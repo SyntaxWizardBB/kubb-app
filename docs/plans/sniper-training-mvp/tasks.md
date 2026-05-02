@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [16] pending | [0] in-progress | [8] done | [0] blocked
+- Status-Übersicht: [15] pending | [0] in-progress | [9] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -186,12 +186,13 @@
 - **Input**: M2-T2
 - **Output**: `test/core/data/dao/player_dao_test.dart`, `test/core/data/dao/session_dao_test.dart`, `test/core/data/dao/session_event_dao_test.dart`, `test/core/data/dao/app_settings_dao_test.dart`
 - **Akzeptanzkriterien**:
-  - [ ] Given die DAOs aus M2-T2 when alle vier Test-Files laufen then alle Cases grün
-  - [ ] Given session_event_dao_test when `latestNonDeletedOfKind` mit einer korrigierten Row aufgerufen then die nächst-jüngere non-deleted Row kommt zurück
-  - [ ] flutter test grün
-  - [ ] flutter analyze clean
+  - [x] Given die DAOs aus M2-T2 when alle vier Test-Files laufen then alle Cases grün
+  - [x] Given session_event_dao_test when `latestNonDeletedOfKind` mit einer korrigierten Row aufgerufen then die nächst-jüngere non-deleted Row kommt zurück
+  - [x] flutter test grün
+  - [x] flutter analyze clean
 - **Abhängigkeiten**: M2-T2
-- **Status**: pending
+- **Status**: done
+- **Notiz**: 14 neue DAO-Test-Cases plus geteilter Helper `test/_helpers/sqlite_open.dart` (Linux-SQLite-Override + In-Memory-DB mit `PRAGMA foreign_keys = ON`). Foreign-Key-Constraints werden für Cascade (Session-Delete → Events weg) und Restrict (Session-Insert ohne Player) explizit getestet. Bestehender `app_database_test.dart` nutzt jetzt denselben Helper. Insgesamt 29 Tests grün.
 
 ## M3: Player & Settings
 
