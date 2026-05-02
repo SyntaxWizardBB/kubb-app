@@ -36,6 +36,11 @@ dependencies:
   logging: any
   collection: any
 
+  url_launcher: ^6.3.2
+  google_fonts: ^8.1.0
+  lucide_icons: ^0.257.0
+  package_info_plus: ^10.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
