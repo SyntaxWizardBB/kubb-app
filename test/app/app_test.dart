@@ -1,0 +1,42 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:kubb_app/app/app.dart';
+import 'package:kubb_app/core/ui/theme/theme_choice.dart';
+
+void main() {
+  Future<void> pumpWithChoice(WidgetTester tester, ThemeChoice choice) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [themeChoiceProvider.overrideWithValue(choice)],
+        child: const KubbApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('renders home placeholder in light mode', (tester) async {
+    await pumpWithChoice(tester, ThemeChoice.light);
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(MaterialApp), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Placeholder — Home'), findsOneWidget);
+  });
+
+  testWidgets('renders home placeholder in dark mode', (tester) async {
+    await pumpWithChoice(tester, ThemeChoice.dark);
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(MaterialApp), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
+  });
+
+  testWidgets('renders home placeholder in high-contrast mode', (tester) async {
+    await pumpWithChoice(tester, ThemeChoice.highContrast);
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(MaterialApp), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
+  });
+}
