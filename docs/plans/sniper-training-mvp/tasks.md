@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [17] pending | [0] in-progress | [7] done | [0] blocked
+- Status-Übersicht: [16] pending | [0] in-progress | [8] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -170,11 +170,11 @@
 - **Input**: M2-T2
 - **Output**: `lib/core/data/app_settings.dart`, `lib/core/data/app_database_provider.dart`
 - **Akzeptanzkriterien**:
-  - [ ] Given `appDatabaseProvider.read(...)` when zum ersten Mal aufgerufen then `AppDatabase`-Instanz wird erzeugt
-  - [ ] Given `AppSettings.fromMap` mit den vier Default-Rows when aufgerufen then Default-Werte
-  - [ ] flutter analyze clean
+  - [x] Given `appDatabaseProvider.read(...)` when zum ersten Mal aufgerufen then `AppDatabase`-Instanz wird erzeugt
+  - [x] Given `AppSettings.fromMap` mit den vier Default-Rows when aufgerufen then Default-Werte
+  - [x] flutter analyze clean
 - **Abhängigkeiten**: M2-T2
-- **Status**: pending
+- **Status**: done
 
 ### M2-T4: DAO-Tests in-memory
 - **Agent**: tester
