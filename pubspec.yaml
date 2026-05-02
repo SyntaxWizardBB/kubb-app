@@ -45,6 +45,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   very_good_analysis: any
+  sqlite3: any
 
   build_runner: any
   drift_dev: any
