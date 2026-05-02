@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [23] pending | [0] in-progress | [1] done | [0] blocked
+- Status-Übersicht: [22] pending | [0] in-progress | [2] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -67,12 +67,12 @@
 - **Input**: ADR-0008 (Theme-System), `lib/core/ui/`
 - **Output**: `lib/core/ui/theme/kubb_tokens.dart`
 - **Akzeptanzkriterien**:
-  - [ ] Given `KubbTokens.light` when verwendet then alle Properties non-null und vom richtigen Typ
-  - [ ] Given die drei Instanzen when verglichen then HighContrast hat reinweisses Background und reinschwarzen Text
-  - [ ] flutter analyze clean
-  - [ ] Datei ≤ 100 LOC
+  - [x] Given `KubbTokens.light` when verwendet then alle Properties non-null und vom richtigen Typ
+  - [x] Given die drei Instanzen when verglichen then HighContrast hat reinweisses Background und reinschwarzen Text
+  - [x] flutter analyze clean
+  - [x] Datei ≤ 100 LOC
 - **Abhängigkeiten**: M1-T1
-- **Status**: pending
+- **Status**: done
 
 ### M1-T3: KubbTheme — Light/Dark/HighContrast
 - **Agent**: coder
