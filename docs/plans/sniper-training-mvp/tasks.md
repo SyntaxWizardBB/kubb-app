@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [22] pending | [0] in-progress | [2] done | [0] blocked
+- Status-Übersicht: [21] pending | [0] in-progress | [3] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -84,12 +84,12 @@
 - **Input**: M1-T2, ADR-0008, `lib/core/ui/`
 - **Output**: `lib/core/ui/theme/kubb_theme.dart`, `lib/core/ui/theme/theme_choice.dart`, `test/core/ui/theme/kubb_theme_test.dart`
 - **Akzeptanzkriterien**:
-  - [ ] Given `KubbTheme.highContrast()` when in MaterialApp gemountet then `Theme.of(context).extension<KubbTokens>()` liefert HC-Tokens
-  - [ ] Given drei Modes when via `ThemeChoice` gewählt then jeweils richtige `ThemeData` zurück
-  - [ ] flutter analyze clean
-  - [ ] Widget-Test grün (drei Cases)
+  - [x] Given `KubbTheme.highContrast()` when in MaterialApp gemountet then `Theme.of(context).extension<KubbTokens>()` liefert HC-Tokens
+  - [x] Given drei Modes when via `ThemeChoice` gewählt then jeweils richtige `ThemeData` zurück
+  - [x] flutter analyze clean
+  - [x] Widget-Test grün (drei Cases)
 - **Abhängigkeiten**: M1-T2
-- **Status**: pending
+- **Status**: done
 
 ### M1-T4: l10n-Pipeline + leere de.arb
 - **Agent**: coder

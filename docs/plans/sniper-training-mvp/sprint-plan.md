@@ -98,12 +98,12 @@ Sieben Tasks, ~12.5h. Innerhalb davon sind die Engpässe:
 
 | Milestone | Done | In Progress | Blocked | Pending | Total |
 |---|---|---|---|---|---|
-| M1 | 2 | 0 | 0 | 3 | 5 |
+| M1 | 3 | 0 | 0 | 2 | 5 |
 | M2 | 0 | 0 | 0 | 4 | 4 |
 | M3 | 0 | 0 | 0 | 5 | 5 |
 | M4 | 0 | 0 | 0 | 5 | 5 |
 | M5 | 0 | 0 | 0 | 5 | 5 |
-| **Gesamt** | **2** | **0** | **0** | **22** | **24** |
+| **Gesamt** | **3** | **0** | **0** | **21** | **24** |
 
 ## Risiken & Mitigation
 
