@@ -1,0 +1,38 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 20px; background: var(--bk-bg); display:flex; flex-direction:column; gap: 14px; }
+  .row { display:flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .btn { min-height: 48px; padding: 0 22px; border-radius: 12px; border: 0; font-family: var(--bk-font-display); font-weight: 600; font-size: 16px; cursor: pointer; display:inline-flex; align-items:center; gap:8px; }
+  /* No borderless buttons. Every button has a visible surface. */
+  .btn-primary  { background: var(--bk-primary); color: var(--bk-on-primary); box-shadow: var(--bk-shadow-1); }
+  .btn-primary:hover { background: var(--bk-primary-hover); }
+  .btn-config   { background: var(--bk-stone-700); color: var(--bk-chalk-50); }
+  /* Caution (orange/wood) — Verwerfen, Abbrechen, Zurück */
+  .btn-caution  { background: var(--bk-accent); color: var(--bk-on-accent); }
+  /* Outlined neutral surface for benign secondary actions only */
+  .btn-secondary{ background: var(--bk-bg-raised); color: var(--bk-fg); box-shadow: inset 0 0 0 2px var(--bk-line-strong); }
+  /* Destructive — red */
+  .btn-danger   { background: var(--bk-danger); color: var(--bk-on-danger); }
+  .btn-pressed  { background: var(--bk-primary-press); color: var(--bk-on-primary); box-shadow: var(--bk-shadow-pressed); transform: translateY(1px); }
+</style></head>
+<body>
+  <div class="bk-overline">Buttons</div>
+  <div class="row">
+    <button class="btn btn-primary">Session starten</button>
+    <button class="btn btn-primary">Speichern</button>
+    <button class="btn btn-config">Konfigurieren</button>
+    <button class="btn btn-secondary">Übernehmen</button>
+  </div>
+  <div class="bk-overline">Caution — orange</div>
+  <div class="row">
+    <button class="btn btn-caution">Verwerfen</button>
+    <button class="btn btn-caution">Abbrechen</button>
+    <button class="btn btn-caution">Zurück</button>
+  </div>
+  <div class="bk-overline">Destruktiv</div>
+  <div class="row">
+    <button class="btn btn-danger">Löschen</button>
+    <button class="btn btn-pressed">Gedrückt</button>
+  </div>
+</body></html>

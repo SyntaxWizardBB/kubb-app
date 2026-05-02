@@ -1,0 +1,328 @@
+/* ============================================================
+   Brosi's Kubb — Design Tokens
+   Outdoor-first, high-contrast training UI.
+   Use the CSS variables; semantic classes at the bottom.
+   ============================================================ */
+
+/* ---------- Fonts (Google Fonts, with local fallback intent) ---------- */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  /* ============================================================
+     COLOR — Brand
+     "Kubb-Holz, Wiesen-Grün, hoher Kontrast"
+     ============================================================ */
+
+  /* Wiesen — meadow green. Primary brand. Mid-deep, slightly cool. */
+  --bk-meadow-50:  #eef6ec;
+  --bk-meadow-100: #d6ead0;
+  --bk-meadow-200: #aed3a2;
+  --bk-meadow-300: #7fb56f;
+  --bk-meadow-400: #569748;
+  --bk-meadow-500: #3a7c2e;   /* primary */
+  --bk-meadow-600: #2d6324;
+  --bk-meadow-700: #234e1c;
+  --bk-meadow-800: #1a3a16;
+  --bk-meadow-900: #112710;
+
+  /* Holz — kubb wood. Warm oak / pine accent. */
+  --bk-wood-50:  #faf3e6;
+  --bk-wood-100: #f1e1bf;
+  --bk-wood-200: #e6c98c;
+  --bk-wood-300: #d6ab57;
+  --bk-wood-400: #c08a33;   /* accent */
+  --bk-wood-500: #a16f24;
+  --bk-wood-600: #80561c;
+  --bk-wood-700: #604015;
+  --bk-wood-800: #422c0e;
+
+  /* Chalk — pitch-line white & off-white. */
+  --bk-chalk-0:   #ffffff;
+  --bk-chalk-50:  #fbfaf6;   /* warm paper */
+  --bk-chalk-100: #f4f1e8;
+  --bk-chalk-200: #e8e2d2;
+
+  /* Stone — neutral charcoals; warmed slightly to sit with wood. */
+  --bk-stone-50:  #f4f3f0;
+  --bk-stone-100: #e7e5df;
+  --bk-stone-200: #cfccc1;
+  --bk-stone-300: #a8a597;
+  --bk-stone-400: #777567;
+  --bk-stone-500: #4d4b40;
+  --bk-stone-600: #34322a;
+  --bk-stone-700: #232118;
+  --bk-stone-800: #161510;
+  --bk-stone-900: #0c0b07;   /* near-black, the "ink" */
+
+  /* Semantic accents */
+  --bk-hit:     #2d6324;   /* meadow-600 — Treffer */
+  --bk-miss:    #b73a2a;   /* deep brick — Fehlschuss */
+  --bk-heli:    #c08a33;   /* wood-400 — Helikopter (caution) */
+  --bk-penalty: #8a1f3d;   /* dark cranberry — Strafkubb */
+  --bk-king:    #c89b3d;   /* gilded — König */
+
+  /* ============================================================
+     COLOR — Semantic surface tokens (light theme — default)
+     ============================================================ */
+  --bk-bg:          var(--bk-chalk-50);
+  --bk-bg-raised:   var(--bk-chalk-0);
+  --bk-bg-sunken:   var(--bk-chalk-100);
+  --bk-bg-inverse:  var(--bk-stone-900);
+
+  --bk-fg:          var(--bk-stone-900);   /* primary ink */
+  --bk-fg-muted:    var(--bk-stone-500);
+  --bk-fg-subtle:   var(--bk-stone-400);
+  --bk-fg-inverse:  var(--bk-chalk-50);
+
+  --bk-line:        var(--bk-stone-200);   /* hairline borders */
+  --bk-line-strong: var(--bk-stone-900);   /* high-contrast pitch line */
+
+  --bk-primary:        var(--bk-meadow-500);
+  --bk-primary-hover:  var(--bk-meadow-600);
+  --bk-primary-press:  var(--bk-meadow-700);
+  --bk-on-primary:     var(--bk-chalk-50);
+
+  --bk-accent:        var(--bk-wood-400);
+  --bk-accent-hover:  var(--bk-wood-500);
+  --bk-on-accent:     var(--bk-stone-900);
+
+  --bk-danger:        var(--bk-miss);
+  --bk-on-danger:     var(--bk-chalk-50);
+
+  /* ============================================================
+     TYPE
+     ============================================================ */
+  --bk-font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --bk-font-body:    'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --bk-font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Type scale — outdoor-readable. Counter sizes go up to absurd. */
+  --bk-text-2xs:  11px;
+  --bk-text-xs:   13px;
+  --bk-text-sm:   15px;
+  --bk-text-base: 17px;   /* mobile body, slightly larger than web default */
+  --bk-text-lg:   20px;
+  --bk-text-xl:   24px;
+  --bk-text-2xl:  32px;
+  --bk-text-3xl:  44px;
+  --bk-text-4xl:  60px;
+  --bk-text-5xl:  84px;   /* primary counter */
+  --bk-text-6xl:  120px;  /* hero counter, single number */
+
+  /* Weights */
+  --bk-w-regular:  400;
+  --bk-w-medium:   500;
+  --bk-w-semibold: 600;
+  --bk-w-bold:     700;
+  --bk-w-black:    800;
+
+  /* Line heights */
+  --bk-lh-tight:   1.05;
+  --bk-lh-snug:    1.2;
+  --bk-lh-normal:  1.45;
+  --bk-lh-loose:   1.6;
+
+  /* Letter spacing — display tightens, micro labels open up */
+  --bk-tracking-tight:  -0.02em;
+  --bk-tracking-normal: 0;
+  --bk-tracking-wide:   0.04em;
+  --bk-tracking-uppercase: 0.08em;
+
+  /* ============================================================
+     SPACING — 4px base
+     ============================================================ */
+  --bk-space-0:  0;
+  --bk-space-1:  4px;
+  --bk-space-2:  8px;
+  --bk-space-3:  12px;
+  --bk-space-4:  16px;
+  --bk-space-5:  20px;
+  --bk-space-6:  24px;
+  --bk-space-8:  32px;
+  --bk-space-10: 40px;
+  --bk-space-12: 48px;   /* min touch target */
+  --bk-space-14: 56px;
+  --bk-space-16: 64px;
+  --bk-space-20: 80px;
+  --bk-space-24: 96px;
+
+  /* Touch target floor — DO NOT go below */
+  --bk-touch-min: 48px;
+  --bk-touch-comfortable: 64px;   /* preferred for primary action buttons */
+
+  /* ============================================================
+     RADII — restrained. Pitch-tool, not a candy app.
+     ============================================================ */
+  --bk-radius-xs:   2px;
+  --bk-radius-sm:   4px;
+  --bk-radius-md:   8px;
+  --bk-radius-lg:   12px;
+  --bk-radius-xl:   16px;
+  --bk-radius-2xl:  20px;
+  --bk-radius-pill: 999px;
+
+  /* ============================================================
+     SHADOWS / ELEVATION
+     Soft, low-spread. Outdoor UI rarely needs deep shadows.
+     ============================================================ */
+  --bk-shadow-1: 0 1px 0 rgb(12 11 7 / 0.06), 0 1px 2px rgb(12 11 7 / 0.06);
+  --bk-shadow-2: 0 1px 2px rgb(12 11 7 / 0.06), 0 4px 12px rgb(12 11 7 / 0.08);
+  --bk-shadow-3: 0 2px 4px rgb(12 11 7 / 0.08), 0 12px 24px rgb(12 11 7 / 0.12);
+  --bk-shadow-pressed: inset 0 2px 0 rgb(12 11 7 / 0.18);
+
+  /* Focus ring — meadow, thick enough to see in sun */
+  --bk-focus-ring: 0 0 0 3px var(--bk-chalk-50), 0 0 0 6px var(--bk-meadow-500);
+
+  /* ============================================================
+     MOTION — restrained. No bounces.
+     ============================================================ */
+  --bk-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --bk-ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
+  --bk-dur-fast: 120ms;
+  --bk-dur-base: 200ms;
+  --bk-dur-slow: 320ms;
+}
+
+/* ============================================================
+   HIGH-CONTRAST MODE
+   Triggered by .bk-hc on any ancestor (or system pref).
+   Goes maximum contrast; flattens shadows.
+   ============================================================ */
+.bk-hc, .bk-hc :where(*) {
+  --bk-bg:        #ffffff;
+  --bk-bg-raised: #ffffff;
+  --bk-bg-sunken: #f0efe8;
+  --bk-fg:        #000000;
+  --bk-fg-muted:  #1a1a1a;
+  --bk-line:      #000000;
+  --bk-primary:   #0f4a08;
+  --bk-on-primary: #ffffff;
+  --bk-accent:    #6e3c00;
+  --bk-shadow-1: 0 0 0 1px #000;
+  --bk-shadow-2: 0 0 0 2px #000;
+  --bk-shadow-3: 0 0 0 2px #000;
+}
+
+/* ============================================================
+   DARK MODE — for dusk play and indoor stat review
+   ============================================================ */
+.bk-dark {
+  --bk-bg:          var(--bk-stone-900);
+  --bk-bg-raised:   var(--bk-stone-800);
+  --bk-bg-sunken:   #050402;
+  --bk-bg-inverse:  var(--bk-chalk-50);
+
+  --bk-fg:          var(--bk-chalk-50);
+  --bk-fg-muted:    var(--bk-stone-300);
+  --bk-fg-subtle:   var(--bk-stone-400);
+  --bk-fg-inverse:  var(--bk-stone-900);
+
+  --bk-line:        var(--bk-stone-700);
+  --bk-line-strong: var(--bk-chalk-50);
+
+  --bk-primary:        var(--bk-meadow-400);
+  --bk-primary-hover:  var(--bk-meadow-300);
+  --bk-on-primary:     var(--bk-stone-900);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--bk-font-body);
+  font-size: var(--bk-text-base);
+  line-height: var(--bk-lh-normal);
+  color: var(--bk-fg);
+  background: var(--bk-bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ============================================================
+   SEMANTIC TYPE CLASSES
+   Use these as utilities or as component-level styles.
+   ============================================================ */
+.bk-display {
+  font-family: var(--bk-font-display);
+  font-size: var(--bk-text-4xl);
+  font-weight: var(--bk-w-bold);
+  line-height: var(--bk-lh-tight);
+  letter-spacing: var(--bk-tracking-tight);
+}
+
+.bk-h1 {
+  font-family: var(--bk-font-display);
+  font-size: var(--bk-text-3xl);
+  font-weight: var(--bk-w-bold);
+  line-height: var(--bk-lh-tight);
+  letter-spacing: var(--bk-tracking-tight);
+}
+.bk-h2 {
+  font-family: var(--bk-font-display);
+  font-size: var(--bk-text-2xl);
+  font-weight: var(--bk-w-semibold);
+  line-height: var(--bk-lh-snug);
+  letter-spacing: var(--bk-tracking-tight);
+}
+.bk-h3 {
+  font-family: var(--bk-font-display);
+  font-size: var(--bk-text-xl);
+  font-weight: var(--bk-w-semibold);
+  line-height: var(--bk-lh-snug);
+}
+.bk-body {
+  font-size: var(--bk-text-base);
+  line-height: var(--bk-lh-normal);
+}
+.bk-body-sm {
+  font-size: var(--bk-text-sm);
+  line-height: var(--bk-lh-normal);
+}
+.bk-caption {
+  font-size: var(--bk-text-xs);
+  line-height: var(--bk-lh-normal);
+  color: var(--bk-fg-muted);
+}
+.bk-overline {
+  font-size: var(--bk-text-xs);
+  font-weight: var(--bk-w-semibold);
+  letter-spacing: var(--bk-tracking-uppercase);
+  text-transform: uppercase;
+  color: var(--bk-fg-muted);
+}
+
+/* THE counter style — used on the training screens.
+   Tabular numerals so digits don't shift width as the count climbs. */
+.bk-counter {
+  font-family: var(--bk-font-display);
+  font-size: var(--bk-text-5xl);
+  font-weight: var(--bk-w-bold);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'ss01' 1;
+}
+.bk-counter-hero {
+  font-family: var(--bk-font-display);
+  font-size: var(--bk-text-6xl);
+  font-weight: var(--bk-w-black);
+  line-height: 0.85;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+.bk-mono {
+  font-family: var(--bk-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   UTIL — sport-pitch hairline (used as section separator)
+   ============================================================ */
+.bk-pitch-line {
+  height: 2px;
+  background: var(--bk-line-strong);
+  border: 0;
+}

@@ -1,0 +1,20 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 20px; background: var(--bk-bg); }
+  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .tok { display: flex; flex-direction: column; gap: 6px; }
+  .sw { height: 64px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--bk-font-display); font-weight: 700; font-size: 13px; }
+  .nm { font-size: 11px; font-family: var(--bk-font-mono); color: var(--bk-fg); }
+  .sub { font-size: 10px; color: var(--bk-fg-muted); }
+</style></head>
+<body>
+  <div class="bk-overline" style="margin-bottom:10px">Semantische Spielereignisse — gameplay events</div>
+  <div class="grid">
+    <div class="tok"><div class="sw" style="background:var(--bk-hit)">Treffer</div><div class="nm">--bk-hit</div><div class="sub">Hit</div></div>
+    <div class="tok"><div class="sw" style="background:var(--bk-miss)">Miss</div><div class="nm">--bk-miss</div><div class="sub">Fehlschuss</div></div>
+    <div class="tok"><div class="sw" style="background:var(--bk-heli);color:#0c0b07">Heli</div><div class="nm">--bk-heli</div><div class="sub">Helikopter</div></div>
+    <div class="tok"><div class="sw" style="background:var(--bk-penalty)">Strafe</div><div class="nm">--bk-penalty</div><div class="sub">Strafkubb</div></div>
+    <div class="tok"><div class="sw" style="background:var(--bk-king);color:#0c0b07">König</div><div class="nm">--bk-king</div><div class="sub">King</div></div>
+  </div>
+</body></html>

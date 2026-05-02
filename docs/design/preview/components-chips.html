@@ -1,0 +1,20 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 18px; background: var(--bk-bg); display:flex; gap: 12px; flex-wrap: wrap; }
+  .chip { min-height: 36px; padding: 6px 14px; border-radius: 999px; font-family: var(--bk-font-display); font-weight: 600; font-size: 14px; display:inline-flex; align-items:center; gap: 6px; box-shadow: inset 0 0 0 1px var(--bk-line); background: var(--bk-bg-raised); color: var(--bk-fg); }
+  .chip.on { background: var(--bk-stone-900); color: var(--bk-chalk-50); box-shadow: none; }
+  .chip.hit { background: var(--bk-meadow-100); color: var(--bk-meadow-700); box-shadow: inset 0 0 0 1px var(--bk-meadow-300); }
+  .chip.penalty { background: #fbe9ee; color: var(--bk-penalty); box-shadow: inset 0 0 0 1px #e6b3c2; }
+  .chip.king { background: #fbf1d6; color: #6b4a0a; box-shadow: inset 0 0 0 1px var(--bk-wood-300); }
+  .dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; }
+</style></head>
+<body>
+  <div class="bk-overline" style="width:100%;margin-bottom:6px">Chips & tags</div>
+  <span class="chip">7 Feldkubbs</span>
+  <span class="chip">3 Basiskubbs</span>
+  <span class="chip on">Stock 4 / 6</span>
+  <span class="chip hit"><span class="dot"></span>8m-Treffer</span>
+  <span class="chip penalty"><span class="dot"></span>Strafkubb</span>
+  <span class="chip king"><span class="dot"></span>König oben durch</span>
+</body></html>

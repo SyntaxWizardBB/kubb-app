@@ -1,0 +1,21 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 18px; background: var(--bk-bg); }
+  .strip { display:grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: var(--bk-bg-raised); border-radius: 16px; padding: 14px 18px; box-shadow: var(--bk-shadow-1); }
+  .stat { display:flex; flex-direction:column; gap: 2px; }
+  .lbl { font-family: var(--bk-font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--bk-fg-muted); }
+  .val { font-family: var(--bk-font-display); font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .val.hit  { color: var(--bk-hit); }
+  .val.miss { color: var(--bk-miss); }
+  .val.heli { color: var(--bk-heli); }
+</style></head>
+<body>
+  <div class="bk-overline" style="margin-bottom:10px">Counter strip — top of training screen</div>
+  <div class="strip">
+    <div class="stat"><span class="lbl">Würfe</span><span class="val">17</span></div>
+    <div class="stat"><span class="lbl">Treffer</span><span class="val hit">11</span></div>
+    <div class="stat"><span class="lbl">Miss</span><span class="val miss">6</span></div>
+    <div class="stat"><span class="lbl">Heli</span><span class="val heli">0</span></div>
+  </div>
+</body></html>

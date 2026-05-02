@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brosi's Kubb — UI Kit</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  html, body { height:100%; margin:0; }
+  body { background: #0c0b07; font-family: var(--bk-font-body); color: var(--bk-fg); display:flex; align-items:flex-start; justify-content:center; padding: 80px 24px 48px; gap: 24px; min-height:100vh; }
+  .stage { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; justify-content: center; max-width: 1400px; }
+  .device-wrap { display:flex; flex-direction:column; align-items:center; gap:10px; width: 250px; }
+  .phone-box { width: 390px; height: 844px; transform: scale(0.6); transform-origin: top left; margin-left: 0; }
+  .phone-box-outer { width: 234px; height: 506px; overflow: hidden; }
+  .device-wrap .caption { color: var(--bk-stone-300); font-family: var(--bk-font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .nav { position: fixed; top: 16px; left: 16px; right: 16px; display:flex; justify-content:space-between; align-items:center; gap:10px; z-index:50; }
+  .nav .pills { display:flex; gap:6px; flex-wrap:wrap; background: rgba(255,255,255,0.04); padding:4px; border-radius:999px; backdrop-filter: blur(8px); }
+  .nav .pill { background:transparent; color:var(--bk-stone-300); border:0; min-height:32px; padding:0 14px; border-radius:999px; font-family:var(--bk-font-display); font-weight:600; font-size:12px; cursor:pointer; }
+  .nav .pill.on { background: var(--bk-meadow-500); color:#fff; }
+  .nav .brand { color: var(--bk-stone-300); font-family: var(--bk-font-display); font-weight:700; font-size:14px; letter-spacing:0.06em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="brand">Brosi's Kubb · UI Kit</div>
+  <div class="pills" id="navPills"></div>
+</div>
+
+<div class="stage" id="stage"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="shared.jsx"></script>
+<script type="text/babel" src="HomeScreen.jsx"></script>
+<script type="text/babel" src="SettingsScreen.jsx"></script>
+<script type="text/babel" src="ProfileScreen.jsx"></script>
+<script type="text/babel" src="AppSettingsModal.jsx"></script>
+<script type="text/babel" src="CsvExportModal.jsx"></script>
+<script type="text/babel" src="EightMScreen.jsx"></script>
+<script type="text/babel" src="FinisseurConfigScreen.jsx"></script>
+<script type="text/babel" src="FinisseurStickScreen.jsx"></script>
+<script type="text/babel" src="SummaryScreen.jsx"></script>
+<script type="text/babel" src="StatsScreen.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+function HomeWithModals({ onPick, onOpenStats, onOpenProfile, openModal, setOpenModal }) {
+  return (
+    <div style={{position:'relative', height:'100%'}}>
+      <HomeScreen
+        onPick={onPick}
+        onOpenAppSettings={() => setOpenModal('app')}
+        onOpenProfile={onOpenProfile}
+      />
+      {openModal === 'app' && (
+        <AppSettingsModal
+          onClose={() => setOpenModal(null)}
+          onOpenStats={() => { setOpenModal(null); onOpenStats(); }}
+          onOpenAchievements={() => setOpenModal(null)}
+          onOpenExport={() => setOpenModal('export')}
+          onOpenReset={() => setOpenModal(null)}
+        />
+      )}
+      {openModal === 'export' && (
+        <CsvExportModal onClose={() => setOpenModal(null)}/>
+      )}
+    </div>
+  );
+}
+
+function Root() {
+  const [route, setRoute] = React.useState('home');
+  const [config, setConfig] = React.useState({ field:7, base:3 });
+  const [openModal, setOpenModal] = React.useState(null);
+  const [userPresets, setUserPresets] = React.useState([
+    { id:'p-clean', label:'Sauber', f:6, b:4 },
+    { id:'p-late',  label:'Heim',   f:8, b:2 },
+  ]);
+
+  const Phone = ({ children }) => (
+    <div className="phone-box-outer">
+      <div className="phone-box">
+        <IOSDevice width={390} height={844} dark={false}>{children}</IOSDevice>
+      </div>
+    </div>
+  );
+
+  const home = (
+    <HomeWithModals
+      onPick={r => r==='8m' ? setRoute('8m') : r==='finisseur' ? setRoute('finconf') : setRoute('home')}
+      onOpenStats={() => setRoute('stats')}
+      onOpenProfile={() => setRoute('profile')}
+      openModal={openModal}
+      setOpenModal={setOpenModal}
+    />
+  );
+
+  const flows = {
+    home: [
+      ['Home',           home],
+      ['Hamburger Modal',
+        <HomePreviewWith modal="app">
+          {home}
+        </HomePreviewWith>],
+      ['CSV-Export',
+        <HomePreviewWith modal="export">
+          {home}
+        </HomePreviewWith>],
+      ['Profil',         <ProfileScreen onBack={()=>setRoute('home')}/>],
+    ],
+    '8m': [
+      ['Sniper',  <SniperTrainingScreen onBack={()=>setRoute('home')} onFinish={()=>setRoute('8m')}/>],
+      ['Summary',  <SummaryScreen kind="8m" onBack={()=>setRoute('8m')} onSave={()=>setRoute('home')} onDiscard={()=>setRoute('home')} onRestart={()=>setRoute('8m')}/>],
+    ],
+    finconf: [
+      ['Konfig',   <FinisseurConfigScreen onBack={()=>setRoute('home')} onStart={(cfg)=>{setConfig(cfg);}}/>],
+      ['Per-Stick',<FinisseurStickScreen config={config} onBack={()=>setRoute('finconf')} onFinish={()=>{}}/>],
+      ['Summary',  <SummaryScreen kind="finisseur" onBack={()=>setRoute('finconf')} onSave={()=>setRoute('home')} onDiscard={()=>setRoute('home')} onRestart={()=>setRoute('finconf')}/>],
+    ],
+    profile: [
+      ['Home',     home],
+      ['Profil',   <ProfileScreen onBack={()=>setRoute('home')}/>],
+    ],
+    stats: [
+      ['Home',     home],
+      ['Statistik',<StatsScreen onBack={()=>setRoute('home')} userPresets={userPresets}/>],
+    ],
+  };
+  const screens = flows[route] || flows.home;
+
+  const routes = [
+    ['home','Home + Modals'],
+    ['8m','Sniper Flow'],
+    ['finconf','Finisseur Flow'],
+    ['profile','Profil'],
+    ['stats','Stats'],
+  ];
+
+  React.useEffect(() => {
+    const el = document.getElementById('navPills');
+    el.innerHTML = '';
+    routes.forEach(([r, label]) => {
+      const b = document.createElement('button');
+      b.className = 'pill' + (route===r ? ' on' : '');
+      b.textContent = label;
+      b.onclick = () => { setRoute(r); setOpenModal(null); };
+      el.appendChild(b);
+    });
+  }, [route]);
+
+  return (
+    <>
+      {screens.map(([cap, el], i) => (
+        <div className="device-wrap" key={cap+i+route} data-screen-label={`0${i+1} ${cap}`}>
+          <Phone>{el}</Phone>
+          <div className="caption">{cap}</div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+// Helper: renders a Home with a preset modal pinned open (for the kit canvas)
+function HomePreviewWith({ modal, children }) {
+  const [open, setOpen] = React.useState(modal);
+  return (
+    <div style={{position:'relative', height:'100%'}}>
+      <HomeScreen onPick={()=>{}} onOpenAppSettings={()=>setOpen('app')} onOpenProfile={()=>{}}/>
+      {open === 'app' && (
+        <AppSettingsModal
+          onClose={() => setOpen(null)}
+          onOpenStats={()=>{}}
+          onOpenAchievements={()=>{}}
+          onOpenExport={() => setOpen('export')}
+          onOpenReset={()=>{}}
+        />
+      )}
+      {open === 'export' && (
+        <CsvExportModal onClose={() => setOpen(null)}/>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('stage')).render(<Root/>);
+</script>
+
+</body></html>

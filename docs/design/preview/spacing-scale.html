@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 16px; background: var(--bk-bg); }
+  .scale { display: flex; align-items: flex-end; gap: 10px; }
+  .step { display:flex; flex-direction:column; align-items:flex-start; gap: 4px; }
+  .box { background: var(--bk-stone-900); border-radius: 4px; }
+  .nm { font-family: var(--bk-font-mono); font-size: 10px; color: var(--bk-fg-muted); }
+</style></head>
+<body>
+  <div class="bk-overline" style="margin-bottom:10px">Spacing — 4px base · touch-min 48</div>
+  <div class="scale">
+    <div class="step"><div class="box" style="width:4px;height:4px"></div><div class="nm">1·4</div></div>
+    <div class="step"><div class="box" style="width:8px;height:8px"></div><div class="nm">2·8</div></div>
+    <div class="step"><div class="box" style="width:12px;height:12px"></div><div class="nm">3·12</div></div>
+    <div class="step"><div class="box" style="width:16px;height:16px"></div><div class="nm">4·16</div></div>
+    <div class="step"><div class="box" style="width:24px;height:24px"></div><div class="nm">6·24</div></div>
+    <div class="step"><div class="box" style="width:32px;height:32px"></div><div class="nm">8·32</div></div>
+    <div class="step"><div class="box" style="width:48px;height:48px;background:var(--bk-meadow-500)"></div><div class="nm" style="color:var(--bk-meadow-600)">12·48 ★ touch</div></div>
+    <div class="step"><div class="box" style="width:64px;height:64px;background:var(--bk-meadow-500)"></div><div class="nm" style="color:var(--bk-meadow-600)">16·64 ★ comfy</div></div>
+  </div>
+</body></html>

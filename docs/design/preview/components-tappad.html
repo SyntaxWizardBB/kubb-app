@@ -1,0 +1,23 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { padding: 18px; background: var(--bk-bg); }
+  .pad { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 520px; }
+  .tap { min-height: 88px; border-radius: 16px; border: 0; font-family: var(--bk-font-display); font-weight: 700; font-size: 22px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 0 22px; }
+  .tap.hit { background: var(--bk-hit); color: #fff; }
+  .tap.miss { background: var(--bk-miss); color: #fff; }
+  .tap.heli { background: var(--bk-heli); color: var(--bk-stone-900); }
+  .tap.minus { background: var(--bk-bg-raised); color: var(--bk-fg); box-shadow: inset 0 0 0 2px var(--bk-line); font-weight: 600; }
+  .sign { font-family: var(--bk-font-display); font-size: 36px; font-weight: 800; line-height: 1; }
+</style></head>
+<body>
+  <div class="bk-overline" style="margin-bottom:10px">Tap-Pad — primary input on training screen</div>
+  <div class="pad">
+    <button class="tap hit">Hit <span class="sign">+</span></button>
+    <button class="tap minus">Hit <span class="sign">−</span></button>
+    <button class="tap miss">Miss <span class="sign">+</span></button>
+    <button class="tap minus">Miss <span class="sign">−</span></button>
+    <button class="tap heli">Heli <span class="sign">+</span></button>
+    <button class="tap minus">Heli <span class="sign">−</span></button>
+  </div>
+</body></html>
