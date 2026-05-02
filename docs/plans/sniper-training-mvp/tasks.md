@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [19] pending | [0] in-progress | [5] done | [0] blocked
+- Status-Übersicht: [18] pending | [0] in-progress | [6] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -136,12 +136,12 @@
 - **Input**: Architektur-Plan "Daten-Modell"
 - **Output**: `lib/core/data/app_database.dart`, `lib/core/data/tables/players.dart`, `lib/core/data/tables/sessions.dart`, `lib/core/data/tables/session_events.dart`, `lib/core/data/tables/app_settings_table.dart`, `lib/core/data/app_database.g.dart` (generated)
 - **Akzeptanzkriterien**:
-  - [ ] Given `AppDatabase` mit In-Memory-Executor when `schemaVersion` abgefragt then == 1
-  - [ ] Given Schema when migriert then alle vier Tabellen + zwei Indizes existieren
-  - [ ] flutter analyze clean
-  - [ ] build_runner durchgelaufen ohne Error
+  - [x] Given `AppDatabase` mit In-Memory-Executor when `schemaVersion` abgefragt then == 1
+  - [x] Given Schema when migriert then alle vier Tabellen + zwei Indizes existieren
+  - [x] flutter analyze clean
+  - [x] build_runner durchgelaufen ohne Error
 - **Abhängigkeiten**: M1-T1
-- **Status**: pending
+- **Status**: done
 
 ### M2-T2: DAOs: Player / Session / SessionEvent / AppSettings
 - **Agent**: coder
