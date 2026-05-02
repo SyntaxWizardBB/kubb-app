@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [21] pending | [0] in-progress | [3] done | [0] blocked
+- Status-Übersicht: [20] pending | [0] in-progress | [4] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -101,10 +101,11 @@
 - **Input**: po-output.md NFR "Sprache", `pubspec.yaml`
 - **Output**: `l10n.yaml`, `lib/l10n/app_de.arb`, `lib/l10n/generated/...` (auto-generated)
 - **Akzeptanzkriterien**:
-  - [ ] Given `flutter gen-l10n` läuft when ohne Error then `AppLocalizations.of(context).appTitle` liefert "Kubb"
-  - [ ] flutter analyze clean
+  - [x] Given `flutter gen-l10n` läuft when ohne Error then `AppLocalizations.of(context).appTitle` liefert "Kubb"
+  - [x] flutter analyze clean
 - **Abhängigkeiten**: M1-T1
-- **Status**: pending
+- **Status**: done
+- **Notiz**: Pipeline wurde bereits im initialen Bootstrap-Commit (`ed9637b`) eingerichtet — `l10n.yaml`, `lib/l10n/app_de.arb` mit `appTitle`-Sentinel und generierte Dateien unter `lib/l10n/generated/` existieren. `flutter gen-l10n` läuft idempotent ohne Diff. Kein zusätzlicher Code-Commit nötig.
 
 ### M1-T5: AppShell + go_router-Skelett
 - **Agent**: coder
