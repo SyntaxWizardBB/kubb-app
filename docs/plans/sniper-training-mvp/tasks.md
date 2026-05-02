@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [20] pending | [0] in-progress | [4] done | [0] blocked
+- Status-Übersicht: [19] pending | [0] in-progress | [5] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -117,12 +117,12 @@
 - **Input**: M1-T3, M1-T4
 - **Output**: `lib/app/app.dart`, `lib/app/router.dart`, `lib/main.dart`
 - **Akzeptanzkriterien**:
-  - [ ] Given die App startet when ohne Profil-Check then HomeScreen-Placeholder erscheint mit Theme aus dem aktiven `themeChoiceProvider`
-  - [ ] Given man navigiert manuell auf `/profile` when der Route-Builder feuert then ein Placeholder-Screen erscheint
-  - [ ] flutter analyze clean
-  - [ ] Widget-Test: App rendert ohne Error in Light, Dark, HighContrast
+  - [x] Given die App startet when ohne Profil-Check then HomeScreen-Placeholder erscheint mit Theme aus dem aktiven `themeChoiceProvider`
+  - [x] Given man navigiert manuell auf `/profile` when der Route-Builder feuert then ein Placeholder-Screen erscheint
+  - [x] flutter analyze clean
+  - [x] Widget-Test: App rendert ohne Error in Light, Dark, HighContrast
 - **Abhängigkeiten**: M1-T3, M1-T4
-- **Status**: pending
+- **Status**: done
 
 ## M2: Core-DB
 
