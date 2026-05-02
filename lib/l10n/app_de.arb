@@ -1,0 +1,11 @@
+{
+  "@@locale": "de",
+  "appTitle": "Kubb",
+  "@appTitle": {
+    "description": "Application title"
+  },
+  "welcomeMessage": "Willkommen — Projekt-Setup läuft.",
+  "@welcomeMessage": {
+    "description": "Placeholder home screen message during initial setup"
+  }
+}
