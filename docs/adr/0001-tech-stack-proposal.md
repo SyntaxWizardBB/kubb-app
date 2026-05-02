@@ -1,82 +1,113 @@
-# ADR-0001: Tech stack proposal — state, persistence, sync, routing
+# ADR-0001: Tech stack — Tactical DDD with pragmatic backbone
 
-- **Status**: **Proposed** (awaits owner approval)
+- **Status**: **Accepted**
 - **Date**: 2026-05-02
+- **Supersedes**: prior Proposed version of this ADR
 
 ## Context
 
-After bootstrap (ADR-0000) the app needs concrete library picks for:
-1. State management
-2. Local persistence
-3. Cloud backend / multi-device sync
-4. Routing
-5. Forms / validation
-6. Code generation / immutable models
+After bootstrap (ADR-0000) the app needed library picks for state, persistence, cloud sync, routing, forms, models, code-gen, DI, networking, logging, folder structure, and testing. Three competing proposals were produced (pragmatic veteran, modern DX, DDD/hexagonal) and reviewed by three independent reviewers (risk/maintainability, product/delivery, ops/realtime).
 
-The owner has explicitly delegated this set of decisions to a deliberate review (informally referred to as the "Architekturagent-Gremium"). The picks below are this author's recommendation; they are **not** locked into `pubspec.yaml` until accepted.
+Outcome of the review:
+- Pragmatic Veteran proposal won 2 of 3 reviewer lenses (risk: 9/10, product: 9/10, ops: 7.5/10).
+- DDD/Hexagonal proposal won the ops lens (9/10) primarily because of its event-log + Lamport-clock + first-class-dispute design.
+- Modern DX scored mid in all three.
 
-## Functional drivers (recap)
-
-- **Hybrid offline + cloud sync**: during a tournament, both teams enter scores on their phones; organizer screen reflects live state; resilient to flaky networks.
-- **Real-time updates** between players' phones and the organizer / scoreboard view.
-- **Offline-capable training modes** (no network required for 8m-Ticker etc.).
-- **Type-safe domain modeling** (rule engine, score state, bracket).
-- **Mobile + web + desktop** from one codebase.
-
-## Proposal
-
-| Concern | Choice | Why this | Why not the alternatives |
-|---|---|---|---|
-| State mgmt | **Riverpod 2** with `riverpod_generator` | async-first; fits realtime streams; testable without widget tree; no `BuildContext` lookups. | Bloc: more ceremony, less ergonomic for streams. Provider: legacy. GetX: opinionated and harder to test. |
-| Local DB | **`drift`** (SQLite, type-safe DAO) | type-safe queries, migrations, runs on all targets including web (via `sqlite3.wasm`). Mature. | Isar: faster but unstable maintenance. Hive: schemaless, painful to query. Sembast: too low-level. |
-| Cloud backend | **Supabase** (Postgres + Realtime + Auth + Storage) | open-source, EU-hostable, native realtime subscriptions perfect for live scoring; Postgres is honest about constraints. Free tier ample for early stage. | Firebase: vendor lock-in, less honest about constraints, EU-data-residency story weaker. PocketBase: lighter but realtime less mature. Self-hosted: ops overhead too early. |
-| Sync | **Repository + per-feature sync layer** on top of drift + Supabase Realtime | simple optimistic write-through, conflict policy per entity (last-write-wins for scores, manual merge for bracket changes). | CRDTs: overkill for tournament scope, hard to reason about. Powersync: paid. |
-| Routing | **`go_router`** | declarative, deep-link friendly, web-friendly URLs (organizer dashboard works in browser). | auto_route: codegen overhead for marginal gains here. |
-| Forms | **`reactive_forms`** | declarative validation, plays well with Riverpod. | `flutter_form_builder`: heavier surface area. Manual: too much boilerplate at our scale. |
-| Models | **`freezed` + `json_serializable`** | immutable unions for game/match state, structural equality, sealed exhaustiveness in `switch`. | Manual `==`/`hashCode`: error-prone. `dart_mappable`: smaller community. |
-| Code gen | **`build_runner`** (watch mode while developing) | standard. | — |
-
-### Indicative dependency block (would land in `pubspec.yaml` after approval)
-
-```yaml
-dependencies:
-  flutter_riverpod: ^2.5.0
-  riverpod_annotation: ^2.3.0
-  go_router: ^14.0.0
-  drift: ^2.18.0
-  sqlite3_flutter_libs: ^0.5.0
-  path_provider: ^2.1.0
-  path: ^1.9.0
-  supabase_flutter: ^2.5.0
-  reactive_forms: ^17.0.0
-  freezed_annotation: ^2.4.0
-  json_annotation: ^4.9.0
-
-dev_dependencies:
-  build_runner: ^2.4.0
-  drift_dev: ^2.18.0
-  riverpod_generator: ^2.4.0
-  freezed: ^2.5.0
-  json_serializable: ^6.8.0
-  custom_lint: ^0.6.0
-  riverpod_lint: ^2.3.0
-```
-
-(Versions are indicative — actual resolution by `flutter pub get` will pick the latest compatible.)
-
-## Alternatives considered (high-level)
-
-- **No backend, all local + manual export**: rejected — multi-device live scoring is a core MVP requirement.
-- **Firebase + no local DB**: rejected — offline play during a tournament with flaky reception is non-negotiable.
-- **Bloc + Hive + Firebase**: a perfectly viable stack many production apps use; the Riverpod + drift + Supabase combination wins on type-safety, async ergonomics, and EU data hosting.
-- **Server-authoritative scoring (custom backend)**: ops cost too high for v1; revisit if Supabase row-level rules can't cover the trust model.
-
-## Consequences
-
-- Adds non-trivial code generation: developers must run `dart run build_runner watch -d` while editing freezed/riverpod-annotated files.
-- Supabase implies an external account; for v1 we will use a free-tier project owned by Lukas.
-- `drift` on web needs the `sqlite3.wasm` worker; `flutter run -d chrome` requires loading it (drift docs cover this).
+The owner expressed a strong preference for the professionalism implied by the DDD/Hexagonal plan but acknowledged the velocity tax of applying full hexagonal to CRUD-heavy features.
 
 ## Decision
 
-**Pending.** Lukas to approve, modify, or trigger an alternative review path before any of the above libraries are added to `pubspec.yaml`.
+**Tactical DDD**: pragmatic backbone (Riverpod + drift + Supabase) with hexagonal discipline applied **only where the domain is rich**. Hexagonal ceremony is not paid for CRUD-shaped features.
+
+### Picks
+
+| Concern | Pick | Notes |
+|---|---|---|
+| State management | **Riverpod 2.x** + `riverpod_generator` | Doubles as DI. AsyncNotifier maps cleanly onto drift streams + Supabase realtime. |
+| Local DB | **drift 2.x** | Type-safe SQL, runs on Android + Linux native + Web (sqlite3.wasm). |
+| Cloud / realtime | **Supabase** (Frankfurt, EU region) | Postgres + Realtime + Auth + RLS. Free tier ample for early stage. Exit: pg_dump + adapter swap. |
+| Sync model | **Append-only event log** keyed by UUIDv7, **Lamport ordering**, `DisputeRaised` + `OrganizerOverride` as first-class events | NOT last-write-wins per field. Score events are immutable; conflict resolution is a domain operation, not a sync race. |
+| Routing | **go_router 14.x** | Web-friendly URLs for backoffice; deep links for mobile. |
+| Forms | **reactive_forms** | Declarative validation; plays well with Riverpod. |
+| Models | **freezed 2.x** + `json_serializable` | Sealed unions for match state, structural equality. |
+| Code-gen | **build_runner** (watch mode in dev) | Standard Flutter codegen toolchain. |
+| DI | Riverpod (no separate container) | Avoids redundancy of get_it + injectable + Riverpod. |
+| Networking | Supabase SDK + `dio` for any direct HTTP | Most network goes through the Supabase client. |
+| Logging | `package:logging` initially; Sentry later if needed | Defer paid observability until real usage. |
+| Folder structure | **Bounded-context-aware** — see ADR-0002 | Hexagonal where complex, pragmatic where simple. |
+| Testing | `flutter_test`, `mocktail`, `glados` (property tests for the rule engine), `golden_toolkit` for goldens, `integration_test` | Property tests on rules; mocktail at the port boundary; in-memory drift for repository tests. |
+
+### Indicative dependency block
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  intl: any
+
+  # Domain (path)
+  kubb_domain:
+    path: packages/kubb_domain
+
+  # State + DI + routing
+  flutter_riverpod: any
+  riverpod_annotation: any
+  go_router: any
+
+  # Persistence
+  drift: any
+  sqlite3_flutter_libs: any
+  path_provider: any
+  path: any
+
+  # Cloud
+  supabase_flutter: any
+
+  # Forms / models / utils
+  reactive_forms: any
+  freezed_annotation: any
+  json_annotation: any
+  uuid: any
+  logging: any
+  collection: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: any
+  build_runner: any
+  drift_dev: any
+  riverpod_generator: any
+  freezed: any
+  json_serializable: any
+  custom_lint: any
+  riverpod_lint: any
+  mocktail: any
+  glados: any
+```
+
+`any` is used here for clarity; the actual lock file will pin specific versions resolved by `flutter pub get`.
+
+## MUST-FIXes before non-trivial code
+
+These are consensus blockers from the three-reviewer panel. They are not optional.
+
+1. **Drift-on-Web WASM spike** (day 1). All three reviewers flagged this. Verify `flutter build web` with `sqlite3.wasm` + OPFS persistence works on target Chromium versions before any Web-specific code is written. If it doesn't, the web target is a thinner read-only client.
+2. **Lamport-clock protocol pinned on paper** before any data row exists. Document: clock advance rule, tie-break by device_id, monotonic invariant. Migrating after data exists is expensive.
+3. **Score-disagreement state machine** designed before sync code. States: `Proposed → Confirmed → Disputed → Overridden`. Documented in `packages/kubb_domain/`.
+4. **Offline JWT policy** for Supabase Auth: how long can a player keep scoring after losing reception? What happens on token expiry mid-set?
+
+## First feature
+
+Reviewer R2's recommendation, accepted: ship **offline-only 8m-Ticker** as the first feature. No cloud, no sync, only drift + Riverpod. Derisks the boring slice and decouples sync complexity from the MVP start.
+
+## Consequences
+
+- Two layering depths in the same repo (intentional). Match feature is hexagonal; Training is pragmatic. See ADR-0002 for the bounded-context map.
+- The pure-Dart `kubb_domain` package establishes the rule engine as a Flutter-free island. Tested with `dart test` (fast) and `glados` for property-based coverage.
+- Code generation is part of normal dev flow: `dart run build_runner watch -d` while editing freezed/riverpod annotations.
+- Supabase is a real external dependency; an account is owned by the project owner. Free tier is sufficient until real-world usage.
+- Exit cost from Supabase is `pg_dump` + a new adapter behind the existing port (`TournamentRemote`).

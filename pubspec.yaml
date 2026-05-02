@@ -15,10 +15,40 @@ dependencies:
   cupertino_icons: ^1.0.8
   intl: any
 
+  kubb_domain:
+    path: packages/kubb_domain
+
+  flutter_riverpod: any
+  riverpod_annotation: any
+  go_router: any
+
+  drift: any
+  sqlite3_flutter_libs: any
+  path_provider: any
+  path: any
+
+  supabase_flutter: any
+
+  reactive_forms: any
+  freezed_annotation: any
+  json_annotation: any
+  uuid: any
+  logging: any
+  collection: any
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   very_good_analysis: any
+
+  build_runner: any
+  drift_dev: any
+  riverpod_generator: any
+  riverpod_lint: any
+  freezed: any
+  json_serializable: any
+  custom_lint: any
+  mocktail: any
 
 flutter:
   uses-material-design: true

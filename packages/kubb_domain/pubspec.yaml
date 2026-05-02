@@ -1,0 +1,17 @@
+name: kubb_domain
+description: "Pure-Dart domain model and rule engine for the Kubb app. No Flutter imports."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  collection: ^1.18.0
+  meta: ^1.16.0
+  uuid: ^4.5.0
+
+dev_dependencies:
+  test: any
+  glados: any
+  very_good_analysis: any
