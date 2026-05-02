@@ -1428,6 +1428,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $AppSettingsTableTable appSettingsTable = $AppSettingsTableTable(
     this,
   );
+  late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
+  late final SessionDao sessionDao = SessionDao(this as AppDatabase);
+  late final SessionEventDao sessionEventDao = SessionEventDao(
+    this as AppDatabase,
+  );
+  late final AppSettingsDao appSettingsDao = AppSettingsDao(
+    this as AppDatabase,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
