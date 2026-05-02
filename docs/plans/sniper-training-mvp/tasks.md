@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [15] pending | [0] in-progress | [9] done | [0] blocked
+- Status-Übersicht: [14] pending | [0] in-progress | [10] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -206,11 +206,12 @@
 - **Input**: M2-T3, Architektur-Plan "Player-Context"
 - **Output**: `lib/features/player/data/player_repository.dart`, `lib/features/player/application/current_profile_provider.dart`
 - **Akzeptanzkriterien**:
-  - [ ] Given keine Player-Row when `currentOrNull()` then null
-  - [ ] Given `create("Lukas")` when danach `currentOrNull()` then Row mit name=="Lukas" und nicht-leerem deviceId
-  - [ ] flutter analyze clean
+  - [x] Given keine Player-Row when `currentOrNull()` then null
+  - [x] Given `create("Lukas")` when danach `currentOrNull()` then Row mit name=="Lukas" und nicht-leerem deviceId
+  - [x] flutter analyze clean
 - **Abhängigkeiten**: M2-T3
-- **Status**: pending
+- **Status**: done
+- **Notiz**: Repository nutzt UUIDv7 (uuid 4.5.3) für `id` und `deviceId`, `watchCurrent` baut einen drift-Stream mit `orderBy createdAt asc, limit 1`. Vier Test-Cases grün (null-default, create+load, multi-row-asc, watchCurrent-Stream). Insgesamt 33 Tests grün.
 
 ### M3-T2: OnboardingScreen mit Validierung
 - **Agent**: coder
