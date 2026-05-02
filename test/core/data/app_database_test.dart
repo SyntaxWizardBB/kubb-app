@@ -1,22 +1,13 @@
-import 'dart:ffi';
-import 'dart:io';
-
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/data/app_database.dart';
-import 'package:sqlite3/open.dart';
+
+import '../../_helpers/sqlite_open.dart';
 
 void main() {
   late AppDatabase db;
 
-  setUpAll(() {
-    if (Platform.isLinux) {
-      open.overrideFor(
-        OperatingSystem.linux,
-        () => DynamicLibrary.open('libsqlite3.so.0'),
-      );
-    }
-  });
+  setUpAll(registerLinuxSqliteOverride);
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
