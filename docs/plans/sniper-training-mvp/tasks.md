@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [18] pending | [0] in-progress | [6] done | [0] blocked
+- Status-Übersicht: [17] pending | [0] in-progress | [7] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -153,12 +153,12 @@
 - **Input**: M2-T1, Architektur-Plan "DAOs"
 - **Output**: `lib/core/data/dao/player_dao.dart`, `lib/core/data/dao/session_dao.dart`, `lib/core/data/dao/session_event_dao.dart`, `lib/core/data/dao/app_settings_dao.dart`
 - **Akzeptanzkriterien**:
-  - [ ] Given die vier DAOs sind in `AppDatabase` registriert when `db.playerDao` aufgerufen then non-null
-  - [ ] Given AppSettingsDao.save({theme: dark}) when load() then theme == dark
-  - [ ] flutter analyze clean
-  - [ ] build_runner durchgelaufen ohne Error
+  - [x] Given die vier DAOs sind in `AppDatabase` registriert when `db.playerDao` aufgerufen then non-null
+  - [x] Given AppSettingsDao.save({theme: dark}) when load() then theme == dark
+  - [x] flutter analyze clean
+  - [x] build_runner durchgelaufen ohne Error
 - **Abhängigkeiten**: M2-T1
-- **Status**: pending
+- **Status**: done
 
 ### M2-T3: appDatabaseProvider + AppSettings-Wertobjekt
 - **Agent**: coder
