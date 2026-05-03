@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
 import 'package:kubb_app/features/player/presentation/onboarding_screen.dart';
+import 'package:kubb_app/features/player/presentation/profile_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final notifier = _ProfileRefresh();
@@ -37,7 +38,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/profile',
-        builder: (context, state) => const _ProfilePlaceholder(),
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/training/sniper/config',
@@ -81,12 +82,6 @@ class _HomePlaceholder extends StatelessWidget {
   const _HomePlaceholder();
   @override
   Widget build(BuildContext context) => const _Placeholder(title: 'Home');
-}
-
-class _ProfilePlaceholder extends StatelessWidget {
-  const _ProfilePlaceholder();
-  @override
-  Widget build(BuildContext context) => const _Placeholder(title: 'Profile');
 }
 
 class _SniperConfigPlaceholder extends StatelessWidget {

@@ -23,5 +23,17 @@
   "onboardingConfirm": "Weiter",
   "@onboardingConfirm": {
     "description": "Onboarding confirm button label"
+  },
+  "profileTitle": "Profil",
+  "@profileTitle": {
+    "description": "Profile screen title"
+  },
+  "profileDeviceLabel": "Geräte-ID",
+  "@profileDeviceLabel": {
+    "description": "Profile device id label"
+  },
+  "profileSinceLabel": "Mitglied seit",
+  "@profileSinceLabel": {
+    "description": "Profile created-at label"
   }
 }
