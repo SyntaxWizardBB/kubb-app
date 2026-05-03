@@ -5,6 +5,7 @@ import 'package:kubb_app/app/bootstrap.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
 import 'package:kubb_app/features/player/presentation/onboarding_screen.dart';
 import 'package:kubb_app/features/player/presentation/profile_screen.dart';
+import 'package:kubb_app/features/stats/presentation/stats_screen.dart';
 import 'package:kubb_app/features/training/presentation/home_screen.dart';
 import 'package:kubb_app/features/training/presentation/sniper_config_screen.dart';
 import 'package:kubb_app/features/training/presentation/sniper_session_screen.dart';
@@ -44,6 +45,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/stats',
+        builder: (context, state) => const StatsScreen(),
       ),
       GoRoute(
         path: '/training/sniper/config',

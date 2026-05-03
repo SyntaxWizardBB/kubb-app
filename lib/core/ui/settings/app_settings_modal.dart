@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/theme/theme_choice.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class AppSettingsModal extends ConsumerWidget {
@@ -60,6 +62,8 @@ class AppSettingsModal extends ConsumerWidget {
               ),
               Text(l.settingsTitle, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: KubbTokens.space4),
+              _StatsLink(label: l.statsTitle, tokens: tokens),
+              const SizedBox(height: KubbTokens.space4),
               asyncSettings.when(
                 loading: () => const Padding(
                   padding: EdgeInsets.all(KubbTokens.space6),
@@ -98,6 +102,49 @@ class AppSettingsModal extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _StatsLink extends StatelessWidget {
+  const _StatsLink({required this.label, required this.tokens});
+
+  final String label;
+  final KubbTokens tokens;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: tokens.bg,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+          onTap: () {
+            Navigator.of(context).pop();
+            unawaited(context.push('/stats'));
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: KubbTokens.space3,
+              vertical: KubbTokens.space3,
+            ),
+            child: Row(
+              children: [
+                Icon(LucideIcons.barChart3, size: 20, color: tokens.fg),
+                const SizedBox(width: KubbTokens.space3),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: tokens.fg,
+                    ),
+                  ),
+                ),
+                Icon(LucideIcons.chevronRight, size: 20, color: tokens.fgMuted),
+              ],
+            ),
+          ),
+        ),
+      );
 }
 
 class _VersionFooter extends StatefulWidget {
