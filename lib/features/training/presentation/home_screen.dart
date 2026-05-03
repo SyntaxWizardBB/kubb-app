@@ -26,7 +26,10 @@ class HomeScreen extends ConsumerWidget {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final profile = ref.watch(currentProfileProvider);
-    final recent = ref.watch(recentSessionsProvider);
+    final recent = ref.watch(recentSessionsProvider).maybeWhen(
+          data: (items) => items,
+          orElse: () => const <RecentSessionView>[],
+        );
 
     final greeting = profile.maybeWhen(
       data: (p) => p == null ? l.homeGreetingFallback : l.homeGreeting(p.name),

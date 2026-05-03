@@ -1,10 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/core/data/app_database.dart';
+import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
+import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/training/data/training_repository.dart';
+
+const _kindHit = 'hit';
+const _kindMiss = 'miss';
+const _kindHeli = 'heli';
 
 /// Lightweight projection of a completed training session for the home list.
-///
-/// Stub for M4-T5 — the real implementation lands in M5-T1 with a streaming
-/// provider against the Drift session DAO. Type signature is meant to stay
-/// compatible.
 class RecentSessionView {
   const RecentSessionView({
     required this.modeTag,
@@ -17,6 +21,70 @@ class RecentSessionView {
   final String subtitle;
 }
 
-final recentSessionsProvider = Provider<List<RecentSessionView>>(
-  (ref) => const [],
-);
+final recentSessionsProvider =
+    StreamProvider<List<RecentSessionView>>((ref) {
+  final profile = ref.watch(currentProfileProvider).value;
+  if (profile == null) {
+    return Stream.value(const <RecentSessionView>[]);
+  }
+
+  final heliTracking =
+      ref.watch(appSettingsProvider).value?.heliTracking ?? true;
+  final repo = ref.watch(trainingRepositoryProvider);
+
+  return repo
+      .watchRecentCompleted(playerId: profile.id)
+      .asyncMap((sessions) async {
+    final views = <RecentSessionView>[];
+    for (final session in sessions) {
+      views.add(await _toView(repo, session, heliTracking: heliTracking));
+    }
+    return views;
+  });
+});
+
+Future<RecentSessionView> _toView(
+  TrainingRepository repo,
+  Session session, {
+  required bool heliTracking,
+}) async {
+  final events = await repo.eventsOf(session.id);
+  var hits = 0;
+  var misses = 0;
+  var helis = 0;
+  for (final e in events) {
+    if (e.correctedAt != null) continue;
+    switch (e.kind) {
+      case _kindHit:
+        hits++;
+      case _kindMiss:
+        misses++;
+      case _kindHeli:
+        helis++;
+    }
+  }
+
+  final divisor = hits + misses;
+  final hitRate = divisor == 0 ? 0 : ((hits / divisor) * 100).round();
+  final totalThrows = hits + misses + (heliTracking ? helis : 0);
+  final completedAt = session.completedAt ?? session.startedAt;
+
+  return RecentSessionView(
+    modeTag: 'Sniper',
+    hitRatePercent: hitRate,
+    subtitle: '${session.distanceMeters.toStringAsFixed(1)} m · '
+        '$totalThrows Würfe · ${_relativeTime(completedAt)}',
+  );
+}
+
+String _relativeTime(DateTime utc) {
+  final now = DateTime.now().toUtc();
+  final diff = now.difference(utc);
+  if (diff.inMinutes < 1) return 'gerade eben';
+  if (diff.inMinutes < 60) return 'vor ${diff.inMinutes} Min';
+  if (diff.inHours < 24) return 'vor ${diff.inHours} Std';
+  if (diff.inDays == 1) return 'gestern';
+  if (diff.inDays < 7) return 'vor ${diff.inDays} Tagen';
+  if (diff.inDays < 30) return 'vor ${(diff.inDays / 7).floor()} Wochen';
+  return 'vor ${(diff.inDays / 30).floor()} Monaten';
+}

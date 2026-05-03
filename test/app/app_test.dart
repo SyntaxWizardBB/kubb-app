@@ -7,6 +7,7 @@ import 'package:kubb_app/core/data/app_settings.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/core/ui/theme/theme_choice.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
 
 class _FakeAppSettingsNotifier extends AppSettingsNotifier {
   _FakeAppSettingsNotifier(this._initial);
@@ -34,6 +35,9 @@ void main() {
                 createdAt: DateTime.utc(2026),
               ),
             ),
+          ),
+          recentSessionsProvider.overrideWith(
+            (ref) => Stream.value(const <RecentSessionView>[]),
           ),
         ],
         child: const KubbApp(),

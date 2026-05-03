@@ -20,7 +20,7 @@ void main() {
           currentProfileProvider.overrideWith((ref) async* {
             yield profile;
           }),
-          recentSessionsProvider.overrideWithValue(recent),
+          recentSessionsProvider.overrideWith((ref) => Stream.value(recent)),
         ],
         child: MaterialApp(
           theme: KubbTheme.light(),

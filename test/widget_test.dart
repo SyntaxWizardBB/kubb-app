@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/app/app.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
 
 void main() {
   testWidgets('App boots and renders the home greeting', (tester) async {
@@ -19,6 +20,9 @@ void main() {
                 createdAt: DateTime.utc(2026),
               ),
             ),
+          ),
+          recentSessionsProvider.overrideWith(
+            (ref) => Stream.value(const <RecentSessionView>[]),
           ),
         ],
         child: const KubbApp(),
