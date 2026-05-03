@@ -1,0 +1,218 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/features/stats/application/stats_aggregate_provider.dart';
+import 'package:kubb_app/features/stats/data/stats_aggregate.dart';
+import 'package:kubb_app/features/stats/presentation/widgets/stats_aggregate_block.dart';
+import 'package:kubb_app/features/stats/presentation/widgets/stats_filter_bar.dart';
+import 'package:kubb_app/features/stats/presentation/widgets/stats_session_list.dart';
+import 'package:kubb_app/features/stats/presentation/widgets/stats_trend_chart.dart';
+import 'package:kubb_app/l10n/generated/app_localizations.dart';
+
+class StatsScreen extends ConsumerWidget {
+  const StatsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    final asyncAgg = ref.watch(statsAggregateProvider);
+
+    return Scaffold(
+      backgroundColor: tokens.bg,
+      appBar: KubbAppBar(eyebrow: l.statsEyebrow, title: l.statsTitle),
+      body: asyncAgg.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(KubbTokens.space6),
+            child: Text(e.toString(), textAlign: TextAlign.center),
+          ),
+        ),
+        data: (agg) => _Body(aggregate: agg, tokens: tokens, l: l),
+      ),
+    );
+  }
+}
+
+class _Body extends StatelessWidget {
+  const _Body({required this.aggregate, required this.tokens, required this.l});
+
+  final StatsAggregate aggregate;
+  final KubbTokens tokens;
+  final AppLocalizations l;
+
+  @override
+  Widget build(BuildContext context) => SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          KubbTokens.space4,
+          KubbTokens.space2,
+          KubbTokens.space4,
+          KubbTokens.space8,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const StatsFilterBar(),
+            const SizedBox(height: KubbTokens.space5),
+            if (aggregate.isEmpty) ...[
+              _EmptyState(tokens: tokens, l: l),
+            ] else ...[
+              StatsTrendChart(points: aggregate.trendPoints),
+              const SizedBox(height: KubbTokens.space5),
+              StatsAggregateBlock(aggregate: aggregate),
+              const SizedBox(height: KubbTokens.space5),
+              _BestsBlock(aggregate: aggregate, tokens: tokens, l: l),
+              const SizedBox(height: KubbTokens.space5),
+              _SectionHead(text: l.statsSessionsTitle, tokens: tokens),
+              const SizedBox(height: KubbTokens.space2),
+              StatsSessionList(rows: aggregate.sessionRows),
+            ],
+          ],
+        ),
+      );
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.tokens, required this.l});
+
+  final KubbTokens tokens;
+  final AppLocalizations l;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(KubbTokens.space6),
+        decoration: BoxDecoration(
+          color: tokens.bgRaised,
+          borderRadius: BorderRadius.circular(KubbTokens.radiusXl),
+        ),
+        child: Column(
+          children: [
+            Text(
+              l.statsEmptyTitle,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: tokens.fg,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: KubbTokens.space2),
+            Text(
+              l.statsEmptyBody,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: tokens.fgMuted),
+            ),
+          ],
+        ),
+      );
+}
+
+class _SectionHead extends StatelessWidget {
+  const _SectionHead({required this.text, required this.tokens});
+
+  final String text;
+  final KubbTokens tokens;
+
+  @override
+  Widget build(BuildContext context) => Text(
+        text.toUpperCase(),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.88,
+          color: tokens.fgMuted,
+        ),
+      );
+}
+
+class _BestsBlock extends StatelessWidget {
+  const _BestsBlock({
+    required this.aggregate,
+    required this.tokens,
+    required this.l,
+  });
+
+  final StatsAggregate aggregate;
+  final KubbTokens tokens;
+  final AppLocalizations l;
+
+  @override
+  Widget build(BuildContext context) {
+    final dist = aggregate.bestHitRateDistance;
+    final bestRate = dist == null
+        ? '${aggregate.bestHitRatePercent} %'
+        : '${aggregate.bestHitRatePercent} %  ·  ${dist.toStringAsFixed(1)} m';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SectionHead(text: l.statsBestsTitle, tokens: tokens),
+        const SizedBox(height: KubbTokens.space2),
+        Container(
+          decoration: BoxDecoration(
+            color: tokens.bgRaised,
+            borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space3),
+          child: Column(
+            children: [
+              _BestRow(label: l.statsBestRate, value: bestRate, tokens: tokens, divider: true),
+              _BestRow(
+                label: l.statsBestStreak,
+                value: '${aggregate.longestHitStreak}',
+                tokens: tokens,
+                divider: true,
+              ),
+              _BestRow(
+                label: l.statsBestDay,
+                value: '${aggregate.mostThrowsInOneDay}',
+                tokens: tokens,
+                divider: false,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BestRow extends StatelessWidget {
+  const _BestRow({
+    required this.label,
+    required this.value,
+    required this.tokens,
+    required this.divider,
+  });
+
+  final String label;
+  final String value;
+  final KubbTokens tokens;
+  final bool divider;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        decoration: BoxDecoration(
+          border: divider ? Border(bottom: BorderSide(color: tokens.line)) : null,
+        ),
+        padding: const EdgeInsets.symmetric(vertical: KubbTokens.space3),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+              ),
+            ),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: tokens.fg,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
+      );
+}
