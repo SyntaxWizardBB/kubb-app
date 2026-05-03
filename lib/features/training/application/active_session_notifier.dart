@@ -1,64 +1,96 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/core/data/app_database.dart';
+import 'package:kubb_app/core/data/app_database_provider.dart';
+import 'package:kubb_app/features/training/application/active_session_state.dart';
+import 'package:kubb_app/features/training/data/training_repository.dart';
 
-/// Snapshot the UI consumes while a training session is running.
-///
-/// Counts (`hits`, `misses`, `helis`) are derived from non-corrected
-/// `SessionEvent` rows in the underlying drift store. `throwTarget` mirrors
-/// the configured target (null = open-ended).
-class ActiveSessionState {
-  const ActiveSessionState({
-    required this.sessionId,
-    required this.distance,
-    required this.hits,
-    required this.misses,
-    required this.helis,
-    required this.startedAt,
-    this.throwTarget,
-  });
+const _hit = 'hit';
+const _miss = 'miss';
+const _heli = 'heli';
 
-  final String sessionId;
-  final double distance;
-  final int? throwTarget;
-  final int hits;
-  final int misses;
-  final int helis;
-  final DateTime startedAt;
-}
-
-/// Holds the lifecycle of the currently active sniper session.
-///
-/// Stub for M5-T2 (TDD). Real implementation lands in M5-T3; every method
-/// throws `UnimplementedError` until then so the tests in
-/// `test/features/training/application/active_session_notifier_test.dart`
-/// compile and document the behaviour contract without accidentally
-/// passing.
 class ActiveSessionNotifier extends AsyncNotifier<ActiveSessionState?> {
   @override
-  Future<ActiveSessionState?> build() {
-    throw UnimplementedError('M5-T3 implements this');
-  }
+  Future<ActiveSessionState?> build() async => null;
+
+  TrainingRepository get _repo => ref.read(trainingRepositoryProvider);
 
   Future<void> startSession({
     required String playerId,
     required double distance,
     int? throwTarget,
-  }) =>
-      throw UnimplementedError('M5-T3');
+  }) async {
+    final s = await _repo.startSession(
+      playerId: playerId,
+      distance: distance,
+      throwTarget: throwTarget,
+    );
+    state = AsyncData(_hydrate(s, 0, 0, 0));
+  }
 
-  Future<void> recordHit() => throw UnimplementedError('M5-T3');
+  Future<void> recordHit() => _append(_hit);
+  Future<void> recordMiss() => _append(_miss);
+  Future<void> recordHeli() => _append(_heli);
 
-  Future<void> recordMiss() => throw UnimplementedError('M5-T3');
+  Future<void> undoLast(String kind) => _withActive((s) async {
+        await _repo.softDeleteLastEvent(sessionId: s.sessionId, kind: kind);
+        state = AsyncData(_bump(s, kind, -1));
+      });
 
-  Future<void> recordHeli() => throw UnimplementedError('M5-T3');
+  Future<void> complete() => _withActive((s) async {
+        await _repo.markCompleted(sessionId: s.sessionId);
+        state = const AsyncData(null);
+      });
 
-  Future<void> undoLast(String kind) => throw UnimplementedError('M5-T3');
+  Future<void> abortAndDelete() => _withActive((s) async {
+        await _repo.discard(sessionId: s.sessionId);
+        state = const AsyncData(null);
+      });
 
-  Future<void> complete() => throw UnimplementedError('M5-T3');
+  Future<void> resumeFromCrash(String sessionId) async {
+    final db = ref.read(appDatabaseProvider);
+    final s = await db.sessionDao.getById(sessionId);
+    if (s == null) return;
+    final ev = db.sessionEventDao;
+    state = AsyncData(
+      _hydrate(
+        s,
+        await ev.countByKind(sessionId, _hit),
+        await ev.countByKind(sessionId, _miss),
+        await ev.countByKind(sessionId, _heli),
+      ),
+    );
+  }
 
-  Future<void> abortAndDelete() => throw UnimplementedError('M5-T3');
+  Future<void> _append(String kind) => _withActive((s) async {
+        await _repo.appendEvent(sessionId: s.sessionId, kind: kind);
+        state = AsyncData(_bump(s, kind, 1));
+      });
 
-  Future<void> resumeFromCrash(String sessionId) =>
-      throw UnimplementedError('M5-T3');
+  Future<void> _withActive(Future<void> Function(ActiveSessionState) op) async {
+    final s = state.value;
+    if (s != null) await op(s);
+  }
+
+  ActiveSessionState _hydrate(Session s, int hits, int misses, int helis) =>
+      ActiveSessionState(
+        sessionId: s.id,
+        distance: s.distanceMeters,
+        throwTarget: s.throwTarget,
+        hits: hits,
+        misses: misses,
+        helis: helis,
+        startedAt: s.startedAt,
+      );
+
+  ActiveSessionState _bump(ActiveSessionState s, String kind, int delta) {
+    int c(int v) => v < 0 ? 0 : v;
+    return switch (kind) {
+      _hit => s.copyWith(hits: c(s.hits + delta)),
+      _miss => s.copyWith(misses: c(s.misses + delta)),
+      _heli => s.copyWith(helis: c(s.helis + delta)),
+      _ => s,
+    };
+  }
 }
 
 final activeSessionProvider =

@@ -10,8 +10,6 @@ import 'package:kubb_app/features/training/application/active_session_notifier.d
 
 import '../../../_helpers/sqlite_open.dart';
 
-const _skipUntilM5T3 = 'TDD: green after M5-T3 implements ActiveSessionNotifier';
-
 class _FakeAppSettingsNotifier extends AppSettingsNotifier {
   _FakeAppSettingsNotifier(this._initial);
 
@@ -75,7 +73,7 @@ void main() {
     expect(state.hits, 0);
     expect(state.misses, 0);
     expect(state.helis, 0);
-  }, skip: _skipUntilM5T3);
+  });
 
   test('recordHit appends a hit event and increments the count', () async {
     final notifier = container.read(activeSessionProvider.notifier);
@@ -88,7 +86,7 @@ void main() {
 
     final events = await db.sessionEventDao.forSession(state.sessionId);
     expect(events.where((e) => e.kind == 'hit'), hasLength(1));
-  }, skip: _skipUntilM5T3);
+  });
 
   test('three recordMiss calls produce three miss events', () async {
     final notifier = container.read(activeSessionProvider.notifier);
@@ -102,7 +100,7 @@ void main() {
 
     final events = await db.sessionEventDao.forSession(state.sessionId);
     expect(events.where((e) => e.kind == 'miss'), hasLength(3));
-  }, skip: _skipUntilM5T3);
+  });
 
   test('undoLast soft-deletes the most recent event of that kind', () async {
     final notifier = container.read(activeSessionProvider.notifier);
@@ -116,7 +114,7 @@ void main() {
     final events = await db.sessionEventDao.forSession(state.sessionId);
     expect(events, hasLength(1));
     expect(events.single.correctedAt, isNotNull);
-  }, skip: _skipUntilM5T3);
+  });
 
   test('recordHeli increments helis when heliTracking is on', () async {
     container.dispose();
@@ -129,7 +127,7 @@ void main() {
 
     final state = container.read(activeSessionProvider).requireValue!;
     expect(state.helis, 1);
-  }, skip: _skipUntilM5T3);
+  });
 
   test('complete marks the session completed and clears the state', () async {
     final notifier = container.read(activeSessionProvider.notifier);
@@ -141,7 +139,7 @@ void main() {
     final stored = await db.sessionDao.getById(id);
     expect(stored?.status, 'completed');
     expect(stored?.completedAt, isNotNull);
-  }, skip: _skipUntilM5T3);
+  });
 
   test('abortAndDelete removes session row and cascades events', () async {
     final notifier = container.read(activeSessionProvider.notifier);
@@ -153,7 +151,7 @@ void main() {
     expect(container.read(activeSessionProvider).requireValue, isNull);
     expect(await db.sessionDao.getById(id), isNull);
     expect(await db.sessionEventDao.forSession(id), isEmpty);
-  }, skip: _skipUntilM5T3);
+  });
 
   test('resumeFromCrash rehydrates counts and ignores corrected events',
       () async {
@@ -206,7 +204,7 @@ void main() {
     expect(state.hits, 5);
     expect(state.misses, 2);
     expect(state.helis, 0);
-  }, skip: _skipUntilM5T3);
+  });
 
   test('recordHit without an active session is a stable no-op', () async {
     final notifier = container.read(activeSessionProvider.notifier);
@@ -217,5 +215,5 @@ void main() {
     final allEvents = await db.select(db.sessionEvents).get();
     expect(allEvents, isEmpty);
     expect(container.read(activeSessionProvider).value, isNull);
-  }, skip: _skipUntilM5T3);
+  });
 }
