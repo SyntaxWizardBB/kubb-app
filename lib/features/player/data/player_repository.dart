@@ -41,4 +41,26 @@ class PlayerRepository {
       ..limit(1);
     return query.watch().map((rows) => rows.isEmpty ? null : rows.first);
   }
+
+  Future<Player> update({
+    required String id,
+    required String name,
+    String? avatarColor,
+  }) async {
+    final affected = await _dao.updateById(
+      id,
+      PlayersCompanion(
+        name: Value(name),
+        avatarColor: Value(avatarColor),
+      ),
+    );
+    if (affected == 0) {
+      throw StateError('no player row matched id $id');
+    }
+    final stored = await _dao.getById(id);
+    if (stored == null) {
+      throw StateError('updated player $id not retrievable');
+    }
+    return stored;
+  }
 }
