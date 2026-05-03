@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [11] pending | [0] in-progress | [13] done | [0] blocked
+- Status-Übersicht: [10] pending | [0] in-progress | [14] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -277,13 +277,14 @@
 - **Input**: M3-T4
 - **Output**: `lib/features/training/presentation/widgets/app_settings_modal.dart`, `lib/l10n/app_de.arb`
 - **Akzeptanzkriterien**:
-  - [ ] Given Modal offen when Theme auf Dark gewechselt then App rendert sofort dark, Settings persistiert
-  - [ ] Given Heli-Toggle off when bestätigt then `appSettings.heliTracking == false`
+  - [x] Given Modal offen when Theme auf Dark gewechselt then App rendert sofort dark, Settings persistiert
+  - [x] Given Heli-Toggle off when bestätigt then `appSettings.heliTracking == false`
   - [ ] Given aktive Session-Route geöffnet when Modal-Aufruf-Pfad blockiert then Modal öffnet nicht (Detail kommt in M5-T4 als Hamburger-disabled)
-  - [ ] flutter analyze clean
-  - [ ] Widget-Test für Toggle-Verhalten (mind. 1 Case)
+  - [x] flutter analyze clean
+  - [x] Widget-Test für Toggle-Verhalten (mind. 1 Case)
 - **Abhängigkeiten**: M3-T4
-- **Status**: pending
+- **Status**: done
+- **Notiz**: Modal lebt unter `lib/core/ui/settings/app_settings_modal.dart` (kohärenter mit `app_settings_provider.dart` daneben — global, nicht training-scoped). Statische `AppSettingsModal.show(context)` öffnet das Sheet via `showModalBottomSheet` mit transparentem Backdrop. Vier Rows (Sprache read-only, Theme als `SegmentedButton<ThemeChoice>`, Heli- und Vibration-Switches), Version-Footer via `package_info_plus` mit graceful-degrade wenn Platform-Channel fehlt. Sniper-Eye-Setting bleibt bewusst draussen — gehört in M5-T4 in die Session-AppBar. AC-3 (Hamburger-disabled in aktiver Session) wird in M5-T4 auf der Caller-Seite umgesetzt. Zwei Widget-Test-Cases grün (alle Rows sichtbar, Heli-Switch ruft Notifier korrekt). 45 Tests grün, `flutter analyze` clean. Damit ist Milestone M3 vollständig: Player-Onboarding/Profile + AppSettings + Modal stehen, alles offline-tauglich, Theme reagiert sofort.
 
 ## M4: Reusable Widgets & HomeScreen
 
