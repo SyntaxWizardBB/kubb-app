@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/app/app.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
 
 void main() {
@@ -24,6 +25,7 @@ void main() {
           recentSessionsProvider.overrideWith(
             (ref) => Stream.value(const <RecentSessionView>[]),
           ),
+          crashRecoveryProvider.overrideWith((ref) async => null),
         ],
         child: const KubbApp(),
       ),

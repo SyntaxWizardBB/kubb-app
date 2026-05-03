@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +8,9 @@ import 'package:kubb_app/core/ui/settings/app_settings_modal.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
+import 'package:kubb_app/features/training/presentation/widgets/crash_recovery_dialog.dart';
 import 'package:kubb_app/features/training/presentation/widgets/home_greeting.dart';
 import 'package:kubb_app/features/training/presentation/widgets/news_card.dart';
 import 'package:kubb_app/features/training/presentation/widgets/recent_section.dart';
@@ -18,11 +22,16 @@ import 'package:url_launcher/url_launcher.dart';
 
 const _newsUrl = 'https://kubbtour.ch';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final profile = ref.watch(currentProfileProvider);
@@ -30,6 +39,18 @@ class HomeScreen extends ConsumerWidget {
           data: (items) => items,
           orElse: () => const <RecentSessionView>[],
         );
+
+    ref.listen(crashRecoveryProvider, (_, next) {
+      next.whenData((session) {
+        if (session == null) return;
+        if (ref.read(crashRecoveryShownProvider)) return;
+        ref.read(crashRecoveryShownProvider.notifier).mark(true);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          unawaited(CrashRecoveryDialog.show(context, session));
+        });
+      });
+    });
 
     final greeting = profile.maybeWhen(
       data: (p) => p == null ? l.homeGreetingFallback : l.homeGreeting(p.name),

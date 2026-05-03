@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
 import 'package:kubb_app/features/training/presentation/home_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -21,6 +22,7 @@ void main() {
             yield profile;
           }),
           recentSessionsProvider.overrideWith((ref) => Stream.value(recent)),
+          crashRecoveryProvider.overrideWith((ref) async => null),
         ],
         child: MaterialApp(
           theme: KubbTheme.light(),

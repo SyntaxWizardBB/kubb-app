@@ -164,5 +164,18 @@
   "summaryDiscard": "Verwerfen",
   "@summaryDiscard": { "description": "Hard-delete button on summary" },
   "summaryRestart": "Neu starten",
-  "@summaryRestart": { "description": "Restart-with-same-config button on summary" }
+  "@summaryRestart": { "description": "Restart-with-same-config button on summary" },
+  "crashRecoveryTitle": "Letzte Session unterbrochen",
+  "@crashRecoveryTitle": { "description": "Crash recovery dialog title" },
+  "crashRecoveryContent": "Eine Session vom {date} ist noch offen. Was möchtest du tun?",
+  "@crashRecoveryContent": {
+    "description": "Crash recovery dialog content with session start date",
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "crashRecoveryResume": "Fortsetzen",
+  "@crashRecoveryResume": { "description": "Crash recovery resume button" },
+  "crashRecoverySave": "Als beendet speichern",
+  "@crashRecoverySave": { "description": "Crash recovery save-as-finished button" },
+  "crashRecoveryDiscard": "Verwerfen",
+  "@crashRecoveryDiscard": { "description": "Crash recovery discard button" }
 }
