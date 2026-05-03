@@ -89,6 +89,160 @@
   "@modeFinisseurSubtitle": { "description": "Finisseur mode subtitle" },
   "modeFinisseurComingSoon": "In Vorbereitung",
   "@modeFinisseurComingSoon": { "description": "Snackbar message when tapping finisseur (not yet implemented)" },
+  "finisseurConfigEyebrow": "Finisseur",
+  "@finisseurConfigEyebrow": { "description": "Eyebrow on the finisseur config screen" },
+  "finisseurConfigTitle": "Konfiguration",
+  "@finisseurConfigTitle": { "description": "Finisseur config screen title" },
+  "finisseurConfigFieldLabel": "Feldkubbs (eingeworfen)",
+  "@finisseurConfigFieldLabel": { "description": "Field-kubb stepper label" },
+  "finisseurConfigBaseLabel": "Basiskubbs · max {max}",
+  "@finisseurConfigBaseLabel": {
+    "description": "Base-kubb stepper label with current max",
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "finisseurConfigConstraint": "Total maximal 10 Kubbs · Basis maximal 5. Aktuell {current} / 10.",
+  "@finisseurConfigConstraint": {
+    "description": "Constraint hint under the stepper",
+    "placeholders": { "current": { "type": "int" } }
+  },
+  "finisseurConfigPresets": "Presets",
+  "@finisseurConfigPresets": { "description": "Preset section header" },
+  "finisseurConfigPresetStandard": "Standard",
+  "@finisseurConfigPresetStandard": { "description": "Built-in preset 7/3 label" },
+  "finisseurConfigPresetEven": "5/5",
+  "@finisseurConfigPresetEven": { "description": "Built-in preset 5/5 label" },
+  "finisseurConfigPresetAllField": "10/0",
+  "@finisseurConfigPresetAllField": { "description": "Built-in preset 10/0 label" },
+  "finisseurConfigPresetLate": "Spät",
+  "@finisseurConfigPresetLate": { "description": "Built-in preset 3/5 label" },
+  "finisseurConfigPreviewSubtitle": "{field} / {base} · 6 Stöcke",
+  "@finisseurConfigPreviewSubtitle": {
+    "description": "Preview caption under the visual kubb stack",
+    "placeholders": {
+      "field": { "type": "int" }, "base": { "type": "int" }
+    }
+  },
+  "finisseurConfigStartButton": "Finisseur starten",
+  "@finisseurConfigStartButton": { "description": "Start session button" },
+  "finisseurStickTitle": "Stock {n} / 6",
+  "@finisseurStickTitle": {
+    "description": "Stick screen title showing current stick number",
+    "placeholders": { "n": { "type": "int" } }
+  },
+  "finisseurStickEyebrow": "Finisseur · {field}/{base}",
+  "@finisseurStickEyebrow": {
+    "description": "Stick screen eyebrow with active config",
+    "placeholders": {
+      "field": { "type": "int" }, "base": { "type": "int" }
+    }
+  },
+  "finisseurStickRemainingField": "Feldkubbs übrig",
+  "@finisseurStickRemainingField": { "description": "Remaining field-kubb label" },
+  "finisseurStickRemainingBase": "Basiskubbs übrig",
+  "@finisseurStickRemainingBase": { "description": "Remaining base-kubb label" },
+  "finisseurStickFieldHeader": "Feldkubbs umgeworfen",
+  "@finisseurStickFieldHeader": { "description": "Field-kubb section header" },
+  "finisseurStickFieldRange": "0–{max}",
+  "@finisseurStickFieldRange": {
+    "description": "Field-kubb chip range",
+    "placeholders": { "max": { "type": "int" } }
+  },
+  "finisseurStickFieldEmpty": "keine Feldkubbs mehr — direkt 8m oder König",
+  "@finisseurStickFieldEmpty": { "description": "Empty field-kubb state" },
+  "finisseurStick8mLabel": "8m-Treffer",
+  "@finisseurStick8mLabel": { "description": "8m hit toggle label" },
+  "finisseurStick8mSub": "Wurf auf Basiskubb",
+  "@finisseurStick8mSub": { "description": "8m hit toggle subtitle" },
+  "finisseurStickHeliLabel": "Helikopter",
+  "@finisseurStickHeliLabel": { "description": "Heli toggle label" },
+  "finisseurStickHeliSub": "ungültig, Stock weg",
+  "@finisseurStickHeliSub": { "description": "Heli toggle subtitle" },
+  "finisseurStickKingLabel": "Königswurf",
+  "@finisseurStickKingLabel": { "description": "King toggle label" },
+  "finisseurStickKingSubDefault": "am Ende",
+  "@finisseurStickKingSubDefault": { "description": "King toggle subtitle when not yet detailed" },
+  "finisseurStickKingPosition": "Position",
+  "@finisseurStickKingPosition": { "description": "King position row label" },
+  "finisseurStickKingOutcome": "Outcome",
+  "@finisseurStickKingOutcome": { "description": "King outcome row label" },
+  "finisseurStickKingOben": "oben",
+  "@finisseurStickKingOben": { "description": "King position oben" },
+  "finisseurStickKingUnten": "unten",
+  "@finisseurStickKingUnten": { "description": "King position unten" },
+  "finisseurStickKingHit": "Treffer",
+  "@finisseurStickKingHit": { "description": "King outcome hit" },
+  "finisseurStickKingMiss": "verfehlt",
+  "@finisseurStickKingMiss": { "description": "King outcome miss" },
+  "finisseurStickPenaltyHeader": "Strafkubbs (vom letzten Halbsatz)",
+  "@finisseurStickPenaltyHeader": { "description": "Penalty kubb section header" },
+  "finisseurStickPenaltyMeta": "{sum} / {base} umgeworfen",
+  "@finisseurStickPenaltyMeta": {
+    "description": "Penalty kubb meta",
+    "placeholders": {
+      "sum": { "type": "int" }, "base": { "type": "int" }
+    }
+  },
+  "finisseurStickPenaltyFirst": "1× geworfen",
+  "@finisseurStickPenaltyFirst": { "description": "First penalty throw row label" },
+  "finisseurStickPenaltyFirstSub": "erster Strafkubb-Wurf",
+  "@finisseurStickPenaltyFirstSub": { "description": "First penalty throw subtitle" },
+  "finisseurStickPenaltySecond": "2× geworfen",
+  "@finisseurStickPenaltySecond": { "description": "Second penalty throw row label" },
+  "finisseurStickPenaltySecondSub": "zweiter Strafkubb-Wurf",
+  "@finisseurStickPenaltySecondSub": { "description": "Second penalty throw subtitle" },
+  "finisseurStickNextStock": "Stock {n}",
+  "@finisseurStickNextStock": {
+    "description": "Next-stick button label",
+    "placeholders": { "n": { "type": "int" } }
+  },
+  "finisseurStickFinish": "Session abschliessen",
+  "@finisseurStickFinish": { "description": "Final stick button label" },
+  "finisseurSummarySuccess": "Sauber finished",
+  "@finisseurSummarySuccess": { "description": "Summary tag for successful finisseur" },
+  "finisseurSummaryFail": "Nicht geschafft",
+  "@finisseurSummaryFail": { "description": "Summary tag for failed finisseur" },
+  "finisseurSummarySticksUsed": "{n} / 6",
+  "@finisseurSummarySticksUsed": {
+    "description": "Sticks used readout",
+    "placeholders": { "n": { "type": "int" } }
+  },
+  "finisseurSummarySticksUsedSubtitle": "Stöcke benötigt · {duration}",
+  "@finisseurSummarySticksUsedSubtitle": {
+    "description": "Sticks used subtitle",
+    "placeholders": { "duration": { "type": "String" } }
+  },
+  "finisseurSummaryKingRow": "Königswurf",
+  "@finisseurSummaryKingRow": { "description": "Summary row for king throw" },
+  "finisseurSummaryKingHit": "{position} durch · Treffer",
+  "@finisseurSummaryKingHit": {
+    "description": "King hit value",
+    "placeholders": { "position": { "type": "String" } }
+  },
+  "finisseurSummaryKingMiss": "verfehlt",
+  "@finisseurSummaryKingMiss": { "description": "King miss value on summary" },
+  "finisseurSummaryKingNone": "kein Wurf",
+  "@finisseurSummaryKingNone": { "description": "No king throw value on summary" },
+  "finisseurSummaryPenalties": "Strafkubbs",
+  "@finisseurSummaryPenalties": { "description": "Penalty count row label" },
+  "finisseurSummaryHeli": "Heli",
+  "@finisseurSummaryHeli": { "description": "Heli count row label" },
+  "finisseurSummaryConfig": "Finisseur · {field}/{base}",
+  "@finisseurSummaryConfig": {
+    "description": "Summary screen title for finisseur",
+    "placeholders": {
+      "field": { "type": "int" }, "base": { "type": "int" }
+    }
+  },
+  "finisseurRecentSubtitle": "{field}/{base} · {sticks} Stöcke · {when}",
+  "@finisseurRecentSubtitle": {
+    "description": "Recent list subtitle for finisseur",
+    "placeholders": {
+      "field": { "type": "int" },
+      "base": { "type": "int" },
+      "sticks": { "type": "int" },
+      "when": { "type": "String" }
+    }
+  },
   "homeAppTitle": "Brosi's Kubb",
   "@homeAppTitle": { "description": "Home screen app bar title" },
   "homeEyebrow": "Brosi's Kubb",
