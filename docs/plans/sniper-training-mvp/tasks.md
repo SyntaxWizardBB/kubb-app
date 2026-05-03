@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [14] pending | [0] in-progress | [10] done | [0] blocked
+- Status-Übersicht: [13] pending | [0] in-progress | [11] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -223,13 +223,14 @@
 - **Input**: M3-T1, M1-T5
 - **Output**: `lib/features/player/presentation/onboarding_screen.dart`, `lib/app/router.dart` (Redirect-Hook), `lib/l10n/app_de.arb`
 - **Akzeptanzkriterien**:
-  - [ ] Given kein Profil when App startet then `OnboardingScreen` erscheint
-  - [ ] Given leerer oder whitespace-Name when "Weiter"-Button geprüft then Button disabled
-  - [ ] Given Name "Lukas" when bestätigt then Profil in DB und Navigation auf `/`
-  - [ ] flutter analyze clean
-  - [ ] Widget-Test: leeres Feld → Button disabled
+  - [x] Given kein Profil when App startet then `OnboardingScreen` erscheint
+  - [x] Given leerer oder whitespace-Name when "Weiter"-Button geprüft then Button disabled
+  - [x] Given Name "Lukas" when bestätigt then Profil in DB und Navigation auf `/`
+  - [x] flutter analyze clean
+  - [x] Widget-Test: leeres Feld → Button disabled
 - **Abhängigkeiten**: M3-T1, M1-T5
-- **Status**: pending
+- **Status**: done
+- **Notiz**: Router wurde von einem Top-Level `appRouter` zu einem `goRouterProvider` umgebaut, damit der globale `redirect` ohne Tricks `ref.read(currentProfileProvider)` nutzen kann. Ein internes `ChangeNotifier` als `refreshListenable` re-evaluiert den Redirect, sobald der Profil-Stream neu emittet. `app_test.dart` und `widget_test.dart` overriden den Provider mit einer fixen Player-Row, damit die alten Smoke-Tests grün bleiben. 4 Tests neu, alle 36 Tests grün, `flutter analyze` clean.
 
 ### M3-T3: ProfileScreen (read-only)
 - **Agent**: coder
