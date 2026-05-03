@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
@@ -39,9 +40,7 @@ class _SniperConfigScreenState extends ConsumerState<SniperConfigScreen> {
     setState(() => _throwTarget = n);
   }
 
-  Future<void> _start() async {
-    final profile = ref.read(currentProfileProvider).value;
-    if (profile == null) return;
+  Future<void> _start(Player profile) async {
     await ref.read(activeSessionProvider.notifier).startSession(
           playerId: profile.id, distance: _distance, throwTarget: _throwTarget,
         );
@@ -54,7 +53,7 @@ class _SniperConfigScreenState extends ConsumerState<SniperConfigScreen> {
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
-    ref.watch(currentProfileProvider); // keep alive for synchronous read in _start
+    final profile = ref.watch(currentProfileProvider).value;
     final isCustom = !_targetPresets.contains(_throwTarget);
 
     return Scaffold(
@@ -104,7 +103,10 @@ class _SniperConfigScreenState extends ConsumerState<SniperConfigScreen> {
           const SizedBox(height: KubbTokens.space8),
           SizedBox(
             height: KubbTokens.touchComfortable,
-            child: FilledButton(onPressed: _start, child: Text(l.sniperConfigStartButton)),
+            child: FilledButton(
+              onPressed: profile == null ? null : () => _start(profile),
+              child: Text(l.sniperConfigStartButton),
+            ),
           ),
         ]),
       ),
