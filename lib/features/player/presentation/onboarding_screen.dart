@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/avatar_circle.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/player/presentation/avatar_color.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:logging/logging.dart';
 
@@ -64,6 +66,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
+              Center(
+                child: AvatarCircle(
+                  initials: AvatarColorHelper.initialsFor(_controller.text),
+                  color: AvatarColorHelper.palette.first,
+                ),
+              ),
+              const SizedBox(height: KubbTokens.space6),
               Text(
                 l.onboardingGreeting,
                 style: textTheme.titleMedium?.copyWith(color: tokens.fgMuted),
