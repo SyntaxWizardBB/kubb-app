@@ -101,5 +101,19 @@
   "homeRecentTitle": "Zuletzt",
   "@homeRecentTitle": { "description": "Section header for the recent sessions list" },
   "homeFabLabel": "Training",
-  "@homeFabLabel": { "description": "FAB label on home screen" }
+  "@homeFabLabel": { "description": "FAB label on home screen" },
+  "sniperConfigEyebrow": "Sniper-Training",
+  "@sniperConfigEyebrow": { "description": "Eyebrow above title on sniper config screen" },
+  "sniperConfigTitle": "Einstellungen",
+  "@sniperConfigTitle": { "description": "Sniper config screen title" },
+  "sniperConfigDistanceLabel": "Distanz",
+  "@sniperConfigDistanceLabel": { "description": "Distance row label" },
+  "sniperConfigTargetLabel": "Ziel-Wurfzahl",
+  "@sniperConfigTargetLabel": { "description": "Throw-target row label" },
+  "sniperConfigTargetNone": "kein Ziel",
+  "@sniperConfigTargetNone": { "description": "Throw-target value when none is set" },
+  "sniperConfigTargetCustomHint": "Eigener Wert",
+  "@sniperConfigTargetCustomHint": { "description": "Custom throw-target field hint" },
+  "sniperConfigStartButton": "Sniper starten",
+  "@sniperConfigStartButton": { "description": "Start button label on sniper config screen" }
 }
