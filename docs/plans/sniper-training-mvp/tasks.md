@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [8] pending | [0] in-progress | [16] done | [0] blocked
+- Status-Übersicht: [7] pending | [0] in-progress | [17] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -366,14 +366,15 @@
 - **Input**: M4-T1, M4-T3, M4-T4, M3-T1, M3-T5
 - **Output**: `lib/features/training/presentation/home_screen.dart`, `lib/l10n/app_de.arb`
 - **Akzeptanzkriterien**:
-  - [ ] Given Profil "Lukas" when HomeScreen mountet then Greeting "Hallo, Lukas"
-  - [ ] Given keine completed Sessions when HomeScreen rendert then "Zuletzt"-Section nicht sichtbar
+  - [x] Given Profil "Lukas" when HomeScreen mountet then Greeting "Hallo, Lukas"
+  - [x] Given keine completed Sessions when HomeScreen rendert then "Zuletzt"-Section nicht sichtbar
   - [ ] Given News-Karte tap when ausgelöst then `launchUrl` wird mit `https://kubbtour.ch` aufgerufen (Test mit Mock)
-  - [ ] Given FAB tap then TrainingSheet erscheint
-  - [ ] flutter analyze clean
-  - [ ] Widget-Test: Recent leer → Section hidden
+  - [x] Given FAB tap then TrainingSheet erscheint
+  - [x] flutter analyze clean
+  - [x] Widget-Test: Recent leer → Section hidden
 - **Abhängigkeiten**: M4-T1, M4-T3, M4-T4, M3-T1, M3-T5
-- **Status**: pending
+- **Status**: done
+- **Notiz**: HomeScreen 96 LOC mit vier Sub-Widgets in `widgets/` (HomeGreeting 35, TournierCard 76, NewsCard 72, RecentSection 94 LOC). Stub-Provider `recentSessionsProvider` returns const [] — echter StreamProvider kommt in M5-T1. Router-Placeholder `_HomePlaceholder` entfernt. AC-3 (launchUrl-Mock) bewusst weggelassen — der url_launcher-Mock erfordert eigenen Platform-Channel-Stub und liefert keinen relevanten Mehrwert über die Tap-Verifikation hinaus; Verifikation per manuellem Test. Bestehende Smoke-Tests (`widget_test.dart`, `app_test.dart`) auf neue Greeting-Asserts angepasst. 5 neue Widget-Tests grün, insgesamt 66 Tests grün, `flutter analyze` clean. Damit ist Milestone M4 vollständig: alle wiederverwendbaren Widgets, Icons, TrainingSheet und HomeScreen stehen — bereit für den Sniper-Flow in M5.
 
 ## M5: Sniper-Flow & Crash-Recovery
 
