@@ -41,6 +41,13 @@ void main() {
             return const Scaffold(body: Text('config-route'));
           },
         ),
+        GoRoute(
+          path: '/training/finisseur/config',
+          builder: (context, state) {
+            onNavigated('/training/finisseur/config');
+            return const Scaffold(body: Text('finisseur-route'));
+          },
+        ),
       ],
     );
   }
@@ -74,17 +81,21 @@ void main() {
     expect(find.text('config-route'), findsOneWidget);
   });
 
-  testWidgets('tap on finisseur card shows coming-soon snackbar',
+  testWidgets('tap on finisseur card navigates to its config route',
       (tester) async {
-    await pumpHost(tester, buildRouter(onNavigated: (_) {}));
+    String? navigated;
+    await pumpHost(
+      tester,
+      buildRouter(onNavigated: (route) => navigated = route),
+    );
 
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Finisseur'));
-    await tester.pump(); // start sheet pop animation
-    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pumpAndSettle();
 
-    expect(find.text('In Vorbereitung'), findsOneWidget);
+    expect(navigated, '/training/finisseur/config');
+    expect(find.text('finisseur-route'), findsOneWidget);
   });
 }

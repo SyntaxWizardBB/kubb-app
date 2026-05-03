@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/data/app_database.dart';
+import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
 import 'package:kubb_app/features/training/data/training_repository.dart';
@@ -7,6 +8,7 @@ import 'package:kubb_app/features/training/data/training_repository.dart';
 const _kindHit = 'hit';
 const _kindMiss = 'miss';
 const _kindHeli = 'heli';
+const _modeFinisseur = 'finisseur';
 
 /// Lightweight projection of a completed training session for the home list.
 class RecentSessionView {
@@ -31,19 +33,26 @@ final recentSessionsProvider =
   final heliTracking =
       ref.watch(appSettingsProvider).value?.heliTracking ?? true;
   final repo = ref.watch(trainingRepositoryProvider);
+  final db = ref.watch(appDatabaseProvider);
 
   return repo
       .watchRecentCompleted(playerId: profile.id)
       .asyncMap((sessions) async {
     final views = <RecentSessionView>[];
     for (final session in sessions) {
-      views.add(await _toView(repo, session, heliTracking: heliTracking));
+      if (session.mode == _modeFinisseur) {
+        views.add(await _toFinisseurView(db, session));
+      } else {
+        views.add(
+          await _toSniperView(repo, session, heliTracking: heliTracking),
+        );
+      }
     }
     return views;
   });
 });
 
-Future<RecentSessionView> _toView(
+Future<RecentSessionView> _toSniperView(
   TrainingRepository repo,
   Session session, {
   required bool heliTracking,
@@ -74,6 +83,34 @@ Future<RecentSessionView> _toView(
     hitRatePercent: hitRate,
     subtitle: '${session.distanceMeters.toStringAsFixed(1)} m · '
         '$totalThrows Würfe · ${_relativeTime(completedAt)}',
+  );
+}
+
+Future<RecentSessionView> _toFinisseurView(
+  AppDatabase db,
+  Session session,
+) async {
+  final sticks = await db.finisseurStickEventDao.forSession(session.id);
+  final used = sticks
+      .where((s) =>
+          s.fieldKubbsHit > 0 ||
+          s.eightMHit ||
+          s.heliThrow ||
+          s.kingHit != null ||
+          s.penaltyHits1 + s.penaltyHits2 > 0)
+      .length;
+  final field = session.finField ?? 0;
+  final base = session.finBase ?? 0;
+  final fieldDown = sticks.fold<int>(0, (a, s) => a + s.fieldKubbsHit);
+  final baseDown = sticks.fold<int>(0, (a, s) => a + (s.eightMHit ? 1 : 0));
+  final kingHit = sticks.any((s) => s.kingHit ?? false);
+  final success = fieldDown >= field && baseDown >= base && kingHit;
+  final ratePct = success ? 100 : 0;
+  final completedAt = session.completedAt ?? session.startedAt;
+  return RecentSessionView(
+    modeTag: 'Finisseur',
+    hitRatePercent: ratePct,
+    subtitle: '$field/$base · $used Stöcke · ${_relativeTime(completedAt)}',
   );
 }
 

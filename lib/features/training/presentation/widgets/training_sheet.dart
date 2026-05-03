@@ -43,9 +43,7 @@ class TrainingSheet extends StatelessWidget {
             trailing: '7/3',
             onTap: () {
               Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l.modeFinisseurComingSoon)),
-              );
+              context.go('/training/finisseur/config');
             },
           ),
         ],
