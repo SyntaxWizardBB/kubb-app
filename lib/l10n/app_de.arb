@@ -40,6 +40,18 @@
   "@profileSinceLabel": {
     "description": "Profile created-at label"
   },
+  "profileEditButton": "Bearbeiten",
+  "@profileEditButton": { "description": "Read-mode edit toggle button" },
+  "profileSaveButton": "Speichern",
+  "@profileSaveButton": { "description": "Save edits to profile" },
+  "profileCancelButton": "Abbrechen",
+  "@profileCancelButton": { "description": "Discard edits to profile" },
+  "profileNameLabel": "Anzeigename",
+  "@profileNameLabel": { "description": "Label above the name field in edit mode" },
+  "profileColorLabel": "Avatar-Farbe",
+  "@profileColorLabel": { "description": "Label above the color chips in edit mode" },
+  "profileUpdateError": "Profil konnte nicht gespeichert werden — bitte erneut versuchen.",
+  "@profileUpdateError": { "description": "Snackbar shown when profile update fails" },
   "settingsTitle": "Einstellungen",
   "@settingsTitle": { "description": "App settings modal title" },
   "settingsLanguage": "Sprache",
