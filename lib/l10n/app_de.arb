@@ -58,5 +58,19 @@
   "@settingsVersion": {
     "description": "App version footer",
     "placeholders": { "version": {"type": "String"}, "build": {"type": "String"} }
-  }
+  },
+  "trainingSheetEyebrow": "Neue Session",
+  "@trainingSheetEyebrow": { "description": "Training sheet eyebrow above title" },
+  "trainingSheetTitle": "Welcher Modus?",
+  "@trainingSheetTitle": { "description": "Training sheet title" },
+  "modeSniperTitle": "Sniper-Training",
+  "@modeSniperTitle": { "description": "Sniper mode title" },
+  "modeSniperSubtitle": "Trefferquote · Konstanz",
+  "@modeSniperSubtitle": { "description": "Sniper mode subtitle" },
+  "modeFinisseurTitle": "Finisseur",
+  "@modeFinisseurTitle": { "description": "Finisseur mode title" },
+  "modeFinisseurSubtitle": "Match-Endspiel · 6 Stöcke",
+  "@modeFinisseurSubtitle": { "description": "Finisseur mode subtitle" },
+  "modeFinisseurComingSoon": "In Vorbereitung",
+  "@modeFinisseurComingSoon": { "description": "Snackbar message when tapping finisseur (not yet implemented)" }
 }
