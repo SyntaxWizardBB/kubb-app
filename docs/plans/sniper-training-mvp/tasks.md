@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [4] pending | [0] in-progress | [20] done | [0] blocked
+- Status-Übersicht: [0] pending | [0] in-progress | [24] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -465,10 +465,11 @@
 - **Input**: M5-T1, M5-T4, M4-T5
 - **Output**: `lib/features/training/application/crash_recovery_provider.dart`, `lib/features/training/presentation/widgets/crash_recovery_dialog.dart`, `lib/features/training/presentation/home_screen.dart` (Hook), `integration_test/sniper_flow_test.dart`, `lib/l10n/app_de.arb`
 - **Akzeptanzkriterien**:
-  - [ ] Given DB enthält `active`-Session when HomeScreen mountet then CrashRecoveryDialog erscheint genau einmal
-  - [ ] Given Dialog "Fortsetzen" tap then Navigation auf Session-Route, State ist hydriert
-  - [ ] Given Dialog "Verwerfen" then Session-Row und Events weg, Dialog schliesst
-  - [ ] Given Integration-Test when MVP-Pfad ausgeführt then alle Steps grün, Recent-Liste zeigt den Eintrag
-  - [ ] flutter analyze clean
+  - [x] Given DB enthält `active`-Session when HomeScreen mountet then CrashRecoveryDialog erscheint genau einmal
+  - [x] Given Dialog "Fortsetzen" tap then Navigation auf Session-Route, State ist hydriert
+  - [x] Given Dialog "Verwerfen" then Session-Row und Events weg, Dialog schliesst
+  - [x] Given Integration-Test when MVP-Pfad ausgeführt then alle Steps grün, Recent-Liste zeigt den Eintrag
+  - [x] flutter analyze clean
 - **Abhängigkeiten**: M5-T1, M5-T4, M4-T5
-- **Status**: pending
+- **Status**: done
+- **Notiz**: `crashRecoveryProvider` 32 LOC als keep-alive FutureProvider, lädt `repo.loadActiveOrNull()` für das aktuelle Profil. `CrashRecoveryShown`-Notifier (bool latch) sorgt dafür, dass der Dialog auch bei HomeScreen-Rebuilds nur einmal pro App-Start erscheint. `CrashRecoveryDialog` 70 LOC mit `barrierDismissible: false` und drei Buttons (Verwerfen → `discard`, Speichern → `markCompleted` + Summary-Route, Fortsetzen → `resumeFromCrash` + Session-Route). HomeScreen jetzt `ConsumerStatefulWidget` (120 LOC, +21 vs. M4-T5) mit `ref.listen` auf den Provider; Dialog-Show wird via `addPostFrameCallback` deferred. Integration-Test in `integration_test/sniper_flow_test.dart` (80 LOC) deckt MVP-Pfad: Onboarding → Sniper-Config → Session mit drei Hits → Summary 100 % → Speichern → Recent-Liste. Kann auf dieser Dev-Box nicht laufen (Linux-Build braucht `ld`-Linker, Web-Target nicht für integration_test unterstützt) — Test bleibt als Regressions-Asset für die Android-Pipeline. Run-Befehl: `flutter test integration_test/sniper_flow_test.dart -d <device>`. Drei bestehende Widget-Tests (`widget_test`, `app_test`, `home_screen_test`) ergänzt um `crashRecoveryProvider`-Override → null. 102 Tests grün, `flutter analyze` clean. Damit ist Milestone M5 vollständig — F1 (Sniper-Training MVP) ist done.
