@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [9] pending | [0] in-progress | [15] done | [0] blocked
+- Status-Übersicht: [8] pending | [0] in-progress | [16] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -349,11 +349,12 @@
 - **Input**: M4-T1
 - **Output**: `lib/features/training/presentation/widgets/training_sheet.dart`, `lib/l10n/app_de.arb`
 - **Akzeptanzkriterien**:
-  - [ ] Given Sheet offen when Sniper-Karte tap then go_router pushed `/training/sniper/config`
-  - [ ] Given Finisseur-Karte tap then Snackbar "In Vorbereitung", keine Navigation
-  - [ ] flutter analyze clean
+  - [x] Given Sheet offen when Sniper-Karte tap then go_router navigiert auf `/training/sniper/config`
+  - [x] Given Finisseur-Karte tap then Snackbar "In Vorbereitung", keine Navigation
+  - [x] flutter analyze clean
 - **Abhängigkeiten**: M4-T1
-- **Status**: pending
+- **Status**: done
+- **Notiz**: TrainingSheet 149 LOC mit drei Stateless-Klassen (Sheet + Header + ModeCard). Header wird via `KubbBottomSheet.header`-Slot übergeben — passt zur bestehenden Sheet-API. Sniper-Tap ruft erst `Navigator.pop` (Sheet schliessen) dann `context.go('/training/sniper/config')`; bewusst `go` statt `push` weil Top-Level-Navigation und kein Future-Return wegen `discarded_futures`-Lint. Finisseur-Tap pop't das Sheet und feuert ScaffoldMessenger-Snackbar. Drei Widget-Tests grün (Render, Sniper-Navigation via Test-Router, Finisseur-Snackbar). 61 Tests grün, `flutter analyze` clean. Status-Übersicht: 8 pending, 16 done.
 
 ### M4-T5: HomeScreen mit Recent-Karte, Tournier, News-Link
 - **Agent**: coder
