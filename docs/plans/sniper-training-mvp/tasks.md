@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [12] pending | [0] in-progress | [12] done | [0] blocked
+- Status-Übersicht: [11] pending | [0] in-progress | [13] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -259,12 +259,13 @@
 - **Input**: M2-T3
 - **Output**: `lib/core/ui/settings/app_settings_provider.dart`, `lib/app/app.dart` (Theme-Anbindung)
 - **Akzeptanzkriterien**:
-  - [ ] Given `setTheme(ThemeChoice.dark)` when aufgerufen then `state` ist Dark
-  - [ ] Given Settings persistiert when App neu startet then geladene Settings sind die letzten gespeicherten
-  - [ ] Given `setHeliTracking(false)` when der Notifier feuert then UI-Watcher bekommen das neue State-Objekt
-  - [ ] flutter analyze clean
+  - [x] Given `setTheme(ThemeChoice.dark)` when aufgerufen then `state` ist Dark
+  - [x] Given Settings persistiert when App neu startet then geladene Settings sind die letzten gespeicherten
+  - [x] Given `setHeliTracking(false)` when der Notifier feuert then UI-Watcher bekommen das neue State-Objekt
+  - [x] flutter analyze clean
 - **Abhängigkeiten**: M2-T3
-- **Status**: pending
+- **Status**: done
+- **Notiz**: Notifier hängt am `appDatabaseProvider` und nutzt das bestehende `AppSettings.fromMap` für den Bootstrap. Die drei bool-Setter sind named-`{required bool value}` (very_good_analysis verbietet positionale Bool-Parameter). `app.dart` mappt jetzt `appSettingsProvider` → ThemeChoice mit Light-Fallback in loading/error. Vier neue Tests grün (Default-Build, setTheme, setHeliTracking, Persistenz-Roundtrip via fresh container). `app_test.dart` overrided den Notifier statt des alten Stub-Providers. Insgesamt 43 Tests grün, `flutter analyze` clean.
 
 ### M3-T5: AppSettingsModal
 - **Agent**: coder
