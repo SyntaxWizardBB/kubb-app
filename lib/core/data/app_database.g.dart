@@ -409,6 +409,16 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _modeMeta = const VerificationMeta('mode');
+  @override
+  late final GeneratedColumn<String> mode = GeneratedColumn<String>(
+    'mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('sniper'),
+  );
   static const VerificationMeta _distanceMetersMeta = const VerificationMeta(
     'distanceMeters',
   );
@@ -426,6 +436,28 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
   @override
   late final GeneratedColumn<int> throwTarget = GeneratedColumn<int>(
     'throw_target',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _finFieldMeta = const VerificationMeta(
+    'finField',
+  );
+  @override
+  late final GeneratedColumn<int> finField = GeneratedColumn<int>(
+    'fin_field',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _finBaseMeta = const VerificationMeta(
+    'finBase',
+  );
+  @override
+  late final GeneratedColumn<int> finBase = GeneratedColumn<int>(
+    'fin_base',
     aliasedName,
     true,
     type: DriftSqlType.int,
@@ -467,8 +499,11 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     id,
     playerId,
     kind,
+    mode,
     distanceMeters,
     throwTarget,
+    finField,
+    finBase,
     status,
     startedAt,
     completedAt,
@@ -506,6 +541,12 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     } else if (isInserting) {
       context.missing(_kindMeta);
     }
+    if (data.containsKey('mode')) {
+      context.handle(
+        _modeMeta,
+        mode.isAcceptableOrUnknown(data['mode']!, _modeMeta),
+      );
+    }
     if (data.containsKey('distance_meters')) {
       context.handle(
         _distanceMetersMeta,
@@ -524,6 +565,18 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
           data['throw_target']!,
           _throwTargetMeta,
         ),
+      );
+    }
+    if (data.containsKey('fin_field')) {
+      context.handle(
+        _finFieldMeta,
+        finField.isAcceptableOrUnknown(data['fin_field']!, _finFieldMeta),
+      );
+    }
+    if (data.containsKey('fin_base')) {
+      context.handle(
+        _finBaseMeta,
+        finBase.isAcceptableOrUnknown(data['fin_base']!, _finBaseMeta),
       );
     }
     if (data.containsKey('status')) {
@@ -572,6 +625,10 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.string,
         data['${effectivePrefix}kind'],
       )!,
+      mode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mode'],
+      )!,
       distanceMeters: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}distance_meters'],
@@ -579,6 +636,14 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
       throwTarget: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}throw_target'],
+      ),
+      finField: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}fin_field'],
+      ),
+      finBase: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}fin_base'],
       ),
       status: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -605,8 +670,11 @@ class Session extends DataClass implements Insertable<Session> {
   final String id;
   final String playerId;
   final String kind;
+  final String mode;
   final double distanceMeters;
   final int? throwTarget;
+  final int? finField;
+  final int? finBase;
   final String status;
   final DateTime startedAt;
   final DateTime? completedAt;
@@ -614,8 +682,11 @@ class Session extends DataClass implements Insertable<Session> {
     required this.id,
     required this.playerId,
     required this.kind,
+    required this.mode,
     required this.distanceMeters,
     this.throwTarget,
+    this.finField,
+    this.finBase,
     required this.status,
     required this.startedAt,
     this.completedAt,
@@ -626,9 +697,16 @@ class Session extends DataClass implements Insertable<Session> {
     map['id'] = Variable<String>(id);
     map['player_id'] = Variable<String>(playerId);
     map['kind'] = Variable<String>(kind);
+    map['mode'] = Variable<String>(mode);
     map['distance_meters'] = Variable<double>(distanceMeters);
     if (!nullToAbsent || throwTarget != null) {
       map['throw_target'] = Variable<int>(throwTarget);
+    }
+    if (!nullToAbsent || finField != null) {
+      map['fin_field'] = Variable<int>(finField);
+    }
+    if (!nullToAbsent || finBase != null) {
+      map['fin_base'] = Variable<int>(finBase);
     }
     map['status'] = Variable<String>(status);
     map['started_at'] = Variable<DateTime>(startedAt);
@@ -643,10 +721,17 @@ class Session extends DataClass implements Insertable<Session> {
       id: Value(id),
       playerId: Value(playerId),
       kind: Value(kind),
+      mode: Value(mode),
       distanceMeters: Value(distanceMeters),
       throwTarget: throwTarget == null && nullToAbsent
           ? const Value.absent()
           : Value(throwTarget),
+      finField: finField == null && nullToAbsent
+          ? const Value.absent()
+          : Value(finField),
+      finBase: finBase == null && nullToAbsent
+          ? const Value.absent()
+          : Value(finBase),
       status: Value(status),
       startedAt: Value(startedAt),
       completedAt: completedAt == null && nullToAbsent
@@ -664,8 +749,11 @@ class Session extends DataClass implements Insertable<Session> {
       id: serializer.fromJson<String>(json['id']),
       playerId: serializer.fromJson<String>(json['playerId']),
       kind: serializer.fromJson<String>(json['kind']),
+      mode: serializer.fromJson<String>(json['mode']),
       distanceMeters: serializer.fromJson<double>(json['distanceMeters']),
       throwTarget: serializer.fromJson<int?>(json['throwTarget']),
+      finField: serializer.fromJson<int?>(json['finField']),
+      finBase: serializer.fromJson<int?>(json['finBase']),
       status: serializer.fromJson<String>(json['status']),
       startedAt: serializer.fromJson<DateTime>(json['startedAt']),
       completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
@@ -678,8 +766,11 @@ class Session extends DataClass implements Insertable<Session> {
       'id': serializer.toJson<String>(id),
       'playerId': serializer.toJson<String>(playerId),
       'kind': serializer.toJson<String>(kind),
+      'mode': serializer.toJson<String>(mode),
       'distanceMeters': serializer.toJson<double>(distanceMeters),
       'throwTarget': serializer.toJson<int?>(throwTarget),
+      'finField': serializer.toJson<int?>(finField),
+      'finBase': serializer.toJson<int?>(finBase),
       'status': serializer.toJson<String>(status),
       'startedAt': serializer.toJson<DateTime>(startedAt),
       'completedAt': serializer.toJson<DateTime?>(completedAt),
@@ -690,8 +781,11 @@ class Session extends DataClass implements Insertable<Session> {
     String? id,
     String? playerId,
     String? kind,
+    String? mode,
     double? distanceMeters,
     Value<int?> throwTarget = const Value.absent(),
+    Value<int?> finField = const Value.absent(),
+    Value<int?> finBase = const Value.absent(),
     String? status,
     DateTime? startedAt,
     Value<DateTime?> completedAt = const Value.absent(),
@@ -699,8 +793,11 @@ class Session extends DataClass implements Insertable<Session> {
     id: id ?? this.id,
     playerId: playerId ?? this.playerId,
     kind: kind ?? this.kind,
+    mode: mode ?? this.mode,
     distanceMeters: distanceMeters ?? this.distanceMeters,
     throwTarget: throwTarget.present ? throwTarget.value : this.throwTarget,
+    finField: finField.present ? finField.value : this.finField,
+    finBase: finBase.present ? finBase.value : this.finBase,
     status: status ?? this.status,
     startedAt: startedAt ?? this.startedAt,
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
@@ -710,12 +807,15 @@ class Session extends DataClass implements Insertable<Session> {
       id: data.id.present ? data.id.value : this.id,
       playerId: data.playerId.present ? data.playerId.value : this.playerId,
       kind: data.kind.present ? data.kind.value : this.kind,
+      mode: data.mode.present ? data.mode.value : this.mode,
       distanceMeters: data.distanceMeters.present
           ? data.distanceMeters.value
           : this.distanceMeters,
       throwTarget: data.throwTarget.present
           ? data.throwTarget.value
           : this.throwTarget,
+      finField: data.finField.present ? data.finField.value : this.finField,
+      finBase: data.finBase.present ? data.finBase.value : this.finBase,
       status: data.status.present ? data.status.value : this.status,
       startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
       completedAt: data.completedAt.present
@@ -730,8 +830,11 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('id: $id, ')
           ..write('playerId: $playerId, ')
           ..write('kind: $kind, ')
+          ..write('mode: $mode, ')
           ..write('distanceMeters: $distanceMeters, ')
           ..write('throwTarget: $throwTarget, ')
+          ..write('finField: $finField, ')
+          ..write('finBase: $finBase, ')
           ..write('status: $status, ')
           ..write('startedAt: $startedAt, ')
           ..write('completedAt: $completedAt')
@@ -744,8 +847,11 @@ class Session extends DataClass implements Insertable<Session> {
     id,
     playerId,
     kind,
+    mode,
     distanceMeters,
     throwTarget,
+    finField,
+    finBase,
     status,
     startedAt,
     completedAt,
@@ -757,8 +863,11 @@ class Session extends DataClass implements Insertable<Session> {
           other.id == this.id &&
           other.playerId == this.playerId &&
           other.kind == this.kind &&
+          other.mode == this.mode &&
           other.distanceMeters == this.distanceMeters &&
           other.throwTarget == this.throwTarget &&
+          other.finField == this.finField &&
+          other.finBase == this.finBase &&
           other.status == this.status &&
           other.startedAt == this.startedAt &&
           other.completedAt == this.completedAt);
@@ -768,8 +877,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<String> id;
   final Value<String> playerId;
   final Value<String> kind;
+  final Value<String> mode;
   final Value<double> distanceMeters;
   final Value<int?> throwTarget;
+  final Value<int?> finField;
+  final Value<int?> finBase;
   final Value<String> status;
   final Value<DateTime> startedAt;
   final Value<DateTime?> completedAt;
@@ -778,8 +890,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.id = const Value.absent(),
     this.playerId = const Value.absent(),
     this.kind = const Value.absent(),
+    this.mode = const Value.absent(),
     this.distanceMeters = const Value.absent(),
     this.throwTarget = const Value.absent(),
+    this.finField = const Value.absent(),
+    this.finBase = const Value.absent(),
     this.status = const Value.absent(),
     this.startedAt = const Value.absent(),
     this.completedAt = const Value.absent(),
@@ -789,8 +904,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     required String id,
     required String playerId,
     required String kind,
+    this.mode = const Value.absent(),
     required double distanceMeters,
     this.throwTarget = const Value.absent(),
+    this.finField = const Value.absent(),
+    this.finBase = const Value.absent(),
     required String status,
     required DateTime startedAt,
     this.completedAt = const Value.absent(),
@@ -805,8 +923,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<String>? id,
     Expression<String>? playerId,
     Expression<String>? kind,
+    Expression<String>? mode,
     Expression<double>? distanceMeters,
     Expression<int>? throwTarget,
+    Expression<int>? finField,
+    Expression<int>? finBase,
     Expression<String>? status,
     Expression<DateTime>? startedAt,
     Expression<DateTime>? completedAt,
@@ -816,8 +937,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (id != null) 'id': id,
       if (playerId != null) 'player_id': playerId,
       if (kind != null) 'kind': kind,
+      if (mode != null) 'mode': mode,
       if (distanceMeters != null) 'distance_meters': distanceMeters,
       if (throwTarget != null) 'throw_target': throwTarget,
+      if (finField != null) 'fin_field': finField,
+      if (finBase != null) 'fin_base': finBase,
       if (status != null) 'status': status,
       if (startedAt != null) 'started_at': startedAt,
       if (completedAt != null) 'completed_at': completedAt,
@@ -829,8 +953,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<String>? id,
     Value<String>? playerId,
     Value<String>? kind,
+    Value<String>? mode,
     Value<double>? distanceMeters,
     Value<int?>? throwTarget,
+    Value<int?>? finField,
+    Value<int?>? finBase,
     Value<String>? status,
     Value<DateTime>? startedAt,
     Value<DateTime?>? completedAt,
@@ -840,8 +967,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       id: id ?? this.id,
       playerId: playerId ?? this.playerId,
       kind: kind ?? this.kind,
+      mode: mode ?? this.mode,
       distanceMeters: distanceMeters ?? this.distanceMeters,
       throwTarget: throwTarget ?? this.throwTarget,
+      finField: finField ?? this.finField,
+      finBase: finBase ?? this.finBase,
       status: status ?? this.status,
       startedAt: startedAt ?? this.startedAt,
       completedAt: completedAt ?? this.completedAt,
@@ -861,11 +991,20 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (kind.present) {
       map['kind'] = Variable<String>(kind.value);
     }
+    if (mode.present) {
+      map['mode'] = Variable<String>(mode.value);
+    }
     if (distanceMeters.present) {
       map['distance_meters'] = Variable<double>(distanceMeters.value);
     }
     if (throwTarget.present) {
       map['throw_target'] = Variable<int>(throwTarget.value);
+    }
+    if (finField.present) {
+      map['fin_field'] = Variable<int>(finField.value);
+    }
+    if (finBase.present) {
+      map['fin_base'] = Variable<int>(finBase.value);
     }
     if (status.present) {
       map['status'] = Variable<String>(status.value);
@@ -888,8 +1027,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('id: $id, ')
           ..write('playerId: $playerId, ')
           ..write('kind: $kind, ')
+          ..write('mode: $mode, ')
           ..write('distanceMeters: $distanceMeters, ')
           ..write('throwTarget: $throwTarget, ')
+          ..write('finField: $finField, ')
+          ..write('finBase: $finBase, ')
           ..write('status: $status, ')
           ..write('startedAt: $startedAt, ')
           ..write('completedAt: $completedAt, ')
@@ -1477,6 +1619,690 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingsTableData> {
   }
 }
 
+class $FinisseurStickEventsTable extends FinisseurStickEvents
+    with TableInfo<$FinisseurStickEventsTable, FinisseurStickEvent> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinisseurStickEventsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES sessions (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _stickIndexMeta = const VerificationMeta(
+    'stickIndex',
+  );
+  @override
+  late final GeneratedColumn<int> stickIndex = GeneratedColumn<int>(
+    'stick_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fieldKubbsHitMeta = const VerificationMeta(
+    'fieldKubbsHit',
+  );
+  @override
+  late final GeneratedColumn<int> fieldKubbsHit = GeneratedColumn<int>(
+    'field_kubbs_hit',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _eightMHitMeta = const VerificationMeta(
+    'eightMHit',
+  );
+  @override
+  late final GeneratedColumn<bool> eightMHit = GeneratedColumn<bool>(
+    'eight_m_hit',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("eight_m_hit" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _heliThrowMeta = const VerificationMeta(
+    'heliThrow',
+  );
+  @override
+  late final GeneratedColumn<bool> heliThrow = GeneratedColumn<bool>(
+    'heli_throw',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("heli_throw" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _kingHitMeta = const VerificationMeta(
+    'kingHit',
+  );
+  @override
+  late final GeneratedColumn<bool> kingHit = GeneratedColumn<bool>(
+    'king_hit',
+    aliasedName,
+    true,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("king_hit" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _kingPositionMeta = const VerificationMeta(
+    'kingPosition',
+  );
+  @override
+  late final GeneratedColumn<String> kingPosition = GeneratedColumn<String>(
+    'king_position',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _penaltyHits1Meta = const VerificationMeta(
+    'penaltyHits1',
+  );
+  @override
+  late final GeneratedColumn<int> penaltyHits1 = GeneratedColumn<int>(
+    'penalty_hits1',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _penaltyHits2Meta = const VerificationMeta(
+    'penaltyHits2',
+  );
+  @override
+  late final GeneratedColumn<int> penaltyHits2 = GeneratedColumn<int>(
+    'penalty_hits2',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    sessionId,
+    stickIndex,
+    fieldKubbsHit,
+    eightMHit,
+    heliThrow,
+    kingHit,
+    kingPosition,
+    penaltyHits1,
+    penaltyHits2,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'finisseur_stick_events';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinisseurStickEvent> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('stick_index')) {
+      context.handle(
+        _stickIndexMeta,
+        stickIndex.isAcceptableOrUnknown(data['stick_index']!, _stickIndexMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_stickIndexMeta);
+    }
+    if (data.containsKey('field_kubbs_hit')) {
+      context.handle(
+        _fieldKubbsHitMeta,
+        fieldKubbsHit.isAcceptableOrUnknown(
+          data['field_kubbs_hit']!,
+          _fieldKubbsHitMeta,
+        ),
+      );
+    }
+    if (data.containsKey('eight_m_hit')) {
+      context.handle(
+        _eightMHitMeta,
+        eightMHit.isAcceptableOrUnknown(data['eight_m_hit']!, _eightMHitMeta),
+      );
+    }
+    if (data.containsKey('heli_throw')) {
+      context.handle(
+        _heliThrowMeta,
+        heliThrow.isAcceptableOrUnknown(data['heli_throw']!, _heliThrowMeta),
+      );
+    }
+    if (data.containsKey('king_hit')) {
+      context.handle(
+        _kingHitMeta,
+        kingHit.isAcceptableOrUnknown(data['king_hit']!, _kingHitMeta),
+      );
+    }
+    if (data.containsKey('king_position')) {
+      context.handle(
+        _kingPositionMeta,
+        kingPosition.isAcceptableOrUnknown(
+          data['king_position']!,
+          _kingPositionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('penalty_hits1')) {
+      context.handle(
+        _penaltyHits1Meta,
+        penaltyHits1.isAcceptableOrUnknown(
+          data['penalty_hits1']!,
+          _penaltyHits1Meta,
+        ),
+      );
+    }
+    if (data.containsKey('penalty_hits2')) {
+      context.handle(
+        _penaltyHits2Meta,
+        penaltyHits2.isAcceptableOrUnknown(
+          data['penalty_hits2']!,
+          _penaltyHits2Meta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FinisseurStickEvent map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinisseurStickEvent(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      stickIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}stick_index'],
+      )!,
+      fieldKubbsHit: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}field_kubbs_hit'],
+      )!,
+      eightMHit: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}eight_m_hit'],
+      )!,
+      heliThrow: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}heli_throw'],
+      )!,
+      kingHit: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}king_hit'],
+      ),
+      kingPosition: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}king_position'],
+      ),
+      penaltyHits1: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}penalty_hits1'],
+      )!,
+      penaltyHits2: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}penalty_hits2'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FinisseurStickEventsTable createAlias(String alias) {
+    return $FinisseurStickEventsTable(attachedDatabase, alias);
+  }
+}
+
+class FinisseurStickEvent extends DataClass
+    implements Insertable<FinisseurStickEvent> {
+  final String id;
+  final String sessionId;
+  final int stickIndex;
+  final int fieldKubbsHit;
+  final bool eightMHit;
+  final bool heliThrow;
+  final bool? kingHit;
+  final String? kingPosition;
+  final int penaltyHits1;
+  final int penaltyHits2;
+  final DateTime createdAt;
+  const FinisseurStickEvent({
+    required this.id,
+    required this.sessionId,
+    required this.stickIndex,
+    required this.fieldKubbsHit,
+    required this.eightMHit,
+    required this.heliThrow,
+    this.kingHit,
+    this.kingPosition,
+    required this.penaltyHits1,
+    required this.penaltyHits2,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['session_id'] = Variable<String>(sessionId);
+    map['stick_index'] = Variable<int>(stickIndex);
+    map['field_kubbs_hit'] = Variable<int>(fieldKubbsHit);
+    map['eight_m_hit'] = Variable<bool>(eightMHit);
+    map['heli_throw'] = Variable<bool>(heliThrow);
+    if (!nullToAbsent || kingHit != null) {
+      map['king_hit'] = Variable<bool>(kingHit);
+    }
+    if (!nullToAbsent || kingPosition != null) {
+      map['king_position'] = Variable<String>(kingPosition);
+    }
+    map['penalty_hits1'] = Variable<int>(penaltyHits1);
+    map['penalty_hits2'] = Variable<int>(penaltyHits2);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  FinisseurStickEventsCompanion toCompanion(bool nullToAbsent) {
+    return FinisseurStickEventsCompanion(
+      id: Value(id),
+      sessionId: Value(sessionId),
+      stickIndex: Value(stickIndex),
+      fieldKubbsHit: Value(fieldKubbsHit),
+      eightMHit: Value(eightMHit),
+      heliThrow: Value(heliThrow),
+      kingHit: kingHit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(kingHit),
+      kingPosition: kingPosition == null && nullToAbsent
+          ? const Value.absent()
+          : Value(kingPosition),
+      penaltyHits1: Value(penaltyHits1),
+      penaltyHits2: Value(penaltyHits2),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory FinisseurStickEvent.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinisseurStickEvent(
+      id: serializer.fromJson<String>(json['id']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      stickIndex: serializer.fromJson<int>(json['stickIndex']),
+      fieldKubbsHit: serializer.fromJson<int>(json['fieldKubbsHit']),
+      eightMHit: serializer.fromJson<bool>(json['eightMHit']),
+      heliThrow: serializer.fromJson<bool>(json['heliThrow']),
+      kingHit: serializer.fromJson<bool?>(json['kingHit']),
+      kingPosition: serializer.fromJson<String?>(json['kingPosition']),
+      penaltyHits1: serializer.fromJson<int>(json['penaltyHits1']),
+      penaltyHits2: serializer.fromJson<int>(json['penaltyHits2']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'sessionId': serializer.toJson<String>(sessionId),
+      'stickIndex': serializer.toJson<int>(stickIndex),
+      'fieldKubbsHit': serializer.toJson<int>(fieldKubbsHit),
+      'eightMHit': serializer.toJson<bool>(eightMHit),
+      'heliThrow': serializer.toJson<bool>(heliThrow),
+      'kingHit': serializer.toJson<bool?>(kingHit),
+      'kingPosition': serializer.toJson<String?>(kingPosition),
+      'penaltyHits1': serializer.toJson<int>(penaltyHits1),
+      'penaltyHits2': serializer.toJson<int>(penaltyHits2),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  FinisseurStickEvent copyWith({
+    String? id,
+    String? sessionId,
+    int? stickIndex,
+    int? fieldKubbsHit,
+    bool? eightMHit,
+    bool? heliThrow,
+    Value<bool?> kingHit = const Value.absent(),
+    Value<String?> kingPosition = const Value.absent(),
+    int? penaltyHits1,
+    int? penaltyHits2,
+    DateTime? createdAt,
+  }) => FinisseurStickEvent(
+    id: id ?? this.id,
+    sessionId: sessionId ?? this.sessionId,
+    stickIndex: stickIndex ?? this.stickIndex,
+    fieldKubbsHit: fieldKubbsHit ?? this.fieldKubbsHit,
+    eightMHit: eightMHit ?? this.eightMHit,
+    heliThrow: heliThrow ?? this.heliThrow,
+    kingHit: kingHit.present ? kingHit.value : this.kingHit,
+    kingPosition: kingPosition.present ? kingPosition.value : this.kingPosition,
+    penaltyHits1: penaltyHits1 ?? this.penaltyHits1,
+    penaltyHits2: penaltyHits2 ?? this.penaltyHits2,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  FinisseurStickEvent copyWithCompanion(FinisseurStickEventsCompanion data) {
+    return FinisseurStickEvent(
+      id: data.id.present ? data.id.value : this.id,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      stickIndex: data.stickIndex.present
+          ? data.stickIndex.value
+          : this.stickIndex,
+      fieldKubbsHit: data.fieldKubbsHit.present
+          ? data.fieldKubbsHit.value
+          : this.fieldKubbsHit,
+      eightMHit: data.eightMHit.present ? data.eightMHit.value : this.eightMHit,
+      heliThrow: data.heliThrow.present ? data.heliThrow.value : this.heliThrow,
+      kingHit: data.kingHit.present ? data.kingHit.value : this.kingHit,
+      kingPosition: data.kingPosition.present
+          ? data.kingPosition.value
+          : this.kingPosition,
+      penaltyHits1: data.penaltyHits1.present
+          ? data.penaltyHits1.value
+          : this.penaltyHits1,
+      penaltyHits2: data.penaltyHits2.present
+          ? data.penaltyHits2.value
+          : this.penaltyHits2,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinisseurStickEvent(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('stickIndex: $stickIndex, ')
+          ..write('fieldKubbsHit: $fieldKubbsHit, ')
+          ..write('eightMHit: $eightMHit, ')
+          ..write('heliThrow: $heliThrow, ')
+          ..write('kingHit: $kingHit, ')
+          ..write('kingPosition: $kingPosition, ')
+          ..write('penaltyHits1: $penaltyHits1, ')
+          ..write('penaltyHits2: $penaltyHits2, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    sessionId,
+    stickIndex,
+    fieldKubbsHit,
+    eightMHit,
+    heliThrow,
+    kingHit,
+    kingPosition,
+    penaltyHits1,
+    penaltyHits2,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinisseurStickEvent &&
+          other.id == this.id &&
+          other.sessionId == this.sessionId &&
+          other.stickIndex == this.stickIndex &&
+          other.fieldKubbsHit == this.fieldKubbsHit &&
+          other.eightMHit == this.eightMHit &&
+          other.heliThrow == this.heliThrow &&
+          other.kingHit == this.kingHit &&
+          other.kingPosition == this.kingPosition &&
+          other.penaltyHits1 == this.penaltyHits1 &&
+          other.penaltyHits2 == this.penaltyHits2 &&
+          other.createdAt == this.createdAt);
+}
+
+class FinisseurStickEventsCompanion
+    extends UpdateCompanion<FinisseurStickEvent> {
+  final Value<String> id;
+  final Value<String> sessionId;
+  final Value<int> stickIndex;
+  final Value<int> fieldKubbsHit;
+  final Value<bool> eightMHit;
+  final Value<bool> heliThrow;
+  final Value<bool?> kingHit;
+  final Value<String?> kingPosition;
+  final Value<int> penaltyHits1;
+  final Value<int> penaltyHits2;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const FinisseurStickEventsCompanion({
+    this.id = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.stickIndex = const Value.absent(),
+    this.fieldKubbsHit = const Value.absent(),
+    this.eightMHit = const Value.absent(),
+    this.heliThrow = const Value.absent(),
+    this.kingHit = const Value.absent(),
+    this.kingPosition = const Value.absent(),
+    this.penaltyHits1 = const Value.absent(),
+    this.penaltyHits2 = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinisseurStickEventsCompanion.insert({
+    required String id,
+    required String sessionId,
+    required int stickIndex,
+    this.fieldKubbsHit = const Value.absent(),
+    this.eightMHit = const Value.absent(),
+    this.heliThrow = const Value.absent(),
+    this.kingHit = const Value.absent(),
+    this.kingPosition = const Value.absent(),
+    this.penaltyHits1 = const Value.absent(),
+    this.penaltyHits2 = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       sessionId = Value(sessionId),
+       stickIndex = Value(stickIndex),
+       createdAt = Value(createdAt);
+  static Insertable<FinisseurStickEvent> custom({
+    Expression<String>? id,
+    Expression<String>? sessionId,
+    Expression<int>? stickIndex,
+    Expression<int>? fieldKubbsHit,
+    Expression<bool>? eightMHit,
+    Expression<bool>? heliThrow,
+    Expression<bool>? kingHit,
+    Expression<String>? kingPosition,
+    Expression<int>? penaltyHits1,
+    Expression<int>? penaltyHits2,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sessionId != null) 'session_id': sessionId,
+      if (stickIndex != null) 'stick_index': stickIndex,
+      if (fieldKubbsHit != null) 'field_kubbs_hit': fieldKubbsHit,
+      if (eightMHit != null) 'eight_m_hit': eightMHit,
+      if (heliThrow != null) 'heli_throw': heliThrow,
+      if (kingHit != null) 'king_hit': kingHit,
+      if (kingPosition != null) 'king_position': kingPosition,
+      if (penaltyHits1 != null) 'penalty_hits1': penaltyHits1,
+      if (penaltyHits2 != null) 'penalty_hits2': penaltyHits2,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinisseurStickEventsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? sessionId,
+    Value<int>? stickIndex,
+    Value<int>? fieldKubbsHit,
+    Value<bool>? eightMHit,
+    Value<bool>? heliThrow,
+    Value<bool?>? kingHit,
+    Value<String?>? kingPosition,
+    Value<int>? penaltyHits1,
+    Value<int>? penaltyHits2,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return FinisseurStickEventsCompanion(
+      id: id ?? this.id,
+      sessionId: sessionId ?? this.sessionId,
+      stickIndex: stickIndex ?? this.stickIndex,
+      fieldKubbsHit: fieldKubbsHit ?? this.fieldKubbsHit,
+      eightMHit: eightMHit ?? this.eightMHit,
+      heliThrow: heliThrow ?? this.heliThrow,
+      kingHit: kingHit ?? this.kingHit,
+      kingPosition: kingPosition ?? this.kingPosition,
+      penaltyHits1: penaltyHits1 ?? this.penaltyHits1,
+      penaltyHits2: penaltyHits2 ?? this.penaltyHits2,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (stickIndex.present) {
+      map['stick_index'] = Variable<int>(stickIndex.value);
+    }
+    if (fieldKubbsHit.present) {
+      map['field_kubbs_hit'] = Variable<int>(fieldKubbsHit.value);
+    }
+    if (eightMHit.present) {
+      map['eight_m_hit'] = Variable<bool>(eightMHit.value);
+    }
+    if (heliThrow.present) {
+      map['heli_throw'] = Variable<bool>(heliThrow.value);
+    }
+    if (kingHit.present) {
+      map['king_hit'] = Variable<bool>(kingHit.value);
+    }
+    if (kingPosition.present) {
+      map['king_position'] = Variable<String>(kingPosition.value);
+    }
+    if (penaltyHits1.present) {
+      map['penalty_hits1'] = Variable<int>(penaltyHits1.value);
+    }
+    if (penaltyHits2.present) {
+      map['penalty_hits2'] = Variable<int>(penaltyHits2.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinisseurStickEventsCompanion(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('stickIndex: $stickIndex, ')
+          ..write('fieldKubbsHit: $fieldKubbsHit, ')
+          ..write('eightMHit: $eightMHit, ')
+          ..write('heliThrow: $heliThrow, ')
+          ..write('kingHit: $kingHit, ')
+          ..write('kingPosition: $kingPosition, ')
+          ..write('penaltyHits1: $penaltyHits1, ')
+          ..write('penaltyHits2: $penaltyHits2, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1486,6 +2312,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $AppSettingsTableTable appSettingsTable = $AppSettingsTableTable(
     this,
   );
+  late final $FinisseurStickEventsTable finisseurStickEvents =
+      $FinisseurStickEventsTable(this);
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final SessionDao sessionDao = SessionDao(this as AppDatabase);
   late final SessionEventDao sessionEventDao = SessionEventDao(
@@ -1494,6 +2322,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final AppSettingsDao appSettingsDao = AppSettingsDao(
     this as AppDatabase,
   );
+  late final FinisseurStickEventDao finisseurStickEventDao =
+      FinisseurStickEventDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1503,6 +2333,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     sessions,
     sessionEvents,
     appSettingsTable,
+    finisseurStickEvents,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -1512,6 +2343,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('session_events', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'sessions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('finisseur_stick_events', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -1817,8 +2655,11 @@ typedef $$SessionsTableCreateCompanionBuilder =
       required String id,
       required String playerId,
       required String kind,
+      Value<String> mode,
       required double distanceMeters,
       Value<int?> throwTarget,
+      Value<int?> finField,
+      Value<int?> finBase,
       required String status,
       required DateTime startedAt,
       Value<DateTime?> completedAt,
@@ -1829,8 +2670,11 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> playerId,
       Value<String> kind,
+      Value<String> mode,
       Value<double> distanceMeters,
       Value<int?> throwTarget,
+      Value<int?> finField,
+      Value<int?> finBase,
       Value<String> status,
       Value<DateTime> startedAt,
       Value<DateTime?> completedAt,
@@ -1875,6 +2719,34 @@ final class $$SessionsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<
+    $FinisseurStickEventsTable,
+    List<FinisseurStickEvent>
+  >
+  _finisseurStickEventsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.finisseurStickEvents,
+        aliasName: $_aliasNameGenerator(
+          db.sessions.id,
+          db.finisseurStickEvents.sessionId,
+        ),
+      );
+
+  $$FinisseurStickEventsTableProcessedTableManager
+  get finisseurStickEventsRefs {
+    final manager = $$FinisseurStickEventsTableTableManager(
+      $_db,
+      $_db.finisseurStickEvents,
+    ).filter((f) => f.sessionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _finisseurStickEventsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$SessionsTableFilterComposer
@@ -1896,6 +2768,11 @@ class $$SessionsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get mode => $composableBuilder(
+    column: $table.mode,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<double> get distanceMeters => $composableBuilder(
     column: $table.distanceMeters,
     builder: (column) => ColumnFilters(column),
@@ -1903,6 +2780,16 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<int> get throwTarget => $composableBuilder(
     column: $table.throwTarget,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get finField => $composableBuilder(
+    column: $table.finField,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get finBase => $composableBuilder(
+    column: $table.finBase,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1968,6 +2855,31 @@ class $$SessionsTableFilterComposer
     );
     return f(composer);
   }
+
+  Expression<bool> finisseurStickEventsRefs(
+    Expression<bool> Function($$FinisseurStickEventsTableFilterComposer f) f,
+  ) {
+    final $$FinisseurStickEventsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.finisseurStickEvents,
+      getReferencedColumn: (t) => t.sessionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FinisseurStickEventsTableFilterComposer(
+            $db: $db,
+            $table: $db.finisseurStickEvents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$SessionsTableOrderingComposer
@@ -1989,6 +2901,11 @@ class $$SessionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get mode => $composableBuilder(
+    column: $table.mode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get distanceMeters => $composableBuilder(
     column: $table.distanceMeters,
     builder: (column) => ColumnOrderings(column),
@@ -1996,6 +2913,16 @@ class $$SessionsTableOrderingComposer
 
   ColumnOrderings<int> get throwTarget => $composableBuilder(
     column: $table.throwTarget,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get finField => $composableBuilder(
+    column: $table.finField,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get finBase => $composableBuilder(
+    column: $table.finBase,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2053,6 +2980,9 @@ class $$SessionsTableAnnotationComposer
   GeneratedColumn<String> get kind =>
       $composableBuilder(column: $table.kind, builder: (column) => column);
 
+  GeneratedColumn<String> get mode =>
+      $composableBuilder(column: $table.mode, builder: (column) => column);
+
   GeneratedColumn<double> get distanceMeters => $composableBuilder(
     column: $table.distanceMeters,
     builder: (column) => column,
@@ -2062,6 +2992,12 @@ class $$SessionsTableAnnotationComposer
     column: $table.throwTarget,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get finField =>
+      $composableBuilder(column: $table.finField, builder: (column) => column);
+
+  GeneratedColumn<int> get finBase =>
+      $composableBuilder(column: $table.finBase, builder: (column) => column);
 
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
@@ -2121,6 +3057,32 @@ class $$SessionsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> finisseurStickEventsRefs<T extends Object>(
+    Expression<T> Function($$FinisseurStickEventsTableAnnotationComposer a) f,
+  ) {
+    final $$FinisseurStickEventsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.finisseurStickEvents,
+          getReferencedColumn: (t) => t.sessionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$FinisseurStickEventsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.finisseurStickEvents,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$SessionsTableTableManager
@@ -2136,7 +3098,11 @@ class $$SessionsTableTableManager
           $$SessionsTableUpdateCompanionBuilder,
           (Session, $$SessionsTableReferences),
           Session,
-          PrefetchHooks Function({bool playerId, bool sessionEventsRefs})
+          PrefetchHooks Function({
+            bool playerId,
+            bool sessionEventsRefs,
+            bool finisseurStickEventsRefs,
+          })
         > {
   $$SessionsTableTableManager(_$AppDatabase db, $SessionsTable table)
     : super(
@@ -2154,8 +3120,11 @@ class $$SessionsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> playerId = const Value.absent(),
                 Value<String> kind = const Value.absent(),
+                Value<String> mode = const Value.absent(),
                 Value<double> distanceMeters = const Value.absent(),
                 Value<int?> throwTarget = const Value.absent(),
+                Value<int?> finField = const Value.absent(),
+                Value<int?> finBase = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<DateTime> startedAt = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
@@ -2164,8 +3133,11 @@ class $$SessionsTableTableManager
                 id: id,
                 playerId: playerId,
                 kind: kind,
+                mode: mode,
                 distanceMeters: distanceMeters,
                 throwTarget: throwTarget,
+                finField: finField,
+                finBase: finBase,
                 status: status,
                 startedAt: startedAt,
                 completedAt: completedAt,
@@ -2176,8 +3148,11 @@ class $$SessionsTableTableManager
                 required String id,
                 required String playerId,
                 required String kind,
+                Value<String> mode = const Value.absent(),
                 required double distanceMeters,
                 Value<int?> throwTarget = const Value.absent(),
+                Value<int?> finField = const Value.absent(),
+                Value<int?> finBase = const Value.absent(),
                 required String status,
                 required DateTime startedAt,
                 Value<DateTime?> completedAt = const Value.absent(),
@@ -2186,8 +3161,11 @@ class $$SessionsTableTableManager
                 id: id,
                 playerId: playerId,
                 kind: kind,
+                mode: mode,
                 distanceMeters: distanceMeters,
                 throwTarget: throwTarget,
+                finField: finField,
+                finBase: finBase,
                 status: status,
                 startedAt: startedAt,
                 completedAt: completedAt,
@@ -2202,11 +3180,16 @@ class $$SessionsTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({playerId = false, sessionEventsRefs = false}) {
+              ({
+                playerId = false,
+                sessionEventsRefs = false,
+                finisseurStickEventsRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (sessionEventsRefs) db.sessionEvents,
+                    if (finisseurStickEventsRefs) db.finisseurStickEvents,
                   ],
                   addJoins:
                       <
@@ -2263,6 +3246,27 @@ class $$SessionsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (finisseurStickEventsRefs)
+                        await $_getPrefetchedData<
+                          Session,
+                          $SessionsTable,
+                          FinisseurStickEvent
+                        >(
+                          currentTable: table,
+                          referencedTable: $$SessionsTableReferences
+                              ._finisseurStickEventsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$SessionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).finisseurStickEventsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.sessionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -2283,7 +3287,11 @@ typedef $$SessionsTableProcessedTableManager =
       $$SessionsTableUpdateCompanionBuilder,
       (Session, $$SessionsTableReferences),
       Session,
-      PrefetchHooks Function({bool playerId, bool sessionEventsRefs})
+      PrefetchHooks Function({
+        bool playerId,
+        bool sessionEventsRefs,
+        bool finisseurStickEventsRefs,
+      })
     >;
 typedef $$SessionEventsTableCreateCompanionBuilder =
     SessionEventsCompanion Function({
@@ -2763,6 +3771,468 @@ typedef $$AppSettingsTableTableProcessedTableManager =
       AppSettingsTableData,
       PrefetchHooks Function()
     >;
+typedef $$FinisseurStickEventsTableCreateCompanionBuilder =
+    FinisseurStickEventsCompanion Function({
+      required String id,
+      required String sessionId,
+      required int stickIndex,
+      Value<int> fieldKubbsHit,
+      Value<bool> eightMHit,
+      Value<bool> heliThrow,
+      Value<bool?> kingHit,
+      Value<String?> kingPosition,
+      Value<int> penaltyHits1,
+      Value<int> penaltyHits2,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$FinisseurStickEventsTableUpdateCompanionBuilder =
+    FinisseurStickEventsCompanion Function({
+      Value<String> id,
+      Value<String> sessionId,
+      Value<int> stickIndex,
+      Value<int> fieldKubbsHit,
+      Value<bool> eightMHit,
+      Value<bool> heliThrow,
+      Value<bool?> kingHit,
+      Value<String?> kingPosition,
+      Value<int> penaltyHits1,
+      Value<int> penaltyHits2,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+final class $$FinisseurStickEventsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $FinisseurStickEventsTable,
+          FinisseurStickEvent
+        > {
+  $$FinisseurStickEventsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $SessionsTable _sessionIdTable(_$AppDatabase db) =>
+      db.sessions.createAlias(
+        $_aliasNameGenerator(db.finisseurStickEvents.sessionId, db.sessions.id),
+      );
+
+  $$SessionsTableProcessedTableManager get sessionId {
+    final $_column = $_itemColumn<String>('session_id')!;
+
+    final manager = $$SessionsTableTableManager(
+      $_db,
+      $_db.sessions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$FinisseurStickEventsTableFilterComposer
+    extends Composer<_$AppDatabase, $FinisseurStickEventsTable> {
+  $$FinisseurStickEventsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get stickIndex => $composableBuilder(
+    column: $table.stickIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get fieldKubbsHit => $composableBuilder(
+    column: $table.fieldKubbsHit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get eightMHit => $composableBuilder(
+    column: $table.eightMHit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get heliThrow => $composableBuilder(
+    column: $table.heliThrow,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get kingHit => $composableBuilder(
+    column: $table.kingHit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kingPosition => $composableBuilder(
+    column: $table.kingPosition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get penaltyHits1 => $composableBuilder(
+    column: $table.penaltyHits1,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get penaltyHits2 => $composableBuilder(
+    column: $table.penaltyHits2,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$SessionsTableFilterComposer get sessionId {
+    final $$SessionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.sessions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SessionsTableFilterComposer(
+            $db: $db,
+            $table: $db.sessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FinisseurStickEventsTableOrderingComposer
+    extends Composer<_$AppDatabase, $FinisseurStickEventsTable> {
+  $$FinisseurStickEventsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stickIndex => $composableBuilder(
+    column: $table.stickIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get fieldKubbsHit => $composableBuilder(
+    column: $table.fieldKubbsHit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get eightMHit => $composableBuilder(
+    column: $table.eightMHit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get heliThrow => $composableBuilder(
+    column: $table.heliThrow,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get kingHit => $composableBuilder(
+    column: $table.kingHit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kingPosition => $composableBuilder(
+    column: $table.kingPosition,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get penaltyHits1 => $composableBuilder(
+    column: $table.penaltyHits1,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get penaltyHits2 => $composableBuilder(
+    column: $table.penaltyHits2,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$SessionsTableOrderingComposer get sessionId {
+    final $$SessionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.sessions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SessionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.sessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FinisseurStickEventsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FinisseurStickEventsTable> {
+  $$FinisseurStickEventsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get stickIndex => $composableBuilder(
+    column: $table.stickIndex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get fieldKubbsHit => $composableBuilder(
+    column: $table.fieldKubbsHit,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get eightMHit =>
+      $composableBuilder(column: $table.eightMHit, builder: (column) => column);
+
+  GeneratedColumn<bool> get heliThrow =>
+      $composableBuilder(column: $table.heliThrow, builder: (column) => column);
+
+  GeneratedColumn<bool> get kingHit =>
+      $composableBuilder(column: $table.kingHit, builder: (column) => column);
+
+  GeneratedColumn<String> get kingPosition => $composableBuilder(
+    column: $table.kingPosition,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get penaltyHits1 => $composableBuilder(
+    column: $table.penaltyHits1,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get penaltyHits2 => $composableBuilder(
+    column: $table.penaltyHits2,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$SessionsTableAnnotationComposer get sessionId {
+    final $$SessionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.sessions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SessionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.sessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FinisseurStickEventsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FinisseurStickEventsTable,
+          FinisseurStickEvent,
+          $$FinisseurStickEventsTableFilterComposer,
+          $$FinisseurStickEventsTableOrderingComposer,
+          $$FinisseurStickEventsTableAnnotationComposer,
+          $$FinisseurStickEventsTableCreateCompanionBuilder,
+          $$FinisseurStickEventsTableUpdateCompanionBuilder,
+          (FinisseurStickEvent, $$FinisseurStickEventsTableReferences),
+          FinisseurStickEvent,
+          PrefetchHooks Function({bool sessionId})
+        > {
+  $$FinisseurStickEventsTableTableManager(
+    _$AppDatabase db,
+    $FinisseurStickEventsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinisseurStickEventsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FinisseurStickEventsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinisseurStickEventsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
+                Value<int> stickIndex = const Value.absent(),
+                Value<int> fieldKubbsHit = const Value.absent(),
+                Value<bool> eightMHit = const Value.absent(),
+                Value<bool> heliThrow = const Value.absent(),
+                Value<bool?> kingHit = const Value.absent(),
+                Value<String?> kingPosition = const Value.absent(),
+                Value<int> penaltyHits1 = const Value.absent(),
+                Value<int> penaltyHits2 = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinisseurStickEventsCompanion(
+                id: id,
+                sessionId: sessionId,
+                stickIndex: stickIndex,
+                fieldKubbsHit: fieldKubbsHit,
+                eightMHit: eightMHit,
+                heliThrow: heliThrow,
+                kingHit: kingHit,
+                kingPosition: kingPosition,
+                penaltyHits1: penaltyHits1,
+                penaltyHits2: penaltyHits2,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String sessionId,
+                required int stickIndex,
+                Value<int> fieldKubbsHit = const Value.absent(),
+                Value<bool> eightMHit = const Value.absent(),
+                Value<bool> heliThrow = const Value.absent(),
+                Value<bool?> kingHit = const Value.absent(),
+                Value<String?> kingPosition = const Value.absent(),
+                Value<int> penaltyHits1 = const Value.absent(),
+                Value<int> penaltyHits2 = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => FinisseurStickEventsCompanion.insert(
+                id: id,
+                sessionId: sessionId,
+                stickIndex: stickIndex,
+                fieldKubbsHit: fieldKubbsHit,
+                eightMHit: eightMHit,
+                heliThrow: heliThrow,
+                kingHit: kingHit,
+                kingPosition: kingPosition,
+                penaltyHits1: penaltyHits1,
+                penaltyHits2: penaltyHits2,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$FinisseurStickEventsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({sessionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (sessionId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.sessionId,
+                                referencedTable:
+                                    $$FinisseurStickEventsTableReferences
+                                        ._sessionIdTable(db),
+                                referencedColumn:
+                                    $$FinisseurStickEventsTableReferences
+                                        ._sessionIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$FinisseurStickEventsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FinisseurStickEventsTable,
+      FinisseurStickEvent,
+      $$FinisseurStickEventsTableFilterComposer,
+      $$FinisseurStickEventsTableOrderingComposer,
+      $$FinisseurStickEventsTableAnnotationComposer,
+      $$FinisseurStickEventsTableCreateCompanionBuilder,
+      $$FinisseurStickEventsTableUpdateCompanionBuilder,
+      (FinisseurStickEvent, $$FinisseurStickEventsTableReferences),
+      FinisseurStickEvent,
+      PrefetchHooks Function({bool sessionId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2775,4 +4245,6 @@ class $AppDatabaseManager {
       $$SessionEventsTableTableManager(_db, _db.sessionEvents);
   $$AppSettingsTableTableTableManager get appSettingsTable =>
       $$AppSettingsTableTableTableManager(_db, _db.appSettingsTable);
+  $$FinisseurStickEventsTableTableManager get finisseurStickEvents =>
+      $$FinisseurStickEventsTableTableManager(_db, _db.finisseurStickEvents);
 }

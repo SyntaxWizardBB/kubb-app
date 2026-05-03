@@ -35,6 +35,7 @@ void main() {
         id: 'sess-1',
         playerId: 'p1',
         kind: 'sniper',
+        mode: 'sniper',
         distanceMeters: distance,
         throwTarget: throwTarget == 0 ? null : throwTarget,
         status: 'completed',

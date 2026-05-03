@@ -17,8 +17,8 @@ void main() {
     await db.close();
   });
 
-  test('schemaVersion is 2', () {
-    expect(db.schemaVersion, 2);
+  test('schemaVersion is 3', () {
+    expect(db.schemaVersion, 3);
   });
 
   test('players table has avatarColor column after migration', () async {
@@ -43,10 +43,11 @@ void main() {
       'sessions',
       'session_events',
       'app_settings_table',
+      'finisseur_stick_events',
     }));
   });
 
-  test('both expected indices exist after migration', () async {
+  test('all expected indices exist after migration', () async {
     final rows = await db
         .customSelect(
           "SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%'",
@@ -57,6 +58,15 @@ void main() {
     expect(names, containsAll(<String>{
       'idx_sessions_status_completed',
       'idx_session_events_session_corrected',
+      'idx_finisseur_stick_session_index',
     }));
+  });
+
+  test('sessions table has mode column with default sniper', () async {
+    final rows = await db
+        .customSelect("PRAGMA table_info('sessions')")
+        .get();
+    final cols = rows.map((r) => r.read<String>('name')).toSet();
+    expect(cols, containsAll(<String>{'mode', 'fin_field', 'fin_base'}));
   });
 }

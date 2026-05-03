@@ -42,6 +42,7 @@ class TrainingRepository {
       id: _uuid.v7(),
       playerId: playerId,
       kind: _kindSniper,
+      mode: _kindSniper,
       distanceMeters: distance,
       throwTarget: throwTarget,
       status: _statusActive,

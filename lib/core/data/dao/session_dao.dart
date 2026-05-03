@@ -19,6 +19,18 @@ class SessionDao extends DatabaseAccessor<AppDatabase> with _$SessionDaoMixin {
         .getSingleOrNull();
   }
 
+  Future<Session?> activeForPlayerInMode(String playerId, String mode) {
+    return (select(sessions)
+          ..where(
+            (s) =>
+                s.playerId.equals(playerId) &
+                s.status.equals('active') &
+                s.mode.equals(mode),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
   Stream<List<Session>> watchRecentCompleted({
     required String playerId,
     int limit = 3,
