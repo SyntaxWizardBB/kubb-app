@@ -18,7 +18,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -32,6 +32,11 @@ class AppDatabase extends _$AppDatabase {
             'CREATE INDEX idx_session_events_session_corrected '
             'ON session_events (session_id, corrected_at, created_at DESC)',
           );
+        },
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.addColumn(players, players.avatarColor);
+          }
         },
       );
 }

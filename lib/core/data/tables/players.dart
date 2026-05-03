@@ -4,6 +4,7 @@ class Players extends Table {
   TextColumn get id => text()();
   TextColumn get name => text().withLength(min: 1, max: 60)();
   TextColumn get deviceId => text()();
+  TextColumn get avatarColor => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
 
   @override

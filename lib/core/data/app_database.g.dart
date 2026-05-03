@@ -41,6 +41,17 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _avatarColorMeta = const VerificationMeta(
+    'avatarColor',
+  );
+  @override
+  late final GeneratedColumn<String> avatarColor = GeneratedColumn<String>(
+    'avatar_color',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -53,7 +64,13 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [id, name, deviceId, createdAt];
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    deviceId,
+    avatarColor,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -87,6 +104,15 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
     } else if (isInserting) {
       context.missing(_deviceIdMeta);
     }
+    if (data.containsKey('avatar_color')) {
+      context.handle(
+        _avatarColorMeta,
+        avatarColor.isAcceptableOrUnknown(
+          data['avatar_color']!,
+          _avatarColorMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -116,6 +142,10 @@ class $PlayersTable extends Players with TableInfo<$PlayersTable, Player> {
         DriftSqlType.string,
         data['${effectivePrefix}device_id'],
       )!,
+      avatarColor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}avatar_color'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -133,11 +163,13 @@ class Player extends DataClass implements Insertable<Player> {
   final String id;
   final String name;
   final String deviceId;
+  final String? avatarColor;
   final DateTime createdAt;
   const Player({
     required this.id,
     required this.name,
     required this.deviceId,
+    this.avatarColor,
     required this.createdAt,
   });
   @override
@@ -146,6 +178,9 @@ class Player extends DataClass implements Insertable<Player> {
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['device_id'] = Variable<String>(deviceId);
+    if (!nullToAbsent || avatarColor != null) {
+      map['avatar_color'] = Variable<String>(avatarColor);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -155,6 +190,9 @@ class Player extends DataClass implements Insertable<Player> {
       id: Value(id),
       name: Value(name),
       deviceId: Value(deviceId),
+      avatarColor: avatarColor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avatarColor),
       createdAt: Value(createdAt),
     );
   }
@@ -168,6 +206,7 @@ class Player extends DataClass implements Insertable<Player> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       deviceId: serializer.fromJson<String>(json['deviceId']),
+      avatarColor: serializer.fromJson<String?>(json['avatarColor']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -178,6 +217,7 @@ class Player extends DataClass implements Insertable<Player> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'deviceId': serializer.toJson<String>(deviceId),
+      'avatarColor': serializer.toJson<String?>(avatarColor),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -186,11 +226,13 @@ class Player extends DataClass implements Insertable<Player> {
     String? id,
     String? name,
     String? deviceId,
+    Value<String?> avatarColor = const Value.absent(),
     DateTime? createdAt,
   }) => Player(
     id: id ?? this.id,
     name: name ?? this.name,
     deviceId: deviceId ?? this.deviceId,
+    avatarColor: avatarColor.present ? avatarColor.value : this.avatarColor,
     createdAt: createdAt ?? this.createdAt,
   );
   Player copyWithCompanion(PlayersCompanion data) {
@@ -198,6 +240,9 @@ class Player extends DataClass implements Insertable<Player> {
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      avatarColor: data.avatarColor.present
+          ? data.avatarColor.value
+          : this.avatarColor,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -208,13 +253,14 @@ class Player extends DataClass implements Insertable<Player> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('deviceId: $deviceId, ')
+          ..write('avatarColor: $avatarColor, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, deviceId, createdAt);
+  int get hashCode => Object.hash(id, name, deviceId, avatarColor, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -222,6 +268,7 @@ class Player extends DataClass implements Insertable<Player> {
           other.id == this.id &&
           other.name == this.name &&
           other.deviceId == this.deviceId &&
+          other.avatarColor == this.avatarColor &&
           other.createdAt == this.createdAt);
 }
 
@@ -229,12 +276,14 @@ class PlayersCompanion extends UpdateCompanion<Player> {
   final Value<String> id;
   final Value<String> name;
   final Value<String> deviceId;
+  final Value<String?> avatarColor;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const PlayersCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.deviceId = const Value.absent(),
+    this.avatarColor = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -242,6 +291,7 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     required String id,
     required String name,
     required String deviceId,
+    this.avatarColor = const Value.absent(),
     required DateTime createdAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -252,6 +302,7 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? deviceId,
+    Expression<String>? avatarColor,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -259,6 +310,7 @@ class PlayersCompanion extends UpdateCompanion<Player> {
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (deviceId != null) 'device_id': deviceId,
+      if (avatarColor != null) 'avatar_color': avatarColor,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -268,6 +320,7 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     Value<String>? id,
     Value<String>? name,
     Value<String>? deviceId,
+    Value<String?>? avatarColor,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
   }) {
@@ -275,6 +328,7 @@ class PlayersCompanion extends UpdateCompanion<Player> {
       id: id ?? this.id,
       name: name ?? this.name,
       deviceId: deviceId ?? this.deviceId,
+      avatarColor: avatarColor ?? this.avatarColor,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -292,6 +346,9 @@ class PlayersCompanion extends UpdateCompanion<Player> {
     if (deviceId.present) {
       map['device_id'] = Variable<String>(deviceId.value);
     }
+    if (avatarColor.present) {
+      map['avatar_color'] = Variable<String>(avatarColor.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -307,6 +364,7 @@ class PlayersCompanion extends UpdateCompanion<Player> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('deviceId: $deviceId, ')
+          ..write('avatarColor: $avatarColor, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -1463,6 +1521,7 @@ typedef $$PlayersTableCreateCompanionBuilder =
       required String id,
       required String name,
       required String deviceId,
+      Value<String?> avatarColor,
       required DateTime createdAt,
       Value<int> rowid,
     });
@@ -1471,6 +1530,7 @@ typedef $$PlayersTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> name,
       Value<String> deviceId,
+      Value<String?> avatarColor,
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
@@ -1520,6 +1580,11 @@ class $$PlayersTableFilterComposer
 
   ColumnFilters<String> get deviceId => $composableBuilder(
     column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get avatarColor => $composableBuilder(
+    column: $table.avatarColor,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1578,6 +1643,11 @@ class $$PlayersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get avatarColor => $composableBuilder(
+    column: $table.avatarColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -1601,6 +1671,11 @@ class $$PlayersTableAnnotationComposer
 
   GeneratedColumn<String> get deviceId =>
       $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<String> get avatarColor => $composableBuilder(
+    column: $table.avatarColor,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -1662,12 +1737,14 @@ class $$PlayersTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> deviceId = const Value.absent(),
+                Value<String?> avatarColor = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PlayersCompanion(
                 id: id,
                 name: name,
                 deviceId: deviceId,
+                avatarColor: avatarColor,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -1676,12 +1753,14 @@ class $$PlayersTableTableManager
                 required String id,
                 required String name,
                 required String deviceId,
+                Value<String?> avatarColor = const Value.absent(),
                 required DateTime createdAt,
                 Value<int> rowid = const Value.absent(),
               }) => PlayersCompanion.insert(
                 id: id,
                 name: name,
                 deviceId: deviceId,
+                avatarColor: avatarColor,
                 createdAt: createdAt,
                 rowid: rowid,
               ),

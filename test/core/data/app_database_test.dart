@@ -17,8 +17,16 @@ void main() {
     await db.close();
   });
 
-  test('schemaVersion is 1', () {
-    expect(db.schemaVersion, 1);
+  test('schemaVersion is 2', () {
+    expect(db.schemaVersion, 2);
+  });
+
+  test('players table has avatarColor column after migration', () async {
+    final rows = await db
+        .customSelect("PRAGMA table_info('players')")
+        .get();
+    final cols = rows.map((r) => r.read<String>('name')).toSet();
+    expect(cols, contains('avatar_color'));
   });
 
   test('all four tables exist after migration', () async {
