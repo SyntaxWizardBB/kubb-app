@@ -10,32 +10,51 @@ import 'package:logging/logging.dart';
 
 final _bootstrapLog = Logger('Bootstrap');
 
+class _AppConfig {
+  const _AppConfig({
+    required this.theme,
+    required this.darkTheme,
+    required this.themeMode,
+  });
+
+  final ThemeData theme;
+  final ThemeData darkTheme;
+  final ThemeMode themeMode;
+}
+
+_AppConfig _resolveConfig(WidgetRef ref) {
+  final choice = ref.watch(appSettingsProvider).maybeWhen(
+        data: (s) => s.themeChoice,
+        orElse: () => ThemeChoice.light,
+      );
+  return _AppConfig(
+    theme: choice.themeData(),
+    darkTheme: KubbTheme.dark(),
+    themeMode: choice.toThemeMode(),
+  );
+}
+
 class KubbApp extends ConsumerWidget {
   const KubbApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settingsAsync = ref.watch(appSettingsProvider);
-    final choice = settingsAsync.when(
-      data: (s) => s.themeChoice,
-      loading: () => ThemeChoice.light,
-      error: (_, _) => ThemeChoice.light,
-    );
+    final config = _resolveConfig(ref);
     final boot = ref.watch(appBootstrapProvider);
     return boot.when(
-      loading: () => _bootstrapShell(choice, const _SplashScreen()),
+      loading: () => _bootstrapShell(config, const _SplashScreen()),
       error: (e, st) {
         _bootstrapLog.severe('bootstrap failed', e, st);
-        return _bootstrapShell(choice, const _BootstrapErrorScreen());
+        return _bootstrapShell(config, const _BootstrapErrorScreen());
       },
       data: (_) {
         final router = ref.watch(goRouterProvider);
         return MaterialApp.router(
           onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
           routerConfig: router,
-          theme: choice.themeData(),
-          darkTheme: KubbTheme.dark(),
-          themeMode: choice.toThemeMode(),
+          theme: config.theme,
+          darkTheme: config.darkTheme,
+          themeMode: config.themeMode,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           debugShowCheckedModeBanner: false,
@@ -44,12 +63,12 @@ class KubbApp extends ConsumerWidget {
     );
   }
 
-  Widget _bootstrapShell(ThemeChoice choice, Widget home) {
+  Widget _bootstrapShell(_AppConfig config, Widget home) {
     return MaterialApp(
       home: home,
-      theme: choice.themeData(),
-      darkTheme: KubbTheme.dark(),
-      themeMode: choice.toThemeMode(),
+      theme: config.theme,
+      darkTheme: config.darkTheme,
+      themeMode: config.themeMode,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
