@@ -35,5 +35,28 @@
   "profileSinceLabel": "Mitglied seit",
   "@profileSinceLabel": {
     "description": "Profile created-at label"
+  },
+  "settingsTitle": "Einstellungen",
+  "@settingsTitle": { "description": "App settings modal title" },
+  "settingsLanguage": "Sprache",
+  "@settingsLanguage": { "description": "Language row label" },
+  "settingsLanguageValue": "Deutsch",
+  "@settingsLanguageValue": { "description": "Language read-only value" },
+  "settingsTheme": "Erscheinungsbild",
+  "@settingsTheme": { "description": "Theme row label" },
+  "settingsHeli": "Helikopter zählen",
+  "@settingsHeli": { "description": "Heli tracking row label" },
+  "settingsVibration": "Vibration",
+  "@settingsVibration": { "description": "Vibration row label" },
+  "themeLight": "Hell",
+  "@themeLight": { "description": "Theme choice — light" },
+  "themeDark": "Dunkel",
+  "@themeDark": { "description": "Theme choice — dark" },
+  "themeHighContrast": "Sonnenlicht",
+  "@themeHighContrast": { "description": "Theme choice — high contrast / sunlight" },
+  "settingsVersion": "Version {version} ({build})",
+  "@settingsVersion": {
+    "description": "App version footer",
+    "placeholders": { "version": {"type": "String"}, "build": {"type": "String"} }
   }
 }
