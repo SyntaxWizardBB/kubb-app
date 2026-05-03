@@ -33,6 +33,9 @@ class StatsRepository {
     final all = await _sessions.allCompletedForPlayer(playerId);
     final cutoff = _cutoffFor(filter.dateRange, now ?? DateTime.now().toUtc());
     final filtered = all.where((s) {
+      // Sniper aggregates ignore finisseur sessions — they have a separate
+      // model and would otherwise blow up the hit-rate baseline.
+      if (s.mode == 'finisseur') return false;
       final ts = s.completedAt ?? s.startedAt;
       if (cutoff != null && ts.isBefore(cutoff)) return false;
       if (filter.distanceMeters != null &&

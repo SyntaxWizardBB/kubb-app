@@ -6,6 +6,8 @@ import 'package:kubb_app/features/player/application/current_profile_provider.da
 import 'package:kubb_app/features/player/presentation/onboarding_screen.dart';
 import 'package:kubb_app/features/player/presentation/profile_screen.dart';
 import 'package:kubb_app/features/stats/presentation/stats_screen.dart';
+import 'package:kubb_app/features/training/presentation/finisseur_config_screen.dart';
+import 'package:kubb_app/features/training/presentation/finisseur_stick_screen.dart';
 import 'package:kubb_app/features/training/presentation/home_screen.dart';
 import 'package:kubb_app/features/training/presentation/sniper_config_screen.dart';
 import 'package:kubb_app/features/training/presentation/sniper_session_screen.dart';
@@ -58,6 +60,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/training/sniper/session/:id',
         builder: (context, state) =>
             SniperSessionScreen(sessionId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/training/finisseur/config',
+        builder: (context, state) => const FinisseurConfigScreen(),
+      ),
+      GoRoute(
+        path: '/training/finisseur/session/:id',
+        builder: (context, state) =>
+            FinisseurStickScreen(sessionId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/training/summary/:id',
