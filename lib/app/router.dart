@@ -7,6 +7,7 @@ import 'package:kubb_app/features/player/presentation/profile_screen.dart';
 import 'package:kubb_app/features/training/presentation/home_screen.dart';
 import 'package:kubb_app/features/training/presentation/sniper_config_screen.dart';
 import 'package:kubb_app/features/training/presentation/sniper_session_screen.dart';
+import 'package:kubb_app/features/training/presentation/summary_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final notifier = _ProfileRefresh();
@@ -55,7 +56,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/training/summary/:id',
         builder: (context, state) =>
-            _SummaryPlaceholder(id: state.pathParameters['id'] ?? ''),
+            SummaryScreen(sessionId: state.pathParameters['id']!),
       ),
     ],
   );
@@ -63,28 +64,4 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
 class _ProfileRefresh extends ChangeNotifier {
   void notify() => notifyListeners();
-}
-
-class _Placeholder extends StatelessWidget {
-  const _Placeholder({required this.title, this.detail});
-
-  final String title;
-  final String? detail;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = detail == null ? title : '$title — $detail';
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(child: Text('Placeholder — $label')),
-    );
-  }
-}
-
-class _SummaryPlaceholder extends StatelessWidget {
-  const _SummaryPlaceholder({required this.id});
-  final String id;
-  @override
-  Widget build(BuildContext context) =>
-      _Placeholder(title: 'Summary', detail: id);
 }
