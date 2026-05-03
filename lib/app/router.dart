@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
 import 'package:kubb_app/features/player/presentation/onboarding_screen.dart';
 import 'package:kubb_app/features/player/presentation/profile_screen.dart';
+import 'package:kubb_app/features/training/presentation/home_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final notifier = _ProfileRefresh();
@@ -34,7 +35,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/',
-        builder: (context, state) => const _HomePlaceholder(),
+        builder: (context, state) => const HomeScreen(),
       ),
       GoRoute(
         path: '/profile',
@@ -76,12 +77,6 @@ class _Placeholder extends StatelessWidget {
       body: Center(child: Text('Placeholder — $label')),
     );
   }
-}
-
-class _HomePlaceholder extends StatelessWidget {
-  const _HomePlaceholder();
-  @override
-  Widget build(BuildContext context) => const _Placeholder(title: 'Home');
 }
 
 class _SniperConfigPlaceholder extends StatelessWidget {

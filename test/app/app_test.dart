@@ -42,28 +42,27 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('renders home placeholder in light mode', (tester) async {
+  testWidgets('renders home greeting in light mode', (tester) async {
     await pumpWithChoice(tester, ThemeChoice.light);
 
     expect(tester.takeException(), isNull);
     expect(find.byType(MaterialApp), findsOneWidget);
-    expect(find.text('Home'), findsOneWidget);
-    expect(find.text('Placeholder — Home'), findsOneWidget);
+    expect(find.text('Hallo, Test.'), findsOneWidget);
   });
 
-  testWidgets('renders home placeholder in dark mode', (tester) async {
+  testWidgets('renders home greeting in dark mode', (tester) async {
     await pumpWithChoice(tester, ThemeChoice.dark);
 
     expect(tester.takeException(), isNull);
     expect(find.byType(MaterialApp), findsOneWidget);
-    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Hallo, Test.'), findsOneWidget);
   });
 
-  testWidgets('renders home placeholder in high-contrast mode', (tester) async {
+  testWidgets('renders home greeting in high-contrast mode', (tester) async {
     await pumpWithChoice(tester, ThemeChoice.highContrast);
 
     expect(tester.takeException(), isNull);
     expect(find.byType(MaterialApp), findsOneWidget);
-    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Hallo, Test.'), findsOneWidget);
   });
 }

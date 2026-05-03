@@ -6,7 +6,7 @@ import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
 
 void main() {
-  testWidgets('App boots and renders the placeholder home', (tester) async {
+  testWidgets('App boots and renders the home greeting', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -27,6 +27,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(MaterialApp), findsOneWidget);
-    expect(find.byType(AppBar), findsOneWidget);
+    expect(find.text('Hallo, Test.'), findsOneWidget);
   });
 }
