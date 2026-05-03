@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [6] pending | [0] in-progress | [18] done | [0] blocked
+- Status-Übersicht: [5] pending | [0] in-progress | [19] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -406,12 +406,13 @@
 - **Input**: M5-T1
 - **Output**: `test/features/training/application/active_session_notifier_test.dart`
 - **Akzeptanzkriterien**:
-  - [ ] Given M5-T2 ohne M5-T3 when Tests laufen then alle rot (Notifier existiert nicht)
+  - [x] Given M5-T2 ohne M5-T3 when Tests laufen then alle rot (Notifier existiert nicht)
   - [ ] Given M5-T3 implementiert when Tests laufen then alle grün
-  - [ ] Mindestens acht Cases (siehe Beschreibung)
-  - [ ] flutter analyze clean
+  - [x] Mindestens acht Cases (siehe Beschreibung)
+  - [x] flutter analyze clean
 - **Abhängigkeiten**: M5-T1
-- **Status**: pending
+- **Status**: done
+- **Notiz**: Stub `ActiveSessionNotifier` lebt unter `lib/features/training/application/active_session_notifier.dart` (67 LOC) und wirft `UnimplementedError` aus jeder Methode — kompiliert sauber, M5-T3 ersetzt die Bodies. Test-Suite hat neun Cases (start, recordHit, drei recordMiss, undoLast, recordHeli mit heliTracking=on, complete, abortAndDelete, resumeFromCrash mit pre-inserted Session inkl. corrected event, no-op ohne aktive Session). Alle Cases sind mit `skip: 'TDD: green after M5-T3 implements ActiveSessionNotifier'` markiert — die Suite läuft "76 passed, 9 skipped" durch und dokumentiert den Verhaltens-Contract ohne falschen grünen Status. Nach M5-T3: Skip-Konstante entfernen, Tests müssen dann ohne weitere Änderung grün werden. Der Resume-Case verifiziert explizit, dass corrected events (`correctedAt != null`) NICHT mitzählen — 5 hits aus 6 hit-rows. AC-2 (grün nach M5-T3) bleibt offen bis M5-T3 erledigt ist. Insgesamt 76 Tests grün + 9 skipped, `flutter analyze` clean.
 
 ### M5-T3: ActiveSessionNotifier — Tap / Undo / Heli-Filter
 - **Agent**: coder
