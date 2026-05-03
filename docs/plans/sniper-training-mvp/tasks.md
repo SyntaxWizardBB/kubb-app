@@ -450,7 +450,8 @@
   - [ ] flutter analyze clean
   - [ ] Mindestens ein Widget-Test pro Screen (Config, Session, Summary)
 - **Abhängigkeiten**: M5-T3, M4-T2, M4-T1
-- **Status**: pending
+- **Status**: pending — split in a/b/c
+- **Notiz (M5-T4a done)**: SniperConfigScreen unter `lib/features/training/presentation/sniper_config_screen.dart` (130 LOC) plus Widget-Test (121 LOC, 4 Cases). Distanz-Slider 4.0–8.0 m mit 0.5er-Schritten und Tick-Row, Preset-Chips (∞/25/50/100/200) plus Custom-TextField (1–999, digitsOnly), Start ruft `ActiveSessionNotifier.startSession` und navigiert via go_router auf `/training/sniper/session/:id`. Profil wird per `ref.watch(currentProfileProvider)` aktiv gehalten, damit `_start` synchron lesen kann. Router-Placeholder `_SniperConfigPlaceholder` entfernt. Sieben neue ARB-Keys in `app_de.arb`. 89 Tests grün, `flutter analyze` clean. M5-T4b (SessionScreen + AbortDialog) und M5-T4c (SummaryScreen) folgen.
 
 ### M5-T5: crashRecoveryProvider + CrashRecoveryDialog + Integration-Test
 - **Agent**: coder
