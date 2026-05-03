@@ -32,6 +32,15 @@ class SessionDao extends DatabaseAccessor<AppDatabase> with _$SessionDaoMixin {
         .watch();
   }
 
+  Future<List<Session>> allCompletedForPlayer(String playerId) {
+    return (select(sessions)
+          ..where(
+            (s) => s.playerId.equals(playerId) & s.status.equals('completed'),
+          )
+          ..orderBy([(s) => OrderingTerm.asc(s.completedAt)]))
+        .get();
+  }
+
   Future<void> insert(SessionsCompanion companion) {
     return into(sessions).insert(companion);
   }
