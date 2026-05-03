@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/icons.dart';
-import 'package:kubb_app/core/ui/settings/app_settings_modal.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
@@ -65,7 +64,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         leading: IconButton(
           tooltip: l.settingsTitle,
           icon: const KubbIcon(LucideIcons.menu),
-          onPressed: () => AppSettingsModal.show(context),
+          onPressed: () => context.push('/settings'),
         ),
         actions: IconButton(
           tooltip: l.profileTitle,
