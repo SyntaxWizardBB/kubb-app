@@ -19,7 +19,7 @@ void main() {
         id: const Value('p1'),
         name: const Value('Lukas'),
         deviceId: const Value('device-p1'),
-        createdAt: Value(DateTime.utc(2026, 5, 1)),
+        createdAt: Value(DateTime.utc(2026, 5)),
       ),
     );
     repo = StatsRepository(
@@ -142,7 +142,7 @@ void main() {
   });
 
   test('distance filter narrows aggregate', () async {
-    await insertSession('s1', hits: 6, misses: 4, distance: 8);
+    await insertSession('s1', hits: 6, misses: 4);
     await insertSession('s2', hits: 9, misses: 1, distance: 4);
 
     final agg = await repo.computeAggregate(
@@ -205,7 +205,7 @@ void main() {
       () async {
     await insertSession('s1', hits: 6, misses: 4, distance: 6);
     await insertSession('s2', hits: 9, misses: 1, distance: 4.5);
-    await insertSession('s3', hits: 7, misses: 3, distance: 8);
+    await insertSession('s3', hits: 7, misses: 3);
 
     final agg = await repo.computeAggregate(
       playerId: 'p1',
@@ -239,7 +239,7 @@ void main() {
         's$i',
         hits: 5,
         misses: 5,
-        completedAt: DateTime.utc(2026, 5, 1).add(Duration(hours: i)),
+        completedAt: DateTime.utc(2026, 5).add(Duration(hours: i)),
       );
     }
 
