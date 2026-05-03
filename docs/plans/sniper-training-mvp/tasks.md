@@ -298,11 +298,12 @@
 - **Input**: M1-T3, `docs/design/ui_kits/app/shared.jsx`
 - **Output**: `lib/core/ui/widgets/kubb_app_bar.dart`, `lib/core/ui/widgets/kubb_bottom_sheet.dart`
 - **Akzeptanzkriterien**:
-  - [ ] Given KubbAppBar mit Eyebrow + Title when gerendert then beide Texte sichtbar mit Bricolage-Schrift
-  - [ ] Given KubbBottomSheet when via Helper geöffnet then Grabber + Header sichtbar, Top-Radien aus Tokens
-  - [ ] flutter analyze clean
+  - [x] Given KubbAppBar mit Eyebrow + Title when gerendert then beide Texte sichtbar mit Bricolage-Schrift
+  - [x] Given KubbBottomSheet when via Helper geöffnet then Grabber + Header sichtbar, Top-Radien aus Tokens
+  - [x] flutter analyze clean
 - **Abhängigkeiten**: M1-T3
-- **Status**: pending
+- **Status**: done
+- **Notiz**: KubbAppBar 97 LOC, KubbBottomSheet 64 LOC — beide stateless, beide tokens-only. PreferredSize ist 88 statt 64, weil die Spec 24 px Top-Padding für die Status-Bar verlangt; mit Eyebrow + Title (~36 px) reicht 64 nicht. Back-Button nutzt `LucideIcons.arrowLeft` und `context.pop()`, Touch-Target via `BoxConstraints.tightFor(touchMin)`. Eyebrow wird upper-cased gerendert, fontSize 11/600/letterSpacing 0.88 wie in `shared.jsx`. KubbBottomSheet rendert Grabber 36×4 in `tokens.line` (statt explizitem `stone200`, damit Dark-Mode automatisch passt) und addiert `viewInsets.bottom` zum Bottom-Padding für Keyboard-Fälle. `showKubbBottomSheet`-Helper liefert `transparent` Backdrop, `isScrollControlled: true`. Vier neue Tests grün (Eyebrow+Title, Action-Slot, PreferredSize, Sheet-Helper mit Grabber + Top-Radien). 49 Tests grün, `flutter analyze` clean.
 
 ### M4-T2: KubbTapPad + KubbCounter
 - **Agent**: coder
