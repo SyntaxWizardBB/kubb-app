@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [7] pending | [0] in-progress | [17] done | [0] blocked
+- Status-Übersicht: [6] pending | [0] in-progress | [18] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -388,12 +388,13 @@
 - **Input**: M2-T3
 - **Output**: `lib/features/training/data/training_repository.dart`, `lib/features/training/application/recent_sessions_provider.dart`
 - **Akzeptanzkriterien**:
-  - [ ] Given startSession when zuvor `active`-Row existierte then alte Row ist auf `discarded`, neue Row ist `active`
-  - [ ] Given `heliTracking=false` when recentSessionsProvider liefert View then Hit-Rate = `hits / (hits+misses)` ohne Heli
-  - [ ] Given `heliTracking=true` when same then Hit-Rate = `hits / (hits+misses)` (per Q-9b — Heli zählt nicht in Quote)
-  - [ ] flutter analyze clean
+  - [x] Given startSession when zuvor `active`-Row existierte then alte Row ist hard-deleted, neue Row ist `active`
+  - [x] Given `heliTracking=false` when recentSessionsProvider liefert View then Hit-Rate = `hits / (hits+misses)` ohne Heli
+  - [x] Given `heliTracking=true` when same then Hit-Rate = `hits / (hits+misses)` (per Q-9b — Heli zählt nicht in Quote)
+  - [x] flutter analyze clean
 - **Abhängigkeiten**: M2-T3
-- **Status**: pending
+- **Status**: done
+- **Notiz**: TrainingRepository 120 LOC mit den acht spezifizierten Methoden plus `eventsOf` als Read-Helper für den View-Mapper. Defensiv-Pfad in `startSession` nutzt `package:logging`-Logger und macht hard-delete (nicht status-flip), weil `discarded` nirgends mehr gelesen wird und der FK-Cascade die Events automatisch räumt. `recentSessionsProvider` wurde von Const-Stub zu echtem `StreamProvider<List<RecentSessionView>>` mit `asyncMap` über `watchRecentCompleted` — heliTracking aus den Settings beeinflusst nur die `totalThrows`-Anzeige im Subtitle, nicht die Hit-Rate (per Q-9b). HomeScreen + bestehende Widget-Tests (`widget_test`, `app_test`, `home_screen_test`) wurden auf die neue AsyncValue-Signatur umgestellt; `appDatabaseProvider` ist in den Widget-Tests nicht überschrieben, deshalb wird der Provider dort mit einem leeren Stream übersteuert um Native-DB-Timer zu vermeiden. Für die Provider-Tests selbst: `container.read(recentSessionsProvider.future)` blockiert in Riverpod 3.1 (Disposed-during-loading), deshalb ist der Test mit `container.listen(...)` und einer Bedingungs-Future statt `.future` aufgebaut. Insgesamt 76 Tests grün (vorher 66), `flutter analyze` clean.
 
 ### M5-T2: Tests für ActiveSessionNotifier (TDD)
 - **Agent**: tester
