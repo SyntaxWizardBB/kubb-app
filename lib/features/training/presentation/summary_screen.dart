@@ -8,7 +8,9 @@ import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/training/application/active_finisseur_notifier.dart';
 import 'package:kubb_app/features/training/application/active_session_notifier.dart';
+import 'package:kubb_app/features/training/data/finisseur_repository.dart';
 import 'package:kubb_app/features/training/data/training_repository.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
@@ -18,12 +20,16 @@ class SummaryData {
     required this.hits,
     required this.misses,
     required this.helis,
+    this.finisseurSticks = const <FinisseurStickEvent>[],
   });
 
   final Session session;
   final int hits;
   final int misses;
   final int helis;
+  final List<FinisseurStickEvent> finisseurSticks;
+
+  bool get isFinisseur => session.mode == 'finisseur';
 }
 
 // Family inference matches existing repo style; explicit type would shadow
@@ -34,6 +40,16 @@ final summarySessionProvider =
   final db = ref.watch(appDatabaseProvider);
   final session = await db.sessionDao.getById(sessionId);
   if (session == null) throw StateError('Session not found: $sessionId');
+  if (session.mode == 'finisseur') {
+    return SummaryData(
+      session: session,
+      hits: 0,
+      misses: 0,
+      helis: 0,
+      finisseurSticks:
+          await db.finisseurStickEventDao.forSession(sessionId),
+    );
+  }
   return SummaryData(
     session: session,
     hits: await db.sessionEventDao.countByKind(sessionId, 'hit'),
@@ -64,14 +80,16 @@ class SummaryScreen extends ConsumerWidget {
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _ErrorView(message: e.toString()),
-        data: (d) => _Body(data: d, settings: settings, l: l, tokens: tokens),
+        data: (d) => d.isFinisseur
+            ? _FinisseurBody(data: d, l: l, tokens: tokens)
+            : _SniperBody(data: d, settings: settings, l: l, tokens: tokens),
       ),
     );
   }
 }
 
-class _Body extends ConsumerWidget {
-  const _Body({
+class _SniperBody extends ConsumerWidget {
+  const _SniperBody({
     required this.data,
     required this.settings,
     required this.l,
@@ -114,50 +132,209 @@ class _Body extends ConsumerWidget {
           ),
           _Row(label: l.summaryDuration, value: dur, tokens: tokens),
           const SizedBox(height: KubbTokens.space8),
-          SizedBox(
-            height: KubbTokens.touchComfortable,
-            child: FilledButton(
-              onPressed: () => context.go('/'),
-              child: Text(l.summarySave),
-            ),
-          ),
-          const SizedBox(height: KubbTokens.space2),
-          SizedBox(
-            height: KubbTokens.touchComfortable,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(foregroundColor: tokens.danger),
-              onPressed: () async {
-                await ref
-                    .read(trainingRepositoryProvider)
-                    .discard(sessionId: data.session.id);
-                if (!context.mounted) return;
-                context.go('/');
-              },
-              child: Text(l.summaryDiscard),
-            ),
-          ),
-          const SizedBox(height: KubbTokens.space2),
-          TextButton(
-            onPressed: () => _restart(context, ref),
-            child: Text(l.summaryRestart),
+          _Actions(
+            session: data.session,
+            l: l,
+            tokens: tokens,
+            onRestart: () => _restartSniper(context, ref, data.session),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _restart(BuildContext context, WidgetRef ref) async {
+  Future<void> _restartSniper(
+    BuildContext context,
+    WidgetRef ref,
+    Session session,
+  ) async {
     final profile = ref.read(currentProfileProvider).value;
     if (profile == null) return;
     final notifier = ref.read(activeSessionProvider.notifier);
     await notifier.startSession(
       playerId: profile.id,
-      distance: data.session.distanceMeters,
-      throwTarget: data.session.throwTarget,
+      distance: session.distanceMeters,
+      throwTarget: session.throwTarget,
     );
     final id = ref.read(activeSessionProvider).value?.sessionId;
     if (!context.mounted || id == null) return;
     context.go('/training/sniper/session/$id');
+  }
+}
+
+class _FinisseurBody extends ConsumerWidget {
+  const _FinisseurBody({
+    required this.data,
+    required this.l,
+    required this.tokens,
+  });
+
+  final SummaryData data;
+  final AppLocalizations l;
+  final KubbTokens tokens;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sticks = data.finisseurSticks;
+    final field = data.session.finField ?? 0;
+    final base = data.session.finBase ?? 0;
+    final fieldDown = sticks.fold<int>(0, (a, s) => a + s.fieldKubbsHit);
+    final baseDown = sticks.fold<int>(0, (a, s) => a + (s.eightMHit ? 1 : 0));
+    final kingHit = sticks.any((s) => s.kingHit ?? false);
+    final success = fieldDown >= field && baseDown >= base && kingHit;
+    final sticksUsed = sticks.where((s) => !_isUntouched(s)).length;
+    final penalties = sticks.fold<int>(
+      0,
+      (a, s) => a + s.penaltyHits1 + s.penaltyHits2,
+    );
+    final helis = sticks.where((s) => s.heliThrow).length;
+    final dur = _fmtDuration(
+      (data.session.completedAt ?? DateTime.now().toUtc())
+          .difference(data.session.startedAt),
+    );
+    final kingStick = sticks.firstWhere(
+      (s) => s.kingHit != null,
+      orElse: () => sticks.isEmpty
+          ? FinisseurStickEvent(
+              id: '',
+              sessionId: data.session.id,
+              stickIndex: -1,
+              fieldKubbsHit: 0,
+              eightMHit: false,
+              heliThrow: false,
+              penaltyHits1: 0,
+              penaltyHits2: 0,
+              createdAt: DateTime.now().toUtc(),
+            )
+          : sticks.first,
+    );
+    final kingValue = kingStick.kingHit == null
+        ? l.finisseurSummaryKingNone
+        : (kingStick.kingHit!
+            ? l.finisseurSummaryKingHit(kingStick.kingPosition ?? '')
+            : l.finisseurSummaryKingMiss);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        KubbTokens.space4, KubbTokens.space4, KubbTokens.space4, KubbTokens.space6,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _FinisseurVerdict(
+            success: success,
+            sticksUsed: sticksUsed,
+            duration: dur,
+            tokens: tokens,
+            l: l,
+          ),
+          const SizedBox(height: KubbTokens.space6),
+          _Row(label: l.finisseurSummaryKingRow, value: kingValue, tokens: tokens),
+          _Row(
+            label: l.finisseurSummaryPenalties,
+            value: '$penalties',
+            tokens: tokens,
+          ),
+          _Row(label: l.finisseurSummaryHeli, value: '$helis', tokens: tokens),
+          _Row(
+            label: l.summaryDistance,
+            value: '$field/$base',
+            tokens: tokens,
+          ),
+          _Row(label: l.summaryDuration, value: dur, tokens: tokens),
+          const SizedBox(height: KubbTokens.space8),
+          _Actions(
+            session: data.session,
+            l: l,
+            tokens: tokens,
+            onRestart: () => _restartFinisseur(context, ref, data.session),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _restartFinisseur(
+    BuildContext context,
+    WidgetRef ref,
+    Session session,
+  ) async {
+    final profile = ref.read(currentProfileProvider).value;
+    if (profile == null) return;
+    final notifier = ref.read(activeFinisseurProvider.notifier);
+    await notifier.startSession(
+      playerId: profile.id,
+      field: session.finField ?? 7,
+      base: session.finBase ?? 3,
+    );
+    final id = ref.read(activeFinisseurProvider).value?.sessionId;
+    if (!context.mounted || id == null) return;
+    context.go('/training/finisseur/session/$id');
+  }
+
+  bool _isUntouched(FinisseurStickEvent s) =>
+      s.fieldKubbsHit == 0 &&
+      !s.eightMHit &&
+      !s.heliThrow &&
+      s.kingHit == null &&
+      s.penaltyHits1 == 0 &&
+      s.penaltyHits2 == 0;
+}
+
+class _Actions extends ConsumerWidget {
+  const _Actions({
+    required this.session,
+    required this.l,
+    required this.tokens,
+    required this.onRestart,
+  });
+  final Session session;
+  final AppLocalizations l;
+  final KubbTokens tokens;
+  final VoidCallback onRestart;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: KubbTokens.touchComfortable,
+          child: FilledButton(
+            onPressed: () => context.go('/'),
+            child: Text(l.summarySave),
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        SizedBox(
+          height: KubbTokens.touchComfortable,
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(foregroundColor: tokens.danger),
+            onPressed: () => _discard(context, ref),
+            child: Text(l.summaryDiscard),
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        TextButton(
+          onPressed: onRestart,
+          child: Text(l.summaryRestart),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _discard(BuildContext context, WidgetRef ref) async {
+    if (session.mode == 'finisseur') {
+      await ref
+          .read(finisseurRepositoryProvider)
+          .discard(sessionId: session.id);
+    } else {
+      await ref
+          .read(trainingRepositoryProvider)
+          .discard(sessionId: session.id);
+    }
+    if (!context.mounted) return;
+    context.go('/');
   }
 }
 
@@ -193,6 +370,57 @@ class _Verdict extends StatelessWidget {
           ),
         ],
       );
+}
+
+class _FinisseurVerdict extends StatelessWidget {
+  const _FinisseurVerdict({
+    required this.success,
+    required this.sticksUsed,
+    required this.duration,
+    required this.tokens,
+    required this.l,
+  });
+
+  final bool success;
+  final int sticksUsed;
+  final String duration;
+  final KubbTokens tokens;
+  final AppLocalizations l;
+
+  @override
+  Widget build(BuildContext context) {
+    final tag = success ? l.finisseurSummarySuccess : l.finisseurSummaryFail;
+    return Column(
+      children: [
+        Text(
+          tag.toUpperCase(),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.88,
+            color: success ? tokens.primary : tokens.fgMuted,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        Text(
+          l.finisseurSummarySticksUsed(sticksUsed),
+          style: TextStyle(
+            fontSize: 84,
+            fontWeight: FontWeight.w800,
+            height: 0.95,
+            letterSpacing: -3.4,
+            color: tokens.fg,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        Text(
+          l.finisseurSummarySticksUsedSubtitle(duration),
+          style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+        ),
+      ],
+    );
+  }
 }
 
 class _Row extends StatelessWidget {
