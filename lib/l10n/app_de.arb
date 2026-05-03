@@ -7,5 +7,21 @@
   "welcomeMessage": "Willkommen — Projekt-Setup läuft.",
   "@welcomeMessage": {
     "description": "Placeholder home screen message during initial setup"
+  },
+  "onboardingGreeting": "Willkommen",
+  "@onboardingGreeting": {
+    "description": "Onboarding greeting line above the title"
+  },
+  "onboardingTitle": "Wie heisst du?",
+  "@onboardingTitle": {
+    "description": "Onboarding screen title prompting for the player name"
+  },
+  "onboardingHint": "z.B. Lukas",
+  "@onboardingHint": {
+    "description": "Onboarding name field placeholder"
+  },
+  "onboardingConfirm": "Weiter",
+  "@onboardingConfirm": {
+    "description": "Onboarding confirm button label"
   }
 }

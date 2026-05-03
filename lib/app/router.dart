@@ -1,37 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/player/presentation/onboarding_screen.dart';
 
-final GoRouter appRouter = GoRouter(
-  initialLocation: '/',
-  routes: <RouteBase>[
-    GoRoute(
-      path: '/onboarding',
-      builder: (context, state) => const _OnboardingPlaceholder(),
-    ),
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const _HomePlaceholder(),
-    ),
-    GoRoute(
-      path: '/profile',
-      builder: (context, state) => const _ProfilePlaceholder(),
-    ),
-    GoRoute(
-      path: '/training/sniper/config',
-      builder: (context, state) => const _SniperConfigPlaceholder(),
-    ),
-    GoRoute(
-      path: '/training/sniper/session/:id',
-      builder: (context, state) =>
-          _SniperSessionPlaceholder(id: state.pathParameters['id'] ?? ''),
-    ),
-    GoRoute(
-      path: '/training/summary/:id',
-      builder: (context, state) =>
-          _SummaryPlaceholder(id: state.pathParameters['id'] ?? ''),
-    ),
-  ],
-);
+final goRouterProvider = Provider<GoRouter>((ref) {
+  final notifier = _ProfileRefresh();
+  ref
+    ..listen(currentProfileProvider, (_, _) => notifier.notify())
+    ..onDispose(notifier.dispose);
+
+  return GoRouter(
+    initialLocation: '/',
+    refreshListenable: notifier,
+    redirect: (context, state) {
+      final profile = ref.read(currentProfileProvider);
+      return profile.when(
+        data: (player) {
+          final goingToOnboarding = state.matchedLocation == '/onboarding';
+          if (player == null && !goingToOnboarding) return '/onboarding';
+          if (player != null && goingToOnboarding) return '/';
+          return null;
+        },
+        loading: () => null,
+        error: (_, _) => '/onboarding',
+      );
+    },
+    routes: <RouteBase>[
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const _HomePlaceholder(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const _ProfilePlaceholder(),
+      ),
+      GoRoute(
+        path: '/training/sniper/config',
+        builder: (context, state) => const _SniperConfigPlaceholder(),
+      ),
+      GoRoute(
+        path: '/training/sniper/session/:id',
+        builder: (context, state) =>
+            _SniperSessionPlaceholder(id: state.pathParameters['id'] ?? ''),
+      ),
+      GoRoute(
+        path: '/training/summary/:id',
+        builder: (context, state) =>
+            _SummaryPlaceholder(id: state.pathParameters['id'] ?? ''),
+      ),
+    ],
+  );
+});
+
+class _ProfileRefresh extends ChangeNotifier {
+  void notify() => notifyListeners();
+}
 
 class _Placeholder extends StatelessWidget {
   const _Placeholder({required this.title, this.detail});
@@ -47,12 +75,6 @@ class _Placeholder extends StatelessWidget {
       body: Center(child: Text('Placeholder — $label')),
     );
   }
-}
-
-class _OnboardingPlaceholder extends StatelessWidget {
-  const _OnboardingPlaceholder();
-  @override
-  Widget build(BuildContext context) => const _Placeholder(title: 'Onboarding');
 }
 
 class _HomePlaceholder extends StatelessWidget {

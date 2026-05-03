@@ -14,9 +14,10 @@ class KubbApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final choice = ref.watch(themeChoiceProvider);
+    final router = ref.watch(goRouterProvider);
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-      routerConfig: appRouter,
+      routerConfig: router,
       theme: choice.themeData(),
       darkTheme: KubbTheme.dark(),
       themeMode: choice.toThemeMode(),
