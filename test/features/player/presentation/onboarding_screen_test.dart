@@ -73,4 +73,56 @@ void main() {
 
     expect(isEnabled(tester), isFalse);
   });
+
+  testWidgets('A4: shows snackbar and re-enables button when create() throws',
+      (tester) async {
+    final failing = _ThrowingPlayerRepository();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [playerRepositoryProvider.overrideWithValue(failing)],
+        child: MaterialApp(
+          theme: KubbTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('de'),
+          home: const OnboardingScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'Lukas');
+    await tester.pump();
+    expect(isEnabled(tester), isTrue);
+
+    await tester.tap(confirmButton());
+    await tester.pump();
+    await tester.pump();
+
+    expect(
+      find.text('Profil konnte nicht erstellt werden — bitte erneut versuchen.'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+    expect(isEnabled(tester), isTrue);
+  });
+}
+
+class _ThrowingPlayerRepository implements PlayerRepository {
+  _ThrowingPlayerRepository();
+
+  @override
+  Future<Player> create({required String name}) async {
+    throw StateError('forced create() failure');
+  }
+
+  @override
+  Future<Player?> currentOrNull() async => null;
+
+  @override
+  Stream<Player?> watchCurrent() => const Stream<Player?>.empty();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      super.noSuchMethod(invocation);
 }

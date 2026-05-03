@@ -118,4 +118,32 @@ void main() {
     expect(notifier.lastDistance, 8.0);
     expect(notifier.lastThrowTarget, 100);
   });
+
+  testWidgets('A5: start button disabled when current profile is null',
+      (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          currentProfileProvider.overrideWith(
+            (ref) => Stream<Player?>.value(null),
+          ),
+          activeSessionProvider.overrideWith(() => notifier),
+        ],
+        child: MaterialApp(
+          theme: KubbTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('de'),
+          home: const SniperConfigScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Sniper starten'),
+    );
+    expect(button.onPressed, isNull);
+  });
 }
