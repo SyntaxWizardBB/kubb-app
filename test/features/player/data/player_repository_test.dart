@@ -53,6 +53,27 @@ void main() {
     expect(loaded?.name, 'Anna');
   });
 
+  test('update writes name and avatarColor through to db', () async {
+    final created = await repo.create(name: 'Lukas');
+
+    final updated = await repo.update(
+      id: created.id,
+      name: 'Lukasz',
+      avatarColor: '0xFF3A7C2E',
+    );
+
+    expect(updated.name, 'Lukasz');
+    expect(updated.avatarColor, '0xFF3A7C2E');
+    expect(updated.id, created.id);
+  });
+
+  test('update throws StateError when id does not exist', () async {
+    expect(
+      () => repo.update(id: 'unknown', name: 'X'),
+      throwsA(isA<StateError>()),
+    );
+  });
+
   test('watchCurrent emits null then the created player', () async {
     final stream = repo.watchCurrent();
 

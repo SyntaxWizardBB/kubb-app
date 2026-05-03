@@ -53,4 +53,29 @@ void main() {
     final row = await db.playerDao.getById('missing');
     expect(row, isNull);
   });
+
+  test('updateById patches name and avatarColor and returns 1', () async {
+    await db.playerDao.insert(player('p1', 'Lukas'));
+
+    final affected = await db.playerDao.updateById(
+      'p1',
+      const PlayersCompanion(
+        name: Value('Lukasz'),
+        avatarColor: Value('0xFF3A7C2E'),
+      ),
+    );
+
+    expect(affected, 1);
+    final row = await db.playerDao.getById('p1');
+    expect(row!.name, 'Lukasz');
+    expect(row.avatarColor, '0xFF3A7C2E');
+  });
+
+  test('updateById returns 0 when id does not match', () async {
+    final affected = await db.playerDao.updateById(
+      'missing',
+      const PlayersCompanion(name: Value('Whatever')),
+    );
+    expect(affected, 0);
+  });
 }

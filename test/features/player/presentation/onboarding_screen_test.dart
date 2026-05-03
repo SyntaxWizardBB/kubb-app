@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/core/ui/widgets/avatar_circle.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
 import 'package:kubb_app/features/player/data/player_repository.dart';
 import 'package:kubb_app/features/player/presentation/onboarding_screen.dart';
@@ -62,6 +63,23 @@ void main() {
     await tester.pump();
 
     expect(isEnabled(tester), isTrue);
+  });
+
+  testWidgets('avatar preview updates as the user types', (tester) async {
+    await pump(tester);
+
+    expect(find.byType(AvatarCircle), findsOneWidget);
+    expect(find.text('?'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'Lukas');
+    await tester.pump();
+
+    expect(find.text('L'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'Marc Brosius');
+    await tester.pump();
+
+    expect(find.text('MB'), findsOneWidget);
   });
 
   testWidgets('confirm button disabled with whitespace-only name',
