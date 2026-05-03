@@ -24,4 +24,8 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
   Future<int> updateById(String id, PlayersCompanion patch) {
     return (update(players)..where((p) => p.id.equals(id))).write(patch);
   }
+
+  Future<void> deleteById(String id) {
+    return (delete(players)..where((p) => p.id.equals(id))).go();
+  }
 }

@@ -75,4 +75,8 @@ class SessionDao extends DatabaseAccessor<AppDatabase> with _$SessionDaoMixin {
   Future<void> deleteById(String id) {
     return (delete(sessions)..where((s) => s.id.equals(id))).go();
   }
+
+  Future<int> deleteAllForPlayer(String playerId) {
+    return (delete(sessions)..where((s) => s.playerId.equals(playerId))).go();
+  }
 }

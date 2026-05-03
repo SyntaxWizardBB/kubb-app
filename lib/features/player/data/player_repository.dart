@@ -42,6 +42,10 @@ class PlayerRepository {
     return query.watch().map((rows) => rows.isEmpty ? null : rows.first);
   }
 
+  Future<void> delete(String id) {
+    return _dao.deleteById(id);
+  }
+
   Future<Player> update({
     required String id,
     required String name,
