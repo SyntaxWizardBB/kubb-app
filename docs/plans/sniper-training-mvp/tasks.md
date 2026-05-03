@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [5] pending | [0] in-progress | [19] done | [0] blocked
+- Status-Übersicht: [4] pending | [0] in-progress | [20] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -441,17 +441,18 @@
 - **Input**: M5-T3, M4-T2, M4-T1
 - **Output**: `lib/features/training/presentation/sniper_config_screen.dart`, `lib/features/training/presentation/sniper_session_screen.dart`, `lib/features/training/presentation/widgets/abort_dialog.dart`, `lib/features/training/presentation/summary_screen.dart`, `lib/l10n/app_de.arb`
 - **Akzeptanzkriterien**:
-  - [ ] Given Config bestätigt with distance=6.5 when "Start" then Session-Route mit Distanz 6.5 in AppBar
-  - [ ] Given Session offen when Hit+ tap then Counter steigt um 1, Event in DB
-  - [ ] Given Session mit 0 Throws when Abbrechen-Dialog when Speichern-Option then Speichern-Button nicht vorhanden
-  - [ ] Given Eye-Toggle aktiv when Counter masked then "—" sichtbar, sticky-Persistenz nach App-Restart
-  - [ ] Given heliTracking=off when SniperSession rendert then 4-Pad-Grid (kein Heli)
-  - [ ] Given Summary "Neu starten" when ausgelöst then neue Session mit gleicher Config
-  - [ ] flutter analyze clean
-  - [ ] Mindestens ein Widget-Test pro Screen (Config, Session, Summary)
+  - [x] Given Config bestätigt with distance=6.5 when "Start" then Session-Route mit Distanz 6.5 in AppBar
+  - [x] Given Session offen when Hit+ tap then Counter steigt um 1, Event in DB
+  - [x] Given Session mit 0 Throws when Abbrechen-Dialog when Speichern-Option then Speichern-Button nicht vorhanden
+  - [x] Given Eye-Toggle aktiv when Counter masked then "—" sichtbar, sticky-Persistenz nach App-Restart
+  - [x] Given heliTracking=off when SniperSession rendert then 4-Pad-Grid (kein Heli)
+  - [x] Given Summary "Neu starten" when ausgelöst then neue Session mit gleicher Config
+  - [x] flutter analyze clean
+  - [x] Mindestens ein Widget-Test pro Screen (Config, Session, Summary)
 - **Abhängigkeiten**: M5-T3, M4-T2, M4-T1
-- **Status**: pending — split in a/b/c
+- **Status**: done — split in a/b/c, all merged
 - **Notiz (M5-T4a done)**: SniperConfigScreen unter `lib/features/training/presentation/sniper_config_screen.dart` (130 LOC) plus Widget-Test (121 LOC, 4 Cases). Distanz-Slider 4.0–8.0 m mit 0.5er-Schritten und Tick-Row, Preset-Chips (∞/25/50/100/200) plus Custom-TextField (1–999, digitsOnly), Start ruft `ActiveSessionNotifier.startSession` und navigiert via go_router auf `/training/sniper/session/:id`. Profil wird per `ref.watch(currentProfileProvider)` aktiv gehalten, damit `_start` synchron lesen kann. Router-Placeholder `_SniperConfigPlaceholder` entfernt. Sieben neue ARB-Keys in `app_de.arb`. 89 Tests grün, `flutter analyze` clean. M5-T4b (SessionScreen + AbortDialog) und M5-T4c (SummaryScreen) folgen.
+- **Notiz (M5-T4c done)**: SummaryScreen unter `lib/features/training/presentation/summary_screen.dart` (266 LOC inkl. SummaryData-Wrapper, FutureProvider.family und vier private Sub-Widgets `_Body`/`_Verdict`/`_Row`/`_ErrorView` — Haupt-Widget selbst ~25 LOC, Splitting bewusst im selben File). Daten kommen aus `summarySessionProvider` (FutureProvider.family) der direkt am `appDatabaseProvider` zieht — `ActiveSessionNotifier` ist nach `complete()` schon null. Hit-Rate per `(hits / (hits+misses) * 100).round() %` mit Heli-Filter per Q-9b (Heli zählt nie in die Quote). Bei 0 Throws Anzeige "—". Detail-Rows: Treffer, Miss, Heli (nur wenn `appSettings.heliTracking == true`), Distanz, Dauer (mm:ss aus `completedAt - startedAt`). Drei Aktionen: "Speichern" (FilledButton, geht zu `/`), "Verwerfen" (OutlinedButton danger, ruft `repo.discard(sessionId)` für hard-delete), "Neu starten" (TextButton, `notifier.startSession` mit gleicher Distanz/Target und navigiert zur neuen Session-Route). Router-`_SummaryPlaceholder` plus die beiden ungenutzten `_Placeholder`-Klassen entfernt. 11 ARB-Keys neu. Widget-Test mit 5 Cases (71 % Hit-Rate, Heli-Row off/on, Dash bei 0-Throws, Discard ruft repo). 102 Tests grün (vorher 97), `flutter analyze` clean. Damit ist M5-T4 vollständig (a Config + b Session/Abort + c Summary). Nächster Task ist M5-T5 (Crash-Recovery).
 - **Notiz (M5-T4b done)**: SniperSessionScreen unter `lib/features/training/presentation/sniper_session_screen.dart` (262 LOC — Layout in private Widgets `_CounterStrip`/`_Remaining`/`_BlindHint`/`_PadGrid` aufgeteilt, bewusst in derselben Datei statt künstlich verteilt). KubbAppBar mit Distanz als Big-Display, kein Hamburger (per Q-9a), Eye-Toggle als sticky Action-Icon (`appSettings.setEyeHidden`). Counter-Strip mit zwei oder drei `KubbCounter` je nach `heliTracking`, Maskierung über `masked: settings.sniperEyeToggleHidden`. Remaining-Hinweis nur wenn `throwTarget != null`, rechnet Heli korrekt rein nur wenn Tracking on. PadGrid mit 4 oder 6 Pads (2-Spalten-`GridView.count`, aspect 2.2), jeder Pad triggert `_haptic` plus passenden Notifier-Call via `_tap`-Helper (vermeidet `discarded_futures`-Lints). End-Button `complete()` → Summary-Route, Abort-Button öffnet `AbortDialog`. AbortDialog unter `lib/features/training/presentation/widgets/abort_dialog.dart` (48 LOC) als statische `show(...)`-Factory mit `AbortChoice.{save, discard, cancel}`-Enum, "Speichern"-Button nur wenn `hasThrows` true (AC-3). Router-Placeholder `_SniperSessionPlaceholder` entfernt, echte Route auf `/training/sniper/session/:id` verdrahtet. 13 ARB-Keys neu in `app_de.arb`. Zwei Widget-Test-Files: `sniper_session_screen_test.dart` (160 LOC, 6 Cases — Counter-Anzahl heli on/off, Pad-Anzahl, Hit+ ruft notifier, Eye-Toggle ruft Setter, Maskierung mit Dash) plus `abort_dialog_test.dart` (44 LOC, 2 Cases — Save sichtbar/verborgen). 97 Tests grün (vorher 89), `flutter analyze` clean. M5-T4c (SummaryScreen) folgt.
 
 ### M5-T5: crashRecoveryProvider + CrashRecoveryDialog + Integration-Test
