@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/app/app.dart';
+import 'package:kubb_app/app/bootstrap.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
 import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
@@ -9,18 +10,18 @@ import 'package:kubb_app/features/training/application/recent_sessions_provider.
 
 void main() {
   testWidgets('App boots and renders the home greeting', (tester) async {
+    final player = Player(
+      id: 'test-id',
+      name: 'Test',
+      deviceId: 'test-device',
+      createdAt: DateTime.utc(2026),
+    );
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          appBootstrapProvider.overrideWith((ref) async => player),
           currentProfileProvider.overrideWith(
-            (ref) => Stream<Player?>.value(
-              Player(
-                id: 'test-id',
-                name: 'Test',
-                deviceId: 'test-device',
-                createdAt: DateTime.utc(2026),
-              ),
-            ),
+            (ref) => Stream<Player?>.value(player),
           ),
           recentSessionsProvider.overrideWith(
             (ref) => Stream.value(const <RecentSessionView>[]),

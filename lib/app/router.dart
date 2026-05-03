@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kubb_app/app/bootstrap.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
 import 'package:kubb_app/features/player/presentation/onboarding_screen.dart';
 import 'package:kubb_app/features/player/presentation/profile_screen.dart';
@@ -19,17 +20,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: notifier,
     redirect: (context, state) {
-      final profile = ref.read(currentProfileProvider);
-      return profile.when(
-        data: (player) {
-          final goingToOnboarding = state.matchedLocation == '/onboarding';
-          if (player == null && !goingToOnboarding) return '/onboarding';
-          if (player != null && goingToOnboarding) return '/';
-          return null;
-        },
-        loading: () => null,
-        error: (_, _) => '/onboarding',
+      // Live stream wins. Until it has emitted, fall back to the snapshot
+      // captured at bootstrap — both are synchronous, no AsyncLoading window.
+      final live = ref.read(currentProfileProvider);
+      final player = live.maybeWhen(
+        data: (p) => p,
+        orElse: () => ref.read(initialProfileProvider),
       );
+      final goingToOnboarding = state.matchedLocation == '/onboarding';
+      if (player == null && !goingToOnboarding) return '/onboarding';
+      if (player != null && goingToOnboarding) return '/';
+      return null;
     },
     routes: <RouteBase>[
       GoRoute(

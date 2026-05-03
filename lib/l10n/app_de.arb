@@ -24,6 +24,10 @@
   "@onboardingConfirm": {
     "description": "Onboarding confirm button label"
   },
+  "onboardingCreateError": "Profil konnte nicht erstellt werden — bitte erneut versuchen.",
+  "@onboardingCreateError": {
+    "description": "Snackbar shown when profile creation fails on the onboarding screen"
+  },
   "profileTitle": "Profil",
   "@profileTitle": {
     "description": "Profile screen title"

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/app/app.dart';
+import 'package:kubb_app/app/bootstrap.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/app_settings.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
@@ -21,21 +22,21 @@ class _FakeAppSettingsNotifier extends AppSettingsNotifier {
 
 void main() {
   Future<void> pumpWithChoice(WidgetTester tester, ThemeChoice choice) async {
+    final player = Player(
+      id: 'test-id',
+      name: 'Test',
+      deviceId: 'test-device',
+      createdAt: DateTime.utc(2026),
+    );
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           appSettingsProvider.overrideWith(
             () => _FakeAppSettingsNotifier(AppSettings(themeChoice: choice)),
           ),
+          appBootstrapProvider.overrideWith((ref) async => player),
           currentProfileProvider.overrideWith(
-            (ref) => Stream<Player?>.value(
-              Player(
-                id: 'test-id',
-                name: 'Test',
-                deviceId: 'test-device',
-                createdAt: DateTime.utc(2026),
-              ),
-            ),
+            (ref) => Stream<Player?>.value(player),
           ),
           recentSessionsProvider.overrideWith(
             (ref) => Stream.value(const <RecentSessionView>[]),

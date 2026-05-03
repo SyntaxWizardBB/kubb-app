@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
+import 'package:logging/logging.dart';
+
+final _log = Logger('OnboardingScreen');
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -32,10 +34,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     setState(() => _submitting = true);
     try {
       await ref.read(playerRepositoryProvider).create(name: name);
-      if (mounted) context.go('/');
-    } catch (_) {
-      if (mounted) setState(() => _submitting = false);
-      rethrow;
+      // Router redirect picks up the drift stream emission and navigates.
+    } on Object catch (e, st) {
+      _log.warning('failed to create profile', e, st);
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      final l = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.onboardingCreateError)),
+      );
     }
   }
 
