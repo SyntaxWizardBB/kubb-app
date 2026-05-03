@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [13] pending | [0] in-progress | [11] done | [0] blocked
+- Status-Übersicht: [12] pending | [0] in-progress | [12] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -242,11 +242,12 @@
 - **Input**: M3-T1, M1-T5
 - **Output**: `lib/features/player/presentation/profile_screen.dart`, `lib/l10n/app_de.arb`
 - **Akzeptanzkriterien**:
-  - [ ] Given Profil "Lukas" when `/profile` aufgerufen then Name "Lukas" sichtbar
-  - [ ] Given kein Profil when `/profile` aufgerufen then Loading-Indikator (degenerierter Fall, wird in der Praxis durch Redirect verhindert)
-  - [ ] flutter analyze clean
+  - [x] Given Profil "Lukas" when `/profile` aufgerufen then Name "Lukas" sichtbar
+  - [x] Given kein Profil when `/profile` aufgerufen then Loading-Indikator (degenerierter Fall, wird in der Praxis durch Redirect verhindert)
+  - [x] flutter analyze clean
 - **Abhängigkeiten**: M3-T1, M1-T5
-- **Status**: pending
+- **Status**: done
+- **Notiz**: KubbAppBar-Wrapper kommt erst in M4-T1 — F1-Pragma ist hier ein dünner Material-`AppBar` mit Token-Farben. Datum via `DateFormat.yMMMMd('de')`; dafür `initializeDateFormatting('de')` in `main()` ergänzt (Test-Setup ruft es ebenfalls). Drei Widget-Test-Cases: Name sichtbar, Loading-Indikator, "Kein Profil"-Fallback. `_ProfilePlaceholder` aus `router.dart` entfernt — Router jetzt 108 LOC. ProfileScreen 74 LOC. Insgesamt 39 Tests grün, `flutter analyze` clean.
 
 ### M3-T4: AppSettingsNotifier mit Persistenz
 - **Agent**: coder
