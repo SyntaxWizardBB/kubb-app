@@ -424,11 +424,12 @@
 - **Input**: M5-T2 (Tests definieren das Verhalten)
 - **Output**: `lib/features/training/application/active_session_notifier.dart`, `lib/features/training/application/active_session_state.dart`
 - **Akzeptanzkriterien**:
-  - [ ] Given M5-T2 when alle Tests laufen then grün
-  - [ ] flutter analyze clean
-  - [ ] Datei `active_session_notifier.dart` ≤ 100 LOC (state-objekt darf ausgelagert sein)
+  - [x] Given M5-T2 when alle Tests laufen then grün
+  - [x] flutter analyze clean
+  - [x] Datei `active_session_notifier.dart` ≤ 100 LOC (state-objekt darf ausgelagert sein)
 - **Abhängigkeiten**: M5-T2
-- **Status**: pending
+- **Status**: done
+- **Notiz**: Notifier 99 LOC, `active_session_state.dart` 36 LOC ausgelagert mit `copyWith`. `build()` returnt initial null — die echte Crash-Recovery-Hydration triggert M5-T5 in einem separaten Provider via `resumeFromCrash`. Alle Mutations-Methoden gehen durch einen `_withActive`-Guard, der bei null-State graceful no-op macht (Test 9 grün ohne Event-Leak). `_bump` clamped Counter auf min 0 für defensive Undo-Sequenzen. `state.value` (statt `valueOrNull`) ist die Riverpod-3.x-API. Heli-Filter bewusst NICHT im Notifier — wird im SniperSessionScreen-Selektor (M5-T4) auf Settings basierend gemacht. Skip-Marker `_skipUntilM5T3` aus dem Test-File entfernt; alle 9 Cases laufen jetzt mit. Insgesamt 85 Tests grün (vorher 76), `flutter analyze` clean.
 
 ### M5-T4: SniperConfig + SniperSession + AbortDialog + Summary
 - **Agent**: coder
