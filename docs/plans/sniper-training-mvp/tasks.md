@@ -5,7 +5,7 @@
 - Sprint-Plan: sprint-plan.md
 - Erstellt: 2026-05-02
 - Gesamt-Tasks: 24
-- Status-Übersicht: [10] pending | [0] in-progress | [14] done | [0] blocked
+- Status-Übersicht: [9] pending | [0] in-progress | [15] done | [0] blocked
 - Größen-Mapping: S=0.5–1h, M=1–3h, L=3–5h
 
 ## Reihenfolge & Abhängigkeiten
@@ -321,7 +321,7 @@
   - [ ] flutter analyze clean
   - [ ] Widget-Test: Tap-Callback feuert, masked-Mode rendert "—"
 - **Abhängigkeiten**: M1-T3
-- **Status**: pending
+- **Status**: done
 
 ### M4-T3: KubbIcons (Brand + lucide-Wrapper)
 - **Agent**: coder
