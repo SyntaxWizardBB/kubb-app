@@ -30,4 +30,4 @@ Keine — Spec eindeutig genug.
 
 ## Status
 
-Planning → Implementation → Push.
+Done — alle 11 Tasks shipped. Schema bump v3 ist live, FinisseurConfig + StickScreen + SummaryVariant funktionieren, TrainingSheet routet echt, StatsRepository ignoriert Finisseur-Sessions in den Sniper-Aggregaten. 167 Tests grün, `flutter analyze` und `dart analyze` sauber.
