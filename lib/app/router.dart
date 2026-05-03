@@ -6,6 +6,7 @@ import 'package:kubb_app/features/player/presentation/onboarding_screen.dart';
 import 'package:kubb_app/features/player/presentation/profile_screen.dart';
 import 'package:kubb_app/features/training/presentation/home_screen.dart';
 import 'package:kubb_app/features/training/presentation/sniper_config_screen.dart';
+import 'package:kubb_app/features/training/presentation/sniper_session_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final notifier = _ProfileRefresh();
@@ -49,7 +50,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/training/sniper/session/:id',
         builder: (context, state) =>
-            _SniperSessionPlaceholder(id: state.pathParameters['id'] ?? ''),
+            SniperSessionScreen(sessionId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/training/summary/:id',
@@ -78,14 +79,6 @@ class _Placeholder extends StatelessWidget {
       body: Center(child: Text('Placeholder — $label')),
     );
   }
-}
-
-class _SniperSessionPlaceholder extends StatelessWidget {
-  const _SniperSessionPlaceholder({required this.id});
-  final String id;
-  @override
-  Widget build(BuildContext context) =>
-      _Placeholder(title: 'Sniper Session', detail: id);
 }
 
 class _SummaryPlaceholder extends StatelessWidget {

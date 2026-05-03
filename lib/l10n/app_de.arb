@@ -115,5 +115,32 @@
   "sniperConfigTargetCustomHint": "Eigener Wert",
   "@sniperConfigTargetCustomHint": { "description": "Custom throw-target field hint" },
   "sniperConfigStartButton": "Sniper starten",
-  "@sniperConfigStartButton": { "description": "Start button label on sniper config screen" }
+  "@sniperConfigStartButton": { "description": "Start button label on sniper config screen" },
+  "sniperCounterHit": "Treffer",
+  "@sniperCounterHit": { "description": "Counter label for hits during a sniper session" },
+  "sniperCounterMiss": "Miss",
+  "@sniperCounterMiss": { "description": "Counter label for misses during a sniper session" },
+  "sniperCounterHeli": "Heli",
+  "@sniperCounterHeli": { "description": "Counter label for helicopter throws during a sniper session" },
+  "sniperRemaining": "noch {count} Würfe",
+  "@sniperRemaining": {
+    "description": "Remaining throws to target",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sniperBlindHint": "Trefferzahl verdeckt — du wirfst blind.",
+  "@sniperBlindHint": { "description": "Hint shown when the eye-toggle masks counters" },
+  "sniperEndButton": "Session beenden",
+  "@sniperEndButton": { "description": "Primary end-session button label" },
+  "sniperAbortButton": "Abbrechen",
+  "@sniperAbortButton": { "description": "Secondary abort button label" },
+  "abortDialogTitle": "Session abbrechen?",
+  "@abortDialogTitle": { "description": "Abort dialog title" },
+  "abortDialogContent": "Möchtest du die bisherige Session speichern oder verwerfen?",
+  "@abortDialogContent": { "description": "Abort dialog explanatory body" },
+  "abortDialogCancel": "Zurück",
+  "@abortDialogCancel": { "description": "Abort dialog cancel button" },
+  "abortDialogDiscard": "Verwerfen",
+  "@abortDialogDiscard": { "description": "Abort dialog discard button" },
+  "abortDialogSave": "Speichern",
+  "@abortDialogSave": { "description": "Abort dialog save-and-finish button" }
 }
