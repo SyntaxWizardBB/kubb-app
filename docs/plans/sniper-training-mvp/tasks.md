@@ -333,11 +333,11 @@
 - **Input**: M1-T3, `docs/design/ui_kits/app/icons.jsx` (falls vorhanden)
 - **Output**: `lib/core/ui/icons.dart`
 - **Akzeptanzkriterien**:
-  - [ ] Given `KubbIcons.heli` when gerendert then 24×24-Widget mit Tokens-Color
-  - [ ] Given `KubbIcon.lucide(LucideIcons.menu)` when gerendert then Lucide-Menu-Icon
-  - [ ] flutter analyze clean
+  - [x] Given `KubbIcons.heli` when gerendert then 24×24-Widget mit Tokens-Color
+  - [x] Given `KubbIcon.lucide(LucideIcons.menu)` when gerendert then Lucide-Menu-Icon
+  - [x] flutter analyze clean
 - **Abhängigkeiten**: M1-T3
-- **Status**: pending
+- **Status**: done
 
 ### M4-T4: TrainingSheet (FAB-Sheet)
 - **Agent**: coder
