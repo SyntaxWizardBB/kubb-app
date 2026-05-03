@@ -181,5 +181,9 @@
   "crashRecoverySave": "Als beendet speichern",
   "@crashRecoverySave": { "description": "Crash recovery save-as-finished button" },
   "crashRecoveryDiscard": "Verwerfen",
-  "@crashRecoveryDiscard": { "description": "Crash recovery discard button" }
+  "@crashRecoveryDiscard": { "description": "Crash recovery discard button" },
+  "bootstrapErrorTitle": "App konnte nicht starten",
+  "@bootstrapErrorTitle": { "description": "Bootstrap error screen title" },
+  "bootstrapErrorBody": "Bitte App neu starten. Wenn das Problem bleibt, melde dich beim Support.",
+  "@bootstrapErrorBody": { "description": "Bootstrap error screen body" }
 }
