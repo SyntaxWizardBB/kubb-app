@@ -10,9 +10,29 @@ final appBootstrapProvider = FutureProvider<Player?>((ref) async {
   return repo.currentOrNull();
 });
 
-// Synchronous handle to the bootstrap result. Reading this before the
-// bootstrap has resolved throws — KubbApp is the gate that guarantees
-// it has.
-final initialProfileProvider = Provider<Player?>((ref) {
-  return ref.watch(appBootstrapProvider).requireValue;
-});
+/// Sticky snapshot of the last successful bootstrap result.
+///
+/// On the first build, mirrors whatever [appBootstrapProvider] currently
+/// holds (null while loading, the player once it resolves). On subsequent
+/// emissions, only `AsyncData` updates the state — `loading` and `error`
+/// are ignored so a `ref.invalidate` never blanks out the
+/// previously-known profile. The router uses this as a fallback when the
+/// live `currentProfileProvider` stream has not produced its first frame
+/// yet.
+class LastKnownProfileNotifier extends Notifier<Player?> {
+  @override
+  Player? build() {
+    ref.listen<AsyncValue<Player?>>(
+      appBootstrapProvider,
+      (_, next) => next.whenData((p) => state = p),
+    );
+    // Seed synchronously so the very first read after bootstrap resolves
+    // returns the player without waiting for a frame.
+    return ref.read(appBootstrapProvider).value;
+  }
+}
+
+final initialProfileProvider =
+    NotifierProvider<LastKnownProfileNotifier, Player?>(
+  LastKnownProfileNotifier.new,
+);
