@@ -26,20 +26,44 @@ class _FinisseurConfigScreenState
   int _field = 7;
   int _base = 3;
 
-  int get _maxBase =>
-      (_totalMax - _field).clamp(0, _baseHardMax);
-
-  void _setField(int v) {
-    final next = v.clamp(0, _totalMax);
+  // Field+: respect TOTAL_MAX. If incrementing field would push field+base
+  // over the cap and there's a base kubb to give up, swap one base into a
+  // field. At 10/0 we're at the absolute ceiling — no-op.
+  void _incField() {
     setState(() {
-      _field = next;
-      final maxBase = (_totalMax - next).clamp(0, _baseHardMax);
-      if (_base > maxBase) _base = maxBase;
+      if (_field >= _totalMax) return;
+      if (_field + 1 + _base <= _totalMax) {
+        _field += 1;
+      } else if (_base > 0) {
+        _field += 1;
+        _base -= 1;
+      }
     });
   }
 
-  void _setBase(int v) =>
-      setState(() => _base = v.clamp(0, _maxBase));
+  void _decField() {
+    if (_field <= 0) return;
+    setState(() => _field -= 1);
+  }
+
+  // Base+: BASE_HARD is the cap. If field+base+1 exceeds TOTAL_MAX and there's
+  // a field kubb to give up, swap. At base=5 (hard cap) we're done.
+  void _incBase() {
+    setState(() {
+      if (_base >= _baseHardMax) return;
+      if (_field + _base + 1 <= _totalMax) {
+        _base += 1;
+      } else if (_field > 0) {
+        _field -= 1;
+        _base += 1;
+      }
+    });
+  }
+
+  void _decBase() {
+    if (_base <= 0) return;
+    setState(() => _base -= 1);
+  }
 
   Future<void> _start(Player profile) async {
     await ref.read(activeFinisseurProvider.notifier).startSession(
@@ -91,15 +115,21 @@ class _FinisseurConfigScreenState
               value: _field,
               min: 0,
               max: _totalMax,
-              onChanged: _setField,
+              canIncrement: _field < _totalMax,
+              canDecrement: _field > 0,
+              onIncrement: _incField,
+              onDecrement: _decField,
             ),
             const SizedBox(height: KubbTokens.space4),
             _Stepper(
-              label: l.finisseurConfigBaseLabel(_maxBase),
+              label: l.finisseurConfigBaseLabel(_baseHardMax),
               value: _base,
               min: 0,
-              max: _maxBase,
-              onChanged: _setBase,
+              max: _baseHardMax,
+              canIncrement: _base < _baseHardMax,
+              canDecrement: _base > 0,
+              onIncrement: _incBase,
+              onDecrement: _decBase,
               accent: true,
             ),
             const SizedBox(height: KubbTokens.space2),
@@ -132,7 +162,10 @@ class _Stepper extends StatelessWidget {
     required this.value,
     required this.min,
     required this.max,
-    required this.onChanged,
+    required this.canIncrement,
+    required this.canDecrement,
+    required this.onIncrement,
+    required this.onDecrement,
     this.accent = false,
   });
 
@@ -140,7 +173,10 @@ class _Stepper extends StatelessWidget {
   final int value;
   final int min;
   final int max;
-  final ValueChanged<int> onChanged;
+  final bool canIncrement;
+  final bool canDecrement;
+  final VoidCallback onIncrement;
+  final VoidCallback onDecrement;
   final bool accent;
 
   @override
@@ -177,8 +213,7 @@ class _Stepper extends StatelessWidget {
           children: [
             _StepBtn(
               icon: LucideIcons.minus,
-              onPressed:
-                  value > min ? () => onChanged(value - 1) : null,
+              onPressed: canDecrement ? onDecrement : null,
             ),
             const SizedBox(width: KubbTokens.space2),
             Expanded(
@@ -205,8 +240,7 @@ class _Stepper extends StatelessWidget {
             const SizedBox(width: KubbTokens.space2),
             _StepBtn(
               icon: LucideIcons.plus,
-              onPressed:
-                  value < max ? () => onChanged(value + 1) : null,
+              onPressed: canIncrement ? onIncrement : null,
             ),
           ],
         ),
