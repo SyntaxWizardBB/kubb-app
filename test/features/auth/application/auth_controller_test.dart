@@ -121,4 +121,33 @@ void main() {
       const AuthSession.signedOut(),
     );
   });
+
+  test('a sign-in event in flight when signOut runs does not resurrect state',
+      () async {
+    // Reproduces the race that the generation counter guards against:
+    // the adapter has emitted an anonymous-sign-in event but the
+    // listener has not yet finished its async _persistSession await
+    // when the user calls signOut. Without the generation guard the
+    // pending listener would re-write SignedOut with a stale anonymous
+    // session.
+    await container.read(authControllerProvider.future);
+
+    // Fire the event but do NOT drain microtasks — the listener has
+    // queued its async work but signOut runs before that work
+    // completes its dao persistence.
+    await adapter.signInAnonymously();
+    await container.read(authControllerProvider.notifier).signOut();
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    expect(
+      container.read(authControllerProvider).value,
+      const AuthSession.signedOut(),
+      reason: 'in-flight sign-in event must not overwrite SignedOut',
+    );
+    expect(
+      await dao.current(),
+      isNull,
+      reason: 'in-flight sign-in must not persist after signOut',
+    );
+  });
 }

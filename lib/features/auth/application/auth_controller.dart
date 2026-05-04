@@ -47,6 +47,15 @@ final authControllerProvider =
 class AuthController extends AsyncNotifier<AuthSession> {
   StreamSubscription<AuthAdapterState>? _sub;
 
+  /// Monotonic counter bumped on every imperative state change
+  /// (sign-out today; future explicit sign-in promotions when they
+  /// come). Adapter events captured before the bump are ignored,
+  /// which kills the race a fast sign-in→sign-out→sign-in produces:
+  /// without it, a delayed AuthState event from the first sign-in can
+  /// land after the second sign-out and overwrite SignedOut with a
+  /// stale authenticated session in drift.
+  int _generation = 0;
+
   SupabaseAuthAdapter get _adapter =>
       ref.read(supabaseAuthAdapterProvider);
   CachedAuthSessionDao get _dao =>
@@ -56,7 +65,7 @@ class AuthController extends AsyncNotifier<AuthSession> {
   @override
   Future<AuthSession> build() async {
     ref.onDispose(() => _sub?.cancel());
-    _sub = _adapter.onAuthStateChange.listen(_onAdapterState);
+    _subscribe();
 
     final cached = await _dao.current();
     if (cached != null) {
@@ -69,20 +78,52 @@ class AuthController extends AsyncNotifier<AuthSession> {
     return const AuthSession.signedOut();
   }
 
+  void _subscribe() {
+    final subscribedGeneration = _generation;
+    _sub = _adapter.onAuthStateChange.listen((adapterState) {
+      // Stream.listen takes a synchronous callback; the handler is
+      // async by nature so we deliberately discard the returned
+      // Future. Each subscription is bound to the generation in
+      // effect at the moment of `listen()`. signOut bumps the
+      // generation and re-subscribes, so any event that was already
+      // in flight on the previous subscription tags an older
+      // generation and gets dropped.
+      unawaited(_onAdapterState(adapterState, subscribedGeneration));
+    });
+  }
+
   Future<void> signOut() async {
     final userId = state.value?.userId;
+    // Tear down the live subscription first: any event already
+    // emitted by the adapter but not yet delivered to our listener
+    // belongs to the pre-signOut session and must not influence our
+    // state. Bumping _generation invalidates any handler that did
+    // start before the cancel completed.
+    _generation++;
+    await _sub?.cancel();
+    _sub = null;
     await _adapter.signOut();
     await _dao.clear();
     if (userId != null) _telemetry.logout(userId: userId);
     state = const AsyncData(AuthSession.signedOut());
+    _subscribe();
   }
 
-  Future<void> _onAdapterState(AuthAdapterState adapterState) async {
+  Future<void> _onAdapterState(
+    AuthAdapterState adapterState,
+    int eventGeneration,
+  ) async {
+    if (eventGeneration != _generation) {
+      return;
+    }
     final session = _sessionFromAdapter(adapterState);
     if (session is SignedOutSession) {
       await _dao.clear();
     } else {
       await _persistSession(adapterState, session);
+    }
+    if (eventGeneration != _generation) {
+      return;
     }
     state = AsyncData(session);
   }
