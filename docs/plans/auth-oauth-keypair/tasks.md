@@ -428,6 +428,7 @@
   - **When** ein Round-Trip getestet wird: `uploadBackup(privKey, "passwd", "lukas")` → `restoreBackup("lukas", "passwd")`
   - **Then** liefert restore den ursprünglichen privKey zurück
   - **And** falsche Passphrase liefert `AuthError.passphraseMismatch`
+- **Status**: done — abstract KeypairBackupRepository + KeypairRestoreFailed + KeypairRestoreResult. FakeKeypairBackupRepository nutzt echte CryptoService (kleine Test-Params m=8/t=1/p=1) für genuinen encrypt/decrypt-Symmetrie-Check, server-Storage als in-memory Map. 7 Contract-Tests (round-trip, wrong passphrase, unknown nickname, updatePassphrase rotates + fails on wrong old, deleteBackup, multi-account-Isolation). Wichtig: KeypairRestoreFailed unified für "row missing" UND "passphrase mismatch" (per AK-4 Enumeration-Resistance).
 
 ### M3-T04: KeypairBackupRepository implementation
 
