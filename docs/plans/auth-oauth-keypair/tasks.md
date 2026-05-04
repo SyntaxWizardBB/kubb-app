@@ -189,6 +189,7 @@
   - **When** die DB mit schemaVersion=4 erneut geöffnet wird (löst onUpgrade aus)
   - **Then** existiert die Tabelle `cached_auth_session`, sessions hat 0 Zeilen mit user_id-Spalte (statt player_id), session_events hat 0 Zeilen, players-Tabelle existiert nicht mehr
   - **And** ein Backup-Pfad wurde im Test-Hook abgefragt und ist gültig
+- **Status**: done — AC angepasst an additive M1-T01 (kein v3-Backup-Test mehr, da keine destruktiven Operationen). Fixture-Test rollt v4-DB zu v3 zurück (DROP cached_auth_session + PRAGMA user_version=3), seedet 1 Player + 2 Sessions + 1 SessionEvent, zieht createTable manuell durch und verifiziert (a) cached_auth_session da, (b) v3-Daten unverändert, (c) Single-Row-Constraint, (d) Round-Trip. 4 Tests in test/core/data/app_database_v4_migration_test.dart, alle grün. v3-Backup-Hook + destruktive Tests kommen mit M6.
 
 ### M1-T03: cached_auth_session table + DAO + tests
 

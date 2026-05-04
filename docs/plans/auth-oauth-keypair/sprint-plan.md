@@ -197,14 +197,14 @@ Total mögliche Reduktion: ~11 h → effektiv ~44 h, ~4 Wochen.
 | Milestone | Done | In Progress | Blocked | Pending | Total |
 |---|---|---|---|---|---|
 | M0 | 4 | 0 | 0 | 0 | 4 |
-| M1 | 1 | 0 | 0 | 7 | 8 |
+| M1 | 2 | 0 | 0 | 6 | 8 |
 | M2 | 0 | 0 | 0 | 6 | 6 |
 | M3 | 0 | 0 | 0 | 8 | 8 |
 | M4 | 0 | 0 | 0 | 11 | 11 |
 | M5 | 0 | 0 | 0 | 15 | 15 |
 | M6 | 0 | 0 | 0 | 8 | 8 |
 | M7 | 0 | 0 | 0 | 5 | 5 |
-| **Gesamt** | **5** | **0** | **0** | **60** | **65** |
+| **Gesamt** | **6** | **0** | **0** | **59** | **65** |
 
 ## Nächste Schritte (Übergabe an /workflows/feature Phase 3)
 
