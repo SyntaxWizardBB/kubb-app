@@ -153,6 +153,7 @@
   - **Given** M0-T02 ist gemerged
   - **When** `flutter pub get && flutter analyze && flutter test` und `cd packages/kubb_domain && dart pub get && dart analyze && dart test` ausgeführt werden
   - **Then** alle laufen clean (Analyzer 0 Issues, alle 241 bestehenden Tests grün)
+- **Status**: done — flutter analyze 0 Issues, dart analyze (kubb_domain) 0 Issues, flutter test 241/241, dart test (kubb_domain) 9/9. Alle M0-Outputs sind kompatibel mit existierender Code-Basis.
 
 ### M1-T01: drift v4 migration code + v3-backup hook
 
