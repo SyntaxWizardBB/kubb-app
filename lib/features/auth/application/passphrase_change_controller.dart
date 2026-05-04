@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:kubb_app/features/auth/application/account_setup_controller.dart';
+import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/data/keypair_backup_repository.dart';
 
 part 'passphrase_change_controller.freezed.dart';
@@ -28,12 +29,19 @@ class PassphraseChangeController extends Notifier<PassphraseChangeState> {
     required String newPassphrase,
   }) async {
     state = const PassphraseChangeState.changing();
+    final telemetry = ref.read(authTelemetryProvider);
     try {
       await ref.read(keypairBackupRepositoryProvider).updatePassphrase(
             nickname: nickname,
             oldPassphrase: oldPassphrase,
             newPassphrase: newPassphrase,
           );
+      final userId = ref.read(supabaseAuthAdapterProvider).currentState.userId;
+      if (userId != null) {
+        telemetry
+          ..passphraseChanged(userId: userId)
+          ..keypairBackupRotated(userId: userId);
+      }
       state = const PassphraseChangeState.done();
     } on KeypairRestoreFailed catch (e) {
       state = PassphraseChangeState.failed(reason: e.message);

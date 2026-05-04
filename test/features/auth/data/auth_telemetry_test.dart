@@ -107,6 +107,68 @@ void main() {
     expect(records.first.message, isNot(contains('userId')));
   });
 
+  test('profileUpdate logs which fields changed but not their values', () {
+    telemetry.profileUpdate(
+      userId: 'abc12345-fullnickname',
+      didRenameNickname: true,
+      didChangeAvatar: false,
+    );
+
+    expect(records.first.level, Level.INFO);
+    expect(records.first.message, contains('profileUpdate'));
+    expect(records.first.message, contains('userId=abc12345'));
+    expect(records.first.message, contains('rename=true'));
+    expect(records.first.message, contains('avatar=false'));
+    expectNoPii(records.first.message);
+  });
+
+  test('restoreAttempted on success records userId prefix only', () {
+    telemetry.restoreAttempted(
+      userId: 'abc12345-fullnickname',
+      success: true,
+    );
+
+    expect(records.first.level, Level.INFO);
+    expect(records.first.message, contains('restoreAttempted'));
+    expect(records.first.message, contains('userId=abc12345'));
+    expect(records.first.message, contains('success=true'));
+    expectNoPii(records.first.message);
+  });
+
+  test('restoreAttempted on cooldown records reason at WARNING', () {
+    telemetry.restoreAttempted(
+      success: false,
+      reasonCode: 'cooldown_active',
+    );
+
+    expect(records.first.level, Level.WARNING);
+    expect(records.first.message, contains('success=false'));
+    expect(records.first.message, contains('reason=cooldown_active'));
+    expect(records.first.message, isNot(contains('userId')));
+  });
+
+  test('passphraseChanged records nothing besides the user-id prefix', () {
+    telemetry.passphraseChanged(userId: 'abc12345-fullnickname');
+
+    expect(records.first.message, contains('passphraseChanged'));
+    expect(records.first.message, contains('userId=abc12345'));
+    expectNoPii(records.first.message);
+  });
+
+  test('keypairBackupCreated and keypairBackupRotated stay PII-clean', () {
+    telemetry
+      ..keypairBackupCreated(userId: 'abc12345-fullnickname')
+      ..keypairBackupRotated(userId: 'abc12345-fullnickname');
+
+    expect(records.length, 2);
+    expect(records[0].message, contains('keypairBackupCreated'));
+    expect(records[1].message, contains('keypairBackupRotated'));
+    for (final r in records) {
+      expect(r.message, contains('userId=abc12345'));
+      expectNoPii(r.message);
+    }
+  });
+
   test('every AuthEvent is exercised by the API surface', () {
     // Documents the API completeness — if a new event is added to the
     // enum, this test forces the maintainer to add a corresponding
@@ -127,6 +189,19 @@ void main() {
           telemetry.accountDelete(userId: 'u'),
       AuthEvent.accountUpgrade: () =>
           telemetry.accountUpgrade(userId: 'u', toKind: 'k'),
+      AuthEvent.profileUpdate: () => telemetry.profileUpdate(
+            userId: 'u',
+            didRenameNickname: true,
+            didChangeAvatar: true,
+          ),
+      AuthEvent.restoreAttempted: () =>
+          telemetry.restoreAttempted(success: true),
+      AuthEvent.passphraseChanged: () =>
+          telemetry.passphraseChanged(userId: 'u'),
+      AuthEvent.keypairBackupCreated: () =>
+          telemetry.keypairBackupCreated(userId: 'u'),
+      AuthEvent.keypairBackupRotated: () =>
+          telemetry.keypairBackupRotated(userId: 'u'),
     };
 
     expect(exercisable.keys.toSet(), AuthEvent.values.toSet());

@@ -13,6 +13,11 @@ enum AuthEvent {
   logout,
   accountDelete,
   accountUpgrade,
+  profileUpdate,
+  restoreAttempted,
+  passphraseChanged,
+  keypairBackupCreated,
+  keypairBackupRotated,
 }
 
 /// Routes auth-state transitions to `package:logging` with strict PII
@@ -86,6 +91,73 @@ class AuthTelemetry {
     _emit(
       AuthEvent.accountUpgrade,
       message: 'userId=${_prefix(userId)} to=$toKind',
+    );
+  }
+
+  /// Logged after a successful cloud-profile update. The actual
+  /// nickname and avatar value never leave the client; we only record
+  /// which fields the user touched so a regression in the edit flow
+  /// can be diagnosed without trawling the database.
+  void profileUpdate({
+    required String userId,
+    required bool didRenameNickname,
+    required bool didChangeAvatar,
+  }) {
+    _emit(
+      AuthEvent.profileUpdate,
+      message: 'userId=${_prefix(userId)} '
+          'rename=$didRenameNickname avatar=$didChangeAvatar',
+    );
+  }
+
+  /// Logged on every restore attempt — both the success path and the
+  /// per-attempt failures. The cooldown branch passes `success: false`
+  /// with `reason: cooldown_triggered` so the rate-limit can be
+  /// audited from the log alone.
+  void restoreAttempted({
+    required bool success,
+    String? userId,
+    String? reasonCode,
+  }) {
+    final parts = <String>[
+      if (userId != null) 'userId=${_prefix(userId)}',
+      'success=$success',
+      if (reasonCode != null) 'reason=$reasonCode',
+    ];
+    _emit(
+      AuthEvent.restoreAttempted,
+      message: parts.join(' '),
+      level: success ? Level.INFO : Level.WARNING,
+    );
+  }
+
+  /// Logged after the encrypted backup row was re-encrypted with a
+  /// new passphrase. Neither the old nor the new passphrase appears
+  /// in the log — only the user-id prefix.
+  void passphraseChanged({required String userId}) {
+    _emit(
+      AuthEvent.passphraseChanged,
+      message: 'userId=${_prefix(userId)}',
+    );
+  }
+
+  /// Logged after the initial encrypted-keypair upload during anonymous
+  /// signup. Distinct from `passphraseChanged` so a backup that exists
+  /// only because of a rotation can be distinguished from a brand-new
+  /// account.
+  void keypairBackupCreated({required String userId}) {
+    _emit(
+      AuthEvent.keypairBackupCreated,
+      message: 'userId=${_prefix(userId)}',
+    );
+  }
+
+  /// Logged after a backup row was rotated as part of a recovery
+  /// flow (e.g. account-link re-encrypts under a new passphrase).
+  void keypairBackupRotated({required String userId}) {
+    _emit(
+      AuthEvent.keypairBackupRotated,
+      message: 'userId=${_prefix(userId)}',
     );
   }
 

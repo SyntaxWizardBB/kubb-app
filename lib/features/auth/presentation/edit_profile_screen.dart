@@ -106,11 +106,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       });
       return;
     }
+    final didRenameNickname = _nick != _initialNick;
+    final didChangeAvatar = _color != _initialColor;
     try {
       await ref.read(cloudProfileRepositoryProvider).updateProfile(
             userId: profile.userId,
             nickname: _nick,
             avatarColor: _color,
+          );
+      ref.read(authTelemetryProvider).profileUpdate(
+            userId: profile.userId,
+            didRenameNickname: didRenameNickname,
+            didChangeAvatar: didChangeAvatar,
           );
       if (!mounted) return;
       setState(() {

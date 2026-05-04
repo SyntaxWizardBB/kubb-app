@@ -109,7 +109,9 @@ class AccountSetupController extends Notifier<AccountSetupState> {
         );
         return;
       }
-      telemetry.signinSuccess(userId: userId, kind: 'keypair');
+      telemetry
+        ..keypairBackupCreated(userId: userId)
+        ..signinSuccess(userId: userId, kind: 'keypair');
       state = AccountSetupState.done(userId: userId);
     } on Object catch (error) {
       telemetry.signinFailure(

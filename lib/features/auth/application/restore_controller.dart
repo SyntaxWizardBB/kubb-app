@@ -5,6 +5,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/core/data/dao/app_settings_dao.dart';
 import 'package:kubb_app/features/auth/application/account_setup_controller.dart';
+import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/data/keypair_backup_repository.dart';
 
 part 'restore_controller.freezed.dart';
@@ -39,9 +40,14 @@ class RestoreController extends Notifier<RestoreState> {
     required String passphrase,
   }) async {
     final settings = ref.read(appDatabaseProvider).appSettingsDao;
+    final telemetry = ref.read(authTelemetryProvider);
     final cooldownUntil = await _readCooldown(settings, nickname);
     final now = DateTime.now().toUtc();
     if (cooldownUntil != null && cooldownUntil.isAfter(now)) {
+      telemetry.restoreAttempted(
+        success: false,
+        reasonCode: 'cooldown_active',
+      );
       state = RestoreState.cooldown(until: cooldownUntil);
       return;
     }
@@ -57,6 +63,7 @@ class RestoreController extends Notifier<RestoreState> {
       );
       await keypairStorage.save(restored.privateKey);
       await _resetFailures(settings, nickname);
+      telemetry.restoreAttempted(success: true);
       // The actual sign-in (challenge / verify) happens in
       // KeypairSigningService — not here. RestoreController exists to
       // get the private key onto the device; the controller layer
@@ -67,8 +74,18 @@ class RestoreController extends Notifier<RestoreState> {
       if (newFailures >= _maxFailures) {
         final until = now.add(_cooldown);
         await _writeCooldown(settings, nickname, until);
+        telemetry.restoreAttempted(
+          success: false,
+          reasonCode: 'cooldown_triggered',
+        );
         state = RestoreState.cooldown(until: until);
       } else {
+        // Reason code stays generic — `e.message` may carry server text
+        // and must not land in telemetry.
+        telemetry.restoreAttempted(
+          success: false,
+          reasonCode: 'restore_failed',
+        );
         state = RestoreState.failed(reason: e.message);
       }
     }
