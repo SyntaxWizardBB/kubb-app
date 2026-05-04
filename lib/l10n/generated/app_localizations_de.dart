@@ -972,4 +972,34 @@ class AppLocalizationsDe extends AppLocalizations {
   String authRestoreCooldownMessage(int seconds) {
     return 'Bitte warte $seconds Sekunden, dann versuch es erneut.';
   }
+
+  @override
+  String get authLinkEyebrow => 'Account';
+
+  @override
+  String get authLinkTitle => 'Konto verknüpfen';
+
+  @override
+  String get authLinkHeading => 'Verknüpfe dein Konto\nfür sichereres Backup';
+
+  @override
+  String get authLinkExplanation =>
+      'Du bist aktuell anonym mit deiner Passphrase angemeldet. Wenn du Google oder Apple verknüpfst, kannst du dein Konto auch ohne Passphrase wiederherstellen.';
+
+  @override
+  String get authLinkGoogleLabel => 'Google verknüpfen';
+
+  @override
+  String get authLinkAppleLabel => 'Apple verknüpfen';
+
+  @override
+  String get authLinkErrorBanner =>
+      'Verknüpfen fehlgeschlagen. Versuch es nochmals.';
+
+  @override
+  String get authLinkSuccessBanner => 'Konto erfolgreich verknüpft.';
+
+  @override
+  String get authLinkFallbackKept =>
+      'Dein bisheriger Zugang per Passphrase bleibt als Backup erhalten.';
 }

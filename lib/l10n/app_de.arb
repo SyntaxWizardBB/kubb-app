@@ -720,5 +720,24 @@
     "placeholders": {
       "seconds": { "type": "int" }
     }
-  }
+  },
+
+  "authLinkEyebrow": "Account",
+  "@authLinkEyebrow": { "description": "Link-screen eyebrow above the title" },
+  "authLinkTitle": "Konto verknüpfen",
+  "@authLinkTitle": { "description": "Link-screen header title" },
+  "authLinkHeading": "Verknüpfe dein Konto\nfür sichereres Backup",
+  "@authLinkHeading": { "description": "Link-screen large heading" },
+  "authLinkExplanation": "Du bist aktuell anonym mit deiner Passphrase angemeldet. Wenn du Google oder Apple verknüpfst, kannst du dein Konto auch ohne Passphrase wiederherstellen.",
+  "@authLinkExplanation": { "description": "Link-screen explanatory body" },
+  "authLinkGoogleLabel": "Google verknüpfen",
+  "@authLinkGoogleLabel": { "description": "Google upgrade button label" },
+  "authLinkAppleLabel": "Apple verknüpfen",
+  "@authLinkAppleLabel": { "description": "Apple upgrade button label" },
+  "authLinkErrorBanner": "Verknüpfen fehlgeschlagen. Versuch es nochmals.",
+  "@authLinkErrorBanner": { "description": "Link-screen error banner" },
+  "authLinkSuccessBanner": "Konto erfolgreich verknüpft.",
+  "@authLinkSuccessBanner": { "description": "Link-screen success banner" },
+  "authLinkFallbackKept": "Dein bisheriger Zugang per Passphrase bleibt als Backup erhalten.",
+  "@authLinkFallbackKept": { "description": "Link-screen reassurance note that the keypair is still usable" }
 }

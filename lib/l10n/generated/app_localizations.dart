@@ -1863,6 +1863,60 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Bitte warte {seconds} Sekunden, dann versuch es erneut.'**
   String authRestoreCooldownMessage(int seconds);
+
+  /// Link-screen eyebrow above the title
+  ///
+  /// In de, this message translates to:
+  /// **'Account'**
+  String get authLinkEyebrow;
+
+  /// Link-screen header title
+  ///
+  /// In de, this message translates to:
+  /// **'Konto verknüpfen'**
+  String get authLinkTitle;
+
+  /// Link-screen large heading
+  ///
+  /// In de, this message translates to:
+  /// **'Verknüpfe dein Konto\nfür sichereres Backup'**
+  String get authLinkHeading;
+
+  /// Link-screen explanatory body
+  ///
+  /// In de, this message translates to:
+  /// **'Du bist aktuell anonym mit deiner Passphrase angemeldet. Wenn du Google oder Apple verknüpfst, kannst du dein Konto auch ohne Passphrase wiederherstellen.'**
+  String get authLinkExplanation;
+
+  /// Google upgrade button label
+  ///
+  /// In de, this message translates to:
+  /// **'Google verknüpfen'**
+  String get authLinkGoogleLabel;
+
+  /// Apple upgrade button label
+  ///
+  /// In de, this message translates to:
+  /// **'Apple verknüpfen'**
+  String get authLinkAppleLabel;
+
+  /// Link-screen error banner
+  ///
+  /// In de, this message translates to:
+  /// **'Verknüpfen fehlgeschlagen. Versuch es nochmals.'**
+  String get authLinkErrorBanner;
+
+  /// Link-screen success banner
+  ///
+  /// In de, this message translates to:
+  /// **'Konto erfolgreich verknüpft.'**
+  String get authLinkSuccessBanner;
+
+  /// Link-screen reassurance note that the keypair is still usable
+  ///
+  /// In de, this message translates to:
+  /// **'Dein bisheriger Zugang per Passphrase bleibt als Backup erhalten.'**
+  String get authLinkFallbackKept;
 }
 
 class _AppLocalizationsDelegate
