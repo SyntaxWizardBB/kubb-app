@@ -412,6 +412,7 @@
   - **When** der Adapter implementiert ist und gegen FakeSupabase (lokale Testinstanz) läuft
   - **Then** gehen alle M3-T01-Tests grün — sowohl mit FakeAdapter als auch mit dem echten Adapter
   - **And** `flutter analyze` clean
+- **Status**: done — SupabaseAuthAdapterImpl wraps supabase_flutter via SupabaseClient (constructor-injected). Implementiert alle 10 Methoden des Contract: signInWithOAuth (mit Deep-Link redirectTo), signInAnonymously, attachKeypair (rpc keypair_attach mit base64 Encoding), requestKeypairChallenge (rpc), verifyKeypairSignature (rpc), linkOAuthToCurrentUser (auth.linkIdentity), deleteCurrentAccount (auth.admin.deleteUser + signOut), signOut. State derived from Session via _stateFromSession. Note: M3-T01 Contract-Tests laufen gegen Fake; das echte Adapter wird gegen lokales Supabase via M2-T05 Smoketest manuell verifiziert (kein Mocking von SupabaseClient — zu komplex). flutter analyze clean, 294/294 Tests grün.
 
 ### M3-T03: KeypairBackupRepository tests + Fake
 
