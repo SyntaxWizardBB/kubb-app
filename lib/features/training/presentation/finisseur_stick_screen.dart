@@ -5,6 +5,7 @@ import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_notifier.dart';
+import 'package:kubb_app/features/training/application/active_finisseur_state.dart';
 import 'package:kubb_app/features/training/presentation/widgets/abort_dialog.dart';
 import 'package:kubb_app/features/training/presentation/widgets/finisseur_inputs.dart';
 import 'package:kubb_app/features/training/presentation/widgets/pip_progress.dart';
@@ -57,6 +58,13 @@ class FinisseurStickScreen extends ConsumerWidget {
     final inFieldPhase = remField > 0;
     final inBasePhase = remField == 0 && remBase > 0;
     final hasProgress = state.currentIndex > 0 || !stick.isUntouched;
+    // King flow gets activated mid-stick when the player hits the last
+    // standing base kubb with king-throw tracking on. The stick stays open
+    // so the player can record where the king fell — only then we advance.
+    final kingFlowActive = inBasePhase &&
+        settings.kingThrowTracking &&
+        stick.king != null &&
+        !stick.heli;
 
     Future<void> handleBack() async {
       final notifier = ref.read(activeFinisseurProvider.notifier);
@@ -139,15 +147,47 @@ class FinisseurStickScreen extends ConsumerWidget {
                     .read(activeFinisseurProvider.notifier)
                     .updateCurrentStick(s),
               ),
-            ] else if (inBasePhase) ...[
+            ] else if (inBasePhase && !kingFlowActive) ...[
               const SizedBox(height: KubbTokens.space4),
               FinisseurBasePhasePad(
                 stick: stick,
                 heliVisible: settings.heliTracking,
-                onCommit: (patch) async {
+                onHit: () async {
+                  final notifier =
+                      ref.read(activeFinisseurProvider.notifier);
+                  // Last base kubb + king tracking → open the king block,
+                  // do not advance yet. Otherwise commit and move on.
+                  final isLastBase =
+                      remBase == 1 && settings.kingThrowTracking;
+                  if (isLastBase) {
+                    notifier.updateCurrentStick(stick.copyWith(
+                      eightMHit: true,
+                      king: const KingResult(hit: true),
+                    ));
+                  } else {
+                    notifier.updateCurrentStick(
+                      stick.copyWith(eightMHit: true),
+                    );
+                    await next();
+                  }
+                },
+                onMiss: () async {
                   ref
                       .read(activeFinisseurProvider.notifier)
-                      .updateCurrentStick(patch);
+                      .updateCurrentStick(
+                        stick.copyWith(eightMHit: false),
+                      );
+                  await next();
+                },
+                onHeli: () async {
+                  ref
+                      .read(activeFinisseurProvider.notifier)
+                      .updateCurrentStick(stick.copyWith(
+                        heli: true,
+                        fieldHits: 0,
+                        eightMHit: false,
+                        clearKing: true,
+                      ));
                   await next();
                 },
               ),
@@ -174,16 +214,20 @@ class FinisseurStickScreen extends ConsumerWidget {
                     .updateCurrentStick(stick.copyWith(king: k)),
               ),
             ],
-            if (!inBasePhase) ...[
+            if (!inBasePhase || kingFlowActive) ...[
               const SizedBox(height: KubbTokens.space6),
               SizedBox(
                 height: KubbTokens.touchComfortable,
                 child: FilledButton(
                   onPressed: next,
                   child: Text(
-                    state.isLastStick
-                        ? l.finisseurStickFinish
-                        : l.finisseurStickNextStock(state.currentIndex + 2),
+                    kingFlowActive
+                        ? l.finisseurStickFinishStick
+                        : (state.isLastStick
+                            ? l.finisseurStickFinish
+                            : l.finisseurStickNextStock(
+                                state.currentIndex + 2,
+                              )),
                   ),
                 ),
               ),

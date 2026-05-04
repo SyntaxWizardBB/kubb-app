@@ -315,15 +315,25 @@ class FinisseurBasePhasePad extends StatelessWidget {
   const FinisseurBasePhasePad({
     required this.stick,
     required this.heliVisible,
-    required this.onCommit,
+    required this.onHit,
+    required this.onMiss,
+    required this.onHeli,
     super.key,
   });
 
   /// Current draft stick — its existing penalty values are preserved when the
-  /// pad commits, so the penalty block above still gets credited.
+  /// pad delegates back to the parent.
   final StickResult stick;
   final bool heliVisible;
-  final ValueChanged<StickResult> onCommit;
+
+  /// Called when the player taps Hit on the base pad. The parent decides
+  /// whether to auto-advance (regular case) or pause for the king block
+  /// (last base kubb + king-throw tracking on).
+  final VoidCallback onHit;
+
+  /// Called when the player misses or commits a heli. Both auto-advance.
+  final VoidCallback onMiss;
+  final VoidCallback onHeli;
 
   @override
   Widget build(BuildContext context) {
@@ -348,7 +358,7 @@ class FinisseurBasePhasePad extends StatelessWidget {
               child: _BasePadButton(
                 label: l.finisseurStickBasePadHit,
                 tone: _BasePadTone.hit,
-                onTap: () => onCommit(stick.copyWith(eightMHit: true)),
+                onTap: onHit,
               ),
             ),
             const SizedBox(width: KubbTokens.space2),
@@ -356,7 +366,7 @@ class FinisseurBasePhasePad extends StatelessWidget {
               child: _BasePadButton(
                 label: l.finisseurStickBasePadMiss,
                 tone: _BasePadTone.miss,
-                onTap: () => onCommit(stick.copyWith(eightMHit: false)),
+                onTap: onMiss,
               ),
             ),
           ],
@@ -366,12 +376,7 @@ class FinisseurBasePhasePad extends StatelessWidget {
           _BasePadButton(
             label: l.finisseurStickHeliLabel,
             tone: _BasePadTone.heli,
-            onTap: () => onCommit(stick.copyWith(
-              heli: true,
-              fieldHits: 0,
-              eightMHit: false,
-              clearKing: true,
-            )),
+            onTap: onHeli,
           ),
         ],
       ],

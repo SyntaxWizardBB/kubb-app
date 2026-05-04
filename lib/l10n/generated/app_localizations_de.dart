@@ -267,6 +267,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get finisseurStickFinish => 'Session abschliessen';
 
   @override
+  String get finisseurStickFinishStick => 'Stock abschliessen';
+
+  @override
   String get finisseurStickBasePadHeader => 'Wurf auf Basiskubb';
 
   @override

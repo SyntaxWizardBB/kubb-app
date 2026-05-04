@@ -211,6 +211,8 @@
   },
   "finisseurStickFinish": "Session abschliessen",
   "@finisseurStickFinish": { "description": "Final stick button label" },
+  "finisseurStickFinishStick": "Stock abschliessen",
+  "@finisseurStickFinishStick": { "description": "Commit-stick button shown during the king flow in base phase" },
   "finisseurStickBasePadHeader": "Wurf auf Basiskubb",
   "@finisseurStickBasePadHeader": { "description": "Header above the simplified base-phase pad" },
   "finisseurStickBasePadHit": "Treffer",

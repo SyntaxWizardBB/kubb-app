@@ -568,6 +568,12 @@ abstract class AppLocalizations {
   /// **'Session abschliessen'**
   String get finisseurStickFinish;
 
+  /// Commit-stick button shown during the king flow in base phase
+  ///
+  /// In de, this message translates to:
+  /// **'Stock abschliessen'**
+  String get finisseurStickFinishStick;
+
   /// Header above the simplified base-phase pad
   ///
   /// In de, this message translates to:
