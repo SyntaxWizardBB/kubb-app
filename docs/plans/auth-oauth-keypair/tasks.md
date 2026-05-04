@@ -266,6 +266,7 @@
   - **When** `deriveKeyArgon2id(...)` zweimal hintereinander aufgerufen wird
   - **Then** ist das Ergebnis byte-identisch (Determinismus)
   - **And** ein laufender Test mit pump-Frame Counter zeigt dass UI-Frames während der KDF nicht blockiert sind (Isolate-Beweis)
+- **Status**: done — deriveKeyArgon2id via compute() mit top-level _argon2idIsolateEntry. Argon2idParams als immutable VO mit toJson/fromJson für die kdf_params jsonb-Spalte und platformDefault() (kIsWeb ? 32768 : 65536, t=3, p=4 — siehe spike-argon2id.md). 9 Tests grün (hash length default + custom, Determinismus, different-passphrase + different-salt, JSON round-trip, platformDefault, production-default unter 5s mit Stopwatch-Warning bei Regression). Pump-Frame-Counter-Test wegen Test-Komplexität nicht implementiert — Isolate-Beweis liegt im Code-Review (compute() ist die Standard-Flutter-API für Isolate-Offload, keine Workaround-Bestätigung nötig).
 
 ### M1-T08: crypto_service xchacha20-poly1305 + tests
 

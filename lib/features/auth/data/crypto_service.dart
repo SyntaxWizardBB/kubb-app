@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:flutter/foundation.dart' show compute, kIsWeb;
 
 /// Façade over the `cryptography` package's Ed25519, Argon2id and
 /// XChaCha20-Poly1305 primitives.
@@ -100,6 +101,26 @@ class CryptoService {
     final plain = await _xchacha20.decrypt(box, secretKey: SecretKey(key));
     return Uint8List.fromList(plain);
   }
+
+  /// Derives a `params.hashLength`-byte key from a passphrase using
+  /// Argon2id. Runs in a separate isolate via Flutter's `compute` so
+  /// the UI thread stays unblocked during the memory-hard derivation.
+  ///
+  /// Web has no real isolates — `compute` runs the callback in the
+  /// same event loop. The reduced web parameters from
+  /// [Argon2idParams.platformDefault] keep this acceptable.
+  Future<Uint8List> deriveKeyArgon2id({
+    required List<int> passphrase,
+    required List<int> salt,
+    required Argon2idParams params,
+  }) {
+    final msg = _Argon2idIsolateMessage(
+      passphrase: passphrase,
+      salt: salt,
+      params: params,
+    );
+    return compute(_argon2idIsolateEntry, msg);
+  }
 }
 
 /// Plain value object for an Ed25519 keypair as raw bytes. Lives outside
@@ -116,4 +137,90 @@ class Ed25519KeyPairBytes {
 
   /// 32-byte Ed25519 private-key seed.
   final Uint8List privateKey;
+}
+
+/// Argon2id parameters that travel with each encrypted backup row in
+/// the server-side `kdf_params` jsonb column. Keeping them on the row
+/// means a backup created with one parameter set can still be
+/// decrypted later even if the platform default changes.
+class Argon2idParams {
+  const Argon2idParams({
+    required this.memoryKiB,
+    required this.iterations,
+    required this.parallelism,
+    this.hashLength = 32,
+  });
+
+  factory Argon2idParams.fromJson(Map<String, Object?> json) {
+    return Argon2idParams(
+      memoryKiB: json['m']! as int,
+      iterations: json['t']! as int,
+      parallelism: json['p']! as int,
+      hashLength: (json['l'] as int?) ?? 32,
+    );
+  }
+
+  /// Per-platform default at backup-creation time. Native uses 64 MiB,
+  /// web drops to 32 MiB so the KDF stays under the AK-1 budget — see
+  /// `docs/plans/auth-oauth-keypair/spike-argon2id.md`.
+  factory Argon2idParams.platformDefault() {
+    return const Argon2idParams(
+      memoryKiB: kIsWeb ? 32768 : 65536,
+      iterations: 3,
+      parallelism: 4,
+    );
+  }
+
+  /// Memory parameter in KiB. OWASP recommends 65536 (64 MiB) for
+  /// native; the spike (`docs/plans/auth-oauth-keypair/spike-argon2id.md`)
+  /// drops this to 32768 (32 MiB) on web.
+  final int memoryKiB;
+
+  /// Number of iterations.
+  final int iterations;
+
+  /// Lane / parallelism count.
+  final int parallelism;
+
+  /// Output key length in bytes (default 32 — XChaCha20 key size).
+  final int hashLength;
+
+  Map<String, Object> toJson() => <String, Object>{
+        'algo': 'argon2id',
+        'm': memoryKiB,
+        't': iterations,
+        'p': parallelism,
+        if (hashLength != 32) 'l': hashLength,
+      };
+}
+
+/// Top-level isolate entry point for [CryptoService.deriveKeyArgon2id].
+/// Flutter's `compute()` requires the callback to be a top-level (or
+/// static) function so the isolate can resolve it without capturing
+/// closure state.
+Future<Uint8List> _argon2idIsolateEntry(_Argon2idIsolateMessage msg) async {
+  final algo = Argon2id(
+    memory: msg.params.memoryKiB,
+    parallelism: msg.params.parallelism,
+    iterations: msg.params.iterations,
+    hashLength: msg.params.hashLength,
+  );
+  final secret = SecretKey(msg.passphrase);
+  final result = await algo.deriveKey(secretKey: secret, nonce: msg.salt);
+  final bytes = await result.extractBytes();
+  return Uint8List.fromList(bytes);
+}
+
+/// Wire-message for the Argon2id isolate entry. Holds bytes only —
+/// no SecretKey or other types whose isolate-portability is doubtful.
+class _Argon2idIsolateMessage {
+  const _Argon2idIsolateMessage({
+    required this.passphrase,
+    required this.salt,
+    required this.params,
+  });
+
+  final List<int> passphrase;
+  final List<int> salt;
+  final Argon2idParams params;
 }
