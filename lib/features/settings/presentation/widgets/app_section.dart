@@ -82,6 +82,45 @@ class SettingsAppBlock extends ConsumerWidget {
               KubbTokens.space4,
               KubbTokens.space3,
               KubbTokens.space4,
+              0,
+            ),
+            child: Text(
+              l.settingsFinisseurSection.toUpperCase(),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.88,
+                color: tokens.fgMuted,
+              ),
+            ),
+          ),
+          row(
+            l.settingsLongDubbie,
+            Switch(
+              value: settings.longDubbieTracking,
+              onChanged: (v) => notifier.setLongDubbieTracking(value: v),
+            ),
+          ),
+          row(
+            l.settingsPenaltyKubb,
+            Switch(
+              value: settings.penaltyKubbTracking,
+              onChanged: (v) => notifier.setPenaltyKubbTracking(value: v),
+            ),
+          ),
+          row(
+            l.settingsKingThrow,
+            Switch(
+              value: settings.kingThrowTracking,
+              onChanged: (v) => notifier.setKingThrowTracking(value: v),
+            ),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              KubbTokens.space4,
+              KubbTokens.space3,
+              KubbTokens.space4,
               KubbTokens.space3,
             ),
             child: Column(
