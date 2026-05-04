@@ -300,6 +300,7 @@
   - **Then** existieren `user_credentials` und `user_keypair_backups` mit allen Constraints (CHECK, FK, UNIQUE INDEX)
   - **And** ein 32-Byte-zufälliger Server-Salt liegt als Postgres-Secret `auth.nickname_hash_salt` vor (via `vault.create_secret` oder ähnlich)
   - **And** das `user_profiles`-Schema ist um `nickname_unique citext UNIQUE`, `avatar_color text NULL`, `onboarding_completed boolean NOT NULL DEFAULT false` erweitert
+- **Status**: done — Migrations in supabase/migrations/ (Pivot zu Supabase-CLI, dort liegen Migrations standardmässig). Files: 20260504000001_auth_tables.sql (tables + indexes + user_profiles ALTER), 20260504000002_auth_server_salt.sql (auth.nickname_hash_salt() + auth.compute_nickname_hash() Postgres-Functions mit current_setting-Lookup + Local-Dev-Fallback). Production-Hetzner überschreibt salt via ALTER DATABASE ... SET auth.nickname_hash_salt='...'. Verifikation auf Owner-Hardware (Docker/Supabase nicht verfügbar in Dev-Umgebung).
 
 ### M2-T02: SQL migration: RLS policies
 
