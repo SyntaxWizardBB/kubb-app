@@ -87,6 +87,8 @@
   "@trainingSheetEyebrow": { "description": "Training sheet eyebrow above title" },
   "trainingSheetTitle": "Welcher Modus?",
   "@trainingSheetTitle": { "description": "Training sheet title" },
+  "trainingSheetStatsLink": "Statistik anzeigen",
+  "@trainingSheetStatsLink": { "description": "Footer link below the mode cards that opens the stats screen" },
   "modeSniperTitle": "Sniper-Training",
   "@modeSniperTitle": { "description": "Sniper mode title" },
   "modeSniperSubtitle": "Trefferquote · Konstanz",

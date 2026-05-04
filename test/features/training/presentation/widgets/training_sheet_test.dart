@@ -48,6 +48,13 @@ void main() {
             return const Scaffold(body: Text('finisseur-route'));
           },
         ),
+        GoRoute(
+          path: '/stats',
+          builder: (context, state) {
+            onNavigated('/stats');
+            return const Scaffold(body: Text('stats-route'));
+          },
+        ),
       ],
     );
   }
@@ -97,5 +104,22 @@ void main() {
 
     expect(navigated, '/training/finisseur/config');
     expect(find.text('finisseur-route'), findsOneWidget);
+  });
+
+  testWidgets('stats footer link navigates to /stats', (tester) async {
+    String? navigated;
+    await pumpHost(
+      tester,
+      buildRouter(onNavigated: (route) => navigated = route),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Statistik anzeigen'));
+    await tester.pumpAndSettle();
+
+    expect(navigated, '/stats');
+    expect(find.text('stats-route'), findsOneWidget);
   });
 }

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_bottom_sheet.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class TrainingSheet extends StatelessWidget {
   const TrainingSheet({super.key});
@@ -46,10 +47,58 @@ class TrainingSheet extends StatelessWidget {
               context.go('/training/finisseur/config');
             },
           ),
+          const SizedBox(height: KubbTokens.space3),
+          _StatsLink(
+            label: l.trainingSheetStatsLink,
+            color: tokens.fgMuted,
+            onTap: () {
+              Navigator.of(context).pop();
+              context.go('/stats');
+            },
+          ),
         ],
       ),
     );
   }
+}
+
+class _StatsLink extends StatelessWidget {
+  const _StatsLink({
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: KubbTokens.space3,
+            vertical: KubbTokens.space2,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: KubbTokens.space1),
+              Icon(LucideIcons.chevronRight, size: 16, color: color),
+            ],
+          ),
+        ),
+      );
 }
 
 class _Header extends StatelessWidget {
