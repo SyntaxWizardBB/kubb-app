@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
+import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_notifier.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_state.dart';
-import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 
 import '../../../_helpers/sqlite_open.dart';
 

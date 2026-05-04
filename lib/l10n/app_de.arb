@@ -258,6 +258,8 @@
   "@finisseurSummaryPenalties": { "description": "Penalty count row label" },
   "finisseurSummaryHeli": "Heli",
   "@finisseurSummaryHeli": { "description": "Heli count row label" },
+  "finisseurSummaryModeLabel": "Modus",
+  "@finisseurSummaryModeLabel": { "description": "Mode row label on the finisseur summary (replaces distance for finisseurs)" },
   "finisseurSummaryConfig": "Finisseur · {field}/{base}",
   "@finisseurSummaryConfig": {
     "description": "Summary screen title for finisseur",

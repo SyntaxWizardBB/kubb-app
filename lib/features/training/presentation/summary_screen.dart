@@ -70,10 +70,11 @@ class SummaryScreen extends ConsumerWidget {
     final async = ref.watch(summarySessionProvider(sessionId));
     final settings = ref.watch(appSettingsProvider).value ?? const AppSettings();
 
+    final isFinisseur = async.value?.isFinisseur ?? false;
     return Scaffold(
       backgroundColor: tokens.bg,
       appBar: KubbAppBar(
-        eyebrow: l.summaryEyebrow,
+        eyebrow: isFinisseur ? l.finisseurConfigEyebrow : l.summaryEyebrow,
         title: l.summaryTitle,
         automaticallyImplyLeading: false,
       ),
@@ -81,7 +82,7 @@ class SummaryScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _ErrorView(message: e.toString()),
         data: (d) => d.isFinisseur
-            ? _FinisseurBody(data: d, l: l, tokens: tokens)
+            ? _FinisseurBody(data: d, settings: settings, l: l, tokens: tokens)
             : _SniperBody(data: d, settings: settings, l: l, tokens: tokens),
       ),
     );
@@ -125,7 +126,7 @@ class _SniperBody extends ConsumerWidget {
           const SizedBox(height: KubbTokens.space6),
           _Row(label: l.summaryHits, value: '${data.hits}', tokens: tokens),
           _Row(label: l.summaryMisses, value: '${data.misses}', tokens: tokens),
-          if (settings.heliTracking)
+          if (settings.heliTracking && data.helis > 0)
             _Row(label: l.summaryHelis, value: '${data.helis}', tokens: tokens),
           _Row(
             label: l.summaryDistance,
@@ -167,11 +168,13 @@ class _SniperBody extends ConsumerWidget {
 class _FinisseurBody extends ConsumerWidget {
   const _FinisseurBody({
     required this.data,
+    required this.settings,
     required this.l,
     required this.tokens,
   });
 
   final SummaryData data;
+  final AppSettings settings;
   final AppLocalizations l;
   final KubbTokens tokens;
 
@@ -183,13 +186,21 @@ class _FinisseurBody extends ConsumerWidget {
     final fieldDown = sticks.fold<int>(0, (a, s) => a + s.fieldKubbsHit);
     final baseDown = sticks.fold<int>(0, (a, s) => a + (s.eightMHit ? 1 : 0));
     final kingHit = sticks.any((s) => s.kingHit ?? false);
-    final success = fieldDown >= field && baseDown >= base && kingHit;
+    final allKubbsDown = fieldDown >= field && baseDown >= base;
+    // King-tracking off: success = all kubbs down. King-tracking on: also
+    // need the king. Match the live notifier's win condition.
+    final success = settings.kingThrowTracking
+        ? allKubbsDown && kingHit
+        : allKubbsDown;
     final sticksUsed = sticks.where((s) => !_isUntouched(s)).length;
     final penalties = sticks.fold<int>(
       0,
       (a, s) => a + s.penaltyHits1 + s.penaltyHits2,
     );
     final helis = sticks.where((s) => s.heliThrow).length;
+    final longDubbies = sticks
+        .where((s) => s.fieldKubbsHit > 0 && s.eightMHit)
+        .length;
     final dur = _fmtDuration(
       (data.session.completedAt ?? DateTime.now().toUtc())
           .difference(data.session.startedAt),
@@ -231,15 +242,32 @@ class _FinisseurBody extends ConsumerWidget {
             l: l,
           ),
           const SizedBox(height: KubbTokens.space6),
-          _Row(label: l.finisseurSummaryKingRow, value: kingValue, tokens: tokens),
+          if (settings.kingThrowTracking)
+            _Row(
+              label: l.finisseurSummaryKingRow,
+              value: kingValue,
+              tokens: tokens,
+            ),
+          if (settings.penaltyKubbTracking)
+            _Row(
+              label: l.finisseurSummaryPenalties,
+              value: '$penalties',
+              tokens: tokens,
+            ),
+          if (settings.longDubbieTracking)
+            _Row(
+              label: l.finisseurStickLongDubbieLabel,
+              value: '$longDubbies',
+              tokens: tokens,
+            ),
+          if (settings.heliTracking && helis > 0)
+            _Row(
+              label: l.finisseurSummaryHeli,
+              value: '$helis',
+              tokens: tokens,
+            ),
           _Row(
-            label: l.finisseurSummaryPenalties,
-            value: '$penalties',
-            tokens: tokens,
-          ),
-          _Row(label: l.finisseurSummaryHeli, value: '$helis', tokens: tokens),
-          _Row(
-            label: l.summaryDistance,
+            label: l.finisseurSummaryModeLabel,
             value: '$field/$base',
             tokens: tokens,
           ),
