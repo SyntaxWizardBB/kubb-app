@@ -122,16 +122,13 @@ void main() {
     expectNoPii(records.first.message);
   });
 
-  test('restoreAttempted on success records userId prefix only', () {
-    telemetry.restoreAttempted(
-      userId: 'abc12345-fullnickname',
-      success: true,
-    );
+  test('restoreAttempted on success records success flag without userId', () {
+    telemetry.restoreAttempted(success: true);
 
     expect(records.first.level, Level.INFO);
     expect(records.first.message, contains('restoreAttempted'));
-    expect(records.first.message, contains('userId=abc12345'));
     expect(records.first.message, contains('success=true'));
+    expect(records.first.message, isNot(contains('userId')));
     expectNoPii(records.first.message);
   });
 

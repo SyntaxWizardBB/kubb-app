@@ -160,14 +160,16 @@ class Argon2idParams {
     );
   }
 
-  /// Per-platform default at backup-creation time. Native uses 64 MiB,
-  /// web drops to 32 MiB so the KDF stays under the AK-1 budget — see
+  /// Per-platform default at backup-creation time. Native uses 64 MiB
+  /// with four lanes; web drops to 32 MiB and a single lane (browser
+  /// JS is single-threaded — extra lanes add no security margin and
+  /// cost memory). See
   /// `docs/plans/auth-oauth-keypair/spike-argon2id.md`.
   factory Argon2idParams.platformDefault() {
     return const Argon2idParams(
       memoryKiB: kIsWeb ? 32768 : 65536,
       iterations: 3,
-      parallelism: 4,
+      parallelism: kIsWeb ? 1 : 4,
     );
   }
 

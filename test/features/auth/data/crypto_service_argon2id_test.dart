@@ -134,7 +134,7 @@ void main() {
         () {
       final params = Argon2idParams.platformDefault();
       expect(params.iterations, 3);
-      expect(params.parallelism, 4);
+      expect(params.parallelism, kIsWeb ? 1 : 4);
       expect(params.hashLength, 32);
       expect(params.memoryKiB, kIsWeb ? 32768 : 65536);
     });

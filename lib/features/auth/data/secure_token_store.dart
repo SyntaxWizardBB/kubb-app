@@ -19,7 +19,12 @@ enum SecureTokenKind {
 /// audits stay simple and so the test suite can swap in a fake.
 class SecureTokenStore {
   SecureTokenStore({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+      : _storage = storage ?? const FlutterSecureStorage(
+          aOptions: AndroidOptions(encryptedSharedPreferences: true),
+          iOptions: IOSOptions(
+            accessibility: KeychainAccessibility.first_unlock_this_device,
+          ),
+        );
 
   final FlutterSecureStorage _storage;
 

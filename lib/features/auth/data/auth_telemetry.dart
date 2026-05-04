@@ -114,13 +114,16 @@ class AuthTelemetry {
   /// per-attempt failures. The cooldown branch passes `success: false`
   /// with `reason: cooldown_triggered` so the rate-limit can be
   /// audited from the log alone.
+  ///
+  /// No userId is recorded: at the point this event fires the actual
+  /// account id is not yet known (the sign-in challenge runs after the
+  /// private key has been put on the device). Trying to log a userId
+  /// here would either be a placeholder or leak the nickname.
   void restoreAttempted({
     required bool success,
-    String? userId,
     String? reasonCode,
   }) {
     final parts = <String>[
-      if (userId != null) 'userId=${_prefix(userId)}',
       'success=$success',
       if (reasonCode != null) 'reason=$reasonCode',
     ];
