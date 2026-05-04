@@ -30,21 +30,21 @@ void main() {
 
   Future<void> seedV3SampleData() async {
     await db.customStatement(
-      "INSERT INTO players (id, name, device_id, avatar_color, created_at) "
+      'INSERT INTO players (id, name, device_id, avatar_color, created_at) '
       "VALUES ('p1', 'Test Player', 'device-1', '#FF0000', 0)",
     );
     await db.customStatement(
-      "INSERT INTO sessions (id, player_id, kind, mode, distance_meters, "
-      "throw_target, status, started_at) VALUES "
+      'INSERT INTO sessions (id, player_id, kind, mode, distance_meters, '
+      'throw_target, status, started_at) VALUES '
       "('s1', 'p1', 'sniper', 'sniper', 8.0, 50, 'completed', 0)",
     );
     await db.customStatement(
-      "INSERT INTO sessions (id, player_id, kind, mode, distance_meters, "
-      "throw_target, status, started_at) VALUES "
+      'INSERT INTO sessions (id, player_id, kind, mode, distance_meters, '
+      'throw_target, status, started_at) VALUES '
       "('s2', 'p1', 'finisseur', 'finisseur', 8.0, NULL, 'completed', 0)",
     );
     await db.customStatement(
-      "INSERT INTO session_events (id, session_id, kind, created_at) "
+      'INSERT INTO session_events (id, session_id, kind, created_at) '
       "VALUES ('e1', 's1', 'hit', 0)",
     );
   }

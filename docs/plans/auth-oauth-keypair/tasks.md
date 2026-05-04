@@ -205,6 +205,7 @@
   - **When** `dao.upsert(...)` mit einem AuthSession-Eintrag aufgerufen wird, dann erneut mit anderen Werten, dann `dao.current()`
   - **Then** liegt genau eine Zeile vor (id='singleton'), mit den letzten Werten; `watch()` emittiert nach jedem upsert
   - **And** `dao.clear()` macht `current()` null
+- **Status**: done — DAO mit current()/watch()/upsert()/clear(), inkl. createdAt-Preservation in Updates. 6 Tests grün (current null bei fresh DB, upsert + current Round-Trip, second upsert updates, createdAt preserved, clear, watch streams). Files: lib/features/auth/data/dao/cached_auth_session_dao.dart, app_database.dart (DAO registriert), test/features/auth/data/cached_auth_session_dao_test.dart.
 
 ### M1-T04: secure_token_store + tests
 

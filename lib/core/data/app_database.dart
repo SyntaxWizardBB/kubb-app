@@ -9,6 +9,7 @@ import 'package:kubb_app/core/data/tables/finisseur_stick_events.dart';
 import 'package:kubb_app/core/data/tables/players.dart';
 import 'package:kubb_app/core/data/tables/session_events.dart';
 import 'package:kubb_app/core/data/tables/sessions.dart';
+import 'package:kubb_app/features/auth/data/dao/cached_auth_session_dao.dart';
 import 'package:kubb_app/features/auth/data/tables/cached_auth_session_table.dart';
 
 part 'app_database.g.dart';
@@ -28,6 +29,7 @@ part 'app_database.g.dart';
     SessionEventDao,
     AppSettingsDao,
     FinisseurStickEventDao,
+    CachedAuthSessionDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {

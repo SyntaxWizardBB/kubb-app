@@ -2898,6 +2898,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final FinisseurStickEventDao finisseurStickEventDao =
       FinisseurStickEventDao(this as AppDatabase);
+  late final CachedAuthSessionDao cachedAuthSessionDao = CachedAuthSessionDao(
+    this as AppDatabase,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
