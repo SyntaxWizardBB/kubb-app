@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/features/auth/application/auth_controller.dart';
+import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/application/cloud_profile_provider.dart';
 import 'package:kubb_app/features/auth/presentation/edit_profile_screen.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
@@ -10,11 +12,23 @@ import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
 import '../../../fixtures/auth/fake_cloud_profile_repository.dart';
 
+class _SignedOutAuthController extends AuthController {
+  @override
+  Future<AuthSession> build() async => const AuthSession.signedOut();
+}
+
+class _KeypairAuthController extends AuthController {
+  @override
+  Future<AuthSession> build() async =>
+      const AuthSession.keypair(userId: 'u1', displayName: 'wiese-marc');
+}
+
 void main() {
   Future<void> pump(
     WidgetTester tester, {
     required FakeCloudProfileRepository repo,
     DisplayProfile? profile,
+    AuthController Function()? authControllerFactory,
   }) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1;
@@ -37,6 +51,9 @@ void main() {
         overrides: [
           displayProfileProvider.overrideWithValue(profile),
           cloudProfileRepositoryProvider.overrideWithValue(repo),
+          authControllerProvider.overrideWith(
+            authControllerFactory ?? _KeypairAuthController.new,
+          ),
         ],
         child: MaterialApp.router(
           theme: KubbTheme.light(),
@@ -138,4 +155,42 @@ void main() {
     );
   });
 
+  testWidgets('save fails gracefully when session is signed out mid-flow',
+      (tester) async {
+    final repo = FakeCloudProfileRepository();
+    await pump(
+      tester,
+      repo: repo,
+      profile: seedProfile,
+      authControllerFactory: _SignedOutAuthController.new,
+    );
+
+    // Make the form dirty + valid so save becomes tappable.
+    tester.state<EditableTextState>(find.byType(EditableText))
+        .updateEditingValue(
+      const TextEditingValue(
+        text: 'wiese-marc-2',
+        selection: TextSelection.collapsed(offset: 12),
+      ),
+    );
+    await tester.pump();
+
+    final saveButton = find.byType(ElevatedButton);
+    expect(
+      tester.widget<ElevatedButton>(saveButton).onPressed,
+      isNotNull,
+    );
+
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    // RPC must not have been hit — the guard short-circuits before it.
+    expect(repo.updateCount, 0);
+
+    // Error banner is rendered with the static l10n message.
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(EditProfileScreen)),
+    );
+    expect(find.text(l10n.authEditProfileError), findsOneWidget);
+  });
 }

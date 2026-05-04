@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/features/auth/application/auth_controller.dart';
+import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/application/cloud_profile_provider.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -39,7 +41,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late String _color;
 
   bool _saving = false;
-  String? _error;
+  bool _hasError = false;
   bool _success = false;
 
   @override
@@ -87,9 +89,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     if (profile == null) return;
     setState(() {
       _saving = true;
-      _error = null;
+      _hasError = false;
       _success = false;
     });
+    final session = ref.read(authControllerProvider).maybeWhen(
+          data: (s) => s,
+          orElse: () => const AuthSession.signedOut(),
+        );
+    if (!session.isAuthenticated) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _hasError = true;
+      });
+      return;
+    }
     try {
       await ref.read(cloudProfileRepositoryProvider).updateProfile(
             userId: profile.userId,
@@ -101,11 +115,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         _saving = false;
         _success = true;
       });
-    } on Object catch (e) {
+    } on Object catch (_) {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = e.toString();
+        _hasError = true;
       });
     }
   }
@@ -203,7 +217,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   style: TextStyle(fontSize: 12, color: tokens.fgMuted),
                 ),
               ),
-              if (_error != null) ...[
+              if (_hasError) ...[
                 const SizedBox(height: KubbTokens.space3),
                 _Banner(
                   tone: _BannerTone.error,
