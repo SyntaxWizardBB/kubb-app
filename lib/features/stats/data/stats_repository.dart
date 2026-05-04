@@ -219,7 +219,11 @@ class StatsRepository {
           withinRegulation;
       if (success) successCount++;
       totalSticks += sticksTouched;
-      trend.add(success ? 100 : 0);
+      // Trend is cumulative: at session index i the point is the running
+      // success rate across sessions 0..i. Gives a moving average instead
+      // of a binary spike per session.
+      final sessionsSoFar = trend.length + 1;
+      trend.add(((successCount / sessionsSoFar) * 100).round());
       rows.add(FinisseurSessionRow(
         sessionId: s.id,
         completedAt: s.completedAt ?? s.startedAt,

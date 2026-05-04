@@ -434,6 +434,93 @@ void main() {
     expect(agg.sessionRows.single.sticksUsed, 7);
   });
 
+  test('finisseur trend is cumulative success rate over sessions', () async {
+    // Outcomes [Win, Lost, Win] → [100, 50, 67].
+    Future<void> add(String id, {required bool win, required int hour}) {
+      final ts = DateTime.utc(2026, 5, 5, hour);
+      return insertFinisseur(
+        id: id,
+        field: 1,
+        base: 0,
+        sticks: [
+          (fieldHits: win ? 1 : 0, eight: false, heli: false, king: null, p2: 0),
+        ],
+        completedAt: ts,
+      );
+    }
+
+    await add('f1', win: true, hour: 9);
+    await add('f2', win: false, hour: 10);
+    await add('f3', win: true, hour: 11);
+
+    final agg = await repo.computeFinisseurAggregate(playerId: 'p1');
+
+    expect(agg.successTrendPercent, [100, 50, 67]);
+  });
+
+  test('finisseur trend with single win is [100]', () async {
+    await insertFinisseur(
+      id: 'f-only',
+      field: 1,
+      base: 0,
+      sticks: const [
+        (fieldHits: 1, eight: false, heli: false, king: null, p2: 0),
+      ],
+    );
+
+    final agg = await repo.computeFinisseurAggregate(playerId: 'p1');
+
+    expect(agg.successTrendPercent, [100]);
+  });
+
+  test('finisseur trend with single loss is [0]', () async {
+    await insertFinisseur(
+      id: 'f-loss',
+      field: 1,
+      base: 0,
+      sticks: const [
+        (fieldHits: 0, eight: false, heli: false, king: null, p2: 0),
+      ],
+    );
+
+    final agg = await repo.computeFinisseurAggregate(playerId: 'p1');
+
+    expect(agg.successTrendPercent, [0]);
+  });
+
+  test('finisseur trend with no sessions is empty', () async {
+    final agg = await repo.computeFinisseurAggregate(playerId: 'p1');
+
+    expect(agg.successTrendPercent, isEmpty);
+  });
+
+  test('finisseur trend over five mixed sessions tracks running average',
+      () async {
+    // Outcomes [Win, Win, Lost, Win, Lost] → [100, 100, 67, 75, 60].
+    final outcomes = [true, true, false, true, false];
+    for (var i = 0; i < outcomes.length; i++) {
+      await insertFinisseur(
+        id: 'fmix-$i',
+        field: 1,
+        base: 0,
+        sticks: [
+          (
+            fieldHits: outcomes[i] ? 1 : 0,
+            eight: false,
+            heli: false,
+            king: null,
+            p2: 0,
+          ),
+        ],
+        completedAt: DateTime.utc(2026, 5, 6, 8 + i),
+      );
+    }
+
+    final agg = await repo.computeFinisseurAggregate(playerId: 'p1');
+
+    expect(agg.successTrendPercent, [100, 100, 67, 75, 60]);
+  });
+
   test('sessionRows are most-recent-first and capped to 20', () async {
     for (var i = 0; i < 25; i++) {
       await insertSession(
