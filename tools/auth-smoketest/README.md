@@ -14,10 +14,15 @@ reads of credential rows.
 
 ```bash
 bash tools/auth-smoketest/run.sh
+bash tools/auth-smoketest/postgrest_smoketest.sh
 ```
 
-The script auto-detects the local anon key via `supabase status`. If
-you run against a different stack, override the relevant env vars:
+`run.sh` exercises tables, RLS and helpers via psql.
+`postgrest_smoketest.sh` calls each client-facing RPC through the API
+gateway so a missing public-schema wrapper would surface as PGRST202.
+
+Both auto-detect the local anon key via `supabase status`. If you run
+against a different stack, override the relevant env vars:
 
 ```bash
 API_URL=https://kubb.example.com \
