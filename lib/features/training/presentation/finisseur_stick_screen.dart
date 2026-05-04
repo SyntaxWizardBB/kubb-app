@@ -59,21 +59,29 @@ class FinisseurStickScreen extends ConsumerWidget {
     final hasProgress = state.currentIndex > 0 || !stick.isUntouched;
 
     Future<void> handleBack() async {
-      if (!hasProgress) {
-        await ref.read(activeFinisseurProvider.notifier).abortAndDelete();
-        if (!context.mounted) return;
-        context.go('/');
+      final notifier = ref.read(activeFinisseurProvider.notifier);
+      // Past the first stick: back means "undo the last commit", no confirm.
+      if (state.currentIndex > 0) {
+        await notifier.rollbackLastStick();
         return;
       }
+      // First stick, untouched: nothing to lose, discard quietly.
+      if (!hasProgress) {
+        await notifier.abortAndDelete();
+        if (!context.mounted) return;
+        context.go('/training/finisseur/config');
+        return;
+      }
+      // First stick with edits: ask before throwing them away.
       final discard = await FinisseurAbortConfirm.show(context);
       if (!discard) return;
-      await ref.read(activeFinisseurProvider.notifier).abortAndDelete();
+      await notifier.abortAndDelete();
       if (!context.mounted) return;
-      context.go('/');
+      context.go('/training/finisseur/config');
     }
 
     return PopScope(
-      canPop: !hasProgress,
+      canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
         await handleBack();

@@ -14,6 +14,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_tap_pad.dart';
 import 'package:kubb_app/features/training/application/active_session_notifier.dart';
 import 'package:kubb_app/features/training/application/active_session_state.dart';
 import 'package:kubb_app/features/training/presentation/widgets/abort_dialog.dart';
+import 'package:kubb_app/features/training/presentation/widgets/back_confirm.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -36,12 +37,34 @@ class SniperSessionScreen extends ConsumerWidget {
       );
     }
 
-    return Scaffold(
+    Future<void> handleBack() async {
+      final hasThrows = session.hits + session.misses + session.helis > 0;
+      if (hasThrows) {
+        final discard = await SessionBackConfirm.show(context);
+        if (!discard) return;
+      }
+      await ref.read(activeSessionProvider.notifier).abortAndDelete();
+      if (!context.mounted) return;
+      context.go('/training/sniper/config');
+    }
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await handleBack();
+      },
+      child: Scaffold(
       backgroundColor: tokens.bg,
       appBar: KubbAppBar(
         eyebrow: l.sniperConfigEyebrow,
         title: '${session.distance.toStringAsFixed(1)} m',
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(LucideIcons.arrowLeft),
+          color: tokens.fg,
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onPressed: handleBack,
+        ),
         actions: IconButton(
           tooltip: l.sniperConfigEyebrow,
           icon: KubbIcon(
@@ -83,6 +106,7 @@ class SniperSessionScreen extends ConsumerWidget {
           ],
         ),
       ),
+    ),
     );
   }
 

@@ -28,4 +28,17 @@ class FinisseurStickEventDao extends DatabaseAccessor<AppDatabase>
     final row = await query.getSingle();
     return row.read(count) ?? 0;
   }
+
+  Future<int> deleteByStickIndex({
+    required String sessionId,
+    required int stickIndex,
+  }) {
+    return (delete(finisseurStickEvents)
+          ..where(
+            (e) =>
+                e.sessionId.equals(sessionId) &
+                e.stickIndex.equals(stickIndex),
+          ))
+        .go();
+  }
 }

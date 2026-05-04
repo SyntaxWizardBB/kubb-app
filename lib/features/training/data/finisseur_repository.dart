@@ -87,6 +87,16 @@ class FinisseurRepository {
     );
   }
 
+  Future<void> deleteStickAt({
+    required String sessionId,
+    required int stickIndex,
+  }) {
+    return _sticks.deleteByStickIndex(
+      sessionId: sessionId,
+      stickIndex: stickIndex,
+    );
+  }
+
   Future<void> discard({required String sessionId}) {
     return _sessions.deleteById(sessionId);
   }

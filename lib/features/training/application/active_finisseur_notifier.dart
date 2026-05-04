@@ -68,6 +68,35 @@ class ActiveFinisseurNotifier
     await _repo.discard(sessionId: s.sessionId);
     state = const AsyncData(null);
   }
+
+  /// Drops the most recently committed stick and rewinds the index by one.
+  /// The current (uncommitted) stick edits are discarded — back means "undo
+  /// the last commit", not "preserve in-flight work".
+  ///
+  /// Returns false when there is nothing to roll back (already at stick 0).
+  Future<bool> rollbackLastStick() async {
+    final s = state.value;
+    if (s == null) return false;
+    if (s.currentIndex == 0) return false;
+    final prev = s.currentIndex - 1;
+    await _repo.deleteStickAt(sessionId: s.sessionId, stickIndex: prev);
+    final restored = List<StickResult>.from(s.sticks);
+    if (s.currentIndex < restored.length) {
+      restored[s.currentIndex] = const StickResult();
+    }
+    restored[prev] = const StickResult();
+    state = AsyncData(
+      ActiveFinisseurState(
+        sessionId: s.sessionId,
+        field: s.field,
+        base: s.base,
+        sticks: restored,
+        currentIndex: prev,
+        startedAt: s.startedAt,
+      ),
+    );
+    return true;
+  }
 }
 
 final activeFinisseurProvider =

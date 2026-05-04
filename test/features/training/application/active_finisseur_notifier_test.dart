@@ -131,6 +131,33 @@ void main() {
     expect(state.remainingBaseBeforeCurrent, 3);
   });
 
+  test('rollbackLastStick removes the last stick and rewinds the index',
+      () async {
+    final notifier = container.read(activeFinisseurProvider.notifier);
+    await notifier.startSession(playerId: playerId, field: 7, base: 3);
+    notifier.updateCurrentStick(const StickResult(fieldHits: 3));
+    await notifier.advance();
+    notifier.updateCurrentStick(const StickResult(fieldHits: 2));
+    await notifier.advance();
+
+    final ok = await notifier.rollbackLastStick();
+    expect(ok, isTrue);
+
+    final state = container.read(activeFinisseurProvider).requireValue!;
+    expect(state.currentIndex, 1);
+    final id = state.sessionId;
+    final stickEvents = await db.finisseurStickEventDao.forSession(id);
+    expect(stickEvents, hasLength(1));
+    expect(stickEvents.single.stickIndex, 0);
+  });
+
+  test('rollbackLastStick is a no-op when sitting at stick 0', () async {
+    final notifier = container.read(activeFinisseurProvider.notifier);
+    await notifier.startSession(playerId: playerId, field: 7, base: 3);
+    final ok = await notifier.rollbackLastStick();
+    expect(ok, isFalse);
+  });
+
   test('starting a new session discards a prior active finisseur', () async {
     final notifier = container.read(activeFinisseurProvider.notifier);
     await notifier.startSession(playerId: playerId, field: 7, base: 3);
