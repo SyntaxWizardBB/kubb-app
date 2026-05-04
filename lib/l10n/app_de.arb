@@ -819,6 +819,17 @@
   "@authOnboardingBadgeGoogle": { "description": "Status badge for Google OAuth sessions" },
   "authOnboardingBadgeApple": "Mit Apple verknüpft",
   "@authOnboardingBadgeApple": { "description": "Status badge for Apple OAuth sessions" },
+  "authBadgeAnonShort": "Anonym",
+  "@authBadgeAnonShort": { "description": "Compact app-bar badge label for anonymous keypair sessions" },
+  "authBadgeGoogleShort": "Google",
+  "@authBadgeGoogleShort": { "description": "Compact app-bar badge label for Google OAuth sessions" },
+  "authBadgeAppleShort": "Apple",
+  "@authBadgeAppleShort": { "description": "Compact app-bar badge label for Apple OAuth sessions" },
+  "authBadgeStatusSemantic": "Konto-Status: {label}",
+  "@authBadgeStatusSemantic": {
+    "description": "Screen reader label for the account status badge",
+    "placeholders": { "label": { "type": "String" } }
+  },
   "authOnboardingModesTitle": "Trainingsmodi",
   "@authOnboardingModesTitle": { "description": "Slide 2 title" },
   "authOnboardingModeSniperName": "Sniper",

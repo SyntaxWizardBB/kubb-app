@@ -1128,6 +1128,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String get authOnboardingBadgeApple => 'Mit Apple verknüpft';
 
   @override
+  String get authBadgeAnonShort => 'Anonym';
+
+  @override
+  String get authBadgeGoogleShort => 'Google';
+
+  @override
+  String get authBadgeAppleShort => 'Apple';
+
+  @override
+  String authBadgeStatusSemantic(String label) {
+    return 'Konto-Status: $label';
+  }
+
+  @override
   String get authOnboardingModesTitle => 'Trainingsmodi';
 
   @override

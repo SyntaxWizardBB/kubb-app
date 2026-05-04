@@ -2146,6 +2146,30 @@ abstract class AppLocalizations {
   /// **'Mit Apple verknüpft'**
   String get authOnboardingBadgeApple;
 
+  /// Compact app-bar badge label for anonymous keypair sessions
+  ///
+  /// In de, this message translates to:
+  /// **'Anonym'**
+  String get authBadgeAnonShort;
+
+  /// Compact app-bar badge label for Google OAuth sessions
+  ///
+  /// In de, this message translates to:
+  /// **'Google'**
+  String get authBadgeGoogleShort;
+
+  /// Compact app-bar badge label for Apple OAuth sessions
+  ///
+  /// In de, this message translates to:
+  /// **'Apple'**
+  String get authBadgeAppleShort;
+
+  /// Screen reader label for the account status badge
+  ///
+  /// In de, this message translates to:
+  /// **'Konto-Status: {label}'**
+  String authBadgeStatusSemantic(String label);
+
   /// Slide 2 title
   ///
   /// In de, this message translates to:

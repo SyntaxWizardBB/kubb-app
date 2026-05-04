@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
@@ -6,9 +7,11 @@ import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 void main() {
   Future<void> pump(WidgetTester tester, Widget child) async {
     await tester.pumpWidget(
-      MaterialApp(
-        theme: KubbTheme.light(),
-        home: Scaffold(appBar: child as PreferredSizeWidget),
+      ProviderScope(
+        child: MaterialApp(
+          theme: KubbTheme.light(),
+          home: Scaffold(appBar: child as PreferredSizeWidget),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -17,7 +20,11 @@ void main() {
   testWidgets('renders eyebrow and title together', (tester) async {
     await pump(
       tester,
-      const KubbAppBar(eyebrow: 'Account', title: 'Profil'),
+      const KubbAppBar(
+        eyebrow: 'Account',
+        title: 'Profil',
+        showAccountBadge: false,
+      ),
     );
 
     expect(find.text('ACCOUNT'), findsOneWidget);
@@ -29,6 +36,7 @@ void main() {
       tester,
       KubbAppBar(
         title: 'Home',
+        showAccountBadge: false,
         actions: IconButton(
           key: const ValueKey('settings-btn'),
           icon: const Icon(Icons.settings),
