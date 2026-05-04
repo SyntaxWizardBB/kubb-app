@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/core/data/app_settings.dart';
+import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_state.dart';
 import 'package:kubb_app/features/training/data/finisseur_repository.dart';
 
@@ -41,7 +43,9 @@ class ActiveFinisseurNotifier
   }
 
   /// Persists the current stick and advances to the next index. Returns true
-  /// when the session is complete (i.e. the last stick was advanced).
+  /// when the session is complete — either because all sticks were thrown,
+  /// or because the win condition fired early (king down, or all kubbs down
+  /// with king-throw tracking off).
   Future<bool> advance() async {
     final s = state.value;
     if (s == null) return false;
@@ -52,7 +56,25 @@ class ActiveFinisseurNotifier
     );
     final next = s.currentIndex + 1;
     state = AsyncData(s.copyWithIndex(next));
-    return next >= ActiveFinisseurState.totalSticks;
+
+    final settings = ref.read(appSettingsProvider).value ?? const AppSettings();
+    return _isFinished(state.value!, settings);
+  }
+
+  bool _isFinished(ActiveFinisseurState s, AppSettings settings) {
+    if (s.currentIndex >= ActiveFinisseurState.totalSticks) return true;
+    final committed = s.sticks.take(s.currentIndex);
+    final fieldDown = committed.fold<int>(0, (a, x) => a + x.fieldHits);
+    final baseDown = committed.where((x) => x.eightMHit).length;
+    final kingHit = committed.any((x) => x.king?.hit ?? false);
+    final allKubbsDown = fieldDown >= s.field && baseDown >= s.base;
+    if (settings.kingThrowTracking) {
+      // King down in a previous stick = game over (win); without it the
+      // session can only end by exhausting all sticks.
+      return kingHit;
+    }
+    // King-throw tracking off: win the moment all field+base kubbs are down.
+    return allKubbsDown;
   }
 
   Future<void> complete() async {

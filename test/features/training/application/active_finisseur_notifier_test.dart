@@ -5,6 +5,7 @@ import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_notifier.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_state.dart';
+import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 
 import '../../../_helpers/sqlite_open.dart';
 
@@ -149,6 +150,37 @@ void main() {
     final stickEvents = await db.finisseurStickEventDao.forSession(id);
     expect(stickEvents, hasLength(1));
     expect(stickEvents.single.stickIndex, 0);
+  });
+
+  test('advance reports finished early when all kubbs are down with king off',
+      () async {
+    await db.appSettingsDao.save('kingThrowTracking', 'false');
+    await container.read(appSettingsProvider.future);
+
+    final notifier = container.read(activeFinisseurProvider.notifier);
+    await notifier.startSession(playerId: playerId, field: 1, base: 1);
+    notifier.updateCurrentStick(
+      const StickResult(fieldHits: 1, eightMHit: true),
+    );
+    final done = await notifier.advance();
+
+    expect(done, isTrue);
+  });
+
+  test('advance reports finished only on king hit when king tracking is on',
+      () async {
+    final notifier = container.read(activeFinisseurProvider.notifier);
+    await notifier.startSession(playerId: playerId, field: 1, base: 1);
+
+    notifier.updateCurrentStick(
+      const StickResult(fieldHits: 1, eightMHit: true),
+    );
+    expect(await notifier.advance(), isFalse);
+
+    notifier.updateCurrentStick(
+      const StickResult(king: KingResult(hit: true)),
+    );
+    expect(await notifier.advance(), isTrue);
   });
 
   test('rollbackLastStick is a no-op when sitting at stick 0', () async {
