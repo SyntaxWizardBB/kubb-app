@@ -121,6 +121,7 @@
   - **Then** sind sie mit `^`-Versions-Constraint im `dependencies`-Block, `flutter pub get` läuft clean, `flutter pub outdated` zeigt keine Warnings
   - **And** `flutter analyze` bleibt clean
 - **Notes**: Versions per `tech-lead.md` strikt mit `^` pinnen, kein `any`. Lessons-learned aus CLAUDE.md (sqlite3_flutter_libs-Bug).
+- **Status**: done — Pinned: supabase_flutter ^2.5.0, flutter_secure_storage ^8.1.0 (downgraded von ^9.2.2 wegen win32-Konflikt mit package_info_plus ^10.1.0; v8 hat alle benötigten APIs, Windows v1-out-of-scope), cryptography ^2.7.0, app_links ^6.3.0. flutter analyze clean, 241/241 Tests grün.
 
 ### M0-T03: docker-compose.local.yml für lokales Supabase
 

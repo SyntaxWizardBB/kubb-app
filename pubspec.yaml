@@ -27,7 +27,10 @@ dependencies:
   path_provider: any
   path: any
 
-  supabase_flutter: any
+  supabase_flutter: ^2.5.0
+  flutter_secure_storage: ^8.1.0
+  cryptography: ^2.7.0
+  app_links: ^6.3.0
 
   reactive_forms: any
   freezed_annotation: any
