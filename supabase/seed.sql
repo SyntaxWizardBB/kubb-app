@@ -1,0 +1,3 @@
+-- Seed data for local Supabase. Empty for now; populated when needed.
+-- M2-T01..T04 will write the auth-related schema as proper migrations
+-- under supabase/migrations/, not here.

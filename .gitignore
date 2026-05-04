@@ -12,6 +12,12 @@
 .swiftpm/
 migrate_working_dir/
 
+# Supabase local-dev artefacts (CLI-managed)
+/supabase/.branches/
+/supabase/.temp/
+/tools/supabase-local/.env
+/tools/supabase-local/data/
+
 # IntelliJ related
 *.iml
 *.ipr

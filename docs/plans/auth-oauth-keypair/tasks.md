@@ -138,6 +138,7 @@
   - **Then** läuft Supabase auf `http://localhost:54321` (API-Gateway), `http://localhost:54323` (Studio), `postgresql://localhost:54322` (Postgres direkt)
   - **And** der README erklärt initial-setup, reset (`docker compose down -v`), und logs (`docker compose logs -f`)
 - **Notes**: Basiert auf Supabase Self-Hosted Quick-Start. `.env` mit Secrets (Service-Role-Key) bleibt gitignored, `.env.example` ist im Repo.
+- **Status**: done — Pivot zur Supabase-CLI statt rohem docker-compose (gleiche Ports 54321/54322/54323, weniger Wartungsaufwand). Files: `supabase/config.toml`, `supabase/seed.sql`, `supabase/migrations/` (leeres Verzeichnis für M2), `tools/supabase-local/README.md`, `tools/supabase-local/.env.example`, `.gitignore`-Update. Verifikation auf Owner-Hardware (Docker + supabase-CLI nicht in dieser Dev-Umgebung verfügbar).
 
 ### M0-T04: Verify dev environment (analyze + test green)
 
