@@ -104,6 +104,7 @@
   - **When** die Messung auf Linux-Desktop, Android (Mid-Range, API 28, 4 GB RAM), und Flutter Web (Chrome) durchgeführt wird (3 Iterationen, Median nehmen)
   - **Then** liegen die Median-Zeiten dokumentiert in `spike-argon2id.md` mit Empfehlung "Standard-Parameter überall" oder "Web-Fallback m=32 MiB" mit Begründung
 - **Notes**: Risiko #1 aus architecture.md. Spike entscheidet ob crypto_service.dart eine Web-spezifische Parameter-Variante braucht.
+- **Status**: done (Output: docs/plans/auth-oauth-keypair/spike-argon2id.md — Per-Platform-Empfehlung: Native m=64MiB, Web m=32MiB, beide t=3 p=4)
 
 ### M0-T02: Add pubspec deps (4 packages)
 
