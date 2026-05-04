@@ -45,10 +45,22 @@ enum AuthAdapterKind {
 }
 
 /// Result of looking up an account by public-key challenge.
+///
+/// Carries the freshly minted access token so the caller can hydrate
+/// the local Supabase session without a second round-trip. Phase 1
+/// has no refresh token — when [expiresAt] passes the user signs in
+/// again with the keypair (per ADR-0010 follow-up).
 class AuthVerifyResult {
-  const AuthVerifyResult({required this.userId, required this.nickname});
+  const AuthVerifyResult({
+    required this.userId,
+    required this.nickname,
+    required this.accessToken,
+    required this.expiresAt,
+  });
   final String userId;
   final String nickname;
+  final String accessToken;
+  final DateTime expiresAt;
 }
 
 /// Adapter contract over the Supabase auth surface. The real

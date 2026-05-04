@@ -7,20 +7,27 @@
 // verify into a Deno edge function gives us a real cryptographic check
 // without pulling a new database extension.
 //
+// M8-T03 — On successful verify the function now also mints a real
+// Supabase access token (HS256, signed with SUPABASE_JWT_SECRET) so
+// the client can hydrate a live auth session via
+// gotrue.recoverSession(...) — no admin-create-user round-trip and no
+// service-role key on the device.
+//
+// Phase-1 trade-off: no refresh_token. The token lives one hour; once
+// it expires the user signs in again with the keypair. ADR-0010
+// follow-up tracks lifting this in Phase 2.
+//
 // Caller flow (matches lib/features/auth/data/supabase_auth_adapter_impl.dart):
 //   POST { public_key, challenge_b64, signature_b64 }
-//   -> 200 { user_id, nickname }   on success
+//   -> 200 { user_id, nickname, access_token, expires_at, token_type }
+//      on success
 //   -> 401 { error: "<reason>" }   on signature / lookup failure
 //   -> 410 { error: "challenge_expired" } when the challenge is past its TTL
-//
-// JWT issuance for the resolved user_id is intentionally out of scope.
-// That decision is open per ADR-0010 follow-up — the application layer
-// today consumes { user_id, nickname } and treats it as "restored,
-// pending session", which is enough to unblock M8.
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import * as ed from "https://esm.sh/@noble/ed25519@2.1.0";
+import { create as jwtCreate } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 
 interface VerifyRequest {
   public_key?: string;
@@ -29,6 +36,7 @@ interface VerifyRequest {
 }
 
 const CHALLENGE_TTL_SECONDS = 60;
+const ACCESS_TOKEN_TTL_SECONDS = 3600;
 
 function jsonResponse(status: number, body: Record<string, unknown>): Response {
   return new Response(JSON.stringify(body), {
@@ -85,7 +93,8 @@ serve(async (req: Request) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !serviceRoleKey) {
+  const jwtSecret = Deno.env.get("SUPABASE_JWT_SECRET");
+  if (!supabaseUrl || !serviceRoleKey || !jwtSecret) {
     return jsonResponse(500, { error: "server_misconfigured" });
   }
 
@@ -176,8 +185,41 @@ serve(async (req: Request) => {
     nickname = profileJoin.nickname ?? "";
   }
 
+  // Mint the access token. HS256 with SUPABASE_JWT_SECRET — same key
+  // the gotrue server uses to sign its own tokens, so PostgREST and
+  // the storage / functions gateways accept it transparently.
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(jwtSecret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+
+  const now = Math.floor(Date.now() / 1000);
+  const expiresAt = now + ACCESS_TOKEN_TTL_SECONDS;
+  const accessToken = await jwtCreate(
+    { alg: "HS256", typ: "JWT" },
+    {
+      sub: userId,
+      aud: "authenticated",
+      role: "authenticated",
+      iss: `${supabaseUrl}/auth/v1`,
+      iat: now,
+      exp: expiresAt,
+      session_id: crypto.randomUUID(),
+      app_metadata: { provider: "keypair", providers: ["keypair"] },
+      user_metadata: { nickname },
+      is_anonymous: false,
+    },
+    key,
+  );
+
   return jsonResponse(200, {
     user_id: userId,
     nickname,
+    access_token: accessToken,
+    expires_at: expiresAt,
+    token_type: "bearer",
   });
 });

@@ -6,6 +6,7 @@ import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/core/data/dao/app_settings_dao.dart';
 import 'package:kubb_app/features/auth/application/account_setup_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
+import 'package:kubb_app/features/auth/application/keypair_signing_service.dart';
 import 'package:kubb_app/features/auth/data/keypair_backup_repository.dart';
 
 part 'restore_controller.freezed.dart';
@@ -55,6 +56,7 @@ class RestoreController extends Notifier<RestoreState> {
     state = const RestoreState.restoring();
     final backup = ref.read(keypairBackupRepositoryProvider);
     final keypairStorage = ref.read(keypairStorageProvider);
+    final signingService = ref.read(keypairSigningServiceProvider);
 
     try {
       final restored = await backup.restoreBackup(
@@ -62,13 +64,14 @@ class RestoreController extends Notifier<RestoreState> {
         passphrase: passphrase,
       );
       await keypairStorage.save(restored.privateKey);
+      // Chain straight into challenge / sign / verify — the verify
+      // call hydrates the Supabase session, so by the time we transition
+      // to RestoreState.done the auth-state stream has already seen the
+      // new keypair session and the AuthController has persisted it.
+      final verified = await signingService.signInWithChallenge();
       await _resetFailures(settings, nickname);
       telemetry.restoreAttempted(success: true);
-      // The actual sign-in (challenge / verify) happens in
-      // KeypairSigningService — not here. RestoreController exists to
-      // get the private key onto the device; the controller layer
-      // chains in the signing step.
-      state = const RestoreState.done(userId: 'restored-pending-signin');
+      state = RestoreState.done(userId: verified.userId);
     } on KeypairRestoreFailed catch (e) {
       final newFailures = await _incrementFailures(settings, nickname);
       if (newFailures >= _maxFailures) {
@@ -88,6 +91,16 @@ class RestoreController extends Notifier<RestoreState> {
         );
         state = RestoreState.failed(reason: e.message);
       }
+    } on Object catch (e) {
+      // Sign-in step failed (network, signature mismatch, missing
+      // server-side credential) — distinct from a wrong passphrase, so
+      // we do not bump the cooldown counter. The user can retry the
+      // same passphrase once connectivity is back.
+      telemetry.restoreAttempted(
+        success: false,
+        reasonCode: 'signin_failed',
+      );
+      state = RestoreState.failed(reason: e.toString());
     }
   }
 

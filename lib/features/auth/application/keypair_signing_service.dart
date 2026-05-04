@@ -4,12 +4,11 @@ import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/data/supabase_auth_adapter.dart';
 
 /// Composes the keypair-signing flow used by the restore path:
-///   1. Request a server challenge for our public key.
-///   2. Sign the challenge locally.
-///   3. Submit the signed challenge for verification.
-///
-/// Returns the verify response so the caller can move on to issuing
-/// or hydrating the post-restore session.
+///   1. Re-derive the public key from the seed in secure storage.
+///   2. Request a server challenge for that public key.
+///   3. Sign the challenge locally.
+///   4. Submit the signed challenge for verification — the adapter
+///      hydrates the resulting Supabase session in the same call.
 class KeypairSigningService {
   KeypairSigningService(this._ref);
 
@@ -27,22 +26,14 @@ class KeypairSigningService {
       );
     }
 
-    // Derive the public key by re-generating from the seed. The
-    // cryptography package's newKeyPairFromSeed is deterministic.
-    final pair = await crypto.generateEd25519KeyPair();
-    // ^ Note: this generates a NEW pair, not from the loaded seed.
-    // The accurate sign-with-loaded-seed call uses signEd25519 which
-    // internally re-derives the public key from the seed; we use the
-    // pair-derivation only to obtain the public key for the challenge
-    // request.
-
-    final challenge = await adapter.requestKeypairChallenge(pair.publicKey);
+    final publicKey = await crypto.publicKeyFromSeed(privateKey);
+    final challenge = await adapter.requestKeypairChallenge(publicKey);
     final signature = await crypto.signEd25519(
       privateKey: privateKey,
       message: challenge,
     );
     return adapter.verifyKeypairSignature(
-      publicKey: pair.publicKey,
+      publicKey: publicKey,
       challenge: challenge,
       signature: signature,
     );

@@ -96,9 +96,12 @@ void main() {
 
   test('verifyKeypairSignature returns the verified user identity',
       () async {
-    adapter.verifyOverride = const AuthVerifyResult(
+    final expiresAt = DateTime.now().toUtc().add(const Duration(hours: 1));
+    adapter.verifyOverride = AuthVerifyResult(
       userId: 'restored-user-id',
       nickname: 'lukas',
+      accessToken: 'access.jwt.token',
+      expiresAt: expiresAt,
     );
     final result = await adapter.verifyKeypairSignature(
       publicKey: const [1, 2],
@@ -107,6 +110,25 @@ void main() {
     );
     expect(result.userId, 'restored-user-id');
     expect(result.nickname, 'lukas');
+    expect(result.accessToken, 'access.jwt.token');
+    expect(result.expiresAt, expiresAt);
+  });
+
+  test('verifyKeypairSignature hydrates a keypair session', () async {
+    adapter.verifyOverride = AuthVerifyResult(
+      userId: 'restored-user-id',
+      nickname: 'lukas',
+      accessToken: 'access.jwt.token',
+      expiresAt: DateTime.now().toUtc().add(const Duration(hours: 1)),
+    );
+    await adapter.verifyKeypairSignature(
+      publicKey: const [1, 2],
+      challenge: const [3, 4],
+      signature: const [5, 6],
+    );
+    expect(adapter.currentState.kind, AuthAdapterKind.keypair);
+    expect(adapter.currentState.userId, 'restored-user-id');
+    expect(adapter.currentState.nickname, 'lukas');
   });
 
   test('linkOAuthToCurrentUser keeps the same user_id', () async {

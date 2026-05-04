@@ -74,6 +74,34 @@ void main() {
     expect(ok, isFalse);
   });
 
+  test('publicKeyFromSeed re-derives the public key from the stored seed',
+      () async {
+    final pair = await crypto.generateEd25519KeyPair();
+
+    final derived = await crypto.publicKeyFromSeed(pair.privateKey);
+
+    expect(derived, equals(pair.publicKey));
+  });
+
+  test('publicKeyFromSeed pairs with signEd25519 for round-trip verify',
+      () async {
+    final pair = await crypto.generateEd25519KeyPair();
+    final message = Uint8List.fromList(List.generate(32, (i) => i + 5));
+    final signature = await crypto.signEd25519(
+      privateKey: pair.privateKey,
+      message: message,
+    );
+
+    final derived = await crypto.publicKeyFromSeed(pair.privateKey);
+    final ok = await crypto.verifyEd25519(
+      publicKey: derived,
+      message: message,
+      signature: signature,
+    );
+
+    expect(ok, isTrue);
+  });
+
   test('verifyEd25519 returns false when the message has been tampered with',
       () async {
     final pair = await crypto.generateEd25519KeyPair();

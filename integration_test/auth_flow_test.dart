@@ -241,11 +241,10 @@ void main() {
       expect(restoreVariant, 'done',
           reason: 'restore controller should reach done on a valid pair');
 
-      // The private key is now in secure storage — that is what enables
-      // the next-step challenge sign-in. The actual Supabase challenge
-      // round-trip is wired in a follow-up controller (M6); for the
-      // integration boundary we only assert that the recovery primitives
-      // ran end-to-end.
+      // The private key is now in secure storage and the challenge /
+      // verify round-trip has run via the fake adapter — the controller
+      // landed on done with the verified user_id. We assert both: the
+      // key persisted, and the restore reached its terminal state.
       expect(h.secureStore._data, isNotEmpty);
       expect(_hasEvent(h.events, 'restoreAttempted'), isTrue);
       final restoreLog = h.events

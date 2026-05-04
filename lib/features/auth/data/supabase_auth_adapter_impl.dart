@@ -107,8 +107,12 @@ class SupabaseAuthAdapterImpl implements SupabaseAuthAdapter {
     // Verify runs in the keypair-verify edge function (M8-T01) — Postgres
     // has no built-in Ed25519, so the previous SECURITY DEFINER stub
     // never actually checked the signature. The function lives at
-    // supabase/functions/keypair-verify/ and returns the same
-    // { user_id, nickname } shape the dropped Postgres function did.
+    // supabase/functions/keypair-verify/.
+    //
+    // Since M8-T03 the function also mints the access token, so this
+    // call is a one-shot: on success we hydrate the local gotrue
+    // session via recoverSession and the adapter's auth-state stream
+    // emits the new authenticated state.
     final response = await _client.functions.invoke(
       'keypair-verify',
       body: <String, dynamic>{
@@ -126,9 +130,46 @@ class SupabaseAuthAdapterImpl implements SupabaseAuthAdapter {
       );
     }
     final data = response.data as Map<String, dynamic>;
+    final userId = data['user_id'] as String;
+    final nickname = data['nickname'] as String;
+    final accessToken = data['access_token'] as String;
+    final expiresAtUnix = (data['expires_at'] as num).toInt();
+    final expiresAt = DateTime.fromMillisecondsSinceEpoch(
+      expiresAtUnix * 1000,
+      isUtc: true,
+    );
+
+    // Hydrate the local session. The Phase-1 token has no refresh
+    // counterpart, so we hand gotrue a self-contained Session JSON via
+    // recoverSession instead of setSession (which insists on a
+    // non-empty refresh_token). `_saveSession` runs internally and the
+    // tokenRefreshed event flows through to onAuthStateChange — our
+    // own listener picks it up and updates _state.
+    final sessionJson = jsonEncode(<String, dynamic>{
+      'access_token': accessToken,
+      'token_type': 'bearer',
+      'expires_in': expiresAtUnix - DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      'expires_at': expiresAtUnix,
+      'user': <String, dynamic>{
+        'id': userId,
+        'aud': 'authenticated',
+        'role': 'authenticated',
+        'app_metadata': <String, dynamic>{
+          'provider': 'keypair',
+          'providers': <String>['keypair'],
+        },
+        'user_metadata': <String, dynamic>{'nickname': nickname},
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'is_anonymous': false,
+      },
+    });
+    await _client.auth.recoverSession(sessionJson);
+
     return AuthVerifyResult(
-      userId: data['user_id'] as String,
-      nickname: data['nickname'] as String,
+      userId: userId,
+      nickname: nickname,
+      accessToken: accessToken,
+      expiresAt: expiresAt,
     );
   }
 

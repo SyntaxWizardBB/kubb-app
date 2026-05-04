@@ -136,11 +136,26 @@ class FakeSupabaseAuthAdapter implements SupabaseAuthAdapter {
     required List<int> signature,
   }) async {
     _maybeThrow();
-    if (verifyOverride != null) return verifyOverride!;
-    return const AuthVerifyResult(
-      userId: 'fake-verified-user',
-      nickname: 'fake-nick',
-    );
+    final result = verifyOverride ??
+        AuthVerifyResult(
+          userId: 'fake-verified-user',
+          nickname: 'fake-nick',
+          accessToken: 'fake-access-token',
+          expiresAt:
+              DateTime.now().toUtc().add(const Duration(hours: 1)),
+        );
+    // Hydrate the in-memory session the same way the real adapter does
+    // via recoverSession — tests downstream of restore expect a live
+    // keypair session (matching userId) to land in onAuthStateChange.
+    final now = DateTime.now().toUtc();
+    _emit(AuthAdapterState(
+      userId: result.userId,
+      kind: AuthAdapterKind.keypair,
+      expiresAt: result.expiresAt,
+      refreshAfter: now.add(const Duration(minutes: 50)),
+      nickname: result.nickname,
+    ));
+    return result;
   }
 
   @override

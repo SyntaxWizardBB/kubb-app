@@ -44,6 +44,16 @@ class CryptoService {
     return Uint8List.fromList(signature.bytes);
   }
 
+  /// Re-derives the public key from a 32-byte Ed25519 seed. Used by
+  /// the restore-sign-in path: the device only persists the seed in
+  /// secure storage, but the server-side challenge lookup is keyed by
+  /// the public key.
+  Future<Uint8List> publicKeyFromSeed(List<int> seed) async {
+    final keyPair = await _ed25519.newKeyPairFromSeed(seed);
+    final publicKey = await keyPair.extractPublicKey();
+    return Uint8List.fromList(publicKey.bytes);
+  }
+
   /// Verifies a signature against a public key. Returns true iff the
   /// signature is valid.
   Future<bool> verifyEd25519({
