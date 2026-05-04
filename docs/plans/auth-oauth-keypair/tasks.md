@@ -518,6 +518,7 @@
   - **Given** freezed-codegen ist gelaufen
   - **When** `AuthSession.signedOut()`, `.oauth(...)`, `.keypair(...)` instanziiert und mit `.when()` pattern-matched werden
   - **Then** kompiliert, equality + hashCode arbeiten korrekt, JSON-Serialisierung roundtrips
+- **Status**: done — freezed sealed AuthSession mit 4 Variants (SignedOut, Anonymous, Keypair, OAuth) + AuthProvider enum (Google/Apple). Helper-Getter: isAuthenticated (SignedOut+Anonymous false), isAnonymousKeypair (nur Keypair true), userId, displayName. 13 Tests grün inkl. exhaustive pattern matching. JSON-Serialisierung wurde verworfen (nicht benötigt — Sessions werden nicht direkt serialisiert; cached_auth_session DAO speichert Felder-explizit).
 
 ### M4-T02: AuthController tests
 
