@@ -564,6 +564,7 @@
   - **Given** alle relevanten Fake-Dependencies
   - **When** `controller.setNickname('lukas')` → `setPassphrase('passwordhere1')` → `submit()` ausgeführt werden
   - **Then** wird Keypair generiert, account erstellt, profile angelegt, backup hochgeladen, session gecached, controller emittiert `Done`
+- **Status**: done — 5 Tests grün gegen ProviderContainer mit FakeAdapter + FakeBackupRepo + InMemorySecureStore.
 
 ### M4-T05: AccountSetupController implementation
 
@@ -578,6 +579,7 @@
   - **Given** die M4-T04-Tests
   - **When** implementiert
   - **Then** alle Tests grün
+- **Status**: done — Multi-Step state machine (idle / nicknameEntered / submitting / done / failed). submit() orchestriert: telemetry signinAttempt → adapter signInAnonymously → keypairStorage.generate → adapter.attachKeypair → keypairStorage.save → backupRepo.uploadBackup → telemetry signinSuccess → done. Failure-Path: jeder Throw landet in failed mit reason + signinFailure-Telemetry. Provider tokens für deps (cryptoService, secureTokenStore, keypairStorage, keypairBackupRepository) im selben File. **Note**: attachKeypair-Aufruf passiert mit empty bytes für ciphertext/salt/params — backup wird separat per backupRepo hochgeladen damit der Client die Crypto-Parameter besitzt (statt Server-side im keypair_attach RPC).
 
 ### M4-T06: RestoreController + cooldown logic + tests
 
