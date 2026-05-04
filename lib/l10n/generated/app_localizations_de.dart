@@ -1174,4 +1174,43 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get authOnboardingReminderBody =>
       'Ohne sie kommst du nicht mehr an dein anonymes Konto.';
+
+  @override
+  String get authAccountSectionLabel => 'Konto';
+
+  @override
+  String get authAccountProviderAnonymous => 'Anonym (Passphrase)';
+
+  @override
+  String get authAccountProviderGoogle => 'Google';
+
+  @override
+  String get authAccountProviderApple => 'Apple';
+
+  @override
+  String get authAccountLinkLabel => 'Konto verknüpfen';
+
+  @override
+  String get authAccountLinkSub =>
+      'Mit Google oder Apple für sichereres Backup';
+
+  @override
+  String get authAccountPassphraseLabel => 'Passphrase ändern';
+
+  @override
+  String get authAccountPassphraseSub => 'Neue Passphrase für dein Keypair';
+
+  @override
+  String get authAccountSignOutLabel => 'Abmelden';
+
+  @override
+  String authAccountSignOutSub(String provider) {
+    return 'Beendet die Session — $provider';
+  }
+
+  @override
+  String get authAccountDeleteLabel => 'Konto löschen';
+
+  @override
+  String get authAccountDeleteSub => 'Alle Daten dauerhaft entfernen';
 }

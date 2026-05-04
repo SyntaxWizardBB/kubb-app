@@ -2235,6 +2235,78 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Ohne sie kommst du nicht mehr an dein anonymes Konto.'**
   String get authOnboardingReminderBody;
+
+  /// Section heading above the account block in settings
+  ///
+  /// In de, this message translates to:
+  /// **'Konto'**
+  String get authAccountSectionLabel;
+
+  /// Provider badge for anonymous keypair sessions
+  ///
+  /// In de, this message translates to:
+  /// **'Anonym (Passphrase)'**
+  String get authAccountProviderAnonymous;
+
+  /// Provider badge for Google OAuth sessions
+  ///
+  /// In de, this message translates to:
+  /// **'Google'**
+  String get authAccountProviderGoogle;
+
+  /// Provider badge for Apple OAuth sessions
+  ///
+  /// In de, this message translates to:
+  /// **'Apple'**
+  String get authAccountProviderApple;
+
+  /// Nav-row label leading to account-link screen
+  ///
+  /// In de, this message translates to:
+  /// **'Konto verknüpfen'**
+  String get authAccountLinkLabel;
+
+  /// Nav-row subtitle for account link
+  ///
+  /// In de, this message translates to:
+  /// **'Mit Google oder Apple für sichereres Backup'**
+  String get authAccountLinkSub;
+
+  /// Nav-row label leading to passphrase change
+  ///
+  /// In de, this message translates to:
+  /// **'Passphrase ändern'**
+  String get authAccountPassphraseLabel;
+
+  /// Nav-row subtitle for passphrase change
+  ///
+  /// In de, this message translates to:
+  /// **'Neue Passphrase für dein Keypair'**
+  String get authAccountPassphraseSub;
+
+  /// Nav-row label that signs the user out
+  ///
+  /// In de, this message translates to:
+  /// **'Abmelden'**
+  String get authAccountSignOutLabel;
+
+  /// Nav-row subtitle for sign-out, with current provider
+  ///
+  /// In de, this message translates to:
+  /// **'Beendet die Session — {provider}'**
+  String authAccountSignOutSub(String provider);
+
+  /// Nav-row label leading to account delete
+  ///
+  /// In de, this message translates to:
+  /// **'Konto löschen'**
+  String get authAccountDeleteLabel;
+
+  /// Nav-row subtitle for account delete
+  ///
+  /// In de, this message translates to:
+  /// **'Alle Daten dauerhaft entfernen'**
+  String get authAccountDeleteSub;
 }
 
 class _AppLocalizationsDelegate

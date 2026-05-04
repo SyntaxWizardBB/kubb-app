@@ -848,5 +848,35 @@
   "authOnboardingReminderQuestion": "Hast du deine Passphrase im Passwort-Manager gespeichert?",
   "@authOnboardingReminderQuestion": { "description": "Slide 4 reinforcement question" },
   "authOnboardingReminderBody": "Ohne sie kommst du nicht mehr an dein anonymes Konto.",
-  "@authOnboardingReminderBody": { "description": "Slide 4 reinforcement body" }
+  "@authOnboardingReminderBody": { "description": "Slide 4 reinforcement body" },
+
+  "authAccountSectionLabel": "Konto",
+  "@authAccountSectionLabel": { "description": "Section heading above the account block in settings" },
+  "authAccountProviderAnonymous": "Anonym (Passphrase)",
+  "@authAccountProviderAnonymous": { "description": "Provider badge for anonymous keypair sessions" },
+  "authAccountProviderGoogle": "Google",
+  "@authAccountProviderGoogle": { "description": "Provider badge for Google OAuth sessions" },
+  "authAccountProviderApple": "Apple",
+  "@authAccountProviderApple": { "description": "Provider badge for Apple OAuth sessions" },
+  "authAccountLinkLabel": "Konto verknüpfen",
+  "@authAccountLinkLabel": { "description": "Nav-row label leading to account-link screen" },
+  "authAccountLinkSub": "Mit Google oder Apple für sichereres Backup",
+  "@authAccountLinkSub": { "description": "Nav-row subtitle for account link" },
+  "authAccountPassphraseLabel": "Passphrase ändern",
+  "@authAccountPassphraseLabel": { "description": "Nav-row label leading to passphrase change" },
+  "authAccountPassphraseSub": "Neue Passphrase für dein Keypair",
+  "@authAccountPassphraseSub": { "description": "Nav-row subtitle for passphrase change" },
+  "authAccountSignOutLabel": "Abmelden",
+  "@authAccountSignOutLabel": { "description": "Nav-row label that signs the user out" },
+  "authAccountSignOutSub": "Beendet die Session — {provider}",
+  "@authAccountSignOutSub": {
+    "description": "Nav-row subtitle for sign-out, with current provider",
+    "placeholders": {
+      "provider": { "type": "String" }
+    }
+  },
+  "authAccountDeleteLabel": "Konto löschen",
+  "@authAccountDeleteLabel": { "description": "Nav-row label leading to account delete" },
+  "authAccountDeleteSub": "Alle Daten dauerhaft entfernen",
+  "@authAccountDeleteSub": { "description": "Nav-row subtitle for account delete" }
 }
