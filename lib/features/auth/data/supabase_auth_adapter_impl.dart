@@ -135,15 +135,13 @@ class SupabaseAuthAdapterImpl implements SupabaseAuthAdapter {
 
   @override
   Future<void> deleteCurrentAccount() async {
-    final userId = _state.userId;
-    if (userId == null) {
-      throw StateError('deleteCurrentAccount requires an active session');
-    }
-    // The auth.users CASCADE FKs on user_credentials, user_profiles
-    // and user_keypair_backups handle the data side. Server-side
-    // admin.deleteUser is the canonical call.
-    await _client.auth.admin.deleteUser(userId);
-    await signOut();
+    // Server-side SECURITY DEFINER function deletes the row in
+    // auth.users for the current JWT subject and cascades through the
+    // user_credentials / user_keypair_backups / user_profiles FKs.
+    // Calling admin.deleteUser from the mobile client would require
+    // the service-role key in the app bundle — never acceptable.
+    await _client.rpc<void>('fn_delete_current_account');
+    await _client.auth.signOut();
   }
 
   @override
