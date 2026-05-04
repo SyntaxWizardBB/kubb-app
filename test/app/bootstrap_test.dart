@@ -1,0 +1,61 @@
+import 'package:drift/native.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:kubb_app/app/bootstrap.dart';
+import 'package:kubb_app/core/data/app_database.dart';
+import 'package:kubb_app/features/auth/application/auth_controller.dart';
+
+import '../_helpers/sqlite_open.dart';
+
+void main() {
+  setUpAll(registerLinuxSqliteOverride);
+
+  late AppDatabase db;
+
+  setUp(() {
+    db = AppDatabase(NativeDatabase.memory());
+  });
+
+  tearDown(() async {
+    await db.close();
+  });
+
+  test('appBootstrapProvider returns null on a fresh DAO', () async {
+    final container = ProviderContainer(
+      overrides: [
+        cachedAuthSessionDaoProvider.overrideWithValue(db.cachedAuthSessionDao),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final result = await container.read(appBootstrapProvider.future);
+    expect(result, isNull);
+  });
+
+  test('appBootstrapProvider returns the cached row when one exists',
+      () async {
+    final now = DateTime.utc(2026, 5, 4, 12);
+    await db.cachedAuthSessionDao.upsert(
+      userId: 'user-42',
+      kind: 'oauth_google',
+      displayName: 'Lukas',
+      avatarColor: '#3366FF',
+      expiresAt: now.add(const Duration(hours: 1)),
+      refreshAfter: now.add(const Duration(minutes: 50)),
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        cachedAuthSessionDaoProvider.overrideWithValue(db.cachedAuthSessionDao),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final result = await container.read(appBootstrapProvider.future);
+    expect(result, isNotNull);
+    expect(result!.userId, 'user-42');
+    expect(result.kind, 'oauth_google');
+    expect(result.displayName, 'Lukas');
+    expect(result.avatarColor, '#3366FF');
+  });
+}

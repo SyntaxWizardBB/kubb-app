@@ -32,10 +32,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: notifier,
     redirect: (context, state) {
-      final session = ref.read(authControllerProvider).maybeWhen(
-            data: (s) => s,
-            orElse: () => const AuthSession.signedOut(),
-          );
+      final auth = ref.read(authControllerProvider);
+      // Loading without a previous value: stay put. KubbApp renders the
+      // splash while appBootstrapProvider resolves, so by the time the
+      // router runs for real the session is already known. A lingering
+      // AsyncLoading here would mis-redirect to /sign-in for a frame.
+      if (!auth.hasValue && !auth.hasError) {
+        return null;
+      }
+      // Error falls back to signedOut so the user lands on /sign-in
+      // rather than a stuck protected route.
+      final session = auth.hasValue
+          ? auth.requireValue
+          : const AuthSession.signedOut();
       final loc = state.matchedLocation;
       final inAuthFlow = loc == AuthRoutes.signIn ||
           loc.startsWith('${AuthRoutes.signIn}/') ||
