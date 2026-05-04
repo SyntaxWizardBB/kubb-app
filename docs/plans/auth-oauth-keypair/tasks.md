@@ -534,6 +534,7 @@
   - **When** der AuthController gebootet wird
   - **Then** emittiert er `AsyncValue.data(Authenticated.<kind>(...))` ohne auf Server-Call zu warten
   - **And** beim signOut wird die DAO-Zeile gelöscht und `SignedOut` emittiert
+- **Status**: done — 6 Tests grün gegen ProviderContainer mit FakeSupabaseAuthAdapter + in-memory drift dao + AuthTelemetry overrides.
 
 ### M4-T03: AuthController implementation
 
@@ -548,6 +549,7 @@
   - **Given** die M4-T02-Tests
   - **When** der Controller implementiert ist
   - **Then** gehen alle Tests grün
+- **Status**: done — AsyncNotifier per Standard-Riverpod-Pattern. Provider-Tokens (supabaseAuthAdapterProvider, cachedAuthSessionDaoProvider, authTelemetryProvider) im selben File für Test-Override-Klarheit; convenience providers (currentUserId, isAuthenticated, isAnonymousKeypair) in auth_providers.dart. Boot-Pfad: cached_auth_session lookup → onAuthStateChange subscribe → state. signOut clears DAO + emits SignedOut + telemetry.
 
 ### M4-T04: AccountSetupController tests
 
