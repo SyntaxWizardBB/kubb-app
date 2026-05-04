@@ -5,6 +5,8 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/application/cloud_profile_provider.dart';
+import 'package:kubb_app/features/auth/presentation/auth_widgets/auth_app_bar.dart';
+import 'package:kubb_app/features/auth/presentation/auth_widgets/auth_primary_button.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
@@ -139,7 +141,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space6),
           child: Column(
             children: [
-              _AppBar(
+              AuthAppBar(
                 eyebrow: l10n.authEditProfileEyebrow,
                 title: l10n.authEditProfileTitle,
                 onBack: _back,
@@ -232,7 +234,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
               ],
               const Spacer(),
-              _PrimaryButton(
+              AuthPrimaryButton(
                 label: _saving
                     ? l10n.authEditProfileSubmitting
                     : l10n.authEditProfileSubmit,
@@ -282,66 +284,6 @@ class _ColorDot extends StatelessWidget {
   }
 }
 
-class _AppBar extends StatelessWidget {
-  const _AppBar({
-    required this.eyebrow,
-    required this.title,
-    required this.onBack,
-  });
-
-  final String eyebrow;
-  final String title;
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(top: KubbTokens.space2),
-      child: Row(
-        children: [
-          SizedBox(
-            width: KubbTokens.touchMin,
-            height: KubbTokens.touchMin,
-            child: IconButton(
-              onPressed: onBack,
-              icon: const Icon(Icons.arrow_back),
-              tooltip: l10n.authCommonBack,
-            ),
-          ),
-          const SizedBox(width: KubbTokens.space2),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  eyebrow,
-                  style: TextStyle(
-                    fontSize: 11,
-                    letterSpacing: 1.5,
-                    fontWeight: FontWeight.w600,
-                    color: tokens.fgMuted,
-                  ),
-                ),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: tokens.fg,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: KubbTokens.touchMin),
-        ],
-      ),
-    );
-  }
-}
-
 enum _BannerTone { info, error }
 
 class _Banner extends StatelessWidget {
@@ -384,58 +326,6 @@ class _Banner extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PrimaryButton extends StatelessWidget {
-  const _PrimaryButton({
-    required this.label,
-    required this.onPressed,
-    this.loading = false,
-  });
-
-  final String label;
-  final VoidCallback? onPressed;
-  final bool loading;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return SizedBox(
-      width: double.infinity,
-      height: KubbTokens.touchComfortable,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: tokens.primary,
-          foregroundColor: tokens.onPrimary,
-          disabledBackgroundColor: tokens.primary.withValues(alpha: 0.45),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (loading) ...[
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: tokens.onPrimary,
-                ),
-              ),
-              const SizedBox(width: KubbTokens.space2),
-            ],
-            Text(
-              label,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-          ],
-        ),
       ),
     );
   }

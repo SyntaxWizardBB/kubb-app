@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
+import 'package:kubb_app/features/auth/presentation/auth_widgets/auth_primary_button.dart';
 import 'package:kubb_app/features/auth/presentation/disclaimer_block.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
@@ -112,7 +113,7 @@ class _OnboardingTourState extends ConsumerState<OnboardingTour> {
                 KubbTokens.space5,
                 KubbTokens.space5,
               ),
-              child: _PrimaryButton(
+              child: AuthPrimaryButton(
                 label: isLast ? l10n.authOnboardingDone : l10n.authOnboardingNext,
                 onPressed: () => _next(total),
               ),
@@ -596,36 +597,6 @@ class _SlideReminder extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PrimaryButton extends StatelessWidget {
-  const _PrimaryButton({required this.label, required this.onPressed});
-
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return SizedBox(
-      width: double.infinity,
-      height: KubbTokens.touchComfortable,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: tokens.primary,
-          foregroundColor: tokens.onPrimary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
-          ),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-        ),
       ),
     );
   }

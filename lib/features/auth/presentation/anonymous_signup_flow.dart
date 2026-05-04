@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/auth/application/account_setup_controller.dart';
+import 'package:kubb_app/features/auth/presentation/auth_widgets/auth_primary_button.dart';
+import 'package:kubb_app/features/auth/presentation/auth_widgets/wizard_header.dart';
 import 'package:kubb_app/features/auth/presentation/disclaimer_block.dart';
 import 'package:kubb_app/features/auth/presentation/passphrase_input.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -82,7 +84,7 @@ class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
       body: SafeArea(
         child: Column(
           children: [
-            _WizardHeader(
+            WizardHeader(
               step: stepIdx,
               total: 3,
               eyebrow: l10n.authSignupEyebrow,
@@ -119,135 +121,6 @@ class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
 }
 
 enum _Step { nickname, disclaimer, success }
-
-class _WizardHeader extends StatelessWidget {
-  const _WizardHeader({
-    required this.step,
-    required this.total,
-    required this.eyebrow,
-    required this.title,
-    this.onBack,
-    this.onClose,
-  });
-
-  final int step;
-  final int total;
-  final String eyebrow;
-  final String title;
-  final VoidCallback? onBack;
-  final VoidCallback? onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        KubbTokens.space2,
-        KubbTokens.space2,
-        KubbTokens.space2,
-        KubbTokens.space3,
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              SizedBox(
-                width: KubbTokens.touchMin,
-                height: KubbTokens.touchMin,
-                child: onBack != null
-                    ? IconButton(
-                        onPressed: onBack,
-                        icon: const Icon(Icons.arrow_back),
-                        tooltip: l10n.authCommonBack,
-                      )
-                    : null,
-              ),
-              Expanded(
-                child: Text(
-                  l10n.authWizardStepCount(step + 1, total),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: tokens.fgMuted,
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: KubbTokens.touchMin,
-                height: KubbTokens.touchMin,
-                child: onClose != null
-                    ? IconButton(
-                        onPressed: onClose,
-                        icon: const Icon(Icons.close),
-                        tooltip: l10n.authCommonClose,
-                      )
-                    : null,
-              ),
-            ],
-          ),
-          const SizedBox(height: KubbTokens.space2),
-          Text(
-            eyebrow,
-            style: TextStyle(
-              fontSize: 12,
-              letterSpacing: 1.5,
-              fontWeight: FontWeight.w600,
-              color: tokens.primary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: KubbTokens.space4),
-            child: Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.6,
-                color: tokens.fg,
-              ),
-            ),
-          ),
-          const SizedBox(height: KubbTokens.space3),
-          _StepDots(current: step, total: total),
-        ],
-      ),
-    );
-  }
-}
-
-class _StepDots extends StatelessWidget {
-  const _StepDots({required this.current, required this.total});
-
-  final int current;
-  final int total;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (var i = 0; i < total; i++) ...[
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: i == current ? 24 : 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: i <= current ? tokens.primary : KubbTokens.stone200,
-              borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-            ),
-          ),
-          if (i < total - 1) const SizedBox(width: 6),
-        ],
-      ],
-    );
-  }
-}
 
 class _NicknameStep extends StatefulWidget {
   const _NicknameStep({required this.onContinue});
@@ -329,7 +202,7 @@ class _NicknameStepState extends State<_NicknameStep> {
             style: TextStyle(fontSize: 12, color: tokens.fgMuted),
           ),
         const Spacer(),
-        _PrimaryButton(
+        AuthPrimaryButton(
           label: l10n.authCommonContinue,
           onPressed: _isValid() ? () => widget.onContinue(_nick) : null,
         ),
@@ -433,7 +306,7 @@ class _DisclaimerStep extends StatelessWidget {
             ),
           ],
           const SizedBox(height: KubbTokens.space5),
-          _PrimaryButton(
+          AuthPrimaryButton(
             label: submitting
                 ? l10n.authSignupSubmitting
                 : l10n.authSignupSubmit,
@@ -504,65 +377,13 @@ class _SuccessStep extends StatelessWidget {
         const Spacer(),
         SizedBox(
           width: double.infinity,
-          child: _PrimaryButton(
+          child: AuthPrimaryButton(
             label: l10n.authSignupSuccessContinue,
             onPressed: onFinish,
           ),
         ),
         const SizedBox(height: KubbTokens.space5),
       ],
-    );
-  }
-}
-
-class _PrimaryButton extends StatelessWidget {
-  const _PrimaryButton({
-    required this.label,
-    required this.onPressed,
-    this.loading = false,
-  });
-
-  final String label;
-  final VoidCallback? onPressed;
-  final bool loading;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return SizedBox(
-      width: double.infinity,
-      height: KubbTokens.touchComfortable,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: tokens.primary,
-          foregroundColor: tokens.onPrimary,
-          disabledBackgroundColor: tokens.primary.withValues(alpha: 0.45),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (loading) ...[
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: tokens.onPrimary,
-                ),
-              ),
-              const SizedBox(width: KubbTokens.space2),
-            ],
-            Text(
-              label,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
