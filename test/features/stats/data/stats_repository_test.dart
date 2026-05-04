@@ -267,7 +267,10 @@ void main() {
           fieldKubbsHit: Value(s.fieldHits),
           eightMHit: Value(s.eight),
           heliThrow: Value(s.heli),
-          kingHit: s.king == null ? const Value.absent() : Value(s.king!),
+          kingHit: switch (s.king) {
+            final bool v => Value(v),
+            _ => const Value.absent(),
+          },
           penaltyHits2: Value(s.p2),
           createdAt: Value(ts.add(Duration(seconds: i))),
         ),
@@ -320,10 +323,10 @@ void main() {
       id: 'f-old',
       field: 1,
       base: 0,
-      sticks: [
-        (fieldHits: 1, eight: false, heli: false, king: null, p2: 0),
+      sticks: const [
+        (fieldHits: 1, eight: false, heli: false, king: null, p2: 1),
       ],
-      completedAt: DateTime.utc(2026, 5, 1),
+      completedAt: DateTime.utc(2026, 5),
     );
     await insertFinisseur(
       id: 'f-new',
