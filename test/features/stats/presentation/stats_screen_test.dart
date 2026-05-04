@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/stats/application/stats_aggregate_provider.dart';
 import 'package:kubb_app/features/stats/application/stats_filter_notifier.dart';
 import 'package:kubb_app/features/stats/data/stats_aggregate.dart';
 import 'package:kubb_app/features/stats/presentation/stats_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 void main() {
   Future<void> pump(
@@ -157,5 +159,48 @@ void main() {
     expect(find.text('75 %'), findsWidgets); // success rate
     expect(find.text('Letzte Finisseurs'.toUpperCase()), findsOneWidget);
     expect(find.text('7/3'), findsOneWidget);
+  });
+
+  testWidgets('back button routes to home when stats was reached via go',
+      (tester) async {
+    final router = GoRouter(
+      initialLocation: '/stats',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => const Scaffold(body: Text('HOME')),
+        ),
+        GoRoute(
+          path: '/stats',
+          builder: (_, _) => const StatsScreen(),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          statsAggregateProvider.overrideWith((ref) async => makeAgg()),
+          finisseurStatsAggregateProvider.overrideWith(
+            (ref) async => FinisseurStatsAggregate.empty(),
+          ),
+        ],
+        child: MaterialApp.router(
+          theme: KubbTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('de'),
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Back button must be wired even when canPop() is false (route replace).
+    final backFinder = find.byIcon(LucideIcons.arrowLeft);
+    expect(backFinder, findsOneWidget);
+    await tester.tap(backFinder);
+    await tester.pumpAndSettle();
+
+    expect(find.text('HOME'), findsOneWidget);
   });
 }

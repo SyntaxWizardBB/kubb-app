@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/icons.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
@@ -55,6 +56,16 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
       appBar: KubbAppBar(
         eyebrow: l.statsEyebrow,
         title: l.statsTitle,
+        // Stats can be opened via context.go from home (replace) or context.push
+        // from settings/training-sheet — Navigator.canPop is unreliable here, so
+        // we wire an explicit leading that always lands back on home.
+        leading: IconButton(
+          icon: const KubbIcon(LucideIcons.arrowLeft),
+          color: tokens.fg,
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onPressed: () =>
+              Navigator.of(context).canPop() ? context.pop() : context.go('/'),
+        ),
         actions: IconButton(
           tooltip: l.statsFilterTitle,
           icon: const KubbIcon(LucideIcons.sliders),
