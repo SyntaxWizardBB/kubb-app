@@ -131,6 +131,7 @@ void main() {
         totalSessions: 4,
         successCount: 3,
         totalSticks: 18,
+        missSticks: 2,
         longDubbiesPerSession: 1.25,
         heliCount: 2,
         penaltyCount: 1,

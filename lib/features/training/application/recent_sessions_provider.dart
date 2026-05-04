@@ -73,7 +73,9 @@ Future<RecentSessionView> _toSniperView(
     }
   }
 
-  final divisor = hits + misses;
+  // Heli always counts as a miss in the rate denominator. The setting only
+  // controls whether helis show up in the throw-count subtitle.
+  final divisor = hits + misses + helis;
   final hitRate = divisor == 0 ? 0 : ((hits / divisor) * 100).round();
   final totalThrows = hits + misses + (heliTracking ? helis : 0);
   final completedAt = session.completedAt ?? session.startedAt;

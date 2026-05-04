@@ -198,8 +198,21 @@ void main() {
 
     expect(on.totalThrows, 13);
     expect(off.totalThrows, 10);
-    // hit-rate must not change.
+    // hit-rate counts heli as a miss in the denominator regardless of the
+    // setting, so both readings agree.
     expect(on.hitRatePercent, off.hitRatePercent);
+    expect(on.hitRatePercent, 38); // 5 / (5 + 5 + 3) ≈ 38.46%
+  });
+
+  test('heli reduces hit-rate even with helis = 0 keeping the old result',
+      () async {
+    await insertSession('s1', hits: 5, misses: 5);
+    final agg = await repo.computeAggregate(
+      playerId: 'p1',
+      filter: const StatsFilter(),
+      heliTracking: true,
+    );
+    expect(agg.hitRatePercent, 50);
   });
 
   test('best hit-rate picks the strongest session and reports its distance',
@@ -316,6 +329,29 @@ void main() {
     expect(agg.kingAttempts, 1);
     expect(agg.kingHits, 1);
     expect(agg.kingHitRatePercent, 100);
+  });
+
+  test('finisseur aggregate counts heli-only and full-dud sticks as misses',
+      () async {
+    await insertFinisseur(
+      id: 'f-misses',
+      field: 3,
+      base: 1,
+      sticks: const [
+        // hit stick: scores a field kubb
+        (fieldHits: 1, eight: false, heli: false, king: null, p2: 0),
+        // miss stick: heli only
+        (fieldHits: 0, eight: false, heli: true, king: null, p2: 0),
+        // miss stick: dud, no inputs
+        (fieldHits: 0, eight: false, heli: false, king: null, p2: 0),
+      ],
+    );
+
+    final agg = await repo.computeFinisseurAggregate(playerId: 'p1');
+
+    expect(agg.totalSticks, 3);
+    expect(agg.missSticks, 2);
+    expect(agg.stickHitRatePercent, 33); // 1 / 3
   });
 
   test('finisseur aggregate exposes session rows newest-first', () async {

@@ -57,7 +57,13 @@ class StatsRepository {
     }
 
     final totalThrows = stats.fold<int>(0, (a, x) => a + x.totalThrows);
-    final divisor = stats.fold<int>(0, (a, x) => a + x.hits + x.misses);
+    // Heli counts as a miss for the rate denominator, regardless of whether
+    // the heli setting is on (the setting only controls whether helis show
+    // up in the throw count).
+    final divisor = stats.fold<int>(
+      0,
+      (a, x) => a + x.hits + x.misses + x.helis,
+    );
     final hitsTotal = stats.fold<int>(0, (a, x) => a + x.hits);
     final hitRate = divisor == 0 ? 0 : ((hitsTotal / divisor) * 100).round();
 
@@ -117,7 +123,7 @@ class StatsRepository {
           streak = 0;
       }
     }
-    final divisor = hits + misses;
+    final divisor = hits + misses + helis;
     final rate = divisor == 0 ? 0 : ((hits / divisor) * 100).round();
     final total = hits + misses + (heliTracking ? helis : 0);
     return _PerSession(
@@ -126,6 +132,7 @@ class StatsRepository {
       distance: s.distanceMeters,
       hits: hits,
       misses: misses,
+      helis: helis,
       hitRatePercent: rate,
       totalThrows: total,
       longestHitStreak: longest,
@@ -146,6 +153,7 @@ class StatsRepository {
     if (finisseurs.isEmpty) return FinisseurStatsAggregate.empty();
 
     var totalSticks = 0;
+    var missSticks = 0;
     var successCount = 0;
     var heli = 0;
     var penalty = 0;
@@ -174,6 +182,10 @@ class StatsRepository {
           sessionKingAttempts++;
           if (kingHit) sessionKingHits++;
         }
+        // Stick is a miss when no useful hit happened. Heli-only and full
+        // duds both count, king-hit redeems a stick.
+        final hadAnyHit = e.fieldKubbsHit > 0 || e.eightMHit || kingHit == true;
+        if (!hadAnyHit) missSticks++;
       }
       kingAttempts += sessionKingAttempts;
       kingHits += sessionKingHits;
@@ -202,6 +214,7 @@ class StatsRepository {
       totalSessions: finisseurs.length,
       successCount: successCount,
       totalSticks: totalSticks,
+      missSticks: missSticks,
       longDubbiesPerSession: avgLong,
       heliCount: heli,
       penaltyCount: penalty,
@@ -243,6 +256,7 @@ class _PerSession {
     required this.distance,
     required this.hits,
     required this.misses,
+    required this.helis,
     required this.hitRatePercent,
     required this.totalThrows,
     required this.longestHitStreak,
@@ -253,6 +267,7 @@ class _PerSession {
   final double distance;
   final int hits;
   final int misses;
+  final int helis;
   final int hitRatePercent;
   final int totalThrows;
   final int longestHitStreak;

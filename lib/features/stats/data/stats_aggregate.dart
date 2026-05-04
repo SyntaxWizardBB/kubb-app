@@ -88,6 +88,7 @@ class FinisseurStatsAggregate {
     required this.totalSessions,
     required this.successCount,
     required this.totalSticks,
+    required this.missSticks,
     required this.longDubbiesPerSession,
     required this.heliCount,
     required this.penaltyCount,
@@ -101,6 +102,7 @@ class FinisseurStatsAggregate {
         totalSessions: 0,
         successCount: 0,
         totalSticks: 0,
+        missSticks: 0,
         longDubbiesPerSession: 0,
         heliCount: 0,
         penaltyCount: 0,
@@ -113,6 +115,7 @@ class FinisseurStatsAggregate {
   final int totalSessions;
   final int successCount;
   final int totalSticks;
+  final int missSticks;
   final double longDubbiesPerSession;
   final int heliCount;
   final int penaltyCount;
@@ -128,4 +131,7 @@ class FinisseurStatsAggregate {
       totalSessions == 0 ? 0 : totalSticks / totalSessions;
   int get kingHitRatePercent =>
       kingAttempts == 0 ? 0 : ((kingHits / kingAttempts) * 100).round();
+  int get stickHitRatePercent => totalSticks == 0
+      ? 0
+      : (((totalSticks - missSticks) / totalSticks) * 100).round();
 }

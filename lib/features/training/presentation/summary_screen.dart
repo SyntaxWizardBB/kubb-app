@@ -103,7 +103,9 @@ class _SniperBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final relevant = data.hits + data.misses;
+    // Heli counts as a miss in the denominator regardless of the setting —
+    // matches stats and recent-list semantics.
+    final relevant = data.hits + data.misses + data.helis;
     final rate = relevant == 0
         ? '—'
         : '${(100 * data.hits / relevant).round()} %';

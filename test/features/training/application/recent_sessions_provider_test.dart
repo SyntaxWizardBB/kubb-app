@@ -138,7 +138,8 @@ void main() {
     final result =
         await waitForData(container, until: (list) => list.isNotEmpty);
 
-    expect(result.single.hitRatePercent, 50);
+    // Heli reduces the rate (5 / (5+5+2) ≈ 42).
+    expect(result.single.hitRatePercent, 42);
     expect(result.single.subtitle, contains('10 Würfe'));
     expect(result.single.subtitle, contains('8.0 m'));
   });

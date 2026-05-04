@@ -109,6 +109,18 @@ class _MetricBlock extends StatelessWidget {
               tokens: tokens,
             ),
             _MetricRow(
+              label: l.statsFinisseurStickRate,
+              value: '${aggregate.stickHitRatePercent} %',
+              divider: true,
+              tokens: tokens,
+            ),
+            _MetricRow(
+              label: l.statsFinisseurMisses,
+              value: '${aggregate.missSticks}',
+              divider: true,
+              tokens: tokens,
+            ),
+            _MetricRow(
               label: l.statsFinisseurLongDubbies,
               value: aggregate.longDubbiesPerSession.toStringAsFixed(2),
               divider: true,
