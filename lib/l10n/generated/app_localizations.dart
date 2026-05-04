@@ -1917,6 +1917,90 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Dein bisheriger Zugang per Passphrase bleibt als Backup erhalten.'**
   String get authLinkFallbackKept;
+
+  /// Passphrase-change screen eyebrow
+  ///
+  /// In de, this message translates to:
+  /// **'Sicherheit'**
+  String get authPassphraseChangeEyebrow;
+
+  /// Passphrase-change screen title
+  ///
+  /// In de, this message translates to:
+  /// **'Passphrase ändern'**
+  String get authPassphraseChangeTitle;
+
+  /// Label for old-passphrase field
+  ///
+  /// In de, this message translates to:
+  /// **'Alte Passphrase'**
+  String get authPassphraseChangeOldLabel;
+
+  /// Helper text under old-passphrase field
+  ///
+  /// In de, this message translates to:
+  /// **'Wir prüfen erst, dann setzen wir die neue.'**
+  String get authPassphraseChangeOldHelper;
+
+  /// Inline error on the old-passphrase field after a failed change
+  ///
+  /// In de, this message translates to:
+  /// **'Konnte nicht ändern.'**
+  String get authPassphraseChangeError;
+
+  /// Label for new-passphrase field
+  ///
+  /// In de, this message translates to:
+  /// **'Neue Passphrase'**
+  String get authPassphraseChangeNewLabel;
+
+  /// Helper text under new-passphrase field
+  ///
+  /// In de, this message translates to:
+  /// **'Mindestens 12 Zeichen. Sie sollte sich von der bisherigen unterscheiden.'**
+  String get authPassphraseChangeNewHelper;
+
+  /// Label for confirm-passphrase field
+  ///
+  /// In de, this message translates to:
+  /// **'Neue Passphrase bestätigen'**
+  String get authPassphraseChangeConfirmLabel;
+
+  /// Helper text under confirm-passphrase field
+  ///
+  /// In de, this message translates to:
+  /// **'Erneut eingeben — exakt gleich.'**
+  String get authPassphraseChangeConfirmHelper;
+
+  /// Inline error when confirm differs from new
+  ///
+  /// In de, this message translates to:
+  /// **'Stimmt nicht überein.'**
+  String get authPassphraseChangeConfirmMismatch;
+
+  /// Success banner after passphrase change
+  ///
+  /// In de, this message translates to:
+  /// **'Passphrase aktualisiert.'**
+  String get authPassphraseChangeSuccess;
+
+  /// Submit button label
+  ///
+  /// In de, this message translates to:
+  /// **'Speichern'**
+  String get authPassphraseChangeSubmit;
+
+  /// Submit button label while saving
+  ///
+  /// In de, this message translates to:
+  /// **'Speichere …'**
+  String get authPassphraseChangeSubmitting;
+
+  /// Cancel button label
+  ///
+  /// In de, this message translates to:
+  /// **'Abbrechen'**
+  String get authPassphraseChangeCancel;
 }
 
 class _AppLocalizationsDelegate

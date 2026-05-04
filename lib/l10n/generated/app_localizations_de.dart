@@ -1002,4 +1002,49 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get authLinkFallbackKept =>
       'Dein bisheriger Zugang per Passphrase bleibt als Backup erhalten.';
+
+  @override
+  String get authPassphraseChangeEyebrow => 'Sicherheit';
+
+  @override
+  String get authPassphraseChangeTitle => 'Passphrase ändern';
+
+  @override
+  String get authPassphraseChangeOldLabel => 'Alte Passphrase';
+
+  @override
+  String get authPassphraseChangeOldHelper =>
+      'Wir prüfen erst, dann setzen wir die neue.';
+
+  @override
+  String get authPassphraseChangeError => 'Konnte nicht ändern.';
+
+  @override
+  String get authPassphraseChangeNewLabel => 'Neue Passphrase';
+
+  @override
+  String get authPassphraseChangeNewHelper =>
+      'Mindestens 12 Zeichen. Sie sollte sich von der bisherigen unterscheiden.';
+
+  @override
+  String get authPassphraseChangeConfirmLabel => 'Neue Passphrase bestätigen';
+
+  @override
+  String get authPassphraseChangeConfirmHelper =>
+      'Erneut eingeben — exakt gleich.';
+
+  @override
+  String get authPassphraseChangeConfirmMismatch => 'Stimmt nicht überein.';
+
+  @override
+  String get authPassphraseChangeSuccess => 'Passphrase aktualisiert.';
+
+  @override
+  String get authPassphraseChangeSubmit => 'Speichern';
+
+  @override
+  String get authPassphraseChangeSubmitting => 'Speichere …';
+
+  @override
+  String get authPassphraseChangeCancel => 'Abbrechen';
 }
