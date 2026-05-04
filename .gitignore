@@ -53,9 +53,6 @@ app.*.map.json
 # Third-party rule documents (copyright respective associations)
 /docs/rules/*.pdf
 
-# Generated localization files
-/lib/l10n/generated/
-
 # Coverage reports
 /coverage/
 
