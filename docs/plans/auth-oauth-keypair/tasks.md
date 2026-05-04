@@ -443,6 +443,7 @@
   - **Given** die in M3-T03 geschriebenen Tests + Docker-Supabase
   - **When** das Repository implementiert ist
   - **Then** gehen die Tests grün gegen das echte Repository (Integration-Test)
+- **Status**: done — KeypairBackupRepositoryImpl mit Argon2idParams.platformDefault, secure-random salt(16) + nonce(24), framing nonce||privateKey||publicKey damit AEAD-MAC auch publicKey authentifiziert (Schutz gegen server-side public_key swap). nickname_hash via auth.compute_nickname_hash RPC (salt bleibt server-only). updatePassphrase = restore + upload mit neuer Passphrase. Integration-Test gegen lokales Supabase ist Owner-Hardware-Task (siehe M2-T05); Unit-Tests laufen weiterhin gegen Fake aus M3-T03.
 
 ### M3-T05: CloudProfileRepository tests + Fake
 
