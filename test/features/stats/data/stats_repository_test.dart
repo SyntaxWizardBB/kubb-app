@@ -142,13 +142,13 @@ void main() {
     expect(agg.longestHitStreak, 4);
   });
 
-  test('distance filter narrows aggregate', () async {
+  test('distance range narrows aggregate', () async {
     await insertSession('s1', hits: 6, misses: 4);
     await insertSession('s2', hits: 9, misses: 1, distance: 4);
 
     final agg = await repo.computeAggregate(
       playerId: 'p1',
-      filter: const StatsFilter(distanceMeters: 8),
+      filter: const StatsFilter(distanceMin: 7.5),
       heliTracking: true,
     );
 
@@ -329,6 +329,32 @@ void main() {
     expect(agg.kingAttempts, 1);
     expect(agg.kingHits, 1);
     expect(agg.kingHitRatePercent, 100);
+  });
+
+  test('finisseur range narrows aggregate by field plus base', () async {
+    await insertFinisseur(
+      id: 'f73',
+      field: 7,
+      base: 3,
+      sticks: const [(fieldHits: 1, eight: false, heli: false, king: null, p2: 0)],
+    );
+    await insertFinisseur(
+      id: 'f55',
+      field: 5,
+      base: 5,
+      sticks: const [(fieldHits: 1, eight: false, heli: false, king: null, p2: 0)],
+    );
+
+    final agg = await repo.computeFinisseurAggregate(
+      playerId: 'p1',
+      filter: const StatsFilter(
+        finFieldMin: 7,
+        finBaseMax: 3,
+      ),
+    );
+
+    expect(agg.totalSessions, 1);
+    expect(agg.sessionRows.single.field, 7);
   });
 
   test('finisseur aggregate counts heli-only and full-dud sticks as misses',

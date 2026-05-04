@@ -22,13 +22,14 @@ final statsAggregateProvider = FutureProvider<StatsAggregate>((ref) async {
   );
 });
 
-/// Finisseur-only aggregate. Recomputes when the current profile or the
-/// underlying repository changes. Filter pills are sniper-specific so this
-/// one does not subscribe to them.
+/// Finisseur-only aggregate. Recomputes when the active filter, current
+/// profile or the underlying repository changes. The filter modal feeds
+/// finisseur-specific ranges (field, base) plus the shared date range.
 final finisseurStatsAggregateProvider =
     FutureProvider<FinisseurStatsAggregate>((ref) async {
   final profile = ref.watch(currentProfileProvider).value;
   if (profile == null) return FinisseurStatsAggregate.empty();
+  final filter = ref.watch(statsFilterProvider);
   final repo = ref.watch(statsRepositoryProvider);
-  return repo.computeFinisseurAggregate(playerId: profile.id);
+  return repo.computeFinisseurAggregate(playerId: profile.id, filter: filter);
 });

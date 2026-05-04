@@ -75,12 +75,12 @@ void main() {
     expect(find.text('8.0 m'), findsWidgets);
   });
 
-  testWidgets('changing distance filter triggers a recompute', (tester) async {
+  testWidgets('changing distance range triggers a recompute', (tester) async {
     final container = ProviderContainer(
       overrides: [
         statsAggregateProvider.overrideWith((ref) async {
           final filter = ref.watch(statsFilterProvider);
-          return filter.distanceMeters == null
+          return filter.isDistanceFullRange
               ? makeAgg()
               : StatsAggregate.empty();
         }),
@@ -109,8 +109,8 @@ void main() {
     expect(find.text('64'), findsOneWidget);
     expect(find.text('Noch keine Sessions'), findsNothing);
 
-    // Mutate the filter — pick the 4.0 m chip.
-    container.read(statsFilterProvider.notifier).setDistance(4);
+    // Narrow the distance range away from the full default.
+    container.read(statsFilterProvider.notifier).setDistanceRange(4, 5);
     await tester.pumpAndSettle();
 
     expect(find.text('Noch keine Sessions'), findsOneWidget);

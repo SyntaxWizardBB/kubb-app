@@ -130,7 +130,7 @@ void main() {
     );
     addTearDown(sub.close);
 
-    container.read(statsFilterProvider.notifier).setDistance(4);
+    container.read(statsFilterProvider.notifier).setDistanceRange(4, 4.5);
     final filtered = await completer.future.timeout(const Duration(seconds: 5));
     expect(filtered.totalSessions, 0);
   });

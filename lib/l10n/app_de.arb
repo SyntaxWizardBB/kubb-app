@@ -394,6 +394,40 @@
   "@statsFilterAllDistances": { "description": "Distance filter — show all" },
   "statsFilterDateRange": "Zeitraum",
   "@statsFilterDateRange": { "description": "Date range filter pill label" },
+  "statsFilterTitle": "Filter",
+  "@statsFilterTitle": { "description": "Filter modal title in stats" },
+  "statsFilterApply": "Anwenden",
+  "@statsFilterApply": { "description": "Apply button on the stats filter modal" },
+  "statsFilterReset": "Zurücksetzen",
+  "@statsFilterReset": { "description": "Reset button on the stats filter modal" },
+  "statsFilterDistanceRange": "Distanz {lo}–{hi} m",
+  "@statsFilterDistanceRange": {
+    "description": "Active distance range chip on stats screen",
+    "placeholders": {
+      "lo": { "type": "String" },
+      "hi": { "type": "String" }
+    }
+  },
+  "statsFilterFieldRange": "Feldkubbs {lo}–{hi}",
+  "@statsFilterFieldRange": {
+    "description": "Active field-kubb range chip",
+    "placeholders": {
+      "lo": { "type": "int" },
+      "hi": { "type": "int" }
+    }
+  },
+  "statsFilterBaseRange": "Basiskubbs {lo}–{hi}",
+  "@statsFilterBaseRange": {
+    "description": "Active base-kubb range chip",
+    "placeholders": {
+      "lo": { "type": "int" },
+      "hi": { "type": "int" }
+    }
+  },
+  "statsFilterFinisseurField": "Feldkubbs",
+  "@statsFilterFinisseurField": { "description": "Field-kubb range slider label inside filter modal" },
+  "statsFilterFinisseurBase": "Basiskubbs",
+  "@statsFilterFinisseurBase": { "description": "Base-kubb range slider label inside filter modal" },
   "statsRangeAll": "Gesamt",
   "@statsRangeAll": { "description": "Date range — all time" },
   "statsRangeLast7Days": "7 Tage",

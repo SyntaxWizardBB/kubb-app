@@ -1,50 +1,90 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/core/ui/icons.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/stats/application/stats_aggregate_provider.dart';
 import 'package:kubb_app/features/stats/data/stats_aggregate.dart';
+import 'package:kubb_app/features/stats/presentation/widgets/active_filter_tags.dart';
 import 'package:kubb_app/features/stats/presentation/widgets/finisseur_stats_tab.dart';
 import 'package:kubb_app/features/stats/presentation/widgets/stats_aggregate_block.dart';
-import 'package:kubb_app/features/stats/presentation/widgets/stats_filter_bar.dart';
+import 'package:kubb_app/features/stats/presentation/widgets/stats_filter_modal.dart';
 import 'package:kubb_app/features/stats/presentation/widgets/stats_session_list.dart';
 import 'package:kubb_app/features/stats/presentation/widgets/stats_trend_chart.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
-class StatsScreen extends ConsumerWidget {
+class StatsScreen extends ConsumerStatefulWidget {
   const StatsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<StatsScreen> createState() => _StatsScreenState();
+}
+
+class _StatsScreenState extends ConsumerState<StatsScreen>
+    with TickerProviderStateMixin {
+  late final TabController _tab;
+
+  @override
+  void initState() {
+    super.initState();
+    _tab = TabController(length: 2, vsync: this)
+      ..addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    if (!_tab.indexIsChanging) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _tab
+      ..removeListener(_onTabChanged)
+      ..dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
+    final isFinisseur = _tab.index == 1;
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: tokens.bg,
-        appBar: KubbAppBar(eyebrow: l.statsEyebrow, title: l.statsTitle),
-        body: Column(
-          children: [
-            TabBar(
-              labelColor: tokens.fg,
-              unselectedLabelColor: tokens.fgMuted,
-              indicatorColor: tokens.primary,
-              tabs: [
-                Tab(text: l.statsTabSniper),
-                Tab(text: l.statsTabFinisseur),
+    return Scaffold(
+      backgroundColor: tokens.bg,
+      appBar: KubbAppBar(
+        eyebrow: l.statsEyebrow,
+        title: l.statsTitle,
+        actions: IconButton(
+          tooltip: l.statsFilterTitle,
+          icon: const KubbIcon(LucideIcons.sliders),
+          onPressed: () =>
+              StatsFilterModal.show(context, finisseur: isFinisseur),
+        ),
+      ),
+      body: Column(
+        children: [
+          TabBar(
+            controller: _tab,
+            labelColor: tokens.fg,
+            unselectedLabelColor: tokens.fgMuted,
+            indicatorColor: tokens.primary,
+            tabs: [
+              Tab(text: l.statsTabSniper),
+              Tab(text: l.statsTabFinisseur),
+            ],
+          ),
+          ActiveFilterTags(isFinisseur: isFinisseur),
+          Expanded(
+            child: TabBarView(
+              controller: _tab,
+              children: const [
+                _SniperTab(),
+                FinisseurStatsTab(),
               ],
             ),
-            const Expanded(
-              child: TabBarView(
-                children: [
-                  _SniperTab(),
-                  FinisseurStatsTab(),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -89,8 +129,6 @@ class _Body extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const StatsFilterBar(),
-            const SizedBox(height: KubbTokens.space5),
             if (aggregate.isEmpty) ...[
               _EmptyState(tokens: tokens, l: l),
             ] else ...[

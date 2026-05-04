@@ -42,8 +42,8 @@ class StatsRepository {
       if (s.mode == 'finisseur') return false;
       final ts = s.completedAt ?? s.startedAt;
       if (cutoff != null && ts.isBefore(cutoff)) return false;
-      if (filter.distanceMeters != null &&
-          (s.distanceMeters - filter.distanceMeters!).abs() > 0.001) {
+      final d = s.distanceMeters;
+      if (d < filter.distanceMin - 0.001 || d > filter.distanceMax + 0.001) {
         return false;
       }
       return true;
@@ -144,12 +144,27 @@ class StatsRepository {
   /// base kubbs went down before the last stick was thrown.
   Future<FinisseurStatsAggregate> computeFinisseurAggregate({
     required String playerId,
+    StatsFilter filter = const StatsFilter(),
     DateTime? now,
   }) async {
     final dao = _finisseur;
     if (dao == null) return FinisseurStatsAggregate.empty();
     final all = await _sessions.allCompletedForPlayer(playerId);
-    final finisseurs = all.where((s) => s.mode == 'finisseur').toList();
+    final cutoff = _cutoffFor(filter.dateRange, now ?? DateTime.now().toUtc());
+    final finisseurs = all.where((s) {
+      if (s.mode != 'finisseur') return false;
+      final ts = s.completedAt ?? s.startedAt;
+      if (cutoff != null && ts.isBefore(cutoff)) return false;
+      final field = s.finField ?? 0;
+      final base = s.finBase ?? 0;
+      if (field < filter.finFieldMin || field > filter.finFieldMax) {
+        return false;
+      }
+      if (base < filter.finBaseMin || base > filter.finBaseMax) {
+        return false;
+      }
+      return true;
+    }).toList();
     if (finisseurs.isEmpty) return FinisseurStatsAggregate.empty();
 
     var totalSticks = 0;
