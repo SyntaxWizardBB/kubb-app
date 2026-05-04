@@ -281,6 +281,7 @@
   - **When** ein Plaintext verschlüsselt und wieder entschlüsselt wird
   - **Then** entspricht das Ergebnis dem Original
   - **And** ein modifizierter Ciphertext (1 Byte gekippt) löst beim Decrypt einen `SecretBoxAuthenticationError` aus
+- **Status**: done — encryptXChaCha20 + decryptXChaCha20 mit poly1305-AEAD. Ciphertext-Format: `body || mac` (16 Byte MAC concatenated). 5 Tests grün (round-trip, wrong-key/wrong-nonce/tampered-ciphertext alle mit SecretBoxAuthenticationError, too-short-ciphertext mit ArgumentError).
 
 ### M2-T01: SQL migration: tables, indexes, server-salt secret
 

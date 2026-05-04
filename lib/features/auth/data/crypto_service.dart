@@ -12,9 +12,12 @@ import 'package:cryptography/cryptography.dart';
 /// Concrete algorithm classes are constructor-injected so tests can
 /// substitute deterministic / faster implementations when they need to.
 class CryptoService {
-  CryptoService({Ed25519? ed25519}) : _ed25519 = ed25519 ?? Ed25519();
+  CryptoService({Ed25519? ed25519, Xchacha20? xchacha20})
+      : _ed25519 = ed25519 ?? Ed25519(),
+        _xchacha20 = xchacha20 ?? Xchacha20.poly1305Aead();
 
   final Ed25519 _ed25519;
+  final Xchacha20 _xchacha20;
 
   /// Generates a fresh Ed25519 keypair. Public key is 32 bytes, private
   /// key is 32 bytes (the seed; the cryptography package derives the
@@ -54,6 +57,48 @@ class CryptoService {
         publicKey: SimplePublicKey(publicKey, type: KeyPairType.ed25519),
       ),
     );
+  }
+
+  /// Encrypts [plaintext] with XChaCha20-Poly1305 AEAD. Returns the
+  /// concatenated ciphertext (`bytes || mac`) — the caller stores the
+  /// ciphertext alongside the [nonce], both of which are needed for
+  /// decryption. Key length is 32 bytes; nonce length is 24 bytes.
+  Future<Uint8List> encryptXChaCha20({
+    required List<int> key,
+    required List<int> plaintext,
+    required List<int> nonce,
+  }) async {
+    final box = await _xchacha20.encrypt(
+      plaintext,
+      secretKey: SecretKey(key),
+      nonce: nonce,
+    );
+    final out = Uint8List(box.cipherText.length + box.mac.bytes.length)
+      ..setRange(0, box.cipherText.length, box.cipherText)
+      ..setRange(box.cipherText.length, box.cipherText.length + box.mac.bytes.length,
+          box.mac.bytes);
+    return out;
+  }
+
+  /// Decrypts a [ciphertext] produced by [encryptXChaCha20]. Throws a
+  /// [SecretBoxAuthenticationError] if the MAC does not verify (which
+  /// happens when key, nonce or ciphertext have been tampered with).
+  Future<Uint8List> decryptXChaCha20({
+    required List<int> key,
+    required List<int> ciphertext,
+    required List<int> nonce,
+  }) async {
+    const macLength = 16;
+    if (ciphertext.length < macLength) {
+      throw ArgumentError(
+        'ciphertext must be at least $macLength bytes (got ${ciphertext.length})',
+      );
+    }
+    final body = ciphertext.sublist(0, ciphertext.length - macLength);
+    final mac = ciphertext.sublist(ciphertext.length - macLength);
+    final box = SecretBox(body, nonce: nonce, mac: Mac(mac));
+    final plain = await _xchacha20.decrypt(box, secretKey: SecretKey(key));
+    return Uint8List.fromList(plain);
   }
 }
 
