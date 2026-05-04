@@ -30,12 +30,14 @@ class _FakeNotifier extends ActiveFinisseurNotifier {
   }
 
   @override
-  Future<bool> advance() async {
+  Future<FinisseurAdvanceOutcome> advance() async {
     advanced = true;
     final next = _state.currentIndex + 1;
     _state = _state.copyWithIndex(next);
     state = AsyncData(_state);
-    return next >= ActiveFinisseurState.totalSticks;
+    return next >= ActiveFinisseurState.totalSticks
+        ? FinisseurAdvanceOutcome.done
+        : FinisseurAdvanceOutcome.carryOn;
   }
 
   @override
@@ -77,6 +79,30 @@ void main() {
       sticks: sticks,
       currentIndex: 3,
       startedAt: DateTime.utc(2026, 5, 2),
+      phase: FinisseurPhase.base,
+    );
+  }
+
+  // King phase = field+base done, kingThrowTracking on, dedicated stick. The
+  // notifier pre-seeds king=hit when the phase opens; mirror that here so
+  // tapping Stock-abschliessen behaves like in production.
+  ActiveFinisseurState seedKingPhase({int currentIndex = 4}) {
+    final sticks = <StickResult>[
+      const StickResult(fieldHits: 7),
+      const StickResult(eightMHit: true),
+      const StickResult(eightMHit: true),
+      const StickResult(eightMHit: true),
+      const StickResult(king: KingResult(hit: true)),
+      const StickResult(),
+    ];
+    return ActiveFinisseurState(
+      sessionId: 'fin-1',
+      field: 7,
+      base: 3,
+      sticks: sticks,
+      currentIndex: currentIndex,
+      startedAt: DateTime.utc(2026, 5, 2),
+      phase: FinisseurPhase.king,
     );
   }
 
@@ -104,39 +130,45 @@ void main() {
     return notifier;
   }
 
-  testWidgets(
-      'last basekubb hit with king tracking on opens king block, no advance',
+  testWidgets('last basekubb hit auto-advances even with king tracking on',
       (tester) async {
     final notifier = await pump(tester);
     await tester.tap(find.widgetWithText(InkWell, 'Treffer'));
     await tester.pumpAndSettle();
 
-    expect(notifier.advanced, isFalse);
+    // Phase 2 → Phase 3 is now the notifier's job. The last basekubb stays
+    // a clean Hit/Miss/Advance interaction; no inline king block.
+    expect(notifier.advanced, isTrue);
     expect(notifier.lastPatch?.eightMHit, isTrue);
-    expect(notifier.lastPatch?.king, isNotNull);
-    expect(notifier.lastPatch?.king?.hit, isTrue);
-    // King-block fields render their position/outcome row labels.
+    expect(notifier.lastPatch?.king, isNull);
+  });
+
+  testWidgets('king phase shows only the king block, no hit/miss buttons',
+      (tester) async {
+    await pump(tester, initial: seedKingPhase());
+
+    // King phase block is the dedicated FinisseurKingDetail card with the
+    // position + outcome rows. Hit/Miss/Heli pads must be gone.
+    expect(find.text('POSITION'), findsOneWidget);
+    expect(find.text('OUTCOME'), findsOneWidget);
+    expect(find.widgetWithText(InkWell, 'Verfehlt'), findsNothing);
     expect(find.text('Stock abschliessen'), findsOneWidget);
   });
 
-  testWidgets('king hit confirmed via Stock-abschliessen advances session',
+  testWidgets('king phase: Stock-abschliessen advances and finishes session',
       (tester) async {
-    final notifier = await pump(tester);
-    await tester.tap(find.widgetWithText(InkWell, 'Treffer'));
-    await tester.pumpAndSettle();
+    final notifier = await pump(tester, initial: seedKingPhase());
+    // Default king is a hit — pre-seed already in seedKingPhase. Tapping
+    // the commit button just advances; no per-tap update is required.
     await tester.tap(find.widgetWithText(FilledButton, 'Stock abschliessen'));
     await tester.pumpAndSettle();
 
     expect(notifier.advanced, isTrue);
-    expect(notifier.lastPatch?.king?.hit, isTrue);
   });
 
   testWidgets('king miss recorded then advance via Stock-abschliessen',
       (tester) async {
-    final notifier = await pump(tester);
-    await tester.tap(find.widgetWithText(InkWell, 'Treffer'));
-    await tester.pumpAndSettle();
-    // Toggle king outcome to miss inside the king block (lowercase label).
+    final notifier = await pump(tester, initial: seedKingPhase());
     await tester.tap(find.widgetWithText(InkWell, 'verfehlt'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Stock abschliessen'));
@@ -176,6 +208,7 @@ void main() {
       ],
       currentIndex: 2,
       startedAt: DateTime.utc(2026, 5, 2),
+      phase: FinisseurPhase.base,
     );
     final notifier = await pump(tester, initial: state);
     await tester.tap(find.widgetWithText(InkWell, 'Treffer'));

@@ -4,6 +4,18 @@ import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_state.dart';
 import 'package:kubb_app/features/training/data/finisseur_repository.dart';
 
+/// Outcome of [ActiveFinisseurNotifier.advance].
+///
+/// - [carryOn]: nothing special — keep filling sticks.
+/// - [done]: session is over (won or lost). The caller persists and routes to
+///   the summary.
+/// - [needsContinueDecision]: stock 6 was just spent without a win and the
+///   "continue beyond sticks" setting is on. The UI must ask the player
+///   whether to continue or give up; the notifier waits for either
+///   [ActiveFinisseurNotifier.continueBeyondStocks] or
+///   [ActiveFinisseurNotifier.giveUp] before doing anything.
+enum FinisseurAdvanceOutcome { carryOn, done, needsContinueDecision }
+
 class ActiveFinisseurNotifier
     extends AsyncNotifier<ActiveFinisseurState?> {
   @override
@@ -42,39 +54,109 @@ class ActiveFinisseurNotifier
     state = AsyncData(s.copyWithCurrent(patch));
   }
 
-  /// Persists the current stick and advances to the next index. Returns true
-  /// when the session is complete — either because all sticks were thrown,
-  /// or because the win condition fired early (king down, or all kubbs down
-  /// with king-throw tracking off).
-  Future<bool> advance() async {
+  /// Persists the current stick, advances the index, and recomputes the next
+  /// phase. Returns the outcome so the UI knows whether to navigate, ask, or
+  /// keep going.
+  Future<FinisseurAdvanceOutcome> advance() async {
     final s = state.value;
-    if (s == null) return false;
+    if (s == null) return FinisseurAdvanceOutcome.carryOn;
     await _repo.recordStick(
       sessionId: s.sessionId,
       stickIndex: s.currentIndex,
       result: s.current,
     );
     final next = s.currentIndex + 1;
-    state = AsyncData(s.copyWithIndex(next));
+    var nextState = s.copyWithIndex(next);
 
     final settings = ref.read(appSettingsProvider).value ?? const AppSettings();
-    return _isFinished(state.value!, settings);
+    final won = _hasWon(nextState, settings);
+    if (won) {
+      state = AsyncData(nextState.copyWith(phase: FinisseurPhase.field));
+      return FinisseurAdvanceOutcome.done;
+    }
+
+    // Out of sticks: either ask the player to continue, or end as a loss.
+    if (next >= ActiveFinisseurState.totalSticks &&
+        !nextState.continuedBeyondSticks) {
+      if (settings.allowContinueBeyondSticks) {
+        state = AsyncData(
+          nextState.copyWith(phase: FinisseurPhase.awaitingContinueDecision),
+        );
+        return FinisseurAdvanceOutcome.needsContinueDecision;
+      }
+      state = AsyncData(nextState.copyWith(phase: FinisseurPhase.field));
+      return FinisseurAdvanceOutcome.done;
+    }
+
+    // Still has sticks left — pick the right phase for the next stick.
+    nextState = _ensurePhase(nextState, settings);
+    state = AsyncData(nextState);
+    return FinisseurAdvanceOutcome.carryOn;
   }
 
-  bool _isFinished(ActiveFinisseurState s, AppSettings settings) {
-    if (s.currentIndex >= ActiveFinisseurState.totalSticks) return true;
+  /// Player decided to keep going past stock 6. Grow the stick buffer by one
+  /// and rerun the phase logic.
+  Future<void> continueBeyondStocks() async {
+    final s = state.value;
+    if (s == null) return;
+    final settings =
+        ref.read(appSettingsProvider).value ?? const AppSettings();
+    final extended = List<StickResult>.from(s.sticks)
+      ..add(const StickResult());
+    var next = s.copyWith(
+      sticks: extended,
+      continuedBeyondSticks: true,
+      phase: FinisseurPhase.field,
+    );
+    next = _ensurePhase(next, settings);
+    state = AsyncData(next);
+  }
+
+  /// Player gave up after stock 6. Persist as completed (failed) and clear.
+  Future<void> giveUp() async {
+    final s = state.value;
+    if (s == null) return;
+    await _repo.markCompleted(sessionId: s.sessionId);
+    state = const AsyncData(null);
+  }
+
+  bool _hasWon(ActiveFinisseurState s, AppSettings settings) {
     final committed = s.sticks.take(s.currentIndex);
     final fieldDown = committed.fold<int>(0, (a, x) => a + x.fieldHits);
     final baseDown = committed.where((x) => x.eightMHit).length;
     final kingHit = committed.any((x) => x.king?.hit ?? false);
     final allKubbsDown = fieldDown >= s.field && baseDown >= s.base;
-    if (settings.kingThrowTracking) {
-      // King down in a previous stick = game over (win); without it the
-      // session can only end by exhausting all sticks.
-      return kingHit;
-    }
-    // King-throw tracking off: win the moment all field+base kubbs are down.
+    if (settings.kingThrowTracking) return kingHit;
     return allKubbsDown;
+  }
+
+  ActiveFinisseurState _ensurePhase(
+    ActiveFinisseurState s,
+    AppSettings settings,
+  ) {
+    if (s.currentIndex >= s.sticks.length) return s;
+    final remField = s.remainingFieldBeforeCurrent;
+    final remBase = s.remainingBaseBeforeCurrent;
+    if (remField > 0) {
+      return s.copyWith(phase: FinisseurPhase.field);
+    }
+    if (remBase > 0) {
+      return s.copyWith(phase: FinisseurPhase.base);
+    }
+    if (settings.kingThrowTracking) {
+      // Pre-seed a king result so the player can just tap Stock-abschliessen
+      // to record a hit (the default outcome). Tapping verfehlt overrides it
+      // before commit.
+      final pre = s.current.king == null
+          ? s.copyWithCurrent(
+              s.current.copyWith(king: const KingResult(hit: true)),
+            )
+          : s;
+      return pre.copyWith(phase: FinisseurPhase.king);
+    }
+    // King tracking off + nothing left: should not happen — _hasWon catches
+    // it. Fall back to field phase to keep the type total.
+    return s.copyWith(phase: FinisseurPhase.field);
   }
 
   Future<void> complete() async {
@@ -107,16 +189,11 @@ class ActiveFinisseurNotifier
       restored[s.currentIndex] = const StickResult();
     }
     restored[prev] = const StickResult();
-    state = AsyncData(
-      ActiveFinisseurState(
-        sessionId: s.sessionId,
-        field: s.field,
-        base: s.base,
-        sticks: restored,
-        currentIndex: prev,
-        startedAt: s.startedAt,
-      ),
-    );
+    final settings =
+        ref.read(appSettingsProvider).value ?? const AppSettings();
+    var next = s.copyWith(sticks: restored, currentIndex: prev);
+    next = _ensurePhase(next, settings);
+    state = AsyncData(next);
     return true;
   }
 }

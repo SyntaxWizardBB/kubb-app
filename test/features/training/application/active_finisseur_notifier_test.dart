@@ -69,9 +69,9 @@ void main() {
     notifier.updateCurrentStick(
       const StickResult(fieldHits: 3, eightMHit: true),
     );
-    final isLast = await notifier.advance();
+    final outcome = await notifier.advance();
 
-    expect(isLast, isFalse);
+    expect(outcome, FinisseurAdvanceOutcome.carryOn);
     final state = container.read(activeFinisseurProvider).requireValue!;
     expect(state.currentIndex, 1);
 
@@ -82,14 +82,17 @@ void main() {
     expect(stickEvents.single.eightMHit, isTrue);
   });
 
-  test('advance on stick 5 returns true (last stick reached)', () async {
+  test('advance on stick 5 with continue setting off ends the session',
+      () async {
+    await db.appSettingsDao.save('allowContinueBeyondSticks', 'false');
+    await container.read(appSettingsProvider.future);
     final notifier = container.read(activeFinisseurProvider.notifier);
     await notifier.startSession(playerId: playerId, field: 7, base: 3);
-    var isLast = false;
+    var outcome = FinisseurAdvanceOutcome.carryOn;
     for (var i = 0; i < 6; i++) {
-      isLast = await notifier.advance();
+      outcome = await notifier.advance();
     }
-    expect(isLast, isTrue);
+    expect(outcome, FinisseurAdvanceOutcome.done);
   });
 
   test('complete clears state and marks session completed', () async {
@@ -164,7 +167,7 @@ void main() {
     );
     final done = await notifier.advance();
 
-    expect(done, isTrue);
+    expect(done, FinisseurAdvanceOutcome.done);
   });
 
   test('advance reports finished only on king hit when king tracking is on',
@@ -175,12 +178,12 @@ void main() {
     notifier.updateCurrentStick(
       const StickResult(fieldHits: 1, eightMHit: true),
     );
-    expect(await notifier.advance(), isFalse);
+    expect(await notifier.advance(), FinisseurAdvanceOutcome.carryOn);
 
     notifier.updateCurrentStick(
       const StickResult(king: KingResult(hit: true)),
     );
-    expect(await notifier.advance(), isTrue);
+    expect(await notifier.advance(), FinisseurAdvanceOutcome.done);
   });
 
   test('rollbackLastStick is a no-op when sitting at stick 0', () async {

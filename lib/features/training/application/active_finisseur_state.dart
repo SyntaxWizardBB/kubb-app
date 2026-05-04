@@ -3,6 +3,16 @@
 /// König trifft.
 enum KingPosition { oben, unten }
 
+/// Active phase for the current stick. Drives which UI block the player sees.
+///
+/// - [field]: there are field kubbs left to clear.
+/// - [base]: field is empty; the simplified Hit/Miss base pad is active.
+/// - [king]: field and base are both down; the player records the king throw.
+/// - [awaitingContinueDecision]: stock 6 spent without victory and the
+///   "continue beyond sticks" setting is on — the UI asks whether to keep
+///   going or give up. Set by the notifier, never by the player directly.
+enum FinisseurPhase { field, base, king, awaitingContinueDecision }
+
 class KingResult {
   const KingResult({required this.hit, this.position = KingPosition.oben});
 
@@ -68,6 +78,8 @@ class ActiveFinisseurState {
     required this.sticks,
     required this.currentIndex,
     required this.startedAt,
+    this.phase = FinisseurPhase.field,
+    this.continuedBeyondSticks = false,
   });
 
   static const int totalSticks = 6;
@@ -78,6 +90,11 @@ class ActiveFinisseurState {
   final List<StickResult> sticks;
   final int currentIndex;
   final DateTime startedAt;
+  final FinisseurPhase phase;
+
+  /// True once the player has chosen to play past stock 6 — the session can
+  /// no longer be a success even if the king falls afterwards.
+  final bool continuedBeyondSticks;
 
   StickResult get current =>
       currentIndex < sticks.length ? sticks[currentIndex] : const StickResult();
@@ -115,6 +132,8 @@ class ActiveFinisseurState {
       sticks: copy,
       currentIndex: currentIndex,
       startedAt: startedAt,
+      phase: phase,
+      continuedBeyondSticks: continuedBeyondSticks,
     );
   }
 
@@ -126,6 +145,27 @@ class ActiveFinisseurState {
       sticks: sticks,
       currentIndex: next,
       startedAt: startedAt,
+      phase: phase,
+      continuedBeyondSticks: continuedBeyondSticks,
+    );
+  }
+
+  ActiveFinisseurState copyWith({
+    List<StickResult>? sticks,
+    int? currentIndex,
+    FinisseurPhase? phase,
+    bool? continuedBeyondSticks,
+  }) {
+    return ActiveFinisseurState(
+      sessionId: sessionId,
+      field: field,
+      base: base,
+      sticks: sticks ?? this.sticks,
+      currentIndex: currentIndex ?? this.currentIndex,
+      startedAt: startedAt,
+      phase: phase ?? this.phase,
+      continuedBeyondSticks:
+          continuedBeyondSticks ?? this.continuedBeyondSticks,
     );
   }
 }

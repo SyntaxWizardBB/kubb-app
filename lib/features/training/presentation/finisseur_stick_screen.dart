@@ -34,37 +34,32 @@ class FinisseurStickScreen extends ConsumerWidget {
     final stick = state.current;
     final remField = state.remainingFieldBeforeCurrent;
     final remBase = state.remainingBaseBeforeCurrent;
-    final fieldDownIfApplied = state.fieldDownPrior + stick.fieldHits;
-    final baseDownIfApplied = state.baseDownPrior + (stick.eightMHit ? 1 : 0);
-    final allDown = fieldDownIfApplied >= state.field &&
-        baseDownIfApplied >= state.base;
-    final kingPossible = (allDown || state.isLastStick) &&
-        !stick.heli &&
-        settings.kingThrowTracking;
     final longDubbiePossible =
         remField > 0 && remBase > 0 && settings.longDubbieTracking;
 
     Future<void> next() async {
       final notifier = ref.read(activeFinisseurProvider.notifier);
-      final wasLast = await notifier.advance();
+      final outcome = await notifier.advance();
       if (!context.mounted) return;
-      if (wasLast) {
-        await notifier.complete();
-        if (!context.mounted) return;
-        context.go('/training/summary/$sessionId');
+      switch (outcome) {
+        case FinisseurAdvanceOutcome.done:
+          await notifier.complete();
+          if (!context.mounted) return;
+          context.go('/training/summary/$sessionId');
+        case FinisseurAdvanceOutcome.needsContinueDecision:
+        case FinisseurAdvanceOutcome.carryOn:
+          // UI will rebuild from the new state. Continue-decision shows the
+          // dialog block; carryOn just renders the next stick.
+          break;
       }
     }
 
-    final inFieldPhase = remField > 0;
-    final inBasePhase = remField == 0 && remBase > 0;
+    final phase = state.phase;
+    final inFieldPhase = phase == FinisseurPhase.field;
+    final inBasePhase = phase == FinisseurPhase.base;
+    final inKingPhase = phase == FinisseurPhase.king;
+    final awaitingContinue = phase == FinisseurPhase.awaitingContinueDecision;
     final hasProgress = state.currentIndex > 0 || !stick.isUntouched;
-    // King flow gets activated mid-stick when the player hits the last
-    // standing base kubb with king-throw tracking on. The stick stays open
-    // so the player can record where the king fell — only then we advance.
-    final kingFlowActive = inBasePhase &&
-        settings.kingThrowTracking &&
-        stick.king != null &&
-        !stick.heli;
 
     Future<void> handleBack() async {
       final notifier = ref.read(activeFinisseurProvider.notifier);
@@ -116,17 +111,28 @@ class FinisseurStickScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            PipProgress(
-              sticks: state.sticks,
-              currentIndex: state.currentIndex,
-            ),
+            _PhaseProgress(state: state),
             const SizedBox(height: KubbTokens.space3),
             _RemainingBlock(
               field: remField,
               base: remBase,
               labels: l,
             ),
-            if (inFieldPhase) ...[
+            if (awaitingContinue) ...[
+              const SizedBox(height: KubbTokens.space5),
+              _ContinueDecisionBlock(
+                onContinue: () async {
+                  await ref
+                      .read(activeFinisseurProvider.notifier)
+                      .continueBeyondStocks();
+                },
+                onGiveUp: () async {
+                  await ref.read(activeFinisseurProvider.notifier).giveUp();
+                  if (!context.mounted) return;
+                  context.go('/training/summary/$sessionId');
+                },
+              ),
+            ] else if (inFieldPhase) ...[
               const SizedBox(height: KubbTokens.space4),
               FinisseurFieldChips(
                 max: remField,
@@ -140,36 +146,26 @@ class FinisseurStickScreen extends ConsumerWidget {
               FinisseurToggleGrid(
                 stick: stick,
                 longDubbiePossible: longDubbiePossible,
-                kingPossible: kingPossible,
+                // King is its own phase now — never offered in field phase.
+                kingPossible: false,
                 heliVisible: settings.heliTracking,
                 maxFieldHits: remField,
                 onUpdate: (s) => ref
                     .read(activeFinisseurProvider.notifier)
                     .updateCurrentStick(s),
               ),
-            ] else if (inBasePhase && !kingFlowActive) ...[
+            ] else if (inBasePhase) ...[
               const SizedBox(height: KubbTokens.space4),
               FinisseurBasePhasePad(
                 stick: stick,
                 heliVisible: settings.heliTracking,
                 onHit: () async {
-                  final notifier =
-                      ref.read(activeFinisseurProvider.notifier);
-                  // Last base kubb + king tracking → open the king block,
-                  // do not advance yet. Otherwise commit and move on.
-                  final isLastBase =
-                      remBase == 1 && settings.kingThrowTracking;
-                  if (isLastBase) {
-                    notifier.updateCurrentStick(stick.copyWith(
-                      eightMHit: true,
-                      king: const KingResult(hit: true),
-                    ));
-                  } else {
-                    notifier.updateCurrentStick(
-                      stick.copyWith(eightMHit: true),
-                    );
-                    await next();
-                  }
+                  ref
+                      .read(activeFinisseurProvider.notifier)
+                      .updateCurrentStick(
+                        stick.copyWith(eightMHit: true),
+                      );
+                  await next();
                 },
                 onMiss: () async {
                   ref
@@ -191,11 +187,20 @@ class FinisseurStickScreen extends ConsumerWidget {
                   await next();
                 },
               ),
+            ] else if (inKingPhase) ...[
+              const SizedBox(height: KubbTokens.space4),
+              FinisseurKingDetail(
+                king: stick.king ?? const KingResult(hit: true),
+                onUpdate: (k) => ref
+                    .read(activeFinisseurProvider.notifier)
+                    .updateCurrentStick(stick.copyWith(king: k)),
+              ),
             ],
             if (settings.penaltyKubbTracking &&
                 !stick.heli &&
                 state.currentIndex == 0 &&
-                state.base > 0) ...[
+                state.base > 0 &&
+                inFieldPhase) ...[
               const SizedBox(height: KubbTokens.space4),
               FinisseurPenaltyBlock(
                 base: state.base,
@@ -205,23 +210,14 @@ class FinisseurStickScreen extends ConsumerWidget {
                     .updateCurrentStick(s),
               ),
             ],
-            if (stick.king != null && !stick.heli) ...[
-              const SizedBox(height: KubbTokens.space3),
-              FinisseurKingDetail(
-                king: stick.king!,
-                onUpdate: (k) => ref
-                    .read(activeFinisseurProvider.notifier)
-                    .updateCurrentStick(stick.copyWith(king: k)),
-              ),
-            ],
-            if (!inBasePhase || kingFlowActive) ...[
+            if (!awaitingContinue && (inFieldPhase || inKingPhase)) ...[
               const SizedBox(height: KubbTokens.space6),
               SizedBox(
                 height: KubbTokens.touchComfortable,
                 child: FilledButton(
                   onPressed: next,
                   child: Text(
-                    kingFlowActive
+                    inKingPhase
                         ? l.finisseurStickFinishStick
                         : (state.isLastStick
                             ? l.finisseurStickFinish
@@ -236,6 +232,115 @@ class FinisseurStickScreen extends ConsumerWidget {
         ),
       ),
     ),
+    );
+  }
+}
+
+/// Visualises stick progress. Up to six pips render as the original PipProgress
+/// row; once the player has chosen to continue past stick 6, we swap to a
+/// compact "Verlängerung Stock N" badge so the row does not get squashed.
+class _PhaseProgress extends StatelessWidget {
+  const _PhaseProgress({required this.state});
+
+  final ActiveFinisseurState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    if (!state.continuedBeyondSticks &&
+        state.sticks.length <= ActiveFinisseurState.totalSticks) {
+      return PipProgress(
+        sticks: state.sticks,
+        currentIndex: state.currentIndex,
+      );
+    }
+    final extra = state.currentIndex - ActiveFinisseurState.totalSticks + 1;
+    final base = state.sticks.take(ActiveFinisseurState.totalSticks).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        PipProgress(sticks: base, currentIndex: ActiveFinisseurState.totalSticks),
+        const SizedBox(height: KubbTokens.space2),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: KubbTokens.space3,
+            vertical: KubbTokens.space1,
+          ),
+          decoration: BoxDecoration(
+            color: tokens.bgRaised,
+            borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
+          ),
+          child: Text(
+            'Verlängerung · Stock $extra',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: tokens.fgMuted,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ContinueDecisionBlock extends StatelessWidget {
+  const _ContinueDecisionBlock({
+    required this.onContinue,
+    required this.onGiveUp,
+  });
+
+  final Future<void> Function() onContinue;
+  final Future<void> Function() onGiveUp;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.all(KubbTokens.space4),
+      decoration: BoxDecoration(
+        color: tokens.bgRaised,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusXl),
+        border: Border.all(color: KubbTokens.wood400, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l.continueDecisionTitle,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: tokens.fg,
+            ),
+          ),
+          const SizedBox(height: KubbTokens.space2),
+          Text(
+            l.continueDecisionBody,
+            style: TextStyle(fontSize: 14, color: tokens.fgMuted),
+          ),
+          const SizedBox(height: KubbTokens.space4),
+          SizedBox(
+            height: KubbTokens.touchComfortable,
+            child: FilledButton(
+              onPressed: onContinue,
+              child: Text(l.continueDecisionContinue),
+            ),
+          ),
+          const SizedBox(height: KubbTokens.space2),
+          SizedBox(
+            height: KubbTokens.touchComfortable,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(foregroundColor: tokens.danger),
+              onPressed: onGiveUp,
+              child: Text(l.continueDecisionGiveUp),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

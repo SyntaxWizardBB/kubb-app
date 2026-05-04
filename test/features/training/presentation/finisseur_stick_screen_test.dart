@@ -30,12 +30,14 @@ class _FakeNotifier extends ActiveFinisseurNotifier {
   }
 
   @override
-  Future<bool> advance() async {
+  Future<FinisseurAdvanceOutcome> advance() async {
     advanced = true;
     final next = _state.currentIndex + 1;
     _state = _state.copyWithIndex(next);
     state = AsyncData(_state);
-    return next >= ActiveFinisseurState.totalSticks;
+    return next >= ActiveFinisseurState.totalSticks
+        ? FinisseurAdvanceOutcome.done
+        : FinisseurAdvanceOutcome.carryOn;
   }
 
   @override
@@ -150,6 +152,7 @@ void main() {
       (tester) async {
     await db.appSettingsDao.save('kingThrowTracking', 'false');
     // Force the king-eligible state by seeding all-down on the last stick.
+    // King phase must be explicit — phase is the source of truth now.
     final notifier = _FakeNotifier(
       ActiveFinisseurState(
         sessionId: 'fin-1',
@@ -158,6 +161,8 @@ void main() {
         sticks: List<StickResult>.filled(6, const StickResult()),
         currentIndex: 5,
         startedAt: DateTime.utc(2026, 5, 2),
+        // King tracking off: stick screen renders nothing meaningful here,
+        // we just want to assert the king toggle is gone.
       ),
     );
     await tester.pumpWidget(
@@ -190,6 +195,7 @@ void main() {
         sticks: List<StickResult>.filled(6, const StickResult()),
         currentIndex: 0,
         startedAt: DateTime.utc(2026, 5, 2),
+        phase: FinisseurPhase.base,
       ),
     );
     await tester.pumpWidget(

@@ -277,6 +277,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get finisseurStickFinishStick => 'Stock abschliessen';
 
   @override
+  String get continueDecisionTitle => '6 Stöcke verbraucht';
+
+  @override
+  String get continueDecisionBody => 'Möchtest du bis zum Ende weiterspielen?';
+
+  @override
+  String get continueDecisionContinue => 'Weiterspielen';
+
+  @override
+  String get continueDecisionGiveUp => 'Aufgeben';
+
+  @override
   String get finisseurStickBasePadHeader => 'Wurf auf Basiskubb';
 
   @override

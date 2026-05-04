@@ -586,6 +586,30 @@ abstract class AppLocalizations {
   /// **'Stock abschliessen'**
   String get finisseurStickFinishStick;
 
+  /// Continue-beyond-sticks dialog title
+  ///
+  /// In de, this message translates to:
+  /// **'6 Stöcke verbraucht'**
+  String get continueDecisionTitle;
+
+  /// Continue-beyond-sticks dialog body
+  ///
+  /// In de, this message translates to:
+  /// **'Möchtest du bis zum Ende weiterspielen?'**
+  String get continueDecisionBody;
+
+  /// Continue-beyond-sticks primary action
+  ///
+  /// In de, this message translates to:
+  /// **'Weiterspielen'**
+  String get continueDecisionContinue;
+
+  /// Continue-beyond-sticks secondary action
+  ///
+  /// In de, this message translates to:
+  /// **'Aufgeben'**
+  String get continueDecisionGiveUp;
+
   /// Header above the simplified base-phase pad
   ///
   /// In de, this message translates to:
