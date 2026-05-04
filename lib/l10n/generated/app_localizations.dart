@@ -2097,6 +2097,144 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Abbrechen'**
   String get authDeleteCancel;
+
+  /// Onboarding next button
+  ///
+  /// In de, this message translates to:
+  /// **'Weiter'**
+  String get authOnboardingNext;
+
+  /// Onboarding finish button
+  ///
+  /// In de, this message translates to:
+  /// **'Fertig'**
+  String get authOnboardingDone;
+
+  /// Onboarding skip link
+  ///
+  /// In de, this message translates to:
+  /// **'Überspringen'**
+  String get authOnboardingSkip;
+
+  /// Slide 1 title
+  ///
+  /// In de, this message translates to:
+  /// **'Willkommen.'**
+  String get authOnboardingWelcomeTitle;
+
+  /// Slide 1 body text
+  ///
+  /// In de, this message translates to:
+  /// **'Brosi\'s Kubb hilft dir, deine Würfe systematisch zu verbessern — Sniper, Finisseur, und bald mehr.'**
+  String get authOnboardingWelcomeBody;
+
+  /// Status badge for anonymous keypair sessions
+  ///
+  /// In de, this message translates to:
+  /// **'Anonymes Konto'**
+  String get authOnboardingBadgeAnon;
+
+  /// Status badge for Google OAuth sessions
+  ///
+  /// In de, this message translates to:
+  /// **'Mit Google verknüpft'**
+  String get authOnboardingBadgeGoogle;
+
+  /// Status badge for Apple OAuth sessions
+  ///
+  /// In de, this message translates to:
+  /// **'Mit Apple verknüpft'**
+  String get authOnboardingBadgeApple;
+
+  /// Slide 2 title
+  ///
+  /// In de, this message translates to:
+  /// **'Trainingsmodi'**
+  String get authOnboardingModesTitle;
+
+  /// Mode 1 name
+  ///
+  /// In de, this message translates to:
+  /// **'Sniper'**
+  String get authOnboardingModeSniperName;
+
+  /// Mode 1 subtitle
+  ///
+  /// In de, this message translates to:
+  /// **'8 m gerade Treffer trainieren'**
+  String get authOnboardingModeSniperSub;
+
+  /// Mode 2 name
+  ///
+  /// In de, this message translates to:
+  /// **'Finisseur'**
+  String get authOnboardingModeFinisseurName;
+
+  /// Mode 2 subtitle
+  ///
+  /// In de, this message translates to:
+  /// **'Königswurf-Sequenzen üben'**
+  String get authOnboardingModeFinisseurSub;
+
+  /// Mode 3 name
+  ///
+  /// In de, this message translates to:
+  /// **'4 m-Linie'**
+  String get authOnboardingMode4mName;
+
+  /// Mode 3 subtitle
+  ///
+  /// In de, this message translates to:
+  /// **'Strafkubb-Distanz präzisieren'**
+  String get authOnboardingMode4mSub;
+
+  /// Pill label on upcoming modes
+  ///
+  /// In de, this message translates to:
+  /// **'künftig'**
+  String get authOnboardingSoonPill;
+
+  /// Slide 3 title
+  ///
+  /// In de, this message translates to:
+  /// **'Bald verfügbar'**
+  String get authOnboardingSoonTitle;
+
+  /// Slide 3 chip 1
+  ///
+  /// In de, this message translates to:
+  /// **'Tournaments'**
+  String get authOnboardingSoonTournaments;
+
+  /// Slide 3 chip 2
+  ///
+  /// In de, this message translates to:
+  /// **'Friend-Match'**
+  String get authOnboardingSoonFriendMatch;
+
+  /// Slide 3 body text
+  ///
+  /// In de, this message translates to:
+  /// **'Mit Freundinnen und Klubs spielen, Resultate teilen, Ranglisten verfolgen — kommt bald.'**
+  String get authOnboardingSoonBody;
+
+  /// Slide 4 title (anonymous-only reminder)
+  ///
+  /// In de, this message translates to:
+  /// **'Eine letzte Sache.'**
+  String get authOnboardingReminderTitle;
+
+  /// Slide 4 reinforcement question
+  ///
+  /// In de, this message translates to:
+  /// **'Hast du deine Passphrase im Passwort-Manager gespeichert?'**
+  String get authOnboardingReminderQuestion;
+
+  /// Slide 4 reinforcement body
+  ///
+  /// In de, this message translates to:
+  /// **'Ohne sie kommst du nicht mehr an dein anonymes Konto.'**
+  String get authOnboardingReminderBody;
 }
 
 class _AppLocalizationsDelegate

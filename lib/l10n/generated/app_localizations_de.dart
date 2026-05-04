@@ -1101,4 +1101,77 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get authDeleteCancel => 'Abbrechen';
+
+  @override
+  String get authOnboardingNext => 'Weiter';
+
+  @override
+  String get authOnboardingDone => 'Fertig';
+
+  @override
+  String get authOnboardingSkip => 'Überspringen';
+
+  @override
+  String get authOnboardingWelcomeTitle => 'Willkommen.';
+
+  @override
+  String get authOnboardingWelcomeBody =>
+      'Brosi\'s Kubb hilft dir, deine Würfe systematisch zu verbessern — Sniper, Finisseur, und bald mehr.';
+
+  @override
+  String get authOnboardingBadgeAnon => 'Anonymes Konto';
+
+  @override
+  String get authOnboardingBadgeGoogle => 'Mit Google verknüpft';
+
+  @override
+  String get authOnboardingBadgeApple => 'Mit Apple verknüpft';
+
+  @override
+  String get authOnboardingModesTitle => 'Trainingsmodi';
+
+  @override
+  String get authOnboardingModeSniperName => 'Sniper';
+
+  @override
+  String get authOnboardingModeSniperSub => '8 m gerade Treffer trainieren';
+
+  @override
+  String get authOnboardingModeFinisseurName => 'Finisseur';
+
+  @override
+  String get authOnboardingModeFinisseurSub => 'Königswurf-Sequenzen üben';
+
+  @override
+  String get authOnboardingMode4mName => '4 m-Linie';
+
+  @override
+  String get authOnboardingMode4mSub => 'Strafkubb-Distanz präzisieren';
+
+  @override
+  String get authOnboardingSoonPill => 'künftig';
+
+  @override
+  String get authOnboardingSoonTitle => 'Bald verfügbar';
+
+  @override
+  String get authOnboardingSoonTournaments => 'Tournaments';
+
+  @override
+  String get authOnboardingSoonFriendMatch => 'Friend-Match';
+
+  @override
+  String get authOnboardingSoonBody =>
+      'Mit Freundinnen und Klubs spielen, Resultate teilen, Ranglisten verfolgen — kommt bald.';
+
+  @override
+  String get authOnboardingReminderTitle => 'Eine letzte Sache.';
+
+  @override
+  String get authOnboardingReminderQuestion =>
+      'Hast du deine Passphrase im Passwort-Manager gespeichert?';
+
+  @override
+  String get authOnboardingReminderBody =>
+      'Ohne sie kommst du nicht mehr an dein anonymes Konto.';
 }
