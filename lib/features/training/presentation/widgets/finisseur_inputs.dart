@@ -131,15 +131,19 @@ class _BigChip extends StatelessWidget {
 class FinisseurToggleGrid extends StatelessWidget {
   const FinisseurToggleGrid({
     required this.stick,
-    required this.eightMPossible,
+    required this.longDubbiePossible,
     required this.kingPossible,
+    required this.heliVisible,
+    required this.maxFieldHits,
     required this.onUpdate,
     super.key,
   });
 
   final StickResult stick;
-  final bool eightMPossible;
+  final bool longDubbiePossible;
   final bool kingPossible;
+  final bool heliVisible;
+  final int maxFieldHits;
   final ValueChanged<StickResult> onUpdate;
 
   @override
@@ -147,26 +151,43 @@ class FinisseurToggleGrid extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final toggles = <Widget>[];
 
-    if (eightMPossible) {
+    if (longDubbiePossible) {
+      // A "long dubbie" knocks down a field kubb plus a base kubb in one
+      // throw. The toggle commits both increments at once; tapping again
+      // rolls them back. We clamp field hits to maxFieldHits so we never
+      // exceed the remaining field-kubbs on this stick.
+      final on = stick.eightMHit && stick.fieldHits > 0 && !stick.heli;
       toggles.add(_Toggle(
-        label: l.finisseurStick8mLabel,
-        sub: l.finisseurStick8mSub,
-        on: stick.eightMHit && !stick.heli,
+        label: l.finisseurStickLongDubbieLabel,
+        sub: l.finisseurStickLongDubbieSub,
+        on: on,
         disabled: stick.heli,
-        onTap: () => onUpdate(stick.copyWith(eightMHit: !stick.eightMHit)),
+        onTap: () {
+          if (on) {
+            onUpdate(stick.copyWith(
+              eightMHit: false,
+              fieldHits: (stick.fieldHits - 1).clamp(0, maxFieldHits),
+            ));
+          } else {
+            final next = (stick.fieldHits + 1).clamp(0, maxFieldHits);
+            onUpdate(stick.copyWith(eightMHit: true, fieldHits: next));
+          }
+        },
       ));
     }
-    toggles.add(_Toggle(
-      label: l.finisseurStickHeliLabel,
-      sub: l.finisseurStickHeliSub,
-      on: stick.heli,
-      tone: _ToggleTone.heli,
-      onTap: () => onUpdate(
-        stick.heli
-            ? stick.copyWith(heli: false)
-            : const StickResult(heli: true),
-      ),
-    ));
+    if (heliVisible) {
+      toggles.add(_Toggle(
+        label: l.finisseurStickHeliLabel,
+        sub: l.finisseurStickHeliSub,
+        on: stick.heli,
+        tone: _ToggleTone.heli,
+        onTap: () => onUpdate(
+          stick.heli
+              ? stick.copyWith(heli: false)
+              : const StickResult(heli: true),
+        ),
+      ));
+    }
     if (kingPossible) {
       final king = stick.king;
       final sub = king == null
@@ -280,6 +301,127 @@ class _Toggle extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class FinisseurBasePhasePad extends StatelessWidget {
+  const FinisseurBasePhasePad({
+    required this.stick,
+    required this.heliVisible,
+    required this.onCommit,
+    super.key,
+  });
+
+  /// Current draft stick — its existing penalty values are preserved when the
+  /// pad commits, so the penalty block above still gets credited.
+  final StickResult stick;
+  final bool heliVisible;
+  final ValueChanged<StickResult> onCommit;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l.finisseurStickBasePadHeader.toUpperCase(),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.88,
+            color: tokens.fgMuted,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        Row(
+          children: [
+            Expanded(
+              child: _BasePadButton(
+                label: l.finisseurStickBasePadHit,
+                tone: _BasePadTone.hit,
+                onTap: () => onCommit(stick.copyWith(eightMHit: true)),
+              ),
+            ),
+            const SizedBox(width: KubbTokens.space2),
+            Expanded(
+              child: _BasePadButton(
+                label: l.finisseurStickBasePadMiss,
+                tone: _BasePadTone.miss,
+                onTap: () => onCommit(stick.copyWith(eightMHit: false)),
+              ),
+            ),
+          ],
+        ),
+        if (heliVisible) ...[
+          const SizedBox(height: KubbTokens.space2),
+          _BasePadButton(
+            label: l.finisseurStickHeliLabel,
+            tone: _BasePadTone.heli,
+            onTap: () => onCommit(stick.copyWith(
+              heli: true,
+              fieldHits: 0,
+              eightMHit: false,
+              clearKing: true,
+            )),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+enum _BasePadTone { hit, miss, heli }
+
+class _BasePadButton extends StatelessWidget {
+  const _BasePadButton({
+    required this.label,
+    required this.tone,
+    required this.onTap,
+  });
+
+  final String label;
+  final _BasePadTone tone;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final (bg, fg) = switch (tone) {
+      _BasePadTone.hit => (tokens.primary, KubbTokens.stone900),
+      _BasePadTone.miss => (tokens.bgRaised, tokens.fg),
+      _BasePadTone.heli => (KubbTokens.wood300, KubbTokens.stone900),
+    };
+    return SizedBox(
+      height: KubbTokens.touchComfortable + 4,
+      child: Material(
+        color: bg,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusXl),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(KubbTokens.radiusXl),
+          onTap: onTap,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(KubbTokens.radiusXl),
+              border: tone == _BasePadTone.miss
+                  ? Border.all(color: tokens.line, width: 2)
+                  : null,
+            ),
+            child: Center(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: fg,
                 ),
               ),
             ),

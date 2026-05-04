@@ -115,4 +115,109 @@ void main() {
     await pump(tester, currentIndex: 5);
     expect(find.text('Session abschliessen'), findsOneWidget);
   });
+
+  testWidgets('long-dubbie tap sets eightM and increments fieldHits',
+      (tester) async {
+    final notifier = await pump(tester);
+    await tester.ensureVisible(find.text('Long Dubbie'));
+    await tester.tap(find.widgetWithText(InkWell, 'Long Dubbie'));
+    await tester.pumpAndSettle();
+    expect(notifier.lastPatch?.eightMHit, isTrue);
+    expect(notifier.lastPatch?.fieldHits, 1);
+  });
+
+  testWidgets('long-dubbie hidden when long-dubbie tracking is off',
+      (tester) async {
+    await db.appSettingsDao.save('longDubbieTracking', 'false');
+    await pump(tester);
+    expect(find.text('Long Dubbie'), findsNothing);
+  });
+
+  testWidgets('heli toggle hidden when heli tracking is off', (tester) async {
+    await db.appSettingsDao.save('heliTracking', 'false');
+    await pump(tester);
+    expect(find.text('Helikopter'), findsNothing);
+  });
+
+  testWidgets('penalty block hidden when penalty kubb tracking is off',
+      (tester) async {
+    await db.appSettingsDao.save('penaltyKubbTracking', 'false');
+    await pump(tester);
+    expect(find.textContaining('Strafkubb'), findsNothing);
+  });
+
+  testWidgets('king toggle hidden when king-throw tracking is off',
+      (tester) async {
+    await db.appSettingsDao.save('kingThrowTracking', 'false');
+    // Force the king-eligible state by seeding all-down on the last stick.
+    final notifier = _FakeNotifier(
+      ActiveFinisseurState(
+        sessionId: 'fin-1',
+        field: 0,
+        base: 0,
+        sticks: List<StickResult>.filled(6, const StickResult()),
+        currentIndex: 5,
+        startedAt: DateTime.utc(2026, 5, 2),
+      ),
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          activeFinisseurProvider.overrideWith(() => notifier),
+        ],
+        child: MaterialApp(
+          theme: KubbTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('de'),
+          home: const FinisseurStickScreen(sessionId: 'fin-1'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Königswurf'), findsNothing);
+  });
+
+  testWidgets(
+      'simplified base phase shows hit/miss buttons and auto-advances',
+      (tester) async {
+    final notifier = _FakeNotifier(
+      ActiveFinisseurState(
+        sessionId: 'fin-1',
+        field: 0,
+        base: 3,
+        sticks: List<StickResult>.filled(6, const StickResult()),
+        currentIndex: 0,
+        startedAt: DateTime.utc(2026, 5, 2),
+      ),
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          activeFinisseurProvider.overrideWith(() => notifier),
+        ],
+        child: MaterialApp(
+          theme: KubbTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('de'),
+          home: const FinisseurStickScreen(sessionId: 'fin-1'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Field chips must be gone — pure base phase.
+    expect(find.text('Long Dubbie'), findsNothing);
+    expect(find.text('Treffer'), findsOneWidget);
+    expect(find.text('Verfehlt'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(InkWell, 'Treffer'));
+    await tester.pumpAndSettle();
+
+    expect(notifier.lastPatch?.eightMHit, isTrue);
+    expect(notifier.advanced, isTrue);
+  });
 }

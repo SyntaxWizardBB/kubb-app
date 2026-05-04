@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_notifier.dart';
@@ -18,8 +19,9 @@ class FinisseurStickScreen extends ConsumerWidget {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final state = ref.watch(activeFinisseurProvider).value;
+    final settings = ref.watch(appSettingsProvider).value;
 
-    if (state == null) {
+    if (state == null || settings == null) {
       return Scaffold(
         backgroundColor: tokens.bg,
         body: const Center(child: CircularProgressIndicator()),
@@ -33,9 +35,11 @@ class FinisseurStickScreen extends ConsumerWidget {
     final baseDownIfApplied = state.baseDownPrior + (stick.eightMHit ? 1 : 0);
     final allDown = fieldDownIfApplied >= state.field &&
         baseDownIfApplied >= state.base;
-    final kingPossible = (allDown || state.isLastStick) && !stick.heli;
-    final eightMPossible = remBase > 0;
-    final fieldMaxThisStick = remField - (stick.eightMHit ? 0 : 0);
+    final kingPossible = (allDown || state.isLastStick) &&
+        !stick.heli &&
+        settings.kingThrowTracking;
+    final longDubbiePossible =
+        remField > 0 && remBase > 0 && settings.longDubbieTracking;
 
     Future<void> next() async {
       final notifier = ref.read(activeFinisseurProvider.notifier);
@@ -47,6 +51,9 @@ class FinisseurStickScreen extends ConsumerWidget {
         context.go('/training/summary/$sessionId');
       }
     }
+
+    final inFieldPhase = remField > 0;
+    final inBasePhase = remField == 0 && remBase > 0;
 
     return Scaffold(
       backgroundColor: tokens.bg,
@@ -74,25 +81,42 @@ class FinisseurStickScreen extends ConsumerWidget {
               base: remBase,
               labels: l,
             ),
-            const SizedBox(height: KubbTokens.space4),
-            FinisseurFieldChips(
-              max: fieldMaxThisStick,
-              value: stick.fieldHits,
-              disabled: stick.heli,
-              onChanged: (n) => ref
-                  .read(activeFinisseurProvider.notifier)
-                  .updateCurrentStick(stick.copyWith(fieldHits: n)),
-            ),
-            const SizedBox(height: KubbTokens.space3),
-            FinisseurToggleGrid(
-              stick: stick,
-              eightMPossible: eightMPossible,
-              kingPossible: kingPossible,
-              onUpdate: (s) => ref
-                  .read(activeFinisseurProvider.notifier)
-                  .updateCurrentStick(s),
-            ),
-            if (!stick.heli &&
+            if (inFieldPhase) ...[
+              const SizedBox(height: KubbTokens.space4),
+              FinisseurFieldChips(
+                max: remField,
+                value: stick.fieldHits,
+                disabled: stick.heli,
+                onChanged: (n) => ref
+                    .read(activeFinisseurProvider.notifier)
+                    .updateCurrentStick(stick.copyWith(fieldHits: n)),
+              ),
+              const SizedBox(height: KubbTokens.space3),
+              FinisseurToggleGrid(
+                stick: stick,
+                longDubbiePossible: longDubbiePossible,
+                kingPossible: kingPossible,
+                heliVisible: settings.heliTracking,
+                maxFieldHits: remField,
+                onUpdate: (s) => ref
+                    .read(activeFinisseurProvider.notifier)
+                    .updateCurrentStick(s),
+              ),
+            ] else if (inBasePhase) ...[
+              const SizedBox(height: KubbTokens.space4),
+              FinisseurBasePhasePad(
+                stick: stick,
+                heliVisible: settings.heliTracking,
+                onCommit: (patch) async {
+                  ref
+                      .read(activeFinisseurProvider.notifier)
+                      .updateCurrentStick(patch);
+                  await next();
+                },
+              ),
+            ],
+            if (settings.penaltyKubbTracking &&
+                !stick.heli &&
                 state.currentIndex == 0 &&
                 state.base > 0) ...[
               const SizedBox(height: KubbTokens.space4),
@@ -113,18 +137,20 @@ class FinisseurStickScreen extends ConsumerWidget {
                     .updateCurrentStick(stick.copyWith(king: k)),
               ),
             ],
-            const SizedBox(height: KubbTokens.space6),
-            SizedBox(
-              height: KubbTokens.touchComfortable,
-              child: FilledButton(
-                onPressed: next,
-                child: Text(
-                  state.isLastStick
-                      ? l.finisseurStickFinish
-                      : l.finisseurStickNextStock(state.currentIndex + 2),
+            if (!inBasePhase) ...[
+              const SizedBox(height: KubbTokens.space6),
+              SizedBox(
+                height: KubbTokens.touchComfortable,
+                child: FilledButton(
+                  onPressed: next,
+                  child: Text(
+                    state.isLastStick
+                        ? l.finisseurStickFinish
+                        : l.finisseurStickNextStock(state.currentIndex + 2),
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),
