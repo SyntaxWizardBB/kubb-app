@@ -62,14 +62,17 @@ class AccountSetupController extends Notifier<AccountSetupState> {
   /// Drives the full setup flow:
   ///   1. Anonymous Supabase session via the adapter.
   ///   2. Generate Ed25519 keypair locally.
-  ///   3. attachKeypair RPC (server inserts user_credentials,
-  ///      user_keypair_backups and user_profiles in one transaction
-  ///      — but we still upload our local backup row separately so
-  ///      the encryption parameters are owned by the client).
-  ///   4. KeypairStorage.save persists the private key in the OS
-  ///      secure-storage.
-  ///   5. KeypairBackupRepository.uploadBackup persists the encrypted
-  ///      ciphertext on the server.
+  ///   3. Encrypt the private-key seed locally (Argon2id + XChaCha20)
+  ///      via [KeypairBackupRepository.prepareBackup] — no server call
+  ///      yet.
+  ///   4. attachKeypair RPC carrying the real ciphertext / kdf
+  ///      parameters: the server inserts user_credentials,
+  ///      user_keypair_backups and user_profiles in a single
+  ///      transaction. A failure leaves no partial backup row behind.
+  ///   5. KeypairStorage.save persists the private key in the OS
+  ///      secure-storage. Last so a server-side rejection of the
+  ///      attach RPC does not leave a key on disk that has no matching
+  ///      server row.
   Future<void> submit({
     required String nickname,
     required String passphrase,
@@ -86,21 +89,20 @@ class AccountSetupController extends Notifier<AccountSetupState> {
       await adapter.signInAnonymously();
 
       final keypair = await keypairStorage.generate();
-      await adapter.attachKeypair(
-        nickname: nickname,
-        publicKey: keypair.publicKey,
-        ciphertext: const <int>[],
-        kdfSalt: const <int>[],
-        kdfParams: <String, Object>{'placeholder': true},
-        avatarColor: avatarColor,
-      );
-      await keypairStorage.save(keypair.privateKey);
-      await backupRepo.uploadBackup(
-        nickname: nickname,
+      final material = await backupRepo.prepareBackup(
         privateKey: Uint8List.fromList(keypair.privateKey),
         publicKey: Uint8List.fromList(keypair.publicKey),
         passphrase: passphrase,
       );
+      await adapter.attachKeypair(
+        nickname: nickname,
+        publicKey: keypair.publicKey,
+        ciphertext: material.ciphertext,
+        kdfSalt: material.kdfSalt,
+        kdfParams: material.kdfParams,
+        avatarColor: avatarColor,
+      );
+      await keypairStorage.save(keypair.privateKey);
 
       final userId = adapter.currentState.userId;
       if (userId == null) {

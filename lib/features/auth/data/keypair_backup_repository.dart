@@ -11,6 +11,23 @@ class KeypairRestoreResult {
   final Uint8List publicKey;
 }
 
+/// Encrypted backup material ready to be persisted on the server. Used
+/// during account setup so the ciphertext, salt and KDF parameters can
+/// be passed to the `keypair_attach` RPC in the same transaction that
+/// inserts the credential row — avoiding a window in which a partial
+/// row exists with placeholder ciphertext.
+class KeypairBackupMaterial {
+  const KeypairBackupMaterial({
+    required this.ciphertext,
+    required this.kdfSalt,
+    required this.kdfParams,
+  });
+
+  final Uint8List ciphertext;
+  final Uint8List kdfSalt;
+  final Map<String, Object> kdfParams;
+}
+
 /// Thrown when the passphrase does not decrypt the stored backup, or
 /// when no backup exists for the requested nickname. Both surface as
 /// the same error so the client cannot infer whether the nickname is
@@ -30,9 +47,25 @@ class KeypairRestoreFailed implements Exception {
 /// algorithm parameters can change in the future without breaking
 /// existing backups (per ADR-0010 §AK-3).
 abstract class KeypairBackupRepository {
+  /// Encrypts [privateKey] with the [passphrase] and returns the
+  /// resulting backup material without touching the network. Account
+  /// setup uses this so the ciphertext can travel with the
+  /// `keypair_attach` RPC in a single transaction (per ADR-0010 §AK-1)
+  /// — calling [uploadBackup] after a successful attach would leave a
+  /// partial row behind on failure.
+  Future<KeypairBackupMaterial> prepareBackup({
+    required Uint8List privateKey,
+    required Uint8List publicKey,
+    required String passphrase,
+  });
+
   /// Encrypts [privateKey] with the [passphrase] and uploads the
   /// resulting backup row keyed by `sha256(nickname || server_salt)`.
-  /// Returns silently on success.
+  /// Returns silently on success. Used by passphrase rotation and
+  /// other flows that already have an active session and a row to
+  /// upsert into; account setup uses [prepareBackup] instead so the
+  /// initial insert lands in the same transaction as the credential
+  /// row.
   Future<void> uploadBackup({
     required String nickname,
     required Uint8List privateKey,

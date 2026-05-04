@@ -29,9 +29,13 @@ class FakeKeypairBackupRepository implements KeypairBackupRepository {
 
   Iterable<String> get storedNicknames => _rows.keys;
 
+  /// Last [prepareBackup] result the controller pulled out of the
+  /// repository, exposed so tests can assert it travelled into
+  /// the FakeSupabaseAuthAdapter's attachKeypair call verbatim.
+  KeypairBackupMaterial? lastPreparedMaterial;
+
   @override
-  Future<void> uploadBackup({
-    required String nickname,
+  Future<KeypairBackupMaterial> prepareBackup({
     required Uint8List privateKey,
     required Uint8List publicKey,
     required String passphrase,
@@ -48,10 +52,31 @@ class FakeKeypairBackupRepository implements KeypairBackupRepository {
       plaintext: privateKey,
       nonce: nonce,
     );
-    _rows[nickname] = _BackupRow(
+    final material = KeypairBackupMaterial(
       ciphertext: ciphertext,
-      salt: salt,
-      nonce: nonce,
+      kdfSalt: salt,
+      kdfParams: _testParams.toJson(),
+    );
+    lastPreparedMaterial = material;
+    return material;
+  }
+
+  @override
+  Future<void> uploadBackup({
+    required String nickname,
+    required Uint8List privateKey,
+    required Uint8List publicKey,
+    required String passphrase,
+  }) async {
+    final material = await prepareBackup(
+      privateKey: privateKey,
+      publicKey: publicKey,
+      passphrase: passphrase,
+    );
+    _rows[nickname] = _BackupRow(
+      ciphertext: material.ciphertext,
+      salt: material.kdfSalt,
+      nonce: Uint8List.fromList(List.generate(24, (i) => i + 100)),
       params: _testParams,
       publicKey: publicKey,
     );

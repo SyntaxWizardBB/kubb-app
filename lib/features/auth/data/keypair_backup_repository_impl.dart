@@ -43,8 +43,7 @@ class KeypairBackupRepositoryImpl implements KeypairBackupRepository {
   }
 
   @override
-  Future<void> uploadBackup({
-    required String nickname,
+  Future<KeypairBackupMaterial> prepareBackup({
     required Uint8List privateKey,
     required Uint8List publicKey,
     required String passphrase,
@@ -65,6 +64,26 @@ class KeypairBackupRepositoryImpl implements KeypairBackupRepository {
       nonce: nonce,
     );
 
+    return KeypairBackupMaterial(
+      ciphertext: ciphertext,
+      kdfSalt: salt,
+      kdfParams: params.toJson(),
+    );
+  }
+
+  @override
+  Future<void> uploadBackup({
+    required String nickname,
+    required Uint8List privateKey,
+    required Uint8List publicKey,
+    required String passphrase,
+  }) async {
+    final material = await prepareBackup(
+      privateKey: privateKey,
+      publicKey: publicKey,
+      passphrase: passphrase,
+    );
+
     final nicknameHash = await _hashNickname(nickname);
     final userId = _client.auth.currentUser?.id;
     if (userId == null) {
@@ -74,9 +93,9 @@ class KeypairBackupRepositoryImpl implements KeypairBackupRepository {
     await _client.from('user_keypair_backups').upsert(<String, dynamic>{
       'user_id': userId,
       'nickname_hash': nicknameHash,
-      'ciphertext': base64Encode(ciphertext),
-      'kdf_salt': base64Encode(salt),
-      'kdf_params': params.toJson(),
+      'ciphertext': base64Encode(material.ciphertext),
+      'kdf_salt': base64Encode(material.kdfSalt),
+      'kdf_params': material.kdfParams,
     });
   }
 

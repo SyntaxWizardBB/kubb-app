@@ -75,7 +75,7 @@ void main() {
     );
   });
 
-  test('submit happy-path flows through anonymous → attach → backup → done',
+  test('submit happy-path flows through anonymous → prepare → attach → done',
       () async {
     await container.read(accountSetupControllerProvider.notifier).submit(
           nickname: 'lukas',
@@ -90,7 +90,16 @@ void main() {
     expect(variant, startsWith('done:'));
     expect(adapter.anonymousCount, 1);
     expect(adapter.attachKeypairCount, 1);
-    expect(backup.storedNicknames, contains('lukas'));
+    expect(
+      backup.lastPreparedMaterial,
+      isNotNull,
+      reason: 'controller must prepare ciphertext before calling attach',
+    );
+    expect(
+      backup.lastPreparedMaterial!.ciphertext.isNotEmpty,
+      isTrue,
+      reason: 'attach must receive non-placeholder ciphertext',
+    );
   });
 
   test('submit failure surfaces as failed with reason', () async {
