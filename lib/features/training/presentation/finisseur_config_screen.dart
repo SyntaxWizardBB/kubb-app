@@ -13,13 +13,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 const int _totalMax = 10;
 const int _baseHardMax = 5;
 
-class _Preset {
-  const _Preset(this.label, this.field, this.base);
-  final String label;
-  final int field;
-  final int base;
-}
-
 class FinisseurConfigScreen extends ConsumerStatefulWidget {
   const FinisseurConfigScreen({super.key});
 
@@ -64,13 +57,6 @@ class _FinisseurConfigScreenState
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final profile = ref.watch(currentProfileProvider).value;
-
-    final presets = <_Preset>[
-      _Preset(l.finisseurConfigPresetStandard, 7, 3),
-      _Preset(l.finisseurConfigPresetEven, 5, 5),
-      _Preset(l.finisseurConfigPresetAllField, 10, 0),
-      _Preset(l.finisseurConfigPresetLate, 3, 5),
-    ];
 
     return Scaffold(
       backgroundColor: tokens.bg,
@@ -124,32 +110,6 @@ class _FinisseurConfigScreenState
                 color: tokens.fgMuted,
                 fontFamily: 'monospace',
               ),
-            ),
-            const SizedBox(height: KubbTokens.space5),
-            Text(
-              l.finisseurConfigPresets.toUpperCase(),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.88,
-                color: tokens.fgMuted,
-              ),
-            ),
-            const SizedBox(height: KubbTokens.space2),
-            Wrap(
-              spacing: KubbTokens.space2,
-              runSpacing: KubbTokens.space2,
-              children: [
-                for (final p in presets)
-                  _PresetChip(
-                    preset: p,
-                    selected: _field == p.field && _base == p.base,
-                    onTap: () => setState(() {
-                      _field = p.field;
-                      _base = p.base;
-                    }),
-                  ),
-              ],
             ),
             const SizedBox(height: KubbTokens.space8),
             SizedBox(
@@ -281,67 +241,6 @@ class _StepBtn extends StatelessWidget {
             child: Icon(
               icon,
               color: onPressed == null ? tokens.fgSubtle : tokens.fg,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PresetChip extends StatelessWidget {
-  const _PresetChip({
-    required this.preset,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final _Preset preset;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final bg = selected ? KubbTokens.stone900 : tokens.bgRaised;
-    final fg = selected ? KubbTokens.chalk50 : tokens.fg;
-    final sub = selected
-        ? KubbTokens.chalk50.withValues(alpha: 0.75)
-        : tokens.fgMuted;
-    return Material(
-      color: bg,
-      borderRadius: BorderRadius.circular(KubbTokens.radiusXl),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(KubbTokens.radiusXl),
-        onTap: onTap,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 48),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: KubbTokens.space4,
-              vertical: KubbTokens.space2,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  preset.label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: fg,
-                  ),
-                ),
-                Text(
-                  '${preset.field}/${preset.base}',
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 11,
-                    color: sub,
-                  ),
-                ),
-              ],
             ),
           ),
         ),

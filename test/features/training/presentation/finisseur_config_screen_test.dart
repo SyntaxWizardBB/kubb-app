@@ -91,11 +91,13 @@ void main() {
     expect(find.text('3'), findsWidgets);
   });
 
-  testWidgets('tapping preset switches to its config', (tester) async {
+  testWidgets('built-in presets are no longer rendered', (tester) async {
     await pump(tester);
-    await tester.tap(find.text('5/5').first);
-    await tester.pumpAndSettle();
-    expect(find.text('5 / 5 · 6 Stöcke'), findsOneWidget);
+    // Sanity-check that the Standard / 5/5 / 10/0 / Spät labels are gone.
+    expect(find.text('Standard'), findsNothing);
+    expect(find.text('5/5'), findsNothing);
+    expect(find.text('10/0'), findsNothing);
+    expect(find.text('Spät'), findsNothing);
   });
 
   testWidgets('start button calls startSession with current values',
