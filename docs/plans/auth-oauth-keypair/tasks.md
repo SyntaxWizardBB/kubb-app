@@ -488,6 +488,7 @@
   - **Given** ein TestLogger der alle ausgegebenen LogRecords sammelt
   - **When** `AuthTelemetry.signinSuccess(userId='abc-1234-...', kind='oauth_google', email='lukas@...', subject='google-12345')` aufgerufen wird
   - **Then** enthält der LogRecord die userId-Prefix max 8 Chars, das Event-Kind, KEINE E-Mail, KEIN Subject
+- **Status**: done — 7 Tests grün mit PII-Substring-Detector. Asserts: signinSuccess truncates 8-char prefix, signinFailure WARNING + reasonCode (kein freier message-text), logout prefix-only, refreshFailure ohne token, accountUpgrade ohne provider-subject, signinAttempt ohne userId, all-events-exercised completeness check.
 
 ### M3-T08: AuthTelemetry implementation
 
@@ -502,6 +503,7 @@
   - **Given** die M3-T07-Tests
   - **When** Telemetry implementiert ist
   - **Then** gehen alle Tests grün
+- **Status**: done — AuthTelemetry mit AuthEvent enum (8 Events) + 8 typed Methods. PII-Filter im Code: 8-char-userId-truncation, never-take-email/subject/token-Parameters, structured message=`<event> userId=<prefix> kind=<x> reason=<y>`. Default-Level INFO, signinFailure + refreshFailure → WARNING.
 
 ### M4-T01: AuthSession sealed class (freezed) + tests
 
