@@ -75,11 +75,15 @@ secret = "env(SUPABASE_AUTH_APPLE_SECRET)"
 redirect_uri = ""
 
 [edge_runtime]
-enabled = false
+# Required for the keypair-verify edge function (M8-T01) which performs
+# the Ed25519 verify step that Postgres cannot do natively.
+enabled = true
 
 [analytics]
 enabled = false
 
-[functions]
-# No edge functions in this feature; the keypair custom auth lives in
-# Postgres functions (M2) callable through PostgREST.
+[functions.keypair-verify]
+# Public verify endpoint. JWT verification stays off because the caller
+# is on a fresh device with only an anonymous Supabase session and
+# proves ownership via the signed challenge instead of via JWT.
+verify_jwt = false

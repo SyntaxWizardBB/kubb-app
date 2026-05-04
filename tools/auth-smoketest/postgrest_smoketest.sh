@@ -94,10 +94,10 @@ assert_rpc_reachable compute_nickname_hash \
 assert_rpc_reachable keypair_challenge \
   '{"p_public_key": "smoketest-public-key"}'
 
-# keypair_verify will fail validation (no challenge stored) but must be
-# reachable. A 4xx with a Postgres-style error counts as success.
-assert_rpc_reachable keypair_verify \
-  '{"p_public_key": "smoketest", "p_challenge_b64": "AAAA", "p_signature_b64": "AAAA"}'
+# keypair_verify moved out of Postgres into the keypair-verify edge
+# function (M8-T01). The RPC reachability check no longer applies; the
+# edge function lives under supabase/functions/keypair-verify/ and is
+# exercised by run.sh against `${API_URL}/functions/v1/keypair-verify`.
 
 # keypair_attach requires an authenticated session. Anonymous call will
 # raise the "requires an authenticated session" exception — which is

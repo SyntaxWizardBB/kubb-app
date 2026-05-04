@@ -104,17 +104,31 @@ class SupabaseAuthAdapterImpl implements SupabaseAuthAdapter {
     required List<int> challenge,
     required List<int> signature,
   }) async {
-    final response = await _client.rpc<Map<String, dynamic>>(
-      'keypair_verify',
-      params: <String, dynamic>{
-        'p_public_key': base64Encode(publicKey),
-        'p_challenge_b64': base64Encode(challenge),
-        'p_signature_b64': base64Encode(signature),
+    // Verify runs in the keypair-verify edge function (M8-T01) — Postgres
+    // has no built-in Ed25519, so the previous SECURITY DEFINER stub
+    // never actually checked the signature. The function lives at
+    // supabase/functions/keypair-verify/ and returns the same
+    // { user_id, nickname } shape the dropped Postgres function did.
+    final response = await _client.functions.invoke(
+      'keypair-verify',
+      body: <String, dynamic>{
+        'public_key': base64Encode(publicKey),
+        'challenge_b64': base64Encode(challenge),
+        'signature_b64': base64Encode(signature),
       },
     );
+    if (response.status < 200 || response.status >= 300) {
+      final detail = response.data is Map<String, dynamic>
+          ? (response.data as Map<String, dynamic>)['error']
+          : response.data;
+      throw StateError(
+        'keypair-verify failed (status ${response.status}): $detail',
+      );
+    }
+    final data = response.data as Map<String, dynamic>;
     return AuthVerifyResult(
-      userId: response['user_id'] as String,
-      nickname: response['nickname'] as String,
+      userId: data['user_id'] as String,
+      nickname: data['nickname'] as String,
     );
   }
 
