@@ -316,6 +316,7 @@
   - **When** das RLS-Migration-Script ausgeführt wird
   - **Then** sind RLS auf `user_credentials` und `user_keypair_backups` aktiviert
   - **And** die Policies entsprechen der Spec: `user_credentials` owner-read + owner-insert; `user_keypair_backups` lookup (any), owner write/update/delete
+- **Status**: done — Files: 20260504000003_auth_rls.sql. user_credentials owner-read + owner-insert. user_keypair_backups lookup (any) + owner-{insert,update,delete}. user_profiles owner-{read,insert,update} (Public-Read kommt später mit Tournament-Feature). Verifikation auf Owner-Hardware.
 
 ### M2-T03: Postgres function: keypair_create
 
