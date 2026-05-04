@@ -236,6 +236,7 @@
   - **Given** Mock-CryptoService liefert ein deterministisches Ed25519-Paar
   - **When** `generate()` aufgerufen wird, dann `save()`, dann `load()`
   - **Then** ist der zurückgegebene privateKey identisch zum gespeicherten
+- **Status**: done — High-Level-Wrapper über CryptoService + SecureTokenStore. base64-encoded für Persistierung (binär in flutter_secure_storage geht nicht). 6 Tests grün (generate ohne save, save mit korrektem Key + Encoding, load null + decoded, clear isolated, vollständiger save→load Round-Trip).
 
 ### M1-T06: crypto_service ed25519 ops + tests
 
