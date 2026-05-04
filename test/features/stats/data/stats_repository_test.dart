@@ -25,6 +25,7 @@ void main() {
     repo = StatsRepository(
       sessionDao: db.sessionDao,
       eventDao: db.sessionEventDao,
+      finisseurDao: db.finisseurStickEventDao,
     );
   });
 
@@ -231,6 +232,113 @@ void main() {
     );
 
     expect(agg.mostThrowsInOneDay, 20); // dayA: 10 + 10
+  });
+
+  Future<void> insertFinisseur({
+    required String id,
+    required int field,
+    required int base,
+    required List<({int fieldHits, bool eight, bool heli, bool? king, int p2})>
+        sticks,
+    DateTime? completedAt,
+  }) async {
+    final ts = completedAt ?? DateTime.utc(2026, 5, 5);
+    await db.sessionDao.insert(
+      SessionsCompanion(
+        id: Value(id),
+        playerId: const Value('p1'),
+        kind: const Value('finisseur'),
+        mode: const Value('finisseur'),
+        distanceMeters: const Value(8),
+        finField: Value(field),
+        finBase: Value(base),
+        status: const Value('completed'),
+        startedAt: Value(ts),
+        completedAt: Value(ts),
+      ),
+    );
+    for (var i = 0; i < sticks.length; i++) {
+      final s = sticks[i];
+      await db.finisseurStickEventDao.insert(
+        FinisseurStickEventsCompanion(
+          id: Value('$id-stk-$i'),
+          sessionId: Value(id),
+          stickIndex: Value(i),
+          fieldKubbsHit: Value(s.fieldHits),
+          eightMHit: Value(s.eight),
+          heliThrow: Value(s.heli),
+          kingHit: s.king == null ? const Value.absent() : Value(s.king!),
+          penaltyHits2: Value(s.p2),
+          createdAt: Value(ts.add(Duration(seconds: i))),
+        ),
+      );
+    }
+  }
+
+  test('finisseur aggregate is empty without finisseur sessions', () async {
+    final agg = await repo.computeFinisseurAggregate(playerId: 'p1');
+    expect(agg.isEmpty, isTrue);
+  });
+
+  test('finisseur aggregate counts successes, sticks and long dubbies',
+      () async {
+    await insertFinisseur(
+      id: 'f-success',
+      field: 2,
+      base: 1,
+      // Stick 0 knocks down a field plus base in one throw (long dubbie),
+      // stick 1 knocks down the remaining field, king lands.
+      sticks: [
+        (fieldHits: 1, eight: true, heli: false, king: null, p2: 0),
+        (fieldHits: 1, eight: false, heli: false, king: true, p2: 0),
+      ],
+    );
+    await insertFinisseur(
+      id: 'f-fail',
+      field: 1,
+      base: 1,
+      sticks: [
+        (fieldHits: 0, eight: false, heli: true, king: null, p2: 0),
+      ],
+    );
+
+    final agg = await repo.computeFinisseurAggregate(playerId: 'p1');
+
+    expect(agg.totalSessions, 2);
+    expect(agg.successCount, 1);
+    expect(agg.successRatePercent, 50);
+    expect(agg.totalSticks, 3);
+    expect(agg.heliCount, 1);
+    expect(agg.longDubbiesPerSession, closeTo(0.5, 0.0001));
+    expect(agg.kingAttempts, 1);
+    expect(agg.kingHits, 1);
+    expect(agg.kingHitRatePercent, 100);
+  });
+
+  test('finisseur aggregate exposes session rows newest-first', () async {
+    await insertFinisseur(
+      id: 'f-old',
+      field: 1,
+      base: 0,
+      sticks: [
+        (fieldHits: 1, eight: false, heli: false, king: null, p2: 0),
+      ],
+      completedAt: DateTime.utc(2026, 5, 1),
+    );
+    await insertFinisseur(
+      id: 'f-new',
+      field: 1,
+      base: 0,
+      sticks: [
+        (fieldHits: 1, eight: false, heli: false, king: null, p2: 0),
+      ],
+      completedAt: DateTime.utc(2026, 5, 10),
+    );
+
+    final agg = await repo.computeFinisseurAggregate(playerId: 'p1');
+
+    expect(agg.sessionRows.first.sessionId, 'f-new');
+    expect(agg.sessionRows.last.sessionId, 'f-old');
   });
 
   test('sessionRows are most-recent-first and capped to 20', () async {

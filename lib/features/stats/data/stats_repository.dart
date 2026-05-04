@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
+import 'package:kubb_app/core/data/dao/finisseur_stick_event_dao.dart';
 import 'package:kubb_app/core/data/dao/session_dao.dart';
 import 'package:kubb_app/core/data/dao/session_event_dao.dart';
 import 'package:kubb_app/features/stats/data/stats_aggregate.dart';
@@ -18,11 +19,14 @@ class StatsRepository {
   StatsRepository({
     required SessionDao sessionDao,
     required SessionEventDao eventDao,
+    FinisseurStickEventDao? finisseurDao,
   })  : _sessions = sessionDao,
-        _events = eventDao;
+        _events = eventDao,
+        _finisseur = finisseurDao;
 
   final SessionDao _sessions;
   final SessionEventDao _events;
+  final FinisseurStickEventDao? _finisseur;
 
   Future<StatsAggregate> computeAggregate({
     required String playerId,
@@ -128,6 +132,86 @@ class StatsRepository {
     );
   }
 
+  /// Aggregates completed finisseur sessions for one player. Reads each
+  /// session's stick events to compute totals; success means all field plus
+  /// base kubbs went down before the last stick was thrown.
+  Future<FinisseurStatsAggregate> computeFinisseurAggregate({
+    required String playerId,
+    DateTime? now,
+  }) async {
+    final dao = _finisseur;
+    if (dao == null) return FinisseurStatsAggregate.empty();
+    final all = await _sessions.allCompletedForPlayer(playerId);
+    final finisseurs = all.where((s) => s.mode == 'finisseur').toList();
+    if (finisseurs.isEmpty) return FinisseurStatsAggregate.empty();
+
+    var totalSticks = 0;
+    var successCount = 0;
+    var heli = 0;
+    var penalty = 0;
+    var longDubbies = 0;
+    var kingAttempts = 0;
+    var kingHits = 0;
+    final trend = <int>[];
+    final rows = <FinisseurSessionRow>[];
+
+    for (final s in finisseurs) {
+      final events = await dao.forSession(s.id);
+      var fieldDown = 0;
+      var baseDown = 0;
+      var sticksTouched = 0;
+      var sessionKingAttempts = 0;
+      var sessionKingHits = 0;
+      for (final e in events) {
+        sticksTouched++;
+        fieldDown += e.fieldKubbsHit;
+        if (e.eightMHit) baseDown++;
+        if (e.heliThrow) heli++;
+        if (e.fieldKubbsHit > 0 && e.eightMHit) longDubbies++;
+        penalty += e.penaltyHits1 + e.penaltyHits2;
+        final kingHit = e.kingHit;
+        if (kingHit != null) {
+          sessionKingAttempts++;
+          if (kingHit) sessionKingHits++;
+        }
+      }
+      kingAttempts += sessionKingAttempts;
+      kingHits += sessionKingHits;
+      final field = s.finField ?? 0;
+      final base = s.finBase ?? 0;
+      // A finisseur counts as a success when all kubbs went down and the
+      // king-throw — if attempted at all — landed.
+      final success = fieldDown >= field &&
+          baseDown >= base &&
+          (sessionKingAttempts == 0 || sessionKingHits > 0);
+      if (success) successCount++;
+      totalSticks += sticksTouched;
+      trend.add(success ? 100 : 0);
+      rows.add(FinisseurSessionRow(
+        sessionId: s.id,
+        completedAt: s.completedAt ?? s.startedAt,
+        field: field,
+        base: base,
+        sticksUsed: sticksTouched,
+        success: success,
+      ));
+    }
+
+    final avgLong = finisseurs.isEmpty ? 0.0 : longDubbies / finisseurs.length;
+    return FinisseurStatsAggregate(
+      totalSessions: finisseurs.length,
+      successCount: successCount,
+      totalSticks: totalSticks,
+      longDubbiesPerSession: avgLong,
+      heliCount: heli,
+      penaltyCount: penalty,
+      kingAttempts: kingAttempts,
+      kingHits: kingHits,
+      successTrendPercent: trend,
+      sessionRows: rows.reversed.take(_maxSessionRows).toList(),
+    );
+  }
+
   static DateTime? _cutoffFor(StatsDateRange range, DateTime now) {
     switch (range) {
       case StatsDateRange.all:
@@ -179,5 +263,6 @@ final statsRepositoryProvider = Provider<StatsRepository>((ref) {
   return StatsRepository(
     sessionDao: db.sessionDao,
     eventDao: db.sessionEventDao,
+    finisseurDao: db.finisseurStickEventDao,
   );
 });
