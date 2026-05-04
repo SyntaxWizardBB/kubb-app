@@ -366,6 +366,7 @@
   - **When** `bash tools/auth-smoketest/run.sh` ausgeführt wird
   - **Then** exited das Script mit 0 und gibt eine ✅-Liste aus mit allen geprüften Pfaden
   - **And** RLS-Negativ-Tests bestehen (anon kann user_credentials nicht lesen, user kann nicht fremdes user_credentials lesen)
+- **Status**: done — Bash-Script in tools/auth-smoketest/ + README. Checks: tables exist, RLS enabled, helper functions exist, compute_nickname_hash deterministisch + salt-aware, keypair_challenge fresh-nonce, RLS denies anon read of user_credentials. Verifikation auf Owner-Hardware (psql/curl/jq + laufende Supabase-Stack erforderlich).
 
 ### M2-T06: Security review M2 outputs
 
