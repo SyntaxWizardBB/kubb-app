@@ -4,8 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/data/auth_telemetry.dart';
-import 'package:kubb_app/features/auth/data/cloud_profile_repository.dart';
-import 'package:kubb_app/features/auth/data/cloud_profile_repository_impl.dart';
 import 'package:kubb_app/features/auth/data/dao/cached_auth_session_dao.dart';
 import 'package:kubb_app/features/auth/data/supabase_auth_adapter.dart';
 import 'package:kubb_app/features/auth/data/supabase_auth_adapter_impl.dart';
@@ -28,13 +26,6 @@ final cachedAuthSessionDaoProvider = Provider<CachedAuthSessionDao>((ref) {
 
 final authTelemetryProvider = Provider<AuthTelemetry>((ref) {
   return AuthTelemetry();
-});
-
-/// Repository over the `user_profiles` cloud table. Tests override
-/// with the fake from `test/fixtures/auth/fake_cloud_profile_repository.dart`.
-final cloudProfileRepositoryProvider =
-    Provider<CloudProfileRepository>((ref) {
-  return CloudProfileRepositoryImpl(Supabase.instance.client);
 });
 
 /// Central [AuthSession] state. Application widgets watch this; the

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
-import 'package:kubb_app/features/auth/application/auth_controller.dart';
+import 'package:kubb_app/features/auth/application/cloud_profile_provider.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
