@@ -10,6 +10,7 @@ const _keyEyeHidden = 'sniperEyeToggleHidden';
 const _keyLongDubbie = 'longDubbieTracking';
 const _keyPenaltyKubb = 'penaltyKubbTracking';
 const _keyKingThrow = 'kingThrowTracking';
+const _keyAllowContinue = 'allowContinueBeyondSticks';
 
 class AppSettingsNotifier extends AsyncNotifier<AppSettings> {
   @override
@@ -71,6 +72,14 @@ class AppSettingsNotifier extends AsyncNotifier<AppSettings> {
     await _update(
       (prev) => prev.copyWith(kingThrowTracking: value),
       _keyKingThrow,
+      value.toString(),
+    );
+  }
+
+  Future<void> setAllowContinueBeyondSticks({required bool value}) async {
+    await _update(
+      (prev) => prev.copyWith(allowContinueBeyondSticks: value),
+      _keyAllowContinue,
       value.toString(),
     );
   }

@@ -93,6 +93,21 @@ void main() {
     expect(await db.appSettingsDao.get('kingThrowTracking'), 'false');
   });
 
+  test('setAllowContinueBeyondSticks persists the new key', () async {
+    await container.read(appSettingsProvider.future);
+
+    await container
+        .read(appSettingsProvider.notifier)
+        .setAllowContinueBeyondSticks(value: false);
+
+    final state = container.read(appSettingsProvider).requireValue;
+    expect(state.allowContinueBeyondSticks, isFalse);
+    expect(
+      await db.appSettingsDao.get('allowContinueBeyondSticks'),
+      'false',
+    );
+  });
+
   test('a fresh container rehydrates the persisted theme', () async {
     await container.read(appSettingsProvider.future);
     await container.read(appSettingsProvider.notifier).setTheme(

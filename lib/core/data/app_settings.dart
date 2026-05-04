@@ -10,6 +10,7 @@ const _keyEyeHidden = 'sniperEyeToggleHidden';
 const _keyLongDubbie = 'longDubbieTracking';
 const _keyPenaltyKubb = 'penaltyKubbTracking';
 const _keyKingThrow = 'kingThrowTracking';
+const _keyAllowContinue = 'allowContinueBeyondSticks';
 
 @freezed
 abstract class AppSettings with _$AppSettings {
@@ -21,6 +22,7 @@ abstract class AppSettings with _$AppSettings {
     @Default(true) bool longDubbieTracking,
     @Default(true) bool penaltyKubbTracking,
     @Default(true) bool kingThrowTracking,
+    @Default(true) bool allowContinueBeyondSticks,
   }) = _AppSettings;
 
   const AppSettings._();
@@ -41,6 +43,8 @@ abstract class AppSettings with _$AppSettings {
           _parseBool(kv[_keyPenaltyKubb], defaultValue: true),
       kingThrowTracking:
           _parseBool(kv[_keyKingThrow], defaultValue: true),
+      allowContinueBeyondSticks:
+          _parseBool(kv[_keyAllowContinue], defaultValue: true),
     );
   }
 
@@ -52,6 +56,7 @@ abstract class AppSettings with _$AppSettings {
         _keyLongDubbie: longDubbieTracking.toString(),
         _keyPenaltyKubb: penaltyKubbTracking.toString(),
         _keyKingThrow: kingThrowTracking.toString(),
+        _keyAllowContinue: allowContinueBeyondSticks.toString(),
       };
 }
 

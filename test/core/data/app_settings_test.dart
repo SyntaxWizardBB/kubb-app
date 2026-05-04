@@ -13,6 +13,7 @@ void main() {
       expect(settings.longDubbieTracking, isTrue);
       expect(settings.penaltyKubbTracking, isTrue);
       expect(settings.kingThrowTracking, isTrue);
+      expect(settings.allowContinueBeyondSticks, isTrue);
     });
 
     test('fromMap with empty map returns defaults', () {
@@ -29,6 +30,7 @@ void main() {
         'longDubbieTracking': 'false',
         'penaltyKubbTracking': 'false',
         'kingThrowTracking': 'false',
+        'allowContinueBeyondSticks': 'false',
       });
       expect(settings.themeChoice, ThemeChoice.dark);
       expect(settings.heliTracking, isFalse);
@@ -37,6 +39,7 @@ void main() {
       expect(settings.longDubbieTracking, isFalse);
       expect(settings.penaltyKubbTracking, isFalse);
       expect(settings.kingThrowTracking, isFalse);
+      expect(settings.allowContinueBeyondSticks, isFalse);
     });
 
     test('fromMap falls back to light on unknown theme', () {
@@ -51,6 +54,7 @@ void main() {
       expect(settings.longDubbieTracking, isTrue);
       expect(settings.penaltyKubbTracking, isTrue);
       expect(settings.kingThrowTracking, isTrue);
+      expect(settings.allowContinueBeyondSticks, isTrue);
     });
 
     test('round-trip via toMap and fromMap is identity-preserving', () {
@@ -61,6 +65,7 @@ void main() {
         longDubbieTracking: false,
         penaltyKubbTracking: false,
         kingThrowTracking: false,
+        allowContinueBeyondSticks: false,
       );
       final restored = AppSettings.fromMap(original.toMap());
       expect(restored, original);
