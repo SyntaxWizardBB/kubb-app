@@ -3,6 +3,7 @@ import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/training/application/active_finisseur_state.dart';
 import 'package:kubb_app/features/training/data/training_repository.dart';
 
 const _kindHit = 'hit';
@@ -115,8 +116,13 @@ Future<RecentSessionView> _toFinisseurView(
   final baseDown = sticks.fold<int>(0, (a, s) => a + (s.eightMHit ? 1 : 0));
   final kingHit = sticks.any((s) => s.kingHit ?? false);
   final allKubbsDown = fieldDown >= field && baseDown >= base;
-  final success =
+  // Sessions that needed more than the regulation six sticks count as a
+  // loss even if the king fell — the player asked to extend, didn't make
+  // par.
+  final withinRegulation = used <= ActiveFinisseurState.totalSticks;
+  final baseSuccess =
       kingTracking ? allKubbsDown && kingHit : allKubbsDown;
+  final success = baseSuccess && withinRegulation;
   final completedAt = session.completedAt ?? session.startedAt;
   return RecentSessionView(
     modeTag: 'Finisseur',

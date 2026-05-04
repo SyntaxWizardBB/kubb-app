@@ -6,6 +6,7 @@ import 'package:kubb_app/core/data/dao/session_dao.dart';
 import 'package:kubb_app/core/data/dao/session_event_dao.dart';
 import 'package:kubb_app/features/stats/data/stats_aggregate.dart';
 import 'package:kubb_app/features/stats/data/stats_filter.dart';
+import 'package:kubb_app/features/training/application/active_finisseur_state.dart';
 
 const _kindHit = 'hit';
 const _kindMiss = 'miss';
@@ -207,10 +208,15 @@ class StatsRepository {
       final field = s.finField ?? 0;
       final base = s.finBase ?? 0;
       // A finisseur counts as a success when all kubbs went down and the
-      // king-throw — if attempted at all — landed.
+      // king-throw — if attempted at all — landed AND the player stayed
+      // within the regulation six sticks. Continuing past stock 6 always
+      // marks the session as a loss.
+      final withinRegulation =
+          sticksTouched <= ActiveFinisseurState.totalSticks;
       final success = fieldDown >= field &&
           baseDown >= base &&
-          (sessionKingAttempts == 0 || sessionKingHits > 0);
+          (sessionKingAttempts == 0 || sessionKingHits > 0) &&
+          withinRegulation;
       if (success) successCount++;
       totalSticks += sticksTouched;
       trend.add(success ? 100 : 0);

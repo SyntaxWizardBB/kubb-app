@@ -688,6 +688,12 @@ abstract class AppLocalizations {
   /// **'Stöcke benötigt · {duration}'**
   String finisseurSummarySticksUsedSubtitle(String duration);
 
+  /// Sticks used subtitle when player continued past stock 6
+  ///
+  /// In de, this message translates to:
+  /// **'Stöcke benötigt (Verlängerung) · {duration}'**
+  String finisseurSummaryOverstickSubtitle(String duration);
+
   /// Summary row for king throw
   ///
   /// In de, this message translates to:

@@ -333,6 +333,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String finisseurSummaryOverstickSubtitle(String duration) {
+    return 'Stöcke benötigt (Verlängerung) · $duration';
+  }
+
+  @override
   String get finisseurSummaryKingRow => 'Königswurf';
 
   @override

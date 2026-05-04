@@ -257,6 +257,11 @@
     "description": "Sticks used subtitle",
     "placeholders": { "duration": { "type": "String" } }
   },
+  "finisseurSummaryOverstickSubtitle": "Stöcke benötigt (Verlängerung) · {duration}",
+  "@finisseurSummaryOverstickSubtitle": {
+    "description": "Sticks used subtitle when player continued past stock 6",
+    "placeholders": { "duration": { "type": "String" } }
+  },
   "finisseurSummaryKingRow": "Königswurf",
   "@finisseurSummaryKingRow": { "description": "Summary row for king throw" },
   "finisseurSummaryKingHit": "{position} durch · Treffer",

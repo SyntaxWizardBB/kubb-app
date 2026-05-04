@@ -9,6 +9,7 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_notifier.dart';
+import 'package:kubb_app/features/training/application/active_finisseur_state.dart';
 import 'package:kubb_app/features/training/application/active_session_notifier.dart';
 import 'package:kubb_app/features/training/data/finisseur_repository.dart';
 import 'package:kubb_app/features/training/data/training_repository.dart';
@@ -187,12 +188,17 @@ class _FinisseurBody extends ConsumerWidget {
     final baseDown = sticks.fold<int>(0, (a, s) => a + (s.eightMHit ? 1 : 0));
     final kingHit = sticks.any((s) => s.kingHit ?? false);
     final allKubbsDown = fieldDown >= field && baseDown >= base;
+    final sticksUsed = sticks.where((s) => !_isUntouched(s)).length;
+    final withinRegulation =
+        sticksUsed <= ActiveFinisseurState.totalSticks;
     // King-tracking off: success = all kubbs down. King-tracking on: also
-    // need the king. Match the live notifier's win condition.
-    final success = settings.kingThrowTracking
+    // need the king. Either way, going past 6 sticks always marks the
+    // session as a loss.
+    final baseSuccess = settings.kingThrowTracking
         ? allKubbsDown && kingHit
         : allKubbsDown;
-    final sticksUsed = sticks.where((s) => !_isUntouched(s)).length;
+    final success = baseSuccess && withinRegulation;
+    final overSticks = sticksUsed > ActiveFinisseurState.totalSticks;
     final penalties = sticks.fold<int>(
       0,
       (a, s) => a + s.penaltyHits1 + s.penaltyHits2,
@@ -237,6 +243,7 @@ class _FinisseurBody extends ConsumerWidget {
           _FinisseurVerdict(
             success: success,
             sticksUsed: sticksUsed,
+            overSticks: overSticks,
             duration: dur,
             tokens: tokens,
             l: l,
@@ -406,6 +413,7 @@ class _FinisseurVerdict extends StatelessWidget {
   const _FinisseurVerdict({
     required this.success,
     required this.sticksUsed,
+    required this.overSticks,
     required this.duration,
     required this.tokens,
     required this.l,
@@ -413,6 +421,7 @@ class _FinisseurVerdict extends StatelessWidget {
 
   final bool success;
   final int sticksUsed;
+  final bool overSticks;
   final String duration;
   final KubbTokens tokens;
   final AppLocalizations l;
@@ -420,6 +429,14 @@ class _FinisseurVerdict extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tag = success ? l.finisseurSummarySuccess : l.finisseurSummaryFail;
+    // Past regulation: show absolute count, not "X / 6". Stays clear that
+    // the player went into extended play.
+    final headline = overSticks
+        ? '$sticksUsed'
+        : l.finisseurSummarySticksUsed(sticksUsed);
+    final subtitle = overSticks
+        ? l.finisseurSummaryOverstickSubtitle(duration)
+        : l.finisseurSummarySticksUsedSubtitle(duration);
     return Column(
       children: [
         Text(
@@ -433,7 +450,7 @@ class _FinisseurVerdict extends StatelessWidget {
         ),
         const SizedBox(height: KubbTokens.space2),
         Text(
-          l.finisseurSummarySticksUsed(sticksUsed),
+          headline,
           style: TextStyle(
             fontSize: 84,
             fontWeight: FontWeight.w800,
@@ -445,7 +462,7 @@ class _FinisseurVerdict extends StatelessWidget {
         ),
         const SizedBox(height: KubbTokens.space2),
         Text(
-          l.finisseurSummarySticksUsedSubtitle(duration),
+          subtitle,
           style: TextStyle(fontSize: 13, color: tokens.fgMuted),
         ),
       ],
