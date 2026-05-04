@@ -333,6 +333,7 @@
   - **Then** existiert ein neuer auth.users-Eintrag, ein user_credentials(kind=keypair) mit der public_key, ein user_profiles(nickname='lukas')
   - **And** der returnierte JSONB enthält gültige `userId`, `accessToken`, `refreshToken`
   - **And** ein zweiter Aufruf mit gleichem nickname schlägt fehl (UNIQUE-Constraint)
+- **Status**: done — **Approach revision**: statt direkter auth.users-Insert (verlangt JWT-Secret-Access in der Function — supabase-intern komplex) nutzt die Function das "anonymous-then-attach"-Pattern: Client ruft erst `supabase.auth.signInAnonymously()` (GoTrue erstellt auth.users + Session), DANN `auth.keypair_attach(...)` für credential + backup + profile in einer Transaktion. JWT-Issuance bleibt in Supabase's eigenem Pfad. Files: 20260504000004_fn_keypair_create.sql. SECURITY DEFINER + GRANT EXECUTE TO anon,authenticated. TODO-Comment für Hetzner-Integration falls Supabase die anonymous-upgrade-Pattern nicht akzeptiert (Edge-Function-Fallback dokumentiert).
 
 ### M2-T04: Postgres functions: keypair_challenge + verify
 
