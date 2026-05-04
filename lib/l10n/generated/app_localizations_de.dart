@@ -823,4 +823,117 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get authAppName => 'Brosi\'s Kubb';
+
+  @override
+  String get authCommonContinue => 'Weiter';
+
+  @override
+  String get authCommonBack => 'Zurück';
+
+  @override
+  String get authCommonClose => 'Abbrechen';
+
+  @override
+  String get authSignupEyebrow => 'Anonym anlegen';
+
+  @override
+  String get authSignupNicknameTitle => 'Wähle einen Spielnamen';
+
+  @override
+  String get authSignupNicknameLabel => 'Spielname';
+
+  @override
+  String get authSignupNicknamePlaceholder => 'z. B. wiese-marc';
+
+  @override
+  String get authSignupNicknameHelper =>
+      'Andere Spielerinnen sehen diesen Namen';
+
+  @override
+  String get authSignupNicknameTooShort => 'Mindestens 3 Zeichen.';
+
+  @override
+  String get authSignupNicknameTooLong => 'Maximal 30 Zeichen.';
+
+  @override
+  String get authSignupNicknameInvalidChars =>
+      'Nur Buchstaben, Zahlen, \'-\' und \'_\'.';
+
+  @override
+  String get authSignupDisclaimerTitle => 'Sichere deine Passphrase';
+
+  @override
+  String get authDisclaimerHeading => 'Wichtig — bitte lesen';
+
+  @override
+  String get authDisclaimerNoReset =>
+      'Diese Passphrase kann nicht zurückgesetzt werden.';
+
+  @override
+  String get authDisclaimerPasswordManager =>
+      'Wir empfehlen dringend einen Passwort-Manager.';
+
+  @override
+  String get authDisclaimerNoLiability => 'Die App-Betreiber haften nicht.';
+
+  @override
+  String get authDisclaimerAcknowledge =>
+      'Ich habe verstanden, dass diese Passphrase nicht zurückgesetzt werden kann.';
+
+  @override
+  String get authPassphraseLabel => 'Passphrase';
+
+  @override
+  String get authPassphrasePlaceholder => 'mindestens 12 Zeichen';
+
+  @override
+  String get authPassphraseHelper =>
+      'Mindestens 12 Zeichen. Wir empfehlen, sie direkt im Passwort-Manager zu speichern.';
+
+  @override
+  String get authPassphraseMinError => 'Mindestens 12 Zeichen.';
+
+  @override
+  String get authPassphraseShow => 'Passphrase anzeigen';
+
+  @override
+  String get authPassphraseHide => 'Passphrase verbergen';
+
+  @override
+  String get authPassphraseStrengthWeak => 'Schwach';
+
+  @override
+  String get authPassphraseStrengthMedium => 'Mittel';
+
+  @override
+  String get authPassphraseStrengthStrong => 'Stark';
+
+  @override
+  String get authSignupSubmit => 'Account erstellen';
+
+  @override
+  String get authSignupSubmitting => 'Account wird angelegt …';
+
+  @override
+  String get authSignupSubmittingHint =>
+      'Verschlüsselungsschlüssel werden erzeugt — bis zu 4 s.';
+
+  @override
+  String get authSignupErrorBanner =>
+      'Konto konnte nicht angelegt werden. Prüfe deine Verbindung und versuch es nochmals.';
+
+  @override
+  String get authSignupSuccessTitle => 'Account angelegt';
+
+  @override
+  String get authSignupSuccessReminder =>
+      'Speichere deine Passphrase im Passwort-Manager. Ohne sie kommst du nicht mehr an dein Konto.';
+
+  @override
+  String get authSignupSuccessContinue => 'Weiter zur Tour';
+
+  @override
+  String authWizardStepCount(int step, int total) {
+    return 'Schritt $step / $total';
+  }
 }

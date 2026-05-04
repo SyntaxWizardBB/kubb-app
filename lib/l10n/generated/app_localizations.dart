@@ -1593,6 +1593,210 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Brosi\'s Kubb'**
   String get authAppName;
+
+  /// Generic Continue button
+  ///
+  /// In de, this message translates to:
+  /// **'Weiter'**
+  String get authCommonContinue;
+
+  /// Generic Back button
+  ///
+  /// In de, this message translates to:
+  /// **'Zurück'**
+  String get authCommonBack;
+
+  /// Generic Close action
+  ///
+  /// In de, this message translates to:
+  /// **'Abbrechen'**
+  String get authCommonClose;
+
+  /// Wizard header eyebrow
+  ///
+  /// In de, this message translates to:
+  /// **'Anonym anlegen'**
+  String get authSignupEyebrow;
+
+  /// Step 1 title
+  ///
+  /// In de, this message translates to:
+  /// **'Wähle einen Spielnamen'**
+  String get authSignupNicknameTitle;
+
+  /// Step 1 input label
+  ///
+  /// In de, this message translates to:
+  /// **'Spielname'**
+  String get authSignupNicknameLabel;
+
+  /// Step 1 input placeholder
+  ///
+  /// In de, this message translates to:
+  /// **'z. B. wiese-marc'**
+  String get authSignupNicknamePlaceholder;
+
+  /// Step 1 helper text
+  ///
+  /// In de, this message translates to:
+  /// **'Andere Spielerinnen sehen diesen Namen'**
+  String get authSignupNicknameHelper;
+
+  /// Nickname error
+  ///
+  /// In de, this message translates to:
+  /// **'Mindestens 3 Zeichen.'**
+  String get authSignupNicknameTooShort;
+
+  /// Nickname error
+  ///
+  /// In de, this message translates to:
+  /// **'Maximal 30 Zeichen.'**
+  String get authSignupNicknameTooLong;
+
+  /// Nickname error
+  ///
+  /// In de, this message translates to:
+  /// **'Nur Buchstaben, Zahlen, \'-\' und \'_\'.'**
+  String get authSignupNicknameInvalidChars;
+
+  /// Step 2 title
+  ///
+  /// In de, this message translates to:
+  /// **'Sichere deine Passphrase'**
+  String get authSignupDisclaimerTitle;
+
+  /// Disclaimer block heading
+  ///
+  /// In de, this message translates to:
+  /// **'Wichtig — bitte lesen'**
+  String get authDisclaimerHeading;
+
+  /// Disclaimer bullet 1
+  ///
+  /// In de, this message translates to:
+  /// **'Diese Passphrase kann nicht zurückgesetzt werden.'**
+  String get authDisclaimerNoReset;
+
+  /// Disclaimer bullet 2
+  ///
+  /// In de, this message translates to:
+  /// **'Wir empfehlen dringend einen Passwort-Manager.'**
+  String get authDisclaimerPasswordManager;
+
+  /// Disclaimer bullet 3
+  ///
+  /// In de, this message translates to:
+  /// **'Die App-Betreiber haften nicht.'**
+  String get authDisclaimerNoLiability;
+
+  /// Acknowledgement checkbox
+  ///
+  /// In de, this message translates to:
+  /// **'Ich habe verstanden, dass diese Passphrase nicht zurückgesetzt werden kann.'**
+  String get authDisclaimerAcknowledge;
+
+  /// Passphrase field label
+  ///
+  /// In de, this message translates to:
+  /// **'Passphrase'**
+  String get authPassphraseLabel;
+
+  /// Passphrase placeholder
+  ///
+  /// In de, this message translates to:
+  /// **'mindestens 12 Zeichen'**
+  String get authPassphrasePlaceholder;
+
+  /// Passphrase helper
+  ///
+  /// In de, this message translates to:
+  /// **'Mindestens 12 Zeichen. Wir empfehlen, sie direkt im Passwort-Manager zu speichern.'**
+  String get authPassphraseHelper;
+
+  /// Passphrase too short
+  ///
+  /// In de, this message translates to:
+  /// **'Mindestens 12 Zeichen.'**
+  String get authPassphraseMinError;
+
+  /// Show toggle aria label
+  ///
+  /// In de, this message translates to:
+  /// **'Passphrase anzeigen'**
+  String get authPassphraseShow;
+
+  /// Hide toggle aria label
+  ///
+  /// In de, this message translates to:
+  /// **'Passphrase verbergen'**
+  String get authPassphraseHide;
+
+  /// Strength meter weak
+  ///
+  /// In de, this message translates to:
+  /// **'Schwach'**
+  String get authPassphraseStrengthWeak;
+
+  /// Strength meter medium
+  ///
+  /// In de, this message translates to:
+  /// **'Mittel'**
+  String get authPassphraseStrengthMedium;
+
+  /// Strength meter strong
+  ///
+  /// In de, this message translates to:
+  /// **'Stark'**
+  String get authPassphraseStrengthStrong;
+
+  /// Step 2 submit button
+  ///
+  /// In de, this message translates to:
+  /// **'Account erstellen'**
+  String get authSignupSubmit;
+
+  /// Step 2 submit button while submitting
+  ///
+  /// In de, this message translates to:
+  /// **'Account wird angelegt …'**
+  String get authSignupSubmitting;
+
+  /// Step 2 submit progress hint
+  ///
+  /// In de, this message translates to:
+  /// **'Verschlüsselungsschlüssel werden erzeugt — bis zu 4 s.'**
+  String get authSignupSubmittingHint;
+
+  /// Step 2 failure banner
+  ///
+  /// In de, this message translates to:
+  /// **'Konto konnte nicht angelegt werden. Prüfe deine Verbindung und versuch es nochmals.'**
+  String get authSignupErrorBanner;
+
+  /// Step 3 title
+  ///
+  /// In de, this message translates to:
+  /// **'Account angelegt'**
+  String get authSignupSuccessTitle;
+
+  /// Step 3 reminder body
+  ///
+  /// In de, this message translates to:
+  /// **'Speichere deine Passphrase im Passwort-Manager. Ohne sie kommst du nicht mehr an dein Konto.'**
+  String get authSignupSuccessReminder;
+
+  /// Step 3 continue button
+  ///
+  /// In de, this message translates to:
+  /// **'Weiter zur Tour'**
+  String get authSignupSuccessContinue;
+
+  /// Wizard header step counter
+  ///
+  /// In de, this message translates to:
+  /// **'Schritt {step} / {total}'**
+  String authWizardStepCount(int step, int total);
 }
 
 class _AppLocalizationsDelegate
