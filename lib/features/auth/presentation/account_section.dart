@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
+import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
 /// Account block rendered at the top of the SettingsScreen per design
@@ -79,7 +80,7 @@ class AccountSection extends ConsumerWidget {
                   label: l10n.authAccountLinkLabel,
                   sub: l10n.authAccountLinkSub,
                   onTap: () => GoRouter.of(context).push<void>(
-                    '/sign-in/account-link',
+                    AuthRoutes.accountLink,
                   ),
                 ),
               if (hasKeypair)
@@ -88,7 +89,7 @@ class AccountSection extends ConsumerWidget {
                   label: l10n.authAccountPassphraseLabel,
                   sub: l10n.authAccountPassphraseSub,
                   onTap: () => GoRouter.of(context).push<void>(
-                    '/sign-in/passphrase-change',
+                    AuthRoutes.passphraseChange,
                   ),
                 ),
               _NavRow(
@@ -108,7 +109,7 @@ class AccountSection extends ConsumerWidget {
                 tone: _NavTone.danger,
                 isLast: true,
                 onTap: () => GoRouter.of(context).push<void>(
-                  '/sign-in/delete',
+                  AuthRoutes.deleteAccount,
                 ),
               ),
             ],

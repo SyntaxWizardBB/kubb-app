@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/auth/application/account_setup_controller.dart';
+import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/auth_primary_button.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/wizard_header.dart';
 import 'package:kubb_app/features/auth/presentation/disclaimer_block.dart';
@@ -65,7 +66,7 @@ class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
   }
 
   void _finish() {
-    GoRouter.of(context).go('/onboarding-tour');
+    GoRouter.of(context).go(AuthRoutes.onboardingTour);
   }
 
   @override

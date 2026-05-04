@@ -3,33 +3,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/app/app.dart';
 import 'package:kubb_app/app/bootstrap.dart';
-import 'package:kubb_app/core/data/app_database.dart';
-import 'package:kubb_app/features/player/application/current_profile_provider.dart';
-import 'package:kubb_app/features/player/application/display_profile_provider.dart';
+import 'package:kubb_app/features/auth/application/auth_controller.dart';
+import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
 
+class _StubAuthController extends AuthController {
+  _StubAuthController(this._initial);
+  final AuthSession _initial;
+
+  @override
+  Future<AuthSession> build() async => _initial;
+}
+
 void main() {
   testWidgets('App boots and renders the home greeting', (tester) async {
-    final player = Player(
-      id: 'test-id',
-      name: 'Test',
-      deviceId: 'test-device',
-      createdAt: DateTime.utc(2026),
-    );
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          profileBootstrapProvider.overrideWith((ref) async => player),
-          appBootstrapProvider.overrideWith((ref) async {
-            await ref.read(profileBootstrapProvider.future);
-            return null;
-          }),
-          currentProfileProvider.overrideWith(
-            (ref) => Stream<Player?>.value(player),
-          ),
-          displayProfileProvider.overrideWithValue(
-            const DisplayProfile(userId: 'test-id', displayName: 'Test'),
+          appBootstrapProvider.overrideWith((ref) async => null),
+          authControllerProvider.overrideWith(
+            () => _StubAuthController(
+              const AuthSession.keypair(userId: 'test-id', displayName: 'Test'),
+            ),
           ),
           recentSessionsProvider.overrideWith(
             (ref) => Stream.value(const <RecentSessionView>[]),

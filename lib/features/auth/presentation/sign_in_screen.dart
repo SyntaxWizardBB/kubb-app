@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
+import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/oauth_provider_button.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
@@ -34,11 +35,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   }
 
   Future<void> _onPickAnonymous() async {
-    await GoRouter.of(context).push<void>('/sign-in/anonymous');
+    await GoRouter.of(context).push<void>(AuthRoutes.anonymousSignup);
   }
 
   Future<void> _onPickRestore() async {
-    await GoRouter.of(context).push<void>('/sign-in/restore');
+    await GoRouter.of(context).push<void>(AuthRoutes.restore);
   }
 
   @override

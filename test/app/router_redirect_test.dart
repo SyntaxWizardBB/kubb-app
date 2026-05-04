@@ -1,80 +1,86 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/app/app.dart';
 import 'package:kubb_app/app/bootstrap.dart';
-import 'package:kubb_app/core/data/app_database.dart';
-import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/app/router.dart';
+import 'package:kubb_app/features/auth/application/auth_controller.dart';
+import 'package:kubb_app/features/auth/application/auth_session.dart';
+import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
 
-void main() {
-  Player buildPlayer() => Player(
-        id: 'p-router',
-        name: 'Lukas',
-        deviceId: 'd-router',
-        createdAt: DateTime.utc(2026),
-      );
+class _StubAuthController extends AuthController {
+  _StubAuthController(this._initial);
+  final AuthSession _initial;
 
-  Future<void> pumpApp(
+  @override
+  Future<AuthSession> build() async => _initial;
+}
+
+void main() {
+  Future<ProviderContainer> pumpApp(
     WidgetTester tester, {
-    required Player? bootstrap,
-    required Stream<Player?> profileStream,
+    required AuthSession session,
   }) async {
+    final container = ProviderContainer(
+      overrides: [
+        appBootstrapProvider.overrideWith((ref) async => null),
+        authControllerProvider.overrideWith(
+          () => _StubAuthController(session),
+        ),
+        recentSessionsProvider.overrideWith(
+          (ref) => Stream.value(const <RecentSessionView>[]),
+        ),
+        crashRecoveryProvider.overrideWith((ref) async => null),
+      ],
+    );
+    addTearDown(container.dispose);
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          profileBootstrapProvider.overrideWith((ref) async => bootstrap),
-          appBootstrapProvider.overrideWith((ref) async {
-            await ref.read(profileBootstrapProvider.future);
-            return null;
-          }),
-          currentProfileProvider.overrideWith((ref) => profileStream),
-          recentSessionsProvider.overrideWith(
-            (ref) => Stream.value(const <RecentSessionView>[]),
-          ),
-          crashRecoveryProvider.overrideWith((ref) async => null),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: const KubbApp(),
       ),
     );
     await tester.pumpAndSettle();
+    return container;
   }
 
-  testWidgets('A1: bootstrap=null + stream=null routes to onboarding',
-      (tester) async {
-    await pumpApp(
-      tester,
-      bootstrap: null,
-      profileStream: Stream<Player?>.value(null),
-    );
+  testWidgets('signedOut cold start redirects to /sign-in', (tester) async {
+    await pumpApp(tester, session: const AuthSession.signedOut());
 
-    expect(tester.takeException(), isNull);
-    // onboardingHint "z.B. Lukas" is unique to the onboarding screen.
-    expect(find.text('z.B. Lukas'), findsOneWidget);
-    expect(find.text('Wie heisst du?'), findsOneWidget);
+    // SignInScreen tagline is unique to the auth entry point.
+    expect(find.text('Trainings-Tracker für die Wiese'), findsOneWidget);
   });
 
-  testWidgets(
-      'A2-fallback: bootstrap=player + never-emitting stream uses initial '
-      'snapshot and lands on home', (tester) async {
-    final player = buildPlayer();
-    final controller = StreamController<Player?>();
-    addTearDown(controller.close);
-
+  testWidgets('keypair session lands on home', (tester) async {
     await pumpApp(
       tester,
-      bootstrap: player,
-      profileStream: controller.stream,
+      session: const AuthSession.keypair(
+        userId: 'u1',
+        displayName: 'Lukas',
+      ),
     );
 
-    expect(tester.takeException(), isNull);
-    // homeAppTitle is unique to the home scaffold; confirms the router used
-    // the bootstrap snapshot instead of redirecting to onboarding.
-    expect(find.text("Brosi's Kubb"), findsWidgets);
-    // Onboarding hint must be absent — proves we are not on the onboarding
-    // screen.
-    expect(find.text('z.B. Lukas'), findsNothing);
+    // Greeting is the unique marker of the home scaffold.
+    expect(find.text('Hallo, Lukas.'), findsOneWidget);
+    expect(find.text('Trainings-Tracker für die Wiese'), findsNothing);
+  });
+
+  testWidgets('authenticated nav to /sign-in bounces back to /',
+      (tester) async {
+    final container = await pumpApp(
+      tester,
+      session: const AuthSession.keypair(
+        userId: 'u1',
+        displayName: 'Lukas',
+      ),
+    );
+
+    container.read(goRouterProvider).go(AuthRoutes.signIn);
+    await tester.pumpAndSettle();
+
+    // Redirect must have bounced back to home.
+    expect(find.text('Hallo, Lukas.'), findsOneWidget);
+    expect(find.text('Trainings-Tracker für die Wiese'), findsNothing);
   });
 }
