@@ -448,7 +448,9 @@ class FinisseurPenaltyBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
-    final sum = stick.penalty1 + stick.penalty2;
+    // Only the second-chance throw remains tracked. The legacy penalty1
+    // column on existing rows stays untouched in the database for audit;
+    // new sessions never write to it.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -465,7 +467,7 @@ class FinisseurPenaltyBlock extends StatelessWidget {
               ),
             ),
             Text(
-              l.finisseurStickPenaltyMeta(sum, base),
+              l.finisseurStickPenaltyMeta(stick.penalty2, base),
               style: TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 10,
@@ -476,18 +478,10 @@ class FinisseurPenaltyBlock extends StatelessWidget {
         ),
         const SizedBox(height: KubbTokens.space2),
         _PenaltyRow(
-          label: l.finisseurStickPenaltyFirst,
-          sub: l.finisseurStickPenaltyFirstSub,
-          value: stick.penalty1,
-          max: (base - stick.penalty2).clamp(0, base),
-          onChanged: (v) => onUpdate(stick.copyWith(penalty1: v)),
-        ),
-        const SizedBox(height: KubbTokens.space2),
-        _PenaltyRow(
-          label: l.finisseurStickPenaltySecond,
-          sub: l.finisseurStickPenaltySecondSub,
+          label: l.finisseurStickPenaltyLabel,
+          sub: l.finisseurStickPenaltySub,
           value: stick.penalty2,
-          max: (base - stick.penalty1).clamp(0, base),
+          max: base,
           onChanged: (v) => onUpdate(stick.copyWith(penalty2: v)),
         ),
       ],
