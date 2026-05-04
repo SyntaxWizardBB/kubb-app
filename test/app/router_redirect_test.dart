@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kubb_app/app/app.dart';
 import 'package:kubb_app/app/bootstrap.dart';
 import 'package:kubb_app/app/router.dart';
@@ -27,6 +28,20 @@ class _NeverAuthController extends AuthController {
   Future<AuthSession> build() {
     final completer = Completer<AuthSession>();
     return completer.future;
+  }
+}
+
+/// Stub that lets the test flip the [AuthSession] at will so the
+/// router's refreshListenable wiring can be exercised.
+class _SwitchableAuthController extends AuthController {
+  _SwitchableAuthController(this._initial);
+  final AuthSession _initial;
+
+  @override
+  Future<AuthSession> build() async => _initial;
+
+  void emit(AuthSession next) {
+    state = AsyncData(next);
   }
 }
 
@@ -169,6 +184,72 @@ void main() {
         ),
       );
       expect(currentPath(container), AuthRoutes.signIn);
+    });
+  });
+
+  group('routes registry', () {
+    // Each AuthRoutes constant must be reachable through the GoRouter
+    // instance — i.e. it has a registered builder, not just a path string.
+    final allAuthRoutes = <String, String>{
+      'signIn': AuthRoutes.signIn,
+      'anonymousSignup': AuthRoutes.anonymousSignup,
+      'restore': AuthRoutes.restore,
+      'accountLink': AuthRoutes.accountLink,
+      'passphraseChange': AuthRoutes.passphraseChange,
+      'deleteAccount': AuthRoutes.deleteAccount,
+      'onboardingTour': AuthRoutes.onboardingTour,
+      'editProfile': AuthRoutes.editProfile,
+    };
+
+    for (final entry in allAuthRoutes.entries) {
+      testWidgets('${entry.key} resolves to a registered builder',
+          (tester) async {
+        // Use an authenticated session so editProfile is reachable too —
+        // unauthenticated users get bounced before the builder runs.
+        final container = await pumpApp(
+          tester,
+          controllerFactory: () => _StubAuthController(
+            const AuthSession.keypair(userId: 'u1', displayName: 'Lukas'),
+          ),
+        );
+        final router = container.read(goRouterProvider);
+        final matches = router.configuration.findMatch(Uri.parse(entry.value));
+
+        // Last match's route must have a builder. RouteMatchList.last is
+        // the leaf — for these flat top-level routes, it's the only match.
+        expect(
+          matches.routes.isNotEmpty,
+          isTrue,
+          reason: '${entry.key} (${entry.value}) has no route in the config',
+        );
+        expect(
+          matches.routes.whereType<GoRoute>().any((r) => r.builder != null),
+          isTrue,
+          reason: '${entry.key} (${entry.value}) has no builder registered',
+        );
+      });
+    }
+  });
+
+  group('refresh — listens to AuthController state changes', () {
+    testWidgets('redirect re-runs when AuthController emits a new state',
+        (tester) async {
+      final stub = _SwitchableAuthController(const AuthSession.signedOut());
+      final container = await pumpApp(
+        tester,
+        controllerFactory: () => stub,
+      );
+
+      // Cold start: signed-out → redirected to /sign-in.
+      expect(currentPath(container), AuthRoutes.signIn);
+
+      // Flip the controller to authenticated; refreshListenable must fire.
+      stub.emit(
+        const AuthSession.keypair(userId: 'u1', displayName: 'Lukas'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(currentPath(container), '/');
     });
   });
 

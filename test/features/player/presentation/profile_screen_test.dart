@@ -108,6 +108,45 @@ void main() {
     expect(find.text('Anonym (Passphrase)'), findsNothing);
   });
 
+  testWidgets('renders Apple provider badge for OAuth-Apple session',
+      (tester) async {
+    const profile = DisplayProfile(
+      userId: 'u1',
+      displayName: 'Lukas',
+    );
+    await pump(
+      tester,
+      profile: profile,
+      session: const AuthSession.oauth(
+        userId: 'u1',
+        displayName: 'Lukas',
+        provider: AuthProvider.apple,
+      ),
+    );
+
+    expect(find.text('Apple'), findsOneWidget);
+    expect(find.text('Google'), findsNothing);
+    expect(find.text('Anonym (Passphrase)'), findsNothing);
+  });
+
+  testWidgets(
+      'renders anonymous label for AuthSession.anonymous (orElse fallback)',
+      (tester) async {
+    const profile = DisplayProfile(
+      userId: 'u1',
+      displayName: 'Lukas',
+    );
+    await pump(
+      tester,
+      profile: profile,
+      session: const AuthSession.anonymous(userId: 'u1'),
+    );
+
+    expect(find.text('Anonym (Passphrase)'), findsOneWidget);
+    expect(find.text('Google'), findsNothing);
+    expect(find.text('Apple'), findsNothing);
+  });
+
   testWidgets('tapping the edit button navigates to /profile/edit',
       (tester) async {
     const profile = DisplayProfile(

@@ -60,7 +60,13 @@ void main() {
     await db.close();
   });
 
-  Future<void> pump(WidgetTester tester) async {
+  Future<void> pump(
+    WidgetTester tester, {
+    AuthSession session = const AuthSession.keypair(
+      userId: 'p1',
+      displayName: 'Lukas',
+    ),
+  }) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -95,12 +101,7 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           authControllerProvider.overrideWith(
-            () => _StubAuthController(
-              const AuthSession.keypair(
-                userId: 'p1',
-                displayName: 'Lukas',
-              ),
-            ),
+            () => _StubAuthController(session),
           ),
         ],
         child: MaterialApp.router(
@@ -152,6 +153,25 @@ void main() {
 
     final remaining = await db.sessionDao.allCompletedForUser('p1');
     expect(remaining, hasLength(1));
+  });
+
+  testWidgets(
+      'renders account section for OAuth-Google session (composition smoke)',
+      (tester) async {
+    await pump(
+      tester,
+      session: const AuthSession.oauth(
+        userId: 'p1',
+        displayName: 'Lukas',
+        provider: AuthProvider.google,
+      ),
+    );
+
+    expect(find.text('Konto'), findsOneWidget);
+    expect(find.text('Google'), findsWidgets);
+    expect(find.text('Daten'), findsOneWidget);
+    expect(find.text('App'), findsOneWidget);
+    expect(find.text('Sessions zurücksetzen'), findsOneWidget);
   });
 
   testWidgets('confirm on reset deletes all sessions', (tester) async {

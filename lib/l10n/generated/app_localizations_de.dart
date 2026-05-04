@@ -34,6 +34,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get profileTitle => 'Profil';
 
   @override
+  String get profileNotLoaded => 'Kein Profil';
+
+  @override
   String get profileDeviceLabel => 'Geräte-ID';
 
   @override

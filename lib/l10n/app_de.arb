@@ -32,6 +32,10 @@
   "@profileTitle": {
     "description": "Profile screen title"
   },
+  "profileNotLoaded": "Kein Profil",
+  "@profileNotLoaded": {
+    "description": "Fallback shown on the profile screen when no profile is available"
+  },
   "profileDeviceLabel": "Geräte-ID",
   "@profileDeviceLabel": {
     "description": "Profile device id label"

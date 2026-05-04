@@ -142,6 +142,12 @@ abstract class AppLocalizations {
   /// **'Profil'**
   String get profileTitle;
 
+  /// Fallback shown on the profile screen when no profile is available
+  ///
+  /// In de, this message translates to:
+  /// **'Kein Profil'**
+  String get profileNotLoaded;
+
   /// Profile device id label
   ///
   /// In de, this message translates to:

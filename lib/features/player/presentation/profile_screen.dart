@@ -40,7 +40,7 @@ class ProfileScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: profile == null
-            ? const Center(child: Text('Kein Profil'))
+            ? Center(child: Text(l.profileNotLoaded))
             : _Body(profile: profile, session: session, tokens: tokens, l: l),
       ),
     );
