@@ -87,11 +87,49 @@ void main() {
 
     final after = await repo.updateProfile(
       userId: 'u1',
-      nickname: 'Lukas Brosi',
+      nickname: 'lukas-2',
       avatarColor: '#3366FF',
     );
 
-    expect(after.nickname, 'Lukas Brosi');
+    expect(after.nickname, 'lukas-2');
     expect(after.avatarColor, '#3366FF');
+  });
+
+  test('updateProfile recomputes nickname_hash when nickname changes',
+      () async {
+    // Existing keypair user — there is a backup row pinned to the
+    // current nickname's hash.
+    await repo.ensureProfile(userId: 'u1', nickname: 'lukas');
+    repo.seedBackupHash(userId: 'u1', nickname: 'lukas');
+    expect(repo.backupNicknameHashFor('u1'), 'lukas');
+
+    // Rename the profile.
+    await repo.updateProfile(userId: 'u1', nickname: 'lukas-2');
+
+    // The keypair backup hash MUST move with the nickname — otherwise
+    // the user is locked out of their own restore on a fresh device.
+    expect(repo.backupNicknameHashFor('u1'), 'lukas-2');
+  });
+
+  test('updateProfile leaves nickname_hash alone for OAuth-only users',
+      () async {
+    // OAuth user — no keypair backup row exists, so no hash to track.
+    await repo.ensureProfile(userId: 'u2', nickname: 'oauth-user');
+    expect(repo.backupNicknameHashFor('u2'), isNull);
+
+    await repo.updateProfile(userId: 'u2', nickname: 'oauth-user-renamed');
+
+    // Still null — we did not invent a backup row.
+    expect(repo.backupNicknameHashFor('u2'), isNull);
+  });
+
+  test('updateProfile leaves nickname_hash untouched on avatar-only update',
+      () async {
+    await repo.ensureProfile(userId: 'u1', nickname: 'lukas');
+    repo.seedBackupHash(userId: 'u1', nickname: 'lukas');
+
+    await repo.updateProfile(userId: 'u1', avatarColor: '#3366FF');
+
+    expect(repo.backupNicknameHashFor('u1'), 'lukas');
   });
 }

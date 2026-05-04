@@ -46,30 +46,19 @@ class CloudProfileRepositoryImpl implements CloudProfileRepository {
     String? avatarColor,
     bool? onboardingCompleted,
   }) async {
-    final patch = <String, dynamic>{};
-    if (nickname != null) patch['nickname'] = nickname;
-    if (avatarColor != null) patch['avatar_color'] = avatarColor;
-    if (onboardingCompleted != null) {
-      patch['onboarding_completed'] = onboardingCompleted;
-    }
-    if (patch.isEmpty) {
-      final existing = await getProfile(userId: userId);
-      if (existing == null) {
-        throw StateError('updateProfile called before ensureProfile');
-      }
-      return existing;
-    }
-
-    final result = await _client
-        .from('user_profiles')
-        .update(patch)
-        .eq('user_id', userId)
-        .select();
-
-    if (result.isEmpty) {
-      throw StateError('updateProfile called before ensureProfile');
-    }
-    return _fromRow(result.first);
+    // Routed through fn_profile_update_with_hash so a nickname change
+    // recomputes user_keypair_backups.nickname_hash atomically. A plain
+    // UPDATE on user_profiles would leave the hash stale and lock the
+    // user out on a fresh install.
+    final response = await _client.rpc<Map<String, dynamic>>(
+      'fn_profile_update_with_hash',
+      params: <String, dynamic>{
+        'p_nickname': nickname,
+        'p_avatar_color': avatarColor,
+        'p_onboarding_done': onboardingCompleted,
+      },
+    );
+    return _fromRow(response);
   }
 
   CloudProfile _fromRow(Map<String, dynamic> row) {
