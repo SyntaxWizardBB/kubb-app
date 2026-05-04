@@ -1,0 +1,141 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/features/auth/application/cloud_profile_provider.dart';
+import 'package:kubb_app/features/auth/presentation/edit_profile_screen.dart';
+import 'package:kubb_app/features/player/application/display_profile_provider.dart';
+import 'package:kubb_app/l10n/generated/app_localizations.dart';
+
+import '../../../fixtures/auth/fake_cloud_profile_repository.dart';
+
+void main() {
+  Future<void> pump(
+    WidgetTester tester, {
+    required FakeCloudProfileRepository repo,
+    DisplayProfile? profile,
+  }) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final router = GoRouter(
+      initialLocation: '/edit',
+      routes: [
+        GoRoute(
+          path: '/edit',
+          builder: (_, _) => const EditProfileScreen(),
+        ),
+        GoRoute(path: '/', builder: (_, _) => const Scaffold(body: Text('home'))),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          displayProfileProvider.overrideWithValue(profile),
+          cloudProfileRepositoryProvider.overrideWithValue(repo),
+        ],
+        child: MaterialApp.router(
+          theme: KubbTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('de'),
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  const seedProfile = DisplayProfile(
+    userId: 'u1',
+    displayName: 'wiese-marc',
+    avatarColor: '#3a7c2e',
+  );
+
+  testWidgets('editing nickname mid-text keeps cursor stable', (tester) async {
+    final repo = FakeCloudProfileRepository();
+    await pump(tester, repo: repo, profile: seedProfile);
+
+    final field = find.byType(TextField);
+    expect(field, findsOneWidget);
+
+    // Place cursor in the middle of "wiese-marc" (between "wiese-" and
+    // "marc"). updateEditingValue is the same path the platform IME
+    // uses on a real device.
+    final state = tester.state<EditableTextState>(find.byType(EditableText))
+      ..updateEditingValue(
+        const TextEditingValue(
+          text: 'wiese-marc',
+          selection: TextSelection.collapsed(offset: 6),
+        ),
+      );
+    await tester.pump();
+
+    // Insert "X" at the cursor position.
+    state.updateEditingValue(
+      const TextEditingValue(
+        text: 'wiese-Xmarc',
+        selection: TextSelection.collapsed(offset: 7),
+      ),
+    );
+    await tester.pump();
+
+    final controller = state.widget.controller;
+    expect(controller.text, 'wiese-Xmarc');
+    expect(controller.selection.baseOffset, 7);
+    expect(controller.selection.extentOffset, 7);
+  });
+
+  testWidgets('controller is disposed when widget unmounts', (tester) async {
+    final repo = FakeCloudProfileRepository();
+    await pump(tester, repo: repo, profile: seedProfile);
+
+    // Replace the whole tree — the State#dispose path runs.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+
+    // No FlutterError should have been queued from a leaked listener.
+    final errors = <FlutterErrorDetails>[];
+    final previousHandler = FlutterError.onError;
+    FlutterError.onError = errors.add;
+    addTearDown(() => FlutterError.onError = previousHandler);
+
+    await tester.pump();
+    expect(errors, isEmpty);
+  });
+
+  testWidgets('save button enables when nickname changes from initial',
+      (tester) async {
+    final repo = FakeCloudProfileRepository();
+    await pump(tester, repo: repo, profile: seedProfile);
+
+    final saveButton = find.byType(ElevatedButton);
+    expect(saveButton, findsOneWidget);
+    expect(
+      tester.widget<ElevatedButton>(saveButton).onPressed,
+      isNull,
+      reason: 'unchanged form must not allow save',
+    );
+
+    // Edit the nickname.
+    tester.state<EditableTextState>(find.byType(EditableText))
+        .updateEditingValue(
+      const TextEditingValue(
+        text: 'wiese-marc-2',
+        selection: TextSelection.collapsed(offset: 12),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      tester.widget<ElevatedButton>(saveButton).onPressed,
+      isNotNull,
+      reason: 'dirty + valid form must allow save',
+    );
+  });
+
+}

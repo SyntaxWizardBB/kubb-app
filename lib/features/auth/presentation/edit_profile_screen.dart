@@ -35,7 +35,7 @@ String _toHex(Color c) =>
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final String _initialNick;
   late final String _initialColor;
-  late String _nick;
+  late final TextEditingController _nickController;
   late String _color;
 
   bool _saving = false;
@@ -48,9 +48,27 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final profile = ref.read(displayProfileProvider);
     _initialNick = profile?.displayName ?? '';
     _initialColor = profile?.avatarColor ?? _toHex(_avatarPalette.first);
-    _nick = _initialNick;
     _color = _initialColor;
+    _nickController = TextEditingController(text: _initialNick)
+      ..addListener(_onNickChanged);
   }
+
+  @override
+  void dispose() {
+    _nickController
+      ..removeListener(_onNickChanged)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onNickChanged() {
+    // Re-render so save-button enabled-state and avatar initial track
+    // the live text. The controller is the source of truth — we just
+    // need to invalidate the frame.
+    setState(() {});
+  }
+
+  String get _nick => _nickController.text;
 
   void _back() {
     GoRouter.of(context).pop();
@@ -159,14 +177,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
               const SizedBox(height: 6),
               TextField(
-                controller: TextEditingController.fromValue(
-                  TextEditingValue(
-                    text: _nick,
-                    selection: TextSelection.collapsed(offset: _nick.length),
-                  ),
-                ),
+                controller: _nickController,
                 maxLength: 30,
-                onChanged: (v) => setState(() => _nick = v),
                 decoration: InputDecoration(
                   counterText: '',
                   border: OutlineInputBorder(
