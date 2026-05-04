@@ -105,7 +105,77 @@ void main() {
     expect(agg.totalSessions, 2);
     expect(agg.totalThrows, 20);
     expect(agg.hitRatePercent, 60); // (7+5) / (10+10) = 60%
-    expect(agg.trendPoints, [70, 50]);
+    // Trend is cumulative: session 1 → 7/10 = 70%, session 2 → 12/20 = 60%.
+    expect(agg.trendPoints, [70, 60]);
+  });
+
+  test('sniper trend is cumulative hit-rate over sessions', () async {
+    // Three sessions: 8/10, 4/10, 6/10. Cumulative: 80, 60, 60.
+    await insertSession(
+      's1',
+      hits: 8,
+      misses: 2,
+      completedAt: DateTime.utc(2026, 5, 2, 9),
+    );
+    await insertSession(
+      's2',
+      hits: 4,
+      misses: 6,
+      completedAt: DateTime.utc(2026, 5, 2, 10),
+    );
+    await insertSession(
+      's3',
+      hits: 6,
+      misses: 4,
+      completedAt: DateTime.utc(2026, 5, 2, 11),
+    );
+
+    final agg = await repo.computeAggregate(
+      playerId: 'p1',
+      filter: const StatsFilter(),
+      heliTracking: true,
+    );
+
+    expect(agg.trendPoints, [80, 60, 60]);
+  });
+
+  test('sniper trend with single session is its own hit-rate', () async {
+    await insertSession('only', hits: 7, misses: 3);
+
+    final agg = await repo.computeAggregate(
+      playerId: 'p1',
+      filter: const StatsFilter(),
+      heliTracking: true,
+    );
+
+    expect(agg.trendPoints, [70]);
+  });
+
+  test('sniper trend counts helis as misses in the running denominator',
+      () async {
+    // Session 1: 5 hits, 5 misses, 0 helis → 50%.
+    // Session 2: 5 hits, 0 misses, 5 helis → cumulative 10/20 = 50%.
+    await insertSession(
+      's1',
+      hits: 5,
+      misses: 5,
+      completedAt: DateTime.utc(2026, 5, 2, 9),
+    );
+    await insertSession(
+      's2',
+      hits: 5,
+      misses: 0,
+      helis: 5,
+      completedAt: DateTime.utc(2026, 5, 2, 10),
+    );
+
+    final agg = await repo.computeAggregate(
+      playerId: 'p1',
+      filter: const StatsFilter(),
+      heliTracking: true,
+    );
+
+    expect(agg.trendPoints, [50, 50]);
   });
 
   test('computes longest hit streak within a single session', () async {

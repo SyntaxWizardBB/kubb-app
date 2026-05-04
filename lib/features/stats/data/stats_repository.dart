@@ -75,7 +75,17 @@ class StatsRepository {
         stats.map((s) => s.longestHitStreak).fold<int>(0, _max);
     final mostInOneDay = _maxThrowsPerDay(stats);
 
-    final trend = stats.map((s) => s.hitRatePercent).toList();
+    // Cumulative trend: at session index i the point is the running
+    // overall hit-rate across sessions 0..i. Heli counts as a miss for
+    // the denominator, mirroring the overall hitRatePercent calculation.
+    final trend = <int>[];
+    var runHits = 0;
+    var runDiv = 0;
+    for (final s in stats) {
+      runHits += s.hits;
+      runDiv += s.hits + s.misses + s.helis;
+      trend.add(runDiv == 0 ? 0 : ((runHits / runDiv) * 100).round());
+    }
     final rows = stats.reversed.take(_maxSessionRows).map((s) {
       return StatsSessionRow(
         sessionId: s.sessionId,
