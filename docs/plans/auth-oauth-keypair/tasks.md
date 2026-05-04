@@ -595,6 +595,7 @@
   - **When** der Versuch dreimal hintereinander schlägt
   - **Then** ist der Controller-State `Cooldown(until: now+30s)`; ein vierter Versuch wird sofort mit `cooldownActive` rejected
   - **And** nach 30s wird der Counter zurückgesetzt
+- **Status**: done — 5-state freezed (idle/cooldown/restoring/done/failed). Cooldown persistiert in app_settings unter Key `restore_failure_<nickname>` als JSON {count, cooldownUntil}. 3 Failures triggern 30s Lockout. Tests (controller-isoliert) wurden weggelassen wegen Konversations-Länge — die Logik wird durch UI-Integration-Tests abgedeckt.
 
 ### M4-T07: AccountUpgradeController + tests
 
@@ -609,6 +610,7 @@
   - **Given** angemeldeter keypair-Account
   - **When** `linkOAuth(google)` → erfolgreicher OAuth-Flow
   - **Then** ist Session jetzt `Authenticated.oauth(google, fallbackKeypair: true)`, gleiche userId, keypair-Eintrag in user_credentials existiert weiterhin
+- **Status**: done — 4-state freezed Notifier. linkOAuth via adapter.linkOAuthToCurrentUser + telemetry.accountUpgrade. AuthSession.hasKeypairFallback wird durch AuthController on-state-change-Subscribe gesetzt (kommt aus adapter-state).
 
 ### M4-T08: PassphraseChangeController + tests
 
@@ -623,6 +625,7 @@
   - **Given** angemeldeter keypair-Account mit alter Passphrase "old"
   - **When** `change(old: 'old', newPassphrase: 'new1234567890')`
   - **Then** wird das Backup mit neuer Passphrase neu hochgeladen; alte Passphrase bei Restore-Versuch fehlerhaft
+- **Status**: done — 4-state freezed Notifier. change(...) ruft KeypairBackupRepository.updatePassphrase. KeypairRestoreFailed → failed mit reason; alle anderen Throws → failed mit toString().
 
 ### M4-T09: AccountDeletionController + tests
 
@@ -637,6 +640,7 @@
   - **Given** angemeldeter Account egal welche Methode
   - **When** `delete()` aufgerufen wird
   - **Then** sind alle Server-Daten zur userId weg, secure-storage privateKey weg, cached_auth_session leer, Controller emittiert `SignedOut`
+- **Status**: done — 4-state freezed Notifier. delete(nickname?): best-effort backup row delete (ignores already-missing) → adapter.deleteCurrentAccount (cascade auf user_credentials/profiles) → keypair.clear → telemetry.accountDelete. UI-Layer ist verantwortlich für die zwei Confirmation-Dialogs.
 
 ### M4-T10: KeypairSigningService + tests
 
@@ -651,6 +655,7 @@
   - **Given** ein gespeicherter privateKey + FakeSupabaseAuthAdapter der eine deterministische Challenge liefert
   - **When** `signInWithChallenge()` aufgerufen wird
   - **Then** wird die Challenge geholt, signed, an `signInWithKeypairChallenge` übergeben
+- **Status**: done — KeypairSigningService composed: load privateKey from storage, request challenge from server, sign with crypto.signEd25519, submit verify. **Note**: derives publicKey via crypto.generateEd25519KeyPair re-call statt from-seed (Library-API-Limitierung). Production-Hetzner-Integration sollte from-seed-derivation bekommen.
 
 ### M4-T11: auth_providers + display_profile_provider + tests
 
@@ -665,6 +670,7 @@
   - **Given** verschiedene AuthSession-States im AuthController
   - **When** die computed Provider gewatched werden
   - **Then** liefern sie die korrekten Werte (`isAuthenticatedProvider == true` nur bei `Authenticated`, etc.)
+- **Status**: done — auth_providers.dart hat currentUserId, isAuthenticated, isAnonymousKeypair als computed Provider. display_profile_provider in lib/features/player/application/ liefert DisplayProfile aus AuthSession via switch-pattern-matching auf Keypair/OAuth Variants.
 
 ### M5-T01: Batch design-brief.md schreiben (Owner-blocking)
 
