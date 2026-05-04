@@ -221,6 +221,7 @@
   - **When** `write(kind=privateKey, value="...")` aufgerufen wird, dann `read(kind=privateKey)`
   - **Then** wird der gespeicherte Wert zurückgegeben; gemockter Storage hat den korrekten Schlüsselnamen `auth_private_key` empfangen
   - **And** `deleteAll()` ruft alle vier `delete()`-Aufrufe ab
+- **Status**: done — Wrapper mit SecureTokenKind enum (accessToken='auth_access_token', refreshToken='auth_refresh_token', oauthToken='auth_oauth_token', privateKey='auth_private_key'). 4 Tests grün via mocktail-mocked FlutterSecureStorage. Files: lib/features/auth/data/secure_token_store.dart, test/features/auth/data/secure_token_store_test.dart.
 
 ### M1-T05: keypair_storage + tests
 
