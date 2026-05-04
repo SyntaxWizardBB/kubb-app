@@ -250,6 +250,7 @@
   - **Given** ein generiertes Keypair und eine 32-Byte-Message
   - **When** signiert und mit dem korrespondierenden publicKey verifiziert wird
   - **Then** ist verify=true; mit fremdem publicKey verify=false; mit modifizierter Message verify=false
+- **Status**: done — CryptoService mit Ed25519-Methoden (generateEd25519KeyPair, signEd25519, verifyEd25519). Plain-Bytes-Interface (Uint8List) — keine cryptography-Wrapper-Typen leaken in die Application-Layer. 6 Tests grün (32-byte keys, Distinct-Generation, 64-byte sig, verify-true, verify-false-foreign-key, verify-false-tampered-msg).
 
 ### M1-T07: crypto_service argon2id + isolate runner + tests
 
