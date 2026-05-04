@@ -381,6 +381,7 @@
   - **Given** alle M2-Outputs sind in `tools/supabase-local/migrations/`
   - **When** der Security-Checker den Review durchführt
   - **Then** wird ein Report ohne BLOCKING-Findings ausgegeben; MEDIUM/LOW-Findings dokumentiert mit Empfehlung
+- **Status**: done — Report in /tmp/kubb_app/auth-oauth-keypair/security-review-M2.md (ephemer). 0 BLOCKING/HIGH, 2 MEDIUM (Ed25519-Verify-TODO + JWT-Issuance-TODO; beide bereits in SQL als TODO + Hetzner-Integration-Punkt dokumentiert), 3 LOW (GC-Schedule, Local-Dev-Salt, Backup-Lookup-Rate-Limit), 2 INFO (SECURITY DEFINER + public_key Uniqueness sind korrekt). Verdict: M2 ist code-complete aus Security-Sicht, Hetzner-Deployment greift offene Integration-Questions explizit auf.
 
 ### M3-T01: SupabaseAuthAdapter tests + Fake
 
