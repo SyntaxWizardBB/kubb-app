@@ -686,6 +686,7 @@
   - **When** der Brief geschrieben ist
   - **Then** kann der Owner das Dokument an Claude Design übergeben und alle Templates in einer Session produzieren
 - **Notes**: **Dieser Task blockt M5-T02 bis M5-T15 + M7-T01 + M7-T02.** Implementierung dieser Tasks startet ERST nach Owner-Bestätigung "Templates sind da" (manuelle Owner-Bestätigung im Implement-Loop).
+- **Status**: done — design-brief.md geschrieben mit 14 UI-Elementen (SignInScreen, AnonymousSignupFlow 3 Steps, DisclaimerBlock, PassphraseInput, RestoreFlow, AccountLinkScreen, PassphraseChangeScreen, DeleteAccountScreen, OnboardingTour, OAuthProviderButton, AccountSection, EditProfileScreen, AccountStatusBadge, BackupWarningSurface). Pro Element: User-Story-Bezug, abzudeckende States, ARB-Key-Vorschläge, Accessibility-Annotations, Hand-off-Checklist. **Owner-Pause: Templates müssen vor M5-T02 vorliegen.**
 
 ### M5-T02 — M5-T15 (UI-Implementierungs-Tasks)
 
