@@ -24,7 +24,10 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
 
   void _back() {
     if (_page == _Page.confirm) {
-      setState(() => _page = _Page.warning);
+      setState(() {
+        _page = _Page.warning;
+        _ack = false;
+      });
     } else {
       GoRouter.of(context).pop();
     }
