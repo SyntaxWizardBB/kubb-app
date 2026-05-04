@@ -154,6 +154,26 @@ class KeypairBackupRepositoryImpl implements KeypairBackupRepository {
         .eq('nickname_hash', nicknameHash);
   }
 
+  @override
+  Future<DateTime?> backupTimestamp({required String userId}) async {
+    final rows = await _client
+        .from('user_keypair_backups')
+        .select('updated_at')
+        .eq('user_id', userId)
+        .limit(1);
+    if (rows.isEmpty) {
+      return null;
+    }
+    final raw = rows.first['updated_at'];
+    if (raw is String) {
+      return DateTime.parse(raw);
+    }
+    if (raw is DateTime) {
+      return raw;
+    }
+    return null;
+  }
+
   /// Frames the (privateKey, publicKey, nonce) tuple as a single byte
   /// blob: nonce(24) || privateKey(32) || publicKey(32). Encryption
   /// covers the framed blob so the AEAD MAC also authenticates the

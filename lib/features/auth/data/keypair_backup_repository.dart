@@ -60,4 +60,10 @@ abstract class KeypairBackupRepository {
   /// Removes the backup row for the current user. Used by
   /// account-deletion.
   Future<void> deleteBackup({required String nickname});
+
+  /// Returns the `updated_at` of the backup row owned by [userId], or
+  /// `null` when no row exists. Used by the settings screen to surface
+  /// a "backup recommended" warning when the row is missing or stale
+  /// (per design-brief #14).
+  Future<DateTime?> backupTimestamp({required String userId});
 }

@@ -16,6 +16,11 @@ class FakeKeypairBackupRepository implements KeypairBackupRepository {
   final CryptoService _crypto;
   final Map<String, _BackupRow> _rows = <String, _BackupRow>{};
 
+  /// Per-userId override the AccountSection-test uses to simulate a
+  /// missing or stale backup. Keys are user ids, values the
+  /// `updated_at` the repository should return.
+  final Map<String, DateTime> timestampsByUserId = <String, DateTime>{};
+
   static const Argon2idParams _testParams = Argon2idParams(
     memoryKiB: 8,
     iterations: 1,
@@ -102,6 +107,11 @@ class FakeKeypairBackupRepository implements KeypairBackupRepository {
   @override
   Future<void> deleteBackup({required String nickname}) async {
     _rows.remove(nickname);
+  }
+
+  @override
+  Future<DateTime?> backupTimestamp({required String userId}) async {
+    return timestampsByUserId[userId];
   }
 }
 

@@ -3,9 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
+import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
+
+/// Backups older than this are surfaced as "stale" in the warning
+/// panel — the user should re-encrypt with a fresh passphrase or
+/// link to OAuth (per design-brief #14).
+const Duration kBackupStaleAfter = Duration(days: 90);
 
 /// Account block rendered at the top of the SettingsScreen per design
 /// brief #11 / template `AccountSection.jsx` (M5-T14). Pure read-from-
@@ -74,6 +80,7 @@ class AccountSection extends ConsumerWidget {
                 nickname: nickname,
                 providerLabel: providerLabel,
               ),
+              if (isAnonymous) const _BackupWarningSlot(),
               if (isAnonymous)
                 _NavRow(
                   icon: Icons.lock_outline,
@@ -269,6 +276,119 @@ class _NavRow extends StatelessWidget {
             ),
             Icon(Icons.chevron_right, color: tokens.fgMuted),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Watches [lastKeypairBackupAtProvider] and renders [_BackupWarningSurface]
+/// when the keypair user has either no server backup row or one that
+/// is older than [kBackupStaleAfter]. Loading and error are silent —
+/// the warning is a hint, not a blocking dialog.
+class _BackupWarningSlot extends ConsumerWidget {
+  const _BackupWarningSlot();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(lastKeypairBackupAtProvider);
+    return async.maybeWhen(
+      data: (lastBackupAt) {
+        if (lastBackupAt == null) {
+          return const _BackupWarningSurface(ageDays: null);
+        }
+        final age = DateTime.now().difference(lastBackupAt);
+        if (age >= kBackupStaleAfter) {
+          return _BackupWarningSurface(ageDays: age.inDays);
+        }
+        return const SizedBox.shrink();
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+/// Yellow warning panel rendered above the navigation rows when the
+/// anonymous keypair user is missing a server backup or has a stale
+/// one. CTA is intentionally text-only in Phase 1; the dedicated
+/// "Backup einrichten" flow lands in Phase 2 (per task M7-T02 notes).
+class _BackupWarningSurface extends StatelessWidget {
+  const _BackupWarningSurface({required this.ageDays});
+
+  final int? ageDays;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final body = ageDays == null
+        ? l10n.authBackupWarningMissing
+        : l10n.authBackupWarningStale(ageDays!);
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: KubbTokens.space2,
+        bottom: KubbTokens.space1,
+      ),
+      child: Semantics(
+        liveRegion: true,
+        container: true,
+        label: l10n.authBackupWarningTitle,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: KubbTokens.space3,
+            vertical: KubbTokens.space3,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFBF2D6),
+            border: Border.all(
+              color: const Color(0xFFD4AE3B),
+              width: 1.5,
+            ),
+            borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 22,
+                  color: Color(0xFF9A6B00),
+                ),
+              ),
+              const SizedBox(width: KubbTokens.space3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.authBackupWarningTitle,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF3D2C00),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      body,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        height: 1.4,
+                        color: Color(0xFF3D2C00),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

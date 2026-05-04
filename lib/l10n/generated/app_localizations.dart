@@ -2332,6 +2332,24 @@ abstract class AppLocalizations {
   /// **'Alle Daten dauerhaft entfernen'**
   String get authAccountDeleteSub;
 
+  /// Title of the yellow backup-warning surface in the account section
+  ///
+  /// In de, this message translates to:
+  /// **'Backup empfohlen'**
+  String get authBackupWarningTitle;
+
+  /// Body of the backup-warning when no backup row exists
+  ///
+  /// In de, this message translates to:
+  /// **'Dein anonymes Konto hat noch kein Backup auf dem Server.'**
+  String get authBackupWarningMissing;
+
+  /// Body of the backup-warning when last backup is older than 90 days
+  ///
+  /// In de, this message translates to:
+  /// **'Letztes Backup vor {days} Tagen — bitte aktualisieren.'**
+  String authBackupWarningStale(int days);
+
   /// Edit-profile screen eyebrow
   ///
   /// In de, this message translates to:

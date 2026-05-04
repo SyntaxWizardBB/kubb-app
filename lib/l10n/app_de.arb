@@ -890,6 +890,17 @@
   "@authAccountDeleteLabel": { "description": "Nav-row label leading to account delete" },
   "authAccountDeleteSub": "Alle Daten dauerhaft entfernen",
   "@authAccountDeleteSub": { "description": "Nav-row subtitle for account delete" },
+  "authBackupWarningTitle": "Backup empfohlen",
+  "@authBackupWarningTitle": { "description": "Title of the yellow backup-warning surface in the account section" },
+  "authBackupWarningMissing": "Dein anonymes Konto hat noch kein Backup auf dem Server.",
+  "@authBackupWarningMissing": { "description": "Body of the backup-warning when no backup row exists" },
+  "authBackupWarningStale": "Letztes Backup vor {days} Tagen — bitte aktualisieren.",
+  "@authBackupWarningStale": {
+    "description": "Body of the backup-warning when last backup is older than 90 days",
+    "placeholders": {
+      "days": { "type": "int", "example": "120" }
+    }
+  },
 
   "authEditProfileEyebrow": "Account",
   "@authEditProfileEyebrow": { "description": "Edit-profile screen eyebrow" },

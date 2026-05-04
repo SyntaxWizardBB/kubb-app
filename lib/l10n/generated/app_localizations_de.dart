@@ -1229,6 +1229,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get authAccountDeleteSub => 'Alle Daten dauerhaft entfernen';
 
   @override
+  String get authBackupWarningTitle => 'Backup empfohlen';
+
+  @override
+  String get authBackupWarningMissing =>
+      'Dein anonymes Konto hat noch kein Backup auf dem Server.';
+
+  @override
+  String authBackupWarningStale(int days) {
+    return 'Letztes Backup vor $days Tagen — bitte aktualisieren.';
+  }
+
+  @override
   String get authEditProfileEyebrow => 'Account';
 
   @override
