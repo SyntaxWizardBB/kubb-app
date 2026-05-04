@@ -936,4 +936,40 @@ class AppLocalizationsDe extends AppLocalizations {
   String authWizardStepCount(int step, int total) {
     return 'Schritt $step / $total';
   }
+
+  @override
+  String get authRestoreEyebrow => 'Konto wiederherstellen';
+
+  @override
+  String get authRestoreNicknameTitle => 'Spielname';
+
+  @override
+  String get authRestorePassphraseTitle => 'Passphrase';
+
+  @override
+  String get authRestoreNicknamePlaceholder => 'dein Spielname';
+
+  @override
+  String get authRestoreNicknameHelper => 'Genau wie beim Anlegen des Kontos.';
+
+  @override
+  String get authRestorePassphraseHelper =>
+      'Genau wie beim Anlegen — Gross-/Kleinschreibung beachten.';
+
+  @override
+  String get authRestoreSubmit => 'Konto entsperren';
+
+  @override
+  String get authRestoreSubmitting => 'Konto wird entsperrt …';
+
+  @override
+  String get authRestoreError => 'Wiederherstellung fehlgeschlagen.';
+
+  @override
+  String get authRestoreCooldownTitle => 'Zu viele Versuche';
+
+  @override
+  String authRestoreCooldownMessage(int seconds) {
+    return 'Bitte warte $seconds Sekunden, dann versuch es erneut.';
+  }
 }

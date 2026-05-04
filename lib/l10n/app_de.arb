@@ -692,5 +692,33 @@
       "step": { "type": "int" },
       "total": { "type": "int" }
     }
+  },
+
+  "authRestoreEyebrow": "Konto wiederherstellen",
+  "@authRestoreEyebrow": { "description": "Restore-flow eyebrow above the step title" },
+  "authRestoreNicknameTitle": "Spielname",
+  "@authRestoreNicknameTitle": { "description": "Restore step 1 title" },
+  "authRestorePassphraseTitle": "Passphrase",
+  "@authRestorePassphraseTitle": { "description": "Restore step 2 title" },
+  "authRestoreNicknamePlaceholder": "dein Spielname",
+  "@authRestoreNicknamePlaceholder": { "description": "Restore step 1 nickname placeholder" },
+  "authRestoreNicknameHelper": "Genau wie beim Anlegen des Kontos.",
+  "@authRestoreNicknameHelper": { "description": "Restore step 1 helper text" },
+  "authRestorePassphraseHelper": "Genau wie beim Anlegen — Gross-/Kleinschreibung beachten.",
+  "@authRestorePassphraseHelper": { "description": "Restore step 2 passphrase helper" },
+  "authRestoreSubmit": "Konto entsperren",
+  "@authRestoreSubmit": { "description": "Restore submit button label" },
+  "authRestoreSubmitting": "Konto wird entsperrt …",
+  "@authRestoreSubmitting": { "description": "Restore submit button label while restoring" },
+  "authRestoreError": "Wiederherstellung fehlgeschlagen.",
+  "@authRestoreError": { "description": "Restore failure banner" },
+  "authRestoreCooldownTitle": "Zu viele Versuche",
+  "@authRestoreCooldownTitle": { "description": "Cooldown badge title after 3 failed attempts" },
+  "authRestoreCooldownMessage": "Bitte warte {seconds} Sekunden, dann versuch es erneut.",
+  "@authRestoreCooldownMessage": {
+    "description": "Cooldown badge body with remaining seconds",
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
   }
 }

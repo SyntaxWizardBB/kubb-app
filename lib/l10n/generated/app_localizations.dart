@@ -1797,6 +1797,72 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Schritt {step} / {total}'**
   String authWizardStepCount(int step, int total);
+
+  /// Restore-flow eyebrow above the step title
+  ///
+  /// In de, this message translates to:
+  /// **'Konto wiederherstellen'**
+  String get authRestoreEyebrow;
+
+  /// Restore step 1 title
+  ///
+  /// In de, this message translates to:
+  /// **'Spielname'**
+  String get authRestoreNicknameTitle;
+
+  /// Restore step 2 title
+  ///
+  /// In de, this message translates to:
+  /// **'Passphrase'**
+  String get authRestorePassphraseTitle;
+
+  /// Restore step 1 nickname placeholder
+  ///
+  /// In de, this message translates to:
+  /// **'dein Spielname'**
+  String get authRestoreNicknamePlaceholder;
+
+  /// Restore step 1 helper text
+  ///
+  /// In de, this message translates to:
+  /// **'Genau wie beim Anlegen des Kontos.'**
+  String get authRestoreNicknameHelper;
+
+  /// Restore step 2 passphrase helper
+  ///
+  /// In de, this message translates to:
+  /// **'Genau wie beim Anlegen — Gross-/Kleinschreibung beachten.'**
+  String get authRestorePassphraseHelper;
+
+  /// Restore submit button label
+  ///
+  /// In de, this message translates to:
+  /// **'Konto entsperren'**
+  String get authRestoreSubmit;
+
+  /// Restore submit button label while restoring
+  ///
+  /// In de, this message translates to:
+  /// **'Konto wird entsperrt …'**
+  String get authRestoreSubmitting;
+
+  /// Restore failure banner
+  ///
+  /// In de, this message translates to:
+  /// **'Wiederherstellung fehlgeschlagen.'**
+  String get authRestoreError;
+
+  /// Cooldown badge title after 3 failed attempts
+  ///
+  /// In de, this message translates to:
+  /// **'Zu viele Versuche'**
+  String get authRestoreCooldownTitle;
+
+  /// Cooldown badge body with remaining seconds
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte warte {seconds} Sekunden, dann versuch es erneut.'**
+  String authRestoreCooldownMessage(int seconds);
 }
 
 class _AppLocalizationsDelegate
