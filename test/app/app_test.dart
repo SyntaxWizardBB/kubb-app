@@ -35,7 +35,11 @@ void main() {
           appSettingsProvider.overrideWith(
             () => _FakeAppSettingsNotifier(AppSettings(themeChoice: choice)),
           ),
-          appBootstrapProvider.overrideWith((ref) async => player),
+          profileBootstrapProvider.overrideWith((ref) async => player),
+          appBootstrapProvider.overrideWith((ref) async {
+            await ref.read(profileBootstrapProvider.future);
+            return null;
+          }),
           currentProfileProvider.overrideWith(
             (ref) => Stream<Player?>.value(player),
           ),

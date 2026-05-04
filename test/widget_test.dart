@@ -20,7 +20,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          appBootstrapProvider.overrideWith((ref) async => player),
+          profileBootstrapProvider.overrideWith((ref) async => player),
+          appBootstrapProvider.overrideWith((ref) async {
+            await ref.read(profileBootstrapProvider.future);
+            return null;
+          }),
           currentProfileProvider.overrideWith(
             (ref) => Stream<Player?>.value(player),
           ),
