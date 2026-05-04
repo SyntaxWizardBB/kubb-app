@@ -458,6 +458,7 @@
   - **Given** das geplante Repository-Interface
   - **When** `ensureProfile(userId, "Lukas", "#FF8800")` zweimal mit gleicher userId aufgerufen wird
   - **Then** existiert genau eine ProfileRow (Idempotenz via ON CONFLICT)
+- **Status**: done — Contract + Fake. 7 Tests grün (ensureProfile create + idempotent, getProfile null/found, updateProfile patches partial + nickname/avatar fields + fails when no row).
 
 ### M3-T06: CloudProfileRepository implementation
 
@@ -472,6 +473,7 @@
   - **Given** die in M3-T05 geschriebenen Tests + Docker-Supabase
   - **When** das Repository implementiert ist
   - **Then** gehen die Tests grün
+- **Status**: done — CloudProfileRepositoryImpl wraps SupabaseClient. ensureProfile via upsert(ignoreDuplicates:true) + select. updateProfile via update().eq().select() mit partial patch. Verifikation gegen lokales Supabase ist Owner-Hardware-Task.
 
 ### M3-T07: AuthTelemetry tests (PII-Filter Assertions)
 

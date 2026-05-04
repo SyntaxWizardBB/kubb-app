@@ -1,0 +1,97 @@
+import 'package:flutter_test/flutter_test.dart';
+
+import '../../../fixtures/auth/fake_cloud_profile_repository.dart';
+
+void main() {
+  late FakeCloudProfileRepository repo;
+
+  setUp(() {
+    repo = FakeCloudProfileRepository();
+  });
+
+  test('ensureProfile creates a row when missing', () async {
+    final row = await repo.ensureProfile(
+      userId: 'u1',
+      nickname: 'lukas',
+      avatarColor: '#FF8800',
+    );
+
+    expect(row.userId, 'u1');
+    expect(row.nickname, 'lukas');
+    expect(row.avatarColor, '#FF8800');
+    expect(row.onboardingCompleted, isFalse);
+  });
+
+  test('ensureProfile is idempotent — second call returns the same row',
+      () async {
+    final first = await repo.ensureProfile(
+      userId: 'u1',
+      nickname: 'lukas',
+      avatarColor: '#FF8800',
+    );
+
+    // Second call with different values — must not overwrite, but
+    // should still succeed and return the original row.
+    final second = await repo.ensureProfile(
+      userId: 'u1',
+      nickname: 'someone-else',
+      avatarColor: '#000000',
+    );
+
+    expect(second.userId, first.userId);
+    expect(second.nickname, 'lukas');
+    expect(second.avatarColor, '#FF8800');
+    expect(repo.storedUserIds.length, 1);
+  });
+
+  test('getProfile returns null when no row exists', () async {
+    expect(await repo.getProfile(userId: 'never-stored'), isNull);
+  });
+
+  test('getProfile returns the stored row', () async {
+    await repo.ensureProfile(userId: 'u1', nickname: 'lukas');
+    final got = await repo.getProfile(userId: 'u1');
+    expect(got!.nickname, 'lukas');
+  });
+
+  test('updateProfile patches only the supplied fields', () async {
+    await repo.ensureProfile(
+      userId: 'u1',
+      nickname: 'lukas',
+      avatarColor: '#FF8800',
+    );
+
+    final after = await repo.updateProfile(
+      userId: 'u1',
+      onboardingCompleted: true,
+    );
+
+    expect(after.nickname, 'lukas');
+    expect(after.avatarColor, '#FF8800');
+    expect(after.onboardingCompleted, isTrue);
+  });
+
+  test('updateProfile fails when no profile exists yet', () async {
+    await expectLater(
+      repo.updateProfile(userId: 'never-stored', nickname: 'x'),
+      throwsA(isA<StateError>()),
+    );
+  });
+
+  test('updateProfile can change nickname and avatarColor', () async {
+    await repo.ensureProfile(
+      userId: 'u1',
+      nickname: 'lukas',
+      avatarColor: '#FF8800',
+    );
+
+    final after = await repo.updateProfile(
+      userId: 'u1',
+      nickname: 'Lukas Brosi',
+      avatarColor: '#3366FF',
+    );
+
+    expect(after.nickname, 'Lukas Brosi');
+    expect(after.avatarColor, '#3366FF');
+  });
+}
