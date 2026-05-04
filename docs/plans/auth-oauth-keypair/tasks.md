@@ -350,6 +350,7 @@
   - **Then** wird ein 32-Byte-Token zurückgegeben und im server-temp-store mit Ablauf-Timestamp gespeichert
   - **And** wenn der Client das Token + Signature an `keypair_verify` schickt und die Signatur gültig ist, kommt ein JWT zurück
   - **And** ungültige Signatur, abgelaufenes Token, oder unbekannter public_key liefern Fehler-JSON mit klarem Error-Code
+- **Status**: done — auth.keypair_challenges (ephemere Tabelle) + 2 SECURITY DEFINER Functions: keypair_challenge gibt 32-byte gen_random_bytes mit 60s TTL aus + opportunistisches GC abgelaufener Challenges. keypair_verify checkt TTL + DELETE single-use + lookup user_id+nickname per public_key. **Wichtige TODOs für Hetzner-Integration**: (1) Ed25519-Verify selbst (Postgres hat kein eingebautes Ed25519 — pgsodium-Extension nötig oder Custom-Function); (2) JWT-Issuance für gefundene user_id (verlangt service-role Access — Edge-Function oder Owner-Decision auf "anonymous-session-bleibt-aktiv"-Pattern). Beide TODOs explizit im SQL kommentiert.
 
 ### M2-T05: tools/auth-smoketest/ curl-Tests gegen Docker-Supabase
 
