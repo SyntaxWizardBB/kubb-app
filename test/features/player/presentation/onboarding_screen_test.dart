@@ -82,6 +82,28 @@ void main() {
     expect(find.text('MB'), findsOneWidget);
   });
 
+  testWidgets('pressing the keyboard go-action submits the form',
+      (tester) async {
+    await pump(tester);
+
+    await tester.enterText(find.byType(TextField), 'Lukas');
+    await tester.pump();
+
+    await tester.testTextInput.receiveAction(TextInputAction.go);
+    await tester.pumpAndSettle();
+
+    final created = await repo.currentOrNull();
+    expect(created?.name, 'Lukas');
+  });
+
+  testWidgets('text field uses the go input-action so the keyboard submits',
+      (tester) async {
+    await pump(tester);
+
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.textInputAction, TextInputAction.go);
+  });
+
   testWidgets('confirm button disabled with whitespace-only name',
       (tester) async {
     await pump(tester);

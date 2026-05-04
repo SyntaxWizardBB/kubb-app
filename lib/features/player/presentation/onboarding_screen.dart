@@ -56,56 +56,68 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     return Scaffold(
       backgroundColor: tokens.bg,
+      // The keyboard floats over the content instead of resizing the Scaffold.
+      // Combined with a SingleChildScrollView this keeps Spacers from
+      // collapsing into negative space when the soft-keyboard appears.
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: KubbTokens.space6,
-            vertical: KubbTokens.space8,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            KubbTokens.space6,
+            KubbTokens.space8,
+            KubbTokens.space6,
+            KubbTokens.space8 + MediaQuery.of(context).viewInsets.bottom,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Spacer(),
-              Center(
-                child: AvatarCircle(
-                  initials: AvatarColorHelper.initialsFor(_controller.text),
-                  color: AvatarColorHelper.palette.first,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height -
+                  MediaQuery.of(context).padding.vertical -
+                  KubbTokens.space8 * 2,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Center(
+                  child: AvatarCircle(
+                    initials: AvatarColorHelper.initialsFor(_controller.text),
+                    color: AvatarColorHelper.palette.first,
+                  ),
                 ),
-              ),
-              const SizedBox(height: KubbTokens.space6),
-              Text(
-                l.onboardingGreeting,
-                style: textTheme.titleMedium?.copyWith(color: tokens.fgMuted),
-              ),
-              const SizedBox(height: KubbTokens.space2),
-              Text(
-                l.onboardingTitle,
-                style: textTheme.headlineMedium?.copyWith(color: tokens.fg),
-              ),
-              const SizedBox(height: KubbTokens.space6),
-              TextField(
-                controller: _controller,
-                autofocus: true,
-                textInputAction: TextInputAction.done,
-                decoration: InputDecoration(
-                  hintText: l.onboardingHint,
-                  border: const OutlineInputBorder(),
+                const SizedBox(height: KubbTokens.space6),
+                Text(
+                  l.onboardingGreeting,
+                  style: textTheme.titleMedium?.copyWith(color: tokens.fgMuted),
                 ),
-                onChanged: (_) => setState(() {}),
-                onSubmitted: (_) {
-                  if (_isValid) unawaited(_confirm());
-                },
-              ),
-              const SizedBox(height: KubbTokens.space6),
-              SizedBox(
-                height: KubbTokens.touchComfortable,
-                child: FilledButton(
-                  onPressed: _isValid ? _confirm : null,
-                  child: Text(l.onboardingConfirm),
+                const SizedBox(height: KubbTokens.space2),
+                Text(
+                  l.onboardingTitle,
+                  style: textTheme.headlineMedium?.copyWith(color: tokens.fg),
                 ),
-              ),
-              const Spacer(flex: 2),
-            ],
+                const SizedBox(height: KubbTokens.space6),
+                TextField(
+                  controller: _controller,
+                  autofocus: true,
+                  textInputAction: TextInputAction.go,
+                  decoration: InputDecoration(
+                    hintText: l.onboardingHint,
+                    border: const OutlineInputBorder(),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                  onSubmitted: (_) {
+                    if (_isValid) unawaited(_confirm());
+                  },
+                ),
+                const SizedBox(height: KubbTokens.space6),
+                SizedBox(
+                  height: KubbTokens.touchComfortable,
+                  child: FilledButton(
+                    onPressed: _isValid ? _confirm : null,
+                    child: Text(l.onboardingConfirm),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
