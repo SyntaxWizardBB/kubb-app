@@ -21,6 +21,7 @@ class OnboardingTour extends ConsumerStatefulWidget {
 class _OnboardingTourState extends ConsumerState<OnboardingTour> {
   final _controller = PageController();
   int _index = 0;
+  bool _animating = false;
 
   @override
   void dispose() {
@@ -29,22 +30,33 @@ class _OnboardingTourState extends ConsumerState<OnboardingTour> {
   }
 
   Future<void> _next(int total) async {
+    if (_animating) return;
     if (_index >= total - 1) {
       _finish();
-    } else {
+      return;
+    }
+    _animating = true;
+    try {
       await _controller.nextPage(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOut,
       );
+    } finally {
+      if (mounted) _animating = false;
     }
   }
 
   Future<void> _back() async {
-    if (_index == 0) return;
-    await _controller.previousPage(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOut,
-    );
+    if (_animating || _index == 0) return;
+    _animating = true;
+    try {
+      await _controller.previousPage(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+      );
+    } finally {
+      if (mounted) _animating = false;
+    }
   }
 
   void _skip() {
