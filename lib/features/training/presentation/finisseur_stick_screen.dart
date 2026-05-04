@@ -5,9 +5,11 @@ import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_notifier.dart';
+import 'package:kubb_app/features/training/presentation/widgets/abort_dialog.dart';
 import 'package:kubb_app/features/training/presentation/widgets/finisseur_inputs.dart';
 import 'package:kubb_app/features/training/presentation/widgets/pip_progress.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class FinisseurStickScreen extends ConsumerWidget {
   const FinisseurStickScreen({required this.sessionId, super.key});
@@ -54,12 +56,39 @@ class FinisseurStickScreen extends ConsumerWidget {
 
     final inFieldPhase = remField > 0;
     final inBasePhase = remField == 0 && remBase > 0;
+    final hasProgress = state.currentIndex > 0 || !stick.isUntouched;
 
-    return Scaffold(
+    Future<void> handleBack() async {
+      if (!hasProgress) {
+        await ref.read(activeFinisseurProvider.notifier).abortAndDelete();
+        if (!context.mounted) return;
+        context.go('/');
+        return;
+      }
+      final discard = await FinisseurAbortConfirm.show(context);
+      if (!discard) return;
+      await ref.read(activeFinisseurProvider.notifier).abortAndDelete();
+      if (!context.mounted) return;
+      context.go('/');
+    }
+
+    return PopScope(
+      canPop: !hasProgress,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await handleBack();
+      },
+      child: Scaffold(
       backgroundColor: tokens.bg,
       appBar: KubbAppBar(
         eyebrow: l.finisseurStickEyebrow(state.field, state.base),
         title: l.finisseurStickTitle(state.currentIndex + 1),
+        leading: IconButton(
+          icon: const Icon(LucideIcons.arrowLeft),
+          color: tokens.fg,
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onPressed: handleBack,
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
@@ -154,6 +183,7 @@ class FinisseurStickScreen extends ConsumerWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }

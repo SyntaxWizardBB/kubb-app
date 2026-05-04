@@ -77,6 +77,12 @@ class _FinisseurConfigScreenState
       appBar: KubbAppBar(
         eyebrow: l.finisseurConfigEyebrow,
         title: l.finisseurConfigTitle,
+        leading: IconButton(
+          icon: const Icon(LucideIcons.arrowLeft),
+          color: tokens.fg,
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onPressed: () => context.go('/'),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(

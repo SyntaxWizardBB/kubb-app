@@ -46,3 +46,34 @@ class AbortDialog extends StatelessWidget {
     );
   }
 }
+
+/// Two-button confirm shown when the user backs out of a finisseur session
+/// after at least one stick has been recorded. Stays minimal — there is no
+/// save path because finisseur stats are only useful when complete.
+class FinisseurAbortConfirm {
+  const FinisseurAbortConfirm._();
+
+  static Future<bool> show(BuildContext context) async {
+    final l = AppLocalizations.of(context);
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.finisseurAbortConfirmTitle),
+        content: Text(l.finisseurAbortConfirmBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.finisseurAbortConfirmStay),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: tokens.danger),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l.finisseurAbortConfirmDiscard),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+}
