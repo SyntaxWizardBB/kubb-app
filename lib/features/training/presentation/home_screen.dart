@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/icons.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
-import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
 import 'package:kubb_app/features/training/presentation/widgets/crash_recovery_dialog.dart';
@@ -33,7 +33,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
-    final profile = ref.watch(currentProfileProvider);
+    final profile = ref.watch(displayProfileProvider);
     final recent = ref.watch(recentSessionsProvider).maybeWhen(
           data: (items) => items,
           orElse: () => const <RecentSessionView>[],
@@ -51,10 +51,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       });
     });
 
-    final greeting = profile.maybeWhen(
-      data: (p) => p == null ? l.homeGreetingFallback : l.homeGreeting(p.name),
-      orElse: () => l.homeGreetingFallback,
-    );
+    final greeting = profile == null
+        ? l.homeGreetingFallback
+        : l.homeGreeting(profile.displayName);
 
     return Scaffold(
       backgroundColor: tokens.bg,

@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
-import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_state.dart';
 import 'package:kubb_app/features/training/data/training_repository.dart';
 
@@ -32,7 +32,7 @@ class RecentSessionView {
 
 final recentSessionsProvider =
     StreamProvider<List<RecentSessionView>>((ref) {
-  final profile = ref.watch(currentProfileProvider).value;
+  final profile = ref.watch(displayProfileProvider);
   if (profile == null) {
     return Stream.value(const <RecentSessionView>[]);
   }
@@ -44,7 +44,7 @@ final recentSessionsProvider =
   final db = ref.watch(appDatabaseProvider);
 
   return repo
-      .watchRecentCompleted(playerId: profile.id)
+      .watchRecentCompleted(playerId: profile.userId)
       .asyncMap((sessions) async {
     final views = <RecentSessionView>[];
     for (final session in sessions) {

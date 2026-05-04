@@ -5,7 +5,6 @@ import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/core/data/app_settings.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
-import 'package:kubb_app/features/player/application/current_profile_provider.dart';
 import 'package:kubb_app/features/training/application/active_session_notifier.dart';
 
 import '../../../_helpers/sqlite_open.dart';
@@ -33,14 +32,11 @@ Future<void> _seedPlayer(AppDatabase db, String id) {
 ProviderContainer _container({
   required AppDatabase db,
   AppSettings settings = const AppSettings(),
-  Player? player,
 }) {
   return ProviderContainer(
     overrides: [
       appDatabaseProvider.overrideWithValue(db),
       appSettingsProvider.overrideWith(() => _FakeAppSettingsNotifier(settings)),
-      if (player != null)
-        currentProfileProvider.overrideWith((ref) => Stream.value(player)),
     ],
   );
 }

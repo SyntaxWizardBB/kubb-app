@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
-import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_notifier.dart';
 import 'package:kubb_app/features/training/presentation/widgets/kubb_stack_preview.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -65,9 +64,9 @@ class _FinisseurConfigScreenState
     setState(() => _base -= 1);
   }
 
-  Future<void> _start(Player profile) async {
+  Future<void> _start(DisplayProfile profile) async {
     await ref.read(activeFinisseurProvider.notifier).startSession(
-          playerId: profile.id,
+          playerId: profile.userId,
           field: _field,
           base: _base,
         );
@@ -80,7 +79,7 @@ class _FinisseurConfigScreenState
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
-    final profile = ref.watch(currentProfileProvider).value;
+    final profile = ref.watch(displayProfileProvider);
 
     return Scaffold(
       backgroundColor: tokens.bg,

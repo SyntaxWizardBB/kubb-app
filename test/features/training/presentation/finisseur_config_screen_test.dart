@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
-import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_notifier.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_state.dart';
 import 'package:kubb_app/features/training/presentation/finisseur_config_screen.dart';
@@ -55,21 +55,15 @@ void main() {
 
   tearDown(() async => db.close());
 
-  Player profile() => Player(
-        id: 'p1',
-        name: 'Lukas',
-        deviceId: 'd1',
-        createdAt: DateTime.utc(2026, 5, 2),
-      );
+  DisplayProfile profile() =>
+      const DisplayProfile(userId: 'p1', displayName: 'Lukas');
 
   Future<void> pump(WidgetTester tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
-          currentProfileProvider.overrideWith((ref) async* {
-            yield profile();
-          }),
+          displayProfileProvider.overrideWithValue(profile()),
           activeFinisseurProvider.overrideWith(() => notifier),
         ],
         child: MaterialApp(
@@ -119,9 +113,7 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
-          currentProfileProvider.overrideWith(
-            (ref) => Stream<Player?>.value(null),
-          ),
+          displayProfileProvider.overrideWithValue(null),
           activeFinisseurProvider.overrideWith(() => notifier),
         ],
         child: MaterialApp(

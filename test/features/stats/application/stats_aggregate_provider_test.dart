@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
-import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/stats/application/stats_aggregate_provider.dart';
 import 'package:kubb_app/features/stats/application/stats_filter_notifier.dart';
 import 'package:kubb_app/features/stats/data/stats_aggregate.dart';
@@ -15,7 +15,6 @@ import '../../../_helpers/sqlite_open.dart';
 
 void main() {
   late AppDatabase db;
-  late Player player;
 
   setUpAll(registerLinuxSqliteOverride);
 
@@ -29,7 +28,6 @@ void main() {
         createdAt: Value(DateTime.utc(2026, 5)),
       ),
     );
-    player = (await db.playerDao.getById('p1'))!;
   });
 
   tearDown(() async {
@@ -37,16 +35,15 @@ void main() {
   });
 
   Future<ProviderContainer> makeContainer() async {
-    final controller = StreamController<Player?>();
-    addTearDown(controller.close);
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
-        currentProfileProvider.overrideWith((ref) => controller.stream),
+        displayProfileProvider.overrideWithValue(
+          const DisplayProfile(userId: 'p1', displayName: 'Lukas'),
+        ),
       ],
     );
     await container.read(appSettingsProvider.future);
-    controller.add(player);
     return container;
   }
 

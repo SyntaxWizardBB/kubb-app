@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/settings/application/csv_export_state.dart';
 import 'package:kubb_app/features/settings/data/csv_export_filter.dart';
 import 'package:kubb_app/features/settings/data/csv_export_repository.dart';
@@ -50,11 +50,11 @@ class CsvExportNotifier extends AsyncNotifier<CsvExportState> {
   }
 
   Future<String> _requirePlayerId() async {
-    final profile = await ref.read(currentProfileProvider.future);
+    final profile = ref.read(displayProfileProvider);
     if (profile == null) {
       throw StateError('csv export requires an active profile');
     }
-    return profile.id;
+    return profile.userId;
   }
 }
 

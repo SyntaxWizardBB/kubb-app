@@ -5,6 +5,7 @@ import 'package:kubb_app/app/app.dart';
 import 'package:kubb_app/app/bootstrap.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
 
@@ -22,6 +23,9 @@ void main() {
           appBootstrapProvider.overrideWith((ref) async => player),
           currentProfileProvider.overrideWith(
             (ref) => Stream<Player?>.value(player),
+          ),
+          displayProfileProvider.overrideWithValue(
+            const DisplayProfile(userId: 'test-id', displayName: 'Test'),
           ),
           recentSessionsProvider.overrideWith(
             (ref) => Stream.value(const <RecentSessionView>[]),

@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
-import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/training/application/active_session_notifier.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -41,9 +40,11 @@ class _SniperConfigScreenState extends ConsumerState<SniperConfigScreen> {
     setState(() => _throwTarget = n);
   }
 
-  Future<void> _start(Player profile) async {
+  Future<void> _start(DisplayProfile profile) async {
     await ref.read(activeSessionProvider.notifier).startSession(
-          playerId: profile.id, distance: _distance, throwTarget: _throwTarget,
+          playerId: profile.userId,
+          distance: _distance,
+          throwTarget: _throwTarget,
         );
     if (!mounted) return;
     final id = ref.read(activeSessionProvider).value?.sessionId;
@@ -54,7 +55,7 @@ class _SniperConfigScreenState extends ConsumerState<SniperConfigScreen> {
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
-    final profile = ref.watch(currentProfileProvider).value;
+    final profile = ref.watch(displayProfileProvider);
     final isCustom = !_targetPresets.contains(_throwTarget);
 
     return Scaffold(

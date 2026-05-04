@@ -7,7 +7,7 @@ import 'package:kubb_app/core/data/app_settings.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
-import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_notifier.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_state.dart';
 import 'package:kubb_app/features/training/application/active_session_notifier.dart';
@@ -152,11 +152,11 @@ class _SniperBody extends ConsumerWidget {
     WidgetRef ref,
     Session session,
   ) async {
-    final profile = ref.read(currentProfileProvider).value;
+    final profile = ref.read(displayProfileProvider);
     if (profile == null) return;
     final notifier = ref.read(activeSessionProvider.notifier);
     await notifier.startSession(
-      playerId: profile.id,
+      playerId: profile.userId,
       distance: session.distanceMeters,
       throwTarget: session.throwTarget,
     );
@@ -296,11 +296,11 @@ class _FinisseurBody extends ConsumerWidget {
     WidgetRef ref,
     Session session,
   ) async {
-    final profile = ref.read(currentProfileProvider).value;
+    final profile = ref.read(displayProfileProvider);
     if (profile == null) return;
     final notifier = ref.read(activeFinisseurProvider.notifier);
     await notifier.startSession(
-      playerId: profile.id,
+      playerId: profile.userId,
       field: session.finField ?? 7,
       base: session.finBase ?? 3,
     );

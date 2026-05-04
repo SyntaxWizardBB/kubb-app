@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/data/app_database.dart';
-import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/training/data/training_repository.dart';
 
 /// Loads the active session for the current profile, if any.
@@ -10,10 +10,10 @@ import 'package:kubb_app/features/training/data/training_repository.dart';
 /// stable value across rebuilds and the recovery dialog only fires once
 /// per app start.
 final crashRecoveryProvider = FutureProvider<Session?>((ref) async {
-  final profile = ref.watch(currentProfileProvider).value;
+  final profile = ref.watch(displayProfileProvider);
   if (profile == null) return null;
   final repo = ref.watch(trainingRepositoryProvider);
-  return repo.loadActiveOrNull(playerId: profile.id);
+  return repo.loadActiveOrNull(playerId: profile.userId);
 });
 
 /// Per-app-start guard so the recovery dialog is shown at most once even

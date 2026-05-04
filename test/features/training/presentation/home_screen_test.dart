@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
-import 'package:kubb_app/features/player/application/current_profile_provider.dart';
+import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
 import 'package:kubb_app/features/training/presentation/home_screen.dart';
@@ -12,15 +11,13 @@ import 'package:kubb_app/l10n/generated/app_localizations.dart';
 void main() {
   Future<void> pump(
     WidgetTester tester, {
-    Player? profile,
+    DisplayProfile? profile,
     List<RecentSessionView> recent = const [],
   }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          currentProfileProvider.overrideWith((ref) async* {
-            yield profile;
-          }),
+          displayProfileProvider.overrideWithValue(profile),
           recentSessionsProvider.overrideWith((ref) => Stream.value(recent)),
           crashRecoveryProvider.overrideWith((ref) async => null),
         ],
@@ -36,12 +33,8 @@ void main() {
     await tester.pump();
   }
 
-  Player profileNamed(String name) => Player(
-        id: 'p1',
-        name: name,
-        deviceId: 'd1',
-        createdAt: DateTime.utc(2026, 5, 2),
-      );
+  DisplayProfile profileNamed(String name) =>
+      DisplayProfile(userId: 'p1', displayName: name);
 
   testWidgets('renders greeting with profile name', (tester) async {
     await pump(tester, profile: profileNamed('Lukas'));
