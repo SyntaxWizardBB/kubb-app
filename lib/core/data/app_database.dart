@@ -9,6 +9,7 @@ import 'package:kubb_app/core/data/tables/finisseur_stick_events.dart';
 import 'package:kubb_app/core/data/tables/players.dart';
 import 'package:kubb_app/core/data/tables/session_events.dart';
 import 'package:kubb_app/core/data/tables/sessions.dart';
+import 'package:kubb_app/features/auth/data/tables/cached_auth_session_table.dart';
 
 part 'app_database.g.dart';
 
@@ -19,6 +20,7 @@ part 'app_database.g.dart';
     SessionEvents,
     AppSettingsTable,
     FinisseurStickEvents,
+    CachedAuthSession,
   ],
   daos: [
     PlayerDao,
@@ -32,7 +34,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -64,6 +66,9 @@ class AppDatabase extends _$AppDatabase {
               'CREATE UNIQUE INDEX idx_finisseur_stick_session_index '
               'ON finisseur_stick_events (session_id, stick_index)',
             );
+          }
+          if (from < 4) {
+            await m.createTable(cachedAuthSession);
           }
         },
       );

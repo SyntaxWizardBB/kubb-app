@@ -17,8 +17,8 @@ void main() {
     await db.close();
   });
 
-  test('schemaVersion is 3', () {
-    expect(db.schemaVersion, 3);
+  test('schemaVersion is 4', () {
+    expect(db.schemaVersion, 4);
   });
 
   test('players table has avatarColor column after migration', () async {
@@ -29,7 +29,7 @@ void main() {
     expect(cols, contains('avatar_color'));
   });
 
-  test('all four tables exist after migration', () async {
+  test('all expected tables exist after migration', () async {
     final rows = await db
         .customSelect(
           "SELECT name FROM sqlite_master WHERE type='table' "
@@ -44,6 +44,7 @@ void main() {
       'session_events',
       'app_settings_table',
       'finisseur_stick_events',
+      'cached_auth_session',
     }));
   });
 

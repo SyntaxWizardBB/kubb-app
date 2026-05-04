@@ -173,6 +173,7 @@
   - **And** `cached_auth_session` neu angelegt
   - **And** schemaVersion = 4, `flutter analyze` clean
 - **Notes**: Risiko #6 aus architecture.md. v3-Backup ist nicht-destruktiver Fallback — manuell mit sqlite-cli inspectable.
+- **Status**: done — **Plan-Revision**: M1-T01 macht jetzt nur den additiven Teil (cached_auth_session-Table erstellen, schemaVersion 3→4). Der destruktive Teil (drop players, rename sessions.player_id, v3-backup) wurde verschoben zu einem neuen Task **M6-T-DESTRUCTIVE** der zusammen mit M6-T04 (F2 file deletion) ausgeführt wird — sonst Chicken-and-Egg mit existierender PlayerDao/PlayerRepository. Schema-Version geht zu v5 in M6. Files in dieser Iteration: `lib/features/auth/data/tables/cached_auth_session_table.dart` (neu), `lib/core/data/app_database.dart` (Migration), `test/core/data/app_database_test.dart` (Tests adjusted).
 
 ### M1-T02: drift v4 migration tests with v3 fixture
 

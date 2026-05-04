@@ -2303,6 +2303,578 @@ class FinisseurStickEventsCompanion
   }
 }
 
+class $CachedAuthSessionTable extends CachedAuthSession
+    with TableInfo<$CachedAuthSessionTable, CachedAuthSessionData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedAuthSessionTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('singleton'),
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _displayNameMeta = const VerificationMeta(
+    'displayName',
+  );
+  @override
+  late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
+    'display_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _avatarColorMeta = const VerificationMeta(
+    'avatarColor',
+  );
+  @override
+  late final GeneratedColumn<String> avatarColor = GeneratedColumn<String>(
+    'avatar_color',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _expiresAtMeta = const VerificationMeta(
+    'expiresAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> expiresAt = GeneratedColumn<DateTime>(
+    'expires_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _refreshAfterMeta = const VerificationMeta(
+    'refreshAfter',
+  );
+  @override
+  late final GeneratedColumn<DateTime> refreshAfter = GeneratedColumn<DateTime>(
+    'refresh_after',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    userId,
+    kind,
+    displayName,
+    avatarColor,
+    expiresAt,
+    refreshAfter,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_auth_session';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CachedAuthSessionData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('display_name')) {
+      context.handle(
+        _displayNameMeta,
+        displayName.isAcceptableOrUnknown(
+          data['display_name']!,
+          _displayNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_displayNameMeta);
+    }
+    if (data.containsKey('avatar_color')) {
+      context.handle(
+        _avatarColorMeta,
+        avatarColor.isAcceptableOrUnknown(
+          data['avatar_color']!,
+          _avatarColorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('expires_at')) {
+      context.handle(
+        _expiresAtMeta,
+        expiresAt.isAcceptableOrUnknown(data['expires_at']!, _expiresAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_expiresAtMeta);
+    }
+    if (data.containsKey('refresh_after')) {
+      context.handle(
+        _refreshAfterMeta,
+        refreshAfter.isAcceptableOrUnknown(
+          data['refresh_after']!,
+          _refreshAfterMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_refreshAfterMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CachedAuthSessionData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedAuthSessionData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      )!,
+      avatarColor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}avatar_color'],
+      ),
+      expiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}expires_at'],
+      )!,
+      refreshAfter: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}refresh_after'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CachedAuthSessionTable createAlias(String alias) {
+    return $CachedAuthSessionTable(attachedDatabase, alias);
+  }
+}
+
+class CachedAuthSessionData extends DataClass
+    implements Insertable<CachedAuthSessionData> {
+  final String id;
+  final String userId;
+  final String kind;
+  final String displayName;
+  final String? avatarColor;
+  final DateTime expiresAt;
+  final DateTime refreshAfter;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const CachedAuthSessionData({
+    required this.id,
+    required this.userId,
+    required this.kind,
+    required this.displayName,
+    this.avatarColor,
+    required this.expiresAt,
+    required this.refreshAfter,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['kind'] = Variable<String>(kind);
+    map['display_name'] = Variable<String>(displayName);
+    if (!nullToAbsent || avatarColor != null) {
+      map['avatar_color'] = Variable<String>(avatarColor);
+    }
+    map['expires_at'] = Variable<DateTime>(expiresAt);
+    map['refresh_after'] = Variable<DateTime>(refreshAfter);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  CachedAuthSessionCompanion toCompanion(bool nullToAbsent) {
+    return CachedAuthSessionCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      kind: Value(kind),
+      displayName: Value(displayName),
+      avatarColor: avatarColor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avatarColor),
+      expiresAt: Value(expiresAt),
+      refreshAfter: Value(refreshAfter),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory CachedAuthSessionData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedAuthSessionData(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      displayName: serializer.fromJson<String>(json['displayName']),
+      avatarColor: serializer.fromJson<String?>(json['avatarColor']),
+      expiresAt: serializer.fromJson<DateTime>(json['expiresAt']),
+      refreshAfter: serializer.fromJson<DateTime>(json['refreshAfter']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'kind': serializer.toJson<String>(kind),
+      'displayName': serializer.toJson<String>(displayName),
+      'avatarColor': serializer.toJson<String?>(avatarColor),
+      'expiresAt': serializer.toJson<DateTime>(expiresAt),
+      'refreshAfter': serializer.toJson<DateTime>(refreshAfter),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  CachedAuthSessionData copyWith({
+    String? id,
+    String? userId,
+    String? kind,
+    String? displayName,
+    Value<String?> avatarColor = const Value.absent(),
+    DateTime? expiresAt,
+    DateTime? refreshAfter,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => CachedAuthSessionData(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    kind: kind ?? this.kind,
+    displayName: displayName ?? this.displayName,
+    avatarColor: avatarColor.present ? avatarColor.value : this.avatarColor,
+    expiresAt: expiresAt ?? this.expiresAt,
+    refreshAfter: refreshAfter ?? this.refreshAfter,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  CachedAuthSessionData copyWithCompanion(CachedAuthSessionCompanion data) {
+    return CachedAuthSessionData(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
+      avatarColor: data.avatarColor.present
+          ? data.avatarColor.value
+          : this.avatarColor,
+      expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+      refreshAfter: data.refreshAfter.present
+          ? data.refreshAfter.value
+          : this.refreshAfter,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedAuthSessionData(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('kind: $kind, ')
+          ..write('displayName: $displayName, ')
+          ..write('avatarColor: $avatarColor, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('refreshAfter: $refreshAfter, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    userId,
+    kind,
+    displayName,
+    avatarColor,
+    expiresAt,
+    refreshAfter,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedAuthSessionData &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.kind == this.kind &&
+          other.displayName == this.displayName &&
+          other.avatarColor == this.avatarColor &&
+          other.expiresAt == this.expiresAt &&
+          other.refreshAfter == this.refreshAfter &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class CachedAuthSessionCompanion
+    extends UpdateCompanion<CachedAuthSessionData> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> kind;
+  final Value<String> displayName;
+  final Value<String?> avatarColor;
+  final Value<DateTime> expiresAt;
+  final Value<DateTime> refreshAfter;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const CachedAuthSessionCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.displayName = const Value.absent(),
+    this.avatarColor = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+    this.refreshAfter = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedAuthSessionCompanion.insert({
+    this.id = const Value.absent(),
+    required String userId,
+    required String kind,
+    required String displayName,
+    this.avatarColor = const Value.absent(),
+    required DateTime expiresAt,
+    required DateTime refreshAfter,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : userId = Value(userId),
+       kind = Value(kind),
+       displayName = Value(displayName),
+       expiresAt = Value(expiresAt),
+       refreshAfter = Value(refreshAfter),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<CachedAuthSessionData> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? kind,
+    Expression<String>? displayName,
+    Expression<String>? avatarColor,
+    Expression<DateTime>? expiresAt,
+    Expression<DateTime>? refreshAfter,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (kind != null) 'kind': kind,
+      if (displayName != null) 'display_name': displayName,
+      if (avatarColor != null) 'avatar_color': avatarColor,
+      if (expiresAt != null) 'expires_at': expiresAt,
+      if (refreshAfter != null) 'refresh_after': refreshAfter,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedAuthSessionCompanion copyWith({
+    Value<String>? id,
+    Value<String>? userId,
+    Value<String>? kind,
+    Value<String>? displayName,
+    Value<String?>? avatarColor,
+    Value<DateTime>? expiresAt,
+    Value<DateTime>? refreshAfter,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return CachedAuthSessionCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      kind: kind ?? this.kind,
+      displayName: displayName ?? this.displayName,
+      avatarColor: avatarColor ?? this.avatarColor,
+      expiresAt: expiresAt ?? this.expiresAt,
+      refreshAfter: refreshAfter ?? this.refreshAfter,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (displayName.present) {
+      map['display_name'] = Variable<String>(displayName.value);
+    }
+    if (avatarColor.present) {
+      map['avatar_color'] = Variable<String>(avatarColor.value);
+    }
+    if (expiresAt.present) {
+      map['expires_at'] = Variable<DateTime>(expiresAt.value);
+    }
+    if (refreshAfter.present) {
+      map['refresh_after'] = Variable<DateTime>(refreshAfter.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedAuthSessionCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('kind: $kind, ')
+          ..write('displayName: $displayName, ')
+          ..write('avatarColor: $avatarColor, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('refreshAfter: $refreshAfter, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2314,6 +2886,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $FinisseurStickEventsTable finisseurStickEvents =
       $FinisseurStickEventsTable(this);
+  late final $CachedAuthSessionTable cachedAuthSession =
+      $CachedAuthSessionTable(this);
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final SessionDao sessionDao = SessionDao(this as AppDatabase);
   late final SessionEventDao sessionEventDao = SessionEventDao(
@@ -2334,6 +2908,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     sessionEvents,
     appSettingsTable,
     finisseurStickEvents,
+    cachedAuthSession,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -4233,6 +4808,301 @@ typedef $$FinisseurStickEventsTableProcessedTableManager =
       FinisseurStickEvent,
       PrefetchHooks Function({bool sessionId})
     >;
+typedef $$CachedAuthSessionTableCreateCompanionBuilder =
+    CachedAuthSessionCompanion Function({
+      Value<String> id,
+      required String userId,
+      required String kind,
+      required String displayName,
+      Value<String?> avatarColor,
+      required DateTime expiresAt,
+      required DateTime refreshAfter,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$CachedAuthSessionTableUpdateCompanionBuilder =
+    CachedAuthSessionCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> kind,
+      Value<String> displayName,
+      Value<String?> avatarColor,
+      Value<DateTime> expiresAt,
+      Value<DateTime> refreshAfter,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$CachedAuthSessionTableFilterComposer
+    extends Composer<_$AppDatabase, $CachedAuthSessionTable> {
+  $$CachedAuthSessionTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get avatarColor => $composableBuilder(
+    column: $table.avatarColor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get refreshAfter => $composableBuilder(
+    column: $table.refreshAfter,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CachedAuthSessionTableOrderingComposer
+    extends Composer<_$AppDatabase, $CachedAuthSessionTable> {
+  $$CachedAuthSessionTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get avatarColor => $composableBuilder(
+    column: $table.avatarColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get refreshAfter => $composableBuilder(
+    column: $table.refreshAfter,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CachedAuthSessionTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CachedAuthSessionTable> {
+  $$CachedAuthSessionTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get avatarColor => $composableBuilder(
+    column: $table.avatarColor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get expiresAt =>
+      $composableBuilder(column: $table.expiresAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get refreshAfter => $composableBuilder(
+    column: $table.refreshAfter,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$CachedAuthSessionTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CachedAuthSessionTable,
+          CachedAuthSessionData,
+          $$CachedAuthSessionTableFilterComposer,
+          $$CachedAuthSessionTableOrderingComposer,
+          $$CachedAuthSessionTableAnnotationComposer,
+          $$CachedAuthSessionTableCreateCompanionBuilder,
+          $$CachedAuthSessionTableUpdateCompanionBuilder,
+          (
+            CachedAuthSessionData,
+            BaseReferences<
+              _$AppDatabase,
+              $CachedAuthSessionTable,
+              CachedAuthSessionData
+            >,
+          ),
+          CachedAuthSessionData,
+          PrefetchHooks Function()
+        > {
+  $$CachedAuthSessionTableTableManager(
+    _$AppDatabase db,
+    $CachedAuthSessionTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedAuthSessionTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedAuthSessionTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedAuthSessionTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> displayName = const Value.absent(),
+                Value<String?> avatarColor = const Value.absent(),
+                Value<DateTime> expiresAt = const Value.absent(),
+                Value<DateTime> refreshAfter = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CachedAuthSessionCompanion(
+                id: id,
+                userId: userId,
+                kind: kind,
+                displayName: displayName,
+                avatarColor: avatarColor,
+                expiresAt: expiresAt,
+                refreshAfter: refreshAfter,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String userId,
+                required String kind,
+                required String displayName,
+                Value<String?> avatarColor = const Value.absent(),
+                required DateTime expiresAt,
+                required DateTime refreshAfter,
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => CachedAuthSessionCompanion.insert(
+                id: id,
+                userId: userId,
+                kind: kind,
+                displayName: displayName,
+                avatarColor: avatarColor,
+                expiresAt: expiresAt,
+                refreshAfter: refreshAfter,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CachedAuthSessionTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CachedAuthSessionTable,
+      CachedAuthSessionData,
+      $$CachedAuthSessionTableFilterComposer,
+      $$CachedAuthSessionTableOrderingComposer,
+      $$CachedAuthSessionTableAnnotationComposer,
+      $$CachedAuthSessionTableCreateCompanionBuilder,
+      $$CachedAuthSessionTableUpdateCompanionBuilder,
+      (
+        CachedAuthSessionData,
+        BaseReferences<
+          _$AppDatabase,
+          $CachedAuthSessionTable,
+          CachedAuthSessionData
+        >,
+      ),
+      CachedAuthSessionData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4247,4 +5117,6 @@ class $AppDatabaseManager {
       $$AppSettingsTableTableTableManager(_db, _db.appSettingsTable);
   $$FinisseurStickEventsTableTableManager get finisseurStickEvents =>
       $$FinisseurStickEventsTableTableManager(_db, _db.finisseurStickEvents);
+  $$CachedAuthSessionTableTableManager get cachedAuthSession =>
+      $$CachedAuthSessionTableTableManager(_db, _db.cachedAuthSession);
 }
