@@ -105,6 +105,25 @@ void main() {
     expect(agg.isEmpty, isTrue);
   });
 
+  test('returns empty aggregate when displayProfile is null', () async {
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        displayProfileProvider.overrideWithValue(null),
+      ],
+    );
+    addTearDown(container.dispose);
+    await container.read(appSettingsProvider.future);
+
+    final agg = await container.read(statsAggregateProvider.future);
+    expect(agg.isEmpty, isTrue);
+    expect(agg.totalSessions, 0);
+
+    final finisseur =
+        await container.read(finisseurStatsAggregateProvider.future);
+    expect(finisseur.isEmpty, isTrue);
+  });
+
   test('recomputes when distance filter changes', () async {
     await insertSession('s1', hits: 8, misses: 2);
     final container = await makeContainer();

@@ -87,4 +87,14 @@ void main() {
 
     expect(find.text('Hallo.'), findsOneWidget);
   });
+
+  testWidgets('renders home scaffold without throwing when profile is null',
+      (tester) async {
+    await pump(tester);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.text('Training'), findsOneWidget);
+  });
 }
