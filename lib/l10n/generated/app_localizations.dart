@@ -1539,6 +1539,60 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Sessions zurückgesetzt.'**
   String get settingsResetDoneSnack;
+
+  /// SignInScreen brand tagline
+  ///
+  /// In de, this message translates to:
+  /// **'Trainings-Tracker für die Wiese'**
+  String get authSigninTagline;
+
+  /// Google OAuth CTA
+  ///
+  /// In de, this message translates to:
+  /// **'Mit Google anmelden'**
+  String get authSigninGoogle;
+
+  /// Apple OAuth CTA, iOS only
+  ///
+  /// In de, this message translates to:
+  /// **'Mit Apple anmelden'**
+  String get authSigninApple;
+
+  /// Anonymous keypair flow CTA
+  ///
+  /// In de, this message translates to:
+  /// **'Ohne Konto starten (anonym)'**
+  String get authSigninAnonymous;
+
+  /// Anonymous CTA while submitting
+  ///
+  /// In de, this message translates to:
+  /// **'Konto wird angelegt …'**
+  String get authSigninAnonymousLoading;
+
+  /// Restore-account footer link
+  ///
+  /// In de, this message translates to:
+  /// **'Konto auf neuem Gerät wiederherstellen'**
+  String get authSigninRestore;
+
+  /// Offline-state warning banner
+  ///
+  /// In de, this message translates to:
+  /// **'Du bist offline. Provider-Anmeldung wird nicht funktionieren — Anonym-Account legt offline an, lädt später hoch.'**
+  String get authSigninOffline;
+
+  /// Divider between OAuth and anonymous CTAs
+  ///
+  /// In de, this message translates to:
+  /// **'oder'**
+  String get authSigninOr;
+
+  /// App brand name on SignInScreen
+  ///
+  /// In de, this message translates to:
+  /// **'Brosi\'s Kubb'**
+  String get authAppName;
 }
 
 class _AppLocalizationsDelegate

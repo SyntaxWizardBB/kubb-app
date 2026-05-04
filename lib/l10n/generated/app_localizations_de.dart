@@ -795,4 +795,32 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsResetDoneSnack => 'Sessions zurückgesetzt.';
+
+  @override
+  String get authSigninTagline => 'Trainings-Tracker für die Wiese';
+
+  @override
+  String get authSigninGoogle => 'Mit Google anmelden';
+
+  @override
+  String get authSigninApple => 'Mit Apple anmelden';
+
+  @override
+  String get authSigninAnonymous => 'Ohne Konto starten (anonym)';
+
+  @override
+  String get authSigninAnonymousLoading => 'Konto wird angelegt …';
+
+  @override
+  String get authSigninRestore => 'Konto auf neuem Gerät wiederherstellen';
+
+  @override
+  String get authSigninOffline =>
+      'Du bist offline. Provider-Anmeldung wird nicht funktionieren — Anonym-Account legt offline an, lädt später hoch.';
+
+  @override
+  String get authSigninOr => 'oder';
+
+  @override
+  String get authAppName => 'Brosi\'s Kubb';
 }

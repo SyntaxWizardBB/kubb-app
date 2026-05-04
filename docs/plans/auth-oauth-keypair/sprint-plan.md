@@ -201,10 +201,10 @@ Total mögliche Reduktion: ~11 h → effektiv ~44 h, ~4 Wochen.
 | M2 | 6 | 0 | 0 | 0 | 6 |
 | M3 | 8 | 0 | 0 | 0 | 8 |
 | M4 | 11 | 0 | 0 | 0 | 11 |
-| M5 | 1 | 0 | 14 | 0 | 15 |
+| M5 | 3 | 0 | 12 | 0 | 15 |
 | M6 | 0 | 0 | 0 | 8 | 8 |
 | M7 | 0 | 0 | 0 | 5 | 5 |
-| **Gesamt** | **38** | **0** | **14** | **13** | **65** |
+| **Gesamt** | **40** | **0** | **12** | **13** | **65** |
 
 ## Nächste Schritte (Übergabe an /workflows/feature Phase 3)
 
