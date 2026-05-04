@@ -88,6 +88,17 @@ class ActiveFinisseurNotifier
       return FinisseurAdvanceOutcome.done;
     }
 
+    // In Verlängerung: grow the buffer so the new index has a slot to write
+    // into. Without this, currentIndex outruns sticks.length and updates
+    // become silent no-ops.
+    if (nextState.continuedBeyondSticks &&
+        nextState.currentIndex >= nextState.sticks.length) {
+      nextState = nextState.copyWith(
+        sticks: List<StickResult>.from(nextState.sticks)
+          ..add(const StickResult()),
+      );
+    }
+
     // Still has sticks left — pick the right phase for the next stick.
     nextState = _ensurePhase(nextState, settings);
     state = AsyncData(nextState);
@@ -177,6 +188,11 @@ class ActiveFinisseurNotifier
   /// The current (uncommitted) stick edits are discarded — back means "undo
   /// the last commit", not "preserve in-flight work".
   ///
+  /// In Verlängerung the appended slot is removed; rolling back from the
+  /// first Verlängerungs-stick takes the player to stock 6 with edits
+  /// restored and unsets `continuedBeyondSticks` so the continue-decision
+  /// can re-trigger.
+  ///
   /// Returns false when there is nothing to roll back (already at stick 0).
   Future<bool> rollbackLastStick() async {
     final s = state.value;
@@ -185,13 +201,23 @@ class ActiveFinisseurNotifier
     final prev = s.currentIndex - 1;
     await _repo.deleteStickAt(sessionId: s.sessionId, stickIndex: prev);
     final restored = List<StickResult>.from(s.sticks);
-    if (s.currentIndex < restored.length) {
-      restored[s.currentIndex] = const StickResult();
+    // Drop any appended Verlängerungs-slot beyond the new current index so
+    // the buffer never carries trailing empty slots.
+    while (restored.length > ActiveFinisseurState.totalSticks &&
+        restored.length > prev + 1) {
+      restored.removeLast();
     }
-    restored[prev] = const StickResult();
+    if (prev < restored.length) {
+      restored[prev] = const StickResult();
+    }
+    final stillBeyondSticks = prev >= ActiveFinisseurState.totalSticks;
     final settings =
         ref.read(appSettingsProvider).value ?? const AppSettings();
-    var next = s.copyWith(sticks: restored, currentIndex: prev);
+    var next = s.copyWith(
+      sticks: restored,
+      currentIndex: prev,
+      continuedBeyondSticks: stillBeyondSticks && s.continuedBeyondSticks,
+    );
     next = _ensurePhase(next, settings);
     state = AsyncData(next);
     return true;

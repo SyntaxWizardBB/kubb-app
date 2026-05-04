@@ -273,4 +273,77 @@ void main() {
     // Pre-seeded king-result so a single Stock-abschliessen tap commits it.
     expect(state.current.king?.hit, isTrue);
   });
+
+  test('hits in Verlängerung decrement remaining base kubbs', () async {
+    await db.appSettingsDao.save('kingThrowTracking', 'false');
+    await container.read(appSettingsProvider.future);
+
+    final notifier = container.read(activeFinisseurProvider.notifier);
+    await notifier.startSession(playerId: playerId, field: 0, base: 3);
+    for (var i = 0; i < 6; i++) {
+      await notifier.advance();
+    }
+    await notifier.continueBeyondStocks();
+
+    notifier.updateCurrentStick(const StickResult(eightMHit: true));
+    expect(await notifier.advance(), FinisseurAdvanceOutcome.carryOn);
+    var state = container.read(activeFinisseurProvider).requireValue!;
+    expect(state.remainingBaseBeforeCurrent, 2);
+    expect(state.sticks, hasLength(8));
+
+    notifier.updateCurrentStick(const StickResult(eightMHit: true));
+    expect(await notifier.advance(), FinisseurAdvanceOutcome.carryOn);
+    state = container.read(activeFinisseurProvider).requireValue!;
+    expect(state.remainingBaseBeforeCurrent, 1);
+
+    notifier.updateCurrentStick(const StickResult(eightMHit: true));
+    expect(await notifier.advance(), FinisseurAdvanceOutcome.done);
+  });
+
+  test('rollbackLastStick survives Verlängerung and rewinds across the boundary',
+      () async {
+    final notifier = container.read(activeFinisseurProvider.notifier);
+    await notifier.startSession(playerId: playerId, field: 7, base: 3);
+    for (var i = 0; i < 6; i++) {
+      await notifier.advance();
+    }
+    await notifier.continueBeyondStocks();
+    notifier.updateCurrentStick(const StickResult(eightMHit: true));
+    await notifier.advance();
+    notifier.updateCurrentStick(const StickResult(eightMHit: true));
+    await notifier.advance();
+
+    var state = container.read(activeFinisseurProvider).requireValue!;
+    expect(state.currentIndex, 8);
+
+    expect(await notifier.rollbackLastStick(), isTrue);
+    state = container.read(activeFinisseurProvider).requireValue!;
+    expect(state.currentIndex, 7);
+    expect(state.sticks, hasLength(8));
+
+    expect(await notifier.rollbackLastStick(), isTrue);
+    state = container.read(activeFinisseurProvider).requireValue!;
+    expect(state.currentIndex, 6);
+    expect(state.sticks, hasLength(7));
+  });
+
+  test('rollback from first Verlängerungs-stick clears the continue flag',
+      () async {
+    final notifier = container.read(activeFinisseurProvider.notifier);
+    await notifier.startSession(playerId: playerId, field: 7, base: 3);
+    for (var i = 0; i < 6; i++) {
+      await notifier.advance();
+    }
+    await notifier.continueBeyondStocks();
+    final beforeRollback =
+        container.read(activeFinisseurProvider).requireValue!;
+    expect(beforeRollback.currentIndex, 6);
+    expect(beforeRollback.continuedBeyondSticks, isTrue);
+
+    expect(await notifier.rollbackLastStick(), isTrue);
+    final state = container.read(activeFinisseurProvider).requireValue!;
+    expect(state.currentIndex, 5);
+    expect(state.sticks, hasLength(6));
+    expect(state.continuedBeyondSticks, isFalse);
+  });
 }
