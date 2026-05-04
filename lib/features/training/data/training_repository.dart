@@ -33,7 +33,7 @@ class TrainingRepository {
     required double distance,
     int? throwTarget,
   }) async {
-    final stale = await _sessions.activeForPlayer(playerId);
+    final stale = await _sessions.activeForUser(playerId);
     if (stale != null) {
       _log.warning('discarding stale active session ${stale.id}');
       await _sessions.deleteById(stale.id);
@@ -100,11 +100,11 @@ class TrainingRepository {
     required String playerId,
     int limit = 3,
   }) {
-    return _sessions.watchRecentCompleted(playerId: playerId, limit: limit);
+    return _sessions.watchRecentCompleted(userId: playerId, limit: limit);
   }
 
   Future<Session?> loadActiveOrNull({required String playerId}) {
-    return _sessions.activeForPlayer(playerId);
+    return _sessions.activeForUser(playerId);
   }
 
   Future<List<SessionEvent>> eventsOf(String sessionId) {

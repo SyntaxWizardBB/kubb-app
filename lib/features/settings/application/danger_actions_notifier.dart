@@ -15,7 +15,7 @@ class DangerActionsNotifier {
     final profile = _ref.read(displayProfileProvider);
     if (profile == null) return;
     final db = _ref.read(appDatabaseProvider);
-    await db.sessionDao.deleteAllForPlayer(profile.userId);
+    await db.sessionDao.deleteAllForUser(profile.userId);
   }
 }
 

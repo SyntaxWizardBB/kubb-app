@@ -35,7 +35,7 @@ class StatsRepository {
     required bool heliTracking,
     DateTime? now,
   }) async {
-    final all = await _sessions.allCompletedForPlayer(playerId);
+    final all = await _sessions.allCompletedForUser(playerId);
     final cutoff = _cutoffFor(filter.dateRange, now ?? DateTime.now().toUtc());
     final filtered = all.where((s) {
       // Sniper aggregates ignore finisseur sessions — they have a separate
@@ -160,7 +160,7 @@ class StatsRepository {
   }) async {
     final dao = _finisseur;
     if (dao == null) return FinisseurStatsAggregate.empty();
-    final all = await _sessions.allCompletedForPlayer(playerId);
+    final all = await _sessions.allCompletedForUser(playerId);
     final cutoff = _cutoffFor(filter.dateRange, now ?? DateTime.now().toUtc());
     final finisseurs = all.where((s) {
       if (s.mode != 'finisseur') return false;

@@ -150,7 +150,7 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    final remaining = await db.sessionDao.allCompletedForPlayer('p1');
+    final remaining = await db.sessionDao.allCompletedForUser('p1');
     expect(remaining, hasLength(1));
   });
 
@@ -176,7 +176,7 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    final remaining = await db.sessionDao.allCompletedForPlayer('p1');
+    final remaining = await db.sessionDao.allCompletedForUser('p1');
     expect(remaining, isEmpty);
   });
 }

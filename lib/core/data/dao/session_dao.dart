@@ -12,18 +12,18 @@ class SessionDao extends DatabaseAccessor<AppDatabase> with _$SessionDaoMixin {
     return (select(sessions)..where((s) => s.id.equals(id))).getSingleOrNull();
   }
 
-  Future<Session?> activeForPlayer(String playerId) {
+  Future<Session?> activeForUser(String userId) {
     return (select(sessions)
-          ..where((s) => s.playerId.equals(playerId) & s.status.equals('active'))
+          ..where((s) => s.playerId.equals(userId) & s.status.equals('active'))
           ..limit(1))
         .getSingleOrNull();
   }
 
-  Future<Session?> activeForPlayerInMode(String playerId, String mode) {
+  Future<Session?> activeForUserInMode(String userId, String mode) {
     return (select(sessions)
           ..where(
             (s) =>
-                s.playerId.equals(playerId) &
+                s.playerId.equals(userId) &
                 s.status.equals('active') &
                 s.mode.equals(mode),
           )
@@ -32,22 +32,22 @@ class SessionDao extends DatabaseAccessor<AppDatabase> with _$SessionDaoMixin {
   }
 
   Stream<List<Session>> watchRecentCompleted({
-    required String playerId,
+    required String userId,
     int limit = 3,
   }) {
     return (select(sessions)
           ..where(
-            (s) => s.playerId.equals(playerId) & s.status.equals('completed'),
+            (s) => s.playerId.equals(userId) & s.status.equals('completed'),
           )
           ..orderBy([(s) => OrderingTerm.desc(s.completedAt)])
           ..limit(limit))
         .watch();
   }
 
-  Future<List<Session>> allCompletedForPlayer(String playerId) {
+  Future<List<Session>> allCompletedForUser(String userId) {
     return (select(sessions)
           ..where(
-            (s) => s.playerId.equals(playerId) & s.status.equals('completed'),
+            (s) => s.playerId.equals(userId) & s.status.equals('completed'),
           )
           ..orderBy([(s) => OrderingTerm.asc(s.completedAt)]))
         .get();
@@ -76,7 +76,7 @@ class SessionDao extends DatabaseAccessor<AppDatabase> with _$SessionDaoMixin {
     return (delete(sessions)..where((s) => s.id.equals(id))).go();
   }
 
-  Future<int> deleteAllForPlayer(String playerId) {
-    return (delete(sessions)..where((s) => s.playerId.equals(playerId))).go();
+  Future<int> deleteAllForUser(String userId) {
+    return (delete(sessions)..where((s) => s.playerId.equals(userId))).go();
   }
 }

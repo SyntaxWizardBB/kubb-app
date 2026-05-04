@@ -53,7 +53,7 @@ void main() {
     expect(row!.status, 'active');
   });
 
-  test('activeForPlayer returns only the active session', () async {
+  test('activeForUser returns only the active session', () async {
     await db.sessionDao.insert(session('s1', status: 'active'));
     await db.sessionDao.insert(
       session(
@@ -63,7 +63,7 @@ void main() {
       ),
     );
 
-    final row = await db.sessionDao.activeForPlayer('p1');
+    final row = await db.sessionDao.activeForUser('p1');
 
     expect(row?.id, 's1');
   });
@@ -80,7 +80,7 @@ void main() {
       );
     }
 
-    final first = await db.sessionDao.watchRecentCompleted(playerId: 'p1').first;
+    final first = await db.sessionDao.watchRecentCompleted(userId: 'p1').first;
 
     expect(first.map((s) => s.id), ['s3', 's2', 's1']);
   });

@@ -34,7 +34,7 @@ class FinisseurRepository {
     required int field,
     required int base,
   }) async {
-    final stale = await _sessions.activeForPlayerInMode(playerId, _kindFinisseur);
+    final stale = await _sessions.activeForUserInMode(playerId, _kindFinisseur);
     if (stale != null) {
       _log.warning('discarding stale active finisseur session ${stale.id}');
       await _sessions.deleteById(stale.id);
@@ -102,7 +102,7 @@ class FinisseurRepository {
   }
 
   Future<Session?> loadActiveOrNull({required String playerId}) {
-    return _sessions.activeForPlayerInMode(playerId, _kindFinisseur);
+    return _sessions.activeForUserInMode(playerId, _kindFinisseur);
   }
 
   Future<List<FinisseurStickEvent>> loadStickEvents(String sessionId) {

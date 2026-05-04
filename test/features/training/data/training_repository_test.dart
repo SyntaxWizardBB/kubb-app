@@ -47,7 +47,7 @@ void main() {
     final second = await repo.startSession(playerId: 'p1', distance: 6);
 
     final firstStored = await db.sessionDao.getById(first.id);
-    final activeNow = await db.sessionDao.activeForPlayer('p1');
+    final activeNow = await db.sessionDao.activeForUser('p1');
 
     expect(firstStored, isNull);
     expect(activeNow?.id, second.id);

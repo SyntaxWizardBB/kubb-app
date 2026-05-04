@@ -68,7 +68,7 @@ class CsvExportRepository {
     required DateTime now,
   }) async {
     if (filter.isEmpty) return const [];
-    final all = await _sessions.allCompletedForPlayer(playerId);
+    final all = await _sessions.allCompletedForUser(playerId);
     final cutoff = filter.cutoff(now);
     return all.where((s) {
       if (s.mode == _modeFinisseur && !filter.includeFinisseur) return false;
