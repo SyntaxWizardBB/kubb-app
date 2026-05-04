@@ -396,6 +396,7 @@
   - **Given** das geplante SupabaseAuthAdapter-Interface (Methoden: `signInWithOAuth`, `signOut`, `currentSession`, `onAuthStateChange`, `signInWithKeypairChallenge`, `linkOAuth`, `deleteAccount`)
   - **When** Tests gegen den FakeAdapter laufen
   - **Then** sind alle Tests grün (FakeAdapter erfüllt die Spec); die Tests sind so geschrieben dass sie auch gegen das echte Adapter laufen werden
+- **Status**: done — TDD-Pattern: abstract SupabaseAuthAdapter mit AuthAdapterState + AuthOAuthProvider + AuthAdapterKind + AuthVerifyResult Value-Objects. FakeSupabaseAuthAdapter mit deterministic in-memory + override hooks (challengeOverride, verifyOverride, throwOnNextCall) + counters. 13 Contract-Tests grün die der real-adapter (M3-T02) erfüllen muss.
 
 ### M3-T02: SupabaseAuthAdapter implementation
 
