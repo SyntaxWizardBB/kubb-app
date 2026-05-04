@@ -406,6 +406,34 @@ void main() {
     expect(agg.sessionRows.last.sessionId, 'f-old');
   });
 
+  test('finisseur aggregate marks sessions over six sticks as failures',
+      () async {
+    // Player cleared everything but it took seven sticks (continued past
+    // regulation) — the aggregate must still record this as a loss.
+    await insertFinisseur(
+      id: 'f-over',
+      field: 1,
+      base: 1,
+      sticks: const [
+        (fieldHits: 0, eight: false, heli: false, king: null, p2: 0),
+        (fieldHits: 0, eight: false, heli: false, king: null, p2: 0),
+        (fieldHits: 0, eight: false, heli: false, king: null, p2: 0),
+        (fieldHits: 0, eight: false, heli: false, king: null, p2: 0),
+        (fieldHits: 0, eight: false, heli: false, king: null, p2: 0),
+        (fieldHits: 1, eight: true, heli: false, king: null, p2: 0),
+        (fieldHits: 0, eight: false, heli: false, king: true, p2: 0),
+      ],
+    );
+
+    final agg = await repo.computeFinisseurAggregate(playerId: 'p1');
+
+    expect(agg.totalSessions, 1);
+    expect(agg.successCount, 0);
+    expect(agg.totalSticks, 7);
+    expect(agg.sessionRows.single.success, isFalse);
+    expect(agg.sessionRows.single.sticksUsed, 7);
+  });
+
   test('sessionRows are most-recent-first and capped to 20', () async {
     for (var i = 0; i < 25; i++) {
       await insertSession(

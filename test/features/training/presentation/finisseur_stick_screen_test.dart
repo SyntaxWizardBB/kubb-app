@@ -18,6 +18,8 @@ class _FakeNotifier extends ActiveFinisseurNotifier {
   StickResult? lastPatch;
   bool advanced = false;
   bool completed = false;
+  bool continued = false;
+  bool gaveUp = false;
 
   @override
   Future<ActiveFinisseurState?> build() async => _state;
@@ -43,6 +45,25 @@ class _FakeNotifier extends ActiveFinisseurNotifier {
   @override
   Future<void> complete() async {
     completed = true;
+    state = const AsyncData(null);
+  }
+
+  @override
+  Future<void> continueBeyondStocks() async {
+    continued = true;
+    final extended = List<StickResult>.from(_state.sticks)
+      ..add(const StickResult());
+    _state = _state.copyWith(
+      sticks: extended,
+      continuedBeyondSticks: true,
+      phase: FinisseurPhase.field,
+    );
+    state = AsyncData(_state);
+  }
+
+  @override
+  Future<void> giveUp() async {
+    gaveUp = true;
     state = const AsyncData(null);
   }
 }
@@ -225,5 +246,46 @@ void main() {
 
     expect(notifier.lastPatch?.eightMHit, isTrue);
     expect(notifier.advanced, isTrue);
+  });
+
+  testWidgets(
+      'continue-decision phase shows the dialog block and wires both actions',
+      (tester) async {
+    final notifier = _FakeNotifier(
+      ActiveFinisseurState(
+        sessionId: 'fin-1',
+        field: 7,
+        base: 3,
+        sticks: List<StickResult>.filled(6, const StickResult()),
+        currentIndex: 6,
+        startedAt: DateTime.utc(2026, 5, 2),
+        phase: FinisseurPhase.awaitingContinueDecision,
+      ),
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          activeFinisseurProvider.overrideWith(() => notifier),
+        ],
+        child: MaterialApp(
+          theme: KubbTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('de'),
+          home: const FinisseurStickScreen(sessionId: 'fin-1'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('6 Stöcke verbraucht'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Weiterspielen'), findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, 'Aufgeben'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiterspielen'));
+    await tester.pumpAndSettle();
+    expect(notifier.continued, isTrue);
+    expect(notifier.gaveUp, isFalse);
   });
 }

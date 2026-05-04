@@ -203,4 +203,74 @@ void main() {
 
     expect(await db.sessionDao.getById(firstId), isNull);
   });
+
+  test('stock 6 without victory raises continue decision when setting on',
+      () async {
+    final notifier = container.read(activeFinisseurProvider.notifier);
+    await notifier.startSession(playerId: playerId, field: 7, base: 3);
+
+    // Burn six sticks without winning. Field=7 needs more than six pure
+    // misses to flip phase, which suits this test.
+    var outcome = FinisseurAdvanceOutcome.carryOn;
+    for (var i = 0; i < 6; i++) {
+      outcome = await notifier.advance();
+    }
+
+    expect(outcome, FinisseurAdvanceOutcome.needsContinueDecision);
+    final state = container.read(activeFinisseurProvider).requireValue!;
+    expect(state.phase, FinisseurPhase.awaitingContinueDecision);
+  });
+
+  test('continueBeyondStocks extends the buffer and unlocks the next stick',
+      () async {
+    final notifier = container.read(activeFinisseurProvider.notifier);
+    await notifier.startSession(playerId: playerId, field: 7, base: 3);
+    for (var i = 0; i < 6; i++) {
+      await notifier.advance();
+    }
+    expect(
+      container.read(activeFinisseurProvider).requireValue!.phase,
+      FinisseurPhase.awaitingContinueDecision,
+    );
+
+    await notifier.continueBeyondStocks();
+
+    final state = container.read(activeFinisseurProvider).requireValue!;
+    expect(state.continuedBeyondSticks, isTrue);
+    expect(state.sticks, hasLength(7));
+    expect(state.phase, isNot(FinisseurPhase.awaitingContinueDecision));
+  });
+
+  test('giveUp marks the session completed and clears the state', () async {
+    final notifier = container.read(activeFinisseurProvider.notifier);
+    await notifier.startSession(playerId: playerId, field: 7, base: 3);
+    for (var i = 0; i < 6; i++) {
+      await notifier.advance();
+    }
+    final id = container.read(activeFinisseurProvider).requireValue!.sessionId;
+
+    await notifier.giveUp();
+
+    expect(container.read(activeFinisseurProvider).requireValue, isNull);
+    final stored = await db.sessionDao.getById(id);
+    expect(stored?.status, 'completed');
+  });
+
+  test('king phase activates after all base kubbs fall with king on',
+      () async {
+    final notifier = container.read(activeFinisseurProvider.notifier);
+    await notifier.startSession(playerId: playerId, field: 1, base: 1);
+
+    // Stick 0: clear field + base. King-throw is its own next stick.
+    notifier.updateCurrentStick(
+      const StickResult(fieldHits: 1, eightMHit: true),
+    );
+    final outcome = await notifier.advance();
+
+    expect(outcome, FinisseurAdvanceOutcome.carryOn);
+    final state = container.read(activeFinisseurProvider).requireValue!;
+    expect(state.phase, FinisseurPhase.king);
+    // Pre-seeded king-result so a single Stock-abschliessen tap commits it.
+    expect(state.current.king?.hit, isTrue);
+  });
 }
