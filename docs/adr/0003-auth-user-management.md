@@ -1,9 +1,10 @@
 # ADR-0003: Authentication & user management
 
-- **Status**: Accepted
+- **Status**: Accepted (partially superseded — see below)
 - **Date**: 2026-05-02
 - **Depends on**: ADR-0001 (Supabase chosen as cloud backend)
 - **Related**: ADR-0002 (bounded contexts — adds a `tournament` lifecycle component)
+- **Partially superseded by**: ADR-0010 — the §Auth subsection (magic-link only) is dropped in favour of OAuth + anonymous keypair. Roles, tournament lifecycle, flows, data model, RLS policies, and client integration described here remain in force.
 
 ## Context
 
@@ -58,7 +59,7 @@ A player can show up without having registered. Organizer adds a `tournament_app
 
 ### Auth
 
-Supabase Auth, **email + magic link only** (no passwords). Lower friction, no breach surface, simpler to operate. The trade-off is email-deliverability dependence (see Open questions).
+> **Superseded by ADR-0010.** The original pick was Supabase Auth with email + magic link only. ADR-0010 replaces this with two parallel paths: OAuth (Google / Apple) and an anonymous Ed25519 keypair account with passphrase-based encrypted server backup. Email is removed from the critical path entirely. Tournament organizers are forced to OAuth for audit-trail reasons; players may choose either path.
 
 ## Data model (sketch)
 
