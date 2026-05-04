@@ -129,6 +129,67 @@ void main() {
     expect(result.single.modeTag, 'Sniper');
   });
 
+  Future<void> insertFinisseurCompleted(
+    String id, {
+    required int field,
+    required int base,
+    required List<({int fieldHits, bool eight, bool? king})> sticks,
+  }) async {
+    final ts = DateTime.now().toUtc();
+    await db.sessionDao.insert(
+      SessionsCompanion(
+        id: Value(id),
+        playerId: const Value('p1'),
+        kind: const Value('finisseur'),
+        mode: const Value('finisseur'),
+        distanceMeters: const Value(8),
+        finField: Value(field),
+        finBase: Value(base),
+        status: const Value('completed'),
+        startedAt: Value(ts),
+        completedAt: Value(ts),
+      ),
+    );
+    for (var i = 0; i < sticks.length; i++) {
+      final s = sticks[i];
+      await db.finisseurStickEventDao.insert(
+        FinisseurStickEventsCompanion(
+          id: Value('$id-stk-$i'),
+          sessionId: Value(id),
+          stickIndex: Value(i),
+          fieldKubbsHit: Value(s.fieldHits),
+          eightMHit: Value(s.eight),
+          heliThrow: const Value(false),
+          kingHit: switch (s.king) {
+            final bool v => Value(v),
+            _ => const Value.absent(),
+          },
+          createdAt: Value(ts.add(Duration(seconds: i))),
+        ),
+      );
+    }
+  }
+
+  test('finisseur view exposes binaryWin instead of a hit-rate', () async {
+    await insertFinisseurCompleted(
+      'fwin',
+      field: 1,
+      base: 1,
+      sticks: const [
+        (fieldHits: 1, eight: true, king: true),
+      ],
+    );
+    final container = await makeContainer(heliTracking: true);
+    addTearDown(container.dispose);
+
+    final result =
+        await waitForData(container, until: (list) => list.isNotEmpty);
+
+    expect(result.single.modeTag, 'Finisseur');
+    expect(result.single.binaryWin, isTrue);
+    expect(result.single.hitRatePercent, isNull);
+  });
+
   test('subtitle ignores helis in throw count when heliTracking is off',
       () async {
     await insertCompleted('s1', hits: 5, misses: 5, helis: 2);

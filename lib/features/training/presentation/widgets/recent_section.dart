@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class RecentSection extends StatelessWidget {
   const RecentSection({required this.title, required this.items, super.key});
@@ -72,13 +73,7 @@ class _RecentRow extends StatelessWidget {
           ),
           SizedBox(
             width: 80,
-            child: Text(
-              '${item.hitRatePercent} %',
-              style: t.titleMedium?.copyWith(
-                fontSize: 18, fontWeight: FontWeight.w700, color: tokens.fg,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
+            child: _Verdict(item: item, tokens: tokens, textTheme: t),
           ),
           Expanded(
             child: Text(
@@ -88,6 +83,39 @@ class _RecentRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _Verdict extends StatelessWidget {
+  const _Verdict({
+    required this.item,
+    required this.tokens,
+    required this.textTheme,
+  });
+
+  final RecentSessionView item;
+  final KubbTokens tokens;
+  final TextTheme textTheme;
+
+  @override
+  Widget build(BuildContext context) {
+    final win = item.binaryWin;
+    if (win != null) {
+      return Icon(
+        win ? LucideIcons.check : LucideIcons.x,
+        size: 22,
+        color: win ? tokens.primary : tokens.danger,
+      );
+    }
+    return Text(
+      '${item.hitRatePercent ?? 0} %',
+      style: textTheme.titleMedium?.copyWith(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: tokens.fg,
+        fontFeatures: const [FontFeature.tabularFigures()],
       ),
     );
   }

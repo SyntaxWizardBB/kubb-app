@@ -11,16 +11,22 @@ const _kindHeli = 'heli';
 const _modeFinisseur = 'finisseur';
 
 /// Lightweight projection of a completed training session for the home list.
+///
+/// Sniper rows surface `hitRatePercent`. Finisseur rows surface `binaryWin`
+/// instead — the row is binary (won / lost) so a hit-rate percentage would
+/// be misleading. UI picks the correct shape based on which field is set.
 class RecentSessionView {
   const RecentSessionView({
     required this.modeTag,
-    required this.hitRatePercent,
     required this.subtitle,
+    this.hitRatePercent,
+    this.binaryWin,
   });
 
   final String modeTag;
-  final int hitRatePercent;
   final String subtitle;
+  final int? hitRatePercent;
+  final bool? binaryWin;
 }
 
 final recentSessionsProvider =
@@ -30,8 +36,9 @@ final recentSessionsProvider =
     return Stream.value(const <RecentSessionView>[]);
   }
 
-  final heliTracking =
-      ref.watch(appSettingsProvider).value?.heliTracking ?? true;
+  final settings = ref.watch(appSettingsProvider).value;
+  final heliTracking = settings?.heliTracking ?? true;
+  final kingTracking = settings?.kingThrowTracking ?? true;
   final repo = ref.watch(trainingRepositoryProvider);
   final db = ref.watch(appDatabaseProvider);
 
@@ -41,7 +48,7 @@ final recentSessionsProvider =
     final views = <RecentSessionView>[];
     for (final session in sessions) {
       if (session.mode == _modeFinisseur) {
-        views.add(await _toFinisseurView(db, session));
+        views.add(await _toFinisseurView(db, session, kingTracking: kingTracking));
       } else {
         views.add(
           await _toSniperView(repo, session, heliTracking: heliTracking),
@@ -90,8 +97,9 @@ Future<RecentSessionView> _toSniperView(
 
 Future<RecentSessionView> _toFinisseurView(
   AppDatabase db,
-  Session session,
-) async {
+  Session session, {
+  required bool kingTracking,
+}) async {
   final sticks = await db.finisseurStickEventDao.forSession(session.id);
   final used = sticks
       .where((s) =>
@@ -106,12 +114,13 @@ Future<RecentSessionView> _toFinisseurView(
   final fieldDown = sticks.fold<int>(0, (a, s) => a + s.fieldKubbsHit);
   final baseDown = sticks.fold<int>(0, (a, s) => a + (s.eightMHit ? 1 : 0));
   final kingHit = sticks.any((s) => s.kingHit ?? false);
-  final success = fieldDown >= field && baseDown >= base && kingHit;
-  final ratePct = success ? 100 : 0;
+  final allKubbsDown = fieldDown >= field && baseDown >= base;
+  final success =
+      kingTracking ? allKubbsDown && kingHit : allKubbsDown;
   final completedAt = session.completedAt ?? session.startedAt;
   return RecentSessionView(
     modeTag: 'Finisseur',
-    hitRatePercent: ratePct,
+    binaryWin: success,
     subtitle: '$field/$base · $used Stöcke · ${_relativeTime(completedAt)}',
   );
 }
