@@ -7,6 +7,9 @@ const _keyTheme = 'theme';
 const _keyHeliTracking = 'heliTracking';
 const _keyVibration = 'vibration';
 const _keyEyeHidden = 'sniperEyeToggleHidden';
+const _keyLongDubbie = 'longDubbieTracking';
+const _keyPenaltyKubb = 'penaltyKubbTracking';
+const _keyKingThrow = 'kingThrowTracking';
 
 @freezed
 abstract class AppSettings with _$AppSettings {
@@ -15,6 +18,9 @@ abstract class AppSettings with _$AppSettings {
     @Default(true) bool heliTracking,
     @Default(true) bool vibration,
     @Default(false) bool sniperEyeToggleHidden,
+    @Default(true) bool longDubbieTracking,
+    @Default(true) bool penaltyKubbTracking,
+    @Default(true) bool kingThrowTracking,
   }) = _AppSettings;
 
   const AppSettings._();
@@ -29,6 +35,12 @@ abstract class AppSettings with _$AppSettings {
       vibration: _parseBool(kv[_keyVibration], defaultValue: true),
       sniperEyeToggleHidden:
           _parseBool(kv[_keyEyeHidden], defaultValue: false),
+      longDubbieTracking:
+          _parseBool(kv[_keyLongDubbie], defaultValue: true),
+      penaltyKubbTracking:
+          _parseBool(kv[_keyPenaltyKubb], defaultValue: true),
+      kingThrowTracking:
+          _parseBool(kv[_keyKingThrow], defaultValue: true),
     );
   }
 
@@ -37,6 +49,9 @@ abstract class AppSettings with _$AppSettings {
         _keyHeliTracking: heliTracking.toString(),
         _keyVibration: vibration.toString(),
         _keyEyeHidden: sniperEyeToggleHidden.toString(),
+        _keyLongDubbie: longDubbieTracking.toString(),
+        _keyPenaltyKubb: penaltyKubbTracking.toString(),
+        _keyKingThrow: kingThrowTracking.toString(),
       };
 }
 

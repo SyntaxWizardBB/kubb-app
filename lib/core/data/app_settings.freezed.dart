@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AppSettings {
 
- ThemeChoice get themeChoice; bool get heliTracking; bool get vibration; bool get sniperEyeToggleHidden;
+ ThemeChoice get themeChoice; bool get heliTracking; bool get vibration; bool get sniperEyeToggleHidden; bool get longDubbieTracking; bool get penaltyKubbTracking; bool get kingThrowTracking;
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $AppSettingsCopyWith<AppSettings> get copyWith => _$AppSettingsCopyWithImpl<AppS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.themeChoice, themeChoice) || other.themeChoice == themeChoice)&&(identical(other.heliTracking, heliTracking) || other.heliTracking == heliTracking)&&(identical(other.vibration, vibration) || other.vibration == vibration)&&(identical(other.sniperEyeToggleHidden, sniperEyeToggleHidden) || other.sniperEyeToggleHidden == sniperEyeToggleHidden));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.themeChoice, themeChoice) || other.themeChoice == themeChoice)&&(identical(other.heliTracking, heliTracking) || other.heliTracking == heliTracking)&&(identical(other.vibration, vibration) || other.vibration == vibration)&&(identical(other.sniperEyeToggleHidden, sniperEyeToggleHidden) || other.sniperEyeToggleHidden == sniperEyeToggleHidden)&&(identical(other.longDubbieTracking, longDubbieTracking) || other.longDubbieTracking == longDubbieTracking)&&(identical(other.penaltyKubbTracking, penaltyKubbTracking) || other.penaltyKubbTracking == penaltyKubbTracking)&&(identical(other.kingThrowTracking, kingThrowTracking) || other.kingThrowTracking == kingThrowTracking));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,themeChoice,heliTracking,vibration,sniperEyeToggleHidden);
+int get hashCode => Object.hash(runtimeType,themeChoice,heliTracking,vibration,sniperEyeToggleHidden,longDubbieTracking,penaltyKubbTracking,kingThrowTracking);
 
 @override
 String toString() {
-  return 'AppSettings(themeChoice: $themeChoice, heliTracking: $heliTracking, vibration: $vibration, sniperEyeToggleHidden: $sniperEyeToggleHidden)';
+  return 'AppSettings(themeChoice: $themeChoice, heliTracking: $heliTracking, vibration: $vibration, sniperEyeToggleHidden: $sniperEyeToggleHidden, longDubbieTracking: $longDubbieTracking, penaltyKubbTracking: $penaltyKubbTracking, kingThrowTracking: $kingThrowTracking)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $AppSettingsCopyWith<$Res>  {
   factory $AppSettingsCopyWith(AppSettings value, $Res Function(AppSettings) _then) = _$AppSettingsCopyWithImpl;
 @useResult
 $Res call({
- ThemeChoice themeChoice, bool heliTracking, bool vibration, bool sniperEyeToggleHidden
+ ThemeChoice themeChoice, bool heliTracking, bool vibration, bool sniperEyeToggleHidden, bool longDubbieTracking, bool penaltyKubbTracking, bool kingThrowTracking
 });
 
 
@@ -62,12 +62,15 @@ class _$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? themeChoice = null,Object? heliTracking = null,Object? vibration = null,Object? sniperEyeToggleHidden = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? themeChoice = null,Object? heliTracking = null,Object? vibration = null,Object? sniperEyeToggleHidden = null,Object? longDubbieTracking = null,Object? penaltyKubbTracking = null,Object? kingThrowTracking = null,}) {
   return _then(_self.copyWith(
 themeChoice: null == themeChoice ? _self.themeChoice : themeChoice // ignore: cast_nullable_to_non_nullable
 as ThemeChoice,heliTracking: null == heliTracking ? _self.heliTracking : heliTracking // ignore: cast_nullable_to_non_nullable
 as bool,vibration: null == vibration ? _self.vibration : vibration // ignore: cast_nullable_to_non_nullable
 as bool,sniperEyeToggleHidden: null == sniperEyeToggleHidden ? _self.sniperEyeToggleHidden : sniperEyeToggleHidden // ignore: cast_nullable_to_non_nullable
+as bool,longDubbieTracking: null == longDubbieTracking ? _self.longDubbieTracking : longDubbieTracking // ignore: cast_nullable_to_non_nullable
+as bool,penaltyKubbTracking: null == penaltyKubbTracking ? _self.penaltyKubbTracking : penaltyKubbTracking // ignore: cast_nullable_to_non_nullable
+as bool,kingThrowTracking: null == kingThrowTracking ? _self.kingThrowTracking : kingThrowTracking // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -153,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ThemeChoice themeChoice,  bool heliTracking,  bool vibration,  bool sniperEyeToggleHidden)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ThemeChoice themeChoice,  bool heliTracking,  bool vibration,  bool sniperEyeToggleHidden,  bool longDubbieTracking,  bool penaltyKubbTracking,  bool kingThrowTracking)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.themeChoice,_that.heliTracking,_that.vibration,_that.sniperEyeToggleHidden);case _:
+return $default(_that.themeChoice,_that.heliTracking,_that.vibration,_that.sniperEyeToggleHidden,_that.longDubbieTracking,_that.penaltyKubbTracking,_that.kingThrowTracking);case _:
   return orElse();
 
 }
@@ -174,10 +177,10 @@ return $default(_that.themeChoice,_that.heliTracking,_that.vibration,_that.snipe
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ThemeChoice themeChoice,  bool heliTracking,  bool vibration,  bool sniperEyeToggleHidden)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ThemeChoice themeChoice,  bool heliTracking,  bool vibration,  bool sniperEyeToggleHidden,  bool longDubbieTracking,  bool penaltyKubbTracking,  bool kingThrowTracking)  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings():
-return $default(_that.themeChoice,_that.heliTracking,_that.vibration,_that.sniperEyeToggleHidden);case _:
+return $default(_that.themeChoice,_that.heliTracking,_that.vibration,_that.sniperEyeToggleHidden,_that.longDubbieTracking,_that.penaltyKubbTracking,_that.kingThrowTracking);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +197,10 @@ return $default(_that.themeChoice,_that.heliTracking,_that.vibration,_that.snipe
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ThemeChoice themeChoice,  bool heliTracking,  bool vibration,  bool sniperEyeToggleHidden)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ThemeChoice themeChoice,  bool heliTracking,  bool vibration,  bool sniperEyeToggleHidden,  bool longDubbieTracking,  bool penaltyKubbTracking,  bool kingThrowTracking)?  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.themeChoice,_that.heliTracking,_that.vibration,_that.sniperEyeToggleHidden);case _:
+return $default(_that.themeChoice,_that.heliTracking,_that.vibration,_that.sniperEyeToggleHidden,_that.longDubbieTracking,_that.penaltyKubbTracking,_that.kingThrowTracking);case _:
   return null;
 
 }
@@ -209,13 +212,16 @@ return $default(_that.themeChoice,_that.heliTracking,_that.vibration,_that.snipe
 
 
 class _AppSettings extends AppSettings {
-  const _AppSettings({this.themeChoice = ThemeChoice.light, this.heliTracking = true, this.vibration = true, this.sniperEyeToggleHidden = false}): super._();
+  const _AppSettings({this.themeChoice = ThemeChoice.light, this.heliTracking = true, this.vibration = true, this.sniperEyeToggleHidden = false, this.longDubbieTracking = true, this.penaltyKubbTracking = true, this.kingThrowTracking = true}): super._();
   
 
 @override@JsonKey() final  ThemeChoice themeChoice;
 @override@JsonKey() final  bool heliTracking;
 @override@JsonKey() final  bool vibration;
 @override@JsonKey() final  bool sniperEyeToggleHidden;
+@override@JsonKey() final  bool longDubbieTracking;
+@override@JsonKey() final  bool penaltyKubbTracking;
+@override@JsonKey() final  bool kingThrowTracking;
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
@@ -227,16 +233,16 @@ _$AppSettingsCopyWith<_AppSettings> get copyWith => __$AppSettingsCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.themeChoice, themeChoice) || other.themeChoice == themeChoice)&&(identical(other.heliTracking, heliTracking) || other.heliTracking == heliTracking)&&(identical(other.vibration, vibration) || other.vibration == vibration)&&(identical(other.sniperEyeToggleHidden, sniperEyeToggleHidden) || other.sniperEyeToggleHidden == sniperEyeToggleHidden));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.themeChoice, themeChoice) || other.themeChoice == themeChoice)&&(identical(other.heliTracking, heliTracking) || other.heliTracking == heliTracking)&&(identical(other.vibration, vibration) || other.vibration == vibration)&&(identical(other.sniperEyeToggleHidden, sniperEyeToggleHidden) || other.sniperEyeToggleHidden == sniperEyeToggleHidden)&&(identical(other.longDubbieTracking, longDubbieTracking) || other.longDubbieTracking == longDubbieTracking)&&(identical(other.penaltyKubbTracking, penaltyKubbTracking) || other.penaltyKubbTracking == penaltyKubbTracking)&&(identical(other.kingThrowTracking, kingThrowTracking) || other.kingThrowTracking == kingThrowTracking));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,themeChoice,heliTracking,vibration,sniperEyeToggleHidden);
+int get hashCode => Object.hash(runtimeType,themeChoice,heliTracking,vibration,sniperEyeToggleHidden,longDubbieTracking,penaltyKubbTracking,kingThrowTracking);
 
 @override
 String toString() {
-  return 'AppSettings(themeChoice: $themeChoice, heliTracking: $heliTracking, vibration: $vibration, sniperEyeToggleHidden: $sniperEyeToggleHidden)';
+  return 'AppSettings(themeChoice: $themeChoice, heliTracking: $heliTracking, vibration: $vibration, sniperEyeToggleHidden: $sniperEyeToggleHidden, longDubbieTracking: $longDubbieTracking, penaltyKubbTracking: $penaltyKubbTracking, kingThrowTracking: $kingThrowTracking)';
 }
 
 
@@ -247,7 +253,7 @@ abstract mixin class _$AppSettingsCopyWith<$Res> implements $AppSettingsCopyWith
   factory _$AppSettingsCopyWith(_AppSettings value, $Res Function(_AppSettings) _then) = __$AppSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- ThemeChoice themeChoice, bool heliTracking, bool vibration, bool sniperEyeToggleHidden
+ ThemeChoice themeChoice, bool heliTracking, bool vibration, bool sniperEyeToggleHidden, bool longDubbieTracking, bool penaltyKubbTracking, bool kingThrowTracking
 });
 
 
@@ -264,12 +270,15 @@ class __$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? themeChoice = null,Object? heliTracking = null,Object? vibration = null,Object? sniperEyeToggleHidden = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? themeChoice = null,Object? heliTracking = null,Object? vibration = null,Object? sniperEyeToggleHidden = null,Object? longDubbieTracking = null,Object? penaltyKubbTracking = null,Object? kingThrowTracking = null,}) {
   return _then(_AppSettings(
 themeChoice: null == themeChoice ? _self.themeChoice : themeChoice // ignore: cast_nullable_to_non_nullable
 as ThemeChoice,heliTracking: null == heliTracking ? _self.heliTracking : heliTracking // ignore: cast_nullable_to_non_nullable
 as bool,vibration: null == vibration ? _self.vibration : vibration // ignore: cast_nullable_to_non_nullable
 as bool,sniperEyeToggleHidden: null == sniperEyeToggleHidden ? _self.sniperEyeToggleHidden : sniperEyeToggleHidden // ignore: cast_nullable_to_non_nullable
+as bool,longDubbieTracking: null == longDubbieTracking ? _self.longDubbieTracking : longDubbieTracking // ignore: cast_nullable_to_non_nullable
+as bool,penaltyKubbTracking: null == penaltyKubbTracking ? _self.penaltyKubbTracking : penaltyKubbTracking // ignore: cast_nullable_to_non_nullable
+as bool,kingThrowTracking: null == kingThrowTracking ? _self.kingThrowTracking : kingThrowTracking // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

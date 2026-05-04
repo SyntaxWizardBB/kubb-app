@@ -57,6 +57,42 @@ void main() {
     expect(await db.appSettingsDao.get('heliTracking'), 'false');
   });
 
+  test('setLongDubbieTracking persists the new key', () async {
+    await container.read(appSettingsProvider.future);
+
+    await container
+        .read(appSettingsProvider.notifier)
+        .setLongDubbieTracking(value: false);
+
+    final state = container.read(appSettingsProvider).requireValue;
+    expect(state.longDubbieTracking, isFalse);
+    expect(await db.appSettingsDao.get('longDubbieTracking'), 'false');
+  });
+
+  test('setPenaltyKubbTracking persists the new key', () async {
+    await container.read(appSettingsProvider.future);
+
+    await container
+        .read(appSettingsProvider.notifier)
+        .setPenaltyKubbTracking(value: false);
+
+    final state = container.read(appSettingsProvider).requireValue;
+    expect(state.penaltyKubbTracking, isFalse);
+    expect(await db.appSettingsDao.get('penaltyKubbTracking'), 'false');
+  });
+
+  test('setKingThrowTracking persists the new key', () async {
+    await container.read(appSettingsProvider.future);
+
+    await container
+        .read(appSettingsProvider.notifier)
+        .setKingThrowTracking(value: false);
+
+    final state = container.read(appSettingsProvider).requireValue;
+    expect(state.kingThrowTracking, isFalse);
+    expect(await db.appSettingsDao.get('kingThrowTracking'), 'false');
+  });
+
   test('a fresh container rehydrates the persisted theme', () async {
     await container.read(appSettingsProvider.future);
     await container.read(appSettingsProvider.notifier).setTheme(

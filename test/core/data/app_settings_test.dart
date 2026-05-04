@@ -10,6 +10,9 @@ void main() {
       expect(settings.heliTracking, isTrue);
       expect(settings.vibration, isTrue);
       expect(settings.sniperEyeToggleHidden, isFalse);
+      expect(settings.longDubbieTracking, isTrue);
+      expect(settings.penaltyKubbTracking, isTrue);
+      expect(settings.kingThrowTracking, isTrue);
     });
 
     test('fromMap with empty map returns defaults', () {
@@ -17,17 +20,23 @@ void main() {
       expect(settings, const AppSettings());
     });
 
-    test('fromMap parses all four keys', () {
+    test('fromMap parses all keys', () {
       final settings = AppSettings.fromMap(const {
         'theme': 'dark',
         'heliTracking': 'false',
         'vibration': 'false',
         'sniperEyeToggleHidden': 'true',
+        'longDubbieTracking': 'false',
+        'penaltyKubbTracking': 'false',
+        'kingThrowTracking': 'false',
       });
       expect(settings.themeChoice, ThemeChoice.dark);
       expect(settings.heliTracking, isFalse);
       expect(settings.vibration, isFalse);
       expect(settings.sniperEyeToggleHidden, isTrue);
+      expect(settings.longDubbieTracking, isFalse);
+      expect(settings.penaltyKubbTracking, isFalse);
+      expect(settings.kingThrowTracking, isFalse);
     });
 
     test('fromMap falls back to light on unknown theme', () {
@@ -35,11 +44,23 @@ void main() {
       expect(settings.themeChoice, ThemeChoice.light);
     });
 
+    test('missing finisseur tracking keys default to true', () {
+      // Older databases never wrote these keys — make sure existing users
+      // still see the new toggles enabled instead of silently disabled.
+      final settings = AppSettings.fromMap(const {'theme': 'dark'});
+      expect(settings.longDubbieTracking, isTrue);
+      expect(settings.penaltyKubbTracking, isTrue);
+      expect(settings.kingThrowTracking, isTrue);
+    });
+
     test('round-trip via toMap and fromMap is identity-preserving', () {
       const original = AppSettings(
         themeChoice: ThemeChoice.highContrast,
         heliTracking: false,
         sniperEyeToggleHidden: true,
+        longDubbieTracking: false,
+        penaltyKubbTracking: false,
+        kingThrowTracking: false,
       );
       final restored = AppSettings.fromMap(original.toMap());
       expect(restored, original);

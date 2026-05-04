@@ -7,6 +7,9 @@ const _keyTheme = 'theme';
 const _keyHeliTracking = 'heliTracking';
 const _keyVibration = 'vibration';
 const _keyEyeHidden = 'sniperEyeToggleHidden';
+const _keyLongDubbie = 'longDubbieTracking';
+const _keyPenaltyKubb = 'penaltyKubbTracking';
+const _keyKingThrow = 'kingThrowTracking';
 
 class AppSettingsNotifier extends AsyncNotifier<AppSettings> {
   @override
@@ -44,6 +47,30 @@ class AppSettingsNotifier extends AsyncNotifier<AppSettings> {
     await _update(
       (prev) => prev.copyWith(sniperEyeToggleHidden: value),
       _keyEyeHidden,
+      value.toString(),
+    );
+  }
+
+  Future<void> setLongDubbieTracking({required bool value}) async {
+    await _update(
+      (prev) => prev.copyWith(longDubbieTracking: value),
+      _keyLongDubbie,
+      value.toString(),
+    );
+  }
+
+  Future<void> setPenaltyKubbTracking({required bool value}) async {
+    await _update(
+      (prev) => prev.copyWith(penaltyKubbTracking: value),
+      _keyPenaltyKubb,
+      value.toString(),
+    );
+  }
+
+  Future<void> setKingThrowTracking({required bool value}) async {
+    await _update(
+      (prev) => prev.copyWith(kingThrowTracking: value),
+      _keyKingThrow,
       value.toString(),
     );
   }
