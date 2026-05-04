@@ -2001,6 +2001,102 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Abbrechen'**
   String get authPassphraseChangeCancel;
+
+  /// Delete-account flow eyebrow
+  ///
+  /// In de, this message translates to:
+  /// **'Konto löschen'**
+  String get authDeleteEyebrow;
+
+  /// Page 1 title
+  ///
+  /// In de, this message translates to:
+  /// **'Konto löschen?'**
+  String get authDeleteWarningTitle;
+
+  /// Page 2 title
+  ///
+  /// In de, this message translates to:
+  /// **'Endgültig bestätigen'**
+  String get authDeleteConfirmTitle;
+
+  /// Page 1 large headline
+  ///
+  /// In de, this message translates to:
+  /// **'Diese Aktion ist endgültig'**
+  String get authDeleteWarningHeadline;
+
+  /// Page 1 introduction to the consequences list
+  ///
+  /// In de, this message translates to:
+  /// **'Wenn du fortfährst, geht Folgendes verloren:'**
+  String get authDeleteWarningSub;
+
+  /// Consequence bullet 1
+  ///
+  /// In de, this message translates to:
+  /// **'Alle gespeicherten Trainings-Sessions'**
+  String get authDeleteConsequenceSessions;
+
+  /// Consequence bullet 2
+  ///
+  /// In de, this message translates to:
+  /// **'Statistiken, Streaks, Erfolge'**
+  String get authDeleteConsequenceStats;
+
+  /// Consequence bullet 3
+  ///
+  /// In de, this message translates to:
+  /// **'Dein Spielername und Profil'**
+  String get authDeleteConsequenceProfile;
+
+  /// Consequence bullet 4
+  ///
+  /// In de, this message translates to:
+  /// **'Verknüpfte Konten (Google / Apple)'**
+  String get authDeleteConsequenceLinkedAccounts;
+
+  /// Consequence bullet 5
+  ///
+  /// In de, this message translates to:
+  /// **'Anonymer Keypair-Zugang — nicht wiederherstellbar'**
+  String get authDeleteConsequenceKeypair;
+
+  /// Page 1 primary button
+  ///
+  /// In de, this message translates to:
+  /// **'Weiter zur Bestätigung'**
+  String get authDeleteContinueToConfirm;
+
+  /// Page 2 acknowledgement checkbox label
+  ///
+  /// In de, this message translates to:
+  /// **'Ich verstehe, dass alle Daten dauerhaft gelöscht werden.'**
+  String get authDeleteAcknowledge;
+
+  /// Page 2 error banner
+  ///
+  /// In de, this message translates to:
+  /// **'Löschen fehlgeschlagen. Bitte später erneut versuchen.'**
+  String get authDeleteErrorBanner;
+
+  /// Page 2 destructive submit
+  ///
+  /// In de, this message translates to:
+  /// **'Konto endgültig löschen'**
+  String get authDeleteSubmit;
+
+  /// Page 2 destructive submit while deleting
+  ///
+  /// In de, this message translates to:
+  /// **'Konto wird gelöscht …'**
+  String get authDeleteSubmitting;
+
+  /// Page 2 cancel button
+  ///
+  /// In de, this message translates to:
+  /// **'Abbrechen'**
+  String get authDeleteCancel;
 }
 
 class _AppLocalizationsDelegate

@@ -1047,4 +1047,58 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get authPassphraseChangeCancel => 'Abbrechen';
+
+  @override
+  String get authDeleteEyebrow => 'Konto löschen';
+
+  @override
+  String get authDeleteWarningTitle => 'Konto löschen?';
+
+  @override
+  String get authDeleteConfirmTitle => 'Endgültig bestätigen';
+
+  @override
+  String get authDeleteWarningHeadline => 'Diese Aktion ist endgültig';
+
+  @override
+  String get authDeleteWarningSub =>
+      'Wenn du fortfährst, geht Folgendes verloren:';
+
+  @override
+  String get authDeleteConsequenceSessions =>
+      'Alle gespeicherten Trainings-Sessions';
+
+  @override
+  String get authDeleteConsequenceStats => 'Statistiken, Streaks, Erfolge';
+
+  @override
+  String get authDeleteConsequenceProfile => 'Dein Spielername und Profil';
+
+  @override
+  String get authDeleteConsequenceLinkedAccounts =>
+      'Verknüpfte Konten (Google / Apple)';
+
+  @override
+  String get authDeleteConsequenceKeypair =>
+      'Anonymer Keypair-Zugang — nicht wiederherstellbar';
+
+  @override
+  String get authDeleteContinueToConfirm => 'Weiter zur Bestätigung';
+
+  @override
+  String get authDeleteAcknowledge =>
+      'Ich verstehe, dass alle Daten dauerhaft gelöscht werden.';
+
+  @override
+  String get authDeleteErrorBanner =>
+      'Löschen fehlgeschlagen. Bitte später erneut versuchen.';
+
+  @override
+  String get authDeleteSubmit => 'Konto endgültig löschen';
+
+  @override
+  String get authDeleteSubmitting => 'Konto wird gelöscht …';
+
+  @override
+  String get authDeleteCancel => 'Abbrechen';
 }
