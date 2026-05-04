@@ -18,7 +18,7 @@ class SettingsAppBlock extends ConsumerWidget {
     final asyncSettings = ref.watch(appSettingsProvider);
     final notifier = ref.read(appSettingsProvider.notifier);
 
-    Widget row(String label, Widget trailing) => Padding(
+    Widget row(String label, Widget trailing, {String? subtitle}) => Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: KubbTokens.space4,
             vertical: KubbTokens.space2,
@@ -26,7 +26,24 @@ class SettingsAppBlock extends ConsumerWidget {
           child: Row(
             children: [
               Expanded(
-                child: Text(label, style: TextStyle(color: tokens.fgMuted)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(label, style: TextStyle(color: tokens.fgMuted)),
+                    if (subtitle != null && subtitle.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: tokens.fgSubtle,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
               trailing,
             ],
@@ -114,6 +131,15 @@ class SettingsAppBlock extends ConsumerWidget {
               value: settings.kingThrowTracking,
               onChanged: (v) => notifier.setKingThrowTracking(value: v),
             ),
+          ),
+          row(
+            l.settingsAllowContinue,
+            Switch(
+              value: settings.allowContinueBeyondSticks,
+              onChanged: (v) =>
+                  notifier.setAllowContinueBeyondSticks(value: v),
+            ),
+            subtitle: l.settingsAllowContinueSub,
           ),
           const Divider(height: 1),
           Padding(

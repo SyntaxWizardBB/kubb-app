@@ -244,6 +244,18 @@ abstract class AppLocalizations {
   /// **'Königswurf zählen'**
   String get settingsKingThrow;
 
+  /// Allow continuing beyond stick 6 row label
+  ///
+  /// In de, this message translates to:
+  /// **'Über Stock 6 hinaus weiterspielen'**
+  String get settingsAllowContinue;
+
+  /// Allow continuing beyond stick 6 row description
+  ///
+  /// In de, this message translates to:
+  /// **'Nach Stock 6 weiterspielen bis fertig'**
+  String get settingsAllowContinueSub;
+
   /// Finisseur tracking section title inside the app block
   ///
   /// In de, this message translates to:

@@ -86,6 +86,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsKingThrow => 'Königswurf zählen';
 
   @override
+  String get settingsAllowContinue => 'Über Stock 6 hinaus weiterspielen';
+
+  @override
+  String get settingsAllowContinueSub =>
+      'Nach Stock 6 weiterspielen bis fertig';
+
+  @override
   String get settingsFinisseurSection => 'Finisseur';
 
   @override
