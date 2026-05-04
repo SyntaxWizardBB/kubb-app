@@ -4,6 +4,7 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/stats/application/stats_aggregate_provider.dart';
 import 'package:kubb_app/features/stats/data/stats_aggregate.dart';
+import 'package:kubb_app/features/stats/presentation/widgets/finisseur_stats_tab.dart';
 import 'package:kubb_app/features/stats/presentation/widgets/stats_aggregate_block.dart';
 import 'package:kubb_app/features/stats/presentation/widgets/stats_filter_bar.dart';
 import 'package:kubb_app/features/stats/presentation/widgets/stats_session_list.dart';
@@ -17,21 +18,55 @@ class StatsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
-    final asyncAgg = ref.watch(statsAggregateProvider);
 
-    return Scaffold(
-      backgroundColor: tokens.bg,
-      appBar: KubbAppBar(eyebrow: l.statsEyebrow, title: l.statsTitle),
-      body: asyncAgg.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(KubbTokens.space6),
-            child: Text(e.toString(), textAlign: TextAlign.center),
-          ),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: tokens.bg,
+        appBar: KubbAppBar(eyebrow: l.statsEyebrow, title: l.statsTitle),
+        body: Column(
+          children: [
+            TabBar(
+              labelColor: tokens.fg,
+              unselectedLabelColor: tokens.fgMuted,
+              indicatorColor: tokens.primary,
+              tabs: [
+                Tab(text: l.statsTabSniper),
+                Tab(text: l.statsTabFinisseur),
+              ],
+            ),
+            const Expanded(
+              child: TabBarView(
+                children: [
+                  _SniperTab(),
+                  FinisseurStatsTab(),
+                ],
+              ),
+            ),
+          ],
         ),
-        data: (agg) => _Body(aggregate: agg, tokens: tokens, l: l),
       ),
+    );
+  }
+}
+
+class _SniperTab extends ConsumerWidget {
+  const _SniperTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    final asyncAgg = ref.watch(statsAggregateProvider);
+    return asyncAgg.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(KubbTokens.space6),
+          child: Text(e.toString(), textAlign: TextAlign.center),
+        ),
+      ),
+      data: (agg) => _Body(aggregate: agg, tokens: tokens, l: l),
     );
   }
 }

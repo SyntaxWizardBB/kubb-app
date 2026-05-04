@@ -21,3 +21,14 @@ final statsAggregateProvider = FutureProvider<StatsAggregate>((ref) async {
     heliTracking: heli,
   );
 });
+
+/// Finisseur-only aggregate. Recomputes when the current profile or the
+/// underlying repository changes. Filter pills are sniper-specific so this
+/// one does not subscribe to them.
+final finisseurStatsAggregateProvider =
+    FutureProvider<FinisseurStatsAggregate>((ref) async {
+  final profile = ref.watch(currentProfileProvider).value;
+  if (profile == null) return FinisseurStatsAggregate.empty();
+  final repo = ref.watch(statsRepositoryProvider);
+  return repo.computeFinisseurAggregate(playerId: profile.id);
+});

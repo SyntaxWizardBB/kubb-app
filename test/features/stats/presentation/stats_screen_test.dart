@@ -12,11 +12,15 @@ void main() {
   Future<void> pump(
     WidgetTester tester, {
     required StatsAggregate aggregate,
+    FinisseurStatsAggregate? finisseur,
   }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           statsAggregateProvider.overrideWith((ref) async => aggregate),
+          finisseurStatsAggregateProvider.overrideWith(
+            (ref) async => finisseur ?? FinisseurStatsAggregate.empty(),
+          ),
         ],
         child: MaterialApp(
           theme: KubbTheme.light(),
@@ -80,6 +84,9 @@ void main() {
               ? makeAgg()
               : StatsAggregate.empty();
         }),
+        finisseurStatsAggregateProvider.overrideWith(
+          (ref) async => FinisseurStatsAggregate.empty(),
+        ),
       ],
     );
     addTearDown(container.dispose);
@@ -107,5 +114,47 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Noch keine Sessions'), findsOneWidget);
+  });
+
+  testWidgets('renders sniper and finisseur tabs', (tester) async {
+    await pump(tester, aggregate: makeAgg());
+    expect(find.text('Sniper'), findsOneWidget);
+    expect(find.text('Finisseur'), findsOneWidget);
+  });
+
+  testWidgets('switching to finisseur tab shows finisseur metrics',
+      (tester) async {
+    await pump(
+      tester,
+      aggregate: makeAgg(),
+      finisseur: FinisseurStatsAggregate(
+        totalSessions: 4,
+        successCount: 3,
+        totalSticks: 18,
+        longDubbiesPerSession: 1.25,
+        heliCount: 2,
+        penaltyCount: 1,
+        kingAttempts: 4,
+        kingHits: 3,
+        successTrendPercent: const [0, 100, 100, 100],
+        sessionRows: [
+          FinisseurSessionRow(
+            sessionId: 'fa',
+            completedAt: DateTime.utc(2026, 5, 9),
+            field: 7,
+            base: 3,
+            sticksUsed: 5,
+            success: true,
+          ),
+        ],
+      ),
+    );
+
+    await tester.tap(find.text('Finisseur'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('75 %'), findsWidgets); // success rate
+    expect(find.text('Letzte Finisseurs'.toUpperCase()), findsOneWidget);
+    expect(find.text('7/3'), findsOneWidget);
   });
 }
