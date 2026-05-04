@@ -878,5 +878,22 @@
   "authAccountDeleteLabel": "Konto löschen",
   "@authAccountDeleteLabel": { "description": "Nav-row label leading to account delete" },
   "authAccountDeleteSub": "Alle Daten dauerhaft entfernen",
-  "@authAccountDeleteSub": { "description": "Nav-row subtitle for account delete" }
+  "@authAccountDeleteSub": { "description": "Nav-row subtitle for account delete" },
+
+  "authEditProfileEyebrow": "Account",
+  "@authEditProfileEyebrow": { "description": "Edit-profile screen eyebrow" },
+  "authEditProfileTitle": "Profil bearbeiten",
+  "@authEditProfileTitle": { "description": "Edit-profile screen title" },
+  "authEditProfileNicknameLabel": "Spielname",
+  "@authEditProfileNicknameLabel": { "description": "Nickname field label" },
+  "authEditProfileNicknameHelper": "3–30 Zeichen, Buchstaben, Zahlen, '-', '_'.",
+  "@authEditProfileNicknameHelper": { "description": "Nickname field helper text" },
+  "authEditProfileError": "Konnte nicht speichern.",
+  "@authEditProfileError": { "description": "Save failure banner" },
+  "authEditProfileSuccess": "Profil aktualisiert.",
+  "@authEditProfileSuccess": { "description": "Save success banner" },
+  "authEditProfileSubmit": "Speichern",
+  "@authEditProfileSubmit": { "description": "Save button label" },
+  "authEditProfileSubmitting": "Speichere …",
+  "@authEditProfileSubmitting": { "description": "Save button label while saving" }
 }

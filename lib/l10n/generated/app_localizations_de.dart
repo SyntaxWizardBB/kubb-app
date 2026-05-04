@@ -1213,4 +1213,29 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get authAccountDeleteSub => 'Alle Daten dauerhaft entfernen';
+
+  @override
+  String get authEditProfileEyebrow => 'Account';
+
+  @override
+  String get authEditProfileTitle => 'Profil bearbeiten';
+
+  @override
+  String get authEditProfileNicknameLabel => 'Spielname';
+
+  @override
+  String get authEditProfileNicknameHelper =>
+      '3–30 Zeichen, Buchstaben, Zahlen, \'-\', \'_\'.';
+
+  @override
+  String get authEditProfileError => 'Konnte nicht speichern.';
+
+  @override
+  String get authEditProfileSuccess => 'Profil aktualisiert.';
+
+  @override
+  String get authEditProfileSubmit => 'Speichern';
+
+  @override
+  String get authEditProfileSubmitting => 'Speichere …';
 }

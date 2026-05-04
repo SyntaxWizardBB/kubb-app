@@ -2307,6 +2307,54 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Alle Daten dauerhaft entfernen'**
   String get authAccountDeleteSub;
+
+  /// Edit-profile screen eyebrow
+  ///
+  /// In de, this message translates to:
+  /// **'Account'**
+  String get authEditProfileEyebrow;
+
+  /// Edit-profile screen title
+  ///
+  /// In de, this message translates to:
+  /// **'Profil bearbeiten'**
+  String get authEditProfileTitle;
+
+  /// Nickname field label
+  ///
+  /// In de, this message translates to:
+  /// **'Spielname'**
+  String get authEditProfileNicknameLabel;
+
+  /// Nickname field helper text
+  ///
+  /// In de, this message translates to:
+  /// **'3–30 Zeichen, Buchstaben, Zahlen, \'-\', \'_\'.'**
+  String get authEditProfileNicknameHelper;
+
+  /// Save failure banner
+  ///
+  /// In de, this message translates to:
+  /// **'Konnte nicht speichern.'**
+  String get authEditProfileError;
+
+  /// Save success banner
+  ///
+  /// In de, this message translates to:
+  /// **'Profil aktualisiert.'**
+  String get authEditProfileSuccess;
+
+  /// Save button label
+  ///
+  /// In de, this message translates to:
+  /// **'Speichern'**
+  String get authEditProfileSubmit;
+
+  /// Save button label while saving
+  ///
+  /// In de, this message translates to:
+  /// **'Speichere …'**
+  String get authEditProfileSubmitting;
 }
 
 class _AppLocalizationsDelegate
