@@ -188,7 +188,10 @@ class _FinisseurBody extends ConsumerWidget {
     final baseDown = sticks.fold<int>(0, (a, s) => a + (s.eightMHit ? 1 : 0));
     final kingHit = sticks.any((s) => s.kingHit ?? false);
     final allKubbsDown = fieldDown >= field && baseDown >= base;
-    final sticksUsed = sticks.where((s) => !_isUntouched(s)).length;
+    // Every persisted stick counts toward the budget — including
+    // all-zero ones, which represent "stick thrown, missed everything"
+    // (same logic as a miss in Sniper mode).
+    final sticksUsed = sticks.length;
     final withinRegulation =
         sticksUsed <= ActiveFinisseurState.totalSticks;
     // King-tracking off: success = all kubbs down. King-tracking on: also
@@ -308,14 +311,6 @@ class _FinisseurBody extends ConsumerWidget {
     if (!context.mounted || id == null) return;
     context.go('/training/finisseur/session/$id');
   }
-
-  bool _isUntouched(FinisseurStickEvent s) =>
-      s.fieldKubbsHit == 0 &&
-      !s.eightMHit &&
-      !s.heliThrow &&
-      s.kingHit == null &&
-      s.penaltyHits1 == 0 &&
-      s.penaltyHits2 == 0;
 }
 
 class _Actions extends ConsumerWidget {

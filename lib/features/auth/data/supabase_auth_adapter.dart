@@ -87,16 +87,17 @@ abstract class SupabaseAuthAdapter {
   /// signInAnonymously. Required before [attachKeypair].
   Future<AuthAdapterState> signInAnonymously();
 
-  /// Attaches a keypair credential plus encrypted backup to the
-  /// currently-authenticated user (anonymous or otherwise). Returns
-  /// the resulting state — typically the same userId, but with
-  /// `kind = AuthAdapterKind.keypair`.
+  /// Attaches a keypair credential to the currently-authenticated user
+  /// (anonymous or otherwise) and seeds the user-profile row with the
+  /// chosen [nickname]. Returns the resulting state — typically the
+  /// same userId, but with `kind = AuthAdapterKind.keypair`.
+  ///
+  /// Per ADR-0011 the public key is derived deterministically from a
+  /// BIP-39 mnemonic on the client; the mnemonic itself never leaves
+  /// the device, so there is no ciphertext or KDF parameters to ship.
   Future<AuthAdapterState> attachKeypair({
     required String nickname,
     required List<int> publicKey,
-    required List<int> ciphertext,
-    required List<int> kdfSalt,
-    required Map<String, Object> kdfParams,
     String? avatarColor,
   });
 

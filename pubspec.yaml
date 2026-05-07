@@ -30,6 +30,7 @@ dependencies:
   supabase_flutter: ^2.5.0
   flutter_secure_storage: ^8.1.0
   cryptography: ^2.7.0
+  bip39: ^1.0.6
   app_links: ^6.3.0
 
   reactive_forms: any

@@ -195,7 +195,6 @@ void main() {
       'anonymousSignup': AuthRoutes.anonymousSignup,
       'restore': AuthRoutes.restore,
       'accountLink': AuthRoutes.accountLink,
-      'passphraseChange': AuthRoutes.passphraseChange,
       'deleteAccount': AuthRoutes.deleteAccount,
       'onboardingTour': AuthRoutes.onboardingTour,
       'editProfile': AuthRoutes.editProfile,

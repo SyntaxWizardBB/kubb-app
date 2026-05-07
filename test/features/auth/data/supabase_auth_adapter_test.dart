@@ -64,9 +64,6 @@ void main() {
       adapter.attachKeypair(
         nickname: 'lukas',
         publicKey: const [1, 2, 3],
-        ciphertext: const [4, 5, 6],
-        kdfSalt: const [7, 8, 9],
-        kdfParams: const {'algo': 'argon2id'},
       ),
       throwsA(isA<StateError>()),
     );
@@ -77,9 +74,6 @@ void main() {
     final after = await adapter.attachKeypair(
       nickname: 'lukas',
       publicKey: const [1, 2, 3],
-      ciphertext: const [4, 5, 6],
-      kdfSalt: const [7, 8, 9],
-      kdfParams: const {'algo': 'argon2id'},
     );
 
     expect(after.userId, anon.userId);
@@ -136,9 +130,6 @@ void main() {
         await adapter.signInAnonymously().then((_) => adapter.attachKeypair(
               nickname: 'lukas',
               publicKey: const [1, 2, 3],
-              ciphertext: const [4, 5, 6],
-              kdfSalt: const [7, 8, 9],
-              kdfParams: const {'algo': 'argon2id'},
             ));
 
     final after = await adapter

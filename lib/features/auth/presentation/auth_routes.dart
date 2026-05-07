@@ -5,8 +5,8 @@ abstract final class AuthRoutes {
   static const anonymousSignup = '/sign-in/anonymous';
   static const restore = '/sign-in/restore';
   static const accountLink = '/sign-in/account-link';
-  static const passphraseChange = '/sign-in/passphrase-change';
   static const deleteAccount = '/sign-in/delete';
   static const onboardingTour = '/onboarding-tour';
   static const editProfile = '/profile/edit';
+  static const inbox = '/inbox';
 }

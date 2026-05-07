@@ -50,53 +50,67 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     return Scaffold(
       backgroundColor: tokens.bg,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: KubbTokens.space6,
-          ),
-          child: Column(
-            children: [
-              const SizedBox(height: KubbTokens.space10),
-              _BrandBlock(appName: l10n.authAppName, tagline: l10n.authSigninTagline),
-              const Spacer(),
-              if (_offline) ...[
-                _OfflineBanner(message: l10n.authSigninOffline),
-                const SizedBox(height: KubbTokens.space3),
-              ],
-              OAuthProviderButton(
-                provider: AuthProvider.google,
-                label: l10n.authSigninGoogle,
-                loading: _loading == _SignInLoading.google,
-                onPressed: _onPickGoogle,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: KubbTokens.space6,
               ),
-              const SizedBox(height: KubbTokens.space3),
-              if (_showApple) ...[
-                OAuthProviderButton(
-                  provider: AuthProvider.apple,
-                  label: l10n.authSigninApple,
-                  loading: _loading == _SignInLoading.apple,
-                  onPressed: _onPickApple,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: KubbTokens.space10),
+                      _BrandBlock(
+                        appName: l10n.authAppName,
+                        tagline: l10n.authSigninTagline,
+                      ),
+                      const Spacer(),
+                      if (_offline) ...[
+                        _OfflineBanner(message: l10n.authSigninOffline),
+                        const SizedBox(height: KubbTokens.space3),
+                      ],
+                      OAuthProviderButton(
+                        provider: AuthProvider.google,
+                        label: l10n.authSigninGoogle,
+                        loading: _loading == _SignInLoading.google,
+                        onPressed: _onPickGoogle,
+                      ),
+                      const SizedBox(height: KubbTokens.space3),
+                      if (_showApple) ...[
+                        OAuthProviderButton(
+                          provider: AuthProvider.apple,
+                          label: l10n.authSigninApple,
+                          loading: _loading == _SignInLoading.apple,
+                          onPressed: _onPickApple,
+                        ),
+                        const SizedBox(height: KubbTokens.space3),
+                      ],
+                      _OrDivider(label: l10n.authSigninOr),
+                      const SizedBox(height: KubbTokens.space3),
+                      _AnonymousButton(
+                        label: _loading == _SignInLoading.anonymous
+                            ? l10n.authSigninAnonymousLoading
+                            : l10n.authSigninAnonymous,
+                        loading: _loading == _SignInLoading.anonymous,
+                        onPressed: _onPickAnonymous,
+                      ),
+                      const SizedBox(height: KubbTokens.space3),
+                      TextButton(
+                        onPressed: _onPickRestore,
+                        style: TextButton.styleFrom(
+                          foregroundColor: tokens.primary,
+                        ),
+                        child: Text(l10n.authSigninRestore),
+                      ),
+                      const SizedBox(height: KubbTokens.space5),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: KubbTokens.space3),
-              ],
-              _OrDivider(label: l10n.authSigninOr),
-              const SizedBox(height: KubbTokens.space3),
-              _AnonymousButton(
-                label: _loading == _SignInLoading.anonymous
-                    ? l10n.authSigninAnonymousLoading
-                    : l10n.authSigninAnonymous,
-                loading: _loading == _SignInLoading.anonymous,
-                onPressed: _onPickAnonymous,
               ),
-              const SizedBox(height: KubbTokens.space3),
-              TextButton(
-                onPressed: _onPickRestore,
-                style: TextButton.styleFrom(foregroundColor: tokens.primary),
-                child: Text(l10n.authSigninRestore),
-              ),
-              const SizedBox(height: KubbTokens.space5),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

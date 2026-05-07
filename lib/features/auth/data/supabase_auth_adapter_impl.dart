@@ -58,19 +58,13 @@ class SupabaseAuthAdapterImpl implements SupabaseAuthAdapter {
   Future<AuthAdapterState> attachKeypair({
     required String nickname,
     required List<int> publicKey,
-    required List<int> ciphertext,
-    required List<int> kdfSalt,
-    required Map<String, Object> kdfParams,
     String? avatarColor,
   }) async {
     await _client.rpc<Map<String, dynamic>>(
-      'keypair_attach',
+      'keypair_register',
       params: <String, dynamic>{
         'p_nickname': nickname,
         'p_public_key': base64Encode(publicKey),
-        'p_ciphertext': base64Encode(ciphertext),
-        'p_kdf_salt': base64Encode(kdfSalt),
-        'p_kdf_params': kdfParams,
         'p_avatar_color': avatarColor,
       },
     );

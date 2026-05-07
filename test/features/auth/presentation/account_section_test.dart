@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
-import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/presentation/account_section.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -27,10 +26,8 @@ class _StubAuthController extends AuthController {
 void main() {
   Future<_StubAuthController> pump(
     WidgetTester tester,
-    AuthSession session, {
-    DateTime? lastBackupAt,
-    bool noBackupOverride = false,
-  }) async {
+    AuthSession session,
+  ) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -68,11 +65,6 @@ void main() {
       ProviderScope(
         overrides: [
           authControllerProvider.overrideWith(() => stub),
-          if (noBackupOverride)
-            lastKeypairBackupAtProvider.overrideWith((ref) async => null)
-          else if (lastBackupAt != null)
-            lastKeypairBackupAtProvider
-                .overrideWith((ref) async => lastBackupAt),
         ],
         child: MaterialApp.router(
           theme: KubbTheme.light(),
@@ -153,64 +145,6 @@ void main() {
     expect(find.text(l10n.authAccountPassphraseLabel), findsOneWidget);
     expect(find.text(l10n.authAccountLinkLabel), findsNothing);
     expect(find.text(l10n.authAccountProviderGoogle), findsOneWidget);
-  });
-
-  testWidgets(
-      'shows backup-missing surface when last backup is null and session is keypair',
-      (tester) async {
-    await pump(
-      tester,
-      const AuthSession.keypair(userId: 'u1', displayName: 'wiese-marc'),
-      noBackupOverride: true,
-    );
-    final l10n = l10nOf(tester);
-
-    expect(find.text(l10n.authBackupWarningTitle), findsOneWidget);
-    expect(find.text(l10n.authBackupWarningMissing), findsOneWidget);
-  });
-
-  testWidgets(
-      'shows backup-stale surface when last backup is older than 90 days',
-      (tester) async {
-    final stale = DateTime.now().subtract(const Duration(days: 120));
-    await pump(
-      tester,
-      const AuthSession.keypair(userId: 'u1', displayName: 'wiese-marc'),
-      lastBackupAt: stale,
-    );
-    final l10n = l10nOf(tester);
-
-    expect(find.text(l10n.authBackupWarningTitle), findsOneWidget);
-    expect(find.text(l10n.authBackupWarningStale(120)), findsOneWidget);
-  });
-
-  testWidgets('does not show backup surface when last backup is recent',
-      (tester) async {
-    final fresh = DateTime.now().subtract(const Duration(days: 7));
-    await pump(
-      tester,
-      const AuthSession.keypair(userId: 'u1', displayName: 'wiese-marc'),
-      lastBackupAt: fresh,
-    );
-    final l10n = l10nOf(tester);
-
-    expect(find.text(l10n.authBackupWarningTitle), findsNothing);
-  });
-
-  testWidgets('does not show backup surface for oauth sessions',
-      (tester) async {
-    await pump(
-      tester,
-      const AuthSession.oauth(
-        userId: 'u1',
-        displayName: 'wiese-marc',
-        provider: AuthProvider.google,
-      ),
-      noBackupOverride: true,
-    );
-    final l10n = l10nOf(tester);
-
-    expect(find.text(l10n.authBackupWarningTitle), findsNothing);
   });
 
   testWidgets('tapping sign-out invokes signOut on AuthController',

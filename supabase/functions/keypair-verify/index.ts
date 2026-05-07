@@ -54,6 +54,43 @@ function decodeBase64(value: string): Uint8Array {
   return out;
 }
 
+function decodeBase64Url(value: string): Uint8Array {
+  const padded = value
+    .replace(/-/g, "+")
+    .replace(/_/g, "/")
+    .padEnd(Math.ceil(value.length / 4) * 4, "=");
+  return decodeBase64(padded);
+}
+
+// Resolve the HS256 signing secret across Supabase deployments.
+//
+// 1. SUPABASE_JWT_SECRET — present on Hetzner prod and on older
+//    self-hosted/CLI setups.
+// 2. SUPABASE_JWKS — newer Supabase CLI (>= 2.9x) does NOT expose the raw
+//    secret; the edge-runtime wrapper actively strips every
+//    SUPABASE_INTERNAL_* env var before invoking the user worker. The
+//    symmetric key still travels through as the "oct" entry in
+//    SUPABASE_JWKS, with `k` holding the base64url-encoded raw bytes
+//    (same string that would be in SUPABASE_JWT_SECRET).
+function resolveJwtSecret(): Uint8Array | null {
+  const direct = Deno.env.get("SUPABASE_JWT_SECRET");
+  if (direct && direct.length > 0) {
+    return new TextEncoder().encode(direct);
+  }
+  const jwksRaw = Deno.env.get("SUPABASE_JWKS");
+  if (!jwksRaw) return null;
+  try {
+    const jwks = JSON.parse(jwksRaw) as {
+      keys?: Array<{ kty?: string; k?: string }>;
+    };
+    const oct = jwks.keys?.find((entry) => entry?.kty === "oct" && entry?.k);
+    if (!oct?.k) return null;
+    return decodeBase64Url(oct.k);
+  } catch (_err) {
+    return null;
+  }
+}
+
 serve(async (req: Request) => {
   if (req.method !== "POST") {
     return jsonResponse(405, { error: "method_not_allowed" });
@@ -93,8 +130,8 @@ serve(async (req: Request) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const jwtSecret = Deno.env.get("SUPABASE_JWT_SECRET");
-  if (!supabaseUrl || !serviceRoleKey || !jwtSecret) {
+  const jwtSecretBytes = resolveJwtSecret();
+  if (!supabaseUrl || !serviceRoleKey || !jwtSecretBytes) {
     return jsonResponse(500, { error: "server_misconfigured" });
   }
 
@@ -105,7 +142,6 @@ serve(async (req: Request) => {
   // Look up the active challenge. The row is keyed by (public_key,
   // challenge bytes); we read the issued_at to enforce the TTL.
   const challengeRow = await supabase
-    .schema("auth")
     .from("keypair_challenges")
     .select("issued_at")
     .eq("public_key", publicKeyB64)
@@ -125,7 +161,6 @@ serve(async (req: Request) => {
   const ageSeconds = (Date.now() - issuedAt.getTime()) / 1000;
   if (ageSeconds > CHALLENGE_TTL_SECONDS) {
     await supabase
-      .schema("auth")
       .from("keypair_challenges")
       .delete()
       .eq("public_key", publicKeyB64)
@@ -150,22 +185,42 @@ serve(async (req: Request) => {
     return jsonResponse(401, { error: "signature_invalid" });
   }
 
-  // Resolve user_id + nickname behind the public_key. Same join the
-  // dropped Postgres function ran.
+  // Resolve user_id behind the public_key. We previously did this as a
+  // single PostgREST embedded select with `user_profiles!inner(...)`, but
+  // PostgREST refuses that join because user_credentials and
+  // user_profiles do not have a direct foreign-key relationship — both
+  // FK to auth.users(id), not to each other (PGRST200).
   const credentialRow = await supabase
     .from("user_credentials")
-    .select("user_id, user_profiles!inner(nickname)")
+    .select("user_id")
     .eq("kind", "keypair")
     .eq("public_key", publicKeyB64)
     .maybeSingle();
 
-  if (credentialRow.error || !credentialRow.data) {
+  if (credentialRow.error) {
+    console.error("user_credentials lookup failed", credentialRow.error);
+    return jsonResponse(500, { error: "credential_lookup_failed" });
+  }
+  if (!credentialRow.data) {
     return jsonResponse(401, { error: "no_account_for_public_key" });
   }
 
+  const userId = credentialRow.data.user_id as string;
+
+  const profileRow = await supabase
+    .from("user_profiles")
+    .select("nickname")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (profileRow.error) {
+    console.error("user_profiles lookup failed", profileRow.error);
+    return jsonResponse(500, { error: "profile_lookup_failed" });
+  }
+  const nickname = (profileRow.data?.nickname as string | undefined) ?? "";
+
   // Single-use: drop the challenge so a replay is impossible.
   await supabase
-    .schema("auth")
     .from("keypair_challenges")
     .delete()
     .eq("public_key", publicKeyB64)
@@ -173,24 +228,12 @@ serve(async (req: Request) => {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("")}`);
 
-  const userId = credentialRow.data.user_id as string;
-  const profileJoin = credentialRow.data.user_profiles as
-    | { nickname?: string }
-    | { nickname?: string }[]
-    | null;
-  let nickname = "";
-  if (Array.isArray(profileJoin)) {
-    nickname = profileJoin[0]?.nickname ?? "";
-  } else if (profileJoin) {
-    nickname = profileJoin.nickname ?? "";
-  }
-
   // Mint the access token. HS256 with SUPABASE_JWT_SECRET — same key
   // the gotrue server uses to sign its own tokens, so PostgREST and
   // the storage / functions gateways accept it transparently.
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(jwtSecret),
+    jwtSecretBytes,
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"],

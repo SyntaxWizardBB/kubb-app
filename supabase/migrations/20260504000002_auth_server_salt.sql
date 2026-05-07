@@ -9,7 +9,7 @@
 -- Reference value used by local dev. The function below returns this
 -- if the runtime setting is empty so dev environments work out of the
 -- box. PROD MUST OVERRIDE.
-CREATE OR REPLACE FUNCTION auth.nickname_hash_salt() RETURNS text
+CREATE OR REPLACE FUNCTION public.nickname_hash_salt() RETURNS text
 LANGUAGE plpgsql
 STABLE
 AS $$
@@ -32,15 +32,19 @@ $$;
 -- the nickname_hash for inserts and lookups. Identical formula on both
 -- the server and the Dart client (KeypairBackupRepository hashes the
 -- nickname with the same salt fetched once on app start).
-CREATE OR REPLACE FUNCTION auth.compute_nickname_hash(p_nickname text)
+CREATE OR REPLACE FUNCTION public.compute_nickname_hash(p_nickname text)
 RETURNS text
 LANGUAGE plpgsql
 STABLE
+SET search_path = public, extensions
 AS $$
 BEGIN
   RETURN encode(
-    digest(p_nickname || auth.nickname_hash_salt(), 'sha256'),
+    digest(p_nickname || public.nickname_hash_salt(), 'sha256'),
     'base64'
   );
 END;
 $$;
+
+GRANT EXECUTE ON FUNCTION public.compute_nickname_hash(text)
+  TO anon, authenticated;

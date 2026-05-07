@@ -11,4 +11,3 @@
 -- Only the verify side moves out of Postgres.
 
 DROP FUNCTION IF EXISTS public.keypair_verify(text, text, text);
-DROP FUNCTION IF EXISTS auth.keypair_verify(text, text, text);

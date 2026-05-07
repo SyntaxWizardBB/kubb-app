@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:kubb_app/features/auth/application/account_setup_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
-import 'package:kubb_app/features/auth/data/keypair_backup_repository.dart';
 
 part 'account_deletion_controller.freezed.dart';
 
@@ -26,7 +25,11 @@ class AccountDeletionController extends Notifier<AccountDeletionState> {
   /// Two-step destructive flow per AK-13. The UI is responsible for
   /// the two confirmation dialogs; this method assumes the user has
   /// already confirmed twice.
-  Future<void> delete({String? nickname}) async {
+  ///
+  /// Per ADR-0011 there is no encrypted-backup row to clean up — the
+  /// auth.users CASCADE removes user_credentials, user_profiles and
+  /// user_inbox_messages in one transaction.
+  Future<void> delete() async {
     state = const AccountDeletionState.deleting();
     final adapter = ref.read(supabaseAuthAdapterProvider);
     final keypair = ref.read(keypairStorageProvider);
@@ -34,17 +37,6 @@ class AccountDeletionController extends Notifier<AccountDeletionState> {
     final userId = adapter.currentState.userId;
 
     try {
-      if (nickname != null) {
-        // Best-effort cleanup of the backup row before the cascade
-        // takes the rest. If the row is already gone, ignore.
-        try {
-          await ref
-              .read(keypairBackupRepositoryProvider)
-              .deleteBackup(nickname: nickname);
-        } on KeypairRestoreFailed {
-          // Already missing — fine.
-        }
-      }
       await adapter.deleteCurrentAccount();
       await keypair.clear();
       if (userId != null) telemetry.accountDelete(userId: userId);

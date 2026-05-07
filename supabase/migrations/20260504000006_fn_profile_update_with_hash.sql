@@ -14,7 +14,7 @@
 -- User beschränkt: der Funktionsbody arbeitet ausschliesslich auf
 -- auth.uid() und liefert nichts an einen fremden user_id zurück.
 
-CREATE OR REPLACE FUNCTION auth.fn_profile_update_with_hash(
+CREATE OR REPLACE FUNCTION public.fn_profile_update_with_hash(
   p_nickname           text DEFAULT NULL,
   p_avatar_color       text DEFAULT NULL,
   p_onboarding_done    boolean DEFAULT NULL
@@ -79,7 +79,7 @@ BEGIN
   -- with no match is a no-op).
   IF p_nickname IS NOT NULL THEN
     UPDATE user_keypair_backups
-      SET nickname_hash = auth.compute_nickname_hash(p_nickname),
+      SET nickname_hash = public.compute_nickname_hash(p_nickname),
           updated_at    = now()
       WHERE user_id = v_user_id;
   END IF;
@@ -88,10 +88,10 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION auth.fn_profile_update_with_hash IS
+COMMENT ON FUNCTION public.fn_profile_update_with_hash IS
   'Patch user_profiles for the current session and, when the nickname '
   'changes, recompute user_keypair_backups.nickname_hash in the same '
   'transaction so cross-device restore stays consistent.';
 
-GRANT EXECUTE ON FUNCTION auth.fn_profile_update_with_hash
+GRANT EXECUTE ON FUNCTION public.fn_profile_update_with_hash
   TO authenticated;

@@ -23,7 +23,6 @@ void main() {
       const KubbAppBar(
         eyebrow: 'Account',
         title: 'Profil',
-        showAccountBadge: false,
       ),
     );
 
@@ -36,7 +35,6 @@ void main() {
       tester,
       KubbAppBar(
         title: 'Home',
-        showAccountBadge: false,
         actions: IconButton(
           key: const ValueKey('settings-btn'),
           icon: const Icon(Icons.settings),

@@ -55,12 +55,13 @@ extension AccountSetupStatePatterns on AccountSetupState {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _Idle value)?  idle,TResult Function( _NicknameEntered value)?  nicknameEntered,TResult Function( _Submitting value)?  submitting,TResult Function( _Done value)?  done,TResult Function( _Failed value)?  failed,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _Idle value)?  idle,TResult Function( _NicknameEntered value)?  nicknameEntered,TResult Function( _MnemonicReady value)?  mnemonicReady,TResult Function( _Submitting value)?  submitting,TResult Function( _Done value)?  done,TResult Function( _Failed value)?  failed,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _Idle() when idle != null:
 return idle(_that);case _NicknameEntered() when nicknameEntered != null:
-return nicknameEntered(_that);case _Submitting() when submitting != null:
+return nicknameEntered(_that);case _MnemonicReady() when mnemonicReady != null:
+return mnemonicReady(_that);case _Submitting() when submitting != null:
 return submitting(_that);case _Done() when done != null:
 return done(_that);case _Failed() when failed != null:
 return failed(_that);case _:
@@ -81,12 +82,13 @@ return failed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _Idle value)  idle,required TResult Function( _NicknameEntered value)  nicknameEntered,required TResult Function( _Submitting value)  submitting,required TResult Function( _Done value)  done,required TResult Function( _Failed value)  failed,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _Idle value)  idle,required TResult Function( _NicknameEntered value)  nicknameEntered,required TResult Function( _MnemonicReady value)  mnemonicReady,required TResult Function( _Submitting value)  submitting,required TResult Function( _Done value)  done,required TResult Function( _Failed value)  failed,}){
 final _that = this;
 switch (_that) {
 case _Idle():
 return idle(_that);case _NicknameEntered():
-return nicknameEntered(_that);case _Submitting():
+return nicknameEntered(_that);case _MnemonicReady():
+return mnemonicReady(_that);case _Submitting():
 return submitting(_that);case _Done():
 return done(_that);case _Failed():
 return failed(_that);case _:
@@ -106,12 +108,13 @@ return failed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _Idle value)?  idle,TResult? Function( _NicknameEntered value)?  nicknameEntered,TResult? Function( _Submitting value)?  submitting,TResult? Function( _Done value)?  done,TResult? Function( _Failed value)?  failed,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _Idle value)?  idle,TResult? Function( _NicknameEntered value)?  nicknameEntered,TResult? Function( _MnemonicReady value)?  mnemonicReady,TResult? Function( _Submitting value)?  submitting,TResult? Function( _Done value)?  done,TResult? Function( _Failed value)?  failed,}){
 final _that = this;
 switch (_that) {
 case _Idle() when idle != null:
 return idle(_that);case _NicknameEntered() when nicknameEntered != null:
-return nicknameEntered(_that);case _Submitting() when submitting != null:
+return nicknameEntered(_that);case _MnemonicReady() when mnemonicReady != null:
+return mnemonicReady(_that);case _Submitting() when submitting != null:
 return submitting(_that);case _Done() when done != null:
 return done(_that);case _Failed() when failed != null:
 return failed(_that);case _:
@@ -131,11 +134,12 @@ return failed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  idle,TResult Function( String nickname)?  nicknameEntered,TResult Function()?  submitting,TResult Function( String userId)?  done,TResult Function( String reason)?  failed,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  idle,TResult Function( String nickname)?  nicknameEntered,TResult Function( String nickname,  String mnemonic,  int wordCount)?  mnemonicReady,TResult Function()?  submitting,TResult Function( String userId)?  done,TResult Function( String reason)?  failed,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Idle() when idle != null:
 return idle();case _NicknameEntered() when nicknameEntered != null:
-return nicknameEntered(_that.nickname);case _Submitting() when submitting != null:
+return nicknameEntered(_that.nickname);case _MnemonicReady() when mnemonicReady != null:
+return mnemonicReady(_that.nickname,_that.mnemonic,_that.wordCount);case _Submitting() when submitting != null:
 return submitting();case _Done() when done != null:
 return done(_that.userId);case _Failed() when failed != null:
 return failed(_that.reason);case _:
@@ -156,11 +160,12 @@ return failed(_that.reason);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  idle,required TResult Function( String nickname)  nicknameEntered,required TResult Function()  submitting,required TResult Function( String userId)  done,required TResult Function( String reason)  failed,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  idle,required TResult Function( String nickname)  nicknameEntered,required TResult Function( String nickname,  String mnemonic,  int wordCount)  mnemonicReady,required TResult Function()  submitting,required TResult Function( String userId)  done,required TResult Function( String reason)  failed,}) {final _that = this;
 switch (_that) {
 case _Idle():
 return idle();case _NicknameEntered():
-return nicknameEntered(_that.nickname);case _Submitting():
+return nicknameEntered(_that.nickname);case _MnemonicReady():
+return mnemonicReady(_that.nickname,_that.mnemonic,_that.wordCount);case _Submitting():
 return submitting();case _Done():
 return done(_that.userId);case _Failed():
 return failed(_that.reason);case _:
@@ -180,11 +185,12 @@ return failed(_that.reason);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  idle,TResult? Function( String nickname)?  nicknameEntered,TResult? Function()?  submitting,TResult? Function( String userId)?  done,TResult? Function( String reason)?  failed,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  idle,TResult? Function( String nickname)?  nicknameEntered,TResult? Function( String nickname,  String mnemonic,  int wordCount)?  mnemonicReady,TResult? Function()?  submitting,TResult? Function( String userId)?  done,TResult? Function( String reason)?  failed,}) {final _that = this;
 switch (_that) {
 case _Idle() when idle != null:
 return idle();case _NicknameEntered() when nicknameEntered != null:
-return nicknameEntered(_that.nickname);case _Submitting() when submitting != null:
+return nicknameEntered(_that.nickname);case _MnemonicReady() when mnemonicReady != null:
+return mnemonicReady(_that.nickname,_that.mnemonic,_that.wordCount);case _Submitting() when submitting != null:
 return submitting();case _Done() when done != null:
 return done(_that.userId);case _Failed() when failed != null:
 return failed(_that.reason);case _:
@@ -287,6 +293,76 @@ class __$NicknameEnteredCopyWithImpl<$Res>
   return _then(_NicknameEntered(
 nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class _MnemonicReady implements AccountSetupState {
+  const _MnemonicReady({required this.nickname, required this.mnemonic, required this.wordCount});
+  
+
+ final  String nickname;
+ final  String mnemonic;
+ final  int wordCount;
+
+/// Create a copy of AccountSetupState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$MnemonicReadyCopyWith<_MnemonicReady> get copyWith => __$MnemonicReadyCopyWithImpl<_MnemonicReady>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MnemonicReady&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.mnemonic, mnemonic) || other.mnemonic == mnemonic)&&(identical(other.wordCount, wordCount) || other.wordCount == wordCount));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,nickname,mnemonic,wordCount);
+
+@override
+String toString() {
+  return 'AccountSetupState.mnemonicReady(nickname: $nickname, mnemonic: $mnemonic, wordCount: $wordCount)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$MnemonicReadyCopyWith<$Res> implements $AccountSetupStateCopyWith<$Res> {
+  factory _$MnemonicReadyCopyWith(_MnemonicReady value, $Res Function(_MnemonicReady) _then) = __$MnemonicReadyCopyWithImpl;
+@useResult
+$Res call({
+ String nickname, String mnemonic, int wordCount
+});
+
+
+
+
+}
+/// @nodoc
+class __$MnemonicReadyCopyWithImpl<$Res>
+    implements _$MnemonicReadyCopyWith<$Res> {
+  __$MnemonicReadyCopyWithImpl(this._self, this._then);
+
+  final _MnemonicReady _self;
+  final $Res Function(_MnemonicReady) _then;
+
+/// Create a copy of AccountSetupState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? nickname = null,Object? mnemonic = null,Object? wordCount = null,}) {
+  return _then(_MnemonicReady(
+nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
+as String,mnemonic: null == mnemonic ? _self.mnemonic : mnemonic // ignore: cast_nullable_to_non_nullable
+as String,wordCount: null == wordCount ? _self.wordCount : wordCount // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

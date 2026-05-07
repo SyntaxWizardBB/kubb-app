@@ -46,9 +46,10 @@ additional_redirect_urls = [
   "http://localhost:3000/auth/callback",
 ]
 jwt_expiry = 3600
-refresh_token_rotation_enabled = true
-refresh_token_reuse_interval = 10
+# refresh_token_rotation_enabled = true   # requires supabase-cli >= 2.7x
+# refresh_token_reuse_interval = 10       # requires supabase-cli >= 2.7x
 enable_signup = true
+enable_anonymous_sign_ins = true
 
 # Disable email-based signup paths — ADR-0010 removes magic-link entirely.
 # OAuth providers are wired in below; keypair flow runs through custom
@@ -63,13 +64,13 @@ enable_signup = false
 enable_confirmations = false
 
 [auth.external.google]
-enabled = true
+enabled = false
 client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
 redirect_uri = ""
 
 [auth.external.apple]
-enabled = true
+enabled = false
 client_id = "env(SUPABASE_AUTH_APPLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_APPLE_SECRET)"
 redirect_uri = ""

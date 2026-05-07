@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
-import 'package:kubb_app/features/auth/presentation/auth_widgets/account_status_badge.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class KubbAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -12,7 +11,6 @@ class KubbAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.leading,
     this.actions,
     this.automaticallyImplyLeading = true,
-    this.showAccountBadge = true,
   });
 
   final String title;
@@ -20,12 +18,6 @@ class KubbAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget? leading;
   final Widget? actions;
   final bool automaticallyImplyLeading;
-
-  /// When true (default), shows the account status badge on the right
-  /// edge for authenticated sessions. Set false for screens that
-  /// already render the badge themselves or where the right-edge slot
-  /// is needed for something else.
-  final bool showAccountBadge;
 
   @override
   Size get preferredSize => const Size.fromHeight(88);
@@ -104,20 +96,6 @@ class KubbAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget _buildTrailing() {
-    final extra = actions;
-    if (!showAccountBadge) {
-      return extra ?? const SizedBox.shrink();
-    }
-    if (extra == null) {
-      return const AccountStatusBadge();
-    }
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const AccountStatusBadge(),
-        const SizedBox(width: KubbTokens.space2),
-        extra,
-      ],
-    );
+    return actions ?? const SizedBox.shrink();
   }
 }

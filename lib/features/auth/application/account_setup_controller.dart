@@ -1,21 +1,31 @@
-import 'dart:typed_data';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/data/crypto_service.dart';
-import 'package:kubb_app/features/auth/data/keypair_backup_repository.dart';
 import 'package:kubb_app/features/auth/data/keypair_storage.dart';
 import 'package:kubb_app/features/auth/data/secure_token_store.dart';
 
 part 'account_setup_controller.freezed.dart';
 
 /// Multi-step state for the anonymous-account-setup wizard.
+///
+/// Per ADR-0011 the wizard generates a BIP-39 mnemonic locally, the
+/// user writes it down, the user re-enters a few words to confirm, and
+/// only then is the keypair derived and attached to the server.
 @freezed
 class AccountSetupState with _$AccountSetupState {
   const factory AccountSetupState.idle() = _Idle;
   const factory AccountSetupState.nicknameEntered({required String nickname}) =
       _NicknameEntered;
+
+  /// Mnemonic has been generated locally and is shown to the user. The
+  /// keypair is *not* attached yet — that happens after confirmation.
+  const factory AccountSetupState.mnemonicReady({
+    required String nickname,
+    required String mnemonic,
+    required int wordCount,
+  }) = _MnemonicReady;
+
   const factory AccountSetupState.submitting() = _Submitting;
   const factory AccountSetupState.done({required String userId}) = _Done;
   const factory AccountSetupState.failed({required String reason}) = _Failed;
@@ -39,14 +49,6 @@ final keypairStorageProvider = Provider<KeypairStorage>((ref) {
   );
 });
 
-final keypairBackupRepositoryProvider =
-    Provider<KeypairBackupRepository>((ref) {
-  throw UnimplementedError(
-    'keypairBackupRepositoryProvider must be overridden during '
-    'app bootstrap with the real implementation.',
-  );
-});
-
 final accountSetupControllerProvider =
     NotifierProvider<AccountSetupController, AccountSetupState>(
         AccountSetupController.new);
@@ -59,47 +61,50 @@ class AccountSetupController extends Notifier<AccountSetupState> {
     state = AccountSetupState.nicknameEntered(nickname: nickname);
   }
 
-  /// Drives the full setup flow:
+  /// Generates a BIP-39 mnemonic of [wordCount] words and transitions
+  /// the wizard into the "show mnemonic" phase. Does not touch the
+  /// network — the keypair is only registered with the server in
+  /// [submitConfirmed], after the user has acknowledged the phrase.
+  void generateMnemonic({required String nickname, int wordCount = 12}) {
+    final crypto = ref.read(cryptoServiceProvider);
+    final mnemonic = crypto.generateBip39Mnemonic(wordCount: wordCount);
+    state = AccountSetupState.mnemonicReady(
+      nickname: nickname,
+      mnemonic: mnemonic,
+      wordCount: wordCount,
+    );
+  }
+
+  /// Drives the actual server-side setup, called once the user has
+  /// confirmed they wrote the mnemonic down:
   ///   1. Anonymous Supabase session via the adapter.
-  ///   2. Generate Ed25519 keypair locally.
-  ///   3. Encrypt the private-key seed locally (Argon2id + XChaCha20)
-  ///      via [KeypairBackupRepository.prepareBackup] — no server call
-  ///      yet.
-  ///   4. attachKeypair RPC carrying the real ciphertext / kdf
-  ///      parameters: the server inserts user_credentials,
-  ///      user_keypair_backups and user_profiles in a single
-  ///      transaction. A failure leaves no partial backup row behind.
-  ///   5. KeypairStorage.save persists the private key in the OS
+  ///   2. Derive Ed25519 keypair from the mnemonic (BIP-39 → seed →
+  ///      first 32 bytes as Ed25519 secret seed).
+  ///   3. keypair_register RPC: server inserts user_credentials and
+  ///      user_profiles in a single transaction.
+  ///   4. KeypairStorage.save persists the private-key seed in OS
   ///      secure-storage. Last so a server-side rejection of the
-  ///      attach RPC does not leave a key on disk that has no matching
-  ///      server row.
-  Future<void> submit({
+  ///      register RPC does not leave a key on disk that has no
+  ///      matching server row.
+  Future<void> submitConfirmed({
     required String nickname,
-    required String passphrase,
+    required String mnemonic,
     String? avatarColor,
   }) async {
     state = const AccountSetupState.submitting();
     final adapter = ref.read(supabaseAuthAdapterProvider);
     final keypairStorage = ref.read(keypairStorageProvider);
-    final backupRepo = ref.read(keypairBackupRepositoryProvider);
+    final crypto = ref.read(cryptoServiceProvider);
     final telemetry = ref.read(authTelemetryProvider);
 
     try {
       telemetry.signinAttempt(kind: 'keypair');
       await adapter.signInAnonymously();
 
-      final keypair = await keypairStorage.generate();
-      final material = await backupRepo.prepareBackup(
-        privateKey: Uint8List.fromList(keypair.privateKey),
-        publicKey: Uint8List.fromList(keypair.publicKey),
-        passphrase: passphrase,
-      );
+      final keypair = await crypto.keypairFromMnemonic(mnemonic);
       await adapter.attachKeypair(
         nickname: nickname,
         publicKey: keypair.publicKey,
-        ciphertext: material.ciphertext,
-        kdfSalt: material.kdfSalt,
-        kdfParams: material.kdfParams,
         avatarColor: avatarColor,
       );
       await keypairStorage.save(keypair.privateKey);
@@ -111,9 +116,7 @@ class AccountSetupController extends Notifier<AccountSetupState> {
         );
         return;
       }
-      telemetry
-        ..keypairBackupCreated(userId: userId)
-        ..signinSuccess(userId: userId, kind: 'keypair');
+      telemetry.signinSuccess(userId: userId, kind: 'keypair');
       state = AccountSetupState.done(userId: userId);
     } on Object catch (error) {
       telemetry.signinFailure(

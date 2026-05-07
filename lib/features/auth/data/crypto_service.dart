@@ -1,10 +1,11 @@
 import 'dart:typed_data';
 
+import 'package:bip39/bip39.dart' as bip39;
 import 'package:cryptography/cryptography.dart';
-import 'package:flutter/foundation.dart' show compute, kIsWeb;
 
-/// Façade over the `cryptography` package's Ed25519, Argon2id and
-/// XChaCha20-Poly1305 primitives.
+/// Façade over the `cryptography` package's Ed25519 and
+/// XChaCha20-Poly1305 primitives, plus BIP-39 mnemonic generation /
+/// validation / seed derivation per ADR-0011.
 ///
 /// Each public method works with raw byte lists so the auth feature can
 /// move keys, signatures and ciphertexts around without leaking
@@ -52,6 +53,69 @@ class CryptoService {
     final keyPair = await _ed25519.newKeyPairFromSeed(seed);
     final publicKey = await keyPair.extractPublicKey();
     return Uint8List.fromList(publicKey.bytes);
+  }
+
+  /// Generates a fresh BIP-39 mnemonic of the given length. Per
+  /// ADR-0011 the UI exposes 12, 15, and 18; the helper accepts any
+  /// valid BIP-39 length so power-user toggles can lift the cap later
+  /// without changes here. Strength bits per length: 128/160/192/224/256.
+  String generateBip39Mnemonic({int wordCount = 12}) {
+    return bip39.generateMnemonic(strength: _strengthForWordCount(wordCount));
+  }
+
+  /// Validates that [mnemonic] parses as a BIP-39 phrase and that its
+  /// embedded checksum is correct. Used both at restore-time (catch
+  /// typos) and at confirm-mnemonic time during signup.
+  bool isValidBip39Mnemonic(String mnemonic) {
+    return bip39.validateMnemonic(_normalizeMnemonic(mnemonic));
+  }
+
+  /// Derives the Ed25519 keypair from a BIP-39 mnemonic. The phrase is
+  /// stretched to a 64-byte BIP-39 seed (PBKDF2-HMAC-SHA512, 2048
+  /// rounds, salt = "mnemonic"), the first 32 bytes of which become
+  /// the Ed25519 secret seed. We do not use SLIP-0010 derivation —
+  /// there is no HD path, only a single root keypair per account.
+  ///
+  /// Throws [FormatException] if the mnemonic does not validate.
+  Future<Ed25519KeyPairBytes> keypairFromMnemonic(String mnemonic) async {
+    final normalized = _normalizeMnemonic(mnemonic);
+    if (!bip39.validateMnemonic(normalized)) {
+      throw const FormatException('mnemonic checksum failed');
+    }
+    final seed = bip39.mnemonicToSeed(normalized);
+    final ed25519Seed = Uint8List.fromList(seed.sublist(0, 32));
+    final keyPair = await _ed25519.newKeyPairFromSeed(ed25519Seed);
+    final publicKey = await keyPair.extractPublicKey();
+    return Ed25519KeyPairBytes(
+      publicKey: Uint8List.fromList(publicKey.bytes),
+      privateKey: ed25519Seed,
+    );
+  }
+
+  static int _strengthForWordCount(int words) {
+    switch (words) {
+      case 12:
+        return 128;
+      case 15:
+        return 160;
+      case 18:
+        return 192;
+      case 21:
+        return 224;
+      case 24:
+        return 256;
+      default:
+        throw ArgumentError(
+          'BIP-39 word count must be 12, 15, 18, 21, or 24 (got $words)',
+        );
+    }
+  }
+
+  static String _normalizeMnemonic(String input) {
+    // BIP-39 wordlist words are lowercase ASCII. Collapse whitespace
+    // (including tabs / newlines from paste-friendly input) and
+    // lowercase so user input matches the dictionary entries.
+    return input.trim().toLowerCase().split(RegExp(r'\s+')).join(' ');
   }
 
   /// Verifies a signature against a public key. Returns true iff the
@@ -112,25 +176,6 @@ class CryptoService {
     return Uint8List.fromList(plain);
   }
 
-  /// Derives a `params.hashLength`-byte key from a passphrase using
-  /// Argon2id. Runs in a separate isolate via Flutter's `compute` so
-  /// the UI thread stays unblocked during the memory-hard derivation.
-  ///
-  /// Web has no real isolates — `compute` runs the callback in the
-  /// same event loop. The reduced web parameters from
-  /// [Argon2idParams.platformDefault] keep this acceptable.
-  Future<Uint8List> deriveKeyArgon2id({
-    required List<int> passphrase,
-    required List<int> salt,
-    required Argon2idParams params,
-  }) {
-    final msg = _Argon2idIsolateMessage(
-      passphrase: passphrase,
-      salt: salt,
-      params: params,
-    );
-    return compute(_argon2idIsolateEntry, msg);
-  }
 }
 
 /// Plain value object for an Ed25519 keypair as raw bytes. Lives outside
@@ -147,92 +192,4 @@ class Ed25519KeyPairBytes {
 
   /// 32-byte Ed25519 private-key seed.
   final Uint8List privateKey;
-}
-
-/// Argon2id parameters that travel with each encrypted backup row in
-/// the server-side `kdf_params` jsonb column. Keeping them on the row
-/// means a backup created with one parameter set can still be
-/// decrypted later even if the platform default changes.
-class Argon2idParams {
-  const Argon2idParams({
-    required this.memoryKiB,
-    required this.iterations,
-    required this.parallelism,
-    this.hashLength = 32,
-  });
-
-  factory Argon2idParams.fromJson(Map<String, Object?> json) {
-    return Argon2idParams(
-      memoryKiB: json['m']! as int,
-      iterations: json['t']! as int,
-      parallelism: json['p']! as int,
-      hashLength: (json['l'] as int?) ?? 32,
-    );
-  }
-
-  /// Per-platform default at backup-creation time. Native uses 64 MiB
-  /// with four lanes; web drops to 32 MiB and a single lane (browser
-  /// JS is single-threaded — extra lanes add no security margin and
-  /// cost memory). See
-  /// `docs/plans/auth-oauth-keypair/spike-argon2id.md`.
-  factory Argon2idParams.platformDefault() {
-    return const Argon2idParams(
-      memoryKiB: kIsWeb ? 32768 : 65536,
-      iterations: 3,
-      parallelism: kIsWeb ? 1 : 4,
-    );
-  }
-
-  /// Memory parameter in KiB. OWASP recommends 65536 (64 MiB) for
-  /// native; the spike (`docs/plans/auth-oauth-keypair/spike-argon2id.md`)
-  /// drops this to 32768 (32 MiB) on web.
-  final int memoryKiB;
-
-  /// Number of iterations.
-  final int iterations;
-
-  /// Lane / parallelism count.
-  final int parallelism;
-
-  /// Output key length in bytes (default 32 — XChaCha20 key size).
-  final int hashLength;
-
-  Map<String, Object> toJson() => <String, Object>{
-        'algo': 'argon2id',
-        'm': memoryKiB,
-        't': iterations,
-        'p': parallelism,
-        if (hashLength != 32) 'l': hashLength,
-      };
-}
-
-/// Top-level isolate entry point for [CryptoService.deriveKeyArgon2id].
-/// Flutter's `compute()` requires the callback to be a top-level (or
-/// static) function so the isolate can resolve it without capturing
-/// closure state.
-Future<Uint8List> _argon2idIsolateEntry(_Argon2idIsolateMessage msg) async {
-  final algo = Argon2id(
-    memory: msg.params.memoryKiB,
-    parallelism: msg.params.parallelism,
-    iterations: msg.params.iterations,
-    hashLength: msg.params.hashLength,
-  );
-  final secret = SecretKey(msg.passphrase);
-  final result = await algo.deriveKey(secretKey: secret, nonce: msg.salt);
-  final bytes = await result.extractBytes();
-  return Uint8List.fromList(bytes);
-}
-
-/// Wire-message for the Argon2id isolate entry. Holds bytes only —
-/// no SecretKey or other types whose isolate-portability is doubtful.
-class _Argon2idIsolateMessage {
-  const _Argon2idIsolateMessage({
-    required this.passphrase,
-    required this.salt,
-    required this.params,
-  });
-
-  final List<int> passphrase;
-  final List<int> salt;
-  final Argon2idParams params;
 }

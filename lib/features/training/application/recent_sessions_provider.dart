@@ -102,14 +102,10 @@ Future<RecentSessionView> _toFinisseurView(
   required bool kingTracking,
 }) async {
   final sticks = await db.finisseurStickEventDao.forSession(session.id);
-  final used = sticks
-      .where((s) =>
-          s.fieldKubbsHit > 0 ||
-          s.eightMHit ||
-          s.heliThrow ||
-          s.kingHit != null ||
-          s.penaltyHits1 + s.penaltyHits2 > 0)
-      .length;
+  // Every persisted stick counts toward the budget — including all-zero
+  // ones, which represent "stick thrown, missed everything" (same logic
+  // as a miss in Sniper mode).
+  final used = sticks.length;
   final field = session.finField ?? 0;
   final base = session.finBase ?? 0;
   final fieldDown = sticks.fold<int>(0, (a, s) => a + s.fieldKubbsHit);

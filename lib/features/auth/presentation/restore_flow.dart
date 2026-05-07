@@ -1,20 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/features/auth/application/account_setup_controller.dart';
 import 'package:kubb_app/features/auth/application/restore_controller.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/auth_primary_button.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/wizard_header.dart';
-import 'package:kubb_app/features/auth/presentation/passphrase_input.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
-/// Two-step restore wizard per design brief #5 (M5-T08).
-///
-/// Step 1: nickname input. Step 2: passphrase input that drives
-/// [RestoreController]. Cooldown state from the controller is rendered
-/// as a countdown badge instead of the input.
+/// Single-screen restore: paste / type the BIP-39 mnemonic, hit
+/// restore. Per ADR-0011 the public key is derived locally and the
+/// existing challenge/sign/verify path proves ownership — no nickname
+/// lookup, no encrypted-blob fetch.
 class RestoreFlow extends ConsumerStatefulWidget {
   const RestoreFlow({super.key});
 
@@ -23,194 +23,65 @@ class RestoreFlow extends ConsumerStatefulWidget {
 }
 
 class _RestoreFlowState extends ConsumerState<RestoreFlow> {
-  _Step _step = _Step.nickname;
-  String _nickname = '';
+  late final TextEditingController _mnemonicCtrl = TextEditingController();
+  String _mnemonic = '';
 
-  void _toStep2(String nickname) {
+  @override
+  void dispose() {
+    _mnemonicCtrl.dispose();
+    super.dispose();
+  }
+
+  void _close() => GoRouter.of(context).pop();
+
+  void _onRestoreDone() => GoRouter.of(context).go('/');
+
+  Future<void> _pasteFromClipboard() async {
+    final clip = await Clipboard.getData('text/plain');
+    final text = clip?.text;
+    if (text == null) return;
+    if (!mounted) return;
     setState(() {
-      _nickname = nickname;
-      _step = _Step.passphrase;
+      _mnemonic = text;
+      _mnemonicCtrl.text = text;
+      _mnemonicCtrl.selection =
+          TextSelection.collapsed(offset: text.length);
     });
   }
 
-  void _back() {
-    setState(() => _step = _Step.nickname);
+  bool _looksValid() {
+    // Cheap pre-check: BIP-39 mnemonics are 12, 15, 18, 21, or 24 words.
+    final words = _mnemonic
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .toList();
+    return const {12, 15, 18, 21, 24}.contains(words.length);
   }
-
-  void _close() {
-    GoRouter.of(context).pop();
-  }
-
-  void _onRestoreDone() {
-    GoRouter.of(context).go('/');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final l10n = AppLocalizations.of(context);
-    final stepIdx = _step.index;
-    final title = switch (_step) {
-      _Step.nickname => l10n.authRestoreNicknameTitle,
-      _Step.passphrase => l10n.authRestorePassphraseTitle,
-    };
-
-    return Scaffold(
-      backgroundColor: tokens.bg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            WizardHeader(
-              step: stepIdx,
-              total: 2,
-              eyebrow: l10n.authRestoreEyebrow,
-              title: title,
-              onBack: stepIdx > 0 ? _back : null,
-              onClose: _close,
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: KubbTokens.space6,
-                ),
-                child: switch (_step) {
-                  _Step.nickname => _NicknameStep(onContinue: _toStep2),
-                  _Step.passphrase => _PassphraseStep(
-                      nickname: _nickname,
-                      onRestoreDone: _onRestoreDone,
-                    ),
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-enum _Step { nickname, passphrase }
-
-class _NicknameStep extends StatefulWidget {
-  const _NicknameStep({required this.onContinue});
-
-  final ValueChanged<String> onContinue;
-
-  @override
-  State<_NicknameStep> createState() => _NicknameStepState();
-}
-
-class _NicknameStepState extends State<_NicknameStep> {
-  String _nick = '';
-
-  String? _validate(BuildContext context, String v) {
-    final l10n = AppLocalizations.of(context);
-    if (v.isEmpty) return null;
-    if (v.length < 3) return l10n.authSignupNicknameTooShort;
-    if (v.length > 30) return l10n.authSignupNicknameTooLong;
-    if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(v)) {
-      return l10n.authSignupNicknameInvalidChars;
-    }
-    return null;
-  }
-
-  bool _isValid() =>
-      _nick.length >= 3 &&
-      _nick.length <= 30 &&
-      RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(_nick);
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final err = _validate(context, _nick);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: KubbTokens.space3),
-        Text(
-          l10n.authSignupNicknameLabel,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: tokens.fgMuted,
-            letterSpacing: 0.4,
-          ),
-        ),
-        const SizedBox(height: 6),
-        TextField(
-          autofocus: true,
-          maxLength: 30,
-          onChanged: (v) => setState(() => _nick = v),
-          decoration: InputDecoration(
-            hintText: l10n.authRestoreNicknamePlaceholder,
-            counterText: '',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-              borderSide: BorderSide(color: tokens.lineStrong, width: 1.5),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-              borderSide: BorderSide(
-                color: err != null ? KubbTokens.miss : tokens.lineStrong,
-                width: 1.5,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        if (err != null)
-          Text(
-            err,
-            style: const TextStyle(fontSize: 12, color: KubbTokens.miss),
-          )
-        else
-          Text(
-            l10n.authRestoreNicknameHelper,
-            style: TextStyle(fontSize: 12, color: tokens.fgMuted),
-          ),
-        const Spacer(),
-        AuthPrimaryButton(
-          label: l10n.authCommonContinue,
-          onPressed: _isValid() ? () => widget.onContinue(_nick) : null,
-        ),
-        const SizedBox(height: KubbTokens.space5),
-      ],
-    );
-  }
-}
-
-class _PassphraseStep extends ConsumerStatefulWidget {
-  const _PassphraseStep({
-    required this.nickname,
-    required this.onRestoreDone,
-  });
-
-  final String nickname;
-  final VoidCallback onRestoreDone;
-
-  @override
-  ConsumerState<_PassphraseStep> createState() => _PassphraseStepState();
-}
-
-class _PassphraseStepState extends ConsumerState<_PassphraseStep> {
-  String _pass = '';
 
   Future<void> _submit() async {
-    await ref.read(restoreControllerProvider.notifier).restore(
-          nickname: widget.nickname,
-          passphrase: _pass,
-        );
+    final crypto = ref.read(cryptoServiceProvider);
+    if (!crypto.isValidBip39Mnemonic(_mnemonic)) {
+      // Present the same error path the controller would set, but skip
+      // a network round-trip for an obviously broken phrase.
+      await ref
+          .read(restoreControllerProvider.notifier)
+          .restore(mnemonic: _mnemonic);
+      return;
+    }
+    await ref
+        .read(restoreControllerProvider.notifier)
+        .restore(mnemonic: _mnemonic);
   }
 
   @override
   Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l10n = AppLocalizations.of(context);
     final state = ref.watch(restoreControllerProvider);
 
     ref.listen<RestoreState>(restoreControllerProvider, (_, next) {
-      next.whenOrNull(done: (_) => widget.onRestoreDone());
+      next.whenOrNull(done: (_) => _onRestoreDone());
     });
 
     final restoring = state.maybeWhen(
@@ -226,59 +97,160 @@ class _PassphraseStepState extends ConsumerState<_PassphraseStep> {
       orElse: () => null,
     );
 
-    final passOk = _pass.length >= 12;
-    final canSubmit = passOk && !restoring && cooldownUntil == null;
+    final canSubmit =
+        _looksValid() && !restoring && cooldownUntil == null;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: KubbTokens.space3),
-        if (cooldownUntil != null)
-          _CooldownBadge(until: cooldownUntil)
-        else ...[
-          PassphraseInput(
-            value: _pass,
-            onChanged: (v) => setState(() => _pass = v),
-            helper: l10n.authRestorePassphraseHelper,
-            autofocus: true,
-          ),
-          if (errorReason != null) ...[
-            const SizedBox(height: KubbTokens.space3),
-            Container(
-              padding: const EdgeInsets.all(KubbTokens.space3),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFBE4E0),
-                border: Border.all(color: KubbTokens.miss, width: 1.5),
-                borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-              ),
-              child: Text(
-                l10n.authRestoreError,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: KubbTokens.miss,
+    return Scaffold(
+      backgroundColor: tokens.bg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            WizardHeader(
+              step: 0,
+              total: 1,
+              eyebrow: l10n.authRestoreEyebrow,
+              title: 'Mnemonic eingeben',
+              onClose: _close,
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: KubbTokens.space6,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: KubbTokens.space3),
+                    if (cooldownUntil != null)
+                      _CooldownBadge(
+                        until: cooldownUntil,
+                        onExpired: () => ref
+                            .read(restoreControllerProvider.notifier)
+                            .clearIfExpired(),
+                      )
+                    else ...[
+                      Text(
+                        'Gib die 12, 15 oder 18 Wörter deiner Mnemonic-Phrase '
+                        'ein, getrennt durch Leerzeichen.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.4,
+                          color: tokens.fgMuted,
+                        ),
+                      ),
+                      const SizedBox(height: KubbTokens.space3),
+
+                      TextField(
+                        controller: _mnemonicCtrl,
+                        maxLines: 4,
+                        minLines: 3,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        autofocus: true,
+                        onChanged: (v) => setState(() => _mnemonic = v),
+                        decoration: InputDecoration(
+                          hintText:
+                              'word1 word2 word3 …',
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(KubbTokens.radiusMd),
+                            borderSide: BorderSide(
+                              color: tokens.lineStrong,
+                              width: 1.5,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(KubbTokens.radiusMd),
+                            borderSide: BorderSide(
+                              color: errorReason != null
+                                  ? KubbTokens.miss
+                                  : tokens.lineStrong,
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: KubbTokens.space2),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: restoring ? null : _pasteFromClipboard,
+                          icon: const Icon(Icons.paste, size: 16),
+                          label: const Text('Aus Zwischenablage einfügen'),
+                        ),
+                      ),
+
+                      if (errorReason != null) ...[
+                        const SizedBox(height: KubbTokens.space3),
+                        Container(
+                          padding: const EdgeInsets.all(KubbTokens.space3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFBE4E0),
+                            border: Border.all(
+                              color: KubbTokens.miss,
+                              width: 1.5,
+                            ),
+                            borderRadius:
+                                BorderRadius.circular(KubbTokens.radiusMd),
+                          ),
+                          child: Text(
+                            _errorMessageFor(errorReason, l10n),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: KubbTokens.miss,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                    const SizedBox(height: KubbTokens.space6),
+                    AuthPrimaryButton(
+                      label: restoring
+                          ? l10n.authRestoreSubmitting
+                          : l10n.authRestoreSubmit,
+                      onPressed: canSubmit ? _submit : null,
+                      loading: restoring,
+                    ),
+                    const SizedBox(height: KubbTokens.space5),
+                  ],
                 ),
               ),
             ),
           ],
-        ],
-        const Spacer(),
-        AuthPrimaryButton(
-          label: restoring
-              ? l10n.authRestoreSubmitting
-              : l10n.authRestoreSubmit,
-          onPressed: canSubmit ? _submit : null,
-          loading: restoring,
         ),
-        const SizedBox(height: KubbTokens.space5),
-      ],
+      ),
     );
   }
 }
 
+/// Map a `RestoreState.failed(reason: ...)` reason-code to user-facing
+/// copy. The codes come from `RestoreController._classifyRestoreError`
+/// — keep the two in sync.
+String _errorMessageFor(String reason, AppLocalizations l10n) {
+  switch (reason) {
+    case 'mnemonic_invalid':
+      return 'Mnemonic-Phrase ungültig oder Tippfehler in einem Wort.';
+    case 'no_account_for_mnemonic':
+      return 'Diese Mnemonic-Phrase gehört zu keinem Account auf '
+          'diesem Server. Prüfe die Wörter und ihre Reihenfolge.';
+    case 'signature_invalid':
+      return 'Die Signatur konnte nicht überprüft werden. '
+          'Versuch es nochmal.';
+    case 'challenge_failed':
+      return 'Der Server hat die Anfrage nicht akzeptiert. '
+          'Versuch es in ein paar Sekunden nochmal.';
+    case 'signin_failed':
+    default:
+      return l10n.authRestoreError;
+  }
+}
+
 class _CooldownBadge extends StatefulWidget {
-  const _CooldownBadge({required this.until});
+  const _CooldownBadge({required this.until, required this.onExpired});
 
   final DateTime until;
+  final VoidCallback onExpired;
 
   @override
   State<_CooldownBadge> createState() => _CooldownBadgeState();
@@ -303,6 +275,12 @@ class _CooldownBadgeState extends State<_CooldownBadge> {
     });
     if (diff.isNegative || diff.inSeconds == 0) {
       _ticker?.cancel();
+      // Defer to a post-frame callback so we don't mutate provider state
+      // mid-build of the parent (which is already rebuilding because of
+      // our own setState above).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onExpired();
+      });
     }
   }
 

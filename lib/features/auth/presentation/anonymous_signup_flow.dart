@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
@@ -7,10 +8,18 @@ import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/auth_primary_button.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/wizard_header.dart';
 import 'package:kubb_app/features/auth/presentation/disclaimer_block.dart';
-import 'package:kubb_app/features/auth/presentation/passphrase_input.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
-/// Three-step wizard per design brief #2 (M5-T03 + T06 + T07).
+/// Four-step wizard implementing ADR-0011's mnemonic-first signup:
+///   1. Nickname entry.
+///   2. Mnemonic length choice + display of the freshly generated phrase.
+///   3. Acknowledge "I wrote it down" + run keypair_register on the
+///      server.
+///   4. Success.
+///
+/// The mnemonic is generated entirely on-device and never sent to the
+/// server — the server only ever sees the derived public key. There is
+/// no recovery: if the user loses the phrase the account is gone.
 class AnonymousSignupFlow extends ConsumerStatefulWidget {
   const AnonymousSignupFlow({super.key});
 
@@ -22,29 +31,57 @@ class AnonymousSignupFlow extends ConsumerStatefulWidget {
 class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
   _Step _step = _Step.nickname;
   String _nickname = '';
-  String _passphrase = '';
+  int _wordCount = 12;
   bool _ack = false;
   bool _submitting = false;
   String? _error;
 
-  void _toStep2(String nickname) {
+  void _toMnemonicStep(String nickname) {
     setState(() {
       _nickname = nickname;
-      _step = _Step.disclaimer;
     });
+    ref.read(accountSetupControllerProvider.notifier).generateMnemonic(
+          nickname: nickname,
+          wordCount: _wordCount,
+        );
+    setState(() => _step = _Step.mnemonic);
+  }
+
+  void _regenerate() {
+    ref.read(accountSetupControllerProvider.notifier).generateMnemonic(
+          nickname: _nickname,
+          wordCount: _wordCount,
+        );
+    setState(() => _ack = false);
+  }
+
+  void _changeLength(int count) {
+    setState(() => _wordCount = count);
+    ref.read(accountSetupControllerProvider.notifier).generateMnemonic(
+          nickname: _nickname,
+          wordCount: count,
+        );
+    setState(() => _ack = false);
   }
 
   Future<void> _submit() async {
+    final mnemonic =
+        ref.read(accountSetupControllerProvider).maybeWhen(
+              mnemonicReady: (_, mnemonic, _) => mnemonic,
+              orElse: () => '',
+            );
+    if (mnemonic.isEmpty) return;
+
     setState(() {
       _submitting = true;
       _error = null;
     });
-    await ref.read(accountSetupControllerProvider.notifier).submit(
+    await ref.read(accountSetupControllerProvider.notifier).submitConfirmed(
           nickname: _nickname,
-          passphrase: _passphrase,
+          mnemonic: mnemonic,
         );
-    final result = ref.read(accountSetupControllerProvider);
     if (!mounted) return;
+    final result = ref.read(accountSetupControllerProvider);
     setState(() {
       _submitting = false;
       result.maybeWhen(
@@ -57,7 +94,13 @@ class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
 
   void _back() {
     setState(() {
-      _step = _Step.nickname;
+      switch (_step) {
+        case _Step.mnemonic:
+          _step = _Step.nickname;
+        case _Step.nickname:
+        case _Step.success:
+          break;
+      }
     });
   }
 
@@ -76,9 +119,15 @@ class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
     final stepIdx = _step.index;
     final title = switch (_step) {
       _Step.nickname => l10n.authSignupNicknameTitle,
-      _Step.disclaimer => l10n.authSignupDisclaimerTitle,
+      _Step.mnemonic => 'Mnemonic-Phrase',
       _Step.success => l10n.authSignupSuccessTitle,
     };
+
+    final mnemonicState = ref.watch(accountSetupControllerProvider);
+    final mnemonic = mnemonicState.maybeWhen(
+      mnemonicReady: (_, mnemonic, _) => mnemonic,
+      orElse: () => '',
+    );
 
     return Scaffold(
       backgroundColor: tokens.bg,
@@ -99,13 +148,14 @@ class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
                   horizontal: KubbTokens.space6,
                 ),
                 child: switch (_step) {
-                  _Step.nickname => _NicknameStep(onContinue: _toStep2),
-                  _Step.disclaimer => _DisclaimerStep(
-                      passphrase: _passphrase,
-                      onPassphraseChanged: (v) =>
-                          setState(() => _passphrase = v),
+                  _Step.nickname => _NicknameStep(onContinue: _toMnemonicStep),
+                  _Step.mnemonic => _MnemonicStep(
+                      mnemonic: mnemonic,
+                      wordCount: _wordCount,
                       ack: _ack,
                       onAckChanged: (v) => setState(() => _ack = v),
+                      onChangeLength: _changeLength,
+                      onRegenerate: _regenerate,
                       submitting: _submitting,
                       error: _error,
                       onSubmit: _submit,
@@ -121,7 +171,7 @@ class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
   }
 }
 
-enum _Step { nickname, disclaimer, success }
+enum _Step { nickname, mnemonic, success }
 
 class _NicknameStep extends StatefulWidget {
   const _NicknameStep({required this.onContinue});
@@ -213,30 +263,34 @@ class _NicknameStepState extends State<_NicknameStep> {
   }
 }
 
-class _DisclaimerStep extends StatelessWidget {
-  const _DisclaimerStep({
-    required this.passphrase,
-    required this.onPassphraseChanged,
+class _MnemonicStep extends StatelessWidget {
+  const _MnemonicStep({
+    required this.mnemonic,
+    required this.wordCount,
     required this.ack,
     required this.onAckChanged,
+    required this.onChangeLength,
+    required this.onRegenerate,
     required this.submitting,
     required this.error,
     required this.onSubmit,
   });
 
-  final String passphrase;
-  final ValueChanged<String> onPassphraseChanged;
+  final String mnemonic;
+  final int wordCount;
   final bool ack;
   final ValueChanged<bool> onAckChanged;
+  final ValueChanged<int> onChangeLength;
+  final VoidCallback onRegenerate;
   final bool submitting;
   final String? error;
   final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final canSubmit = ack && passphrase.length >= 12 && !submitting;
+    final words = mnemonic.split(' ').where((w) => w.isNotEmpty).toList();
+    final canSubmit = ack && words.length == wordCount && !submitting;
 
     return SingleChildScrollView(
       child: Column(
@@ -244,9 +298,66 @@ class _DisclaimerStep extends StatelessWidget {
         children: [
           const SizedBox(height: KubbTokens.space2),
           const DisclaimerBlock(),
+          const SizedBox(height: KubbTokens.space4),
+
+          // Length picker
+          Row(
+            children: [
+              for (final n in const [12, 15, 18])
+                Padding(
+                  padding: const EdgeInsets.only(right: KubbTokens.space2),
+                  child: ChoiceChip(
+                    label: Text('$n Wörter'),
+                    selected: wordCount == n,
+                    onSelected: submitting ? null : (_) => onChangeLength(n),
+                  ),
+                ),
+            ],
+          ),
           const SizedBox(height: KubbTokens.space3),
+
+          // Mnemonic grid
+          Container(
+            padding: const EdgeInsets.all(KubbTokens.space3),
+            decoration: BoxDecoration(
+              color: tokens.bg,
+              border: Border.all(color: tokens.lineStrong, width: 1.5),
+              borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+            ),
+            child: Wrap(
+              spacing: KubbTokens.space2,
+              runSpacing: KubbTokens.space2,
+              children: [
+                for (var i = 0; i < words.length; i++)
+                  _MnemonicWord(index: i + 1, word: words[i]),
+              ],
+            ),
+          ),
+          const SizedBox(height: KubbTokens.space2),
+
+          // Helper actions
+          Row(
+            children: [
+              TextButton.icon(
+                onPressed: submitting ? null : onRegenerate,
+                icon: const Icon(Icons.refresh, size: 16),
+                label: const Text('Neue Phrase'),
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: submitting
+                    ? null
+                    : () => Clipboard.setData(ClipboardData(text: mnemonic)),
+                icon: const Icon(Icons.copy_outlined, size: 16),
+                label: const Text('Kopieren'),
+              ),
+            ],
+          ),
+          const SizedBox(height: KubbTokens.space3),
+
+          // Acknowledgment
           InkWell(
-            onTap: () => onAckChanged(!ack),
+            onTap: submitting ? null : () => onAckChanged(!ack),
             borderRadius: BorderRadius.circular(KubbTokens.radiusSm),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: KubbTokens.space2),
@@ -269,10 +380,12 @@ class _DisclaimerStep extends StatelessWidget {
                   const SizedBox(width: KubbTokens.space3),
                   Expanded(
                     child: Text(
-                      l10n.authDisclaimerAcknowledge,
+                      'Ich habe meine Mnemonic-Phrase sicher notiert. '
+                      'Mir ist bewusst: ohne diese Wörter ist mein Account '
+                      'nicht wiederherstellbar.',
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         color: tokens.fg,
                       ),
                     ),
@@ -281,13 +394,7 @@ class _DisclaimerStep extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: KubbTokens.space3),
-          PassphraseInput(
-            value: passphrase,
-            onChanged: onPassphraseChanged,
-            showStrength: true,
-            helper: l10n.authPassphraseHelper,
-          ),
+
           if (error != null) ...[
             const SizedBox(height: KubbTokens.space3),
             Container(
@@ -298,7 +405,7 @@ class _DisclaimerStep extends StatelessWidget {
                 borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
               ),
               child: Text(
-                l10n.authSignupErrorBanner,
+                error!,
                 style: const TextStyle(
                   fontSize: 13,
                   color: KubbTokens.miss,
@@ -308,21 +415,56 @@ class _DisclaimerStep extends StatelessWidget {
           ],
           const SizedBox(height: KubbTokens.space5),
           AuthPrimaryButton(
-            label: submitting
-                ? l10n.authSignupSubmitting
-                : l10n.authSignupSubmit,
+            label: submitting ? 'Account wird erstellt…' : 'Account erstellen',
             onPressed: canSubmit ? onSubmit : null,
             loading: submitting,
           ),
-          if (submitting) ...[
-            const SizedBox(height: KubbTokens.space2),
-            Text(
-              l10n.authSignupSubmittingHint,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: tokens.fgMuted),
-            ),
-          ],
           const SizedBox(height: KubbTokens.space5),
+        ],
+      ),
+    );
+  }
+}
+
+class _MnemonicWord extends StatelessWidget {
+  const _MnemonicWord({required this.index, required this.word});
+
+  final int index;
+  final String word;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: KubbTokens.space2,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: KubbTokens.meadow100,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusSm),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$index.',
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: KubbTokens.meadow800,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            word,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: tokens.fg,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
         ],
       ),
     );

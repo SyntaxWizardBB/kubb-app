@@ -7,6 +7,7 @@ import 'package:kubb_app/core/ui/icons.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
+import 'package:kubb_app/features/player/presentation/player_hub_sheet.dart';
 import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
 import 'package:kubb_app/features/training/presentation/widgets/crash_recovery_dialog.dart';
@@ -67,8 +68,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         actions: IconButton(
           tooltip: l.profileTitle,
-          icon: const KubbIcon(KubbIcons.profile),
-          onPressed: () => context.go('/profile'),
+          icon: const KubbIcon(KubbIcons.players),
+          onPressed: () => PlayerHubSheet.show(context),
         ),
       ),
       body: SingleChildScrollView(

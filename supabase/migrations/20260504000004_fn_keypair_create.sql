@@ -22,11 +22,11 @@
 -- function that uses the service-role key to create the auth.users
 -- row and mint the JWT in one shot.
 
-CREATE OR REPLACE FUNCTION auth.keypair_attach(
+CREATE OR REPLACE FUNCTION public.keypair_attach(
   p_nickname        text,
   p_public_key      text,
-  p_ciphertext      bytea,
-  p_kdf_salt        bytea,
+  p_ciphertext      text,
+  p_kdf_salt        text,
   p_kdf_params      jsonb,
   p_avatar_color    text DEFAULT NULL
 )
@@ -38,7 +38,13 @@ AS $$
 DECLARE
   v_user_id uuid;
   v_nickname_hash text;
+  v_ciphertext bytea;
+  v_kdf_salt bytea;
 BEGIN
+  -- PostgREST sends bytea params as text (base64) from JSON. Decode
+  -- here so the table columns stay typed as bytea.
+  v_ciphertext := decode(p_ciphertext, 'base64');
+  v_kdf_salt := decode(p_kdf_salt, 'base64');
   v_user_id := auth.uid();
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'keypair_attach requires an authenticated session'
@@ -56,7 +62,7 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
 
-  v_nickname_hash := auth.compute_nickname_hash(p_nickname);
+  v_nickname_hash := public.compute_nickname_hash(p_nickname);
 
   -- All three inserts in one transaction so a partial registration
   -- never leaves orphan rows. Postgres functions are transactional
@@ -67,7 +73,7 @@ BEGIN
   INSERT INTO user_keypair_backups(
       user_id, nickname_hash, ciphertext, kdf_salt, kdf_params)
     VALUES (
-      v_user_id, v_nickname_hash, p_ciphertext, p_kdf_salt, p_kdf_params);
+      v_user_id, v_nickname_hash, v_ciphertext, v_kdf_salt, p_kdf_params);
 
   INSERT INTO user_profiles(user_id, nickname, avatar_color)
     VALUES (v_user_id, p_nickname, p_avatar_color)
@@ -83,11 +89,11 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION auth.keypair_attach IS
+COMMENT ON FUNCTION public.keypair_attach IS
   'Attach a keypair credential and encrypted backup to the current '
   'anonymous Supabase session. Caller must signInAnonymously() first.';
 
 -- Anyone with a valid (anonymous or authenticated) Supabase session
 -- may call this RPC. RLS on the underlying tables is bypassed via
 -- SECURITY DEFINER but only for the rows scoped to auth.uid().
-GRANT EXECUTE ON FUNCTION auth.keypair_attach TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.keypair_attach TO anon, authenticated;

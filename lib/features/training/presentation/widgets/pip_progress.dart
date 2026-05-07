@@ -3,7 +3,7 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_state.dart';
 
 /// Tone of a single stick pip in the progress row.
-enum PipTone { pending, active, done, heli, penalty, king, empty }
+enum PipTone { pending, active, done, heli, penalty, king, miss, empty }
 
 /// Horizontal row of six pips that visualise the stick history.
 class PipProgress extends StatelessWidget {
@@ -24,7 +24,11 @@ class PipProgress extends StatelessWidget {
     if (s.penalty1 + s.penalty2 > 0) return PipTone.penalty;
     if (s.king?.hit ?? false) return PipTone.king;
     if (s.fieldHits > 0 || s.eightMHit) return PipTone.done;
-    return PipTone.empty;
+    // Past committed stick with zero useful contact = an actual miss
+    // (player threw, hit nothing). Distinct from PipTone.empty so the
+    // row reads like the Sniper miss/hit tally — see also the "every
+    // persisted stick counts" rule in summary/recent.
+    return PipTone.miss;
   }
 
   Color _bgFor(PipTone t, KubbTokens tokens) {
@@ -39,6 +43,8 @@ class PipProgress extends StatelessWidget {
         return tokens.danger;
       case PipTone.king:
         return KubbTokens.wood400;
+      case PipTone.miss:
+        return KubbTokens.miss;
       case PipTone.pending:
       case PipTone.empty:
         return tokens.line;

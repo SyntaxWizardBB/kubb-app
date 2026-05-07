@@ -96,9 +96,6 @@ class FakeSupabaseAuthAdapter implements SupabaseAuthAdapter {
   Future<AuthAdapterState> attachKeypair({
     required String nickname,
     required List<int> publicKey,
-    required List<int> ciphertext,
-    required List<int> kdfSalt,
-    required Map<String, Object> kdfParams,
     String? avatarColor,
   }) async {
     _maybeThrow();

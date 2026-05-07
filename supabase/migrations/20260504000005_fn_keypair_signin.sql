@@ -30,25 +30,25 @@
 -- Ephemeral table for active challenges. Cleaned up by the verify
 -- function as part of the same transaction; orphaned rows expire
 -- naturally because we filter on (issued_at + 60s).
-CREATE TABLE IF NOT EXISTS auth.keypair_challenges (
+CREATE TABLE IF NOT EXISTS public.keypair_challenges (
   public_key  text         NOT NULL,
   challenge   bytea        NOT NULL,
   issued_at   timestamptz  NOT NULL DEFAULT now(),
   PRIMARY KEY (public_key, challenge)
 );
 CREATE INDEX IF NOT EXISTS keypair_challenges_issued_at_idx
-  ON auth.keypair_challenges(issued_at);
+  ON public.keypair_challenges(issued_at);
 
 
 -- ----------------------------------------------------------------------
 -- auth.keypair_challenge(public_key) -> challenge bytes (base64)
 -- ----------------------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION auth.keypair_challenge(p_public_key text)
+CREATE OR REPLACE FUNCTION public.keypair_challenge(p_public_key text)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, auth
+SET search_path = public, auth, extensions
 AS $$
 DECLARE
   v_challenge bytea;
@@ -56,11 +56,11 @@ BEGIN
   -- 32 random bytes from pgcrypto.
   v_challenge := gen_random_bytes(32);
 
-  INSERT INTO auth.keypair_challenges(public_key, challenge)
+  INSERT INTO public.keypair_challenges(public_key, challenge)
     VALUES (p_public_key, v_challenge);
 
   -- Garbage-collect expired challenges (> 60s old) opportunistically.
-  DELETE FROM auth.keypair_challenges
+  DELETE FROM public.keypair_challenges
     WHERE issued_at < now() - interval '60 seconds';
 
   RETURN jsonb_build_object(
@@ -71,7 +71,7 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION auth.keypair_challenge TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.keypair_challenge TO anon, authenticated;
 
 
 -- ----------------------------------------------------------------------
@@ -87,7 +87,7 @@ GRANT EXECUTE ON FUNCTION auth.keypair_challenge TO anon, authenticated;
 -- extension is enabled on the Hetzner Postgres.
 -- ----------------------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION auth.keypair_verify(
+CREATE OR REPLACE FUNCTION public.keypair_verify(
   p_public_key text,
   p_challenge_b64 text,
   p_signature_b64 text
@@ -95,7 +95,7 @@ CREATE OR REPLACE FUNCTION auth.keypair_verify(
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, auth
+SET search_path = public, auth, extensions
 AS $$
 DECLARE
   v_challenge bytea;
@@ -106,7 +106,7 @@ BEGIN
   v_challenge := decode(p_challenge_b64, 'base64');
 
   SELECT issued_at INTO v_issued_at
-    FROM auth.keypair_challenges
+    FROM public.keypair_challenges
     WHERE public_key = p_public_key
       AND challenge = v_challenge;
 
@@ -115,7 +115,7 @@ BEGIN
       USING ERRCODE = '28000';
   END IF;
   IF v_issued_at < now() - interval '60 seconds' THEN
-    DELETE FROM auth.keypair_challenges
+    DELETE FROM public.keypair_challenges
       WHERE public_key = p_public_key AND challenge = v_challenge;
     RAISE EXCEPTION 'challenge expired'
       USING ERRCODE = '28000';
@@ -146,7 +146,7 @@ BEGIN
   END IF;
 
   -- Single-use challenge.
-  DELETE FROM auth.keypair_challenges
+  DELETE FROM public.keypair_challenges
     WHERE public_key = p_public_key AND challenge = v_challenge;
 
   RETURN jsonb_build_object(
@@ -156,4 +156,4 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION auth.keypair_verify TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.keypair_verify TO anon, authenticated;

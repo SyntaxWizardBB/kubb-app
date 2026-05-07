@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/data/app_database.dart';
+import 'package:kubb_app/features/auth/application/account_setup_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/data/auth_telemetry.dart';
 import 'package:kubb_app/features/auth/data/dao/cached_auth_session_dao.dart';
+import 'package:kubb_app/features/auth/data/keypair_storage.dart';
 import 'package:kubb_app/features/auth/data/supabase_auth_adapter.dart';
 import 'package:kubb_app/features/auth/data/supabase_auth_adapter_impl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -60,27 +62,43 @@ class AuthController extends AsyncNotifier<AuthSession> {
       ref.read(supabaseAuthAdapterProvider);
   CachedAuthSessionDao get _dao =>
       ref.read(cachedAuthSessionDaoProvider);
+  KeypairStorage get _keypairStorage =>
+      ref.read(keypairStorageProvider);
   AuthTelemetry get _telemetry => ref.read(authTelemetryProvider);
 
   @override
   Future<AuthSession> build() async {
     ref.onDispose(() => _sub?.cancel());
-    _subscribe();
 
+    // Resolve initial state from cache BEFORE subscribing so the
+    // adapter's first snapshot (which lands as a microtask after
+    // _subscribe) cannot race with this lookup. After a cold start
+    // the snapshot is the bare anonymous Supabase session, even when
+    // the cache holds a richer keypair session — the order matters.
     final cached = await _dao.current();
+    final AuthSession initial;
     if (cached != null) {
-      return _sessionFromCache(cached);
+      initial = _sessionFromCache(cached);
+    } else {
+      final adapterState = _adapter.currentState;
+      initial = adapterState.isAuthenticated
+          ? _sessionFromAdapter(adapterState)
+          : const AuthSession.signedOut();
     }
-    final adapterState = _adapter.currentState;
-    if (adapterState.isAuthenticated) {
-      return _sessionFromAdapter(adapterState);
-    }
-    return const AuthSession.signedOut();
+    _subscribe();
+    return initial;
   }
 
   void _subscribe() {
     final subscribedGeneration = _generation;
-    _sub = _adapter.onAuthStateChange.listen((adapterState) {
+    // Drop the first emission — the adapter's `onAuthStateChange`
+    // stream yields a snapshot of `_state` on subscription. After a
+    // cold start that snapshot is the bare anonymous Supabase session
+    // even when the local cache holds a richer keypair session, and
+    // letting it through would clobber the cache. We already read
+    // `_adapter.currentState` synchronously in `build()` for the
+    // no-cache path.
+    _sub = _adapter.onAuthStateChange.skip(1).listen((adapterState) {
       // Stream.listen takes a synchronous callback; the handler is
       // async by nature so we deliberately discard the returned
       // Future. Each subscription is bound to the generation in
@@ -104,6 +122,7 @@ class AuthController extends AsyncNotifier<AuthSession> {
     _sub = null;
     await _adapter.signOut();
     await _dao.clear();
+    await _keypairStorage.clear();
     if (userId != null) _telemetry.logout(userId: userId);
     state = const AsyncData(AuthSession.signedOut());
     _subscribe();
@@ -116,16 +135,29 @@ class AuthController extends AsyncNotifier<AuthSession> {
     if (eventGeneration != _generation) {
       return;
     }
-    final session = _sessionFromAdapter(adapterState);
-    if (session is SignedOutSession) {
+    final incoming = _sessionFromAdapter(adapterState);
+    // Don't let a bare `anonymous` adapter snapshot clobber a richer
+    // session we already restored from the local cache. After a cold
+    // start the underlying Supabase session is still the anonymous one
+    // GoTrue minted at signup; the adapter cannot know on its own that
+    // a keypair credential was attached. The drift cache does, so we
+    // trust it for same-user emissions.
+    final current = state.value;
+    final isAnonymousDowngrade = incoming is AnonymousSession &&
+        current is KeypairSession &&
+        current.userId == incoming.userId;
+    if (isAnonymousDowngrade) {
+      return;
+    }
+    if (incoming is SignedOutSession) {
       await _dao.clear();
     } else {
-      await _persistSession(adapterState, session);
+      await _persistSession(adapterState, incoming);
     }
     if (eventGeneration != _generation) {
       return;
     }
-    state = AsyncData(session);
+    state = AsyncData(incoming);
   }
 
   Future<void> _persistSession(
@@ -195,6 +227,8 @@ class AuthController extends AsyncNotifier<AuthSession> {
           displayName: cached.displayName,
           avatarColor: cached.avatarColor,
         );
+      case 'anonymous':
+        return AuthSession.anonymous(userId: cached.userId);
       default:
         return const AuthSession.signedOut();
     }

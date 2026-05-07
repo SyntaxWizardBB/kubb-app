@@ -9,11 +9,14 @@ import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/features/auth/presentation/delete_account_screen.dart';
 import 'package:kubb_app/features/auth/presentation/edit_profile_screen.dart';
 import 'package:kubb_app/features/auth/presentation/onboarding_tour.dart';
-import 'package:kubb_app/features/auth/presentation/passphrase_change_screen.dart';
 import 'package:kubb_app/features/auth/presentation/restore_flow.dart';
 import 'package:kubb_app/features/auth/presentation/sign_in_screen.dart';
+import 'package:kubb_app/features/inbox/presentation/inbox_screen.dart';
 import 'package:kubb_app/features/player/presentation/profile_screen.dart';
 import 'package:kubb_app/features/settings/presentation/settings_screen.dart';
+import 'package:kubb_app/features/social/presentation/friends_screen.dart';
+import 'package:kubb_app/features/social/presentation/groups_screen.dart';
+import 'package:kubb_app/features/social/presentation/social_routes.dart';
 import 'package:kubb_app/features/stats/presentation/stats_screen.dart';
 import 'package:kubb_app/features/training/presentation/finisseur_config_screen.dart';
 import 'package:kubb_app/features/training/presentation/finisseur_stick_screen.dart';
@@ -78,10 +81,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const AccountLinkScreen(),
       ),
       GoRoute(
-        path: AuthRoutes.passphraseChange,
-        builder: (_, _) => const PassphraseChangeScreen(),
-      ),
-      GoRoute(
         path: AuthRoutes.deleteAccount,
         builder: (_, _) => const DeleteAccountScreen(),
       ),
@@ -92,6 +91,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AuthRoutes.editProfile,
         builder: (_, _) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: AuthRoutes.inbox,
+        builder: (_, _) => const InboxScreen(),
+      ),
+      GoRoute(
+        path: SocialRoutes.friends,
+        builder: (_, _) => const FriendsScreen(),
+      ),
+      GoRoute(
+        path: SocialRoutes.groups,
+        builder: (_, _) => const GroupsScreen(),
       ),
       GoRoute(
         path: '/',

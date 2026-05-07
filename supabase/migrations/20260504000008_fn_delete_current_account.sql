@@ -13,11 +13,11 @@
 -- (siehe 20260504000001_auth_tables.sql — alle Referenzen auf
 -- auth.users(id) sind ON DELETE CASCADE).
 
-CREATE OR REPLACE FUNCTION auth.fn_delete_current_account()
+CREATE OR REPLACE FUNCTION public.fn_delete_current_account()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = auth, public
+SET search_path = public, auth
 AS $$
 DECLARE
   v_user_id uuid := auth.uid();
@@ -30,28 +30,11 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION auth.fn_delete_current_account IS
+COMMENT ON FUNCTION public.fn_delete_current_account IS
   'Hard-delete the currently authenticated user. FK cascades clean up '
   'user_credentials, user_keypair_backups and user_profiles. Replaces '
   'the client-side admin.deleteUser call which would have required the '
   'service-role key in the app bundle.';
 
-REVOKE ALL ON FUNCTION auth.fn_delete_current_account() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION auth.fn_delete_current_account() TO authenticated;
-
-
--- Public-Wrapper, damit PostgREST den Aufruf findet (siehe
--- 20260504000007_public_rpc_wrappers.sql für das gleiche Pattern bei
--- den anderen Auth-RPCs).
-
-CREATE OR REPLACE FUNCTION public.fn_delete_current_account()
-RETURNS void
-LANGUAGE sql
-SECURITY DEFINER
-SET search_path = auth, public
-AS $$
-  SELECT auth.fn_delete_current_account();
-$$;
-
-GRANT EXECUTE ON FUNCTION public.fn_delete_current_account()
-  TO authenticated;
+REVOKE ALL ON FUNCTION public.fn_delete_current_account() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.fn_delete_current_account() TO authenticated;

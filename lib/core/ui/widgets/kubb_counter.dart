@@ -26,7 +26,7 @@ class KubbCounter extends StatelessWidget {
     final shown = masked ? '—' : value.toString();
 
     final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(

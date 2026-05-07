@@ -17,6 +17,12 @@ class KubbIcons {
   static const IconData stat = LucideIcons.barChart3;
   static const IconData target = LucideIcons.target;
   static const IconData profile = LucideIcons.user;
+
+  /// Multi-figure glyph used for navigation entries that lead to the
+  /// player hub (own profile + friends + groups). Distinct from
+  /// [profile] so single-user contexts (avatar, details) keep the
+  /// single-figure look.
+  static const IconData players = LucideIcons.users;
 }
 
 class KubbIcon extends StatelessWidget {

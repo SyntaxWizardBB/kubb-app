@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/auth/application/account_deletion_controller.dart';
-import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/auth_primary_button.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/auth_secondary_button.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/wizard_header.dart';
@@ -41,13 +40,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
   }
 
   Future<void> _confirmDelete() async {
-    final nickname = ref.read(authControllerProvider).maybeWhen(
-          data: (s) => s.displayName,
-          orElse: () => null,
-        );
-    await ref
-        .read(accountDeletionControllerProvider.notifier)
-        .delete(nickname: nickname);
+    await ref.read(accountDeletionControllerProvider.notifier).delete();
   }
 
   @override

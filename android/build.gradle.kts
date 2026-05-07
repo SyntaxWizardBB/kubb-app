@@ -14,6 +14,18 @@ rootProject.layout.buildDirectory.value(newBuildDir)
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
+
+    // Force every plugin (e.g. flutter_secure_storage which pins
+    // compileSdk=33) to use an SDK level present in the Nix-managed
+    // Android SDK. Without this Gradle tries to download
+    // platforms;android-33 into the read-only /nix/store path.
+    afterEvaluate {
+        if (extensions.findByName("android") != null) {
+            extensions.configure<com.android.build.gradle.BaseExtension>("android") {
+                compileSdkVersion(36)
+            }
+        }
+    }
 }
 subprojects {
     project.evaluationDependsOn(":app")

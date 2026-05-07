@@ -76,7 +76,7 @@ void main() {
       sessionId: 'fin-1',
       field: 7,
       base: 3,
-      sticks: sticks,
+      sticks:sticks,
       currentIndex: 3,
       startedAt: DateTime.utc(2026, 5, 2),
       phase: FinisseurPhase.base,
@@ -99,7 +99,7 @@ void main() {
       sessionId: 'fin-1',
       field: 7,
       base: 3,
-      sticks: sticks,
+      sticks:sticks,
       currentIndex: currentIndex,
       startedAt: DateTime.utc(2026, 5, 2),
       phase: FinisseurPhase.king,
@@ -198,7 +198,7 @@ void main() {
       sessionId: 'fin-1',
       field: 7,
       base: 3,
-      sticks: <StickResult>[
+      sticks:<StickResult>[
         const StickResult(fieldHits: 7),
         const StickResult(eightMHit: true),
         const StickResult(),
