@@ -44,6 +44,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
+    // Keep the polling timer alive while the screen is mounted so the
+    // friends list flips from pending→accepted automatically once the
+    // peer has responded server-side.
+    ref.watch(friendsPollingProvider);
     final friendsAsync = ref.watch(friendsListProvider);
     final callerId = ref.watch(currentUserIdProvider);
 
@@ -81,8 +85,23 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             else
               Expanded(
                 child: friendsAsync.when(
-                  data: (entries) =>
-                      _FriendsList(entries: entries, callerId: callerId),
+                  data: (entries) {
+                    // Pending incoming requests are NOT shown in the
+                    // friends list — they live in the inbox as
+                    // verification_request popups (per ADR-0012 §
+                    // social UX). The list reflects established
+                    // friendships only. Outgoing pending stays so the
+                    // caller can see their own sent requests.
+                    final visible = entries
+                        .where((e) =>
+                            e.isAccepted ||
+                            (e.isPending && e.requestedBy == callerId))
+                        .toList(growable: false);
+                    return _FriendsList(
+                      entries: visible,
+                      callerId: callerId,
+                    );
+                  },
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
                   error: (e, _) => Center(

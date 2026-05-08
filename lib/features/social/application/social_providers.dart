@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/social/data/friend_models.dart';
@@ -13,6 +15,22 @@ final friendsListProvider =
   final isAuthed = ref.watch(isAuthenticatedProvider);
   if (!isAuthed) return const <FriendEntry>[];
   return ref.read(friendRepositoryProvider).listForCaller();
+});
+
+/// Polling sentinel — `ref.watch(friendsPollingProvider)` from a screen
+/// keeps a Timer alive that invalidates [friendsListProvider] every
+/// 8 seconds. Lets the requester's UI flip from "wartet…" to
+/// "Bereits Freund" without manual pull-to-refresh once the other side
+/// has accepted server-side. Auto-disposes when the screen unmounts.
+// Riverpod's autoDispose-provider type names are not part of the
+// public API, so we suppress the lint here.
+// ignore: specify_nonobvious_property_types
+final friendsPollingProvider = Provider.autoDispose<void>((ref) {
+  final timer = Timer.periodic(
+    const Duration(seconds: 8),
+    (_) => ref.invalidate(friendsListProvider),
+  );
+  ref.onDispose(timer.cancel);
 });
 
 /// `accepted` subset of [friendsListProvider]. Used by the group-invite

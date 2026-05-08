@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_bottom_sheet.dart';
+import 'package:kubb_app/features/match/presentation/match_routes.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -45,6 +46,18 @@ class TrainingSheet extends StatelessWidget {
             onTap: () {
               Navigator.of(context).pop();
               context.go('/training/finisseur/config');
+            },
+          ),
+          const SizedBox(height: KubbTokens.space3),
+          _ModeCard(
+            background: KubbTokens.wood400,
+            foreground: KubbTokens.stone900,
+            title: 'Match',
+            subtitle: 'Mehrspieler-Match (Bo1/3/5)',
+            trailing: 'vs',
+            onTap: () {
+              Navigator.of(context).pop();
+              context.go(MatchRoutes.newMatch);
             },
           ),
           const SizedBox(height: KubbTokens.space3),

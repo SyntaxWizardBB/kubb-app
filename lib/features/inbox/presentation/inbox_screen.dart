@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/inbox/application/inbox_controller.dart';
 import 'package:kubb_app/features/inbox/data/inbox_message.dart';
+import 'package:kubb_app/features/match/application/match_providers.dart';
+import 'package:kubb_app/features/match/presentation/match_routes.dart';
+import 'package:kubb_app/features/social/application/social_providers.dart';
 
 /// Minimal inbox screen: lists the user's non-archived messages,
 /// renders each as a tappable tile that opens a body view, and lets
@@ -236,6 +239,9 @@ class _MessageDetail extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final actions = ref.read(inboxActionsProvider);
+    final actionKind = message.actionPayload?['kind'] as String?;
+    final matchId = message.actionPayload?['match_id'] as String?;
+    final friendUserId = message.actionPayload?['from_user_id'] as String?;
 
     return SafeArea(
       child: Padding(
@@ -261,7 +267,84 @@ class _MessageDetail extends ConsumerWidget {
                 color: tokens.fg,
               ),
             ),
-            if (message.awaitsReply) ...[
+            // -- Friend-request action payload --------------------------
+            if (actionKind == 'friend_request' && friendUserId != null) ...[
+              const SizedBox(height: KubbTokens.space5),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => _handleFriendRequest(
+                        context,
+                        ref,
+                        otherUserId: friendUserId,
+                        accept: true,
+                      ),
+                      child: const Text('Annehmen'),
+                    ),
+                  ),
+                  const SizedBox(width: KubbTokens.space3),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => _handleFriendRequest(
+                        context,
+                        ref,
+                        otherUserId: friendUserId,
+                        accept: false,
+                      ),
+                      child: const Text('Ablehnen'),
+                    ),
+                  ),
+                ],
+              ),
+            ] else
+            // -- Match-specific action payloads --------------------------
+            if (actionKind == 'match_invite' && matchId != null) ...[
+              const SizedBox(height: KubbTokens.space5),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => _handleMatchInvite(
+                        context,
+                        ref,
+                        matchId: matchId,
+                        accept: true,
+                      ),
+                      child: const Text('Annehmen'),
+                    ),
+                  ),
+                  const SizedBox(width: KubbTokens.space3),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => _handleMatchInvite(
+                        context,
+                        ref,
+                        matchId: matchId,
+                        accept: false,
+                      ),
+                      child: const Text('Ablehnen'),
+                    ),
+                  ),
+                ],
+              ),
+            ] else if (actionKind == 'match_round_prompt' &&
+                matchId != null) ...[
+              const SizedBox(height: KubbTokens.space5),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => _handleRoundPrompt(
+                    context,
+                    ref,
+                    messageId: message.id,
+                    matchId: matchId,
+                  ),
+                  child: const Text('Resultat eintragen'),
+                ),
+              ),
+            ] else if (message.awaitsReply) ...[
+              // -- Generic confirm / deny fallback ---------------------
               const SizedBox(height: KubbTokens.space5),
               Row(
                 children: [
@@ -306,5 +389,102 @@ class _MessageDetail extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _handleMatchInvite(
+    BuildContext context,
+    WidgetRef ref, {
+    required String matchId,
+    required bool accept,
+  }) async {
+    final inboxActions = ref.read(inboxActionsProvider);
+    final matchActions = ref.read(matchActionsProvider);
+    try {
+      if (accept) {
+        await matchActions.acceptInvite(matchId);
+      } else {
+        await matchActions.declineInvite(matchId);
+      }
+      await inboxActions.reply(
+        message.id,
+        {'answer': accept ? 'accept' : 'decline'},
+      );
+      if (!context.mounted) return;
+      Navigator.of(context).pop();
+      if (accept) {
+        context.go('${MatchRoutes.lobby}/$matchId');
+      }
+    } on Object catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Fehler: $e'),
+          backgroundColor: KubbTokens.miss,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleFriendRequest(
+    BuildContext context,
+    WidgetRef ref, {
+    required String otherUserId,
+    required bool accept,
+  }) async {
+    final inboxActions = ref.read(inboxActionsProvider);
+    final socialActions = ref.read(socialActionsProvider);
+    try {
+      if (accept) {
+        await socialActions.acceptFriendRequest(otherUserId);
+      } else {
+        await socialActions.rejectFriendRequest(otherUserId);
+      }
+      // Mark the inbox message as resolved so it stops looking pending
+      // in the user's inbox.
+      await inboxActions.reply(
+        message.id,
+        {'answer': accept ? 'accept' : 'decline'},
+      );
+      if (!context.mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            accept ? 'Freundschaftsanfrage angenommen' : 'Anfrage abgelehnt',
+          ),
+        ),
+      );
+    } on Object catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Fehler: $e'),
+          backgroundColor: KubbTokens.miss,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleRoundPrompt(
+    BuildContext context,
+    WidgetRef ref, {
+    required String messageId,
+    required String matchId,
+  }) async {
+    final inboxActions = ref.read(inboxActionsProvider);
+    try {
+      await inboxActions.markRead(messageId);
+      if (!context.mounted) return;
+      Navigator.of(context).pop();
+      context.go('${MatchRoutes.result}/$matchId');
+    } on Object catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Fehler: $e'),
+          backgroundColor: KubbTokens.miss,
+        ),
+      );
+    }
   }
 }
