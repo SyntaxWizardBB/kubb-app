@@ -1,16 +1,14 @@
 # match — bounded context
 
-**Layering**: full hexagonal (per ADR-0002).
+**Layering**: server-shaped (per ADR-0013, amending ADR-0002).
 
-This is the rich-domain feature: rule validation, scoring event log, multi-device sync, dispute resolution.
+Solo-Match (per ADR-0012) uses Supabase RPCs as the domain authority. The Flutter side is a thin client over the `match_*` RPCs declared in `supabase/migrations/20260507*_match_*.sql`.
 
 ```
 match/
-├── application/    Riverpod controllers exposing AsyncValue<MatchState>
-├── data/           Adapters: DriftMatchEventRepository, SupabaseMatchEventAdapter
-└── presentation/   Scorer keypad, live state view
+├── application/    Riverpod controllers over the repository
+├── data/           Wire-shaped models + MatchRepository (RPC wrapper)
+└── presentation/   List, lobby, result form
 ```
 
-Domain types (`MatchEvent`, `MatchState`, `RuleSet`, ports) live in `packages/kubb_domain/`. This feature provides the concrete adapters + Flutter UI on top of them.
-
-Sync model: append-only events, UUIDv7 ids, Lamport ordering. Conflicts are domain operations (`DisputeRaised`, `OrganizerOverride`), never silent overwrites.
+Data models in `data/match_models.dart` mirror the RPC payloads (`MatchSummary`, `MatchDetail`, `MatchResultProposal`, …). Round reconciliation, vote tallying, and audit-trail emission live server-side in `_match_try_reconcile`. The `packages/kubb_domain/match/` slot stays reserved for the tournament live-scoring slice (M3+).

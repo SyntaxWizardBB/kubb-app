@@ -110,3 +110,5 @@ kubb_app/
 - The `kubb_domain` package can be imported by future tooling (CLI tournament validator, server-side rule checker) without dragging Flutter along.
 - Cross-context references go through value objects (`PlayerRef`, `TeamRef`) — no direct DB joins between contexts.
 - When in doubt about which style to use for a new feature: default to pragmatic. Move toward hexagonal only when the domain proves rich enough to justify the structure.
+
+> Amended 2026-05-24 by ADR-0013: the `match/` row above describes the future tournament live-scoring slice. Solo-Match (per ADR-0012) is server-shaped — see ADR-0013.
