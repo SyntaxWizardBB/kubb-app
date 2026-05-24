@@ -49,6 +49,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/build/
 
 # Local-only project memory and AI tool configs (per ~/Workbench/CLAUDE.md)
 /CLAUDE.md
