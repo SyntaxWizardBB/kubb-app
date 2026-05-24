@@ -17,6 +17,7 @@ MatchDetail _detail({
   return MatchDetail(
     match: MatchDetailHeader(
       matchId: 'm-1',
+      createdByUserId: null,
       format: MatchFormat.bo3,
       scoring: MatchScoring.wins,
       status: status,
