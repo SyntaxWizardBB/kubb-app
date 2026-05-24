@@ -133,8 +133,6 @@ class _LobbyBody extends StatelessWidget {
         Row(
           children: [
             _MetaChip(text: _formatLabel(detail.match.format)),
-            const SizedBox(width: KubbTokens.space2),
-            _MetaChip(text: _scoringLabel(detail.match.scoring)),
             const Spacer(),
             MatchStatusPill(status: detail.match.status),
           ],
@@ -197,11 +195,6 @@ class _LobbyBody extends StatelessWidget {
   }
 
   String _formatLabel(MatchFormat f) => 'BO${f.n}';
-
-  String _scoringLabel(MatchScoring s) => switch (s) {
-        MatchScoring.wins => 'Sätze',
-        MatchScoring.points => 'Punkte',
-      };
 }
 
 class _MetaChip extends StatelessWidget {

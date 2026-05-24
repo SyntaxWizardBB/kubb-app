@@ -99,13 +99,6 @@ class _MatchConfigScreenState extends ConsumerState<MatchConfigScreen> {
               onChanged: controller.setFormat,
             ),
             const SizedBox(height: KubbTokens.space5),
-            const _SectionLabel(text: 'Wertung'),
-            const SizedBox(height: KubbTokens.space2),
-            _ScoringChips(
-              selected: draft.scoring,
-              onSelected: controller.setScoring,
-            ),
-            const SizedBox(height: KubbTokens.space5),
             _TeamColumn(
               title: 'Team A',
               accent: KubbTokens.meadow600,
@@ -257,77 +250,6 @@ class _StepBtn extends StatelessWidget {
             child: Icon(
               icon,
               color: onPressed == null ? tokens.fgSubtle : tokens.fg,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ScoringChips extends StatelessWidget {
-  const _ScoringChips({required this.selected, required this.onSelected});
-
-  final MatchScoring selected;
-  final ValueChanged<MatchScoring> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: KubbTokens.space2,
-      children: [
-        _Chip(
-          label: 'Sätze',
-          selected: selected == MatchScoring.wins,
-          onTap: () => onSelected(MatchScoring.wins),
-        ),
-        _Chip(
-          label: 'Punkte',
-          selected: selected == MatchScoring.points,
-          onTap: () => onSelected(MatchScoring.points),
-        ),
-      ],
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return Material(
-      color: selected ? tokens.primary : tokens.bgRaised,
-      borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: KubbTokens.space4,
-            vertical: KubbTokens.space2,
-          ),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: selected ? tokens.primary : tokens.line,
-            ),
-            borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: selected ? tokens.onPrimary : tokens.fg,
             ),
           ),
         ),

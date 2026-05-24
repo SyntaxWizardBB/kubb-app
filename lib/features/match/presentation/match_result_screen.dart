@@ -11,14 +11,10 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 /// Pure validation for a round-result entry. Returns `null` when the
 /// inputs form a valid result, otherwise a German message for inline
-/// display. The winner is derived from the score columns — no separate
-/// selector — and ties are rejected for both scoring modes.
+/// display. Sätze-only — the winner is derived from the score columns,
+/// no separate selector. Ties are rejected.
 @visibleForTesting
-String? validateMatchResult({
-  required MatchScoring scoring,
-  required int scoreA,
-  required int scoreB,
-}) {
+String? validateMatchResult({required int scoreA, required int scoreB}) {
   if (scoreA < 0 || scoreB < 0) {
     return 'Punkte dürfen nicht negativ sein';
   }
@@ -97,25 +93,16 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
     _prefilledForRound = detail.match.currentRound;
   }
 
-  /// Hard cap for the per-team counter in `wins` scoring — a team
-  /// cannot win more sets than `ceil(n/2)`. Points scoring has no cap,
-  /// kubb-point counts run freely.
-  int? _scoreCapFor(MatchDetail detail) {
-    if (detail.match.scoring == MatchScoring.wins) {
-      return detail.match.format.setsToWin;
-    }
-    return null;
-  }
+  /// Hard cap for the per-team counter — a team cannot win more sets
+  /// than `ceil(n/2)`.
+  int _scoreCapFor(MatchDetail detail) => detail.match.format.setsToWin;
 
-  String? _validate(MatchDetail detail) => validateMatchResult(
-        scoring: detail.match.scoring,
-        scoreA: _scoreA,
-        scoreB: _scoreB,
-      );
+  String? _validate() =>
+      validateMatchResult(scoreA: _scoreA, scoreB: _scoreB);
 
   Future<void> _submit(MatchDetail detail) async {
     if (_submitting) return;
-    if (_validate(detail) != null) return;
+    if (_validate() != null) return;
     setState(() => _submitting = true);
     try {
       final response = await ref.read(matchActionsProvider).proposeResult(
@@ -192,7 +179,7 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
           // propose-result RPC will accept the first submission.
           unawaited(_ensureAwaitingResults(detail));
           _prefillFromDetail(detail);
-          final validationMsg = _validate(detail);
+          final validationMsg = _validate();
           final cap = _scoreCapFor(detail);
           return SingleChildScrollView(
             padding: const EdgeInsets.all(KubbTokens.space4),
@@ -218,7 +205,7 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
                         title: 'Team A',
                         accent: KubbTokens.meadow600,
                         value: _scoreA,
-                        onIncrement: cap != null && _scoreA >= cap
+                        onIncrement: _scoreA >= cap
                             ? null
                             : () => setState(() => _scoreA += 1),
                         onDecrement: _scoreA == 0
@@ -232,7 +219,7 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
                         title: 'Team B',
                         accent: KubbTokens.wood400,
                         value: _scoreB,
-                        onIncrement: cap != null && _scoreB >= cap
+                        onIncrement: _scoreB >= cap
                             ? null
                             : () => setState(() => _scoreB += 1),
                         onDecrement: _scoreB == 0

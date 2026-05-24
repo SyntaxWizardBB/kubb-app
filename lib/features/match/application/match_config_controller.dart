@@ -17,10 +17,6 @@ class MatchConfigController extends Notifier<MatchConfigDraft> {
     state = state.copyWith(format: format);
   }
 
-  void setScoring(MatchScoring scoring) {
-    state = state.copyWith(scoring: scoring);
-  }
-
   /// Adds [slot] to [team]. If the slot already exists in the *other*
   /// team it is moved (a slot can only live in one team at a time).
   void addToTeam(TeamSlot slot, MatchTeamTag team) {
