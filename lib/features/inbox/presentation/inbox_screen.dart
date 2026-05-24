@@ -22,6 +22,7 @@ class InboxScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
+    ref.watch(inboxPollingProvider);
     final async = ref.watch(inboxMessagesProvider);
 
     return Scaffold(

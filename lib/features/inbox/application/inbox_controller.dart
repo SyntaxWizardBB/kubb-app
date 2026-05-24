@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/inbox/data/inbox_message.dart';
@@ -10,6 +12,21 @@ final inboxMessagesProvider = FutureProvider<List<InboxMessage>>((ref) async {
   final isAuthed = ref.watch(isAuthenticatedProvider);
   if (!isAuthed) return const <InboxMessage>[];
   return ref.read(inboxRepositoryProvider).list();
+});
+
+/// Polling sentinel — a screen that `watch`es this keeps a Timer alive
+/// that invalidates [inboxMessagesProvider] every 8 seconds, so an
+/// incoming friend or match invite shows up without manual refresh.
+/// Same shape as the friends- and match-detail polling providers.
+// Riverpod's autoDispose-provider type names are not part of the
+// public API, so the lint stays suppressed.
+// ignore: specify_nonobvious_property_types
+final inboxPollingProvider = Provider.autoDispose<void>((ref) {
+  final timer = Timer.periodic(
+    const Duration(seconds: 8),
+    (_) => ref.invalidate(inboxMessagesProvider),
+  );
+  ref.onDispose(timer.cancel);
 });
 
 /// Count of unread (non-archived) messages. Cheap derivation off
