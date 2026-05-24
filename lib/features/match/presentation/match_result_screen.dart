@@ -7,6 +7,48 @@ import 'package:kubb_app/features/match/data/match_models.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+/// Pure validation for a round-result entry. Returns `null` when the
+/// inputs are internally consistent, otherwise a German message that
+/// can be surfaced inline.
+///
+/// Rules mirror what the server accepts and add the consistency check
+/// the RPC does *not* enforce (winner must match the higher score for
+/// `points` scoring; ties are only meaningful for `points`).
+@visibleForTesting
+String? validateMatchResult({
+  required MatchScoring scoring,
+  required int scoreA,
+  required int scoreB,
+  required String? winner,
+}) {
+  if (scoreA < 0 || scoreB < 0) {
+    return 'Punkte dürfen nicht negativ sein';
+  }
+  if (winner != null && winner != 'A' && winner != 'B') {
+    return 'Ungültiger Sieger';
+  }
+  switch (scoring) {
+    case MatchScoring.wins:
+      if (winner == null) return 'Sieger fehlt';
+      return null;
+    case MatchScoring.points:
+      if (scoreA == scoreB) {
+        if (winner != null) {
+          return 'Punktegleichstand: bitte Unentschieden wählen';
+        }
+        return null;
+      }
+      final leader = scoreA > scoreB ? 'A' : 'B';
+      if (winner == null) {
+        return 'Sieger fehlt';
+      }
+      if (winner != leader) {
+        return 'Punkte stimmen nicht mit Sieger überein';
+      }
+      return null;
+  }
+}
+
 /// Round-result entry. Uses [matchDetailProvider] for the round
 /// indicator and pre-fills the score inputs from `ownProposal` when
 /// the user is editing a previously-submitted result.
@@ -52,17 +94,16 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
 
   int _maxRoundsFor(MatchFormat format) => format.n;
 
+  String? _validate(MatchDetail detail) => validateMatchResult(
+        scoring: detail.match.scoring,
+        scoreA: _scoreA,
+        scoreB: _scoreB,
+        winner: _winner,
+      );
+
   Future<void> _submit(MatchDetail detail) async {
     if (_submitting) return;
-    if (detail.match.scoring == MatchScoring.wins && _winner == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Bitte Sieger auswählen.'),
-          backgroundColor: KubbTokens.miss,
-        ),
-      );
-      return;
-    }
+    if (_validate(detail) != null) return;
     setState(() => _submitting = true);
     try {
       final response = await ref.read(matchActionsProvider).proposeResult(
@@ -138,6 +179,7 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
           }
           _prefillFromDetail(detail);
           final maxRounds = _maxRoundsFor(detail.match.format);
+          final validationMsg = _validate(detail);
           return SingleChildScrollView(
             padding: const EdgeInsets.all(KubbTokens.space4),
             child: Column(
@@ -197,10 +239,24 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
                   onSelected: (v) => setState(() => _winner = v),
                 ),
                 const SizedBox(height: KubbTokens.space8),
+                if (validationMsg != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: KubbTokens.space3),
+                    child: Text(
+                      validationMsg,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: KubbTokens.miss,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 SizedBox(
                   height: KubbTokens.touchComfortable,
                   child: FilledButton(
-                    onPressed: _submitting ? null : () => _submit(detail),
+                    onPressed: _submitting || validationMsg != null
+                        ? null
+                        : () => _submit(detail),
                     child: _submitting
                         ? const SizedBox(
                             width: 20,
