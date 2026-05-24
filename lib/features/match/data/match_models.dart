@@ -175,6 +175,9 @@ class MatchSummary {
     required this.myTeamId,
     required this.opponentTeamSize,
     required this.myRole,
+    this.winnerTeamId,
+    this.finalScoreA,
+    this.finalScoreB,
   });
 
   factory MatchSummary.fromRow(Map<String, dynamic> row) {
@@ -185,6 +188,8 @@ class MatchSummary {
         : (opponentRaw is num
             ? opponentRaw.toInt()
             : int.parse(opponentRaw.toString()));
+    final scoreARaw = row['final_score_a'];
+    final scoreBRaw = row['final_score_b'];
     return MatchSummary(
       matchId: row['match_id'] as String,
       format: MatchFormat.fromWire(row['format'] as String),
@@ -196,6 +201,13 @@ class MatchSummary {
       myTeamId: row['my_team_id'] as String?,
       opponentTeamSize: opponentSize,
       myRole: MatchRole.fromWire(row['my_role'] as String),
+      winnerTeamId: row['winner_team_id'] as String?,
+      finalScoreA: scoreARaw == null
+          ? null
+          : (scoreARaw is int ? scoreARaw : (scoreARaw as num).toInt()),
+      finalScoreB: scoreBRaw == null
+          ? null
+          : (scoreBRaw is int ? scoreBRaw : (scoreBRaw as num).toInt()),
     );
   }
 
@@ -210,6 +222,24 @@ class MatchSummary {
   final String? myTeamId;
   final int opponentTeamSize;
   final MatchRole myRole;
+
+  /// 'A', 'B', or null. Populated once the match status is `finalized`.
+  /// Null for ongoing matches and for ties (points scoring with equal
+  /// final scores).
+  final String? winnerTeamId;
+  final int? finalScoreA;
+  final int? finalScoreB;
+
+  /// Caller-relative outcome label: 'won', 'lost', 'tie', or null when
+  /// the match is not yet finalized or the caller has no team.
+  String? get callerOutcome {
+    if (winnerTeamId != null) {
+      if (myTeamId == null) return null;
+      return winnerTeamId == myTeamId ? 'won' : 'lost';
+    }
+    if (status == MatchStatus.finalized) return 'tie';
+    return null;
+  }
 }
 
 /// Team-level metadata. `teamId` is the canonical 'A' or 'B' tag.

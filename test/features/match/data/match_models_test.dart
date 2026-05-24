@@ -132,6 +132,84 @@ void main() {
     });
   });
 
+  group('MatchSummary final result', () {
+    Map<String, dynamic> baseRow({
+      String status = 'finalized',
+      String? winnerTeamId = 'A',
+      String? myTeamId = 'A',
+      Object? finalScoreA = 6,
+      Object? finalScoreB = 3,
+      bool includeFinalKeys = true,
+    }) {
+      final row = <String, dynamic>{
+        'match_id': 'match-1',
+        'format': 'bo3',
+        'scoring': 'wins',
+        'status': status,
+        'started_at': '2026-05-24T10:00:00.000Z',
+        'completed_at': status == 'finalized'
+            ? '2026-05-24T11:00:00.000Z'
+            : null,
+        'my_team_id': myTeamId,
+        'opponent_team_size': 2,
+        'my_role': 'participant',
+      };
+      if (includeFinalKeys) {
+        row['winner_team_id'] = winnerTeamId;
+        row['final_score_a'] = finalScoreA;
+        row['final_score_b'] = finalScoreB;
+      }
+      return row;
+    }
+
+    test('fromRow parses winner and final scores on a finalized row', () {
+      final s = MatchSummary.fromRow(baseRow());
+      expect(s.winnerTeamId, 'A');
+      expect(s.finalScoreA, 6);
+      expect(s.finalScoreB, 3);
+    });
+
+    test('fromRow accepts absence of the new fields (older callers)', () {
+      final s = MatchSummary.fromRow(baseRow(includeFinalKeys: false));
+      expect(s.winnerTeamId, isNull);
+      expect(s.finalScoreA, isNull);
+      expect(s.finalScoreB, isNull);
+    });
+
+    test('callerOutcome is won when winner matches my team', () {
+      final s = MatchSummary.fromRow(baseRow());
+      expect(s.callerOutcome, 'won');
+    });
+
+    test('callerOutcome is lost when winner is the other team', () {
+      final s = MatchSummary.fromRow(baseRow(winnerTeamId: 'B'));
+      expect(s.callerOutcome, 'lost');
+    });
+
+    test('callerOutcome is tie when finalized without a winner', () {
+      final s = MatchSummary.fromRow(
+        baseRow(
+          winnerTeamId: null,
+          finalScoreA: 5,
+          finalScoreB: 5,
+        ),
+      );
+      expect(s.callerOutcome, 'tie');
+    });
+
+    test('callerOutcome is null while the match is not finalized', () {
+      final s = MatchSummary.fromRow(
+        baseRow(
+          status: 'active',
+          winnerTeamId: null,
+          finalScoreA: null,
+          finalScoreB: null,
+        ),
+      );
+      expect(s.callerOutcome, isNull);
+    });
+  });
+
   group('MatchDetail.isCallerCreator', () {
     Map<String, dynamic> sampleRow({String? createdBy = 'user-a'}) {
       return <String, dynamic>{
