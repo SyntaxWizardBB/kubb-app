@@ -365,12 +365,17 @@ class MatchDetailHeader {
     required this.completedAt,
     required this.currentRound,
     required this.settings,
+    this.winnerTeamId,
+    this.finalScoreA,
+    this.finalScoreB,
   });
 
   factory MatchDetailHeader.fromRow(Map<String, dynamic> row) {
     final completedRaw = row['completed_at'] as String?;
     final currentRoundRaw = row['current_round'];
     final settingsRaw = row['settings'];
+    final scoreARaw = row['final_score_a'];
+    final scoreBRaw = row['final_score_b'];
     return MatchDetailHeader(
       matchId: row['match_id'] as String,
       format: MatchFormat.fromWire(row['format'] as String),
@@ -385,6 +390,13 @@ class MatchDetailHeader {
       settings: settingsRaw is Map<String, dynamic>
           ? Map<String, dynamic>.from(settingsRaw)
           : <String, dynamic>{},
+      winnerTeamId: row['winner_team_id'] as String?,
+      finalScoreA: scoreARaw == null
+          ? null
+          : (scoreARaw is int ? scoreARaw : (scoreARaw as num).toInt()),
+      finalScoreB: scoreBRaw == null
+          ? null
+          : (scoreBRaw is int ? scoreBRaw : (scoreBRaw as num).toInt()),
     );
   }
 
@@ -396,6 +408,13 @@ class MatchDetailHeader {
   final DateTime? completedAt;
   final int currentRound;
   final Map<String, dynamic> settings;
+
+  /// 'A', 'B', or null. Populated once the match status is `finalized`.
+  /// Null for ongoing matches and for ties (points scoring with equal
+  /// final scores — see [MatchDetail.derivedWinner]).
+  final String? winnerTeamId;
+  final int? finalScoreA;
+  final int? finalScoreB;
 }
 
 /// Full match payload returned by `match_get`. Bundles the header,
@@ -448,5 +467,18 @@ class MatchDetail {
 
   Iterable<MatchParticipant> participantsForTeam(String teamId) {
     return participants.where((p) => p.teamId == teamId);
+  }
+
+  /// Winner-team derivation for finalized matches. Falls back to the
+  /// final-score comparison when the server-side `winner_team_id` is
+  /// absent (which it is for ties in points-scoring matches).
+  /// Returns 'A', 'B', or null for a tie / not-yet-finalized.
+  String? get derivedWinner {
+    if (match.status != MatchStatus.finalized) return null;
+    if (match.winnerTeamId != null) return match.winnerTeamId;
+    final a = match.finalScoreA;
+    final b = match.finalScoreB;
+    if (a == null || b == null || a == b) return null;
+    return a > b ? 'A' : 'B';
   }
 }
