@@ -8,6 +8,7 @@ import 'package:kubb_app/features/stats/application/stats_aggregate_provider.dar
 import 'package:kubb_app/features/stats/data/stats_aggregate.dart';
 import 'package:kubb_app/features/stats/presentation/widgets/active_filter_tags.dart';
 import 'package:kubb_app/features/stats/presentation/widgets/finisseur_stats_tab.dart';
+import 'package:kubb_app/features/stats/presentation/widgets/match_stats_tab.dart';
 import 'package:kubb_app/features/stats/presentation/widgets/stats_aggregate_block.dart';
 import 'package:kubb_app/features/stats/presentation/widgets/stats_filter_modal.dart';
 import 'package:kubb_app/features/stats/presentation/widgets/stats_session_list.dart';
@@ -29,7 +30,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: 2, vsync: this)
+    _tab = TabController(length: 3, vsync: this)
       ..addListener(_onTabChanged);
   }
 
@@ -50,6 +51,8 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final isFinisseur = _tab.index == 1;
+    final isMatch = _tab.index == 2;
+    final showFilter = _tab.index == 0 || _tab.index == 1;
 
     return Scaffold(
       backgroundColor: tokens.bg,
@@ -66,12 +69,14 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
           onPressed: () =>
               Navigator.of(context).canPop() ? context.pop() : context.go('/'),
         ),
-        actions: IconButton(
-          tooltip: l.statsFilterTitle,
-          icon: const KubbIcon(LucideIcons.sliders),
-          onPressed: () =>
-              StatsFilterModal.show(context, finisseur: isFinisseur),
-        ),
+        actions: showFilter
+            ? IconButton(
+                tooltip: l.statsFilterTitle,
+                icon: const KubbIcon(LucideIcons.sliders),
+                onPressed: () =>
+                    StatsFilterModal.show(context, finisseur: isFinisseur),
+              )
+            : null,
       ),
       body: Column(
         children: [
@@ -83,15 +88,17 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
             tabs: [
               Tab(text: l.statsTabSniper),
               Tab(text: l.statsTabFinisseur),
+              Tab(text: l.statsTabMatch),
             ],
           ),
-          ActiveFilterTags(isFinisseur: isFinisseur),
+          if (!isMatch) ActiveFilterTags(isFinisseur: isFinisseur),
           Expanded(
             child: TabBarView(
               controller: _tab,
               children: const [
                 _SniperTab(),
                 FinisseurStatsTab(),
+                MatchStatsTab(),
               ],
             ),
           ),

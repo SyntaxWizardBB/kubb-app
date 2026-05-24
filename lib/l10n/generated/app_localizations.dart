@@ -1222,6 +1222,78 @@ abstract class AppLocalizations {
   /// **'Finisseur'**
   String get statsTabFinisseur;
 
+  /// Match tab label on stats screen
+  ///
+  /// In de, this message translates to:
+  /// **'Match'**
+  String get statsTabMatch;
+
+  /// Empty state title on the match tab when no finished matches exist
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Matches'**
+  String get statsMatchEmptyTitle;
+
+  /// Empty state body on the match tab
+  ///
+  /// In de, this message translates to:
+  /// **'Spiele dein erstes Match — die Statistik füllt sich automatisch.'**
+  String get statsMatchEmptyBody;
+
+  /// Match wins metric label
+  ///
+  /// In de, this message translates to:
+  /// **'Siege'**
+  String get statsMatchWins;
+
+  /// Match losses metric label
+  ///
+  /// In de, this message translates to:
+  /// **'Niederlagen'**
+  String get statsMatchLosses;
+
+  /// Match ties metric label
+  ///
+  /// In de, this message translates to:
+  /// **'Unentschieden'**
+  String get statsMatchTies;
+
+  /// Match win rate metric label
+  ///
+  /// In de, this message translates to:
+  /// **'Siegquote'**
+  String get statsMatchWinRate;
+
+  /// Section title above the recent match list
+  ///
+  /// In de, this message translates to:
+  /// **'Letzte Matches'**
+  String get statsMatchRecentTitle;
+
+  /// Match outcome chip — caller won
+  ///
+  /// In de, this message translates to:
+  /// **'Gewonnen'**
+  String get statsMatchOutcomeWon;
+
+  /// Match outcome chip — caller lost
+  ///
+  /// In de, this message translates to:
+  /// **'Verloren'**
+  String get statsMatchOutcomeLost;
+
+  /// Match outcome chip — tied match
+  ///
+  /// In de, this message translates to:
+  /// **'Unentschieden'**
+  String get statsMatchOutcomeTie;
+
+  /// Opponent indication on a match row
+  ///
+  /// In de, this message translates to:
+  /// **'vs {n} Spieler'**
+  String statsMatchOpponent(int n);
+
   /// Hero label for finisseur success rate
   ///
   /// In de, this message translates to:

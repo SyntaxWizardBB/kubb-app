@@ -622,6 +622,45 @@ class AppLocalizationsDe extends AppLocalizations {
   String get statsTabFinisseur => 'Finisseur';
 
   @override
+  String get statsTabMatch => 'Match';
+
+  @override
+  String get statsMatchEmptyTitle => 'Noch keine Matches';
+
+  @override
+  String get statsMatchEmptyBody =>
+      'Spiele dein erstes Match — die Statistik füllt sich automatisch.';
+
+  @override
+  String get statsMatchWins => 'Siege';
+
+  @override
+  String get statsMatchLosses => 'Niederlagen';
+
+  @override
+  String get statsMatchTies => 'Unentschieden';
+
+  @override
+  String get statsMatchWinRate => 'Siegquote';
+
+  @override
+  String get statsMatchRecentTitle => 'Letzte Matches';
+
+  @override
+  String get statsMatchOutcomeWon => 'Gewonnen';
+
+  @override
+  String get statsMatchOutcomeLost => 'Verloren';
+
+  @override
+  String get statsMatchOutcomeTie => 'Unentschieden';
+
+  @override
+  String statsMatchOpponent(int n) {
+    return 'vs $n Spieler';
+  }
+
+  @override
   String get statsFinisseurSuccessRate => 'Erfolgsrate';
 
   @override
