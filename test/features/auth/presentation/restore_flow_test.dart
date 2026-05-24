@@ -65,24 +65,10 @@ void main() {
     return stub;
   }
 
-  Future<void> advanceToStep2(WidgetTester tester) async {
-    // Step 1: type a valid nickname and press Continue.
-    final field = find.byType(TextField);
-    expect(field, findsOneWidget);
-    await tester.enterText(field, 'abc');
-    await tester.pump();
-
-    final continueButton = find.byType(ElevatedButton);
-    expect(continueButton, findsOneWidget);
-    await tester.tap(continueButton);
-    await tester.pumpAndSettle();
-  }
-
   testWidgets('cooldown badge is disposed when widget unmounts',
       (tester) async {
     final until = DateTime.now().toUtc().add(const Duration(seconds: 30));
     await pump(tester, initial: RestoreState.cooldown(until: until));
-    await advanceToStep2(tester);
 
     // Badge title is unique to the cooldown state.
     expect(find.text('Zu viele Versuche'), findsOneWidget);
@@ -106,7 +92,6 @@ void main() {
     final start = DateTime.now().toUtc();
     final until = start.add(const Duration(seconds: 30));
     await pump(tester, initial: RestoreState.cooldown(until: until));
-    await advanceToStep2(tester);
 
     // First tick happens in initState — should read close to 30.
     expect(
@@ -163,20 +148,19 @@ void main() {
   testWidgets('navigates back to / when restore done', (tester) async {
     final stub =
         await pump(tester, initial: const RestoreState.idle());
-    await advanceToStep2(tester);
 
-    // Sanity check: passphrase input is on screen, Placeholder is not.
+    // Sanity check: mnemonic input is on screen, Placeholder is not.
     expect(find.byType(Placeholder), findsNothing);
 
     stub.emit(const RestoreState.done(userId: 'u1'));
     await tester.pumpAndSettle();
 
-    // The ref.listen on the passphrase step calls go('/'), which
+    // The ref.listen on the mnemonic step calls go('/'), which
     // mounts the Placeholder route.
     expect(find.byType(Placeholder), findsOneWidget);
   });
 
-  testWidgets('continue button enables only for valid nickname',
+  testWidgets('submit button enables only when mnemonic word count is valid',
       (tester) async {
     await pump(tester, initial: const RestoreState.idle());
 
@@ -188,20 +172,34 @@ void main() {
 
     expect(button().onPressed, isNull, reason: 'empty input must be blocked');
 
-    await tester.enterText(field, 'ab');
-    await tester.pump();
-    expect(button().onPressed, isNull, reason: 'two chars are too short');
-
     await tester.enterText(field, 'abc');
-    await tester.pump();
-    expect(button().onPressed, isNotNull, reason: 'three valid chars enable');
-
-    await tester.enterText(field, 'ab cd');
     await tester.pump();
     expect(
       button().onPressed,
       isNull,
-      reason: 'whitespace is rejected by the alphanumeric pattern',
+      reason: 'a single word is not a BIP-39 mnemonic length',
+    );
+
+    // Twelve placeholder words — valid BIP-39 length (the actual word
+    // validity is checked server-side and inside the controller; the
+    // widget only gates on word count via _looksValid).
+    final twelve = List.generate(12, (i) => 'word$i').join(' ');
+    await tester.enterText(field, twelve);
+    await tester.pump();
+    expect(
+      button().onPressed,
+      isNotNull,
+      reason: '12 words satisfy the cheap pre-check',
+    );
+
+    // Eleven words — one short of any allowed length.
+    final eleven = List.generate(11, (i) => 'word$i').join(' ');
+    await tester.enterText(field, eleven);
+    await tester.pump();
+    expect(
+      button().onPressed,
+      isNull,
+      reason: '11 words is not in {12,15,18,21,24}',
     );
   });
 }

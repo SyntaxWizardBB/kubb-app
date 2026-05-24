@@ -103,15 +103,12 @@ void main() {
 
     expect(find.text(l10n.authAccountSectionLabel), findsOneWidget);
     expect(find.text(l10n.authAccountLinkLabel), findsOneWidget);
-    expect(find.text(l10n.authAccountPassphraseLabel), findsOneWidget);
     expect(find.text(l10n.authAccountProviderAnonymous), findsOneWidget);
     expect(find.text(l10n.authAccountSignOutLabel), findsOneWidget);
     expect(find.text(l10n.authAccountDeleteLabel), findsOneWidget);
   });
 
-  testWidgets(
-      'hides link-account and passphrase rows for oauth without keypair fallback',
-      (tester) async {
+  testWidgets('hides link-account row for oauth sessions', (tester) async {
     await pump(
       tester,
       const AuthSession.oauth(
@@ -123,13 +120,12 @@ void main() {
     final l10n = l10nOf(tester);
 
     expect(find.text(l10n.authAccountLinkLabel), findsNothing);
-    expect(find.text(l10n.authAccountPassphraseLabel), findsNothing);
     expect(find.text(l10n.authAccountProviderGoogle), findsOneWidget);
     expect(find.text(l10n.authAccountSignOutLabel), findsOneWidget);
     expect(find.text(l10n.authAccountDeleteLabel), findsOneWidget);
   });
 
-  testWidgets('shows passphrase row for oauth with keypair fallback',
+  testWidgets('hides link-account row for oauth with keypair fallback',
       (tester) async {
     await pump(
       tester,
@@ -142,7 +138,6 @@ void main() {
     );
     final l10n = l10nOf(tester);
 
-    expect(find.text(l10n.authAccountPassphraseLabel), findsOneWidget);
     expect(find.text(l10n.authAccountLinkLabel), findsNothing);
     expect(find.text(l10n.authAccountProviderGoogle), findsOneWidget);
   });
