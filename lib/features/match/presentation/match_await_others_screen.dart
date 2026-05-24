@@ -52,8 +52,9 @@ class _MatchAwaitOthersScreenState
         }
         if (d.match.status == MatchStatus.active) {
           // Reconciled but we're back in active play (rare but possible
-          // after an organizer override). Send back to active.
-          context.go('${MatchRoutes.active}/${widget.matchId}');
+          // after an organizer override). Land on the result screen —
+          // the active intermediate is gone in this flow.
+          context.go('${MatchRoutes.result}/${widget.matchId}');
         }
       },
     );

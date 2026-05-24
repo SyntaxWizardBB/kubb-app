@@ -12,7 +12,6 @@ import 'package:kubb_app/features/auth/presentation/onboarding_tour.dart';
 import 'package:kubb_app/features/auth/presentation/restore_flow.dart';
 import 'package:kubb_app/features/auth/presentation/sign_in_screen.dart';
 import 'package:kubb_app/features/inbox/presentation/inbox_screen.dart';
-import 'package:kubb_app/features/match/presentation/match_active_screen.dart';
 import 'package:kubb_app/features/match/presentation/match_await_others_screen.dart';
 import 'package:kubb_app/features/match/presentation/match_config_screen.dart';
 import 'package:kubb_app/features/match/presentation/match_lobby_screen.dart';
@@ -157,11 +156,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '${MatchRoutes.lobby}/:id',
         builder: (_, state) =>
             MatchLobbyScreen(matchId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '${MatchRoutes.active}/:id',
-        builder: (_, state) =>
-            MatchActiveScreen(matchId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '${MatchRoutes.result}/:id',

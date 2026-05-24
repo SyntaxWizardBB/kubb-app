@@ -28,14 +28,18 @@ class MatchLobbyScreen extends ConsumerWidget {
     final myUserId = ref.watch(currentUserIdProvider);
 
     // Status-driven navigation. Listen so we don't redirect during build.
+    // The "active" status is treated as "all invites accepted, time to
+    // enter the result" — we route straight to the result screen and
+    // skip the no-op active intermediate that used to sit between
+    // them. Server-side `match_propose_result` auto-transitions
+    // active → awaiting_results on first proposal.
     ref.listen<AsyncValue<MatchDetail?>>(
       matchDetailProvider(matchId),
       (_, next) {
         final d = next.value;
         if (d == null) return;
-        if (d.match.status == MatchStatus.active) {
-          context.go('${MatchRoutes.active}/$matchId');
-        } else if (d.match.status == MatchStatus.awaitingResults) {
+        if (d.match.status == MatchStatus.active ||
+            d.match.status == MatchStatus.awaitingResults) {
           context.go('${MatchRoutes.result}/$matchId');
         } else if (d.match.status == MatchStatus.voided) {
           context.go('/');

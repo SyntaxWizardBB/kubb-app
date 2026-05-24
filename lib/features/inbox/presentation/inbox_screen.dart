@@ -412,7 +412,11 @@ class _MessageDetail extends ConsumerWidget {
       if (!context.mounted) return;
       Navigator.of(context).pop();
       if (accept) {
-        context.go('${MatchRoutes.lobby}/$matchId');
+        // Skip the lobby — the lobby would auto-redirect onward as
+        // soon as our acceptance flips the match to `active`. Going
+        // straight to the result screen lets both sides land on the
+        // same surface where the score is entered.
+        context.go('${MatchRoutes.result}/$matchId');
       }
     } on Object catch (e) {
       if (!context.mounted) return;
