@@ -19,7 +19,7 @@ final friendsListProvider =
 
 /// Polling sentinel — `ref.watch(friendsPollingProvider)` from a screen
 /// keeps a Timer alive that invalidates [friendsListProvider] every
-/// 8 seconds. Lets the requester's UI flip from "wartet…" to
+/// second. Lets the requester's UI flip from "wartet…" to
 /// "Bereits Freund" without manual pull-to-refresh once the other side
 /// has accepted server-side. Auto-disposes when the screen unmounts.
 // Riverpod's autoDispose-provider type names are not part of the
@@ -27,7 +27,7 @@ final friendsListProvider =
 // ignore: specify_nonobvious_property_types
 final friendsPollingProvider = Provider.autoDispose<void>((ref) {
   final timer = Timer.periodic(
-    const Duration(seconds: 8),
+    const Duration(seconds: 1),
     (_) => ref.invalidate(friendsListProvider),
   );
   ref.onDispose(timer.cancel);

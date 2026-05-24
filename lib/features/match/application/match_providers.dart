@@ -29,7 +29,7 @@ final matchDetailProvider =
 
 /// Side-effect provider: when a screen `watch`es it, a periodic timer
 /// starts refreshing [matchDetailProvider] for the given match id every
-/// 8 seconds. The timer stops invalidating once the match reaches a
+/// second. The timer stops invalidating once the match reaches a
 /// terminal status (`finalized` / `voided`); the provider itself is
 /// disposed automatically when nobody listens, which cancels the timer.
 //
@@ -38,7 +38,7 @@ final matchDetailProvider =
 // ignore: specify_nonobvious_property_types
 final matchPollingProvider =
     Provider.family<void, String>((ref, matchId) {
-  final timer = Timer.periodic(const Duration(seconds: 8), (_) {
+  final timer = Timer.periodic(const Duration(seconds: 1), (_) {
     final asyncDetail = ref.read(matchDetailProvider(matchId));
     final status = asyncDetail.maybeWhen<MatchStatus?>(
       data: (detail) => detail?.match.status,

@@ -15,7 +15,7 @@ final inboxMessagesProvider = FutureProvider<List<InboxMessage>>((ref) async {
 });
 
 /// Polling sentinel — a screen that `watch`es this keeps a Timer alive
-/// that invalidates [inboxMessagesProvider] every 8 seconds, so an
+/// that invalidates [inboxMessagesProvider] every second, so an
 /// incoming friend or match invite shows up without manual refresh.
 /// Same shape as the friends- and match-detail polling providers.
 // Riverpod's autoDispose-provider type names are not part of the
@@ -23,7 +23,7 @@ final inboxMessagesProvider = FutureProvider<List<InboxMessage>>((ref) async {
 // ignore: specify_nonobvious_property_types
 final inboxPollingProvider = Provider.autoDispose<void>((ref) {
   final timer = Timer.periodic(
-    const Duration(seconds: 8),
+    const Duration(seconds: 1),
     (_) => ref.invalidate(inboxMessagesProvider),
   );
   ref.onDispose(timer.cancel);
