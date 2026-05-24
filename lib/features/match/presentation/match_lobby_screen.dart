@@ -115,17 +115,10 @@ class _LobbyBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
 
-    // The "creator" is the only in-app participant marked accepted from
-    // the start (i.e. the caller of createMatch). Best-effort detection
-    // for the cancel-button visibility — server side enforces the rule.
-    final isCreator = detail.participants.any(
-      (p) =>
-          p.userId != null &&
-          p.userId == myUserId &&
-          p.invitationStatus == MatchInvitationStatus.accepted,
-    );
-    final canCancel =
-        isCreator && detail.match.status == MatchStatus.pendingInvites;
+    // Server tags the creator on `match_get`; the cancel RPC enforces
+    // the same rule. The button is a UX hint, not a security boundary.
+    final canCancel = detail.isCallerCreator(myUserId) &&
+        detail.match.status == MatchStatus.pendingInvites;
 
     final teamA = detail.participants.where((p) => p.teamId == 'A').toList();
     final teamB = detail.participants.where((p) => p.teamId == 'B').toList();

@@ -131,4 +131,46 @@ void main() {
       );
     });
   });
+
+  group('MatchDetail.isCallerCreator', () {
+    Map<String, dynamic> sampleRow({String? createdBy = 'user-a'}) {
+      return <String, dynamic>{
+        'match': <String, dynamic>{
+          'match_id': 'match-1',
+          'created_by': createdBy,
+          'format': 'bo3',
+          'scoring': 'wins',
+          'status': 'pending_invites',
+          'started_at': '2026-05-24T10:00:00.000Z',
+          'completed_at': null,
+          'current_round': 0,
+          'settings': <String, dynamic>{},
+        },
+        'teams': <dynamic>[],
+        'participants': <dynamic>[],
+        'own_proposal': null,
+        'audit_tail': <dynamic>[],
+      };
+    }
+
+    test('parses created_by and reports true for the creator', () {
+      final detail = MatchDetail.fromRow(sampleRow());
+      expect(detail.match.createdByUserId, 'user-a');
+      expect(detail.isCallerCreator('user-a'), isTrue);
+    });
+
+    test('returns false for a non-creator caller', () {
+      final detail = MatchDetail.fromRow(sampleRow());
+      expect(detail.isCallerCreator('user-b'), isFalse);
+    });
+
+    test('returns false when caller or creator is null', () {
+      final knownCreator = MatchDetail.fromRow(sampleRow());
+      expect(knownCreator.isCallerCreator(null), isFalse);
+
+      final orphaned = MatchDetail.fromRow(sampleRow(createdBy: null));
+      expect(orphaned.match.createdByUserId, isNull);
+      expect(orphaned.isCallerCreator('user-a'), isFalse);
+    });
+  });
 }

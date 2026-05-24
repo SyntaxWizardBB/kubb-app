@@ -358,6 +358,7 @@ class MatchAuditEvent {
 class MatchDetailHeader {
   const MatchDetailHeader({
     required this.matchId,
+    required this.createdByUserId,
     required this.format,
     required this.scoring,
     required this.status,
@@ -378,6 +379,7 @@ class MatchDetailHeader {
     final scoreBRaw = row['final_score_b'];
     return MatchDetailHeader(
       matchId: row['match_id'] as String,
+      createdByUserId: row['created_by'] as String?,
       format: MatchFormat.fromWire(row['format'] as String),
       scoring: MatchScoring.fromWire(row['scoring'] as String),
       status: MatchStatus.fromWire(row['status'] as String),
@@ -401,6 +403,10 @@ class MatchDetailHeader {
   }
 
   final String matchId;
+
+  /// Server-tagged creator user id. Nullable because the underlying FK is
+  /// `ON DELETE SET NULL` — the creator could have deleted their account.
+  final String? createdByUserId;
   final MatchFormat format;
   final MatchScoring scoring;
   final MatchStatus status;
@@ -480,5 +486,15 @@ class MatchDetail {
     final b = match.finalScoreB;
     if (a == null || b == null || a == b) return null;
     return a > b ? 'A' : 'B';
+  }
+
+  /// True when [callerUserId] matches the server-tagged creator of the
+  /// match. Returns false for nulls on either side so callers can pass
+  /// `currentUserId` directly without a pre-check.
+  bool isCallerCreator(String? callerUserId) {
+    if (callerUserId == null) return false;
+    final creator = match.createdByUserId;
+    if (creator == null) return false;
+    return creator == callerUserId;
   }
 }
