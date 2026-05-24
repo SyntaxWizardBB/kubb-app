@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -62,6 +64,24 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
   int _scoreB = 0;
   int? _prefilledForRound;
   bool _submitting = false;
+  bool _ensuringAwaitingResults = false;
+
+  /// Promotes the match from `active` to `awaiting_results` so the
+  /// propose-result RPC accepts the first submission. The server-side
+  /// `match_finish_play` is the gatekeeper. Called once per visit, on
+  /// the first build where the status is still `active`.
+  Future<void> _ensureAwaitingResults(MatchDetail detail) async {
+    if (_ensuringAwaitingResults) return;
+    if (detail.match.status != MatchStatus.active) return;
+    _ensuringAwaitingResults = true;
+    try {
+      await ref.read(matchActionsProvider).finishPlay(widget.matchId);
+    } on Object {
+      // Either the match was already awaiting_results (race with the
+      // other side) or the server rejected — both surface naturally
+      // on the next poll. Silently swallow so the UI does not crash.
+    }
+  }
 
   void _prefillFromDetail(MatchDetail? detail) {
     if (detail == null) return;
@@ -168,6 +188,9 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
           if (detail == null) {
             return const Center(child: CircularProgressIndicator());
           }
+          // Fire-and-forget — promotes active → awaiting_results so the
+          // propose-result RPC will accept the first submission.
+          unawaited(_ensureAwaitingResults(detail));
           _prefillFromDetail(detail);
           final validationMsg = _validate(detail);
           final cap = _scoreCapFor(detail);
