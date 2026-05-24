@@ -87,7 +87,7 @@ class MatchRepository {
     required bool accept,
   }) {
     return _client.rpc<void>(
-      'match_respond_to_invite',
+      'match_invite_response',
       params: <String, dynamic>{
         'p_match_id': matchId,
         'p_accept': accept,
