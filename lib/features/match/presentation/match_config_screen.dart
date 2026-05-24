@@ -178,9 +178,9 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-/// "Best of" stepper. Free integer in `MatchFormat.minN..maxN`
-/// (currently 1..99). +/- buttons step by 1; long-press accelerates so
-/// the user can dial up large values quickly without 50 taps.
+/// "Best of" stepper. Steps by 2 so the value stays odd — Best-of-N
+/// must be odd to guarantee a winner without a tie-break. Range:
+/// 1, 3, 5, ..., 99.
 class _FormatStepper extends StatelessWidget {
   const _FormatStepper({required this.selected, required this.onChanged});
 
@@ -191,14 +191,14 @@ class _FormatStepper extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final n = selected.n;
-    final canDec = n > MatchFormat.minN;
-    final canInc = n < MatchFormat.maxN;
+    final canDec = n - 2 >= MatchFormat.minN;
+    final canInc = n + 2 <= MatchFormat.maxN;
 
     return Row(
       children: [
         _StepBtn(
           icon: LucideIcons.minus,
-          onPressed: canDec ? () => onChanged(MatchFormat(n - 1)) : null,
+          onPressed: canDec ? () => onChanged(MatchFormat(n - 2)) : null,
         ),
         const SizedBox(width: KubbTokens.space2),
         Expanded(
@@ -224,7 +224,7 @@ class _FormatStepper extends StatelessWidget {
         const SizedBox(width: KubbTokens.space2),
         _StepBtn(
           icon: LucideIcons.plus,
-          onPressed: canInc ? () => onChanged(MatchFormat(n + 1)) : null,
+          onPressed: canInc ? () => onChanged(MatchFormat(n + 2)) : null,
         ),
       ],
     );
