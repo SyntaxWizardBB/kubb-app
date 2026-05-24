@@ -41,6 +41,8 @@ class MatchLobbyScreen extends ConsumerWidget {
         if (d.match.status == MatchStatus.active ||
             d.match.status == MatchStatus.awaitingResults) {
           context.go('${MatchRoutes.result}/$matchId');
+        } else if (d.match.status == MatchStatus.finalized) {
+          context.go('${MatchRoutes.finished}/$matchId');
         } else if (d.match.status == MatchStatus.voided) {
           context.go('/');
         }

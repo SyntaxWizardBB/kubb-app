@@ -75,7 +75,7 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
 
       if (response.status == MatchStatus.finalized ||
           response.status == MatchStatus.voided) {
-        context.go('${MatchRoutes.lobby}/${widget.matchId}');
+        context.go('${MatchRoutes.finished}/${widget.matchId}');
         return;
       }
       if (response.status == MatchStatus.awaitingResults &&

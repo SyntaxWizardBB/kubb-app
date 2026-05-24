@@ -22,4 +22,9 @@ abstract final class MatchRoutes {
   /// Waiting for the other in-app participants to confirm the round.
   /// Append `/:id`. Renamed from `await` for the same reason.
   static const awaitOthers = '/match/await';
+
+  /// Terminal screen after a match reaches `finalized` or `voided`.
+  /// Shows the winner (or an abort message) plus continue actions.
+  /// Append `/:id`.
+  static const finished = '/match/finished';
 }

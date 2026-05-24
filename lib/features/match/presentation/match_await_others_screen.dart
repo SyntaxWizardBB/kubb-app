@@ -41,7 +41,7 @@ class _MatchAwaitOthersScreenState
 
         if (d.match.status == MatchStatus.finalized ||
             d.match.status == MatchStatus.voided) {
-          context.go('${MatchRoutes.lobby}/${widget.matchId}');
+          context.go('${MatchRoutes.finished}/${widget.matchId}');
           return;
         }
         if (d.match.status == MatchStatus.awaitingResults &&
