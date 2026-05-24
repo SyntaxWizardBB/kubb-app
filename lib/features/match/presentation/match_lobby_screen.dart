@@ -33,16 +33,21 @@ class MatchLobbyScreen extends ConsumerWidget {
     // skip the no-op active intermediate that used to sit between
     // them. Server-side `match_propose_result` auto-transitions
     // active → awaiting_results on first proposal.
+    //
+    // Only react to actual status transitions — polling invalidates the
+    // provider every second, so listening to every emission would loop
+    // `context.go` forever once the match goes active.
     ref.listen<AsyncValue<MatchDetail?>>(
       matchDetailProvider(matchId),
-      (_, next) {
-        final d = next.value;
-        if (d == null) return;
-        if (d.match.status == MatchStatus.active ||
-            d.match.status == MatchStatus.awaitingResults) {
+      (prev, next) {
+        final prevStatus = prev?.value?.match.status;
+        final nextStatus = next.value?.match.status;
+        if (nextStatus == null || nextStatus == prevStatus) return;
+        if (nextStatus == MatchStatus.active ||
+            nextStatus == MatchStatus.awaitingResults) {
           context.go('${MatchRoutes.result}/$matchId');
-        } else if (d.match.status == MatchStatus.finalized ||
-            d.match.status == MatchStatus.voided) {
+        } else if (nextStatus == MatchStatus.finalized ||
+            nextStatus == MatchStatus.voided) {
           context.go('${MatchRoutes.finished}/$matchId');
         }
       },

@@ -31,13 +31,20 @@ class _MatchAwaitOthersScreenState
     ref.watch(matchPollingProvider(widget.matchId));
     final detailAsync = ref.watch(matchDetailProvider(widget.matchId));
 
+    // Listen only on real transitions of (status, currentRound). The
+    // polling provider invalidates every second, so an unguarded
+    // `context.go` would re-fire forever.
     ref.listen<AsyncValue<MatchDetail?>>(
       matchDetailProvider(widget.matchId),
-      (_, next) {
+      (prev, next) {
         final d = next.value;
         if (d == null) return;
-        // Capture the round we landed on so we can detect a bump.
         _seenRound ??= d.match.currentRound;
+
+        final prevD = prev?.value;
+        final sameStatus = prevD?.match.status == d.match.status;
+        final sameRound = prevD?.match.currentRound == d.match.currentRound;
+        if (prevD != null && sameStatus && sameRound) return;
 
         if (d.match.status == MatchStatus.finalized ||
             d.match.status == MatchStatus.voided) {
