@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/data/app_database.dart';
+import 'package:kubb_app/features/auth/application/account_setup_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/data/auth_telemetry.dart';
@@ -9,6 +10,7 @@ import 'package:kubb_app/features/auth/data/dao/cached_auth_session_dao.dart';
 import 'package:kubb_app/features/auth/data/supabase_auth_adapter.dart';
 
 import '../../../_helpers/sqlite_open.dart';
+import '../../../fixtures/auth/fake_secure_token_store.dart';
 import '../../../fixtures/auth/fake_supabase_auth_adapter.dart';
 
 void main() {
@@ -27,6 +29,7 @@ void main() {
       overrides: [
         supabaseAuthAdapterProvider.overrideWithValue(adapter),
         cachedAuthSessionDaoProvider.overrideWithValue(dao),
+        secureTokenStoreProvider.overrideWithValue(FakeSecureTokenStore()),
         authTelemetryProvider.overrideWithValue(AuthTelemetry()),
       ],
     );
