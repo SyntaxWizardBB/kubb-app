@@ -8,45 +8,33 @@ import 'package:kubb_app/features/match/presentation/match_routes.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 /// Pure validation for a round-result entry. Returns `null` when the
-/// inputs are internally consistent, otherwise a German message that
-/// can be surfaced inline.
-///
-/// Rules mirror what the server accepts and add the consistency check
-/// the RPC does *not* enforce (winner must match the higher score for
-/// `points` scoring; ties are only meaningful for `points`).
+/// inputs form a valid result, otherwise a German message for inline
+/// display. The winner is derived from the score columns — no separate
+/// selector — and ties are rejected for both scoring modes.
 @visibleForTesting
 String? validateMatchResult({
   required MatchScoring scoring,
   required int scoreA,
   required int scoreB,
-  required String? winner,
 }) {
   if (scoreA < 0 || scoreB < 0) {
     return 'Punkte dürfen nicht negativ sein';
   }
-  if (winner != null && winner != 'A' && winner != 'B') {
-    return 'Ungültiger Sieger';
+  if (scoreA == 0 && scoreB == 0) {
+    return 'Score fehlt';
   }
-  switch (scoring) {
-    case MatchScoring.wins:
-      if (winner == null) return 'Sieger fehlt';
-      return null;
-    case MatchScoring.points:
-      if (scoreA == scoreB) {
-        if (winner != null) {
-          return 'Punktegleichstand: bitte Unentschieden wählen';
-        }
-        return null;
-      }
-      final leader = scoreA > scoreB ? 'A' : 'B';
-      if (winner == null) {
-        return 'Sieger fehlt';
-      }
-      if (winner != leader) {
-        return 'Punkte stimmen nicht mit Sieger überein';
-      }
-      return null;
+  if (scoreA == scoreB) {
+    return 'Score muss eindeutig sein';
   }
+  return null;
+}
+
+/// Derives the winning team from the score columns. Returns `null` when
+/// the score is not yet decided (equal or both zero).
+@visibleForTesting
+String? deriveWinner(int scoreA, int scoreB) {
+  if (scoreA == scoreB) return null;
+  return scoreA > scoreB ? 'A' : 'B';
 }
 
 /// Round-result entry. Uses [matchDetailProvider] for the round
@@ -72,7 +60,6 @@ class MatchResultScreen extends ConsumerStatefulWidget {
 class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
   int _scoreA = 0;
   int _scoreB = 0;
-  String? _winner; // 'A', 'B' or null=tie (only valid for points scoring)
   int? _prefilledForRound;
   bool _submitting = false;
 
@@ -83,22 +70,27 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
     if (proposal != null && proposal.round == detail.match.currentRound) {
       _scoreA = proposal.scoreA;
       _scoreB = proposal.scoreB;
-      _winner = proposal.winnerTeamId;
     } else {
       _scoreA = 0;
       _scoreB = 0;
-      _winner = null;
     }
     _prefilledForRound = detail.match.currentRound;
   }
 
-  int _maxRoundsFor(MatchFormat format) => format.n;
+  /// Hard cap for the per-team counter in `wins` scoring — a team
+  /// cannot win more sets than `ceil(n/2)`. Points scoring has no cap,
+  /// kubb-point counts run freely.
+  int? _scoreCapFor(MatchDetail detail) {
+    if (detail.match.scoring == MatchScoring.wins) {
+      return detail.match.format.setsToWin;
+    }
+    return null;
+  }
 
   String? _validate(MatchDetail detail) => validateMatchResult(
         scoring: detail.match.scoring,
         scoreA: _scoreA,
         scoreB: _scoreB,
-        winner: _winner,
       );
 
   Future<void> _submit(MatchDetail detail) async {
@@ -108,7 +100,7 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
     try {
       final response = await ref.read(matchActionsProvider).proposeResult(
             widget.matchId,
-            winnerTeamId: _winner,
+            winnerTeamId: deriveWinner(_scoreA, _scoreB),
             scoreA: _scoreA,
             scoreB: _scoreB,
           );
@@ -125,7 +117,6 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
         setState(() {
           _scoreA = 0;
           _scoreB = 0;
-          _winner = null;
           _prefilledForRound = response.round;
         });
         return;
@@ -178,15 +169,17 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           _prefillFromDetail(detail);
-          final maxRounds = _maxRoundsFor(detail.match.format);
           final validationMsg = _validate(detail);
+          final cap = _scoreCapFor(detail);
           return SingleChildScrollView(
             padding: const EdgeInsets.all(KubbTokens.space4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Runde ${detail.match.currentRound} / $maxRounds',
+                  detail.match.format.n == 1
+                      ? 'Resultat'
+                      : 'BO${detail.match.format.n} — bis ${detail.match.format.setsToWin} Siege',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
@@ -202,7 +195,9 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
                         title: 'Team A',
                         accent: KubbTokens.meadow600,
                         value: _scoreA,
-                        onIncrement: () => setState(() => _scoreA += 1),
+                        onIncrement: cap != null && _scoreA >= cap
+                            ? null
+                            : () => setState(() => _scoreA += 1),
                         onDecrement: _scoreA == 0
                             ? null
                             : () => setState(() => _scoreA -= 1),
@@ -214,29 +209,15 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
                         title: 'Team B',
                         accent: KubbTokens.wood400,
                         value: _scoreB,
-                        onIncrement: () => setState(() => _scoreB += 1),
+                        onIncrement: cap != null && _scoreB >= cap
+                            ? null
+                            : () => setState(() => _scoreB += 1),
                         onDecrement: _scoreB == 0
                             ? null
                             : () => setState(() => _scoreB -= 1),
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: KubbTokens.space5),
-                Text(
-                  'Sieger',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.88,
-                    color: tokens.fgMuted,
-                  ),
-                ),
-                const SizedBox(height: KubbTokens.space2),
-                _WinnerSegmented(
-                  selected: _winner,
-                  allowTie: detail.match.scoring == MatchScoring.points,
-                  onSelected: (v) => setState(() => _winner = v),
                 ),
                 const SizedBox(height: KubbTokens.space8),
                 if (validationMsg != null)
@@ -290,7 +271,7 @@ class _ScoreColumn extends StatelessWidget {
   final String title;
   final Color accent;
   final int value;
-  final VoidCallback onIncrement;
+  final VoidCallback? onIncrement;
   final VoidCallback? onDecrement;
 
   @override
@@ -382,83 +363,6 @@ class _StepBtn extends StatelessWidget {
               icon,
               size: 18,
               color: onPressed == null ? tokens.fgSubtle : tokens.fg,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _WinnerSegmented extends StatelessWidget {
-  const _WinnerSegmented({
-    required this.selected,
-    required this.allowTie,
-    required this.onSelected,
-  });
-
-  final String? selected;
-  final bool allowTie;
-  final ValueChanged<String?> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final options = <(String?, String)>[
-      ('A', 'Team A'),
-      ('B', 'Team B'),
-      if (allowTie) (null, 'Unentschieden'),
-    ];
-    return Wrap(
-      spacing: KubbTokens.space2,
-      runSpacing: KubbTokens.space2,
-      children: options
-          .map((opt) => _SegmentBtn(
-                label: opt.$2,
-                selected: selected == opt.$1,
-                onTap: () => onSelected(opt.$1),
-              ))
-          .toList(),
-    );
-  }
-}
-
-class _SegmentBtn extends StatelessWidget {
-  const _SegmentBtn({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return Material(
-      color: selected ? tokens.primary : tokens.bgRaised,
-      borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: KubbTokens.space4,
-            vertical: KubbTokens.space2,
-          ),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: selected ? tokens.primary : tokens.line,
-            ),
-            borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: selected ? tokens.onPrimary : tokens.fg,
             ),
           ),
         ),
