@@ -1257,5 +1257,38 @@
   "tournamentStandingsBuchholz": "Buchholz",
   "@tournamentStandingsBuchholz": { "description": "Standings column: Buchholz score" },
   "tournamentStandingsKubbDiff": "Kubb-Diff",
-  "@tournamentStandingsKubbDiff": { "description": "Standings column: kubb difference" }
+  "@tournamentStandingsKubbDiff": { "description": "Standings column: kubb difference" },
+
+  "tournamentConflictTitle": "Eingaben weichen ab",
+  "@tournamentConflictTitle": { "description": "Conflict screen app-bar title" },
+  "tournamentConflictAttempt": "Versuch {attempt} von 3 — Eingaben weichen ab",
+  "@tournamentConflictAttempt": {
+    "description": "Conflict banner with current consensus round",
+    "placeholders": { "attempt": { "type": "int", "example": "2" } }
+  },
+  "tournamentConflictLastAttemptWarning": "Letzter Versuch — bei Abweichung übernimmt der Veranstalter",
+  "@tournamentConflictLastAttemptWarning": { "description": "Warning banner at consensus round 3" },
+  "tournamentConflictColumnA": "Eingabe Team A",
+  "@tournamentConflictColumnA": { "description": "Conflict comparison column A header" },
+  "tournamentConflictColumnB": "Eingabe Team B",
+  "@tournamentConflictColumnB": { "description": "Conflict comparison column B header" },
+  "tournamentConflictSetLabel": "Satz {n}",
+  "@tournamentConflictSetLabel": {
+    "description": "Per-set heading inside the conflict comparison row",
+    "placeholders": { "n": { "type": "int", "example": "1" } }
+  },
+  "tournamentConflictBasekubbsA": "Basekubbs A",
+  "@tournamentConflictBasekubbsA": { "description": "Row label: basekubbs knocked by team A" },
+  "tournamentConflictBasekubbsB": "Basekubbs B",
+  "@tournamentConflictBasekubbsB": { "description": "Row label: basekubbs knocked by team B" },
+  "tournamentConflictSetWinner": "Sieger",
+  "@tournamentConflictSetWinner": { "description": "Row label: set winner" },
+  "tournamentConflictRetryButton": "Erneut eintragen",
+  "@tournamentConflictRetryButton": { "description": "Primary CTA: open match detail to re-submit" },
+  "tournamentConflictEscalateButton": "Veranstalter hinzuziehen",
+  "@tournamentConflictEscalateButton": { "description": "Secondary CTA: ask organizer to override" },
+  "tournamentConflictEscalateToast": "Verlangen an Veranstalter weitergeleitet",
+  "@tournamentConflictEscalateToast": { "description": "Snackbar shown after the escalate button is tapped" },
+  "tournamentConflictEmpty": "Noch keine abweichenden Eingaben.",
+  "@tournamentConflictEmpty": { "description": "Empty-state hint when no proposals are available" }
 }

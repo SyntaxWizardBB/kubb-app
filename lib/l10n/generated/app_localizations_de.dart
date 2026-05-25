@@ -1696,4 +1696,49 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentStandingsKubbDiff => 'Kubb-Diff';
+
+  @override
+  String get tournamentConflictTitle => 'Eingaben weichen ab';
+
+  @override
+  String tournamentConflictAttempt(int attempt) {
+    return 'Versuch $attempt von 3 — Eingaben weichen ab';
+  }
+
+  @override
+  String get tournamentConflictLastAttemptWarning =>
+      'Letzter Versuch — bei Abweichung übernimmt der Veranstalter';
+
+  @override
+  String get tournamentConflictColumnA => 'Eingabe Team A';
+
+  @override
+  String get tournamentConflictColumnB => 'Eingabe Team B';
+
+  @override
+  String tournamentConflictSetLabel(int n) {
+    return 'Satz $n';
+  }
+
+  @override
+  String get tournamentConflictBasekubbsA => 'Basekubbs A';
+
+  @override
+  String get tournamentConflictBasekubbsB => 'Basekubbs B';
+
+  @override
+  String get tournamentConflictSetWinner => 'Sieger';
+
+  @override
+  String get tournamentConflictRetryButton => 'Erneut eintragen';
+
+  @override
+  String get tournamentConflictEscalateButton => 'Veranstalter hinzuziehen';
+
+  @override
+  String get tournamentConflictEscalateToast =>
+      'Verlangen an Veranstalter weitergeleitet';
+
+  @override
+  String get tournamentConflictEmpty => 'Noch keine abweichenden Eingaben.';
 }

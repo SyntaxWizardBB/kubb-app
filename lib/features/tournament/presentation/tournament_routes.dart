@@ -28,6 +28,9 @@ abstract final class TournamentRoutes {
   static String matchDetail(String tournamentId, String matchId) =>
       '$matchBase/$tournamentId/match/$matchId';
 
+  static String conflict(String tournamentId, String matchId) =>
+      '$matchBase/$tournamentId/match/$matchId/conflict';
+
   static String standings(String tournamentId) =>
       '$standingsBase/$tournamentId/standings';
 }

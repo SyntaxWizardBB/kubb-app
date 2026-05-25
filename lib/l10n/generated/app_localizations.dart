@@ -3195,6 +3195,84 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Kubb-Diff'**
   String get tournamentStandingsKubbDiff;
+
+  /// Conflict screen app-bar title
+  ///
+  /// In de, this message translates to:
+  /// **'Eingaben weichen ab'**
+  String get tournamentConflictTitle;
+
+  /// Conflict banner with current consensus round
+  ///
+  /// In de, this message translates to:
+  /// **'Versuch {attempt} von 3 — Eingaben weichen ab'**
+  String tournamentConflictAttempt(int attempt);
+
+  /// Warning banner at consensus round 3
+  ///
+  /// In de, this message translates to:
+  /// **'Letzter Versuch — bei Abweichung übernimmt der Veranstalter'**
+  String get tournamentConflictLastAttemptWarning;
+
+  /// Conflict comparison column A header
+  ///
+  /// In de, this message translates to:
+  /// **'Eingabe Team A'**
+  String get tournamentConflictColumnA;
+
+  /// Conflict comparison column B header
+  ///
+  /// In de, this message translates to:
+  /// **'Eingabe Team B'**
+  String get tournamentConflictColumnB;
+
+  /// Per-set heading inside the conflict comparison row
+  ///
+  /// In de, this message translates to:
+  /// **'Satz {n}'**
+  String tournamentConflictSetLabel(int n);
+
+  /// Row label: basekubbs knocked by team A
+  ///
+  /// In de, this message translates to:
+  /// **'Basekubbs A'**
+  String get tournamentConflictBasekubbsA;
+
+  /// Row label: basekubbs knocked by team B
+  ///
+  /// In de, this message translates to:
+  /// **'Basekubbs B'**
+  String get tournamentConflictBasekubbsB;
+
+  /// Row label: set winner
+  ///
+  /// In de, this message translates to:
+  /// **'Sieger'**
+  String get tournamentConflictSetWinner;
+
+  /// Primary CTA: open match detail to re-submit
+  ///
+  /// In de, this message translates to:
+  /// **'Erneut eintragen'**
+  String get tournamentConflictRetryButton;
+
+  /// Secondary CTA: ask organizer to override
+  ///
+  /// In de, this message translates to:
+  /// **'Veranstalter hinzuziehen'**
+  String get tournamentConflictEscalateButton;
+
+  /// Snackbar shown after the escalate button is tapped
+  ///
+  /// In de, this message translates to:
+  /// **'Verlangen an Veranstalter weitergeleitet'**
+  String get tournamentConflictEscalateToast;
+
+  /// Empty-state hint when no proposals are available
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine abweichenden Eingaben.'**
+  String get tournamentConflictEmpty;
 }
 
 class _AppLocalizationsDelegate
