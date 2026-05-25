@@ -1123,5 +1123,139 @@
   "tournamentRegistrationCancel": "Abbrechen",
   "@tournamentRegistrationCancel": { "description": "Cancel button label" },
   "tournamentRegistrationSuccess": "Anmeldung gesendet.",
-  "@tournamentRegistrationSuccess": { "description": "Success snackbar after registration" }
+  "@tournamentRegistrationSuccess": { "description": "Success snackbar after registration" },
+  "tournamentMatchListTitle": "Spiele",
+  "@tournamentMatchListTitle": { "description": "Tournament match list screen title" },
+  "tournamentMatchListEmpty": "Noch keine Spiele geplant.",
+  "@tournamentMatchListEmpty": { "description": "Empty state for match list" },
+  "tournamentMatchListRound": "Runde {round}",
+  "@tournamentMatchListRound": {
+    "description": "Round group header in match list",
+    "placeholders": { "round": { "type": "int", "example": "1" } }
+  },
+  "tournamentMatchLoadError": "Spiele konnten nicht geladen werden",
+  "@tournamentMatchLoadError": { "description": "Error banner when match list / detail fails to load" },
+  "tournamentMatchBye": "BYE",
+  "@tournamentMatchBye": { "description": "Label for a BYE participant slot" },
+  "tournamentMatchStatusScheduled": "Geplant",
+  "@tournamentMatchStatusScheduled": { "description": "Status pill for scheduled matches" },
+  "tournamentMatchStatusAwaiting": "Warten",
+  "@tournamentMatchStatusAwaiting": { "description": "Status pill for awaiting-results matches" },
+  "tournamentMatchStatusDisputed": "Strittig",
+  "@tournamentMatchStatusDisputed": { "description": "Status pill for disputed matches" },
+  "tournamentMatchStatusFinalized": "Abgeschlossen",
+  "@tournamentMatchStatusFinalized": { "description": "Status pill for finalized matches" },
+  "tournamentMatchStatusOverridden": "Korrigiert",
+  "@tournamentMatchStatusOverridden": { "description": "Status pill for organizer-overridden matches" },
+  "tournamentMatchStatusVoided": "Ungültig",
+  "@tournamentMatchStatusVoided": { "description": "Status pill for voided matches" },
+
+  "tournamentMatchDetailTitle": "Spiel-Eingabe",
+  "@tournamentMatchDetailTitle": { "description": "Tournament match detail screen title" },
+  "tournamentMatchHeaderRound": "Runde {round} — Spiel {match}",
+  "@tournamentMatchHeaderRound": {
+    "description": "Header eyebrow on match detail showing round and slot",
+    "placeholders": {
+      "round": { "type": "int", "example": "2" },
+      "match": { "type": "int", "example": "3" }
+    }
+  },
+  "tournamentMatchVersusHeader": "{a} gegen {b}",
+  "@tournamentMatchVersusHeader": {
+    "description": "Header showing the two opponents",
+    "placeholders": {
+      "a": { "type": "String", "example": "abc123" },
+      "b": { "type": "String", "example": "def456" }
+    }
+  },
+  "tournamentMatchByeHeader": "Freilos",
+  "@tournamentMatchByeHeader": { "description": "Header text when match is a BYE" },
+  "tournamentMatchConsensusAttempt": "Versuch {attempt} von {max}",
+  "@tournamentMatchConsensusAttempt": {
+    "description": "Consensus banner — current retry round indicator",
+    "placeholders": {
+      "attempt": { "type": "int", "example": "2" },
+      "max": { "type": "int", "example": "3" }
+    }
+  },
+  "tournamentMatchSetLabel": "Satz {n}",
+  "@tournamentMatchSetLabel": {
+    "description": "Per-set header in the score input form",
+    "placeholders": { "n": { "type": "int", "example": "1" } }
+  },
+  "tournamentMatchBasekubbsALabel": "Basekubbs Team A",
+  "@tournamentMatchBasekubbsALabel": { "description": "Stepper label for team A basekubbs" },
+  "tournamentMatchBasekubbsBLabel": "Basekubbs Team B",
+  "@tournamentMatchBasekubbsBLabel": { "description": "Stepper label for team B basekubbs" },
+  "tournamentMatchKingLabel": "Königsstoss durch",
+  "@tournamentMatchKingLabel": { "description": "Toggle label for who finished the King" },
+  "tournamentMatchKingByA": "Team A",
+  "@tournamentMatchKingByA": { "description": "Option: King finished by team A" },
+  "tournamentMatchKingByB": "Team B",
+  "@tournamentMatchKingByB": { "description": "Option: King finished by team B" },
+  "tournamentMatchKingByNone": "Zeitablauf",
+  "@tournamentMatchKingByNone": { "description": "Option: time ran out, no King finisher" },
+  "tournamentMatchAddSet": "Satz +",
+  "@tournamentMatchAddSet": { "description": "Button to add another set row" },
+  "tournamentMatchRemoveSet": "Satz −",
+  "@tournamentMatchRemoveSet": { "description": "Button to remove the last set row" },
+  "tournamentMatchLivePreviewLabel": "Aktueller Stand",
+  "@tournamentMatchLivePreviewLabel": { "description": "Live-Vorschau heading on match detail" },
+  "tournamentMatchLivePreviewScore": "{a}:{b}",
+  "@tournamentMatchLivePreviewScore": {
+    "description": "Live-Vorschau score display",
+    "placeholders": {
+      "a": { "type": "int", "example": "2" },
+      "b": { "type": "int", "example": "1" }
+    }
+  },
+  "tournamentMatchLivePreviewUndecided": "Match noch offen",
+  "@tournamentMatchLivePreviewUndecided": { "description": "Live-Vorschau hint when no winner yet" },
+  "tournamentMatchSubmitButton": "Einreichen",
+  "@tournamentMatchSubmitButton": { "description": "Submit-score button" },
+  "tournamentMatchSubmitError": "Senden fehlgeschlagen",
+  "@tournamentMatchSubmitError": { "description": "Snackbar prefix when the propose-scores RPC fails" },
+  "tournamentMatchReadOnlyNotice": "Dieses Spiel ist bereits abgeschlossen.",
+  "@tournamentMatchReadOnlyNotice": { "description": "Hint shown when match status is terminal" },
+  "tournamentMatchValidationEmpty": "Satz {n}: Eingabe fehlt.",
+  "@tournamentMatchValidationEmpty": {
+    "description": "Validation error when a set has neither score nor king",
+    "placeholders": { "n": { "type": "int", "example": "1" } }
+  },
+  "tournamentMatchValidationKingNeedsMax": "Satz {n}: Königsstoss verlangt volle Basekubbs.",
+  "@tournamentMatchValidationKingNeedsMax": {
+    "description": "Validation error per DSCORE-15 — king requires max basekubbs on winning side",
+    "placeholders": { "n": { "type": "int", "example": "2" } }
+  },
+  "tournamentMatchFinalizedToast": "Match abgeschlossen",
+  "@tournamentMatchFinalizedToast": { "description": "Snackbar shown when submission finalises the match" },
+  "tournamentMatchDisagreementToast": "Eingaben weichen ab — Versuch {attempt} von {max}",
+  "@tournamentMatchDisagreementToast": {
+    "description": "Snackbar shown when submission triggers a consensus retry",
+    "placeholders": {
+      "attempt": { "type": "int", "example": "2" },
+      "max": { "type": "int", "example": "3" }
+    }
+  },
+  "tournamentMatchDisputedToast": "Strittig — Veranstalter benachrichtigt",
+  "@tournamentMatchDisputedToast": { "description": "Snackbar shown when submission moves match to disputed" },
+
+  "tournamentStandingsTitle": "Endrangliste",
+  "@tournamentStandingsTitle": { "description": "Standings screen title" },
+  "tournamentStandingsEmpty": "Noch keine Ergebnisse.",
+  "@tournamentStandingsEmpty": { "description": "Empty state for standings" },
+  "tournamentStandingsLoadError": "Rangliste konnte nicht geladen werden",
+  "@tournamentStandingsLoadError": { "description": "Standings load error banner" },
+  "tournamentStandingsRank": "Rang",
+  "@tournamentStandingsRank": { "description": "Standings column: rank" },
+  "tournamentStandingsPlayer": "Spieler",
+  "@tournamentStandingsPlayer": { "description": "Standings column: player" },
+  "tournamentStandingsTotal": "Total",
+  "@tournamentStandingsTotal": { "description": "Standings column: total points" },
+  "tournamentStandingsWins": "Siege",
+  "@tournamentStandingsWins": { "description": "Standings column: wins" },
+  "tournamentStandingsBuchholz": "Buchholz",
+  "@tournamentStandingsBuchholz": { "description": "Standings column: Buchholz score" },
+  "tournamentStandingsKubbDiff": "Kubb-Diff",
+  "@tournamentStandingsKubbDiff": { "description": "Standings column: kubb difference" }
 }

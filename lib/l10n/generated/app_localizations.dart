@@ -2925,6 +2925,276 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Anmeldung gesendet.'**
   String get tournamentRegistrationSuccess;
+
+  /// Tournament match list screen title
+  ///
+  /// In de, this message translates to:
+  /// **'Spiele'**
+  String get tournamentMatchListTitle;
+
+  /// Empty state for match list
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Spiele geplant.'**
+  String get tournamentMatchListEmpty;
+
+  /// Round group header in match list
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {round}'**
+  String tournamentMatchListRound(int round);
+
+  /// Error banner when match list / detail fails to load
+  ///
+  /// In de, this message translates to:
+  /// **'Spiele konnten nicht geladen werden'**
+  String get tournamentMatchLoadError;
+
+  /// Label for a BYE participant slot
+  ///
+  /// In de, this message translates to:
+  /// **'BYE'**
+  String get tournamentMatchBye;
+
+  /// Status pill for scheduled matches
+  ///
+  /// In de, this message translates to:
+  /// **'Geplant'**
+  String get tournamentMatchStatusScheduled;
+
+  /// Status pill for awaiting-results matches
+  ///
+  /// In de, this message translates to:
+  /// **'Warten'**
+  String get tournamentMatchStatusAwaiting;
+
+  /// Status pill for disputed matches
+  ///
+  /// In de, this message translates to:
+  /// **'Strittig'**
+  String get tournamentMatchStatusDisputed;
+
+  /// Status pill for finalized matches
+  ///
+  /// In de, this message translates to:
+  /// **'Abgeschlossen'**
+  String get tournamentMatchStatusFinalized;
+
+  /// Status pill for organizer-overridden matches
+  ///
+  /// In de, this message translates to:
+  /// **'Korrigiert'**
+  String get tournamentMatchStatusOverridden;
+
+  /// Status pill for voided matches
+  ///
+  /// In de, this message translates to:
+  /// **'Ungültig'**
+  String get tournamentMatchStatusVoided;
+
+  /// Tournament match detail screen title
+  ///
+  /// In de, this message translates to:
+  /// **'Spiel-Eingabe'**
+  String get tournamentMatchDetailTitle;
+
+  /// Header eyebrow on match detail showing round and slot
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {round} — Spiel {match}'**
+  String tournamentMatchHeaderRound(int round, int match);
+
+  /// Header showing the two opponents
+  ///
+  /// In de, this message translates to:
+  /// **'{a} gegen {b}'**
+  String tournamentMatchVersusHeader(String a, String b);
+
+  /// Header text when match is a BYE
+  ///
+  /// In de, this message translates to:
+  /// **'Freilos'**
+  String get tournamentMatchByeHeader;
+
+  /// Consensus banner — current retry round indicator
+  ///
+  /// In de, this message translates to:
+  /// **'Versuch {attempt} von {max}'**
+  String tournamentMatchConsensusAttempt(int attempt, int max);
+
+  /// Per-set header in the score input form
+  ///
+  /// In de, this message translates to:
+  /// **'Satz {n}'**
+  String tournamentMatchSetLabel(int n);
+
+  /// Stepper label for team A basekubbs
+  ///
+  /// In de, this message translates to:
+  /// **'Basekubbs Team A'**
+  String get tournamentMatchBasekubbsALabel;
+
+  /// Stepper label for team B basekubbs
+  ///
+  /// In de, this message translates to:
+  /// **'Basekubbs Team B'**
+  String get tournamentMatchBasekubbsBLabel;
+
+  /// Toggle label for who finished the King
+  ///
+  /// In de, this message translates to:
+  /// **'Königsstoss durch'**
+  String get tournamentMatchKingLabel;
+
+  /// Option: King finished by team A
+  ///
+  /// In de, this message translates to:
+  /// **'Team A'**
+  String get tournamentMatchKingByA;
+
+  /// Option: King finished by team B
+  ///
+  /// In de, this message translates to:
+  /// **'Team B'**
+  String get tournamentMatchKingByB;
+
+  /// Option: time ran out, no King finisher
+  ///
+  /// In de, this message translates to:
+  /// **'Zeitablauf'**
+  String get tournamentMatchKingByNone;
+
+  /// Button to add another set row
+  ///
+  /// In de, this message translates to:
+  /// **'Satz +'**
+  String get tournamentMatchAddSet;
+
+  /// Button to remove the last set row
+  ///
+  /// In de, this message translates to:
+  /// **'Satz −'**
+  String get tournamentMatchRemoveSet;
+
+  /// Live-Vorschau heading on match detail
+  ///
+  /// In de, this message translates to:
+  /// **'Aktueller Stand'**
+  String get tournamentMatchLivePreviewLabel;
+
+  /// Live-Vorschau score display
+  ///
+  /// In de, this message translates to:
+  /// **'{a}:{b}'**
+  String tournamentMatchLivePreviewScore(int a, int b);
+
+  /// Live-Vorschau hint when no winner yet
+  ///
+  /// In de, this message translates to:
+  /// **'Match noch offen'**
+  String get tournamentMatchLivePreviewUndecided;
+
+  /// Submit-score button
+  ///
+  /// In de, this message translates to:
+  /// **'Einreichen'**
+  String get tournamentMatchSubmitButton;
+
+  /// Snackbar prefix when the propose-scores RPC fails
+  ///
+  /// In de, this message translates to:
+  /// **'Senden fehlgeschlagen'**
+  String get tournamentMatchSubmitError;
+
+  /// Hint shown when match status is terminal
+  ///
+  /// In de, this message translates to:
+  /// **'Dieses Spiel ist bereits abgeschlossen.'**
+  String get tournamentMatchReadOnlyNotice;
+
+  /// Validation error when a set has neither score nor king
+  ///
+  /// In de, this message translates to:
+  /// **'Satz {n}: Eingabe fehlt.'**
+  String tournamentMatchValidationEmpty(int n);
+
+  /// Validation error per DSCORE-15 — king requires max basekubbs on winning side
+  ///
+  /// In de, this message translates to:
+  /// **'Satz {n}: Königsstoss verlangt volle Basekubbs.'**
+  String tournamentMatchValidationKingNeedsMax(int n);
+
+  /// Snackbar shown when submission finalises the match
+  ///
+  /// In de, this message translates to:
+  /// **'Match abgeschlossen'**
+  String get tournamentMatchFinalizedToast;
+
+  /// Snackbar shown when submission triggers a consensus retry
+  ///
+  /// In de, this message translates to:
+  /// **'Eingaben weichen ab — Versuch {attempt} von {max}'**
+  String tournamentMatchDisagreementToast(int attempt, int max);
+
+  /// Snackbar shown when submission moves match to disputed
+  ///
+  /// In de, this message translates to:
+  /// **'Strittig — Veranstalter benachrichtigt'**
+  String get tournamentMatchDisputedToast;
+
+  /// Standings screen title
+  ///
+  /// In de, this message translates to:
+  /// **'Endrangliste'**
+  String get tournamentStandingsTitle;
+
+  /// Empty state for standings
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Ergebnisse.'**
+  String get tournamentStandingsEmpty;
+
+  /// Standings load error banner
+  ///
+  /// In de, this message translates to:
+  /// **'Rangliste konnte nicht geladen werden'**
+  String get tournamentStandingsLoadError;
+
+  /// Standings column: rank
+  ///
+  /// In de, this message translates to:
+  /// **'Rang'**
+  String get tournamentStandingsRank;
+
+  /// Standings column: player
+  ///
+  /// In de, this message translates to:
+  /// **'Spieler'**
+  String get tournamentStandingsPlayer;
+
+  /// Standings column: total points
+  ///
+  /// In de, this message translates to:
+  /// **'Total'**
+  String get tournamentStandingsTotal;
+
+  /// Standings column: wins
+  ///
+  /// In de, this message translates to:
+  /// **'Siege'**
+  String get tournamentStandingsWins;
+
+  /// Standings column: Buchholz score
+  ///
+  /// In de, this message translates to:
+  /// **'Buchholz'**
+  String get tournamentStandingsBuchholz;
+
+  /// Standings column: kubb difference
+  ///
+  /// In de, this message translates to:
+  /// **'Kubb-Diff'**
+  String get tournamentStandingsKubbDiff;
 }
 
 class _AppLocalizationsDelegate

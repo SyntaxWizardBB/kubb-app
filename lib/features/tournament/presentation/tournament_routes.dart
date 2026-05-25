@@ -1,17 +1,33 @@
-/// Route path constants for the tournament feature.
+/// Static, lint-friendly route constants for the Tournament feature.
 ///
-/// The actual router wiring (registration with `GoRouter`, redirect
-/// rules) lives in M1-W4. These constants are exposed so the wizard and
-/// list/detail screens can share a single source of truth for paths.
-class TournamentRoutes {
-  const TournamentRoutes._();
-
+/// Mirrors the pattern used by `MatchRoutes`. Each "section" route is
+/// the base path; concrete URLs append ids.
+abstract final class TournamentRoutes {
   /// Setup wizard for creating a new tournament.
-  static const String newTournament = '/tournament/new';
+  static const newTournament = '/tournament/new';
 
-  /// Tournament list. Detail pages use `'$list/:id'`.
-  static const String list = '/tournament';
+  /// Tournament list / discovery. Append nothing.
+  static const list = '/tournament';
 
-  /// Detail route prefix; concatenate with the tournament id to navigate.
-  static const String detail = '/tournament';
+  /// Single tournament overview. Append `/:id`.
+  static const detail = '/tournament';
+
+  /// Match list for a tournament. Append `/:id/matches`.
+  static const matches = '/tournament';
+
+  /// Single tournament match (score entry). Compose as
+  /// `'$matchBase/$tournamentId/match/$matchId'`.
+  static const matchBase = '/tournament';
+
+  /// Final ranking. Compose as `'$standingsBase/$tournamentId/standings'`.
+  static const standingsBase = '/tournament';
+
+  static String matchesFor(String tournamentId) =>
+      '$matches/$tournamentId/matches';
+
+  static String matchDetail(String tournamentId, String matchId) =>
+      '$matchBase/$tournamentId/match/$matchId';
+
+  static String standings(String tournamentId) =>
+      '$standingsBase/$tournamentId/standings';
 }

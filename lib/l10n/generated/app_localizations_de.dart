@@ -1540,4 +1540,160 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentRegistrationSuccess => 'Anmeldung gesendet.';
+
+  @override
+  String get tournamentMatchListTitle => 'Spiele';
+
+  @override
+  String get tournamentMatchListEmpty => 'Noch keine Spiele geplant.';
+
+  @override
+  String tournamentMatchListRound(int round) {
+    return 'Runde $round';
+  }
+
+  @override
+  String get tournamentMatchLoadError => 'Spiele konnten nicht geladen werden';
+
+  @override
+  String get tournamentMatchBye => 'BYE';
+
+  @override
+  String get tournamentMatchStatusScheduled => 'Geplant';
+
+  @override
+  String get tournamentMatchStatusAwaiting => 'Warten';
+
+  @override
+  String get tournamentMatchStatusDisputed => 'Strittig';
+
+  @override
+  String get tournamentMatchStatusFinalized => 'Abgeschlossen';
+
+  @override
+  String get tournamentMatchStatusOverridden => 'Korrigiert';
+
+  @override
+  String get tournamentMatchStatusVoided => 'Ungültig';
+
+  @override
+  String get tournamentMatchDetailTitle => 'Spiel-Eingabe';
+
+  @override
+  String tournamentMatchHeaderRound(int round, int match) {
+    return 'Runde $round — Spiel $match';
+  }
+
+  @override
+  String tournamentMatchVersusHeader(String a, String b) {
+    return '$a gegen $b';
+  }
+
+  @override
+  String get tournamentMatchByeHeader => 'Freilos';
+
+  @override
+  String tournamentMatchConsensusAttempt(int attempt, int max) {
+    return 'Versuch $attempt von $max';
+  }
+
+  @override
+  String tournamentMatchSetLabel(int n) {
+    return 'Satz $n';
+  }
+
+  @override
+  String get tournamentMatchBasekubbsALabel => 'Basekubbs Team A';
+
+  @override
+  String get tournamentMatchBasekubbsBLabel => 'Basekubbs Team B';
+
+  @override
+  String get tournamentMatchKingLabel => 'Königsstoss durch';
+
+  @override
+  String get tournamentMatchKingByA => 'Team A';
+
+  @override
+  String get tournamentMatchKingByB => 'Team B';
+
+  @override
+  String get tournamentMatchKingByNone => 'Zeitablauf';
+
+  @override
+  String get tournamentMatchAddSet => 'Satz +';
+
+  @override
+  String get tournamentMatchRemoveSet => 'Satz −';
+
+  @override
+  String get tournamentMatchLivePreviewLabel => 'Aktueller Stand';
+
+  @override
+  String tournamentMatchLivePreviewScore(int a, int b) {
+    return '$a:$b';
+  }
+
+  @override
+  String get tournamentMatchLivePreviewUndecided => 'Match noch offen';
+
+  @override
+  String get tournamentMatchSubmitButton => 'Einreichen';
+
+  @override
+  String get tournamentMatchSubmitError => 'Senden fehlgeschlagen';
+
+  @override
+  String get tournamentMatchReadOnlyNotice =>
+      'Dieses Spiel ist bereits abgeschlossen.';
+
+  @override
+  String tournamentMatchValidationEmpty(int n) {
+    return 'Satz $n: Eingabe fehlt.';
+  }
+
+  @override
+  String tournamentMatchValidationKingNeedsMax(int n) {
+    return 'Satz $n: Königsstoss verlangt volle Basekubbs.';
+  }
+
+  @override
+  String get tournamentMatchFinalizedToast => 'Match abgeschlossen';
+
+  @override
+  String tournamentMatchDisagreementToast(int attempt, int max) {
+    return 'Eingaben weichen ab — Versuch $attempt von $max';
+  }
+
+  @override
+  String get tournamentMatchDisputedToast =>
+      'Strittig — Veranstalter benachrichtigt';
+
+  @override
+  String get tournamentStandingsTitle => 'Endrangliste';
+
+  @override
+  String get tournamentStandingsEmpty => 'Noch keine Ergebnisse.';
+
+  @override
+  String get tournamentStandingsLoadError =>
+      'Rangliste konnte nicht geladen werden';
+
+  @override
+  String get tournamentStandingsRank => 'Rang';
+
+  @override
+  String get tournamentStandingsPlayer => 'Spieler';
+
+  @override
+  String get tournamentStandingsTotal => 'Total';
+
+  @override
+  String get tournamentStandingsWins => 'Siege';
+
+  @override
+  String get tournamentStandingsBuchholz => 'Buchholz';
+
+  @override
+  String get tournamentStandingsKubbDiff => 'Kubb-Diff';
 }
