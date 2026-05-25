@@ -40,6 +40,14 @@ class FakeTournamentRemote implements TournamentRemote {
       _tournaments[id]?.toSummary();
 
   @override
+  Future<TournamentDetail?> getTournamentDetail(TournamentId id) async {
+    // M1 integration tests don't drive UI that reads the full detail.
+    // Returning null is safe — the only consumer would be the detail
+    // screen, which is not part of these scenarios.
+    return null;
+  }
+
+  @override
   Future<TournamentId> createTournament({
     required String displayName,
     required int teamSize,

@@ -1,7 +1,7 @@
 // Integration-flavoured widget test that exercises the M1 happy path
 // (4-player round-robin, all matches finalised through consensus) plus
 // the conflict-and-override sibling. Drives the use-case via the
-// `tournamentActionsProvider` + `tournamentMatchActionsProvider`
+// `tournamentActionsProvider` + `tournamentActionsProvider`
 // surfaces wired to a [FakeTournamentRemote], then pumps the
 // standings screen at the end to confirm the read model is intact.
 //
@@ -68,7 +68,7 @@ Future<TournamentParticipantId> _registerAs(
 
 Future<void> _submitAs(
   FakeTournamentRemote remote,
-  TournamentMatchActions actions,
+  TournamentActions actions,
   UserId user,
   TournamentMatchId matchId, {
   required int round,
@@ -181,7 +181,7 @@ void main() {
         pC: _userC,
         pD: _userD,
       };
-      final matchActions = c.read(tournamentMatchActionsProvider);
+      final matchActions = c.read(tournamentActionsProvider);
       final aWinsSets = <SetScore>[_agreedSet(winner: SetWinner.teamA)];
       for (final m in matches) {
         await _submitAs(remote, matchActions, userByPid[m.participantA]!,
@@ -235,7 +235,7 @@ void main() {
       final remote = FakeTournamentRemote(initialUser: _organizer);
       final c = _container(remote: remote, currentUser: _organizer);
       final actions = c.read(tournamentActionsProvider);
-      final matchActions = c.read(tournamentMatchActionsProvider);
+      final matchActions = c.read(tournamentActionsProvider);
 
       // Minimal 2-player tournament so a single match is enough.
       const draft = TournamentConfigDraft(
