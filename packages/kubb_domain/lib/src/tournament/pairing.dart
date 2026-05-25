@@ -1,9 +1,5 @@
+import 'package:kubb_domain/src/tournament/pool.dart';
 import 'package:meta/meta.dart';
-
-// Relative import keeps the intra-package coupling explicit and avoids a
-// self-referential `package:kubb_domain/...` URI inside its own lib/.
-// ignore: always_use_package_imports
-import 'pool.dart';
 
 /// Catalogue of pairing strategies described in FR-PAIR-2. Only
 /// [roundRobin] has an implementation in M0; the remaining values are
