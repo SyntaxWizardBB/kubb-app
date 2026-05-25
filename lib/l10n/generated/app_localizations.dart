@@ -2475,6 +2475,120 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Speichere …'**
   String get authEditProfileSubmitting;
+
+  /// Tournament setup wizard title
+  ///
+  /// In de, this message translates to:
+  /// **'Neues Turnier'**
+  String get tournamentWizardTitle;
+
+  /// Wizard step 1 eyebrow
+  ///
+  /// In de, this message translates to:
+  /// **'Stammdaten'**
+  String get tournamentWizardStep1Title;
+
+  /// Wizard step 2 eyebrow
+  ///
+  /// In de, this message translates to:
+  /// **'Teilnehmer'**
+  String get tournamentWizardStep2Title;
+
+  /// Wizard step 3 eyebrow
+  ///
+  /// In de, this message translates to:
+  /// **'Format'**
+  String get tournamentWizardStep3Title;
+
+  /// Wizard step 4 eyebrow
+  ///
+  /// In de, this message translates to:
+  /// **'Übersicht'**
+  String get tournamentWizardStep4Title;
+
+  /// Progress bar caption
+  ///
+  /// In de, this message translates to:
+  /// **'Schritt {step} von {total}'**
+  String tournamentWizardStepLabel(int step, int total);
+
+  /// Display-name input label
+  ///
+  /// In de, this message translates to:
+  /// **'Turniername'**
+  String get tournamentWizardDisplayNameLabel;
+
+  /// Min participants stepper label
+  ///
+  /// In de, this message translates to:
+  /// **'Min. Teilnehmer'**
+  String get tournamentWizardMinParticipantsLabel;
+
+  /// Max participants stepper label
+  ///
+  /// In de, this message translates to:
+  /// **'Max. Teilnehmer'**
+  String get tournamentWizardMaxParticipantsLabel;
+
+  /// Format radio group label
+  ///
+  /// In de, this message translates to:
+  /// **'Turnierformat'**
+  String get tournamentWizardFormatLabel;
+
+  /// Round robin format label
+  ///
+  /// In de, this message translates to:
+  /// **'Round Robin'**
+  String get tournamentWizardFormatRoundRobin;
+
+  /// Pill on disabled formats
+  ///
+  /// In de, this message translates to:
+  /// **'Folgt in M2+'**
+  String get tournamentWizardFormatComingSoon;
+
+  /// Sets-to-win stepper label
+  ///
+  /// In de, this message translates to:
+  /// **'Sätze zum Sieg'**
+  String get tournamentWizardSetsToWinLabel;
+
+  /// Max-sets stepper label
+  ///
+  /// In de, this message translates to:
+  /// **'Max. Sätze'**
+  String get tournamentWizardMaxSetsLabel;
+
+  /// Round-time summary label
+  ///
+  /// In de, this message translates to:
+  /// **'Rundenzeit (Minuten)'**
+  String get tournamentWizardRoundTimeLabel;
+
+  /// Wizard back button
+  ///
+  /// In de, this message translates to:
+  /// **'Zurück'**
+  String get tournamentWizardBackButton;
+
+  /// Wizard next button
+  ///
+  /// In de, this message translates to:
+  /// **'Weiter'**
+  String get tournamentWizardNextButton;
+
+  /// Wizard final submit button
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier anlegen'**
+  String get tournamentWizardCreateButton;
+
+  /// Snackbar on submit failure
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier konnte nicht erstellt werden: {error}'**
+  String tournamentWizardSubmitError(String error);
 }
 
 class _AppLocalizationsDelegate

@@ -1306,4 +1306,65 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get authEditProfileSubmitting => 'Speichere …';
+
+  @override
+  String get tournamentWizardTitle => 'Neues Turnier';
+
+  @override
+  String get tournamentWizardStep1Title => 'Stammdaten';
+
+  @override
+  String get tournamentWizardStep2Title => 'Teilnehmer';
+
+  @override
+  String get tournamentWizardStep3Title => 'Format';
+
+  @override
+  String get tournamentWizardStep4Title => 'Übersicht';
+
+  @override
+  String tournamentWizardStepLabel(int step, int total) {
+    return 'Schritt $step von $total';
+  }
+
+  @override
+  String get tournamentWizardDisplayNameLabel => 'Turniername';
+
+  @override
+  String get tournamentWizardMinParticipantsLabel => 'Min. Teilnehmer';
+
+  @override
+  String get tournamentWizardMaxParticipantsLabel => 'Max. Teilnehmer';
+
+  @override
+  String get tournamentWizardFormatLabel => 'Turnierformat';
+
+  @override
+  String get tournamentWizardFormatRoundRobin => 'Round Robin';
+
+  @override
+  String get tournamentWizardFormatComingSoon => 'Folgt in M2+';
+
+  @override
+  String get tournamentWizardSetsToWinLabel => 'Sätze zum Sieg';
+
+  @override
+  String get tournamentWizardMaxSetsLabel => 'Max. Sätze';
+
+  @override
+  String get tournamentWizardRoundTimeLabel => 'Rundenzeit (Minuten)';
+
+  @override
+  String get tournamentWizardBackButton => 'Zurück';
+
+  @override
+  String get tournamentWizardNextButton => 'Weiter';
+
+  @override
+  String get tournamentWizardCreateButton => 'Turnier anlegen';
+
+  @override
+  String tournamentWizardSubmitError(String error) {
+    return 'Turnier konnte nicht erstellt werden: $error';
+  }
 }

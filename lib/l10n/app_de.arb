@@ -948,5 +948,55 @@
   "authEditProfileSubmit": "Speichern",
   "@authEditProfileSubmit": { "description": "Save button label" },
   "authEditProfileSubmitting": "Speichere …",
-  "@authEditProfileSubmitting": { "description": "Save button label while saving" }
+  "@authEditProfileSubmitting": { "description": "Save button label while saving" },
+
+  "tournamentWizardTitle": "Neues Turnier",
+  "@tournamentWizardTitle": { "description": "Tournament setup wizard title" },
+  "tournamentWizardStep1Title": "Stammdaten",
+  "@tournamentWizardStep1Title": { "description": "Wizard step 1 eyebrow" },
+  "tournamentWizardStep2Title": "Teilnehmer",
+  "@tournamentWizardStep2Title": { "description": "Wizard step 2 eyebrow" },
+  "tournamentWizardStep3Title": "Format",
+  "@tournamentWizardStep3Title": { "description": "Wizard step 3 eyebrow" },
+  "tournamentWizardStep4Title": "Übersicht",
+  "@tournamentWizardStep4Title": { "description": "Wizard step 4 eyebrow" },
+  "tournamentWizardStepLabel": "Schritt {step} von {total}",
+  "@tournamentWizardStepLabel": {
+    "description": "Progress bar caption",
+    "placeholders": {
+      "step": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "tournamentWizardDisplayNameLabel": "Turniername",
+  "@tournamentWizardDisplayNameLabel": { "description": "Display-name input label" },
+  "tournamentWizardMinParticipantsLabel": "Min. Teilnehmer",
+  "@tournamentWizardMinParticipantsLabel": { "description": "Min participants stepper label" },
+  "tournamentWizardMaxParticipantsLabel": "Max. Teilnehmer",
+  "@tournamentWizardMaxParticipantsLabel": { "description": "Max participants stepper label" },
+  "tournamentWizardFormatLabel": "Turnierformat",
+  "@tournamentWizardFormatLabel": { "description": "Format radio group label" },
+  "tournamentWizardFormatRoundRobin": "Round Robin",
+  "@tournamentWizardFormatRoundRobin": { "description": "Round robin format label" },
+  "tournamentWizardFormatComingSoon": "Folgt in M2+",
+  "@tournamentWizardFormatComingSoon": { "description": "Pill on disabled formats" },
+  "tournamentWizardSetsToWinLabel": "Sätze zum Sieg",
+  "@tournamentWizardSetsToWinLabel": { "description": "Sets-to-win stepper label" },
+  "tournamentWizardMaxSetsLabel": "Max. Sätze",
+  "@tournamentWizardMaxSetsLabel": { "description": "Max-sets stepper label" },
+  "tournamentWizardRoundTimeLabel": "Rundenzeit (Minuten)",
+  "@tournamentWizardRoundTimeLabel": { "description": "Round-time summary label" },
+  "tournamentWizardBackButton": "Zurück",
+  "@tournamentWizardBackButton": { "description": "Wizard back button" },
+  "tournamentWizardNextButton": "Weiter",
+  "@tournamentWizardNextButton": { "description": "Wizard next button" },
+  "tournamentWizardCreateButton": "Turnier anlegen",
+  "@tournamentWizardCreateButton": { "description": "Wizard final submit button" },
+  "tournamentWizardSubmitError": "Turnier konnte nicht erstellt werden: {error}",
+  "@tournamentWizardSubmitError": {
+    "description": "Snackbar on submit failure",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  }
 }
