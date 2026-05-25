@@ -95,6 +95,11 @@ class TournamentMatchRef {
     required this.participantB,
     required this.status,
     required this.consensusRound,
+    this.startedAt,
+    this.completedAt,
+    this.winnerParticipant,
+    this.finalScoreA,
+    this.finalScoreB,
   });
 
   final TournamentMatchId matchId;
@@ -105,6 +110,11 @@ class TournamentMatchRef {
   final TournamentParticipantId? participantB;
   final TournamentMatchStatus status;
   final int consensusRound;
+  final DateTime? startedAt;
+  final DateTime? completedAt;
+  final TournamentParticipantId? winnerParticipant;
+  final int? finalScoreA;
+  final int? finalScoreB;
 
   @override
   bool operator ==(Object other) =>
@@ -117,7 +127,12 @@ class TournamentMatchRef {
           other.participantA == participantA &&
           other.participantB == participantB &&
           other.status == status &&
-          other.consensusRound == consensusRound;
+          other.consensusRound == consensusRound &&
+          other.startedAt == startedAt &&
+          other.completedAt == completedAt &&
+          other.winnerParticipant == winnerParticipant &&
+          other.finalScoreA == finalScoreA &&
+          other.finalScoreB == finalScoreB;
 
   @override
   int get hashCode => Object.hash(
@@ -129,6 +144,11 @@ class TournamentMatchRef {
         participantB,
         status,
         consensusRound,
+        startedAt,
+        completedAt,
+        winnerParticipant,
+        finalScoreA,
+        finalScoreB,
       );
 }
 
