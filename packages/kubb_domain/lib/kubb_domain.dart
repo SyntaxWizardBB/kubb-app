@@ -15,6 +15,7 @@ export 'src/tournament/bracket.dart';
 export 'src/tournament/ekc_score.dart';
 export 'src/tournament/pairing.dart';
 export 'src/tournament/pool.dart';
+export 'src/tournament/standings.dart';
 export 'src/tournament/tiebreaker.dart';
 export 'src/values/ids.dart';
 export 'src/values/lamport_clock.dart';
