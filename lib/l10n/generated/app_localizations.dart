@@ -340,6 +340,18 @@ abstract class AppLocalizations {
   /// **'In Vorbereitung'**
   String get modeFinisseurComingSoon;
 
+  /// Tournament mode title in the training sheet
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier'**
+  String get homeModeTournamentTitle;
+
+  /// Tournament mode subtitle in the training sheet
+  ///
+  /// In de, this message translates to:
+  /// **'Mehrere Teams · Tabelle'**
+  String get homeModeTournamentSubtitle;
+
   /// Eyebrow on the finisseur config screen
   ///
   /// In de, this message translates to:

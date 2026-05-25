@@ -172,6 +172,14 @@
   "@modeFinisseurComingSoon": {
     "description": "Snackbar message when tapping finisseur (not yet implemented)"
   },
+  "homeModeTournamentTitle": "Turnier",
+  "@homeModeTournamentTitle": {
+    "description": "Tournament mode title in the training sheet"
+  },
+  "homeModeTournamentSubtitle": "Mehrere Teams · Tabelle",
+  "@homeModeTournamentSubtitle": {
+    "description": "Tournament mode subtitle in the training sheet"
+  },
   "finisseurConfigEyebrow": "Finisseur",
   "@finisseurConfigEyebrow": {
     "description": "Eyebrow on the finisseur config screen"

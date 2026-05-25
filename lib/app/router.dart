@@ -24,12 +24,23 @@ import 'package:kubb_app/features/social/presentation/friends_screen.dart';
 import 'package:kubb_app/features/social/presentation/groups_screen.dart';
 import 'package:kubb_app/features/social/presentation/social_routes.dart';
 import 'package:kubb_app/features/stats/presentation/stats_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_conflict_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_detail_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_list_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_match_detail_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_match_list_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_override_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_registration_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_setup_wizard.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_standings_screen.dart';
 import 'package:kubb_app/features/training/presentation/finisseur_config_screen.dart';
 import 'package:kubb_app/features/training/presentation/finisseur_stick_screen.dart';
 import 'package:kubb_app/features/training/presentation/home_screen.dart';
 import 'package:kubb_app/features/training/presentation/sniper_config_screen.dart';
 import 'package:kubb_app/features/training/presentation/sniper_session_screen.dart';
 import 'package:kubb_app/features/training/presentation/summary_screen.dart';
+import 'package:kubb_domain/kubb_domain.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthRefresh();
@@ -172,6 +183,59 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '${MatchRoutes.finished}/:id',
         builder: (_, state) =>
             MatchFinishedScreen(matchId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: TournamentRoutes.list,
+        builder: (_, _) => const TournamentListScreen(),
+      ),
+      GoRoute(
+        path: TournamentRoutes.newTournament,
+        builder: (_, _) => const TournamentSetupWizard(),
+      ),
+      GoRoute(
+        path: '${TournamentRoutes.detail}/:id',
+        builder: (_, state) => TournamentDetailScreen(
+          tournamentId: TournamentId(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/tournament/:id/register',
+        builder: (_, state) => TournamentRegistrationScreen(
+          tournamentId: TournamentId(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/tournament/:id/matches',
+        builder: (_, state) => TournamentMatchListScreen(
+          tournamentId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/tournament/:id/match/:matchId',
+        builder: (_, state) => TournamentMatchDetailScreen(
+          tournamentId: state.pathParameters['id']!,
+          matchId: state.pathParameters['matchId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/tournament/:id/match/:matchId/conflict',
+        builder: (_, state) => TournamentConflictScreen(
+          tournamentId: state.pathParameters['id']!,
+          matchId: state.pathParameters['matchId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/tournament/:id/match/:matchId/override',
+        builder: (_, state) => TournamentOverrideScreen(
+          tournamentId: state.pathParameters['id']!,
+          matchId: state.pathParameters['matchId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/tournament/:id/standings',
+        builder: (_, state) => TournamentStandingsScreen(
+          tournamentId: state.pathParameters['id']!,
+        ),
       ),
     ],
   );

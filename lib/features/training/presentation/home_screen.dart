@@ -8,6 +8,7 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/player/presentation/player_hub_sheet.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
 import 'package:kubb_app/features/training/presentation/widgets/crash_recovery_dialog.dart';
@@ -85,9 +86,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               eyebrow: l.homeTournierEyebrow,
               title: l.homeTournierTitle,
               subtitle: l.homeTournierComingSoon,
-              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l.homeTournierTapToast)),
-              ),
+              onTap: () => context.push(TournamentRoutes.list),
             ),
             const SizedBox(height: KubbTokens.space3),
             NewsCard(

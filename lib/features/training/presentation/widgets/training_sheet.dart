@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_bottom_sheet.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -58,6 +59,18 @@ class TrainingSheet extends StatelessWidget {
             onTap: () {
               Navigator.of(context).pop();
               context.go(MatchRoutes.newMatch);
+            },
+          ),
+          const SizedBox(height: KubbTokens.space3),
+          _ModeCard(
+            background: KubbTokens.wood500,
+            foreground: KubbTokens.chalk50,
+            title: l.homeModeTournamentTitle,
+            subtitle: l.homeModeTournamentSubtitle,
+            trailing: 'T',
+            onTap: () {
+              Navigator.of(context).pop();
+              context.go(TournamentRoutes.list);
             },
           ),
           const SizedBox(height: KubbTokens.space3),

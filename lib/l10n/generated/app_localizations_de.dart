@@ -137,6 +137,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get modeFinisseurComingSoon => 'In Vorbereitung';
 
   @override
+  String get homeModeTournamentTitle => 'Turnier';
+
+  @override
+  String get homeModeTournamentSubtitle => 'Mehrere Teams · Tabelle';
+
+  @override
   String get finisseurConfigEyebrow => 'Finisseur';
 
   @override
