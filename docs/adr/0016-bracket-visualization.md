@@ -1,16 +1,11 @@
 # ADR-0016: Bracket-Visualisierungs-Widget
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-05-25
+- **Depends on**: ADR-0001, ADR-0002, ADR-0008, ADR-0015
 - **Bezug**: `docs/plans/m2-ko-bracket/architecture.md` §3.3, §6, OD-M2-01
 
-## Entscheidung
-
-**TBD** — wartet auf Output von `/committee bracket-visualization-flutter` plus Owner-Abnahme.
-
-Vorläufige Empfehlung der Architekten-Vorprüfung: **Option A — eigener CustomPainter**.
-
-## Kontext
+## Context
 
 Milestone M2 verlangt eine Bracket-Visualisierung für die Single-Elimination-KO-Phase (FR-PUB-6) und für das Hybridformat `round_robin_then_ko`. Das Widget rendert:
 
@@ -25,79 +20,65 @@ Das Widget wird sowohl im Veranstalter-Flow (`/<id>/bracket`) als auch in der ö
 
 Anforderungen:
 - Responsiv (Mobile, Tablet, Desktop, Web).
-- Konsistent mit `kubb_tokens`-Design-System.
-- Touch-Targets ≥ 60×60 px (NFR-UX-1).
-- Performant bei bis zu 32-Teilnehmer-Brackets (5 Runden, 31 Boxen).
+- Konsistent mit `kubb_tokens`-Design-System (ADR-0008).
+- Touch-Targets ≥ 48 px (NFR-UX-1 / `KubbTokens.touchMin`).
+- Performant bei bis zu 64-Teilnehmer-Brackets (63 Match-Boxen + Connectoren).
 - Wartbar — die Streaming-Sicht (FR-PUB-10, KANN nach M5) wird ein Variant brauchen.
+- BYE-Slots (FR-FMT-11) und Spiel-um-Platz-3 (FR-FMT-1) müssen first-class darstellbar sein.
 
-## Alternativen
+## Decision
 
-### Option A — Eigener CustomPainter from scratch
+CustomPainter from scratch.
 
-`StatelessWidget`, der intern einen `CustomPainter` für Verbindungslinien verwendet und Match-Boxen via `Stack`/`Positioned` platziert. Layout-Berechnung in einer pure-Dart-Helper-Funktion.
+Layout-Math wandert als Pure-Function nach `packages/kubb_domain/lib/src/tournament/bracket_layout.dart` und verwendet eigene `BoxRect`/`Point`-Records statt Flutter-Typen (`Rect`/`Offset`), damit das Flutter-Import-Verbot im Domain-Package erhalten bleibt (ADR-0002). Die Presentation lebt in `lib/features/tournament/presentation/bracket/`:
 
-- **Pros**:
-  - Volle Kontrolle über Layout, Theming, Animationen.
-  - Keine externe Abhängigkeit, keine Lib-Lock-In.
-  - Direkte Integration in `kubb_tokens` (Primary-Color für Sieger-Pfad, Border-Radius aus Tokens).
-  - Spiel-um-Platz-3 als separate Spalte einfach modellierbar.
-  - Wiederverwendbar für die spätere Streaming-Sicht ohne Refactor.
-- **Cons**:
-  - Initialer Aufwand: 1.5–2 Tage Mobile + 1 Tag Tablet/Desktop = ~3 Tage.
-  - Edge-Cases bei sehr breiten Brackets (32+) sind eigener Pflege-Aufwand.
+- `BracketCanvas` (ConsumerWidget) als Root: `InteractiveViewer` für Pan/Zoom, darunter ein `Stack` mit `Positioned`-`KubbMatchCard`-Widgets, dazu ein `CustomPaint`-Layer ausschliesslich für die Connector-Linien.
+- Tap-Hit-Test, Tap-Navigation (`context.go`) und Live-Highlight (`currentMatchProvider`) laufen über echte Widgets — keine Painter-Hit-Test-Workarounds.
+- `KubbMatchCard` konsumiert `KubbTokens` direkt (`meadow500`, `touchMin=48`, `radiusLg`), `InkWell` für Tap, `Semantics` first-class.
+- `BracketConnectorPainter` mit `shouldRepaint`-Optimierung: Layout-Hash plus separater Repaint-Listenable für Highlight, damit Live-Highlight nicht das ganze Connector-Layer neu malt.
 
-### Option B — Pub.dev-Library (z.B. `flutter_bracket_view`, `bracket_widget`)
+Dieser Schnitt erfüllt drei Constraints, die keine der evaluierten Libraries gleichzeitig erfüllt: Tactical-DDD-Konformität (ADR-0001/0002, Layout-Math testbar via glados ohne Flutter-Dep), Design-System-Disziplin (ADR-0008, Tokens werden direkt konsumiert statt gegen Library-Defaults gewrappt) und Web/WASM-Null-Risiko (ADR-0015, nur Standard-Flutter-Primitiven).
 
-Eine fertige Library einbinden und konfigurieren.
+## Alternatives considered
 
-- **Pros**:
-  - Schnellere Initial-Integration (geschätzt 0.5–1 Tag).
-  - Weniger eigener Code.
-- **Cons**:
-  - Nischen-Libs auf Pub.dev haben oft sporadische Maintenance (typisch < 200 Likes, letzter Commit > 12 Monate alt).
-  - Theming-Anpassungen mit `kubb_tokens` häufig umständlich (Theme-API limitiert).
-  - Spiel-um-Platz-3-Spalte selten supportet — würde Custom-Layout erfordern.
-  - Tap-Dialog-Override für FR-PAIR-7 muss durch die Lib-API möglich sein, sonst Fork.
-  - Lock-In auf Drittpaket-Datenstruktur, eventuell Mapper-Layer nötig.
-  - Maintenance-Risiko: Lib unmaintained → eigener Fork oder Wechsel.
+### A — `flutter_tournament_bracket` (Pub.dev)
 
-### Option C — SVG-Renderer (`flutter_svg`) mit serverseitig generierten SVG
+Pub-Score 160/160, 22 Likes, 18 Monate kein Release. Verworfen: BYE-Support ist offenes Issue #4 (seit Dez 2024), Side-Bracket für Spiel-um-Platz-3 ist offenes Issue #5 (seit Okt 2025). Genau unsere zwei Pflicht-Features fehlen.
 
-Server (oder Edge-Function) erzeugt das Bracket als SVG, App rendert mit `flutter_svg`.
+### B — `tournament_bracket` (Pub.dev)
 
-- **Pros**:
-  - Eine Wahrheit für Bracket-Layout (serverseitig).
-  - Wiederverwendbar für Streaming-Sicht und PDF-Export.
-- **Cons**:
-  - Overengineering für M2.
-  - Tap-Interaktivität in SVG umständlich (jeder Tap-Bereich braucht eigene `<g>`-Group).
-  - Server-Code-Aufwand (oder Edge-Function-Deployment) für eine Funktion, die clientseitig trivial ist.
-  - Layout-Anpassungen ohne Server-Roundtrip nicht möglich.
+0.0.4, 3 Likes, 3 Jahre kein Commit, Null-Safety-Status unklar. Verworfen: faktisch abandoned, `touchable`-Transitive-Dep mit eigenem Maintenance-Risk.
 
-## Konsequenzen
+### C — `graphview` als Bracket-Renderer
 
-### Bei Option A (empfohlen):
+508 Likes, verified Publisher, generischer Tree-Renderer. Verworfen: README sagt explizit "works excellent with small graphs" — kein Beleg für 64-Team-Brackets. Bracket-typische rechtwinklige Connectors sind kein Default, brauchen Custom-Edge-Renderer — der LOC-Vorteil schmilzt auf ~200–350 LOC Mapper + Edge-Code zusammen.
 
-- M2.3-T2 wird ein L-Task statt M-Task (3 Tage statt 1.5).
-- Keine neue Pub.dev-Abhängigkeit in `pubspec.yaml`.
+### D — `graphite`
+
+186 Likes, letzter Release März 2025, generischer Direct-Graph-Renderer. Verworfen: gleiche `touchable`-Transitive-Dep wie B, Bracket-Semantik (Round, Seed, Bye, Third-Place) bleibt komplett Eigen-Mapping, Web-Support in README nicht belegt.
+
+### E — Serverseitig generiertes SVG via `flutter_svg`
+
+Verworfen: Tap-Interaktivität pro `<g>` umständlich, Layout-Anpassungen ohne Server-Roundtrip unmöglich, Overengineering für M2.
+
+## Consequences
+
+- M2.3-T2 wird ein L-Task statt M-Task (~3 Tage Mobile + Tablet/Desktop).
+- Keine neue Pub.dev-Abhängigkeit in `pubspec.yaml`. Stack-Decision-Trigger aus ADR-0001 entfällt.
 - Widget-Pflege bleibt im Haus, Risiko von externer Drift entfällt.
 - Streaming-Sicht in M5+ kann das Widget mit anderem Layout-Parameter wiederverwenden.
 
-### Bei Option B:
+Implementation Notes (gehen 1:1 in die M2.3-Tasks):
 
-- M2.3-T2 wird ein M-Task (1.5 Tage).
-- Neue Abhängigkeit in `pubspec.yaml`, Owner-Abnahme der Lib-Wahl nötig (Stack-Decision per ADR-0001).
-- Theming-Test in M2.3-T1 muss Konsistenz mit `kubb_tokens` verifizieren.
-- Lock-In, Fallback-Plan (eigene Lib) muss dokumentiert sein.
+- **Domain-Layer** (`packages/kubb_domain/lib/src/tournament/bracket_layout.dart`): Pure-Function `BracketLayout` mit eigenen Records `BoxRect`/`Point`. `BracketEntry.isBye` first-class. Spiel-um-Platz-3 als optionaler Side-Branch im Layout-Output (separates Box-Set mit eigenen Connectoren zu beiden SF-Verlierern).
+- **Property-Tests** via glados über Team-Counts 1..64 im Domain-Package.
+- **Goldens** via `golden_toolkit` für 4/8/16/32/64-Team-Brackets inkl. BYE- und Side-Branch-Varianten.
+- **Viewport-Culling** im Painter ab 32-Team-Brackets (Connectoren in `canvas.clipRect`).
+- **Semantics** pro `KubbMatchCard` plus `semanticsBuilder` am Painter — nicht nachträglich draufgeschraubt.
+- **Live-Highlight**-Animation via `AnimatedBuilder` über `currentMatchProvider`-Listenable, separater Layer im Painter.
 
-### Bei Option C:
+Scale-Impact-Notiz (Tier 1 per `tech-lead.md`): Bracket > 32 Teams, Performance-Budget **p95 < 16 ms first-paint** als Tester-Task vor Implementation-Start.
 
-- Server-Aufwand kommt zu M2.2 hinzu (zusätzliche RPC oder Edge-Function).
-- M2.3-T2 wird trivial (nur `SvgPicture`), aber Interaktivität separat zu lösen.
-- Realistisch nicht für M2-Zeitfenster.
+## Reference: Committee Decision Doc
 
-## Tracking
-
-- `/committee bracket-visualization-flutter` läuft parallel — der Output liefert eine technische Bewertung der konkreten Pub.dev-Optionen.
-- Nach Committee-Output: Owner-Abnahme dieser ADR.
-- Nach Acceptance: M2.3-T1/T2 starten.
+`/tmp/kubb_app/committee/bracket-visualization-flutter/decision.md`

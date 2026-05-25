@@ -5,7 +5,7 @@
 
 Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockiert wenigstens einen Task aus dem Milestone-Plan.
 
-## OD-M2-01: Bracket-Visualisierung — CustomPainter oder Library? `[committee] [owner]`
+## OD-M2-01: Bracket-Visualisierung — CustomPainter oder Library? `[resolved]`
 
 **Frage**: Mit welcher Technik bauen wir das Bracket-Visualisierungs-Widget?
 
@@ -22,7 +22,7 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockiert
 
 **Empfehlung (vorläufig, ersetzt sobald Committee zurück ist)**: A — CustomPainter. Begründung: Das Bracket-Widget wird einer der zentralen Touchpoints im Veranstalter-Flow. Ein nicht mehr gepflegtes Drittpaket im kritischen Pfad ist ein zukünftiges Liability. Die +1 Tag Initialaufwand zahlen sich über die Lebensdauer aus. Die spätere Streaming-Sicht (FR-PUB-10) wird ein verändertes Layout brauchen — mit Eigencode trivial nachrüstbar, mit Library evtl. nicht.
 
-**Marker**: `[committee]` — technische Bewertung läuft per `/committee bracket-visualization-flutter` (Library-Landschaft auf Pub.dev, Pflege-Status, Theming-Möglichkeiten). `[owner]` — Owner muss am ADR-0016 abnicken (Lib-Wahl ist eine Stack-Decision per ADR-0001).
+**Resolution**: Resolved 2026-05-25 via Committee Vote 3:0 für CustomPainter. Siehe ADR-0016 (Accepted).
 
 ## OD-M2-02: Server-Authority oder Client-Authority für Bracket-Generation? `[committee]`
 
@@ -151,17 +151,17 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockiert
 
 ## Übersicht der ODs nach Marker
 
-| ID | `[committee]` | `[owner]` | `[domain]` | Blockt |
-|---|---|---|---|---|
-| OD-M2-01 | ja | ja | — | M2.3-T2 |
-| OD-M2-02 | ja | — | — | M2.2-T3 |
-| OD-M2-03 | ja | — | — | M2.3-T4 |
-| OD-M2-04 | — | ja | ja | M2.1-T3, M2.3-T4 |
-| OD-M2-05 | — | — | ja | M2.1-T3 |
-| OD-M2-06 | ja | — | — | M2.2-T3, M2.3-T6 |
-| OD-M2-07 | ja | — | — | M2.3-T2 |
+| ID | `[committee]` | `[owner]` | `[domain]` | `[resolved]` | Blockt |
+|---|---|---|---|---|---|
+| OD-M2-01 | — | — | — | ja | M2.3-T2 |
+| OD-M2-02 | ja | — | — | — | M2.2-T3 |
+| OD-M2-03 | ja | — | — | — | M2.3-T4 |
+| OD-M2-04 | — | ja | ja | — | M2.1-T3, M2.3-T4 |
+| OD-M2-05 | — | — | ja | — | M2.1-T3 |
+| OD-M2-06 | ja | — | — | — | M2.2-T3, M2.3-T6 |
+| OD-M2-07 | ja | — | — | — | M2.3-T2 |
 
-Zählung: 7 ODs gesamt — 5x `[committee]`, 2x `[owner]`, 2x `[domain]`. Manche tragen mehrere Marker.
+Zählung: 7 ODs gesamt — 4x `[committee]`, 1x `[owner]`, 2x `[domain]`, 1x `[resolved]`. Manche tragen mehrere Marker.
 
 ## Empfohlene Entscheidungs-Reihenfolge
 
@@ -169,7 +169,7 @@ Damit M2-Implementierung starten kann, in dieser Sequenz:
 
 1. **OD-M2-04** und **OD-M2-05** — beide blocken M2.1 (Pure Domain), das ist der erste Sub-Milestone. Schnell entscheiden, beide sind low-stakes Domain-Fragen.
 2. **OD-M2-02** — blocked M2.2 (Server). Vor dem Committee-Output kann hier vorläufig die Empfehlung B verfolgt werden, eine spätere Anpassung ist additiv.
-3. **OD-M2-01** — wichtigste Entscheidung, hängt am Committee-Output `/committee bracket-visualization-flutter` plus Owner-ADR-Abnahme. Blocked M2.3.
+3. ~~**OD-M2-01**~~ — resolved 2026-05-25 (Committee 3:0 für CustomPainter, ADR-0016 Accepted). M2.3-T2 entblockt.
 4. **OD-M2-06**, **OD-M2-03**, **OD-M2-07** — UX/Polish-Entscheidungen, können parallel zur Implementation laufen, müssen aber vor M2.3 abgeschlossen sein.
 
 ## Was die ODs explizit **nicht** entscheiden
