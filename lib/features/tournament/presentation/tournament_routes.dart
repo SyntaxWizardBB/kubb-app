@@ -31,6 +31,11 @@ abstract final class TournamentRoutes {
   static String conflict(String tournamentId, String matchId) =>
       '$matchBase/$tournamentId/match/$matchId/conflict';
 
+  /// Organizer override entry-point for a disputed match. Compose as
+  /// `'$matchBase/$tournamentId/match/$matchId/override'`.
+  static String override(String tournamentId, String matchId) =>
+      '$matchBase/$tournamentId/match/$matchId/override';
+
   static String standings(String tournamentId) =>
       '$standingsBase/$tournamentId/standings';
 }

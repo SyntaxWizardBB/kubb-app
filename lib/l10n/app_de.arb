@@ -45,1250 +45,2402 @@
     "description": "Profile created-at label"
   },
   "profileEditButton": "Bearbeiten",
-  "@profileEditButton": { "description": "Read-mode edit toggle button" },
+  "@profileEditButton": {
+    "description": "Read-mode edit toggle button"
+  },
   "profileSaveButton": "Speichern",
-  "@profileSaveButton": { "description": "Save edits to profile" },
+  "@profileSaveButton": {
+    "description": "Save edits to profile"
+  },
   "profileCancelButton": "Abbrechen",
-  "@profileCancelButton": { "description": "Discard edits to profile" },
+  "@profileCancelButton": {
+    "description": "Discard edits to profile"
+  },
   "profileNameLabel": "Anzeigename",
-  "@profileNameLabel": { "description": "Label above the name field in edit mode" },
+  "@profileNameLabel": {
+    "description": "Label above the name field in edit mode"
+  },
   "profileColorLabel": "Avatar-Farbe",
-  "@profileColorLabel": { "description": "Label above the color chips in edit mode" },
+  "@profileColorLabel": {
+    "description": "Label above the color chips in edit mode"
+  },
   "profileUpdateError": "Profil konnte nicht gespeichert werden — bitte erneut versuchen.",
-  "@profileUpdateError": { "description": "Snackbar shown when profile update fails" },
+  "@profileUpdateError": {
+    "description": "Snackbar shown when profile update fails"
+  },
   "settingsTitle": "Einstellungen",
-  "@settingsTitle": { "description": "App settings modal title" },
+  "@settingsTitle": {
+    "description": "App settings modal title"
+  },
   "settingsLanguage": "Sprache",
-  "@settingsLanguage": { "description": "Language row label" },
+  "@settingsLanguage": {
+    "description": "Language row label"
+  },
   "settingsLanguageValue": "Deutsch",
-  "@settingsLanguageValue": { "description": "Language read-only value" },
+  "@settingsLanguageValue": {
+    "description": "Language read-only value"
+  },
   "settingsTheme": "Erscheinungsbild",
-  "@settingsTheme": { "description": "Theme row label" },
+  "@settingsTheme": {
+    "description": "Theme row label"
+  },
   "settingsHeli": "Helikopter zählen",
-  "@settingsHeli": { "description": "Heli tracking row label" },
+  "@settingsHeli": {
+    "description": "Heli tracking row label"
+  },
   "settingsVibration": "Vibration",
-  "@settingsVibration": { "description": "Vibration row label" },
+  "@settingsVibration": {
+    "description": "Vibration row label"
+  },
   "settingsLongDubbie": "Long Dubbie zählen",
-  "@settingsLongDubbie": { "description": "Long-dubbie tracking row label" },
+  "@settingsLongDubbie": {
+    "description": "Long-dubbie tracking row label"
+  },
   "settingsPenaltyKubb": "Strafkubb zählen",
-  "@settingsPenaltyKubb": { "description": "Penalty-kubb tracking row label" },
+  "@settingsPenaltyKubb": {
+    "description": "Penalty-kubb tracking row label"
+  },
   "settingsKingThrow": "Königswurf zählen",
-  "@settingsKingThrow": { "description": "King-throw tracking row label" },
+  "@settingsKingThrow": {
+    "description": "King-throw tracking row label"
+  },
   "settingsAllowContinue": "Über Stock 6 hinaus weiterspielen",
-  "@settingsAllowContinue": { "description": "Allow continuing beyond stick 6 row label" },
+  "@settingsAllowContinue": {
+    "description": "Allow continuing beyond stick 6 row label"
+  },
   "settingsAllowContinueSub": "Nach Stock 6 weiterspielen bis fertig",
-  "@settingsAllowContinueSub": { "description": "Allow continuing beyond stick 6 row description" },
+  "@settingsAllowContinueSub": {
+    "description": "Allow continuing beyond stick 6 row description"
+  },
   "settingsFinisseurSection": "Finisseur",
-  "@settingsFinisseurSection": { "description": "Finisseur tracking section title inside the app block" },
+  "@settingsFinisseurSection": {
+    "description": "Finisseur tracking section title inside the app block"
+  },
   "themeLight": "Hell",
-  "@themeLight": { "description": "Theme choice — light" },
+  "@themeLight": {
+    "description": "Theme choice — light"
+  },
   "themeDark": "Dunkel",
-  "@themeDark": { "description": "Theme choice — dark" },
+  "@themeDark": {
+    "description": "Theme choice — dark"
+  },
   "themeHighContrast": "Sonnenlicht",
-  "@themeHighContrast": { "description": "Theme choice — high contrast / sunlight" },
+  "@themeHighContrast": {
+    "description": "Theme choice — high contrast / sunlight"
+  },
   "settingsVersion": "Version {version} ({build})",
   "@settingsVersion": {
     "description": "App version footer",
-    "placeholders": { "version": {"type": "String"}, "build": {"type": "String"} }
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
   },
   "trainingSheetEyebrow": "Neue Session",
-  "@trainingSheetEyebrow": { "description": "Training sheet eyebrow above title" },
+  "@trainingSheetEyebrow": {
+    "description": "Training sheet eyebrow above title"
+  },
   "trainingSheetTitle": "Welcher Modus?",
-  "@trainingSheetTitle": { "description": "Training sheet title" },
+  "@trainingSheetTitle": {
+    "description": "Training sheet title"
+  },
   "trainingSheetStatsLink": "Statistik anzeigen",
-  "@trainingSheetStatsLink": { "description": "Footer link below the mode cards that opens the stats screen" },
+  "@trainingSheetStatsLink": {
+    "description": "Footer link below the mode cards that opens the stats screen"
+  },
   "modeSniperTitle": "Sniper-Training",
-  "@modeSniperTitle": { "description": "Sniper mode title" },
+  "@modeSniperTitle": {
+    "description": "Sniper mode title"
+  },
   "modeSniperSubtitle": "Trefferquote · Konstanz",
-  "@modeSniperSubtitle": { "description": "Sniper mode subtitle" },
+  "@modeSniperSubtitle": {
+    "description": "Sniper mode subtitle"
+  },
   "modeFinisseurTitle": "Finisseur",
-  "@modeFinisseurTitle": { "description": "Finisseur mode title" },
+  "@modeFinisseurTitle": {
+    "description": "Finisseur mode title"
+  },
   "modeFinisseurSubtitle": "Match-Endspiel · 6 Stöcke",
-  "@modeFinisseurSubtitle": { "description": "Finisseur mode subtitle" },
+  "@modeFinisseurSubtitle": {
+    "description": "Finisseur mode subtitle"
+  },
   "modeFinisseurComingSoon": "In Vorbereitung",
-  "@modeFinisseurComingSoon": { "description": "Snackbar message when tapping finisseur (not yet implemented)" },
+  "@modeFinisseurComingSoon": {
+    "description": "Snackbar message when tapping finisseur (not yet implemented)"
+  },
   "finisseurConfigEyebrow": "Finisseur",
-  "@finisseurConfigEyebrow": { "description": "Eyebrow on the finisseur config screen" },
+  "@finisseurConfigEyebrow": {
+    "description": "Eyebrow on the finisseur config screen"
+  },
   "finisseurConfigTitle": "Konfiguration",
-  "@finisseurConfigTitle": { "description": "Finisseur config screen title" },
+  "@finisseurConfigTitle": {
+    "description": "Finisseur config screen title"
+  },
   "finisseurConfigFieldLabel": "Feldkubbs (eingeworfen)",
-  "@finisseurConfigFieldLabel": { "description": "Field-kubb stepper label" },
+  "@finisseurConfigFieldLabel": {
+    "description": "Field-kubb stepper label"
+  },
   "finisseurConfigBaseLabel": "Basiskubbs · max {max}",
   "@finisseurConfigBaseLabel": {
     "description": "Base-kubb stepper label with current max",
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "finisseurConfigConstraint": "Total maximal 10 Kubbs · Basis maximal 5. Aktuell {current} / 10.",
   "@finisseurConfigConstraint": {
     "description": "Constraint hint under the stepper",
-    "placeholders": { "current": { "type": "int" } }
+    "placeholders": {
+      "current": {
+        "type": "int"
+      }
+    }
   },
   "finisseurConfigPresets": "Presets",
-  "@finisseurConfigPresets": { "description": "Preset section header (currently unused; built-in presets removed)" },
+  "@finisseurConfigPresets": {
+    "description": "Preset section header (currently unused; built-in presets removed)"
+  },
   "finisseurConfigPresetStandard": "Standard",
-  "@finisseurConfigPresetStandard": { "description": "Legacy built-in preset 7/3 label (built-ins removed)" },
+  "@finisseurConfigPresetStandard": {
+    "description": "Legacy built-in preset 7/3 label (built-ins removed)"
+  },
   "finisseurConfigPresetEven": "5/5",
-  "@finisseurConfigPresetEven": { "description": "Legacy built-in preset 5/5 label (built-ins removed)" },
+  "@finisseurConfigPresetEven": {
+    "description": "Legacy built-in preset 5/5 label (built-ins removed)"
+  },
   "finisseurConfigPresetAllField": "10/0",
-  "@finisseurConfigPresetAllField": { "description": "Legacy built-in preset 10/0 label (built-ins removed)" },
+  "@finisseurConfigPresetAllField": {
+    "description": "Legacy built-in preset 10/0 label (built-ins removed)"
+  },
   "finisseurConfigPresetLate": "Spät",
-  "@finisseurConfigPresetLate": { "description": "Legacy built-in preset 3/5 label (built-ins removed)" },
+  "@finisseurConfigPresetLate": {
+    "description": "Legacy built-in preset 3/5 label (built-ins removed)"
+  },
   "finisseurConfigPreviewSubtitle": "{field} / {base} · 6 Stöcke",
   "@finisseurConfigPreviewSubtitle": {
     "description": "Preview caption under the visual kubb stack",
     "placeholders": {
-      "field": { "type": "int" }, "base": { "type": "int" }
+      "field": {
+        "type": "int"
+      },
+      "base": {
+        "type": "int"
+      }
     }
   },
   "finisseurConfigStartButton": "Finisseur starten",
-  "@finisseurConfigStartButton": { "description": "Start session button" },
+  "@finisseurConfigStartButton": {
+    "description": "Start session button"
+  },
   "finisseurStickTitle": "Stock {n} / 6",
   "@finisseurStickTitle": {
     "description": "Stick screen title showing current stick number",
-    "placeholders": { "n": { "type": "int" } }
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
   },
   "finisseurStickEyebrow": "Finisseur · {field}/{base}",
   "@finisseurStickEyebrow": {
     "description": "Stick screen eyebrow with active config",
     "placeholders": {
-      "field": { "type": "int" }, "base": { "type": "int" }
+      "field": {
+        "type": "int"
+      },
+      "base": {
+        "type": "int"
+      }
     }
   },
   "finisseurStickRemainingField": "Feldkubbs übrig",
-  "@finisseurStickRemainingField": { "description": "Remaining field-kubb label" },
+  "@finisseurStickRemainingField": {
+    "description": "Remaining field-kubb label"
+  },
   "finisseurStickRemainingBase": "Basiskubbs übrig",
-  "@finisseurStickRemainingBase": { "description": "Remaining base-kubb label" },
+  "@finisseurStickRemainingBase": {
+    "description": "Remaining base-kubb label"
+  },
   "finisseurStickFieldHeader": "Feldkubbs umgeworfen",
-  "@finisseurStickFieldHeader": { "description": "Field-kubb section header" },
+  "@finisseurStickFieldHeader": {
+    "description": "Field-kubb section header"
+  },
   "finisseurStickFieldRange": "0–{max}",
   "@finisseurStickFieldRange": {
     "description": "Field-kubb chip range",
-    "placeholders": { "max": { "type": "int" } }
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "finisseurStickFieldEmpty": "keine Feldkubbs mehr — direkt 8m oder König",
-  "@finisseurStickFieldEmpty": { "description": "Empty field-kubb state" },
+  "@finisseurStickFieldEmpty": {
+    "description": "Empty field-kubb state"
+  },
   "finisseurStick8mLabel": "8m-Treffer",
-  "@finisseurStick8mLabel": { "description": "Legacy 8m hit toggle label (deprecated by long dubbie)" },
+  "@finisseurStick8mLabel": {
+    "description": "Legacy 8m hit toggle label (deprecated by long dubbie)"
+  },
   "finisseurStick8mSub": "Wurf auf Basiskubb",
-  "@finisseurStick8mSub": { "description": "Legacy 8m hit toggle subtitle (deprecated by long dubbie)" },
+  "@finisseurStick8mSub": {
+    "description": "Legacy 8m hit toggle subtitle (deprecated by long dubbie)"
+  },
   "finisseurStickLongDubbieLabel": "Long Dubbie",
-  "@finisseurStickLongDubbieLabel": { "description": "Long-dubbie toggle label — feldkubb plus basiskubb in one throw" },
+  "@finisseurStickLongDubbieLabel": {
+    "description": "Long-dubbie toggle label — feldkubb plus basiskubb in one throw"
+  },
   "finisseurStickLongDubbieSub": "Feldkubb + Basiskubb in einem",
-  "@finisseurStickLongDubbieSub": { "description": "Long-dubbie toggle subtitle" },
+  "@finisseurStickLongDubbieSub": {
+    "description": "Long-dubbie toggle subtitle"
+  },
   "finisseurStickHeliLabel": "Helikopter",
-  "@finisseurStickHeliLabel": { "description": "Heli toggle label" },
+  "@finisseurStickHeliLabel": {
+    "description": "Heli toggle label"
+  },
   "finisseurStickHeliSub": "ungültig, Stock weg",
-  "@finisseurStickHeliSub": { "description": "Heli toggle subtitle" },
+  "@finisseurStickHeliSub": {
+    "description": "Heli toggle subtitle"
+  },
   "finisseurStickKingLabel": "Königswurf",
-  "@finisseurStickKingLabel": { "description": "King toggle label" },
+  "@finisseurStickKingLabel": {
+    "description": "King toggle label"
+  },
   "finisseurStickKingSubDefault": "am Ende",
-  "@finisseurStickKingSubDefault": { "description": "King toggle subtitle when not yet detailed" },
+  "@finisseurStickKingSubDefault": {
+    "description": "King toggle subtitle when not yet detailed"
+  },
   "finisseurStickKingPosition": "Position",
-  "@finisseurStickKingPosition": { "description": "King position row label" },
+  "@finisseurStickKingPosition": {
+    "description": "King position row label"
+  },
   "finisseurStickKingOutcome": "Outcome",
-  "@finisseurStickKingOutcome": { "description": "King outcome row label" },
+  "@finisseurStickKingOutcome": {
+    "description": "King outcome row label"
+  },
   "finisseurStickKingOben": "oben",
-  "@finisseurStickKingOben": { "description": "King position oben" },
+  "@finisseurStickKingOben": {
+    "description": "King position oben"
+  },
   "finisseurStickKingUnten": "unten",
-  "@finisseurStickKingUnten": { "description": "King position unten" },
+  "@finisseurStickKingUnten": {
+    "description": "King position unten"
+  },
   "finisseurStickKingHit": "Treffer",
-  "@finisseurStickKingHit": { "description": "King outcome hit" },
+  "@finisseurStickKingHit": {
+    "description": "King outcome hit"
+  },
   "finisseurStickKingMiss": "verfehlt",
-  "@finisseurStickKingMiss": { "description": "King outcome miss" },
+  "@finisseurStickKingMiss": {
+    "description": "King outcome miss"
+  },
   "finisseurStickPenaltyHeader": "Strafkubbs (vom letzten Halbsatz)",
-  "@finisseurStickPenaltyHeader": { "description": "Penalty kubb section header" },
+  "@finisseurStickPenaltyHeader": {
+    "description": "Penalty kubb section header"
+  },
   "finisseurStickPenaltyMeta": "{sum} / {base} umgeworfen",
   "@finisseurStickPenaltyMeta": {
     "description": "Penalty kubb meta",
     "placeholders": {
-      "sum": { "type": "int" }, "base": { "type": "int" }
+      "sum": {
+        "type": "int"
+      },
+      "base": {
+        "type": "int"
+      }
     }
   },
   "finisseurStickPenaltyFirst": "1× geworfen",
-  "@finisseurStickPenaltyFirst": { "description": "First penalty throw row label" },
+  "@finisseurStickPenaltyFirst": {
+    "description": "First penalty throw row label"
+  },
   "finisseurStickPenaltyFirstSub": "erster Strafkubb-Wurf",
-  "@finisseurStickPenaltyFirstSub": { "description": "First penalty throw subtitle" },
+  "@finisseurStickPenaltyFirstSub": {
+    "description": "First penalty throw subtitle"
+  },
   "finisseurStickPenaltySecond": "2× geworfen",
-  "@finisseurStickPenaltySecond": { "description": "Second penalty throw row label" },
+  "@finisseurStickPenaltySecond": {
+    "description": "Second penalty throw row label"
+  },
   "finisseurStickPenaltySecondSub": "zweiter Strafkubb-Wurf",
-  "@finisseurStickPenaltySecondSub": { "description": "Second penalty throw subtitle" },
+  "@finisseurStickPenaltySecondSub": {
+    "description": "Second penalty throw subtitle"
+  },
   "finisseurStickNextStock": "Stock {n}",
   "@finisseurStickNextStock": {
     "description": "Next-stick button label",
-    "placeholders": { "n": { "type": "int" } }
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
   },
   "finisseurStickFinish": "Session abschliessen",
-  "@finisseurStickFinish": { "description": "Final stick button label" },
+  "@finisseurStickFinish": {
+    "description": "Final stick button label"
+  },
   "finisseurStickFinishStick": "Stock abschliessen",
-  "@finisseurStickFinishStick": { "description": "Commit-stick button shown during the king flow in base phase" },
+  "@finisseurStickFinishStick": {
+    "description": "Commit-stick button shown during the king flow in base phase"
+  },
   "continueDecisionTitle": "6 Stöcke verbraucht",
-  "@continueDecisionTitle": { "description": "Continue-beyond-sticks dialog title" },
+  "@continueDecisionTitle": {
+    "description": "Continue-beyond-sticks dialog title"
+  },
   "continueDecisionBody": "Möchtest du bis zum Ende weiterspielen?",
-  "@continueDecisionBody": { "description": "Continue-beyond-sticks dialog body" },
+  "@continueDecisionBody": {
+    "description": "Continue-beyond-sticks dialog body"
+  },
   "continueDecisionContinue": "Weiterspielen",
-  "@continueDecisionContinue": { "description": "Continue-beyond-sticks primary action" },
+  "@continueDecisionContinue": {
+    "description": "Continue-beyond-sticks primary action"
+  },
   "continueDecisionGiveUp": "Aufgeben",
-  "@continueDecisionGiveUp": { "description": "Continue-beyond-sticks secondary action" },
+  "@continueDecisionGiveUp": {
+    "description": "Continue-beyond-sticks secondary action"
+  },
   "finisseurStickBasePadHeader": "Wurf auf Basiskubb",
-  "@finisseurStickBasePadHeader": { "description": "Header above the simplified base-phase pad" },
+  "@finisseurStickBasePadHeader": {
+    "description": "Header above the simplified base-phase pad"
+  },
   "finisseurStickBasePadHit": "Treffer",
-  "@finisseurStickBasePadHit": { "description": "Hit button on the simplified base-phase pad" },
+  "@finisseurStickBasePadHit": {
+    "description": "Hit button on the simplified base-phase pad"
+  },
   "finisseurStickBasePadMiss": "Verfehlt",
-  "@finisseurStickBasePadMiss": { "description": "Miss button on the simplified base-phase pad" },
+  "@finisseurStickBasePadMiss": {
+    "description": "Miss button on the simplified base-phase pad"
+  },
   "finisseurStickPenaltyLabel": "Strafkubb",
-  "@finisseurStickPenaltyLabel": { "description": "Single penalty kubb row label after the second-chance reduction" },
+  "@finisseurStickPenaltyLabel": {
+    "description": "Single penalty kubb row label after the second-chance reduction"
+  },
   "finisseurStickPenaltySub": "Strafwurf umgeworfen",
-  "@finisseurStickPenaltySub": { "description": "Single penalty kubb row subtitle" },
+  "@finisseurStickPenaltySub": {
+    "description": "Single penalty kubb row subtitle"
+  },
   "finisseurAbortConfirmTitle": "Session verwerfen?",
-  "@finisseurAbortConfirmTitle": { "description": "Title for the confirm dialog when leaving a dirty finisseur session" },
+  "@finisseurAbortConfirmTitle": {
+    "description": "Title for the confirm dialog when leaving a dirty finisseur session"
+  },
   "finisseurAbortConfirmBody": "Die bisherigen Stöcke werden gelöscht. Trotzdem zurück?",
-  "@finisseurAbortConfirmBody": { "description": "Body for the abort confirm dialog" },
+  "@finisseurAbortConfirmBody": {
+    "description": "Body for the abort confirm dialog"
+  },
   "finisseurAbortConfirmStay": "Weitertrainieren",
-  "@finisseurAbortConfirmStay": { "description": "Cancel option of the abort confirm dialog" },
+  "@finisseurAbortConfirmStay": {
+    "description": "Cancel option of the abort confirm dialog"
+  },
   "finisseurAbortConfirmDiscard": "Verwerfen",
-  "@finisseurAbortConfirmDiscard": { "description": "Discard option of the abort confirm dialog" },
+  "@finisseurAbortConfirmDiscard": {
+    "description": "Discard option of the abort confirm dialog"
+  },
   "finisseurSummarySuccess": "Sauber finished",
-  "@finisseurSummarySuccess": { "description": "Summary tag for successful finisseur" },
+  "@finisseurSummarySuccess": {
+    "description": "Summary tag for successful finisseur"
+  },
   "finisseurSummaryFail": "Nicht geschafft",
-  "@finisseurSummaryFail": { "description": "Summary tag for failed finisseur" },
+  "@finisseurSummaryFail": {
+    "description": "Summary tag for failed finisseur"
+  },
   "finisseurSummarySticksUsed": "{n} / 6",
   "@finisseurSummarySticksUsed": {
     "description": "Sticks used readout",
-    "placeholders": { "n": { "type": "int" } }
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
   },
   "finisseurSummarySticksUsedSubtitle": "Stöcke benötigt · {duration}",
   "@finisseurSummarySticksUsedSubtitle": {
     "description": "Sticks used subtitle",
-    "placeholders": { "duration": { "type": "String" } }
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "finisseurSummaryOverstickSubtitle": "Stöcke benötigt (Verlängerung) · {duration}",
   "@finisseurSummaryOverstickSubtitle": {
     "description": "Sticks used subtitle when player continued past stock 6",
-    "placeholders": { "duration": { "type": "String" } }
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
   },
   "finisseurSummaryKingRow": "Königswurf",
-  "@finisseurSummaryKingRow": { "description": "Summary row for king throw" },
+  "@finisseurSummaryKingRow": {
+    "description": "Summary row for king throw"
+  },
   "finisseurSummaryKingHit": "{position} durch · Treffer",
   "@finisseurSummaryKingHit": {
     "description": "King hit value",
-    "placeholders": { "position": { "type": "String" } }
+    "placeholders": {
+      "position": {
+        "type": "String"
+      }
+    }
   },
   "finisseurSummaryKingMiss": "verfehlt",
-  "@finisseurSummaryKingMiss": { "description": "King miss value on summary" },
+  "@finisseurSummaryKingMiss": {
+    "description": "King miss value on summary"
+  },
   "finisseurSummaryKingNone": "kein Wurf",
-  "@finisseurSummaryKingNone": { "description": "No king throw value on summary" },
+  "@finisseurSummaryKingNone": {
+    "description": "No king throw value on summary"
+  },
   "finisseurSummaryPenalties": "Strafkubbs",
-  "@finisseurSummaryPenalties": { "description": "Penalty count row label" },
+  "@finisseurSummaryPenalties": {
+    "description": "Penalty count row label"
+  },
   "finisseurSummaryHeli": "Heli",
-  "@finisseurSummaryHeli": { "description": "Heli count row label" },
+  "@finisseurSummaryHeli": {
+    "description": "Heli count row label"
+  },
   "finisseurSummaryModeLabel": "Modus",
-  "@finisseurSummaryModeLabel": { "description": "Mode row label on the finisseur summary (replaces distance for finisseurs)" },
+  "@finisseurSummaryModeLabel": {
+    "description": "Mode row label on the finisseur summary (replaces distance for finisseurs)"
+  },
   "finisseurSummaryConfig": "Finisseur · {field}/{base}",
   "@finisseurSummaryConfig": {
     "description": "Summary screen title for finisseur",
     "placeholders": {
-      "field": { "type": "int" }, "base": { "type": "int" }
+      "field": {
+        "type": "int"
+      },
+      "base": {
+        "type": "int"
+      }
     }
   },
   "finisseurRecentSubtitle": "{field}/{base} · {sticks} Stöcke · {when}",
   "@finisseurRecentSubtitle": {
     "description": "Recent list subtitle for finisseur",
     "placeholders": {
-      "field": { "type": "int" },
-      "base": { "type": "int" },
-      "sticks": { "type": "int" },
-      "when": { "type": "String" }
+      "field": {
+        "type": "int"
+      },
+      "base": {
+        "type": "int"
+      },
+      "sticks": {
+        "type": "int"
+      },
+      "when": {
+        "type": "String"
+      }
     }
   },
   "homeAppTitle": "Brosi's Kubb",
-  "@homeAppTitle": { "description": "Home screen app bar title" },
+  "@homeAppTitle": {
+    "description": "Home screen app bar title"
+  },
   "homeEyebrow": "Brosi's Kubb",
-  "@homeEyebrow": { "description": "Eyebrow above greeting on home" },
+  "@homeEyebrow": {
+    "description": "Eyebrow above greeting on home"
+  },
   "homeGreeting": "Hallo, {name}.",
   "@homeGreeting": {
     "description": "Greeting on home screen",
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "homeGreetingFallback": "Hallo.",
-  "@homeGreetingFallback": { "description": "Fallback greeting without name" },
+  "@homeGreetingFallback": {
+    "description": "Fallback greeting without name"
+  },
   "homeTournierEyebrow": "Tournier",
-  "@homeTournierEyebrow": { "description": "Eyebrow on the tournament card" },
+  "@homeTournierEyebrow": {
+    "description": "Eyebrow on the tournament card"
+  },
   "homeTournierTitle": "Match-Modus",
-  "@homeTournierTitle": { "description": "Tournament card title" },
+  "@homeTournierTitle": {
+    "description": "Tournament card title"
+  },
   "homeTournierComingSoon": "In Vorbereitung",
-  "@homeTournierComingSoon": { "description": "Tournament card subtitle (not yet implemented)" },
+  "@homeTournierComingSoon": {
+    "description": "Tournament card subtitle (not yet implemented)"
+  },
   "homeTournierTapToast": "In Vorbereitung",
-  "@homeTournierTapToast": { "description": "Snackbar shown when tapping tournament card" },
+  "@homeTournierTapToast": {
+    "description": "Snackbar shown when tapping tournament card"
+  },
   "homeNewsEyebrow": "News · Kubbtour.ch",
-  "@homeNewsEyebrow": { "description": "Eyebrow on the news card" },
+  "@homeNewsEyebrow": {
+    "description": "Eyebrow on the news card"
+  },
   "homeNewsTitle": "Saison 2026 — Termine sind raus",
-  "@homeNewsTitle": { "description": "News card title" },
+  "@homeNewsTitle": {
+    "description": "News card title"
+  },
   "homeNewsSubtitle": "tippen für alle Turniere & Anmeldung",
-  "@homeNewsSubtitle": { "description": "News card subtitle" },
+  "@homeNewsSubtitle": {
+    "description": "News card subtitle"
+  },
   "homeRecentTitle": "Zuletzt",
-  "@homeRecentTitle": { "description": "Section header for the recent sessions list" },
+  "@homeRecentTitle": {
+    "description": "Section header for the recent sessions list"
+  },
   "homeFabLabel": "Training",
-  "@homeFabLabel": { "description": "FAB label on home screen" },
+  "@homeFabLabel": {
+    "description": "FAB label on home screen"
+  },
   "sniperConfigEyebrow": "Sniper-Training",
-  "@sniperConfigEyebrow": { "description": "Eyebrow above title on sniper config screen" },
+  "@sniperConfigEyebrow": {
+    "description": "Eyebrow above title on sniper config screen"
+  },
   "sniperConfigTitle": "Einstellungen",
-  "@sniperConfigTitle": { "description": "Sniper config screen title" },
+  "@sniperConfigTitle": {
+    "description": "Sniper config screen title"
+  },
   "sniperConfigDistanceLabel": "Distanz",
-  "@sniperConfigDistanceLabel": { "description": "Distance row label" },
+  "@sniperConfigDistanceLabel": {
+    "description": "Distance row label"
+  },
   "sniperConfigTargetLabel": "Ziel-Wurfzahl",
-  "@sniperConfigTargetLabel": { "description": "Throw-target row label" },
+  "@sniperConfigTargetLabel": {
+    "description": "Throw-target row label"
+  },
   "sniperConfigTargetNone": "kein Ziel",
-  "@sniperConfigTargetNone": { "description": "Throw-target value when none is set" },
+  "@sniperConfigTargetNone": {
+    "description": "Throw-target value when none is set"
+  },
   "sniperConfigTargetCustomHint": "Eigener Wert",
-  "@sniperConfigTargetCustomHint": { "description": "Custom throw-target field hint" },
+  "@sniperConfigTargetCustomHint": {
+    "description": "Custom throw-target field hint"
+  },
   "sniperConfigStartButton": "Sniper starten",
-  "@sniperConfigStartButton": { "description": "Start button label on sniper config screen" },
+  "@sniperConfigStartButton": {
+    "description": "Start button label on sniper config screen"
+  },
   "sniperCounterHit": "Treffer",
-  "@sniperCounterHit": { "description": "Counter label for hits during a sniper session" },
+  "@sniperCounterHit": {
+    "description": "Counter label for hits during a sniper session"
+  },
   "sniperCounterMiss": "Miss",
-  "@sniperCounterMiss": { "description": "Counter label for misses during a sniper session" },
+  "@sniperCounterMiss": {
+    "description": "Counter label for misses during a sniper session"
+  },
   "sniperCounterHeli": "Heli",
-  "@sniperCounterHeli": { "description": "Counter label for helicopter throws during a sniper session" },
+  "@sniperCounterHeli": {
+    "description": "Counter label for helicopter throws during a sniper session"
+  },
   "sniperRemaining": "noch {count} Würfe",
   "@sniperRemaining": {
     "description": "Remaining throws to target",
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "sniperBlindHint": "Trefferzahl verdeckt — du wirfst blind.",
-  "@sniperBlindHint": { "description": "Hint shown when the eye-toggle masks counters" },
+  "@sniperBlindHint": {
+    "description": "Hint shown when the eye-toggle masks counters"
+  },
   "sniperEndButton": "Session beenden",
-  "@sniperEndButton": { "description": "Primary end-session button label" },
+  "@sniperEndButton": {
+    "description": "Primary end-session button label"
+  },
   "sniperAbortButton": "Abbrechen",
-  "@sniperAbortButton": { "description": "Secondary abort button label" },
+  "@sniperAbortButton": {
+    "description": "Secondary abort button label"
+  },
   "abortDialogTitle": "Session abbrechen?",
-  "@abortDialogTitle": { "description": "Abort dialog title" },
+  "@abortDialogTitle": {
+    "description": "Abort dialog title"
+  },
   "abortDialogContent": "Möchtest du die bisherige Session speichern oder verwerfen?",
-  "@abortDialogContent": { "description": "Abort dialog explanatory body" },
+  "@abortDialogContent": {
+    "description": "Abort dialog explanatory body"
+  },
   "abortDialogCancel": "Zurück",
-  "@abortDialogCancel": { "description": "Abort dialog cancel button" },
+  "@abortDialogCancel": {
+    "description": "Abort dialog cancel button"
+  },
   "abortDialogDiscard": "Verwerfen",
-  "@abortDialogDiscard": { "description": "Abort dialog discard button" },
+  "@abortDialogDiscard": {
+    "description": "Abort dialog discard button"
+  },
   "abortDialogSave": "Speichern",
-  "@abortDialogSave": { "description": "Abort dialog save-and-finish button" },
+  "@abortDialogSave": {
+    "description": "Abort dialog save-and-finish button"
+  },
   "summaryEyebrow": "Sniper-Training",
-  "@summaryEyebrow": { "description": "Eyebrow above title on summary screen" },
+  "@summaryEyebrow": {
+    "description": "Eyebrow above title on summary screen"
+  },
   "summaryTitle": "Zusammenfassung",
-  "@summaryTitle": { "description": "Summary screen title" },
+  "@summaryTitle": {
+    "description": "Summary screen title"
+  },
   "summaryHitRateLabel": "Trefferquote",
-  "@summaryHitRateLabel": { "description": "Caption under the big hit-rate number" },
+  "@summaryHitRateLabel": {
+    "description": "Caption under the big hit-rate number"
+  },
   "summaryHits": "Treffer",
-  "@summaryHits": { "description": "Hit count row label on summary" },
+  "@summaryHits": {
+    "description": "Hit count row label on summary"
+  },
   "summaryMisses": "Miss",
-  "@summaryMisses": { "description": "Miss count row label on summary" },
+  "@summaryMisses": {
+    "description": "Miss count row label on summary"
+  },
   "summaryHelis": "Heli",
-  "@summaryHelis": { "description": "Heli count row label on summary" },
+  "@summaryHelis": {
+    "description": "Heli count row label on summary"
+  },
   "summaryDistance": "Distanz",
-  "@summaryDistance": { "description": "Distance row label on summary" },
+  "@summaryDistance": {
+    "description": "Distance row label on summary"
+  },
   "summaryDuration": "Dauer",
-  "@summaryDuration": { "description": "Duration row label on summary" },
+  "@summaryDuration": {
+    "description": "Duration row label on summary"
+  },
   "summarySave": "Speichern",
-  "@summarySave": { "description": "Primary save button on summary" },
+  "@summarySave": {
+    "description": "Primary save button on summary"
+  },
   "summaryDiscard": "Verwerfen",
-  "@summaryDiscard": { "description": "Hard-delete button on summary" },
+  "@summaryDiscard": {
+    "description": "Hard-delete button on summary"
+  },
   "summaryRestart": "Neu starten",
-  "@summaryRestart": { "description": "Restart-with-same-config button on summary" },
+  "@summaryRestart": {
+    "description": "Restart-with-same-config button on summary"
+  },
   "crashRecoveryTitle": "Letzte Session unterbrochen",
-  "@crashRecoveryTitle": { "description": "Crash recovery dialog title" },
+  "@crashRecoveryTitle": {
+    "description": "Crash recovery dialog title"
+  },
   "crashRecoveryContent": "Eine Session vom {date} ist noch offen. Was möchtest du tun?",
   "@crashRecoveryContent": {
     "description": "Crash recovery dialog content with session start date",
-    "placeholders": { "date": { "type": "String" } }
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
   },
   "crashRecoveryResume": "Fortsetzen",
-  "@crashRecoveryResume": { "description": "Crash recovery resume button" },
+  "@crashRecoveryResume": {
+    "description": "Crash recovery resume button"
+  },
   "crashRecoverySave": "Als beendet speichern",
-  "@crashRecoverySave": { "description": "Crash recovery save-as-finished button" },
+  "@crashRecoverySave": {
+    "description": "Crash recovery save-as-finished button"
+  },
   "crashRecoveryDiscard": "Verwerfen",
-  "@crashRecoveryDiscard": { "description": "Crash recovery discard button" },
+  "@crashRecoveryDiscard": {
+    "description": "Crash recovery discard button"
+  },
   "bootstrapErrorTitle": "App konnte nicht starten",
-  "@bootstrapErrorTitle": { "description": "Bootstrap error screen title" },
+  "@bootstrapErrorTitle": {
+    "description": "Bootstrap error screen title"
+  },
   "bootstrapErrorBody": "Bitte App neu starten. Wenn das Problem bleibt, melde dich beim Support.",
-  "@bootstrapErrorBody": { "description": "Bootstrap error screen body" },
+  "@bootstrapErrorBody": {
+    "description": "Bootstrap error screen body"
+  },
   "statsTitle": "Statistik",
-  "@statsTitle": { "description": "Stats screen title and settings menu entry" },
+  "@statsTitle": {
+    "description": "Stats screen title and settings menu entry"
+  },
   "statsEyebrow": "Profil",
-  "@statsEyebrow": { "description": "Eyebrow above stats title" },
+  "@statsEyebrow": {
+    "description": "Eyebrow above stats title"
+  },
   "statsFilterDistance": "Distanz",
-  "@statsFilterDistance": { "description": "Distance filter pill label" },
+  "@statsFilterDistance": {
+    "description": "Distance filter pill label"
+  },
   "statsFilterAllDistances": "Alle",
-  "@statsFilterAllDistances": { "description": "Distance filter — show all" },
+  "@statsFilterAllDistances": {
+    "description": "Distance filter — show all"
+  },
   "statsFilterDateRange": "Zeitraum",
-  "@statsFilterDateRange": { "description": "Date range filter pill label" },
+  "@statsFilterDateRange": {
+    "description": "Date range filter pill label"
+  },
   "statsFilterTitle": "Filter",
-  "@statsFilterTitle": { "description": "Filter modal title in stats" },
+  "@statsFilterTitle": {
+    "description": "Filter modal title in stats"
+  },
   "statsFilterApply": "Anwenden",
-  "@statsFilterApply": { "description": "Apply button on the stats filter modal" },
+  "@statsFilterApply": {
+    "description": "Apply button on the stats filter modal"
+  },
   "statsFilterReset": "Zurücksetzen",
-  "@statsFilterReset": { "description": "Reset button on the stats filter modal" },
+  "@statsFilterReset": {
+    "description": "Reset button on the stats filter modal"
+  },
   "statsFilterDistanceRange": "Distanz {lo}–{hi} m",
   "@statsFilterDistanceRange": {
     "description": "Active distance range chip on stats screen",
     "placeholders": {
-      "lo": { "type": "String" },
-      "hi": { "type": "String" }
+      "lo": {
+        "type": "String"
+      },
+      "hi": {
+        "type": "String"
+      }
     }
   },
   "statsFilterFieldRange": "Feldkubbs {lo}–{hi}",
   "@statsFilterFieldRange": {
     "description": "Active field-kubb range chip",
     "placeholders": {
-      "lo": { "type": "int" },
-      "hi": { "type": "int" }
+      "lo": {
+        "type": "int"
+      },
+      "hi": {
+        "type": "int"
+      }
     }
   },
   "statsFilterBaseRange": "Basiskubbs {lo}–{hi}",
   "@statsFilterBaseRange": {
     "description": "Active base-kubb range chip",
     "placeholders": {
-      "lo": { "type": "int" },
-      "hi": { "type": "int" }
+      "lo": {
+        "type": "int"
+      },
+      "hi": {
+        "type": "int"
+      }
     }
   },
   "statsFilterFinisseurField": "Feldkubbs",
-  "@statsFilterFinisseurField": { "description": "Field-kubb range slider label inside filter modal" },
+  "@statsFilterFinisseurField": {
+    "description": "Field-kubb range slider label inside filter modal"
+  },
   "statsFilterFinisseurBase": "Basiskubbs",
-  "@statsFilterFinisseurBase": { "description": "Base-kubb range slider label inside filter modal" },
+  "@statsFilterFinisseurBase": {
+    "description": "Base-kubb range slider label inside filter modal"
+  },
   "statsRangeAll": "Gesamt",
-  "@statsRangeAll": { "description": "Date range — all time" },
+  "@statsRangeAll": {
+    "description": "Date range — all time"
+  },
   "statsRangeLast7Days": "7 Tage",
-  "@statsRangeLast7Days": { "description": "Date range — last 7 days" },
+  "@statsRangeLast7Days": {
+    "description": "Date range — last 7 days"
+  },
   "statsRangeLast30Days": "30 Tage",
-  "@statsRangeLast30Days": { "description": "Date range — last 30 days" },
+  "@statsRangeLast30Days": {
+    "description": "Date range — last 30 days"
+  },
   "statsHitRateLabel": "Trefferrate",
-  "@statsHitRateLabel": { "description": "Big hero label for overall hit rate" },
+  "@statsHitRateLabel": {
+    "description": "Big hero label for overall hit rate"
+  },
   "statsTotalThrowsLabel": "Würfe",
-  "@statsTotalThrowsLabel": { "description": "Hero label for total throws" },
+  "@statsTotalThrowsLabel": {
+    "description": "Hero label for total throws"
+  },
   "statsTotalSessionsLabel": "Sessions",
-  "@statsTotalSessionsLabel": { "description": "Hero label for total session count" },
+  "@statsTotalSessionsLabel": {
+    "description": "Hero label for total session count"
+  },
   "statsLongestStreakLabel": "Längste Serie",
-  "@statsLongestStreakLabel": { "description": "Hero label for longest hit streak" },
+  "@statsLongestStreakLabel": {
+    "description": "Hero label for longest hit streak"
+  },
   "statsTrendTitle": "Verlauf",
-  "@statsTrendTitle": { "description": "Trend chart section title" },
+  "@statsTrendTitle": {
+    "description": "Trend chart section title"
+  },
   "statsBestsTitle": "Bestmarken",
-  "@statsBestsTitle": { "description": "Personal bests section title" },
+  "@statsBestsTitle": {
+    "description": "Personal bests section title"
+  },
   "statsBestRate": "Beste Trefferrate",
-  "@statsBestRate": { "description": "Personal best — highest hit rate label" },
+  "@statsBestRate": {
+    "description": "Personal best — highest hit rate label"
+  },
   "statsBestStreak": "Längste Serie",
-  "@statsBestStreak": { "description": "Personal best — longest streak label" },
+  "@statsBestStreak": {
+    "description": "Personal best — longest streak label"
+  },
   "statsBestDay": "Meiste Würfe an einem Tag",
-  "@statsBestDay": { "description": "Personal best — most throws in one day label" },
+  "@statsBestDay": {
+    "description": "Personal best — most throws in one day label"
+  },
   "statsSessionsTitle": "Letzte Sessions",
-  "@statsSessionsTitle": { "description": "Session list section title" },
+  "@statsSessionsTitle": {
+    "description": "Session list section title"
+  },
   "statsTabSniper": "Sniper",
-  "@statsTabSniper": { "description": "Sniper tab label on stats screen" },
+  "@statsTabSniper": {
+    "description": "Sniper tab label on stats screen"
+  },
   "statsTabFinisseur": "Finisseur",
-  "@statsTabFinisseur": { "description": "Finisseur tab label on stats screen" },
+  "@statsTabFinisseur": {
+    "description": "Finisseur tab label on stats screen"
+  },
   "statsTabMatch": "Match",
-  "@statsTabMatch": { "description": "Match tab label on stats screen" },
+  "@statsTabMatch": {
+    "description": "Match tab label on stats screen"
+  },
   "statsMatchEmptyTitle": "Noch keine Matches",
-  "@statsMatchEmptyTitle": { "description": "Empty state title on the match tab when no finished matches exist" },
+  "@statsMatchEmptyTitle": {
+    "description": "Empty state title on the match tab when no finished matches exist"
+  },
   "statsMatchEmptyBody": "Spiele dein erstes Match — die Statistik füllt sich automatisch.",
-  "@statsMatchEmptyBody": { "description": "Empty state body on the match tab" },
+  "@statsMatchEmptyBody": {
+    "description": "Empty state body on the match tab"
+  },
   "statsMatchWins": "Siege",
-  "@statsMatchWins": { "description": "Match wins metric label" },
+  "@statsMatchWins": {
+    "description": "Match wins metric label"
+  },
   "statsMatchLosses": "Niederlagen",
-  "@statsMatchLosses": { "description": "Match losses metric label" },
+  "@statsMatchLosses": {
+    "description": "Match losses metric label"
+  },
   "statsMatchTies": "Unentschieden",
-  "@statsMatchTies": { "description": "Match ties metric label" },
+  "@statsMatchTies": {
+    "description": "Match ties metric label"
+  },
   "statsMatchWinRate": "Siegquote",
-  "@statsMatchWinRate": { "description": "Match win rate metric label" },
+  "@statsMatchWinRate": {
+    "description": "Match win rate metric label"
+  },
   "statsMatchRecentTitle": "Letzte Matches",
-  "@statsMatchRecentTitle": { "description": "Section title above the recent match list" },
+  "@statsMatchRecentTitle": {
+    "description": "Section title above the recent match list"
+  },
   "statsMatchOutcomeWon": "Gewonnen",
-  "@statsMatchOutcomeWon": { "description": "Match outcome chip — caller won" },
+  "@statsMatchOutcomeWon": {
+    "description": "Match outcome chip — caller won"
+  },
   "statsMatchOutcomeLost": "Verloren",
-  "@statsMatchOutcomeLost": { "description": "Match outcome chip — caller lost" },
+  "@statsMatchOutcomeLost": {
+    "description": "Match outcome chip — caller lost"
+  },
   "statsMatchOutcomeTie": "Unentschieden",
-  "@statsMatchOutcomeTie": { "description": "Match outcome chip — tied match" },
+  "@statsMatchOutcomeTie": {
+    "description": "Match outcome chip — tied match"
+  },
   "statsMatchOpponent": "vs {n} Spieler",
   "@statsMatchOpponent": {
     "description": "Opponent indication on a match row",
-    "placeholders": { "n": { "type": "int" } }
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
   },
   "statsFinisseurSuccessRate": "Erfolgsrate",
-  "@statsFinisseurSuccessRate": { "description": "Hero label for finisseur success rate" },
+  "@statsFinisseurSuccessRate": {
+    "description": "Hero label for finisseur success rate"
+  },
   "statsFinisseurTotalSticks": "Stöcke total",
-  "@statsFinisseurTotalSticks": { "description": "Total sticks across all finisseur sessions" },
+  "@statsFinisseurTotalSticks": {
+    "description": "Total sticks across all finisseur sessions"
+  },
   "statsFinisseurAvgSticks": "Stöcke pro Session",
-  "@statsFinisseurAvgSticks": { "description": "Average sticks per finisseur session" },
+  "@statsFinisseurAvgSticks": {
+    "description": "Average sticks per finisseur session"
+  },
   "statsFinisseurLongDubbies": "Long Dubbies pro Session",
-  "@statsFinisseurLongDubbies": { "description": "Average long dubbies per finisseur session" },
+  "@statsFinisseurLongDubbies": {
+    "description": "Average long dubbies per finisseur session"
+  },
   "statsFinisseurHeli": "Helikopter",
-  "@statsFinisseurHeli": { "description": "Total heli throws across finisseur sessions" },
+  "@statsFinisseurHeli": {
+    "description": "Total heli throws across finisseur sessions"
+  },
   "statsFinisseurPenalty": "Strafkubb",
-  "@statsFinisseurPenalty": { "description": "Total penalty kubbs across finisseur sessions" },
+  "@statsFinisseurPenalty": {
+    "description": "Total penalty kubbs across finisseur sessions"
+  },
   "statsFinisseurKingRate": "Königswurf-Quote",
-  "@statsFinisseurKingRate": { "description": "King-throw hit rate across finisseur sessions" },
+  "@statsFinisseurKingRate": {
+    "description": "King-throw hit rate across finisseur sessions"
+  },
   "statsFinisseurMisses": "Misses (0-Treffer-Stöcke)",
-  "@statsFinisseurMisses": { "description": "Sticks without any hit — heli-only or full duds" },
+  "@statsFinisseurMisses": {
+    "description": "Sticks without any hit — heli-only or full duds"
+  },
   "statsFinisseurStickRate": "Stock-Trefferquote",
-  "@statsFinisseurStickRate": { "description": "Share of sticks that produced at least one hit" },
+  "@statsFinisseurStickRate": {
+    "description": "Share of sticks that produced at least one hit"
+  },
   "statsFinisseurSessionsTitle": "Letzte Finisseurs",
-  "@statsFinisseurSessionsTitle": { "description": "Section title for the finisseur session list" },
+  "@statsFinisseurSessionsTitle": {
+    "description": "Section title for the finisseur session list"
+  },
   "statsFinisseurRowConfig": "{field}/{base}",
   "@statsFinisseurRowConfig": {
     "description": "Compact field/base label for a finisseur session row",
-    "placeholders": { "field": { "type": "int" }, "base": { "type": "int" } }
+    "placeholders": {
+      "field": {
+        "type": "int"
+      },
+      "base": {
+        "type": "int"
+      }
+    }
   },
   "statsFinisseurRowSticks": "{n} Stöcke",
   "@statsFinisseurRowSticks": {
     "description": "Sticks count in a finisseur session row",
-    "placeholders": { "n": { "type": "int" } }
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
   },
   "statsEmptyTitle": "Noch keine Sessions",
-  "@statsEmptyTitle": { "description": "Empty state title when no sessions exist" },
+  "@statsEmptyTitle": {
+    "description": "Empty state title when no sessions exist"
+  },
   "statsEmptyBody": "Starte dein erstes Training — die Statistik füllt sich automatisch.",
-  "@statsEmptyBody": { "description": "Empty state body" },
+  "@statsEmptyBody": {
+    "description": "Empty state body"
+  },
   "statsTrendEmpty": "Noch zu wenig Daten — mindestens 2 Sessions für den Verlauf.",
-  "@statsTrendEmpty": { "description": "Empty state for trend chart" },
+  "@statsTrendEmpty": {
+    "description": "Empty state for trend chart"
+  },
   "statsRowThrows": "{n} Würfe",
   "@statsRowThrows": {
     "description": "Throw count in the session row",
-    "placeholders": { "n": { "type": "int" } }
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
   },
   "csvExportTitle": "CSV-Export",
-  "@csvExportTitle": { "description": "Title of the CSV export bottom sheet" },
+  "@csvExportTitle": {
+    "description": "Title of the CSV export bottom sheet"
+  },
   "csvExportRangeLabel": "Zeitraum",
-  "@csvExportRangeLabel": { "description": "Section label for date range filter" },
+  "@csvExportRangeLabel": {
+    "description": "Section label for date range filter"
+  },
   "csvExportRangeAll": "Alle",
-  "@csvExportRangeAll": { "description": "Date range — all" },
+  "@csvExportRangeAll": {
+    "description": "Date range — all"
+  },
   "csvExportRange30": "30 Tage",
-  "@csvExportRange30": { "description": "Date range — last 30 days" },
+  "@csvExportRange30": {
+    "description": "Date range — last 30 days"
+  },
   "csvExportRange90": "90 Tage",
-  "@csvExportRange90": { "description": "Date range — last 90 days" },
+  "@csvExportRange90": {
+    "description": "Date range — last 90 days"
+  },
   "csvExportRangeYear": "Jahr",
-  "@csvExportRangeYear": { "description": "Date range — last year" },
+  "@csvExportRangeYear": {
+    "description": "Date range — last year"
+  },
   "csvExportModesLabel": "Modi",
-  "@csvExportModesLabel": { "description": "Section label for mode checkboxes" },
+  "@csvExportModesLabel": {
+    "description": "Section label for mode checkboxes"
+  },
   "csvExportModeSniper": "Sniper-Training",
-  "@csvExportModeSniper": { "description": "Mode checkbox — sniper" },
+  "@csvExportModeSniper": {
+    "description": "Mode checkbox — sniper"
+  },
   "csvExportModeFinisseur": "Finisseur",
-  "@csvExportModeFinisseur": { "description": "Mode checkbox — finisseur" },
+  "@csvExportModeFinisseur": {
+    "description": "Mode checkbox — finisseur"
+  },
   "csvExportCount": "{n} Sessions im Filter",
   "@csvExportCount": {
     "description": "Live count of sessions matching the filter",
-    "placeholders": { "n": { "type": "int" } }
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
   },
   "csvExportDownload": "Herunterladen",
-  "@csvExportDownload": { "description": "Trigger download / share" },
+  "@csvExportDownload": {
+    "description": "Trigger download / share"
+  },
   "csvExportEmpty": "Keine Sessions zum Exportieren",
-  "@csvExportEmpty": { "description": "Hint when filter matches no sessions" },
+  "@csvExportEmpty": {
+    "description": "Hint when filter matches no sessions"
+  },
   "csvExportSavedTo": "Export gespeichert: {path}",
   "@csvExportSavedTo": {
     "description": "Snackbar shown on desktop after CSV is written to disk",
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "settingsScreenEyebrow": "Menü",
-  "@settingsScreenEyebrow": { "description": "Eyebrow above settings title" },
+  "@settingsScreenEyebrow": {
+    "description": "Eyebrow above settings title"
+  },
   "settingsAccountSection": "Account",
-  "@settingsAccountSection": { "description": "Account section header" },
+  "@settingsAccountSection": {
+    "description": "Account section header"
+  },
   "settingsDataSection": "Daten",
-  "@settingsDataSection": { "description": "Data section header" },
+  "@settingsDataSection": {
+    "description": "Data section header"
+  },
   "settingsAppSection": "App",
-  "@settingsAppSection": { "description": "App section header" },
+  "@settingsAppSection": {
+    "description": "App section header"
+  },
   "settingsRowProfile": "Profil",
-  "@settingsRowProfile": { "description": "Profile row label" },
+  "@settingsRowProfile": {
+    "description": "Profile row label"
+  },
   "settingsRowProfileSub": "Name, Avatar-Farbe",
-  "@settingsRowProfileSub": { "description": "Profile row subtitle" },
+  "@settingsRowProfileSub": {
+    "description": "Profile row subtitle"
+  },
   "settingsRowDeviceLabel": "Geräte-ID",
-  "@settingsRowDeviceLabel": { "description": "Device id row label" },
+  "@settingsRowDeviceLabel": {
+    "description": "Device id row label"
+  },
   "settingsRowStats": "Statistik",
-  "@settingsRowStats": { "description": "Stats row label" },
+  "@settingsRowStats": {
+    "description": "Stats row label"
+  },
   "settingsRowStatsSub": "Trefferquote, Streaks, Verlauf",
-  "@settingsRowStatsSub": { "description": "Stats row subtitle" },
+  "@settingsRowStatsSub": {
+    "description": "Stats row subtitle"
+  },
   "settingsRowExport": "CSV-Export",
-  "@settingsRowExport": { "description": "Export row label" },
+  "@settingsRowExport": {
+    "description": "Export row label"
+  },
   "settingsRowExportSub": "Sessions als .csv-Datei",
-  "@settingsRowExportSub": { "description": "Export row subtitle" },
+  "@settingsRowExportSub": {
+    "description": "Export row subtitle"
+  },
   "settingsRowResetSessions": "Sessions zurücksetzen",
-  "@settingsRowResetSessions": { "description": "Reset sessions row label" },
+  "@settingsRowResetSessions": {
+    "description": "Reset sessions row label"
+  },
   "settingsRowResetSessionsSub": "alle Trainings-Sessions löschen",
-  "@settingsRowResetSessionsSub": { "description": "Reset sessions row subtitle" },
+  "@settingsRowResetSessionsSub": {
+    "description": "Reset sessions row subtitle"
+  },
   "settingsRowDeleteProfile": "Profil löschen",
-  "@settingsRowDeleteProfile": { "description": "Delete profile row label" },
+  "@settingsRowDeleteProfile": {
+    "description": "Delete profile row label"
+  },
   "settingsRowDeleteProfileSub": "Profil und alle Sessions entfernen",
-  "@settingsRowDeleteProfileSub": { "description": "Delete profile row subtitle" },
+  "@settingsRowDeleteProfileSub": {
+    "description": "Delete profile row subtitle"
+  },
   "settingsPrivacyHeader": "Datenschutz",
-  "@settingsPrivacyHeader": { "description": "Privacy mini-section header" },
+  "@settingsPrivacyHeader": {
+    "description": "Privacy mini-section header"
+  },
   "settingsPrivacyBody": "Alle Daten bleiben lokal auf deinem Gerät. Die App sendet nichts an externe Server.",
-  "@settingsPrivacyBody": { "description": "Static privacy notice" },
+  "@settingsPrivacyBody": {
+    "description": "Static privacy notice"
+  },
   "settingsFooterTagline": "Für die Wiese gebaut.",
-  "@settingsFooterTagline": { "description": "Footer tagline below version" },
+  "@settingsFooterTagline": {
+    "description": "Footer tagline below version"
+  },
   "confirmCancel": "Abbrechen",
-  "@confirmCancel": { "description": "Generic confirm dialog cancel button" },
+  "@confirmCancel": {
+    "description": "Generic confirm dialog cancel button"
+  },
   "confirmDelete": "Löschen",
-  "@confirmDelete": { "description": "Generic confirm dialog delete button" },
+  "@confirmDelete": {
+    "description": "Generic confirm dialog delete button"
+  },
   "confirmResetSessionsTitle": "Sessions löschen?",
-  "@confirmResetSessionsTitle": { "description": "Reset sessions confirm title" },
+  "@confirmResetSessionsTitle": {
+    "description": "Reset sessions confirm title"
+  },
   "confirmResetSessionsBody": "Alle Trainings-Sessions werden unwiderruflich gelöscht. Dein Profil bleibt bestehen.",
-  "@confirmResetSessionsBody": { "description": "Reset sessions confirm body" },
+  "@confirmResetSessionsBody": {
+    "description": "Reset sessions confirm body"
+  },
   "confirmDeleteProfileTitle": "Profil löschen?",
-  "@confirmDeleteProfileTitle": { "description": "Delete profile confirm title" },
+  "@confirmDeleteProfileTitle": {
+    "description": "Delete profile confirm title"
+  },
   "confirmDeleteProfileBody": "Profil und alle Trainings-Sessions werden unwiderruflich gelöscht. Du landest danach im Onboarding.",
-  "@confirmDeleteProfileBody": { "description": "Delete profile confirm body" },
+  "@confirmDeleteProfileBody": {
+    "description": "Delete profile confirm body"
+  },
   "settingsResetDoneSnack": "Sessions zurückgesetzt.",
   "authSigninTagline": "Trainings-Tracker für die Wiese",
-  "@authSigninTagline": { "description": "SignInScreen brand tagline" },
+  "@authSigninTagline": {
+    "description": "SignInScreen brand tagline"
+  },
   "authSigninGoogle": "Mit Google anmelden",
-  "@authSigninGoogle": { "description": "Google OAuth CTA" },
+  "@authSigninGoogle": {
+    "description": "Google OAuth CTA"
+  },
   "authSigninApple": "Mit Apple anmelden",
-  "@authSigninApple": { "description": "Apple OAuth CTA, iOS only" },
+  "@authSigninApple": {
+    "description": "Apple OAuth CTA, iOS only"
+  },
   "authSigninAnonymous": "Ohne Konto starten (anonym)",
-  "@authSigninAnonymous": { "description": "Anonymous keypair flow CTA" },
+  "@authSigninAnonymous": {
+    "description": "Anonymous keypair flow CTA"
+  },
   "authSigninAnonymousLoading": "Konto wird angelegt …",
-  "@authSigninAnonymousLoading": { "description": "Anonymous CTA while submitting" },
+  "@authSigninAnonymousLoading": {
+    "description": "Anonymous CTA while submitting"
+  },
   "authSigninRestore": "Konto auf neuem Gerät wiederherstellen",
-  "@authSigninRestore": { "description": "Restore-account footer link" },
+  "@authSigninRestore": {
+    "description": "Restore-account footer link"
+  },
   "authSigninOffline": "Du bist offline. Provider-Anmeldung wird nicht funktionieren — Anonym-Account legt offline an, lädt später hoch.",
-  "@authSigninOffline": { "description": "Offline-state warning banner" },
+  "@authSigninOffline": {
+    "description": "Offline-state warning banner"
+  },
   "authSigninOr": "oder",
-  "@authSigninOr": { "description": "Divider between OAuth and anonymous CTAs" },
+  "@authSigninOr": {
+    "description": "Divider between OAuth and anonymous CTAs"
+  },
   "authAppName": "Brosi's Kubb",
-  "@authAppName": { "description": "App brand name on SignInScreen" },
+  "@authAppName": {
+    "description": "App brand name on SignInScreen"
+  },
   "authCommonContinue": "Weiter",
-  "@authCommonContinue": { "description": "Generic Continue button" },
+  "@authCommonContinue": {
+    "description": "Generic Continue button"
+  },
   "authCommonBack": "Zurück",
-  "@authCommonBack": { "description": "Generic Back button" },
+  "@authCommonBack": {
+    "description": "Generic Back button"
+  },
   "authCommonClose": "Abbrechen",
-  "@authCommonClose": { "description": "Generic Close action" },
+  "@authCommonClose": {
+    "description": "Generic Close action"
+  },
   "authSignupEyebrow": "Anonym anlegen",
-  "@authSignupEyebrow": { "description": "Wizard header eyebrow" },
+  "@authSignupEyebrow": {
+    "description": "Wizard header eyebrow"
+  },
   "authSignupNicknameTitle": "Wähle einen Spielnamen",
-  "@authSignupNicknameTitle": { "description": "Step 1 title" },
+  "@authSignupNicknameTitle": {
+    "description": "Step 1 title"
+  },
   "authSignupNicknameLabel": "Spielname",
-  "@authSignupNicknameLabel": { "description": "Step 1 input label" },
+  "@authSignupNicknameLabel": {
+    "description": "Step 1 input label"
+  },
   "authSignupNicknamePlaceholder": "z. B. wiese-marc",
-  "@authSignupNicknamePlaceholder": { "description": "Step 1 input placeholder" },
+  "@authSignupNicknamePlaceholder": {
+    "description": "Step 1 input placeholder"
+  },
   "authSignupNicknameHelper": "Andere Spielerinnen sehen diesen Namen",
-  "@authSignupNicknameHelper": { "description": "Step 1 helper text" },
+  "@authSignupNicknameHelper": {
+    "description": "Step 1 helper text"
+  },
   "authSignupNicknameTooShort": "Mindestens 3 Zeichen.",
-  "@authSignupNicknameTooShort": { "description": "Nickname error" },
+  "@authSignupNicknameTooShort": {
+    "description": "Nickname error"
+  },
   "authSignupNicknameTooLong": "Maximal 30 Zeichen.",
-  "@authSignupNicknameTooLong": { "description": "Nickname error" },
+  "@authSignupNicknameTooLong": {
+    "description": "Nickname error"
+  },
   "authSignupNicknameInvalidChars": "Nur Buchstaben, Zahlen, '-' und '_'.",
-  "@authSignupNicknameInvalidChars": { "description": "Nickname error" },
+  "@authSignupNicknameInvalidChars": {
+    "description": "Nickname error"
+  },
   "authSignupDisclaimerTitle": "Sichere deine Passphrase",
-  "@authSignupDisclaimerTitle": { "description": "Step 2 title" },
+  "@authSignupDisclaimerTitle": {
+    "description": "Step 2 title"
+  },
   "authDisclaimerHeading": "Wichtig — bitte lesen",
-  "@authDisclaimerHeading": { "description": "Disclaimer block heading" },
+  "@authDisclaimerHeading": {
+    "description": "Disclaimer block heading"
+  },
   "authDisclaimerNoReset": "Diese Passphrase kann nicht zurückgesetzt werden.",
-  "@authDisclaimerNoReset": { "description": "Disclaimer bullet 1" },
+  "@authDisclaimerNoReset": {
+    "description": "Disclaimer bullet 1"
+  },
   "authDisclaimerPasswordManager": "Wir empfehlen dringend einen Passwort-Manager.",
-  "@authDisclaimerPasswordManager": { "description": "Disclaimer bullet 2" },
+  "@authDisclaimerPasswordManager": {
+    "description": "Disclaimer bullet 2"
+  },
   "authDisclaimerNoLiability": "Die App-Betreiber haften nicht.",
-  "@authDisclaimerNoLiability": { "description": "Disclaimer bullet 3" },
+  "@authDisclaimerNoLiability": {
+    "description": "Disclaimer bullet 3"
+  },
   "authDisclaimerAcknowledge": "Ich habe verstanden, dass diese Passphrase nicht zurückgesetzt werden kann.",
-  "@authDisclaimerAcknowledge": { "description": "Acknowledgement checkbox" },
+  "@authDisclaimerAcknowledge": {
+    "description": "Acknowledgement checkbox"
+  },
   "authPassphraseLabel": "Passphrase",
-  "@authPassphraseLabel": { "description": "Passphrase field label" },
+  "@authPassphraseLabel": {
+    "description": "Passphrase field label"
+  },
   "authPassphrasePlaceholder": "mindestens 12 Zeichen",
-  "@authPassphrasePlaceholder": { "description": "Passphrase placeholder" },
+  "@authPassphrasePlaceholder": {
+    "description": "Passphrase placeholder"
+  },
   "authPassphraseHelper": "Mindestens 12 Zeichen. Wir empfehlen, sie direkt im Passwort-Manager zu speichern.",
-  "@authPassphraseHelper": { "description": "Passphrase helper" },
+  "@authPassphraseHelper": {
+    "description": "Passphrase helper"
+  },
   "authPassphraseMinError": "Mindestens 12 Zeichen.",
-  "@authPassphraseMinError": { "description": "Passphrase too short" },
+  "@authPassphraseMinError": {
+    "description": "Passphrase too short"
+  },
   "authPassphraseShow": "Passphrase anzeigen",
-  "@authPassphraseShow": { "description": "Show toggle aria label" },
+  "@authPassphraseShow": {
+    "description": "Show toggle aria label"
+  },
   "authPassphraseHide": "Passphrase verbergen",
-  "@authPassphraseHide": { "description": "Hide toggle aria label" },
+  "@authPassphraseHide": {
+    "description": "Hide toggle aria label"
+  },
   "authPassphraseStrengthWeak": "Schwach",
-  "@authPassphraseStrengthWeak": { "description": "Strength meter weak" },
+  "@authPassphraseStrengthWeak": {
+    "description": "Strength meter weak"
+  },
   "authPassphraseStrengthMedium": "Mittel",
-  "@authPassphraseStrengthMedium": { "description": "Strength meter medium" },
+  "@authPassphraseStrengthMedium": {
+    "description": "Strength meter medium"
+  },
   "authPassphraseStrengthStrong": "Stark",
-  "@authPassphraseStrengthStrong": { "description": "Strength meter strong" },
+  "@authPassphraseStrengthStrong": {
+    "description": "Strength meter strong"
+  },
   "authSignupSubmit": "Account erstellen",
-  "@authSignupSubmit": { "description": "Step 2 submit button" },
+  "@authSignupSubmit": {
+    "description": "Step 2 submit button"
+  },
   "authSignupSubmitting": "Account wird angelegt …",
-  "@authSignupSubmitting": { "description": "Step 2 submit button while submitting" },
+  "@authSignupSubmitting": {
+    "description": "Step 2 submit button while submitting"
+  },
   "authSignupSubmittingHint": "Verschlüsselungsschlüssel werden erzeugt — bis zu 4 s.",
-  "@authSignupSubmittingHint": { "description": "Step 2 submit progress hint" },
+  "@authSignupSubmittingHint": {
+    "description": "Step 2 submit progress hint"
+  },
   "authSignupErrorBanner": "Konto konnte nicht angelegt werden. Prüfe deine Verbindung und versuch es nochmals.",
-  "@authSignupErrorBanner": { "description": "Step 2 failure banner" },
+  "@authSignupErrorBanner": {
+    "description": "Step 2 failure banner"
+  },
   "authSignupSuccessTitle": "Account angelegt",
-  "@authSignupSuccessTitle": { "description": "Step 3 title" },
+  "@authSignupSuccessTitle": {
+    "description": "Step 3 title"
+  },
   "authSignupSuccessReminder": "Speichere deine Passphrase im Passwort-Manager. Ohne sie kommst du nicht mehr an dein Konto.",
-  "@authSignupSuccessReminder": { "description": "Step 3 reminder body" },
+  "@authSignupSuccessReminder": {
+    "description": "Step 3 reminder body"
+  },
   "authSignupSuccessContinue": "Weiter zur Tour",
-  "@authSignupSuccessContinue": { "description": "Step 3 continue button" },
+  "@authSignupSuccessContinue": {
+    "description": "Step 3 continue button"
+  },
   "authWizardStepCount": "Schritt {step} / {total}",
   "@authWizardStepCount": {
     "description": "Wizard header step counter",
     "placeholders": {
-      "step": { "type": "int" },
-      "total": { "type": "int" }
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
-
   "authRestoreEyebrow": "Konto wiederherstellen",
-  "@authRestoreEyebrow": { "description": "Restore-flow eyebrow above the step title" },
+  "@authRestoreEyebrow": {
+    "description": "Restore-flow eyebrow above the step title"
+  },
   "authRestoreNicknameTitle": "Spielname",
-  "@authRestoreNicknameTitle": { "description": "Restore step 1 title" },
+  "@authRestoreNicknameTitle": {
+    "description": "Restore step 1 title"
+  },
   "authRestorePassphraseTitle": "Passphrase",
-  "@authRestorePassphraseTitle": { "description": "Restore step 2 title" },
+  "@authRestorePassphraseTitle": {
+    "description": "Restore step 2 title"
+  },
   "authRestoreNicknamePlaceholder": "dein Spielname",
-  "@authRestoreNicknamePlaceholder": { "description": "Restore step 1 nickname placeholder" },
+  "@authRestoreNicknamePlaceholder": {
+    "description": "Restore step 1 nickname placeholder"
+  },
   "authRestoreNicknameHelper": "Genau wie beim Anlegen des Kontos.",
-  "@authRestoreNicknameHelper": { "description": "Restore step 1 helper text" },
+  "@authRestoreNicknameHelper": {
+    "description": "Restore step 1 helper text"
+  },
   "authRestorePassphraseHelper": "Genau wie beim Anlegen — Gross-/Kleinschreibung beachten.",
-  "@authRestorePassphraseHelper": { "description": "Restore step 2 passphrase helper" },
+  "@authRestorePassphraseHelper": {
+    "description": "Restore step 2 passphrase helper"
+  },
   "authRestoreSubmit": "Konto entsperren",
-  "@authRestoreSubmit": { "description": "Restore submit button label" },
+  "@authRestoreSubmit": {
+    "description": "Restore submit button label"
+  },
   "authRestoreSubmitting": "Konto wird entsperrt …",
-  "@authRestoreSubmitting": { "description": "Restore submit button label while restoring" },
+  "@authRestoreSubmitting": {
+    "description": "Restore submit button label while restoring"
+  },
   "authRestoreError": "Wiederherstellung fehlgeschlagen.",
-  "@authRestoreError": { "description": "Restore failure banner" },
+  "@authRestoreError": {
+    "description": "Restore failure banner"
+  },
   "authRestoreCooldownTitle": "Zu viele Versuche",
-  "@authRestoreCooldownTitle": { "description": "Cooldown badge title after 3 failed attempts" },
+  "@authRestoreCooldownTitle": {
+    "description": "Cooldown badge title after 3 failed attempts"
+  },
   "authRestoreCooldownMessage": "Bitte warte {seconds} Sekunden, dann versuch es erneut.",
   "@authRestoreCooldownMessage": {
     "description": "Cooldown badge body with remaining seconds",
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
-
   "authLinkEyebrow": "Account",
-  "@authLinkEyebrow": { "description": "Link-screen eyebrow above the title" },
+  "@authLinkEyebrow": {
+    "description": "Link-screen eyebrow above the title"
+  },
   "authLinkTitle": "Konto verknüpfen",
-  "@authLinkTitle": { "description": "Link-screen header title" },
+  "@authLinkTitle": {
+    "description": "Link-screen header title"
+  },
   "authLinkHeading": "Verknüpfe dein Konto\nfür sichereres Backup",
-  "@authLinkHeading": { "description": "Link-screen large heading" },
+  "@authLinkHeading": {
+    "description": "Link-screen large heading"
+  },
   "authLinkExplanation": "Du bist aktuell anonym mit deiner Passphrase angemeldet. Wenn du Google oder Apple verknüpfst, kannst du dein Konto auch ohne Passphrase wiederherstellen.",
-  "@authLinkExplanation": { "description": "Link-screen explanatory body" },
+  "@authLinkExplanation": {
+    "description": "Link-screen explanatory body"
+  },
   "authLinkGoogleLabel": "Google verknüpfen",
-  "@authLinkGoogleLabel": { "description": "Google upgrade button label" },
+  "@authLinkGoogleLabel": {
+    "description": "Google upgrade button label"
+  },
   "authLinkAppleLabel": "Apple verknüpfen",
-  "@authLinkAppleLabel": { "description": "Apple upgrade button label" },
+  "@authLinkAppleLabel": {
+    "description": "Apple upgrade button label"
+  },
   "authLinkErrorBanner": "Verknüpfen fehlgeschlagen. Versuch es nochmals.",
-  "@authLinkErrorBanner": { "description": "Link-screen error banner" },
+  "@authLinkErrorBanner": {
+    "description": "Link-screen error banner"
+  },
   "authLinkSuccessBanner": "Konto erfolgreich verknüpft.",
-  "@authLinkSuccessBanner": { "description": "Link-screen success banner" },
+  "@authLinkSuccessBanner": {
+    "description": "Link-screen success banner"
+  },
   "authLinkFallbackKept": "Dein bisheriger Zugang per Passphrase bleibt als Backup erhalten.",
-  "@authLinkFallbackKept": { "description": "Link-screen reassurance note that the keypair is still usable" },
-
+  "@authLinkFallbackKept": {
+    "description": "Link-screen reassurance note that the keypair is still usable"
+  },
   "authPassphraseChangeEyebrow": "Sicherheit",
-  "@authPassphraseChangeEyebrow": { "description": "Passphrase-change screen eyebrow" },
+  "@authPassphraseChangeEyebrow": {
+    "description": "Passphrase-change screen eyebrow"
+  },
   "authPassphraseChangeTitle": "Passphrase ändern",
-  "@authPassphraseChangeTitle": { "description": "Passphrase-change screen title" },
+  "@authPassphraseChangeTitle": {
+    "description": "Passphrase-change screen title"
+  },
   "authPassphraseChangeOldLabel": "Alte Passphrase",
-  "@authPassphraseChangeOldLabel": { "description": "Label for old-passphrase field" },
+  "@authPassphraseChangeOldLabel": {
+    "description": "Label for old-passphrase field"
+  },
   "authPassphraseChangeOldHelper": "Wir prüfen erst, dann setzen wir die neue.",
-  "@authPassphraseChangeOldHelper": { "description": "Helper text under old-passphrase field" },
+  "@authPassphraseChangeOldHelper": {
+    "description": "Helper text under old-passphrase field"
+  },
   "authPassphraseChangeError": "Konnte nicht ändern.",
-  "@authPassphraseChangeError": { "description": "Inline error on the old-passphrase field after a failed change" },
+  "@authPassphraseChangeError": {
+    "description": "Inline error on the old-passphrase field after a failed change"
+  },
   "authPassphraseChangeNewLabel": "Neue Passphrase",
-  "@authPassphraseChangeNewLabel": { "description": "Label for new-passphrase field" },
+  "@authPassphraseChangeNewLabel": {
+    "description": "Label for new-passphrase field"
+  },
   "authPassphraseChangeNewHelper": "Mindestens 12 Zeichen. Sie sollte sich von der bisherigen unterscheiden.",
-  "@authPassphraseChangeNewHelper": { "description": "Helper text under new-passphrase field" },
+  "@authPassphraseChangeNewHelper": {
+    "description": "Helper text under new-passphrase field"
+  },
   "authPassphraseChangeConfirmLabel": "Neue Passphrase bestätigen",
-  "@authPassphraseChangeConfirmLabel": { "description": "Label for confirm-passphrase field" },
+  "@authPassphraseChangeConfirmLabel": {
+    "description": "Label for confirm-passphrase field"
+  },
   "authPassphraseChangeConfirmHelper": "Erneut eingeben — exakt gleich.",
-  "@authPassphraseChangeConfirmHelper": { "description": "Helper text under confirm-passphrase field" },
+  "@authPassphraseChangeConfirmHelper": {
+    "description": "Helper text under confirm-passphrase field"
+  },
   "authPassphraseChangeConfirmMismatch": "Stimmt nicht überein.",
-  "@authPassphraseChangeConfirmMismatch": { "description": "Inline error when confirm differs from new" },
+  "@authPassphraseChangeConfirmMismatch": {
+    "description": "Inline error when confirm differs from new"
+  },
   "authPassphraseChangeSuccess": "Passphrase aktualisiert.",
-  "@authPassphraseChangeSuccess": { "description": "Success banner after passphrase change" },
+  "@authPassphraseChangeSuccess": {
+    "description": "Success banner after passphrase change"
+  },
   "authPassphraseChangeSubmit": "Speichern",
-  "@authPassphraseChangeSubmit": { "description": "Submit button label" },
+  "@authPassphraseChangeSubmit": {
+    "description": "Submit button label"
+  },
   "authPassphraseChangeSubmitting": "Speichere …",
-  "@authPassphraseChangeSubmitting": { "description": "Submit button label while saving" },
+  "@authPassphraseChangeSubmitting": {
+    "description": "Submit button label while saving"
+  },
   "authPassphraseChangeCancel": "Abbrechen",
-  "@authPassphraseChangeCancel": { "description": "Cancel button label" },
-
+  "@authPassphraseChangeCancel": {
+    "description": "Cancel button label"
+  },
   "authDeleteEyebrow": "Konto löschen",
-  "@authDeleteEyebrow": { "description": "Delete-account flow eyebrow" },
+  "@authDeleteEyebrow": {
+    "description": "Delete-account flow eyebrow"
+  },
   "authDeleteWarningTitle": "Konto löschen?",
-  "@authDeleteWarningTitle": { "description": "Page 1 title" },
+  "@authDeleteWarningTitle": {
+    "description": "Page 1 title"
+  },
   "authDeleteConfirmTitle": "Endgültig bestätigen",
-  "@authDeleteConfirmTitle": { "description": "Page 2 title" },
+  "@authDeleteConfirmTitle": {
+    "description": "Page 2 title"
+  },
   "authDeleteWarningHeadline": "Diese Aktion ist endgültig",
-  "@authDeleteWarningHeadline": { "description": "Page 1 large headline" },
+  "@authDeleteWarningHeadline": {
+    "description": "Page 1 large headline"
+  },
   "authDeleteWarningSub": "Wenn du fortfährst, geht Folgendes verloren:",
-  "@authDeleteWarningSub": { "description": "Page 1 introduction to the consequences list" },
+  "@authDeleteWarningSub": {
+    "description": "Page 1 introduction to the consequences list"
+  },
   "authDeleteConsequenceSessions": "Alle gespeicherten Trainings-Sessions",
-  "@authDeleteConsequenceSessions": { "description": "Consequence bullet 1" },
+  "@authDeleteConsequenceSessions": {
+    "description": "Consequence bullet 1"
+  },
   "authDeleteConsequenceStats": "Statistiken, Streaks, Erfolge",
-  "@authDeleteConsequenceStats": { "description": "Consequence bullet 2" },
+  "@authDeleteConsequenceStats": {
+    "description": "Consequence bullet 2"
+  },
   "authDeleteConsequenceProfile": "Dein Spielername und Profil",
-  "@authDeleteConsequenceProfile": { "description": "Consequence bullet 3" },
+  "@authDeleteConsequenceProfile": {
+    "description": "Consequence bullet 3"
+  },
   "authDeleteConsequenceLinkedAccounts": "Verknüpfte Konten (Google / Apple)",
-  "@authDeleteConsequenceLinkedAccounts": { "description": "Consequence bullet 4" },
+  "@authDeleteConsequenceLinkedAccounts": {
+    "description": "Consequence bullet 4"
+  },
   "authDeleteConsequenceKeypair": "Anonymer Keypair-Zugang — nicht wiederherstellbar",
-  "@authDeleteConsequenceKeypair": { "description": "Consequence bullet 5" },
+  "@authDeleteConsequenceKeypair": {
+    "description": "Consequence bullet 5"
+  },
   "authDeleteContinueToConfirm": "Weiter zur Bestätigung",
-  "@authDeleteContinueToConfirm": { "description": "Page 1 primary button" },
+  "@authDeleteContinueToConfirm": {
+    "description": "Page 1 primary button"
+  },
   "authDeleteAcknowledge": "Ich verstehe, dass alle Daten dauerhaft gelöscht werden.",
-  "@authDeleteAcknowledge": { "description": "Page 2 acknowledgement checkbox label" },
+  "@authDeleteAcknowledge": {
+    "description": "Page 2 acknowledgement checkbox label"
+  },
   "authDeleteErrorBanner": "Löschen fehlgeschlagen. Bitte später erneut versuchen.",
-  "@authDeleteErrorBanner": { "description": "Page 2 error banner" },
+  "@authDeleteErrorBanner": {
+    "description": "Page 2 error banner"
+  },
   "authDeleteSubmit": "Konto endgültig löschen",
-  "@authDeleteSubmit": { "description": "Page 2 destructive submit" },
+  "@authDeleteSubmit": {
+    "description": "Page 2 destructive submit"
+  },
   "authDeleteSubmitting": "Konto wird gelöscht …",
-  "@authDeleteSubmitting": { "description": "Page 2 destructive submit while deleting" },
+  "@authDeleteSubmitting": {
+    "description": "Page 2 destructive submit while deleting"
+  },
   "authDeleteCancel": "Abbrechen",
-  "@authDeleteCancel": { "description": "Page 2 cancel button" },
-
+  "@authDeleteCancel": {
+    "description": "Page 2 cancel button"
+  },
   "authOnboardingNext": "Weiter",
-  "@authOnboardingNext": { "description": "Onboarding next button" },
+  "@authOnboardingNext": {
+    "description": "Onboarding next button"
+  },
   "authOnboardingDone": "Fertig",
-  "@authOnboardingDone": { "description": "Onboarding finish button" },
+  "@authOnboardingDone": {
+    "description": "Onboarding finish button"
+  },
   "authOnboardingSkip": "Überspringen",
-  "@authOnboardingSkip": { "description": "Onboarding skip link" },
+  "@authOnboardingSkip": {
+    "description": "Onboarding skip link"
+  },
   "authOnboardingWelcomeTitle": "Willkommen.",
-  "@authOnboardingWelcomeTitle": { "description": "Slide 1 title" },
+  "@authOnboardingWelcomeTitle": {
+    "description": "Slide 1 title"
+  },
   "authOnboardingWelcomeBody": "Brosi's Kubb hilft dir, deine Würfe systematisch zu verbessern — Sniper, Finisseur, und bald mehr.",
-  "@authOnboardingWelcomeBody": { "description": "Slide 1 body text" },
+  "@authOnboardingWelcomeBody": {
+    "description": "Slide 1 body text"
+  },
   "authOnboardingBadgeAnon": "Anonymes Konto",
-  "@authOnboardingBadgeAnon": { "description": "Status badge for anonymous keypair sessions" },
+  "@authOnboardingBadgeAnon": {
+    "description": "Status badge for anonymous keypair sessions"
+  },
   "authOnboardingBadgeGoogle": "Mit Google verknüpft",
-  "@authOnboardingBadgeGoogle": { "description": "Status badge for Google OAuth sessions" },
+  "@authOnboardingBadgeGoogle": {
+    "description": "Status badge for Google OAuth sessions"
+  },
   "authOnboardingBadgeApple": "Mit Apple verknüpft",
-  "@authOnboardingBadgeApple": { "description": "Status badge for Apple OAuth sessions" },
+  "@authOnboardingBadgeApple": {
+    "description": "Status badge for Apple OAuth sessions"
+  },
   "authBadgeAnonShort": "Anonym",
-  "@authBadgeAnonShort": { "description": "Compact app-bar badge label for anonymous keypair sessions" },
+  "@authBadgeAnonShort": {
+    "description": "Compact app-bar badge label for anonymous keypair sessions"
+  },
   "authBadgeGoogleShort": "Google",
-  "@authBadgeGoogleShort": { "description": "Compact app-bar badge label for Google OAuth sessions" },
+  "@authBadgeGoogleShort": {
+    "description": "Compact app-bar badge label for Google OAuth sessions"
+  },
   "authBadgeAppleShort": "Apple",
-  "@authBadgeAppleShort": { "description": "Compact app-bar badge label for Apple OAuth sessions" },
+  "@authBadgeAppleShort": {
+    "description": "Compact app-bar badge label for Apple OAuth sessions"
+  },
   "authBadgeStatusSemantic": "Konto-Status: {label}",
   "@authBadgeStatusSemantic": {
     "description": "Screen reader label for the account status badge",
-    "placeholders": { "label": { "type": "String" } }
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
   },
   "authOnboardingModesTitle": "Trainingsmodi",
-  "@authOnboardingModesTitle": { "description": "Slide 2 title" },
+  "@authOnboardingModesTitle": {
+    "description": "Slide 2 title"
+  },
   "authOnboardingModeSniperName": "Sniper",
-  "@authOnboardingModeSniperName": { "description": "Mode 1 name" },
+  "@authOnboardingModeSniperName": {
+    "description": "Mode 1 name"
+  },
   "authOnboardingModeSniperSub": "8 m gerade Treffer trainieren",
-  "@authOnboardingModeSniperSub": { "description": "Mode 1 subtitle" },
+  "@authOnboardingModeSniperSub": {
+    "description": "Mode 1 subtitle"
+  },
   "authOnboardingModeFinisseurName": "Finisseur",
-  "@authOnboardingModeFinisseurName": { "description": "Mode 2 name" },
+  "@authOnboardingModeFinisseurName": {
+    "description": "Mode 2 name"
+  },
   "authOnboardingModeFinisseurSub": "Königswurf-Sequenzen üben",
-  "@authOnboardingModeFinisseurSub": { "description": "Mode 2 subtitle" },
+  "@authOnboardingModeFinisseurSub": {
+    "description": "Mode 2 subtitle"
+  },
   "authOnboardingMode4mName": "4 m-Linie",
-  "@authOnboardingMode4mName": { "description": "Mode 3 name" },
+  "@authOnboardingMode4mName": {
+    "description": "Mode 3 name"
+  },
   "authOnboardingMode4mSub": "Strafkubb-Distanz präzisieren",
-  "@authOnboardingMode4mSub": { "description": "Mode 3 subtitle" },
+  "@authOnboardingMode4mSub": {
+    "description": "Mode 3 subtitle"
+  },
   "authOnboardingSoonPill": "künftig",
-  "@authOnboardingSoonPill": { "description": "Pill label on upcoming modes" },
+  "@authOnboardingSoonPill": {
+    "description": "Pill label on upcoming modes"
+  },
   "authOnboardingSoonTitle": "Bald verfügbar",
-  "@authOnboardingSoonTitle": { "description": "Slide 3 title" },
+  "@authOnboardingSoonTitle": {
+    "description": "Slide 3 title"
+  },
   "authOnboardingSoonTournaments": "Tournaments",
-  "@authOnboardingSoonTournaments": { "description": "Slide 3 chip 1" },
+  "@authOnboardingSoonTournaments": {
+    "description": "Slide 3 chip 1"
+  },
   "authOnboardingSoonFriendMatch": "Friend-Match",
-  "@authOnboardingSoonFriendMatch": { "description": "Slide 3 chip 2" },
+  "@authOnboardingSoonFriendMatch": {
+    "description": "Slide 3 chip 2"
+  },
   "authOnboardingSoonBody": "Mit Freundinnen und Klubs spielen, Resultate teilen, Ranglisten verfolgen — kommt bald.",
-  "@authOnboardingSoonBody": { "description": "Slide 3 body text" },
+  "@authOnboardingSoonBody": {
+    "description": "Slide 3 body text"
+  },
   "authOnboardingReminderTitle": "Eine letzte Sache.",
-  "@authOnboardingReminderTitle": { "description": "Slide 4 title (anonymous-only reminder)" },
+  "@authOnboardingReminderTitle": {
+    "description": "Slide 4 title (anonymous-only reminder)"
+  },
   "authOnboardingReminderQuestion": "Hast du deine Passphrase im Passwort-Manager gespeichert?",
-  "@authOnboardingReminderQuestion": { "description": "Slide 4 reinforcement question" },
+  "@authOnboardingReminderQuestion": {
+    "description": "Slide 4 reinforcement question"
+  },
   "authOnboardingReminderBody": "Ohne sie kommst du nicht mehr an dein anonymes Konto.",
-  "@authOnboardingReminderBody": { "description": "Slide 4 reinforcement body" },
-
+  "@authOnboardingReminderBody": {
+    "description": "Slide 4 reinforcement body"
+  },
   "authAccountSectionLabel": "Konto",
-  "@authAccountSectionLabel": { "description": "Section heading above the account block in settings" },
+  "@authAccountSectionLabel": {
+    "description": "Section heading above the account block in settings"
+  },
   "authAccountProviderAnonymous": "Anonym (Passphrase)",
-  "@authAccountProviderAnonymous": { "description": "Provider badge for anonymous keypair sessions" },
+  "@authAccountProviderAnonymous": {
+    "description": "Provider badge for anonymous keypair sessions"
+  },
   "authAccountProviderGoogle": "Google",
-  "@authAccountProviderGoogle": { "description": "Provider badge for Google OAuth sessions" },
+  "@authAccountProviderGoogle": {
+    "description": "Provider badge for Google OAuth sessions"
+  },
   "authAccountProviderApple": "Apple",
-  "@authAccountProviderApple": { "description": "Provider badge for Apple OAuth sessions" },
+  "@authAccountProviderApple": {
+    "description": "Provider badge for Apple OAuth sessions"
+  },
   "authAccountLinkLabel": "Konto verknüpfen",
-  "@authAccountLinkLabel": { "description": "Nav-row label leading to account-link screen" },
+  "@authAccountLinkLabel": {
+    "description": "Nav-row label leading to account-link screen"
+  },
   "authAccountLinkSub": "Mit Google oder Apple für sichereres Backup",
-  "@authAccountLinkSub": { "description": "Nav-row subtitle for account link" },
+  "@authAccountLinkSub": {
+    "description": "Nav-row subtitle for account link"
+  },
   "authAccountPassphraseLabel": "Passphrase ändern",
-  "@authAccountPassphraseLabel": { "description": "Nav-row label leading to passphrase change" },
+  "@authAccountPassphraseLabel": {
+    "description": "Nav-row label leading to passphrase change"
+  },
   "authAccountPassphraseSub": "Neue Passphrase für dein Keypair",
-  "@authAccountPassphraseSub": { "description": "Nav-row subtitle for passphrase change" },
+  "@authAccountPassphraseSub": {
+    "description": "Nav-row subtitle for passphrase change"
+  },
   "authAccountSignOutLabel": "Abmelden",
-  "@authAccountSignOutLabel": { "description": "Nav-row label that signs the user out" },
+  "@authAccountSignOutLabel": {
+    "description": "Nav-row label that signs the user out"
+  },
   "authAccountSignOutSub": "Beendet die Session — {provider}",
   "@authAccountSignOutSub": {
     "description": "Nav-row subtitle for sign-out, with current provider",
     "placeholders": {
-      "provider": { "type": "String" }
+      "provider": {
+        "type": "String"
+      }
     }
   },
   "authAccountDeleteLabel": "Konto löschen",
-  "@authAccountDeleteLabel": { "description": "Nav-row label leading to account delete" },
+  "@authAccountDeleteLabel": {
+    "description": "Nav-row label leading to account delete"
+  },
   "authAccountDeleteSub": "Alle Daten dauerhaft entfernen",
-  "@authAccountDeleteSub": { "description": "Nav-row subtitle for account delete" },
+  "@authAccountDeleteSub": {
+    "description": "Nav-row subtitle for account delete"
+  },
   "authBackupWarningTitle": "Backup empfohlen",
-  "@authBackupWarningTitle": { "description": "Title of the yellow backup-warning surface in the account section" },
+  "@authBackupWarningTitle": {
+    "description": "Title of the yellow backup-warning surface in the account section"
+  },
   "authBackupWarningMissing": "Dein anonymes Konto hat noch kein Backup auf dem Server.",
-  "@authBackupWarningMissing": { "description": "Body of the backup-warning when no backup row exists" },
+  "@authBackupWarningMissing": {
+    "description": "Body of the backup-warning when no backup row exists"
+  },
   "authBackupWarningStale": "Letztes Backup vor {days} Tagen — bitte aktualisieren.",
   "@authBackupWarningStale": {
     "description": "Body of the backup-warning when last backup is older than 90 days",
     "placeholders": {
-      "days": { "type": "int", "example": "120" }
+      "days": {
+        "type": "int",
+        "example": "120"
+      }
     }
   },
-
   "authEditProfileEyebrow": "Account",
-  "@authEditProfileEyebrow": { "description": "Edit-profile screen eyebrow" },
+  "@authEditProfileEyebrow": {
+    "description": "Edit-profile screen eyebrow"
+  },
   "authEditProfileTitle": "Profil bearbeiten",
-  "@authEditProfileTitle": { "description": "Edit-profile screen title" },
+  "@authEditProfileTitle": {
+    "description": "Edit-profile screen title"
+  },
   "authEditProfileNicknameLabel": "Spielname",
-  "@authEditProfileNicknameLabel": { "description": "Nickname field label" },
+  "@authEditProfileNicknameLabel": {
+    "description": "Nickname field label"
+  },
   "authEditProfileNicknameHelper": "3–30 Zeichen, Buchstaben, Zahlen, '-', '_'.",
-  "@authEditProfileNicknameHelper": { "description": "Nickname field helper text" },
+  "@authEditProfileNicknameHelper": {
+    "description": "Nickname field helper text"
+  },
   "authEditProfileError": "Konnte nicht speichern.",
-  "@authEditProfileError": { "description": "Save failure banner" },
+  "@authEditProfileError": {
+    "description": "Save failure banner"
+  },
   "authEditProfileSuccess": "Profil aktualisiert.",
-  "@authEditProfileSuccess": { "description": "Save success banner" },
+  "@authEditProfileSuccess": {
+    "description": "Save success banner"
+  },
   "authEditProfileSubmit": "Speichern",
-  "@authEditProfileSubmit": { "description": "Save button label" },
+  "@authEditProfileSubmit": {
+    "description": "Save button label"
+  },
   "authEditProfileSubmitting": "Speichere …",
-  "@authEditProfileSubmitting": { "description": "Save button label while saving" },
-
+  "@authEditProfileSubmitting": {
+    "description": "Save button label while saving"
+  },
   "tournamentWizardTitle": "Neues Turnier",
-  "@tournamentWizardTitle": { "description": "Tournament setup wizard title" },
+  "@tournamentWizardTitle": {
+    "description": "Tournament setup wizard title"
+  },
   "tournamentWizardStep1Title": "Stammdaten",
-  "@tournamentWizardStep1Title": { "description": "Wizard step 1 eyebrow" },
+  "@tournamentWizardStep1Title": {
+    "description": "Wizard step 1 eyebrow"
+  },
   "tournamentWizardStep2Title": "Teilnehmer",
-  "@tournamentWizardStep2Title": { "description": "Wizard step 2 eyebrow" },
+  "@tournamentWizardStep2Title": {
+    "description": "Wizard step 2 eyebrow"
+  },
   "tournamentWizardStep3Title": "Format",
-  "@tournamentWizardStep3Title": { "description": "Wizard step 3 eyebrow" },
+  "@tournamentWizardStep3Title": {
+    "description": "Wizard step 3 eyebrow"
+  },
   "tournamentWizardStep4Title": "Übersicht",
-  "@tournamentWizardStep4Title": { "description": "Wizard step 4 eyebrow" },
+  "@tournamentWizardStep4Title": {
+    "description": "Wizard step 4 eyebrow"
+  },
   "tournamentWizardStepLabel": "Schritt {step} von {total}",
   "@tournamentWizardStepLabel": {
     "description": "Progress bar caption",
     "placeholders": {
-      "step": { "type": "int" },
-      "total": { "type": "int" }
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "tournamentWizardDisplayNameLabel": "Turniername",
-  "@tournamentWizardDisplayNameLabel": { "description": "Display-name input label" },
+  "@tournamentWizardDisplayNameLabel": {
+    "description": "Display-name input label"
+  },
   "tournamentWizardMinParticipantsLabel": "Min. Teilnehmer",
-  "@tournamentWizardMinParticipantsLabel": { "description": "Min participants stepper label" },
+  "@tournamentWizardMinParticipantsLabel": {
+    "description": "Min participants stepper label"
+  },
   "tournamentWizardMaxParticipantsLabel": "Max. Teilnehmer",
-  "@tournamentWizardMaxParticipantsLabel": { "description": "Max participants stepper label" },
+  "@tournamentWizardMaxParticipantsLabel": {
+    "description": "Max participants stepper label"
+  },
   "tournamentWizardFormatLabel": "Turnierformat",
-  "@tournamentWizardFormatLabel": { "description": "Format radio group label" },
+  "@tournamentWizardFormatLabel": {
+    "description": "Format radio group label"
+  },
   "tournamentWizardFormatRoundRobin": "Round Robin",
-  "@tournamentWizardFormatRoundRobin": { "description": "Round robin format label" },
+  "@tournamentWizardFormatRoundRobin": {
+    "description": "Round robin format label"
+  },
   "tournamentWizardFormatComingSoon": "Folgt in M2+",
-  "@tournamentWizardFormatComingSoon": { "description": "Pill on disabled formats" },
+  "@tournamentWizardFormatComingSoon": {
+    "description": "Pill on disabled formats"
+  },
   "tournamentWizardSetsToWinLabel": "Sätze zum Sieg",
-  "@tournamentWizardSetsToWinLabel": { "description": "Sets-to-win stepper label" },
+  "@tournamentWizardSetsToWinLabel": {
+    "description": "Sets-to-win stepper label"
+  },
   "tournamentWizardMaxSetsLabel": "Max. Sätze",
-  "@tournamentWizardMaxSetsLabel": { "description": "Max-sets stepper label" },
+  "@tournamentWizardMaxSetsLabel": {
+    "description": "Max-sets stepper label"
+  },
   "tournamentWizardRoundTimeLabel": "Rundenzeit (Minuten)",
-  "@tournamentWizardRoundTimeLabel": { "description": "Round-time summary label" },
+  "@tournamentWizardRoundTimeLabel": {
+    "description": "Round-time summary label"
+  },
   "tournamentWizardBackButton": "Zurück",
-  "@tournamentWizardBackButton": { "description": "Wizard back button" },
+  "@tournamentWizardBackButton": {
+    "description": "Wizard back button"
+  },
   "tournamentWizardNextButton": "Weiter",
-  "@tournamentWizardNextButton": { "description": "Wizard next button" },
+  "@tournamentWizardNextButton": {
+    "description": "Wizard next button"
+  },
   "tournamentWizardCreateButton": "Turnier anlegen",
-  "@tournamentWizardCreateButton": { "description": "Wizard final submit button" },
+  "@tournamentWizardCreateButton": {
+    "description": "Wizard final submit button"
+  },
   "tournamentWizardSubmitError": "Turnier konnte nicht erstellt werden: {error}",
   "@tournamentWizardSubmitError": {
     "description": "Snackbar on submit failure",
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "tournamentListEyebrow": "Turniere",
-  "@tournamentListEyebrow": { "description": "Eyebrow above tournament-list title" },
+  "@tournamentListEyebrow": {
+    "description": "Eyebrow above tournament-list title"
+  },
   "tournamentListTitle": "Übersicht",
-  "@tournamentListTitle": { "description": "Tournament-list screen title" },
+  "@tournamentListTitle": {
+    "description": "Tournament-list screen title"
+  },
   "tournamentListTabMine": "Meine Turniere",
-  "@tournamentListTabMine": { "description": "Tab label: tournaments created by caller" },
+  "@tournamentListTabMine": {
+    "description": "Tab label: tournaments created by caller"
+  },
   "tournamentListTabPublic": "Aktuelle Turniere",
-  "@tournamentListTabPublic": { "description": "Tab label: public discoverable tournaments" },
+  "@tournamentListTabPublic": {
+    "description": "Tab label: public discoverable tournaments"
+  },
   "tournamentListNewButton": "Neues Turnier",
-  "@tournamentListNewButton": { "description": "FAB label opening the setup wizard" },
+  "@tournamentListNewButton": {
+    "description": "FAB label opening the setup wizard"
+  },
   "tournamentListEmptyMine": "Du hast noch keine Turniere erstellt.",
-  "@tournamentListEmptyMine": { "description": "Empty state on Meine Turniere tab" },
+  "@tournamentListEmptyMine": {
+    "description": "Empty state on Meine Turniere tab"
+  },
   "tournamentListEmptyPublic": "Keine offenen Turniere zurzeit.",
-  "@tournamentListEmptyPublic": { "description": "Empty state on Aktuelle Turniere tab" },
+  "@tournamentListEmptyPublic": {
+    "description": "Empty state on Aktuelle Turniere tab"
+  },
   "tournamentListParticipantCount": "{count} Teilnehmer",
   "@tournamentListParticipantCount": {
     "description": "Participant count chip on tournament cards",
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-
   "tournamentStatusDraft": "Entwurf",
-  "@tournamentStatusDraft": { "description": "Pill: tournament status draft" },
+  "@tournamentStatusDraft": {
+    "description": "Pill: tournament status draft"
+  },
   "tournamentStatusPublished": "Veröffentlicht",
-  "@tournamentStatusPublished": { "description": "Pill: tournament status published" },
+  "@tournamentStatusPublished": {
+    "description": "Pill: tournament status published"
+  },
   "tournamentStatusRegistrationOpen": "Anmeldung offen",
-  "@tournamentStatusRegistrationOpen": { "description": "Pill: registration open" },
+  "@tournamentStatusRegistrationOpen": {
+    "description": "Pill: registration open"
+  },
   "tournamentStatusRegistrationClosed": "Anmeldung geschlossen",
-  "@tournamentStatusRegistrationClosed": { "description": "Pill: registration closed" },
+  "@tournamentStatusRegistrationClosed": {
+    "description": "Pill: registration closed"
+  },
   "tournamentStatusLive": "Läuft",
-  "@tournamentStatusLive": { "description": "Pill: tournament live" },
+  "@tournamentStatusLive": {
+    "description": "Pill: tournament live"
+  },
   "tournamentStatusFinalized": "Abgeschlossen",
-  "@tournamentStatusFinalized": { "description": "Pill: tournament finalized" },
+  "@tournamentStatusFinalized": {
+    "description": "Pill: tournament finalized"
+  },
   "tournamentStatusAborted": "Abgebrochen",
-  "@tournamentStatusAborted": { "description": "Pill: tournament aborted" },
-
+  "@tournamentStatusAborted": {
+    "description": "Pill: tournament aborted"
+  },
   "tournamentFormatRoundRobin": "Jeder gegen Jeden",
-  "@tournamentFormatRoundRobin": { "description": "Format chip: round-robin" },
+  "@tournamentFormatRoundRobin": {
+    "description": "Format chip: round-robin"
+  },
   "tournamentFormatSingleElimination": "K.-o.",
-  "@tournamentFormatSingleElimination": { "description": "Format chip: single-elimination" },
+  "@tournamentFormatSingleElimination": {
+    "description": "Format chip: single-elimination"
+  },
   "tournamentFormatSchoch": "Schoch",
-  "@tournamentFormatSchoch": { "description": "Format chip: Schoch system" },
+  "@tournamentFormatSchoch": {
+    "description": "Format chip: Schoch system"
+  },
   "tournamentFormatSwiss": "Schweizer System",
-  "@tournamentFormatSwiss": { "description": "Format chip: Swiss system" },
+  "@tournamentFormatSwiss": {
+    "description": "Format chip: Swiss system"
+  },
   "tournamentFormatRoundRobinKo": "Gruppen + K.-o.",
-  "@tournamentFormatRoundRobinKo": { "description": "Format chip: round-robin then knockout" },
+  "@tournamentFormatRoundRobinKo": {
+    "description": "Format chip: round-robin then knockout"
+  },
   "tournamentFormatSchochKo": "Schoch + K.-o.",
-  "@tournamentFormatSchochKo": { "description": "Format chip: Schoch then knockout" },
+  "@tournamentFormatSchochKo": {
+    "description": "Format chip: Schoch then knockout"
+  },
   "tournamentFormatSwissKo": "Schweiz + K.-o.",
-  "@tournamentFormatSwissKo": { "description": "Format chip: Swiss then knockout" },
-
+  "@tournamentFormatSwissKo": {
+    "description": "Format chip: Swiss then knockout"
+  },
   "tournamentDetailEyebrow": "Turnier",
-  "@tournamentDetailEyebrow": { "description": "Detail-screen eyebrow" },
+  "@tournamentDetailEyebrow": {
+    "description": "Detail-screen eyebrow"
+  },
   "tournamentDetailNotFound": "Turnier nicht gefunden.",
-  "@tournamentDetailNotFound": { "description": "Shown when detail returns null" },
+  "@tournamentDetailNotFound": {
+    "description": "Shown when detail returns null"
+  },
   "tournamentDetailParticipantSummary": "{count} von {max} Teilnehmern",
   "@tournamentDetailParticipantSummary": {
     "description": "Header subline with participant count vs capacity",
     "placeholders": {
-      "count": { "type": "int" },
-      "max": { "type": "int" }
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
     }
   },
   "tournamentDetailStammdaten": "Stammdaten",
-  "@tournamentDetailStammdaten": { "description": "Section heading: master data" },
+  "@tournamentDetailStammdaten": {
+    "description": "Section heading: master data"
+  },
   "tournamentDetailFormat": "Format",
-  "@tournamentDetailFormat": { "description": "Row label: format" },
+  "@tournamentDetailFormat": {
+    "description": "Row label: format"
+  },
   "tournamentDetailTeamSize": "Team-Grösse",
-  "@tournamentDetailTeamSize": { "description": "Row label: team size" },
+  "@tournamentDetailTeamSize": {
+    "description": "Row label: team size"
+  },
   "tournamentDetailSetsToWin": "Sätze zum Sieg",
-  "@tournamentDetailSetsToWin": { "description": "Row label: sets-to-win" },
+  "@tournamentDetailSetsToWin": {
+    "description": "Row label: sets-to-win"
+  },
   "tournamentDetailMaxSets": "Max Sätze",
-  "@tournamentDetailMaxSets": { "description": "Row label: maximum sets" },
+  "@tournamentDetailMaxSets": {
+    "description": "Row label: maximum sets"
+  },
   "tournamentDetailRoundTime": "Runden-Zeit",
-  "@tournamentDetailRoundTime": { "description": "Row label: round time" },
+  "@tournamentDetailRoundTime": {
+    "description": "Row label: round time"
+  },
   "tournamentDetailParticipants": "Teilnehmer",
-  "@tournamentDetailParticipants": { "description": "Section heading: participants" },
+  "@tournamentDetailParticipants": {
+    "description": "Section heading: participants"
+  },
   "tournamentDetailParticipantsEmpty": "Noch keine Anmeldungen.",
-  "@tournamentDetailParticipantsEmpty": { "description": "Empty participants list" },
+  "@tournamentDetailParticipantsEmpty": {
+    "description": "Empty participants list"
+  },
   "tournamentDetailPending": "ausstehend",
-  "@tournamentDetailPending": { "description": "Inline marker for pending registration" },
+  "@tournamentDetailPending": {
+    "description": "Inline marker for pending registration"
+  },
   "tournamentDetailApprove": "Bestätigen",
-  "@tournamentDetailApprove": { "description": "Organizer button: approve registration" },
+  "@tournamentDetailApprove": {
+    "description": "Organizer button: approve registration"
+  },
   "tournamentDetailReject": "Ablehnen",
-  "@tournamentDetailReject": { "description": "Organizer button: reject registration" },
+  "@tournamentDetailReject": {
+    "description": "Organizer button: reject registration"
+  },
   "tournamentDetailActionPublish": "Veröffentlichen",
-  "@tournamentDetailActionPublish": { "description": "Action: publish draft tournament" },
+  "@tournamentDetailActionPublish": {
+    "description": "Action: publish draft tournament"
+  },
   "tournamentDetailActionOpenReg": "Anmeldung öffnen",
-  "@tournamentDetailActionOpenReg": { "description": "Action: open registration" },
+  "@tournamentDetailActionOpenReg": {
+    "description": "Action: open registration"
+  },
   "tournamentDetailActionCloseReg": "Anmeldung schliessen",
-  "@tournamentDetailActionCloseReg": { "description": "Action: close registration" },
+  "@tournamentDetailActionCloseReg": {
+    "description": "Action: close registration"
+  },
   "tournamentDetailActionRegister": "Anmelden",
-  "@tournamentDetailActionRegister": { "description": "Action: register self" },
+  "@tournamentDetailActionRegister": {
+    "description": "Action: register self"
+  },
   "tournamentDetailActionWithdraw": "Abmelden",
-  "@tournamentDetailActionWithdraw": { "description": "Action: withdraw own registration" },
+  "@tournamentDetailActionWithdraw": {
+    "description": "Action: withdraw own registration"
+  },
   "tournamentDetailActionStart": "Turnier starten",
-  "@tournamentDetailActionStart": { "description": "Action: start tournament" },
+  "@tournamentDetailActionStart": {
+    "description": "Action: start tournament"
+  },
   "tournamentDetailActionFinalize": "Turnier abschliessen",
-  "@tournamentDetailActionFinalize": { "description": "Action: finalize tournament" },
+  "@tournamentDetailActionFinalize": {
+    "description": "Action: finalize tournament"
+  },
   "tournamentDetailActionAbort": "Turnier abbrechen",
-  "@tournamentDetailActionAbort": { "description": "Action: abort tournament" },
+  "@tournamentDetailActionAbort": {
+    "description": "Action: abort tournament"
+  },
   "tournamentDetailActionGotoMatches": "Zu den Matches",
-  "@tournamentDetailActionGotoMatches": { "description": "Action: navigate to matches screen" },
+  "@tournamentDetailActionGotoMatches": {
+    "description": "Action: navigate to matches screen"
+  },
   "tournamentDetailActionStandings": "Endrangliste",
-  "@tournamentDetailActionStandings": { "description": "Action: navigate to final standings" },
+  "@tournamentDetailActionStandings": {
+    "description": "Action: navigate to final standings"
+  },
   "tournamentDetailAborted": "Turnier abgebrochen.",
-  "@tournamentDetailAborted": { "description": "Headline when status is aborted" },
+  "@tournamentDetailAborted": {
+    "description": "Headline when status is aborted"
+  },
   "tournamentDetailAuditHeader": "Verlauf",
-  "@tournamentDetailAuditHeader": { "description": "Section heading: audit tail" },
+  "@tournamentDetailAuditHeader": {
+    "description": "Section heading: audit tail"
+  },
   "tournamentDetailAuditEmpty": "Keine Ereignisse.",
-  "@tournamentDetailAuditEmpty": { "description": "Empty audit-tail message" },
-
+  "@tournamentDetailAuditEmpty": {
+    "description": "Empty audit-tail message"
+  },
   "tournamentRegistrationEyebrow": "Turnier",
-  "@tournamentRegistrationEyebrow": { "description": "Registration screen eyebrow" },
+  "@tournamentRegistrationEyebrow": {
+    "description": "Registration screen eyebrow"
+  },
   "tournamentRegistrationTitle": "Anmelden",
-  "@tournamentRegistrationTitle": { "description": "Registration screen title" },
+  "@tournamentRegistrationTitle": {
+    "description": "Registration screen title"
+  },
   "tournamentRegistrationPendingHint": "Du wirst zunächst auf 'ausstehend' gesetzt, bis der Veranstalter bestätigt.",
-  "@tournamentRegistrationPendingHint": { "description": "Hint banner explaining pending state" },
+  "@tournamentRegistrationPendingHint": {
+    "description": "Hint banner explaining pending state"
+  },
   "tournamentRegistrationConfirm": "Anmeldung bestätigen",
-  "@tournamentRegistrationConfirm": { "description": "Submit button label" },
+  "@tournamentRegistrationConfirm": {
+    "description": "Submit button label"
+  },
   "tournamentRegistrationSubmitting": "Sende …",
-  "@tournamentRegistrationSubmitting": { "description": "Submit button label while submitting" },
+  "@tournamentRegistrationSubmitting": {
+    "description": "Submit button label while submitting"
+  },
   "tournamentRegistrationCancel": "Abbrechen",
-  "@tournamentRegistrationCancel": { "description": "Cancel button label" },
+  "@tournamentRegistrationCancel": {
+    "description": "Cancel button label"
+  },
   "tournamentRegistrationSuccess": "Anmeldung gesendet.",
-  "@tournamentRegistrationSuccess": { "description": "Success snackbar after registration" },
+  "@tournamentRegistrationSuccess": {
+    "description": "Success snackbar after registration"
+  },
   "tournamentMatchListTitle": "Spiele",
-  "@tournamentMatchListTitle": { "description": "Tournament match list screen title" },
+  "@tournamentMatchListTitle": {
+    "description": "Tournament match list screen title"
+  },
   "tournamentMatchListEmpty": "Noch keine Spiele geplant.",
-  "@tournamentMatchListEmpty": { "description": "Empty state for match list" },
+  "@tournamentMatchListEmpty": {
+    "description": "Empty state for match list"
+  },
   "tournamentMatchListRound": "Runde {round}",
   "@tournamentMatchListRound": {
     "description": "Round group header in match list",
-    "placeholders": { "round": { "type": "int", "example": "1" } }
+    "placeholders": {
+      "round": {
+        "type": "int",
+        "example": "1"
+      }
+    }
   },
   "tournamentMatchLoadError": "Spiele konnten nicht geladen werden",
-  "@tournamentMatchLoadError": { "description": "Error banner when match list / detail fails to load" },
+  "@tournamentMatchLoadError": {
+    "description": "Error banner when match list / detail fails to load"
+  },
   "tournamentMatchBye": "BYE",
-  "@tournamentMatchBye": { "description": "Label for a BYE participant slot" },
+  "@tournamentMatchBye": {
+    "description": "Label for a BYE participant slot"
+  },
   "tournamentMatchStatusScheduled": "Geplant",
-  "@tournamentMatchStatusScheduled": { "description": "Status pill for scheduled matches" },
+  "@tournamentMatchStatusScheduled": {
+    "description": "Status pill for scheduled matches"
+  },
   "tournamentMatchStatusAwaiting": "Warten",
-  "@tournamentMatchStatusAwaiting": { "description": "Status pill for awaiting-results matches" },
+  "@tournamentMatchStatusAwaiting": {
+    "description": "Status pill for awaiting-results matches"
+  },
   "tournamentMatchStatusDisputed": "Strittig",
-  "@tournamentMatchStatusDisputed": { "description": "Status pill for disputed matches" },
+  "@tournamentMatchStatusDisputed": {
+    "description": "Status pill for disputed matches"
+  },
   "tournamentMatchStatusFinalized": "Abgeschlossen",
-  "@tournamentMatchStatusFinalized": { "description": "Status pill for finalized matches" },
+  "@tournamentMatchStatusFinalized": {
+    "description": "Status pill for finalized matches"
+  },
   "tournamentMatchStatusOverridden": "Korrigiert",
-  "@tournamentMatchStatusOverridden": { "description": "Status pill for organizer-overridden matches" },
+  "@tournamentMatchStatusOverridden": {
+    "description": "Status pill for organizer-overridden matches"
+  },
   "tournamentMatchStatusVoided": "Ungültig",
-  "@tournamentMatchStatusVoided": { "description": "Status pill for voided matches" },
-
+  "@tournamentMatchStatusVoided": {
+    "description": "Status pill for voided matches"
+  },
   "tournamentMatchDetailTitle": "Spiel-Eingabe",
-  "@tournamentMatchDetailTitle": { "description": "Tournament match detail screen title" },
+  "@tournamentMatchDetailTitle": {
+    "description": "Tournament match detail screen title"
+  },
   "tournamentMatchHeaderRound": "Runde {round} — Spiel {match}",
   "@tournamentMatchHeaderRound": {
     "description": "Header eyebrow on match detail showing round and slot",
     "placeholders": {
-      "round": { "type": "int", "example": "2" },
-      "match": { "type": "int", "example": "3" }
+      "round": {
+        "type": "int",
+        "example": "2"
+      },
+      "match": {
+        "type": "int",
+        "example": "3"
+      }
     }
   },
   "tournamentMatchVersusHeader": "{a} gegen {b}",
   "@tournamentMatchVersusHeader": {
     "description": "Header showing the two opponents",
     "placeholders": {
-      "a": { "type": "String", "example": "abc123" },
-      "b": { "type": "String", "example": "def456" }
+      "a": {
+        "type": "String",
+        "example": "abc123"
+      },
+      "b": {
+        "type": "String",
+        "example": "def456"
+      }
     }
   },
   "tournamentMatchByeHeader": "Freilos",
-  "@tournamentMatchByeHeader": { "description": "Header text when match is a BYE" },
+  "@tournamentMatchByeHeader": {
+    "description": "Header text when match is a BYE"
+  },
   "tournamentMatchConsensusAttempt": "Versuch {attempt} von {max}",
   "@tournamentMatchConsensusAttempt": {
     "description": "Consensus banner — current retry round indicator",
     "placeholders": {
-      "attempt": { "type": "int", "example": "2" },
-      "max": { "type": "int", "example": "3" }
+      "attempt": {
+        "type": "int",
+        "example": "2"
+      },
+      "max": {
+        "type": "int",
+        "example": "3"
+      }
     }
   },
   "tournamentMatchSetLabel": "Satz {n}",
   "@tournamentMatchSetLabel": {
     "description": "Per-set header in the score input form",
-    "placeholders": { "n": { "type": "int", "example": "1" } }
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "1"
+      }
+    }
   },
   "tournamentMatchBasekubbsALabel": "Basekubbs Team A",
-  "@tournamentMatchBasekubbsALabel": { "description": "Stepper label for team A basekubbs" },
+  "@tournamentMatchBasekubbsALabel": {
+    "description": "Stepper label for team A basekubbs"
+  },
   "tournamentMatchBasekubbsBLabel": "Basekubbs Team B",
-  "@tournamentMatchBasekubbsBLabel": { "description": "Stepper label for team B basekubbs" },
+  "@tournamentMatchBasekubbsBLabel": {
+    "description": "Stepper label for team B basekubbs"
+  },
   "tournamentMatchKingLabel": "Königsstoss durch",
-  "@tournamentMatchKingLabel": { "description": "Toggle label for who finished the King" },
+  "@tournamentMatchKingLabel": {
+    "description": "Toggle label for who finished the King"
+  },
   "tournamentMatchKingByA": "Team A",
-  "@tournamentMatchKingByA": { "description": "Option: King finished by team A" },
+  "@tournamentMatchKingByA": {
+    "description": "Option: King finished by team A"
+  },
   "tournamentMatchKingByB": "Team B",
-  "@tournamentMatchKingByB": { "description": "Option: King finished by team B" },
+  "@tournamentMatchKingByB": {
+    "description": "Option: King finished by team B"
+  },
   "tournamentMatchKingByNone": "Zeitablauf",
-  "@tournamentMatchKingByNone": { "description": "Option: time ran out, no King finisher" },
+  "@tournamentMatchKingByNone": {
+    "description": "Option: time ran out, no King finisher"
+  },
   "tournamentMatchAddSet": "Satz +",
-  "@tournamentMatchAddSet": { "description": "Button to add another set row" },
+  "@tournamentMatchAddSet": {
+    "description": "Button to add another set row"
+  },
   "tournamentMatchRemoveSet": "Satz −",
-  "@tournamentMatchRemoveSet": { "description": "Button to remove the last set row" },
+  "@tournamentMatchRemoveSet": {
+    "description": "Button to remove the last set row"
+  },
   "tournamentMatchLivePreviewLabel": "Aktueller Stand",
-  "@tournamentMatchLivePreviewLabel": { "description": "Live-Vorschau heading on match detail" },
+  "@tournamentMatchLivePreviewLabel": {
+    "description": "Live-Vorschau heading on match detail"
+  },
   "tournamentMatchLivePreviewScore": "{a}:{b}",
   "@tournamentMatchLivePreviewScore": {
     "description": "Live-Vorschau score display",
     "placeholders": {
-      "a": { "type": "int", "example": "2" },
-      "b": { "type": "int", "example": "1" }
+      "a": {
+        "type": "int",
+        "example": "2"
+      },
+      "b": {
+        "type": "int",
+        "example": "1"
+      }
     }
   },
   "tournamentMatchLivePreviewUndecided": "Match noch offen",
-  "@tournamentMatchLivePreviewUndecided": { "description": "Live-Vorschau hint when no winner yet" },
+  "@tournamentMatchLivePreviewUndecided": {
+    "description": "Live-Vorschau hint when no winner yet"
+  },
   "tournamentMatchSubmitButton": "Einreichen",
-  "@tournamentMatchSubmitButton": { "description": "Submit-score button" },
+  "@tournamentMatchSubmitButton": {
+    "description": "Submit-score button"
+  },
   "tournamentMatchSubmitError": "Senden fehlgeschlagen",
-  "@tournamentMatchSubmitError": { "description": "Snackbar prefix when the propose-scores RPC fails" },
+  "@tournamentMatchSubmitError": {
+    "description": "Snackbar prefix when the propose-scores RPC fails"
+  },
   "tournamentMatchReadOnlyNotice": "Dieses Spiel ist bereits abgeschlossen.",
-  "@tournamentMatchReadOnlyNotice": { "description": "Hint shown when match status is terminal" },
+  "@tournamentMatchReadOnlyNotice": {
+    "description": "Hint shown when match status is terminal"
+  },
   "tournamentMatchValidationEmpty": "Satz {n}: Eingabe fehlt.",
   "@tournamentMatchValidationEmpty": {
     "description": "Validation error when a set has neither score nor king",
-    "placeholders": { "n": { "type": "int", "example": "1" } }
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "1"
+      }
+    }
   },
   "tournamentMatchValidationKingNeedsMax": "Satz {n}: Königsstoss verlangt volle Basekubbs.",
   "@tournamentMatchValidationKingNeedsMax": {
     "description": "Validation error per DSCORE-15 — king requires max basekubbs on winning side",
-    "placeholders": { "n": { "type": "int", "example": "2" } }
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "2"
+      }
+    }
   },
   "tournamentMatchFinalizedToast": "Match abgeschlossen",
-  "@tournamentMatchFinalizedToast": { "description": "Snackbar shown when submission finalises the match" },
+  "@tournamentMatchFinalizedToast": {
+    "description": "Snackbar shown when submission finalises the match"
+  },
   "tournamentMatchDisagreementToast": "Eingaben weichen ab — Versuch {attempt} von {max}",
   "@tournamentMatchDisagreementToast": {
     "description": "Snackbar shown when submission triggers a consensus retry",
     "placeholders": {
-      "attempt": { "type": "int", "example": "2" },
-      "max": { "type": "int", "example": "3" }
+      "attempt": {
+        "type": "int",
+        "example": "2"
+      },
+      "max": {
+        "type": "int",
+        "example": "3"
+      }
     }
   },
   "tournamentMatchDisputedToast": "Strittig — Veranstalter benachrichtigt",
-  "@tournamentMatchDisputedToast": { "description": "Snackbar shown when submission moves match to disputed" },
-
+  "@tournamentMatchDisputedToast": {
+    "description": "Snackbar shown when submission moves match to disputed"
+  },
   "tournamentStandingsTitle": "Endrangliste",
-  "@tournamentStandingsTitle": { "description": "Standings screen title" },
+  "@tournamentStandingsTitle": {
+    "description": "Standings screen title"
+  },
   "tournamentStandingsEmpty": "Noch keine Ergebnisse.",
-  "@tournamentStandingsEmpty": { "description": "Empty state for standings" },
+  "@tournamentStandingsEmpty": {
+    "description": "Empty state for standings"
+  },
   "tournamentStandingsLoadError": "Rangliste konnte nicht geladen werden",
-  "@tournamentStandingsLoadError": { "description": "Standings load error banner" },
+  "@tournamentStandingsLoadError": {
+    "description": "Standings load error banner"
+  },
   "tournamentStandingsRank": "Rang",
-  "@tournamentStandingsRank": { "description": "Standings column: rank" },
+  "@tournamentStandingsRank": {
+    "description": "Standings column: rank"
+  },
   "tournamentStandingsPlayer": "Spieler",
-  "@tournamentStandingsPlayer": { "description": "Standings column: player" },
+  "@tournamentStandingsPlayer": {
+    "description": "Standings column: player"
+  },
   "tournamentStandingsTotal": "Total",
-  "@tournamentStandingsTotal": { "description": "Standings column: total points" },
+  "@tournamentStandingsTotal": {
+    "description": "Standings column: total points"
+  },
   "tournamentStandingsWins": "Siege",
-  "@tournamentStandingsWins": { "description": "Standings column: wins" },
+  "@tournamentStandingsWins": {
+    "description": "Standings column: wins"
+  },
   "tournamentStandingsBuchholz": "Buchholz",
-  "@tournamentStandingsBuchholz": { "description": "Standings column: Buchholz score" },
+  "@tournamentStandingsBuchholz": {
+    "description": "Standings column: Buchholz score"
+  },
   "tournamentStandingsKubbDiff": "Kubb-Diff",
-  "@tournamentStandingsKubbDiff": { "description": "Standings column: kubb difference" },
-
+  "@tournamentStandingsKubbDiff": {
+    "description": "Standings column: kubb difference"
+  },
   "tournamentConflictTitle": "Eingaben weichen ab",
-  "@tournamentConflictTitle": { "description": "Conflict screen app-bar title" },
+  "@tournamentConflictTitle": {
+    "description": "Conflict screen app-bar title"
+  },
   "tournamentConflictAttempt": "Versuch {attempt} von 3 — Eingaben weichen ab",
   "@tournamentConflictAttempt": {
     "description": "Conflict banner with current consensus round",
-    "placeholders": { "attempt": { "type": "int", "example": "2" } }
+    "placeholders": {
+      "attempt": {
+        "type": "int",
+        "example": "2"
+      }
+    }
   },
   "tournamentConflictLastAttemptWarning": "Letzter Versuch — bei Abweichung übernimmt der Veranstalter",
-  "@tournamentConflictLastAttemptWarning": { "description": "Warning banner at consensus round 3" },
+  "@tournamentConflictLastAttemptWarning": {
+    "description": "Warning banner at consensus round 3"
+  },
   "tournamentConflictColumnA": "Eingabe Team A",
-  "@tournamentConflictColumnA": { "description": "Conflict comparison column A header" },
+  "@tournamentConflictColumnA": {
+    "description": "Conflict comparison column A header"
+  },
   "tournamentConflictColumnB": "Eingabe Team B",
-  "@tournamentConflictColumnB": { "description": "Conflict comparison column B header" },
+  "@tournamentConflictColumnB": {
+    "description": "Conflict comparison column B header"
+  },
   "tournamentConflictSetLabel": "Satz {n}",
   "@tournamentConflictSetLabel": {
     "description": "Per-set heading inside the conflict comparison row",
-    "placeholders": { "n": { "type": "int", "example": "1" } }
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "1"
+      }
+    }
   },
   "tournamentConflictBasekubbsA": "Basekubbs A",
-  "@tournamentConflictBasekubbsA": { "description": "Row label: basekubbs knocked by team A" },
+  "@tournamentConflictBasekubbsA": {
+    "description": "Row label: basekubbs knocked by team A"
+  },
   "tournamentConflictBasekubbsB": "Basekubbs B",
-  "@tournamentConflictBasekubbsB": { "description": "Row label: basekubbs knocked by team B" },
+  "@tournamentConflictBasekubbsB": {
+    "description": "Row label: basekubbs knocked by team B"
+  },
   "tournamentConflictSetWinner": "Sieger",
-  "@tournamentConflictSetWinner": { "description": "Row label: set winner" },
+  "@tournamentConflictSetWinner": {
+    "description": "Row label: set winner"
+  },
   "tournamentConflictRetryButton": "Erneut eintragen",
-  "@tournamentConflictRetryButton": { "description": "Primary CTA: open match detail to re-submit" },
+  "@tournamentConflictRetryButton": {
+    "description": "Primary CTA: open match detail to re-submit"
+  },
   "tournamentConflictEscalateButton": "Veranstalter hinzuziehen",
-  "@tournamentConflictEscalateButton": { "description": "Secondary CTA: ask organizer to override" },
+  "@tournamentConflictEscalateButton": {
+    "description": "Secondary CTA: ask organizer to override"
+  },
   "tournamentConflictEscalateToast": "Verlangen an Veranstalter weitergeleitet",
-  "@tournamentConflictEscalateToast": { "description": "Snackbar shown after the escalate button is tapped" },
+  "@tournamentConflictEscalateToast": {
+    "description": "Snackbar shown after the escalate button is tapped"
+  },
   "tournamentConflictEmpty": "Noch keine abweichenden Eingaben.",
-  "@tournamentConflictEmpty": { "description": "Empty-state hint when no proposals are available" }
+  "@tournamentConflictEmpty": {
+    "description": "Empty-state hint when no proposals are available"
+  },
+  "tournamentOverrideEyebrow": "Strittiges Match",
+  "tournamentOverrideTitle": "Veranstalter-Override",
+  "tournamentOverrideProposalsHeader": "Bisherige Eingaben",
+  "tournamentOverrideProposalsEmpty": "Keine Eingaben vorhanden.",
+  "tournamentOverrideFinalHeader": "Finaler Score",
+  "tournamentOverrideReasonHeader": "Begründung",
+  "tournamentOverrideReasonHint": "Warum wurde dieser Score festgelegt?",
+  "tournamentOverrideReasonCounter": "{current}/{max}",
+  "tournamentOverrideSubmitButton": "Entscheidung speichern",
+  "tournamentOverrideSubmitError": "Speichern fehlgeschlagen: {error}",
+  "tournamentOverrideStatusGate": "Nur strittige Matches können übersteuert werden.",
+  "tournamentOverrideValidationReasonEmpty": "Begründung ist erforderlich",
+  "tournamentOverrideValidationScoreNotDecisive": "Score muss eindeutig sein (ein Team erreicht die nötigen Sätze)",
+  "tournamentOverrideNotAuthorized": "Nicht autorisiert"
 }

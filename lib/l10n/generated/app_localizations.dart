@@ -3273,6 +3273,90 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Noch keine abweichenden Eingaben.'**
   String get tournamentConflictEmpty;
+
+  /// No description provided for @tournamentOverrideEyebrow.
+  ///
+  /// In de, this message translates to:
+  /// **'Strittiges Match'**
+  String get tournamentOverrideEyebrow;
+
+  /// No description provided for @tournamentOverrideTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Veranstalter-Override'**
+  String get tournamentOverrideTitle;
+
+  /// No description provided for @tournamentOverrideProposalsHeader.
+  ///
+  /// In de, this message translates to:
+  /// **'Bisherige Eingaben'**
+  String get tournamentOverrideProposalsHeader;
+
+  /// No description provided for @tournamentOverrideProposalsEmpty.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Eingaben vorhanden.'**
+  String get tournamentOverrideProposalsEmpty;
+
+  /// No description provided for @tournamentOverrideFinalHeader.
+  ///
+  /// In de, this message translates to:
+  /// **'Finaler Score'**
+  String get tournamentOverrideFinalHeader;
+
+  /// No description provided for @tournamentOverrideReasonHeader.
+  ///
+  /// In de, this message translates to:
+  /// **'Begründung'**
+  String get tournamentOverrideReasonHeader;
+
+  /// No description provided for @tournamentOverrideReasonHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Warum wurde dieser Score festgelegt?'**
+  String get tournamentOverrideReasonHint;
+
+  /// No description provided for @tournamentOverrideReasonCounter.
+  ///
+  /// In de, this message translates to:
+  /// **'{current}/{max}'**
+  String tournamentOverrideReasonCounter(Object current, Object max);
+
+  /// No description provided for @tournamentOverrideSubmitButton.
+  ///
+  /// In de, this message translates to:
+  /// **'Entscheidung speichern'**
+  String get tournamentOverrideSubmitButton;
+
+  /// No description provided for @tournamentOverrideSubmitError.
+  ///
+  /// In de, this message translates to:
+  /// **'Speichern fehlgeschlagen: {error}'**
+  String tournamentOverrideSubmitError(Object error);
+
+  /// No description provided for @tournamentOverrideStatusGate.
+  ///
+  /// In de, this message translates to:
+  /// **'Nur strittige Matches können übersteuert werden.'**
+  String get tournamentOverrideStatusGate;
+
+  /// No description provided for @tournamentOverrideValidationReasonEmpty.
+  ///
+  /// In de, this message translates to:
+  /// **'Begründung ist erforderlich'**
+  String get tournamentOverrideValidationReasonEmpty;
+
+  /// No description provided for @tournamentOverrideValidationScoreNotDecisive.
+  ///
+  /// In de, this message translates to:
+  /// **'Score muss eindeutig sein (ein Team erreicht die nötigen Sätze)'**
+  String get tournamentOverrideValidationScoreNotDecisive;
+
+  /// No description provided for @tournamentOverrideNotAuthorized.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht autorisiert'**
+  String get tournamentOverrideNotAuthorized;
 }
 
 class _AppLocalizationsDelegate

@@ -101,4 +101,20 @@ class TournamentActions {
     await _ref.read(tournamentRemoteProvider).rejectRegistration(id);
     _ref.invalidate(tournamentListProvider);
   }
+
+  /// Organizer override for a disputed match. Persists the final score
+  /// and the mandatory reason via the `tournament_organizer_override`
+  /// RPC, then nudges the list so the row flips to `overridden`.
+  Future<void> organizerOverride({
+    required TournamentMatchId matchId,
+    required List<SetScore> finalSetScores,
+    required String reason,
+  }) async {
+    await _ref.read(tournamentRemoteProvider).organizerOverride(
+          matchId: matchId,
+          finalSetScores: finalSetScores,
+          reason: reason,
+        );
+    _ref.invalidate(tournamentListProvider);
+  }
 }

@@ -1741,4 +1741,54 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentConflictEmpty => 'Noch keine abweichenden Eingaben.';
+
+  @override
+  String get tournamentOverrideEyebrow => 'Strittiges Match';
+
+  @override
+  String get tournamentOverrideTitle => 'Veranstalter-Override';
+
+  @override
+  String get tournamentOverrideProposalsHeader => 'Bisherige Eingaben';
+
+  @override
+  String get tournamentOverrideProposalsEmpty => 'Keine Eingaben vorhanden.';
+
+  @override
+  String get tournamentOverrideFinalHeader => 'Finaler Score';
+
+  @override
+  String get tournamentOverrideReasonHeader => 'Begründung';
+
+  @override
+  String get tournamentOverrideReasonHint =>
+      'Warum wurde dieser Score festgelegt?';
+
+  @override
+  String tournamentOverrideReasonCounter(Object current, Object max) {
+    return '$current/$max';
+  }
+
+  @override
+  String get tournamentOverrideSubmitButton => 'Entscheidung speichern';
+
+  @override
+  String tournamentOverrideSubmitError(Object error) {
+    return 'Speichern fehlgeschlagen: $error';
+  }
+
+  @override
+  String get tournamentOverrideStatusGate =>
+      'Nur strittige Matches können übersteuert werden.';
+
+  @override
+  String get tournamentOverrideValidationReasonEmpty =>
+      'Begründung ist erforderlich';
+
+  @override
+  String get tournamentOverrideValidationScoreNotDecisive =>
+      'Score muss eindeutig sein (ein Team erreicht die nötigen Sätze)';
+
+  @override
+  String get tournamentOverrideNotAuthorized => 'Nicht autorisiert';
 }
