@@ -79,4 +79,26 @@ class TournamentActions {
     await _ref.read(tournamentRemoteProvider).abortTournament(id);
     _ref.invalidate(tournamentListProvider);
   }
+
+  Future<TournamentParticipantId> registerSingle(TournamentId id) async {
+    final pid =
+        await _ref.read(tournamentRemoteProvider).registerSingle(id);
+    _ref.invalidate(tournamentListProvider);
+    return pid;
+  }
+
+  Future<void> withdrawRegistration(TournamentParticipantId id) async {
+    await _ref.read(tournamentRemoteProvider).withdrawRegistration(id);
+    _ref.invalidate(tournamentListProvider);
+  }
+
+  Future<void> confirmRegistration(TournamentParticipantId id) async {
+    await _ref.read(tournamentRemoteProvider).confirmRegistration(id);
+    _ref.invalidate(tournamentListProvider);
+  }
+
+  Future<void> rejectRegistration(TournamentParticipantId id) async {
+    await _ref.read(tournamentRemoteProvider).rejectRegistration(id);
+    _ref.invalidate(tournamentListProvider);
+  }
 }
