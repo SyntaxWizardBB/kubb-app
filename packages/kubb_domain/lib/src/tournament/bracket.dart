@@ -1,6 +1,13 @@
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 
+/// Standard sport-tournament seeding (top-seed faces top of the
+/// opposite half, so seed 1 and seed 2 only meet in the final).
+/// The linear pattern pairs `(seed_i, seed_{N+1-i})` straight through,
+/// which lets high seeds meet earlier — easier to compute, but
+/// uncommon in real tournaments.
+enum BracketSeedingPattern { recursive, linear }
+
 typedef BracketEntry = ({int seed, String? participantId, bool isBye});
 typedef BracketPairing = (BracketEntry a, BracketEntry b);
 
@@ -33,6 +40,7 @@ sealed class Bracket {
     // in M0.
     // ignore: avoid_unused_constructor_parameters
     bool withThirdPlace = false,
+    BracketSeedingPattern seedingPattern = BracketSeedingPattern.recursive,
   }) {
     if (participantIds.isEmpty) {
       throw ArgumentError.value(participantIds, 'participantIds', 'is empty');
@@ -51,8 +59,15 @@ sealed class Bracket {
           isBye: i >= n,
         ),
     ];
+    final order = switch (seedingPattern) {
+      BracketSeedingPattern.linear => [
+          for (var i = 0; i < size ~/ 2; i++) ...[i + 1, size - i],
+        ],
+      BracketSeedingPattern.recursive => _standardBracketOrder(size),
+    };
     final round1 = <BracketPairing>[
-      for (var i = 0; i < size ~/ 2; i++) (slots[i], slots[size - 1 - i]),
+      for (var i = 0; i < size; i += 2)
+        (slots[order[i] - 1], slots[order[i + 1] - 1]),
     ];
     const placeholder = (seed: 0, participantId: null, isBye: false);
     var totalRounds = 0;
@@ -72,6 +87,18 @@ sealed class Bracket {
     ];
     return SingleEliminationBracket(rounds: rounds);
   }
+}
+
+List<int> _standardBracketOrder(int n) {
+  if (n == 1) return [1];
+  final inner = _standardBracketOrder(n ~/ 2);
+  return [
+    for (var i = 0; i < inner.length; i++)
+      if (i.isEven) ...[inner[i], n + 1 - inner[i]] else ...[
+        n + 1 - inner[i],
+        inner[i],
+      ],
+  ];
 }
 
 @immutable
