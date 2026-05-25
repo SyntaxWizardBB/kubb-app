@@ -3,6 +3,36 @@ import 'package:kubb_app/features/tournament/data/tournament_models.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Projects a `tournament_get` envelope into a [TournamentSummaryRef].
+///
+/// The envelope's inner `tournament` block is the detail header — it does
+/// not carry `participant_count`. Recompute it from the sibling
+/// `participants` array so the projection stays compatible with the
+/// listing decoder ([tournamentSummaryRefFromRow]) without forcing the
+/// RPC to expose duplicate fields.
+TournamentSummaryRef _tournamentSummaryFromGetEnvelope(
+  Map<String, dynamic> envelope,
+) {
+  final header = envelope['tournament'] as Map<String, dynamic>;
+  final participants =
+      envelope['participants'] as List<dynamic>? ?? const <dynamic>[];
+  final creator = header['created_by'] as String?;
+  return TournamentSummaryRef(
+    tournamentId: TournamentId(header['tournament_id'] as String),
+    displayName: header['display_name'] as String,
+    format: TournamentFormatWire.fromWire(header['format'] as String),
+    status: TournamentStatusWire.fromWire(header['status'] as String),
+    startedAt: header['started_at'] == null
+        ? null
+        : DateTime.parse(header['started_at'] as String),
+    completedAt: header['completed_at'] == null
+        ? null
+        : DateTime.parse(header['completed_at'] as String),
+    participantCount: participants.length,
+    createdBy: creator == null ? null : UserId(creator),
+  );
+}
+
 /// Wrapper around the tournament-* RPCs declared in the
 /// `tournament_*` migrations. Implements the [TournamentRemote] port
 /// from `kubb_domain`. Every call is authenticated; the
@@ -38,11 +68,7 @@ class TournamentRepository implements TournamentRemote {
       params: <String, dynamic>{'p_tournament_id': id.value},
     );
     if (response == null) return null;
-    // The RPC returns the full TournamentDetail jsonb; callers that
-    // only need the summary use the header subset.
-    return tournamentSummaryRefFromRow(
-      response['tournament'] as Map<String, dynamic>,
-    );
+    return _tournamentSummaryFromGetEnvelope(response);
   }
 
   @override
