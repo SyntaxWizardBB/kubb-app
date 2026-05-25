@@ -11,5 +11,6 @@ export 'src/ports/match_event_repository.dart';
 export 'src/ports/tournament_remote.dart';
 export 'src/rules/opening_rule.dart';
 export 'src/rules/rule_set.dart';
+export 'src/tournament/bracket.dart';
 export 'src/values/ids.dart';
 export 'src/values/lamport_clock.dart';
