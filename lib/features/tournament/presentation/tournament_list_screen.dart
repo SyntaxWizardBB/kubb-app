@@ -43,6 +43,8 @@ class _State extends ConsumerState<TournamentListScreen>
     final l = AppLocalizations.of(context);
     ref.watch(tournamentListPollingProvider(null));
 
+    final myUserId = ref.watch(currentUserIdProvider);
+
     return Scaffold(
       backgroundColor: tokens.bg,
       appBar: KubbAppBar(
@@ -72,7 +74,8 @@ class _State extends ConsumerState<TournamentListScreen>
               children: [
                 _Tab(
                   emptyMessage: l.tournamentListEmptyMine,
-                  filter: (s) => s.status == TournamentStatus.draft,
+                  filter: (s) =>
+                      myUserId != null && s.createdBy?.value == myUserId,
                 ),
                 _Tab(
                   emptyMessage: l.tournamentListEmptyPublic,

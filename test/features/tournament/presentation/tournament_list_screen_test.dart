@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_list_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
+
+const _testUserId = 'me-1';
 
 TournamentSummaryRef _ref({
   required String id,
@@ -14,6 +17,7 @@ TournamentSummaryRef _ref({
   required TournamentStatus status,
   TournamentFormat format = TournamentFormat.roundRobin,
   int participants = 4,
+  String? createdBy,
 }) {
   return TournamentSummaryRef(
     tournamentId: TournamentId(id),
@@ -23,6 +27,7 @@ TournamentSummaryRef _ref({
     startedAt: null,
     completedAt: null,
     participantCount: participants,
+    createdBy: createdBy == null ? null : UserId(createdBy),
   );
 }
 
@@ -62,6 +67,7 @@ Future<void> _pump(
     ProviderScope(
       overrides: [
         tournamentListProvider(null).overrideWith((_) async => rows),
+        currentUserIdProvider.overrideWith((_) => _testUserId),
       ],
       child: MaterialApp.router(
         theme: KubbTheme.light(),
@@ -100,11 +106,20 @@ void main() {
     expect(find.text('Mein Entwurf'), findsNothing);
   });
 
-  testWidgets('renders own drafts in the mine tab', (tester) async {
+  testWidgets('renders own tournaments in the mine tab', (tester) async {
     await _pump(tester, [
-      _ref(id: 'a', name: 'Sommer-Cup',
-          status: TournamentStatus.registrationOpen),
-      _ref(id: 'b', name: 'Mein Entwurf', status: TournamentStatus.draft),
+      _ref(
+        id: 'a',
+        name: 'Sommer-Cup',
+        status: TournamentStatus.registrationOpen,
+        createdBy: 'someone-else',
+      ),
+      _ref(
+        id: 'b',
+        name: 'Mein Entwurf',
+        status: TournamentStatus.draft,
+        createdBy: _testUserId,
+      ),
     ]);
 
     expect(find.text('Mein Entwurf'), findsOneWidget);
@@ -117,6 +132,7 @@ void main() {
         id: 'b',
         name: 'Mein Entwurf',
         status: TournamentStatus.draft,
+        createdBy: _testUserId,
       ),
     ]);
     await tester.tap(find.text('Mein Entwurf'));

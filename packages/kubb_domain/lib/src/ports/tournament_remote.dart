@@ -47,6 +47,7 @@ class TournamentSummaryRef {
     required this.startedAt,
     required this.completedAt,
     required this.participantCount,
+    this.createdBy,
   });
 
   final TournamentId tournamentId;
@@ -56,6 +57,12 @@ class TournamentSummaryRef {
   final DateTime? startedAt;
   final DateTime? completedAt;
   final int participantCount;
+
+  /// User-id of the row's creator. Null when the server-side projection
+  /// hides the column (older RPCs) or the row pre-dates the migration
+  /// that added it. Used by the list screen to filter the "Meine" tab
+  /// instead of leaning on a status-only heuristic.
+  final UserId? createdBy;
 
   @override
   bool operator ==(Object other) =>
@@ -67,7 +74,8 @@ class TournamentSummaryRef {
           other.status == status &&
           other.startedAt == startedAt &&
           other.completedAt == completedAt &&
-          other.participantCount == participantCount;
+          other.participantCount == participantCount &&
+          other.createdBy == createdBy;
 
   @override
   int get hashCode => Object.hash(
@@ -78,6 +86,7 @@ class TournamentSummaryRef {
         startedAt,
         completedAt,
         participantCount,
+        createdBy,
       );
 }
 

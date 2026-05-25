@@ -248,6 +248,7 @@ TournamentMatchRef tournamentMatchRefFromRow(Map<String, dynamic> row) {
 
 /// Decodes a wire row into a domain [TournamentSummaryRef].
 TournamentSummaryRef tournamentSummaryRefFromRow(Map<String, dynamic> row) {
+  final creator = row['created_by'] as String?;
   return TournamentSummaryRef(
     tournamentId: TournamentId(row['tournament_id'] as String),
     displayName: row['display_name'] as String,
@@ -256,6 +257,7 @@ TournamentSummaryRef tournamentSummaryRefFromRow(Map<String, dynamic> row) {
     startedAt: _asDateOrNull(row['started_at']),
     completedAt: _asDateOrNull(row['completed_at']),
     participantCount: _asInt(row['participant_count']),
+    createdBy: creator == null ? null : UserId(creator),
   );
 }
 
