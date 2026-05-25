@@ -56,3 +56,21 @@ final class DeviceId extends TypedId {
   @override
   String get _typeTag => 'DeviceId';
 }
+
+final class TournamentParticipantId extends TypedId {
+  const TournamentParticipantId(super.value);
+  @override
+  String get _typeTag => 'TournamentParticipantId';
+}
+
+final class TournamentMatchId extends TypedId {
+  const TournamentMatchId(super.value);
+  @override
+  String get _typeTag => 'TournamentMatchId';
+}
+
+final class UserId extends TypedId {
+  const UserId(super.value);
+  @override
+  String get _typeTag => 'UserId';
+}
