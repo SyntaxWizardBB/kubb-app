@@ -10,9 +10,11 @@ import 'package:kubb_domain/kubb_domain.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class _FakeRemote implements TournamentRemote {
-  _FakeRemote(this._detail);
+  _FakeRemote(this._detail, {TournamentMatchRef? afterPropose})
+      : _afterPropose = afterPropose;
 
-  final TournamentMatchRef _detail;
+  TournamentMatchRef _detail;
+  final TournamentMatchRef? _afterPropose;
   ({TournamentMatchId matchId, int round, List<SetScore> scores})? lastCall;
 
   @override
@@ -25,6 +27,7 @@ class _FakeRemote implements TournamentRemote {
     required List<SetScore> setScores,
   }) async {
     lastCall = (matchId: matchId, round: consensusRound, scores: setScores);
+    if (_afterPropose != null) _detail = _afterPropose;
   }
 
   @override
@@ -55,6 +58,7 @@ TournamentMatchRef _match({
 Future<_FakeRemote> _pump(
   WidgetTester tester, {
   required TournamentMatchRef match,
+  TournamentMatchRef? afterPropose,
 }) async {
   // Tall viewport so the bottom of the match-detail ListView (with
   // the submit button) is built without scrolling.
@@ -62,7 +66,7 @@ Future<_FakeRemote> _pump(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  final fake = _FakeRemote(match);
+  final fake = _FakeRemote(match, afterPropose: afterPropose);
   final router = GoRouter(
     initialLocation: '/tournament/t-1/match/m-1',
     routes: [
@@ -72,6 +76,10 @@ Future<_FakeRemote> _pump(
           tournamentId: s.pathParameters['id']!,
           matchId: s.pathParameters['matchId']!,
         ),
+      ),
+      GoRoute(
+        path: '/tournament/:id/match/:matchId/conflict',
+        builder: (_, _) => const Scaffold(body: Text('conflict-screen')),
       ),
       GoRoute(
         path: '/tournament/:id/matches',
@@ -141,6 +149,26 @@ void main() {
     expect(fake.lastCall!.scores.length, 1);
     expect(fake.lastCall!.scores.first.basekubbsKnockedByA, 5);
     expect(fake.lastCall!.scores.first.winner, SetWinner.teamA);
+  });
+
+  testWidgets('pushes the conflict screen when consensus round bumps',
+      (tester) async {
+    await _pump(
+      tester,
+      match: _match(),
+      afterPropose: _match(consensusRound: 2),
+    );
+    final plus = find.byIcon(LucideIcons.plus).first;
+    for (var i = 0; i < 5; i++) {
+      await tester.tap(plus);
+      await tester.pump();
+    }
+    await tester.tap(find.text('Team A'));
+    await tester.pump();
+    await tester.tap(find.text('Einreichen'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('conflict-screen'), findsOneWidget);
   });
 
   testWidgets('finalized match shows read-only notice and hides submit',

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -131,15 +133,20 @@ class _TournamentMatchDetailScreenState
         return;
       }
       if (next.consensusRound > prevConsensus) {
-        messenger.showSnackBar(SnackBar(
-          content: Text(l.tournamentMatchDisagreementToast(
-              next.consensusRound, ScoreConsensusBanner.maxAttempts)),
-          backgroundColor: KubbTokens.wood400,
-        ));
         setState(() {
           _prefilledForRound = next.consensusRound;
           _drafts = const <_SetDraft>[_SetDraft()];
         });
+        if (mounted) {
+          unawaited(context.push<void>(TournamentRoutes.conflict(
+              widget.tournamentId, match.matchId.value)));
+        } else {
+          messenger.showSnackBar(SnackBar(
+            content: Text(l.tournamentMatchDisagreementToast(
+                next.consensusRound, ScoreConsensusBanner.maxAttempts)),
+            backgroundColor: KubbTokens.wood400,
+          ));
+        }
       }
     } on Object catch (e) {
       if (!mounted) return;
