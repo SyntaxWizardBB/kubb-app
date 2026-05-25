@@ -2875,6 +2875,338 @@ class CachedAuthSessionCompanion
   }
 }
 
+class $TournamentScoreDraftsTable extends TournamentScoreDrafts
+    with TableInfo<$TournamentScoreDraftsTable, TournamentScoreDraftRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TournamentScoreDraftsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _matchIdMeta = const VerificationMeta(
+    'matchId',
+  );
+  @override
+  late final GeneratedColumn<String> matchId = GeneratedColumn<String>(
+    'match_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _consensusRoundMeta = const VerificationMeta(
+    'consensusRound',
+  );
+  @override
+  late final GeneratedColumn<int> consensusRound = GeneratedColumn<int>(
+    'consensus_round',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    matchId,
+    consensusRound,
+    payload,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tournament_score_drafts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TournamentScoreDraftRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('match_id')) {
+      context.handle(
+        _matchIdMeta,
+        matchId.isAcceptableOrUnknown(data['match_id']!, _matchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_matchIdMeta);
+    }
+    if (data.containsKey('consensus_round')) {
+      context.handle(
+        _consensusRoundMeta,
+        consensusRound.isAcceptableOrUnknown(
+          data['consensus_round']!,
+          _consensusRoundMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_consensusRoundMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {matchId, consensusRound};
+  @override
+  TournamentScoreDraftRow map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TournamentScoreDraftRow(
+      matchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}match_id'],
+      )!,
+      consensusRound: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}consensus_round'],
+      )!,
+      payload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TournamentScoreDraftsTable createAlias(String alias) {
+    return $TournamentScoreDraftsTable(attachedDatabase, alias);
+  }
+}
+
+class TournamentScoreDraftRow extends DataClass
+    implements Insertable<TournamentScoreDraftRow> {
+  final String matchId;
+  final int consensusRound;
+  final String payload;
+  final DateTime updatedAt;
+  const TournamentScoreDraftRow({
+    required this.matchId,
+    required this.consensusRound,
+    required this.payload,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['match_id'] = Variable<String>(matchId);
+    map['consensus_round'] = Variable<int>(consensusRound);
+    map['payload'] = Variable<String>(payload);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  TournamentScoreDraftsCompanion toCompanion(bool nullToAbsent) {
+    return TournamentScoreDraftsCompanion(
+      matchId: Value(matchId),
+      consensusRound: Value(consensusRound),
+      payload: Value(payload),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory TournamentScoreDraftRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TournamentScoreDraftRow(
+      matchId: serializer.fromJson<String>(json['matchId']),
+      consensusRound: serializer.fromJson<int>(json['consensusRound']),
+      payload: serializer.fromJson<String>(json['payload']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'matchId': serializer.toJson<String>(matchId),
+      'consensusRound': serializer.toJson<int>(consensusRound),
+      'payload': serializer.toJson<String>(payload),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  TournamentScoreDraftRow copyWith({
+    String? matchId,
+    int? consensusRound,
+    String? payload,
+    DateTime? updatedAt,
+  }) => TournamentScoreDraftRow(
+    matchId: matchId ?? this.matchId,
+    consensusRound: consensusRound ?? this.consensusRound,
+    payload: payload ?? this.payload,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  TournamentScoreDraftRow copyWithCompanion(
+    TournamentScoreDraftsCompanion data,
+  ) {
+    return TournamentScoreDraftRow(
+      matchId: data.matchId.present ? data.matchId.value : this.matchId,
+      consensusRound: data.consensusRound.present
+          ? data.consensusRound.value
+          : this.consensusRound,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TournamentScoreDraftRow(')
+          ..write('matchId: $matchId, ')
+          ..write('consensusRound: $consensusRound, ')
+          ..write('payload: $payload, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(matchId, consensusRound, payload, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TournamentScoreDraftRow &&
+          other.matchId == this.matchId &&
+          other.consensusRound == this.consensusRound &&
+          other.payload == this.payload &&
+          other.updatedAt == this.updatedAt);
+}
+
+class TournamentScoreDraftsCompanion
+    extends UpdateCompanion<TournamentScoreDraftRow> {
+  final Value<String> matchId;
+  final Value<int> consensusRound;
+  final Value<String> payload;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const TournamentScoreDraftsCompanion({
+    this.matchId = const Value.absent(),
+    this.consensusRound = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TournamentScoreDraftsCompanion.insert({
+    required String matchId,
+    required int consensusRound,
+    required String payload,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : matchId = Value(matchId),
+       consensusRound = Value(consensusRound),
+       payload = Value(payload),
+       updatedAt = Value(updatedAt);
+  static Insertable<TournamentScoreDraftRow> custom({
+    Expression<String>? matchId,
+    Expression<int>? consensusRound,
+    Expression<String>? payload,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (matchId != null) 'match_id': matchId,
+      if (consensusRound != null) 'consensus_round': consensusRound,
+      if (payload != null) 'payload': payload,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TournamentScoreDraftsCompanion copyWith({
+    Value<String>? matchId,
+    Value<int>? consensusRound,
+    Value<String>? payload,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return TournamentScoreDraftsCompanion(
+      matchId: matchId ?? this.matchId,
+      consensusRound: consensusRound ?? this.consensusRound,
+      payload: payload ?? this.payload,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (matchId.present) {
+      map['match_id'] = Variable<String>(matchId.value);
+    }
+    if (consensusRound.present) {
+      map['consensus_round'] = Variable<int>(consensusRound.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TournamentScoreDraftsCompanion(')
+          ..write('matchId: $matchId, ')
+          ..write('consensusRound: $consensusRound, ')
+          ..write('payload: $payload, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2888,6 +3220,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $FinisseurStickEventsTable(this);
   late final $CachedAuthSessionTable cachedAuthSession =
       $CachedAuthSessionTable(this);
+  late final $TournamentScoreDraftsTable tournamentScoreDrafts =
+      $TournamentScoreDraftsTable(this);
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final SessionDao sessionDao = SessionDao(this as AppDatabase);
   late final SessionEventDao sessionEventDao = SessionEventDao(
@@ -2901,6 +3235,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final CachedAuthSessionDao cachedAuthSessionDao = CachedAuthSessionDao(
     this as AppDatabase,
   );
+  late final TournamentScoreDraftDao tournamentScoreDraftDao =
+      TournamentScoreDraftDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2912,6 +3248,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     appSettingsTable,
     finisseurStickEvents,
     cachedAuthSession,
+    tournamentScoreDrafts,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -5106,6 +5443,208 @@ typedef $$CachedAuthSessionTableProcessedTableManager =
       CachedAuthSessionData,
       PrefetchHooks Function()
     >;
+typedef $$TournamentScoreDraftsTableCreateCompanionBuilder =
+    TournamentScoreDraftsCompanion Function({
+      required String matchId,
+      required int consensusRound,
+      required String payload,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$TournamentScoreDraftsTableUpdateCompanionBuilder =
+    TournamentScoreDraftsCompanion Function({
+      Value<String> matchId,
+      Value<int> consensusRound,
+      Value<String> payload,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$TournamentScoreDraftsTableFilterComposer
+    extends Composer<_$AppDatabase, $TournamentScoreDraftsTable> {
+  $$TournamentScoreDraftsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get matchId => $composableBuilder(
+    column: $table.matchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get consensusRound => $composableBuilder(
+    column: $table.consensusRound,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TournamentScoreDraftsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TournamentScoreDraftsTable> {
+  $$TournamentScoreDraftsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get matchId => $composableBuilder(
+    column: $table.matchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get consensusRound => $composableBuilder(
+    column: $table.consensusRound,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TournamentScoreDraftsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TournamentScoreDraftsTable> {
+  $$TournamentScoreDraftsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get matchId =>
+      $composableBuilder(column: $table.matchId, builder: (column) => column);
+
+  GeneratedColumn<int> get consensusRound => $composableBuilder(
+    column: $table.consensusRound,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$TournamentScoreDraftsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TournamentScoreDraftsTable,
+          TournamentScoreDraftRow,
+          $$TournamentScoreDraftsTableFilterComposer,
+          $$TournamentScoreDraftsTableOrderingComposer,
+          $$TournamentScoreDraftsTableAnnotationComposer,
+          $$TournamentScoreDraftsTableCreateCompanionBuilder,
+          $$TournamentScoreDraftsTableUpdateCompanionBuilder,
+          (
+            TournamentScoreDraftRow,
+            BaseReferences<
+              _$AppDatabase,
+              $TournamentScoreDraftsTable,
+              TournamentScoreDraftRow
+            >,
+          ),
+          TournamentScoreDraftRow,
+          PrefetchHooks Function()
+        > {
+  $$TournamentScoreDraftsTableTableManager(
+    _$AppDatabase db,
+    $TournamentScoreDraftsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TournamentScoreDraftsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$TournamentScoreDraftsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$TournamentScoreDraftsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> matchId = const Value.absent(),
+                Value<int> consensusRound = const Value.absent(),
+                Value<String> payload = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TournamentScoreDraftsCompanion(
+                matchId: matchId,
+                consensusRound: consensusRound,
+                payload: payload,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String matchId,
+                required int consensusRound,
+                required String payload,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => TournamentScoreDraftsCompanion.insert(
+                matchId: matchId,
+                consensusRound: consensusRound,
+                payload: payload,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TournamentScoreDraftsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TournamentScoreDraftsTable,
+      TournamentScoreDraftRow,
+      $$TournamentScoreDraftsTableFilterComposer,
+      $$TournamentScoreDraftsTableOrderingComposer,
+      $$TournamentScoreDraftsTableAnnotationComposer,
+      $$TournamentScoreDraftsTableCreateCompanionBuilder,
+      $$TournamentScoreDraftsTableUpdateCompanionBuilder,
+      (
+        TournamentScoreDraftRow,
+        BaseReferences<
+          _$AppDatabase,
+          $TournamentScoreDraftsTable,
+          TournamentScoreDraftRow
+        >,
+      ),
+      TournamentScoreDraftRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5122,4 +5661,6 @@ class $AppDatabaseManager {
       $$FinisseurStickEventsTableTableManager(_db, _db.finisseurStickEvents);
   $$CachedAuthSessionTableTableManager get cachedAuthSession =>
       $$CachedAuthSessionTableTableManager(_db, _db.cachedAuthSession);
+  $$TournamentScoreDraftsTableTableManager get tournamentScoreDrafts =>
+      $$TournamentScoreDraftsTableTableManager(_db, _db.tournamentScoreDrafts);
 }

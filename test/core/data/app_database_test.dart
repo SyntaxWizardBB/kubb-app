@@ -17,8 +17,8 @@ void main() {
     await db.close();
   });
 
-  test('schemaVersion is 4', () {
-    expect(db.schemaVersion, 4);
+  test('schemaVersion is 5', () {
+    expect(db.schemaVersion, 5);
   });
 
   test('players table has avatarColor column after migration', () async {
@@ -45,6 +45,7 @@ void main() {
       'app_settings_table',
       'finisseur_stick_events',
       'cached_auth_session',
+      'tournament_score_drafts',
     }));
   });
 
