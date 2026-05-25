@@ -1367,4 +1367,177 @@ class AppLocalizationsDe extends AppLocalizations {
   String tournamentWizardSubmitError(String error) {
     return 'Turnier konnte nicht erstellt werden: $error';
   }
+
+  @override
+  String get tournamentListEyebrow => 'Turniere';
+
+  @override
+  String get tournamentListTitle => 'Übersicht';
+
+  @override
+  String get tournamentListTabMine => 'Meine Turniere';
+
+  @override
+  String get tournamentListTabPublic => 'Aktuelle Turniere';
+
+  @override
+  String get tournamentListNewButton => 'Neues Turnier';
+
+  @override
+  String get tournamentListEmptyMine => 'Du hast noch keine Turniere erstellt.';
+
+  @override
+  String get tournamentListEmptyPublic => 'Keine offenen Turniere zurzeit.';
+
+  @override
+  String tournamentListParticipantCount(int count) {
+    return '$count Teilnehmer';
+  }
+
+  @override
+  String get tournamentStatusDraft => 'Entwurf';
+
+  @override
+  String get tournamentStatusPublished => 'Veröffentlicht';
+
+  @override
+  String get tournamentStatusRegistrationOpen => 'Anmeldung offen';
+
+  @override
+  String get tournamentStatusRegistrationClosed => 'Anmeldung geschlossen';
+
+  @override
+  String get tournamentStatusLive => 'Läuft';
+
+  @override
+  String get tournamentStatusFinalized => 'Abgeschlossen';
+
+  @override
+  String get tournamentStatusAborted => 'Abgebrochen';
+
+  @override
+  String get tournamentFormatRoundRobin => 'Jeder gegen Jeden';
+
+  @override
+  String get tournamentFormatSingleElimination => 'K.-o.';
+
+  @override
+  String get tournamentFormatSchoch => 'Schoch';
+
+  @override
+  String get tournamentFormatSwiss => 'Schweizer System';
+
+  @override
+  String get tournamentFormatRoundRobinKo => 'Gruppen + K.-o.';
+
+  @override
+  String get tournamentFormatSchochKo => 'Schoch + K.-o.';
+
+  @override
+  String get tournamentFormatSwissKo => 'Schweiz + K.-o.';
+
+  @override
+  String get tournamentDetailEyebrow => 'Turnier';
+
+  @override
+  String get tournamentDetailNotFound => 'Turnier nicht gefunden.';
+
+  @override
+  String tournamentDetailParticipantSummary(int count, int max) {
+    return '$count von $max Teilnehmern';
+  }
+
+  @override
+  String get tournamentDetailStammdaten => 'Stammdaten';
+
+  @override
+  String get tournamentDetailFormat => 'Format';
+
+  @override
+  String get tournamentDetailTeamSize => 'Team-Grösse';
+
+  @override
+  String get tournamentDetailSetsToWin => 'Sätze zum Sieg';
+
+  @override
+  String get tournamentDetailMaxSets => 'Max Sätze';
+
+  @override
+  String get tournamentDetailRoundTime => 'Runden-Zeit';
+
+  @override
+  String get tournamentDetailParticipants => 'Teilnehmer';
+
+  @override
+  String get tournamentDetailParticipantsEmpty => 'Noch keine Anmeldungen.';
+
+  @override
+  String get tournamentDetailPending => 'ausstehend';
+
+  @override
+  String get tournamentDetailApprove => 'Bestätigen';
+
+  @override
+  String get tournamentDetailReject => 'Ablehnen';
+
+  @override
+  String get tournamentDetailActionPublish => 'Veröffentlichen';
+
+  @override
+  String get tournamentDetailActionOpenReg => 'Anmeldung öffnen';
+
+  @override
+  String get tournamentDetailActionCloseReg => 'Anmeldung schliessen';
+
+  @override
+  String get tournamentDetailActionRegister => 'Anmelden';
+
+  @override
+  String get tournamentDetailActionWithdraw => 'Abmelden';
+
+  @override
+  String get tournamentDetailActionStart => 'Turnier starten';
+
+  @override
+  String get tournamentDetailActionFinalize => 'Turnier abschliessen';
+
+  @override
+  String get tournamentDetailActionAbort => 'Turnier abbrechen';
+
+  @override
+  String get tournamentDetailActionGotoMatches => 'Zu den Matches';
+
+  @override
+  String get tournamentDetailActionStandings => 'Endrangliste';
+
+  @override
+  String get tournamentDetailAborted => 'Turnier abgebrochen.';
+
+  @override
+  String get tournamentDetailAuditHeader => 'Verlauf';
+
+  @override
+  String get tournamentDetailAuditEmpty => 'Keine Ereignisse.';
+
+  @override
+  String get tournamentRegistrationEyebrow => 'Turnier';
+
+  @override
+  String get tournamentRegistrationTitle => 'Anmelden';
+
+  @override
+  String get tournamentRegistrationPendingHint =>
+      'Du wirst zunächst auf \'ausstehend\' gesetzt, bis der Veranstalter bestätigt.';
+
+  @override
+  String get tournamentRegistrationConfirm => 'Anmeldung bestätigen';
+
+  @override
+  String get tournamentRegistrationSubmitting => 'Sende …';
+
+  @override
+  String get tournamentRegistrationCancel => 'Abbrechen';
+
+  @override
+  String get tournamentRegistrationSuccess => 'Anmeldung gesendet.';
 }

@@ -2589,6 +2589,342 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Turnier konnte nicht erstellt werden: {error}'**
   String tournamentWizardSubmitError(String error);
+
+  /// Eyebrow above tournament-list title
+  ///
+  /// In de, this message translates to:
+  /// **'Turniere'**
+  String get tournamentListEyebrow;
+
+  /// Tournament-list screen title
+  ///
+  /// In de, this message translates to:
+  /// **'Übersicht'**
+  String get tournamentListTitle;
+
+  /// Tab label: tournaments created by caller
+  ///
+  /// In de, this message translates to:
+  /// **'Meine Turniere'**
+  String get tournamentListTabMine;
+
+  /// Tab label: public discoverable tournaments
+  ///
+  /// In de, this message translates to:
+  /// **'Aktuelle Turniere'**
+  String get tournamentListTabPublic;
+
+  /// FAB label opening the setup wizard
+  ///
+  /// In de, this message translates to:
+  /// **'Neues Turnier'**
+  String get tournamentListNewButton;
+
+  /// Empty state on Meine Turniere tab
+  ///
+  /// In de, this message translates to:
+  /// **'Du hast noch keine Turniere erstellt.'**
+  String get tournamentListEmptyMine;
+
+  /// Empty state on Aktuelle Turniere tab
+  ///
+  /// In de, this message translates to:
+  /// **'Keine offenen Turniere zurzeit.'**
+  String get tournamentListEmptyPublic;
+
+  /// Participant count chip on tournament cards
+  ///
+  /// In de, this message translates to:
+  /// **'{count} Teilnehmer'**
+  String tournamentListParticipantCount(int count);
+
+  /// Pill: tournament status draft
+  ///
+  /// In de, this message translates to:
+  /// **'Entwurf'**
+  String get tournamentStatusDraft;
+
+  /// Pill: tournament status published
+  ///
+  /// In de, this message translates to:
+  /// **'Veröffentlicht'**
+  String get tournamentStatusPublished;
+
+  /// Pill: registration open
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldung offen'**
+  String get tournamentStatusRegistrationOpen;
+
+  /// Pill: registration closed
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldung geschlossen'**
+  String get tournamentStatusRegistrationClosed;
+
+  /// Pill: tournament live
+  ///
+  /// In de, this message translates to:
+  /// **'Läuft'**
+  String get tournamentStatusLive;
+
+  /// Pill: tournament finalized
+  ///
+  /// In de, this message translates to:
+  /// **'Abgeschlossen'**
+  String get tournamentStatusFinalized;
+
+  /// Pill: tournament aborted
+  ///
+  /// In de, this message translates to:
+  /// **'Abgebrochen'**
+  String get tournamentStatusAborted;
+
+  /// Format chip: round-robin
+  ///
+  /// In de, this message translates to:
+  /// **'Jeder gegen Jeden'**
+  String get tournamentFormatRoundRobin;
+
+  /// Format chip: single-elimination
+  ///
+  /// In de, this message translates to:
+  /// **'K.-o.'**
+  String get tournamentFormatSingleElimination;
+
+  /// Format chip: Schoch system
+  ///
+  /// In de, this message translates to:
+  /// **'Schoch'**
+  String get tournamentFormatSchoch;
+
+  /// Format chip: Swiss system
+  ///
+  /// In de, this message translates to:
+  /// **'Schweizer System'**
+  String get tournamentFormatSwiss;
+
+  /// Format chip: round-robin then knockout
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppen + K.-o.'**
+  String get tournamentFormatRoundRobinKo;
+
+  /// Format chip: Schoch then knockout
+  ///
+  /// In de, this message translates to:
+  /// **'Schoch + K.-o.'**
+  String get tournamentFormatSchochKo;
+
+  /// Format chip: Swiss then knockout
+  ///
+  /// In de, this message translates to:
+  /// **'Schweiz + K.-o.'**
+  String get tournamentFormatSwissKo;
+
+  /// Detail-screen eyebrow
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier'**
+  String get tournamentDetailEyebrow;
+
+  /// Shown when detail returns null
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier nicht gefunden.'**
+  String get tournamentDetailNotFound;
+
+  /// Header subline with participant count vs capacity
+  ///
+  /// In de, this message translates to:
+  /// **'{count} von {max} Teilnehmern'**
+  String tournamentDetailParticipantSummary(int count, int max);
+
+  /// Section heading: master data
+  ///
+  /// In de, this message translates to:
+  /// **'Stammdaten'**
+  String get tournamentDetailStammdaten;
+
+  /// Row label: format
+  ///
+  /// In de, this message translates to:
+  /// **'Format'**
+  String get tournamentDetailFormat;
+
+  /// Row label: team size
+  ///
+  /// In de, this message translates to:
+  /// **'Team-Grösse'**
+  String get tournamentDetailTeamSize;
+
+  /// Row label: sets-to-win
+  ///
+  /// In de, this message translates to:
+  /// **'Sätze zum Sieg'**
+  String get tournamentDetailSetsToWin;
+
+  /// Row label: maximum sets
+  ///
+  /// In de, this message translates to:
+  /// **'Max Sätze'**
+  String get tournamentDetailMaxSets;
+
+  /// Row label: round time
+  ///
+  /// In de, this message translates to:
+  /// **'Runden-Zeit'**
+  String get tournamentDetailRoundTime;
+
+  /// Section heading: participants
+  ///
+  /// In de, this message translates to:
+  /// **'Teilnehmer'**
+  String get tournamentDetailParticipants;
+
+  /// Empty participants list
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Anmeldungen.'**
+  String get tournamentDetailParticipantsEmpty;
+
+  /// Inline marker for pending registration
+  ///
+  /// In de, this message translates to:
+  /// **'ausstehend'**
+  String get tournamentDetailPending;
+
+  /// Organizer button: approve registration
+  ///
+  /// In de, this message translates to:
+  /// **'Bestätigen'**
+  String get tournamentDetailApprove;
+
+  /// Organizer button: reject registration
+  ///
+  /// In de, this message translates to:
+  /// **'Ablehnen'**
+  String get tournamentDetailReject;
+
+  /// Action: publish draft tournament
+  ///
+  /// In de, this message translates to:
+  /// **'Veröffentlichen'**
+  String get tournamentDetailActionPublish;
+
+  /// Action: open registration
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldung öffnen'**
+  String get tournamentDetailActionOpenReg;
+
+  /// Action: close registration
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldung schliessen'**
+  String get tournamentDetailActionCloseReg;
+
+  /// Action: register self
+  ///
+  /// In de, this message translates to:
+  /// **'Anmelden'**
+  String get tournamentDetailActionRegister;
+
+  /// Action: withdraw own registration
+  ///
+  /// In de, this message translates to:
+  /// **'Abmelden'**
+  String get tournamentDetailActionWithdraw;
+
+  /// Action: start tournament
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier starten'**
+  String get tournamentDetailActionStart;
+
+  /// Action: finalize tournament
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier abschliessen'**
+  String get tournamentDetailActionFinalize;
+
+  /// Action: abort tournament
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier abbrechen'**
+  String get tournamentDetailActionAbort;
+
+  /// Action: navigate to matches screen
+  ///
+  /// In de, this message translates to:
+  /// **'Zu den Matches'**
+  String get tournamentDetailActionGotoMatches;
+
+  /// Action: navigate to final standings
+  ///
+  /// In de, this message translates to:
+  /// **'Endrangliste'**
+  String get tournamentDetailActionStandings;
+
+  /// Headline when status is aborted
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier abgebrochen.'**
+  String get tournamentDetailAborted;
+
+  /// Section heading: audit tail
+  ///
+  /// In de, this message translates to:
+  /// **'Verlauf'**
+  String get tournamentDetailAuditHeader;
+
+  /// Empty audit-tail message
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Ereignisse.'**
+  String get tournamentDetailAuditEmpty;
+
+  /// Registration screen eyebrow
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier'**
+  String get tournamentRegistrationEyebrow;
+
+  /// Registration screen title
+  ///
+  /// In de, this message translates to:
+  /// **'Anmelden'**
+  String get tournamentRegistrationTitle;
+
+  /// Hint banner explaining pending state
+  ///
+  /// In de, this message translates to:
+  /// **'Du wirst zunächst auf \'ausstehend\' gesetzt, bis der Veranstalter bestätigt.'**
+  String get tournamentRegistrationPendingHint;
+
+  /// Submit button label
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldung bestätigen'**
+  String get tournamentRegistrationConfirm;
+
+  /// Submit button label while submitting
+  ///
+  /// In de, this message translates to:
+  /// **'Sende …'**
+  String get tournamentRegistrationSubmitting;
+
+  /// Cancel button label
+  ///
+  /// In de, this message translates to:
+  /// **'Abbrechen'**
+  String get tournamentRegistrationCancel;
+
+  /// Success snackbar after registration
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldung gesendet.'**
+  String get tournamentRegistrationSuccess;
 }
 
 class _AppLocalizationsDelegate
