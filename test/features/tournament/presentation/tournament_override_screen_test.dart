@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
-import 'package:kubb_app/features/tournament/data/tournament_models.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_override_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';

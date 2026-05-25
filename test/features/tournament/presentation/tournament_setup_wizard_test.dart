@@ -48,6 +48,9 @@ class _FakeTournamentRemote implements TournamentRemote {
   Future<TournamentSummaryRef?> getTournament(TournamentId id) async => null;
 
   @override
+  Future<TournamentDetail?> getTournamentDetail(TournamentId id) async => null;
+
+  @override
   Future<void> publish(TournamentId id) async {}
 
   @override

@@ -6,7 +6,6 @@ import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
-import 'package:kubb_app/features/tournament/data/tournament_models.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_card.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_status_pill.dart';

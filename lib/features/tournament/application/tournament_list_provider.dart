@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kubb_app/features/tournament/data/tournament_models.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -24,11 +23,7 @@ final tournamentListProvider =
 final tournamentDetailProvider =
     FutureProvider.family<TournamentDetail?, TournamentId>(
   (ref, tournamentId) async {
-    final remote = ref.read(tournamentRemoteProvider);
-    if (remote is TournamentRepository) {
-      return remote.getTournamentDetail(tournamentId);
-    }
-    return null;
+    return ref.read(tournamentRemoteProvider).getTournamentDetail(tournamentId);
   },
 );
 

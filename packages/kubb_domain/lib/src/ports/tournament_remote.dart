@@ -199,6 +199,128 @@ class TournamentSetScoreProposal {
       );
 }
 
+/// How a tournament's per-set score is interpreted on the server.
+enum TournamentScoring {
+  ekc,
+  classic,
+}
+
+/// Lifecycle of a single registration row. See FR-REG-6 / FR-REG-7.
+enum TournamentParticipantStatus {
+  pending,
+  approved,
+  waitlist,
+  withdrawn,
+  rejected,
+}
+
+/// One row from the `participants` array of the full tournament payload.
+/// Pure data — adapters fill it in from whatever wire shape they speak.
+@immutable
+class TournamentParticipant {
+  const TournamentParticipant({
+    required this.participantId,
+    required this.userId,
+    required this.nickname,
+    required this.registrationStatus,
+    required this.seed,
+    required this.registeredAt,
+    required this.respondedAt,
+  });
+
+  final String participantId;
+  final String? userId;
+  final String? nickname;
+  final TournamentParticipantStatus registrationStatus;
+  final int? seed;
+  final DateTime registeredAt;
+  final DateTime? respondedAt;
+
+  String get displayLabel => nickname ?? '?';
+}
+
+/// Header block within the full tournament payload — the row from
+/// `tournaments` plus a few derived flags. The wizard reads the
+/// match-format settings as a wire map so wave-2 additions don't need
+/// a Dart migration.
+@immutable
+class TournamentDetailHeader {
+  const TournamentDetailHeader({
+    required this.tournamentId,
+    required this.displayName,
+    required this.createdByUserId,
+    required this.teamSize,
+    required this.minParticipants,
+    required this.maxParticipants,
+    required this.format,
+    required this.scoring,
+    required this.matchFormatConfig,
+    required this.tiebreakerOrder,
+    required this.byePoints,
+    required this.forfeitPoints,
+    required this.status,
+    required this.publishedAt,
+    required this.startedAt,
+    required this.completedAt,
+  });
+
+  final String tournamentId;
+  final String displayName;
+  final String? createdByUserId;
+  final int teamSize;
+  final int minParticipants;
+  final int maxParticipants;
+  final TournamentFormat format;
+  final TournamentScoring scoring;
+  final Map<String, Object?> matchFormatConfig;
+  final List<String> tiebreakerOrder;
+  final int? byePoints;
+  final int? forfeitPoints;
+  final TournamentStatus status;
+  final DateTime? publishedAt;
+  final DateTime? startedAt;
+  final DateTime? completedAt;
+}
+
+/// One audit-log entry exposed via the full tournament payload.
+@immutable
+class TournamentAuditEvent {
+  const TournamentAuditEvent({
+    required this.kind,
+    required this.actorUserId,
+    required this.payload,
+    required this.at,
+  });
+
+  final String kind;
+  final String? actorUserId;
+  final Map<String, Object?> payload;
+  final DateTime at;
+}
+
+/// Full tournament payload — header, participants, matches, audit tail.
+/// Returned by [TournamentRemote.getTournamentDetail].
+@immutable
+class TournamentDetail {
+  const TournamentDetail({
+    required this.tournament,
+    required this.participants,
+    required this.matches,
+    required this.auditTail,
+  });
+
+  final TournamentDetailHeader tournament;
+  final List<TournamentParticipant> participants;
+  final List<TournamentMatchRef> matches;
+  final List<TournamentAuditEvent> auditTail;
+
+  bool isCallerCreator(String? callerUserId) {
+    if (callerUserId == null) return false;
+    final creator = tournament.createdByUserId;
+    return creator != null && creator == callerUserId;
+  }
+}
+
 /// Port for cloud-side tournament data.
 ///
 /// Per ADR-0014, tournament matches use per-match-result semantics with
@@ -213,6 +335,10 @@ abstract interface class TournamentRemote {
   });
 
   Future<TournamentSummaryRef?> getTournament(TournamentId id);
+
+  /// Full detail payload — header, participants, matches, audit tail.
+  /// Returns `null` when the caller has no read access on the row.
+  Future<TournamentDetail?> getTournamentDetail(TournamentId id);
 
   // Lifecycle (organizer)
   Future<TournamentId> createTournament({

@@ -62,9 +62,9 @@ Map<String, dynamic> _matchRow({String status = 'scheduled'}) =>
     };
 
 void main() {
-  group('TournamentDetailHeader.fromRow', () {
+  group('tournamentDetailHeaderFromRow', () {
     test('parses required fields, defaults dates to null in draft', () {
-      final h = TournamentDetailHeader.fromRow(_headerRow());
+      final h = tournamentDetailHeaderFromRow(_headerRow());
       expect(h.tournamentId, 't-1');
       expect(h.displayName, 'Spring Cup');
       expect(h.createdByUserId, 'user-a');
@@ -82,7 +82,7 @@ void main() {
     });
 
     test('parses timestamps when the tournament is live', () {
-      final h = TournamentDetailHeader.fromRow(
+      final h = tournamentDetailHeaderFromRow(
         _headerRow(
           status: 'live',
           publishedAt: '2026-05-24T08:00:00.000Z',
@@ -96,7 +96,7 @@ void main() {
     });
 
     test('falls back to empty config/tiebreaker on null wire values', () {
-      final h = TournamentDetailHeader.fromRow(
+      final h = tournamentDetailHeaderFromRow(
         _headerRow(cfg: null, tiebreaker: null),
       );
       expect(h.matchFormatConfig, isEmpty);
@@ -121,9 +121,9 @@ void main() {
     });
   });
 
-  group('TournamentParticipant.fromRow', () {
+  group('tournamentParticipantFromRow', () {
     test('parses pending participant with no responded_at and no seed', () {
-      final p = TournamentParticipant.fromRow(_participantRow());
+      final p = tournamentParticipantFromRow(_participantRow());
       expect(p.participantId, 'p-1');
       expect(p.userId, 'u-1');
       expect(p.registrationStatus, TournamentParticipantStatus.pending);
@@ -133,7 +133,7 @@ void main() {
     });
 
     test('parses approved participant with seed and responded_at', () {
-      final p = TournamentParticipant.fromRow(_participantRow(
+      final p = tournamentParticipantFromRow(_participantRow(
         status: 'approved',
         seed: 3,
         respondedAt: '2026-05-24T11:00:00.000Z',
@@ -144,7 +144,7 @@ void main() {
     });
   });
 
-  group('TournamentDetail.fromRow', () {
+  group('tournamentDetailFromRow', () {
     Map<String, dynamic> sample({String? createdBy = 'user-a'}) =>
         <String, dynamic>{
           'tournament': _headerRow(createdBy: createdBy),
@@ -161,7 +161,7 @@ void main() {
         };
 
     test('parses header + lists, mapping match status correctly', () {
-      final d = TournamentDetail.fromRow(sample());
+      final d = tournamentDetailFromRow(sample());
       expect(d.participants, hasLength(1));
       expect(d.matches, hasLength(1));
       expect(d.matches.first.status, TournamentMatchStatus.scheduled);
@@ -170,12 +170,12 @@ void main() {
     });
 
     test('isCallerCreator handles null inputs defensively', () {
-      final known = TournamentDetail.fromRow(sample());
+      final known = tournamentDetailFromRow(sample());
       expect(known.isCallerCreator('user-a'), isTrue);
       expect(known.isCallerCreator('other'), isFalse);
       expect(known.isCallerCreator(null), isFalse);
 
-      final orphan = TournamentDetail.fromRow(sample(createdBy: null));
+      final orphan = tournamentDetailFromRow(sample(createdBy: null));
       expect(orphan.isCallerCreator('user-a'), isFalse);
     });
   });

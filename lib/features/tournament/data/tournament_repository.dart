@@ -45,14 +45,14 @@ class TournamentRepository implements TournamentRemote {
     );
   }
 
-  /// Variant of [getTournament] that decodes the full detail payload.
+  @override
   Future<TournamentDetail?> getTournamentDetail(TournamentId id) async {
     final response = await _client.rpc<Map<String, dynamic>?>(
       'tournament_get',
       params: <String, dynamic>{'p_tournament_id': id.value},
     );
     if (response == null) return null;
-    return TournamentDetail.fromRow(response);
+    return tournamentDetailFromRow(response);
   }
 
   @override
