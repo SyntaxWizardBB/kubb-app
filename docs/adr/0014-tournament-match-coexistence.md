@@ -1,6 +1,6 @@
 # ADR-0014: Tournament-Match-Pfad neben Solo-Match-Pfad
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-05-25
 - **Depends on**: ADR-0002 (bounded contexts), ADR-0012 (social + Solo-Match), ADR-0013 (Solo-Match server-shaped)
 - **Bezug**: `docs/plans/tournament-foundation/architecture.md` §3.3, `open-decisions.md` OD-06

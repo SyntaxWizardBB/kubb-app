@@ -1,6 +1,6 @@
 # ADR-0015: Cross-Platform-Sequenzierung für den Tournament-MVP
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-05-25
 - **Bezug**: ADR-0005 (per-platform persistence), `docs/plans/tournament-foundation/open-decisions.md` OD-02
 
