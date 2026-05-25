@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
+import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -116,5 +117,21 @@ class TournamentActions {
           reason: reason,
         );
     _ref.invalidate(tournamentListProvider);
+  }
+
+  /// Submits one team's proposal for the scores of all sets of a match
+  /// in the given consensus retry round. Refreshes the affected match
+  /// detail so the screen picks up the new consensus state / status.
+  Future<void> proposeSetScores({
+    required TournamentMatchId matchId,
+    required int consensusRound,
+    required List<SetScore> setScores,
+  }) async {
+    await _ref.read(tournamentRemoteProvider).proposeSetScores(
+          matchId: matchId,
+          consensusRound: consensusRound,
+          setScores: setScores,
+        );
+    _ref.invalidate(tournamentMatchDetailProvider(matchId));
   }
 }

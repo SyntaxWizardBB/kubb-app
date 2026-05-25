@@ -4,31 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
-/// Imperative action surface for match-flow writes. Keeps the
-/// invalidate-after-write boilerplate off the screen widgets and
-/// stays independent of worker A's broader `tournamentActionsProvider`
-/// so this file compiles on its own.
-final tournamentMatchActionsProvider =
-    Provider<TournamentMatchActions>(TournamentMatchActions.new);
-
-class TournamentMatchActions {
-  TournamentMatchActions(this._ref);
-  final Ref _ref;
-
-  Future<void> proposeSetScores({
-    required TournamentMatchId matchId,
-    required int consensusRound,
-    required List<SetScore> setScores,
-  }) async {
-    await _ref.read(tournamentRemoteProvider).proposeSetScores(
-          matchId: matchId,
-          consensusRound: consensusRound,
-          setScores: setScores,
-        );
-    _ref.invalidate(tournamentMatchDetailProvider(matchId));
-  }
-}
-
 /// All matches for one tournament, fetched via the
 /// `tournament_list_matches` RPC. Polled at the screen level via
 /// [tournamentMatchListPollingProvider] so the bracket / round list

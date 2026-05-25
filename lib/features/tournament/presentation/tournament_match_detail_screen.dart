@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
+import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/score_consensus_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_set_input.dart';
@@ -105,7 +106,7 @@ class _TournamentMatchDetailScreenState
     setState(() => _submitting = true);
     final prevConsensus = match.consensusRound;
     try {
-      await ref.read(tournamentMatchActionsProvider).proposeSetScores(
+      await ref.read(tournamentActionsProvider).proposeSetScores(
             matchId: match.matchId,
             consensusRound: prevConsensus,
             setScores: _setScores(),
