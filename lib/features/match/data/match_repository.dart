@@ -58,7 +58,7 @@ class MatchRepository {
   }) async {
     final params = <String, dynamic>{};
     if (statusFilter != null) {
-      params['p_status'] = _statusToWire(statusFilter);
+      params['p_status_filter'] = _statusToWire(statusFilter);
     }
     final rows = await _client.rpc<List<dynamic>>(
       'match_list_for_caller',
