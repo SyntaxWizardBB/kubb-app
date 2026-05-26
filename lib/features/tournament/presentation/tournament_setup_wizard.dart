@@ -9,13 +9,22 @@ import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_league_step.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_pool_config_step.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
 /// Logical step identifiers — keeps the dynamic ordering for KO-formats
 /// (T13: round_robin_then_ko adds [_StepKind.league] and [_StepKind.koConfig])
 /// readable. The visible step index is derived from `_visibleSteps`.
-enum _StepKind { name, participants, format, league, koConfig, summary }
+enum _StepKind {
+  name,
+  participants,
+  format,
+  league,
+  poolConfig,
+  koConfig,
+  summary,
+}
 
 /// Four-step organizer wizard for creating a tournament. Drives the
 /// [tournamentConfigControllerProvider] and hands the final draft to
@@ -32,6 +41,10 @@ class TournamentSetupWizard extends ConsumerStatefulWidget {
 class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
   int _step = 0;
   bool _submitting = false;
+  // T9: toggle state for the pool-phase step. Lives in widget state so the
+  // organizer can flip it off without losing the previously typed values
+  // until they advance the wizard.
+  bool _poolPhaseEnabled = false;
 
   /// Logical step list for the current draft. Hybrid formats unlock
   /// [_StepKind.league] (T12) and [_StepKind.koConfig] (T13); pure
@@ -43,6 +56,7 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
       _StepKind.format,
       if (draft.requiresKoConfig) ...[
         _StepKind.league,
+        if (draft.supportsPoolPhase) _StepKind.poolConfig,
         _StepKind.koConfig,
       ],
       _StepKind.summary,
@@ -66,6 +80,14 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
       case _StepKind.league:
         // Boolean switch — always valid.
         return true;
+      case _StepKind.poolConfig:
+        // Off (toggle stored locally → poolPhaseConfig null) is valid.
+        // On with an invalid input also leaves poolPhaseConfig null
+        // because the inline widget pushes null until every field is fine.
+        // We allow "Weiter" when either:
+        //   * the toggle is off (tracked via _poolPhaseEnabled), or
+        //   * the toggle is on AND the draft has a valid PoolPhaseConfig.
+        return !_poolPhaseEnabled || draft.poolPhaseConfig != null;
       case _StepKind.koConfig:
         final cfg = draft.koConfig;
         return cfg != null &&
@@ -178,6 +200,8 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
         return l10n.tournamentWizardStep3Title;
       case _StepKind.league:
         return l10n.tournamentWizardStep45Title;
+      case _StepKind.poolConfig:
+        return 'Pool-Phase';
       case _StepKind.koConfig:
         return l10n.tournamentWizardStep5Title;
       case _StepKind.summary:
@@ -216,6 +240,25 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
         return WizardLeagueStep(
           value: draft.leagueEligible,
           onChanged: controller.setLeagueEligible,
+        );
+      case _StepKind.poolConfig:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            WizardPoolToggle(
+              value: _poolPhaseEnabled,
+              onChanged: (next) {
+                setState(() => _poolPhaseEnabled = next);
+                if (!next) controller.setPoolPhaseConfig(null);
+              },
+            ),
+            if (_poolPhaseEnabled)
+              WizardPoolConfigStep(
+                key: ValueKey<int>(draft.maxParticipants),
+                draft: draft,
+                onConfigChanged: controller.setPoolPhaseConfig,
+              ),
+          ],
         );
       case _StepKind.koConfig:
         return WizardKoConfigStep(

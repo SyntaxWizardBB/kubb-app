@@ -80,6 +80,17 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     state = state.copyWith(leagueEligible: value);
   }
 
+  /// Replaces the in-progress [PoolPhaseConfig] (T9). Pass `null` to clear
+  /// it — the [TournamentConfigDraft.copyWith] sentinel `clearPoolPhaseConfig`
+  /// makes the field nullable across edits, which is what the pool-toggle
+  /// off-state needs.
+  void setPoolPhaseConfig(PoolPhaseConfig? config) {
+    state = state.copyWith(
+      poolPhaseConfig: config,
+      clearPoolPhaseConfig: config == null,
+    );
+  }
+
   TournamentConfigValidation validate() => state.validate();
 
   void reset() {

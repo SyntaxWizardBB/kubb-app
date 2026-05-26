@@ -30,6 +30,7 @@ class TournamentConfigDraft {
     this.koConfig,
     this.bracketSeedingMode,
     this.leagueEligible = false,
+    this.poolPhaseConfig,
   });
 
   /// Visible name of the tournament. Null while the organizer hasn't
@@ -59,6 +60,11 @@ class TournamentConfigDraft {
   /// pre-tick the bronze-match toggle.
   final bool leagueEligible;
 
+  /// Pool-phase configuration. Null when the organizer leaves the pool
+  /// toggle off (T9). Only meaningful for hybrid formats; the create-RPC
+  /// ignores it for pure round-robin or single-elimination drafts.
+  final PoolPhaseConfig? poolPhaseConfig;
+
   static const int displayNameMinChars = 3;
   static const int displayNameMaxChars = 60;
   static const int participantsHardMin = 2;
@@ -80,6 +86,8 @@ class TournamentConfigDraft {
     KoPhaseConfig? koConfig,
     SeedingMode? bracketSeedingMode,
     bool? leagueEligible,
+    PoolPhaseConfig? poolPhaseConfig,
+    bool clearPoolPhaseConfig = false,
   }) {
     return TournamentConfigDraft(
       displayName: displayName ?? this.displayName,
@@ -95,8 +103,19 @@ class TournamentConfigDraft {
       koConfig: koConfig ?? this.koConfig,
       bracketSeedingMode: bracketSeedingMode ?? this.bracketSeedingMode,
       leagueEligible: leagueEligible ?? this.leagueEligible,
+      poolPhaseConfig: clearPoolPhaseConfig
+          ? null
+          : (poolPhaseConfig ?? this.poolPhaseConfig),
     );
   }
+
+  /// Whether the wizard should surface the pool-phase configuration step.
+  /// Pool grouping is only meaningful for hybrid formats that follow a
+  /// round-robin / Schoch / Swiss stage with a KO bracket.
+  bool get supportsPoolPhase =>
+      format == TournamentFormat.roundRobinThenKo ||
+      format == TournamentFormat.schochThenKo ||
+      format == TournamentFormat.swissThenKo;
 
   /// Whether a KO phase has to be configured for the selected [format].
   bool get requiresKoConfig =>
@@ -179,7 +198,8 @@ class TournamentConfigDraft {
           listEquals(other.tiebreakerOrder, tiebreakerOrder) &&
           other.koConfig == koConfig &&
           other.bracketSeedingMode == bracketSeedingMode &&
-          other.leagueEligible == leagueEligible;
+          other.leagueEligible == leagueEligible &&
+          other.poolPhaseConfig == poolPhaseConfig;
 
   @override
   int get hashCode => Object.hash(
@@ -196,5 +216,6 @@ class TournamentConfigDraft {
         koConfig,
         bracketSeedingMode,
         leagueEligible,
+        poolPhaseConfig,
       );
 }
