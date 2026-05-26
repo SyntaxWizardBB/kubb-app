@@ -38,6 +38,23 @@ class RosterLockedException implements Exception {
   String toString() => 'RosterLockedException($cause): $message';
 }
 
+/// Local mirror of the canonical exception in
+/// `lib/features/tournament/data/tournament_repository.dart`. Duplicated
+/// so the fake builds standalone; the orchestrator merge dedupes it the
+/// same way it does the roster exceptions above.
+class TieResolutionRequiredException implements Exception {
+  const TieResolutionRequiredException({
+    required this.conflictingParticipants,
+    required this.message,
+  });
+  final List<TournamentParticipantId> conflictingParticipants;
+  final String message;
+  @override
+  String toString() =>
+      'TieResolutionRequiredException(${conflictingParticipants.length}): '
+      '$message';
+}
+
 /// In-memory [TournamentRemote] for widget-level tests. Mirrors the
 /// `tournament_propose_set_scores` consensus state machine: byte-equal
 /// proposals from both sides finalise the match (with EKC final scores);
@@ -83,6 +100,20 @@ class FakeTournamentRemote implements TournamentRemote {
   /// open ones, distinguished by [_RosterSlot.replacedAt].
   final Map<TournamentParticipantId, List<_RosterSlot>> _rosterByParticipant =
       <TournamentParticipantId, List<_RosterSlot>>{};
+
+  /// Per-tournament pool-phase config; populated by [startPoolPhase].
+  final Map<TournamentId, PoolPhaseConfig> _poolConfig =
+      <TournamentId, PoolPhaseConfig>{};
+
+  /// Per-tournament participant → group_label assignment. Mirrors the
+  /// `group_label` column on `tournament_participants`.
+  final Map<TournamentId, Map<TournamentParticipantId, String>> _groupLabels =
+      <TournamentId, Map<TournamentParticipantId, String>>{};
+
+  /// Per-tournament cross-pool tie resolution (ordered participants).
+  /// Populated by [resolveCrossPoolTie]; persists across retries.
+  final Map<TournamentId, List<TournamentParticipantId>> _crossPoolOverrides =
+      <TournamentId, List<TournamentParticipantId>>{};
 
   String _nextId(String prefix) => '$prefix-${++_idSeq}';
 
@@ -454,6 +485,117 @@ class FakeTournamentRemote implements TournamentRemote {
           ),
     ];
     return bracketFromMatches(rows);
+  }
+
+  // ---------------------------------------------------------------------
+  // Pool phase (M3.3 — T8). The Fake calls the pure-Dart [generatePools]
+  // directly instead of mirroring a server RPC; that keeps the in-memory
+  // assignment byte-equal to the algorithm exercised by the property
+  // tests in T7. Standings are computed lazily from finalized matches.
+  // ---------------------------------------------------------------------
+
+  @override
+  Future<void> startPoolPhase(
+    TournamentId tournamentId,
+    PoolPhaseConfig config,
+  ) async {
+    final t = _tournaments[tournamentId];
+    if (t == null) {
+      throw StateError('unknown tournament: ${tournamentId.value}');
+    }
+    if (_poolConfig.containsKey(tournamentId)) {
+      // Idempotent — mirrors the Supabase `ERRCODE 40001` swallow.
+      return;
+    }
+    final approved = t.participantIds
+        .where((p) => _participants[p]!.status == _PStatus.approved)
+        .toList(growable: false);
+    final result = generatePools(
+      [for (final p in approved) p.value],
+      config,
+    );
+    final labels = <TournamentParticipantId, String>{};
+    for (var g = 0; g < result.groups.length; g++) {
+      final label = String.fromCharCode(65 + g); // 'A', 'B', ...
+      for (final id in result.groups[g]) {
+        if (id == null) continue;
+        labels[TournamentParticipantId(id)] = label;
+      }
+    }
+    _poolConfig[tournamentId] = config;
+    _groupLabels[tournamentId] = labels;
+  }
+
+  @override
+  Future<List<PoolGroupStandings>> getPoolStandings(TournamentId id) async {
+    final labels = _groupLabels[id];
+    if (labels == null) return const <PoolGroupStandings>[];
+    final byGroup = <String, List<TournamentParticipantId>>{};
+    for (final entry in labels.entries) {
+      byGroup.putIfAbsent(entry.value, () => []).add(entry.key);
+    }
+    final out = <PoolGroupStandings>[];
+    final sortedLabels = byGroup.keys.toList()..sort();
+    for (final label in sortedLabels) {
+      final stats = [
+        for (final p in byGroup[label]!) _statsFor(id, p),
+      ];
+      out.add(PoolGroupStandings(label, stats));
+    }
+    return out;
+  }
+
+  @override
+  Future<void> resolveCrossPoolTie(
+    TournamentId tournamentId,
+    List<TournamentParticipantId> orderedParticipants,
+  ) async {
+    if (!_tournaments.containsKey(tournamentId)) {
+      throw StateError('unknown tournament: ${tournamentId.value}');
+    }
+    _crossPoolOverrides[tournamentId] =
+        List<TournamentParticipantId>.unmodifiable(orderedParticipants);
+  }
+
+  /// Builds a [ParticipantStats] row from finalized non-KO matches —
+  /// enough to satisfy the [PoolGroupStandings] contract without
+  /// re-implementing the tiebreaker chain (callers that need a sorted
+  /// view feed this into [TiebreakerChain.compare] themselves).
+  ParticipantStats _statsFor(TournamentId id, TournamentParticipantId pid) {
+    final t = _tournaments[id]!;
+    var wins = 0;
+    var kubbsScored = 0;
+    var kubbsConceded = 0;
+    final opponents = <String>[];
+    for (final mid in t.matchIds) {
+      final m = _matches[mid]!;
+      if (_isKoMatch(m)) continue;
+      if (m.status != TournamentMatchStatus.finalized &&
+          m.status != TournamentMatchStatus.overridden) {
+        continue;
+      }
+      final a = m.participantA;
+      final b = m.participantB;
+      if (a != pid && b != pid) continue;
+      final isA = a == pid;
+      final other = isA ? b : a;
+      if (other != null) opponents.add(other.value);
+      final sa = m.finalScoreA ?? 0;
+      final sb = m.finalScoreB ?? 0;
+      kubbsScored += isA ? sa : sb;
+      kubbsConceded += isA ? sb : sa;
+      if (m.winnerParticipant == pid) wins += 1;
+    }
+    return ParticipantStats(
+      participantId: pid.value,
+      totalPoints: wins,
+      wins: wins,
+      kubbsScored: kubbsScored,
+      kubbsConceded: kubbsConceded,
+      opponentIds: opponents,
+      opponentTotalPointsLookup: const <String, int>{},
+      headToHeadLookup: const <String, int>{},
+    );
   }
 
   // ---------------------------------------------------------------------

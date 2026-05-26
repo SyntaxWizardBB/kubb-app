@@ -161,6 +161,27 @@ class _FakeTournamentRemote implements TournamentRemote {
   Future<List<RosterSlot>> getRoster(TournamentParticipantId participantId) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<void> startPoolPhase(
+    TournamentId tournamentId,
+    PoolPhaseConfig config,
+  ) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<PoolGroupStandings>> getPoolStandings(TournamentId id) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> resolveCrossPoolTie(
+    TournamentId tournamentId,
+    List<TournamentParticipantId> orderedParticipants,
+  ) {
+    throw UnimplementedError();
+  }
 }
 
 /// Controller variant that starts the draft in a hybrid format so the

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/features/tournament/data/tournament_models.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -77,6 +79,32 @@ class RosterLockedException implements Exception {
 
   @override
   String toString() => 'RosterLockedException($cause): $message';
+}
+
+/// Thrown when a pool-cut step cannot break a tie via the configured
+/// tiebreaker chain (OD-M3-05). The server raises
+/// `TIEBREAKER_NEEDS_RESOLUTION` (`ERRCODE 40001`) with a JSON detail
+/// payload listing the affected participants. The organizer then orders
+/// them manually via [TournamentRemote.resolveCrossPoolTie] and retries
+/// the start call.
+///
+/// See ADR-0019 §4 and migration adding `_tournament_compute_pool_cut`.
+class TieResolutionRequiredException implements Exception {
+  const TieResolutionRequiredException({
+    required this.conflictingParticipants,
+    required this.message,
+  });
+
+  /// Participants the server could not order. Wire payload uses
+  /// `tied_participants` (ADR-0019) or `conflicting_participants`
+  /// (tasks.md T5); the adapter accepts both keys.
+  final List<TournamentParticipantId> conflictingParticipants;
+  final String message;
+
+  @override
+  String toString() =>
+      'TieResolutionRequiredException(${conflictingParticipants.length}): '
+      '$message';
 }
 
 /// Thrown when `tournament_organizer_override_pairing` rejects the call.
@@ -328,6 +356,8 @@ class TournamentRepository implements TournamentRemote {
         },
       );
     } on PostgrestException catch (e) {
+      final tieEx = _tieResolutionFromException(e);
+      if (tieEx != null) throw tieEx;
       if (e.code == '40001') {
         // Idempotent path: KO phase already initialised on the server.
         // Caller invalidates and re-fetches instead of bubbling an error.
@@ -495,6 +525,150 @@ class TournamentRepository implements TournamentRemote {
             'id': slot['slot_id'],
           }),
     ];
+  }
+
+  // ---- M3.3 pool-phase additions (T8) ----
+
+  /// Calls `tournament_start_pool_phase`. Per ADR-0019 §5 the server
+  /// surfaces an already-initialised phase as `ERRCODE 40001`; that
+  /// path is swallowed for idempotency (mirroring `startKoPhase`). The
+  /// same code is also used for `TIEBREAKER_NEEDS_RESOLUTION` — we
+  /// disambiguate by message before deciding.
+  @override
+  Future<void> startPoolPhase(
+    TournamentId tournamentId,
+    PoolPhaseConfig config,
+  ) async {
+    try {
+      await _client.rpc<void>(
+        'tournament_start_pool_phase',
+        params: <String, dynamic>{
+          'p_tournament_id': tournamentId.value,
+          'p_pool_config': _poolPhaseConfigToWire(config),
+        },
+      );
+    } on PostgrestException catch (e) {
+      final tieEx = _tieResolutionFromException(e);
+      if (tieEx != null) throw tieEx;
+      if (e.code == '40001') {
+        return; // idempotent — phase already initialised
+      }
+      rethrow;
+    }
+  }
+
+  /// Reads `tournament_pool_standings(p_tournament_id)`. The RPC returns
+  /// a `groups: [{group_label, stats: [...]}]` envelope; decoding leans
+  /// on the in-package [PoolGroupStandings] value object.
+  @override
+  Future<List<PoolGroupStandings>> getPoolStandings(TournamentId id) async {
+    final response = await _client.rpc<Map<String, dynamic>?>(
+      'tournament_pool_standings',
+      params: <String, dynamic>{'p_tournament_id': id.value},
+    );
+    if (response == null) return const <PoolGroupStandings>[];
+    final groups =
+        (response['groups'] as List<dynamic>? ?? const <dynamic>[])
+            .cast<Map<String, dynamic>>();
+    return [
+      for (final g in groups)
+        PoolGroupStandings(
+          g['group_label'] as String,
+          (g['stats'] as List<dynamic>? ?? const <dynamic>[])
+              .cast<Map<String, dynamic>>()
+              .map(_participantStatsFromRow)
+              .toList(growable: false),
+        ),
+    ];
+  }
+
+  /// Calls `tournament_resolve_cross_pool_tie`. The server writes the
+  /// supplied order into `tournament_seeding_overrides`; the caller is
+  /// expected to retry [startKoPhase] afterwards.
+  @override
+  Future<void> resolveCrossPoolTie(
+    TournamentId tournamentId,
+    List<TournamentParticipantId> orderedParticipants,
+  ) {
+    return _client.rpc<void>(
+      'tournament_resolve_cross_pool_tie',
+      params: <String, dynamic>{
+        'p_tournament_id': tournamentId.value,
+        'p_ordered_participant_ids': [
+          for (final p in orderedParticipants) p.value,
+        ],
+      },
+    );
+  }
+
+  Map<String, dynamic> _poolPhaseConfigToWire(PoolPhaseConfig c) {
+    return <String, dynamic>{
+      'group_count': c.groupCount,
+      'qualifiers_per_group': c.qualifiersPerGroup,
+      'strategy': c.strategy.name,
+      if (c.randomSeed != null) 'random_seed': c.randomSeed,
+    };
+  }
+
+  ParticipantStats _participantStatsFromRow(Map<String, dynamic> row) {
+    return ParticipantStats(
+      participantId: row['participant_id'] as String,
+      totalPoints: _asInt(row['total_points']),
+      wins: _asInt(row['wins']),
+      kubbsScored: _asInt(row['kubbs_scored']),
+      kubbsConceded: _asInt(row['kubbs_conceded']),
+      opponentIds:
+          (row['opponent_ids'] as List<dynamic>? ?? const <dynamic>[])
+              .cast<String>(),
+      opponentTotalPointsLookup: ((row['opponent_total_points_lookup']
+                  as Map<String, dynamic>?) ??
+              const <String, dynamic>{})
+          .map((k, v) => MapEntry(k, _asInt(v))),
+      headToHeadLookup: ((row['head_to_head_lookup']
+                  as Map<String, dynamic>?) ??
+              const <String, dynamic>{})
+          .map((k, v) => MapEntry(k, _asInt(v))),
+    );
+  }
+
+  /// Matches a `TIEBREAKER_NEEDS_RESOLUTION` server raise (ADR-0019 §4):
+  /// `ERRCODE 40001` + message prefix + JSON DETAIL listing the tied
+  /// participants under `tied_participants` (ADR) or
+  /// `conflicting_participants` (tasks.md T5). Returns `null` when [e]
+  /// is some other `40001` (e.g. already-started idempotency).
+  TieResolutionRequiredException? _tieResolutionFromException(
+    PostgrestException e,
+  ) {
+    if (e.code != '40001') return null;
+    if (!e.message.contains('TIEBREAKER_NEEDS_RESOLUTION')) return null;
+    final detail = e.details;
+    final raw = detail is String ? detail : null;
+    final ids = <TournamentParticipantId>[];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map<String, dynamic>) {
+          final list = (decoded['tied_participants'] ??
+              decoded['conflicting_participants']) as List<dynamic>?;
+          if (list != null) {
+            ids.addAll(list.cast<String>().map(TournamentParticipantId.new));
+          }
+        }
+      } on FormatException {
+        // Server didn't ship a JSON detail — leave ids empty so the
+        // dialog can fall back to "manual reorder all qualifiers".
+      }
+    }
+    return TieResolutionRequiredException(
+      conflictingParticipants: List<TournamentParticipantId>.unmodifiable(ids),
+      message: e.message,
+    );
+  }
+
+  int _asInt(Object? r) {
+    if (r is int) return r;
+    if (r is num) return r.toInt();
+    throw ArgumentError.value(r, 'r', 'expected num');
   }
 
   Map<String, dynamic> _rosterSlotInputToWire(RosterSlotInput slot) {

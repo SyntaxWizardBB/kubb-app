@@ -1,6 +1,8 @@
 import 'package:kubb_domain/src/tournament/bracket.dart';
 import 'package:kubb_domain/src/tournament/ekc_score.dart';
 import 'package:kubb_domain/src/tournament/ko_phase.dart';
+import 'package:kubb_domain/src/tournament/pool_group_standings.dart';
+import 'package:kubb_domain/src/tournament/pool_phase.dart';
 import 'package:kubb_domain/src/tournament/roster_slot.dart';
 import 'package:kubb_domain/src/values/ids.dart';
 import 'package:meta/meta.dart';
@@ -463,4 +465,33 @@ abstract interface class TournamentRemote {
   /// open slots ordered by `slot_index`. Closed history rows are not
   /// returned here — those flow through the audit-tail view.
   Future<List<RosterSlot>> getRoster(TournamentParticipantId participantId);
+
+  // Pool phase (M3.3 — see architecture.md §3.5 and ADR-0019)
+
+  /// Starts the pool/group phase. Reads the approved participant list,
+  /// groups them per [config], and inserts pool-phase matches with
+  /// `group_label` populated. Backed by `tournament_start_pool_phase`
+  /// on the server. Idempotent via the same `ERRCODE 40001` pattern as
+  /// `tournament_start_ko_phase` — a second call against an already
+  /// initialised phase is swallowed.
+  Future<void> startPoolPhase(
+    TournamentId tournamentId,
+    PoolPhaseConfig config,
+  );
+
+  /// Reads the per-group standings snapshot for [id]. Backed by
+  /// `tournament_pool_standings(p_tournament_id)`; the server returns
+  /// one entry per `group_label`, each already sorted by the
+  /// tournament's configured tiebreaker chain.
+  Future<List<PoolGroupStandings>> getPoolStandings(TournamentId id);
+
+  /// Veranstalter-Override per OD-M3-05. After `startKoPhase` raised
+  /// `TIEBREAKER_NEEDS_RESOLUTION`, the organizer manually orders the
+  /// tied qualifiers and submits the resulting permutation. The server
+  /// writes it into `tournament_seeding_overrides`; the caller then
+  /// retries [startKoPhase].
+  Future<void> resolveCrossPoolTie(
+    TournamentId tournamentId,
+    List<TournamentParticipantId> orderedParticipants,
+  );
 }
