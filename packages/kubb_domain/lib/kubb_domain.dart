@@ -17,6 +17,7 @@ export 'src/tournament/ekc_score.dart';
 export 'src/tournament/ko_phase.dart';
 export 'src/tournament/pairing.dart';
 export 'src/tournament/pool.dart';
+export 'src/tournament/roster_slot.dart';
 export 'src/tournament/seeding.dart';
 export 'src/tournament/standings.dart';
 export 'src/tournament/tiebreaker.dart';
