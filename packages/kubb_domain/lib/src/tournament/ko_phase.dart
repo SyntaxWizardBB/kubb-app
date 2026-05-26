@@ -13,14 +13,30 @@ final class KoPhaseConfig {
     this.withThirdPlacePlayoff = false,
     this.seedingMode = SeedingMode.auto,
   }) {
+    validate(
+      qualifierCount: qualifierCount,
+      participantCount: participantCount,
+    );
+  }
+
+  /// Validates raw inputs per ADR-0017 §4 / U2 in `qualifier-count.md`:
+  /// `2 <= qualifierCount <= participantCount`. Throws [ArgumentError] otherwise.
+  static void validate({
+    required int qualifierCount,
+    required int participantCount,
+  }) {
     if (qualifierCount < 2) {
-      throw ArgumentError.value(qualifierCount, 'qualifierCount', '>= 2 (U2)');
+      throw ArgumentError.value(
+        qualifierCount,
+        'qualifierCount',
+        'must be >= 2 (per U2: a KO phase needs at least a final)',
+      );
     }
     if (qualifierCount > participantCount) {
       throw ArgumentError.value(
         qualifierCount,
         'qualifierCount',
-        '<= participantCount',
+        'must be <= participantCount (per U2)',
       );
     }
   }

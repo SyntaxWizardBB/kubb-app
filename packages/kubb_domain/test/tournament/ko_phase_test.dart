@@ -55,6 +55,27 @@ void main() {
       expect(a.hashCode, b.hashCode);
     });
 
+    test('static validate passes for valid inputs without throwing', () {
+      expect(
+        () => KoPhaseConfig.validate(qualifierCount: 4, participantCount: 8),
+        returnsNormally,
+      );
+    });
+
+    test('static validate throws ArgumentError with U2 hint for qualifierCount < 2',
+        () {
+      expect(
+        () => KoPhaseConfig.validate(qualifierCount: 1, participantCount: 8),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.message.toString(),
+            'message',
+            contains('U2'),
+          ),
+        ),
+      );
+    });
+
     test('it distinguishes instances that differ in any field', () {
       final base = KoPhaseConfig(qualifierCount: 4, participantCount: 8);
       expect(
