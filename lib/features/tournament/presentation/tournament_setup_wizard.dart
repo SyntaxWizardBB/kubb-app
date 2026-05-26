@@ -3,13 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
-const int _kTotalSteps = 4;
+/// Logical step identifiers — keeps the dynamic ordering for KO-formats
+/// (T13: round_robin_then_ko adds [_StepKind.league] and [_StepKind.koConfig])
+/// readable. The visible step index is derived from `_visibleSteps`.
+enum _StepKind { name, participants, format, league, koConfig, summary }
 
 /// Four-step organizer wizard for creating a tournament. Drives the
 /// [tournamentConfigControllerProvider] and hands the final draft to
@@ -27,27 +32,53 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
   int _step = 0;
   bool _submitting = false;
 
+  /// Logical step list for the current draft. Hybrid formats unlock
+  /// [_StepKind.league] (T12) and [_StepKind.koConfig] (T13); pure
+  /// round-robin keeps the original four-step flow.
+  List<_StepKind> _visibleSteps(TournamentConfigDraft draft) {
+    return <_StepKind>[
+      _StepKind.name,
+      _StepKind.participants,
+      _StepKind.format,
+      if (draft.requiresKoConfig) ...[
+        _StepKind.league,
+        _StepKind.koConfig,
+      ],
+      _StepKind.summary,
+    ];
+  }
+
   bool _stepValid(TournamentConfigDraft draft) {
-    switch (_step) {
-      case 0:
+    final kinds = _visibleSteps(draft);
+    if (_step >= kinds.length) return false;
+    switch (kinds[_step]) {
+      case _StepKind.name:
         final n = draft.displayName?.trim() ?? '';
         return n.length >= TournamentConfigDraft.displayNameMinChars &&
             n.length <= TournamentConfigDraft.displayNameMaxChars;
-      case 1:
+      case _StepKind.participants:
         return draft.minParticipants <= draft.maxParticipants &&
             draft.minParticipants >= TournamentConfigDraft.participantsHardMin;
-      case 2:
+      case _StepKind.format:
         return draft.setsToWin >= TournamentConfigDraft.setsToWinMin &&
             draft.maxSets >= 2 * draft.setsToWin - 1;
-      case 3:
+      case _StepKind.league:
+        // Boolean switch — always valid.
+        return true;
+      case _StepKind.koConfig:
+        final cfg = draft.koConfig;
+        return cfg != null &&
+            cfg.qualifierCount >= 2 &&
+            cfg.qualifierCount <= draft.maxParticipants;
+      case _StepKind.summary:
         return draft.validate().isValid;
-      default:
-        return false;
     }
   }
 
   Future<void> _onPrimary() async {
-    if (_step < _kTotalSteps - 1) {
+    final draft = ref.read(tournamentConfigControllerProvider);
+    final totalSteps = _visibleSteps(draft).length;
+    if (_step < totalSteps - 1) {
       setState(() => _step += 1);
       return;
     }
@@ -83,19 +114,20 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
     final l10n = AppLocalizations.of(context);
     final draft = ref.watch(tournamentConfigControllerProvider);
     final controller = ref.read(tournamentConfigControllerProvider.notifier);
-    final stepTitle = switch (_step) {
-      0 => l10n.tournamentWizardStep1Title,
-      1 => l10n.tournamentWizardStep2Title,
-      2 => l10n.tournamentWizardStep3Title,
-      _ => l10n.tournamentWizardStep4Title,
-    };
+    final kinds = _visibleSteps(draft);
+    final totalSteps = kinds.length;
+    // Clamp step index in case the visible-step list shrank under us
+    // (organizer switched back from a KO format after entering KO steps).
+    final stepIndex = _step.clamp(0, totalSteps - 1);
+    final kind = kinds[stepIndex];
+    final stepTitle = _titleForKind(kind, l10n);
 
     return Scaffold(
       backgroundColor: tokens.bg,
       appBar: KubbAppBar(
         title: l10n.tournamentWizardTitle,
         eyebrow: stepTitle,
-        leading: _step == 0
+        leading: stepIndex == 0
             ? null
             : IconButton(
                 icon: const Icon(Icons.arrow_back),
@@ -106,7 +138,7 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
       body: SafeArea(
         child: Column(
           children: [
-            _ProgressBar(step: _step, total: _kTotalSteps),
+            _ProgressBar(step: stepIndex, total: totalSteps),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(
@@ -115,32 +147,15 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
                   KubbTokens.space4,
                   KubbTokens.space8,
                 ),
-                child: switch (_step) {
-                  0 => _StepName(
-                      draft: draft,
-                      onChanged: controller.setDisplayName,
-                    ),
-                  1 => _StepParticipants(
-                      draft: draft,
-                      onMin: controller.setMinParticipants,
-                      onMax: controller.setMaxParticipants,
-                    ),
-                  2 => _StepFormat(
-                      draft: draft,
-                      onFormat: controller.setFormat,
-                      onSetsToWin: controller.setSetsToWin,
-                      onMaxSets: controller.setMaxSets,
-                    ),
-                  _ => _StepSummary(draft: draft),
-                },
+                child: _buildStep(kind, draft, controller),
               ),
             ),
             _BottomBar(
               onPrimary: _stepValid(draft) && !_submitting ? _onPrimary : null,
-              onBack: _step == 0 || _submitting
+              onBack: stepIndex == 0 || _submitting
                   ? null
                   : () => setState(() => _step -= 1),
-              primaryLabel: _step == _kTotalSteps - 1
+              primaryLabel: stepIndex == totalSteps - 1
                   ? l10n.tournamentWizardCreateButton
                   : l10n.tournamentWizardNextButton,
               backLabel: l10n.tournamentWizardBackButton,
@@ -149,6 +164,100 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
           ],
         ),
       ),
+    );
+  }
+
+  String _titleForKind(_StepKind kind, AppLocalizations l10n) {
+    switch (kind) {
+      case _StepKind.name:
+        return l10n.tournamentWizardStep1Title;
+      case _StepKind.participants:
+        return l10n.tournamentWizardStep2Title;
+      case _StepKind.format:
+        return l10n.tournamentWizardStep3Title;
+      case _StepKind.league:
+        return l10n.tournamentWizardStep45Title;
+      case _StepKind.koConfig:
+        return l10n.tournamentWizardStep5Title;
+      case _StepKind.summary:
+        return l10n.tournamentWizardStep4Title;
+    }
+  }
+
+  /// Dispatches the visible step kind to its widget. Anchor for T12
+  /// (`_LeagueStep`) and T13 (`WizardKoConfigStep`) — adding a new step
+  /// only touches `_StepKind`, `_visibleSteps` and this switch.
+  Widget _buildStep(
+    _StepKind kind,
+    TournamentConfigDraft draft,
+    TournamentConfigController controller,
+  ) {
+    switch (kind) {
+      case _StepKind.name:
+        return _StepName(
+          draft: draft,
+          onChanged: controller.setDisplayName,
+        );
+      case _StepKind.participants:
+        return _StepParticipants(
+          draft: draft,
+          onMin: controller.setMinParticipants,
+          onMax: controller.setMaxParticipants,
+        );
+      case _StepKind.format:
+        return _StepFormat(
+          draft: draft,
+          onFormat: controller.setFormat,
+          onSetsToWin: controller.setSetsToWin,
+          onMaxSets: controller.setMaxSets,
+        );
+      case _StepKind.league:
+        // T12 will provide `_LeagueStep`. Placeholder keeps the step
+        // navigable until that widget lands and is wired in here.
+        return _LeagueStepPlaceholder(draft: draft);
+      case _StepKind.koConfig:
+        return WizardKoConfigStep(
+          key: ValueKey<int>(draft.maxParticipants),
+          draft: draft,
+          onConfigChanged: controller.setKoConfig,
+          onSeedingModeChanged: controller.setBracketSeedingMode,
+        );
+      case _StepKind.summary:
+        return _StepSummary(draft: draft);
+    }
+  }
+}
+
+/// Temporary placeholder for the league step until T12 ships
+/// `_LeagueStep`. Renders the localized title so the wizard remains
+/// navigable in parallel-development mode without committing to a
+/// concrete API shape that would conflict with T12.
+class _LeagueStepPlaceholder extends StatelessWidget {
+  const _LeagueStepPlaceholder({required this.draft});
+
+  final TournamentConfigDraft draft;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l10n.tournamentWizardLeagueEligibleLabel,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: tokens.fg,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        Text(
+          l10n.tournamentWizardLeagueEligibleHelper,
+          style: TextStyle(fontSize: 12, color: tokens.fgMuted),
+        ),
+      ],
     );
   }
 }

@@ -62,6 +62,20 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     state = state.copyWith(tiebreakerOrder: List<String>.unmodifiable(order));
   }
 
+  /// Replaces the in-progress [KoPhaseConfig]. Used by the KO-config wizard
+  /// step (T13) to commit `qualifierCount`, `withThirdPlacePlayoff` and
+  /// `seedingMode` once the inputs are valid (`2 <= n <= participantCount`).
+  void setKoConfig(KoPhaseConfig? config) {
+    state = state.copyWith(koConfig: config);
+  }
+
+  /// Persists the seeding source choice independent of the KO-config
+  /// snapshot so the seeding-step (T11) can read it back even when the
+  /// organizer hasn't touched the qualifier field yet.
+  void setBracketSeedingMode(SeedingMode mode) {
+    state = state.copyWith(bracketSeedingMode: mode);
+  }
+
   TournamentConfigValidation validate() => state.validate();
 
   void reset() {

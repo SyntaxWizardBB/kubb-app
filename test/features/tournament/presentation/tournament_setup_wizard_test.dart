@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
+import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
+import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_setup_wizard.dart';
@@ -136,7 +139,20 @@ class _FakeTournamentRemote implements TournamentRemote {
   }
 }
 
-Future<_FakeTournamentRemote> _pumpWizard(WidgetTester tester) async {
+/// Controller variant that starts the draft in a hybrid format so the
+/// dynamic step list exposes the league + KO-config steps (T13 acceptance
+/// 1 — `_totalSteps = 6` for `round_robin_then_ko`).
+class _KoSeededController extends TournamentConfigController {
+  @override
+  TournamentConfigDraft build() => const TournamentConfigDraft(
+        format: TournamentFormat.roundRobinThenKo,
+      );
+}
+
+Future<_FakeTournamentRemote> _pumpWizard(
+  WidgetTester tester, {
+  List<Object> extraOverrides = const <Object>[],
+}) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -161,9 +177,10 @@ Future<_FakeTournamentRemote> _pumpWizard(WidgetTester tester) async {
 
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [
+      overrides: <Object>[
         tournamentRemoteProvider.overrideWithValue(fake),
-      ],
+        ...extraOverrides,
+      ].cast(),
       child: MaterialApp.router(
         theme: KubbTheme.light(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -228,6 +245,35 @@ void main() {
     expect(find.text('ÜBERSICHT'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Turnier anlegen'),
         findsOneWidget);
+  });
+
+  testWidgets(
+      'round_robin_then_ko unlocks league + ko steps for a total of 6 (T13)',
+      (tester) async {
+    await _pumpWizard(
+      tester,
+      extraOverrides: [
+        tournamentConfigControllerProvider
+            .overrideWith(_KoSeededController.new),
+      ],
+    );
+    expect(find.text('Schritt 1 von 6'), findsOneWidget);
+
+    await _typeName(tester, 'KO Cup');
+    await _tapNext(tester); // -> participants
+    expect(find.text('Schritt 2 von 6'), findsOneWidget);
+    await _tapNext(tester); // -> format
+    expect(find.text('Schritt 3 von 6'), findsOneWidget);
+    await _tapNext(tester); // -> league (T12)
+    expect(find.text('Schritt 4 von 6'), findsOneWidget);
+    expect(find.text('LIGA-WERTUNG'), findsOneWidget);
+    await _tapNext(tester); // -> ko config (T13)
+    expect(find.text('Schritt 5 von 6'), findsOneWidget);
+    expect(find.text('KO-KONFIGURATION'), findsOneWidget);
+    // Smart default for 8 participants is 4 → preview shows bracket 8,
+    // 4 BYEs, but the smarter case is exercised explicitly in the
+    // helper-widget test file. Sanity-check the preview is rendered.
+    expect(find.textContaining('Bracket-Grösse'), findsOneWidget);
   });
 
   testWidgets('submit calls createTournament with the configured draft',
