@@ -74,3 +74,33 @@ final class UserId extends TypedId {
   @override
   String get _typeTag => 'UserId';
 }
+
+final class TeamGuestPlayerId extends TypedId {
+  TeamGuestPlayerId(super.value) {
+    if (value.isEmpty) {
+      throw ArgumentError.value(value, 'value', 'must not be empty');
+    }
+  }
+  @override
+  String get _typeTag => 'TeamGuestPlayerId';
+}
+
+final class TeamMembershipId extends TypedId {
+  TeamMembershipId(super.value) {
+    if (value.isEmpty) {
+      throw ArgumentError.value(value, 'value', 'must not be empty');
+    }
+  }
+  @override
+  String get _typeTag => 'TeamMembershipId';
+}
+
+final class TeamInvitationId extends TypedId {
+  TeamInvitationId(super.value) {
+    if (value.isEmpty) {
+      throw ArgumentError.value(value, 'value', 'must not be empty');
+    }
+  }
+  @override
+  String get _typeTag => 'TeamInvitationId';
+}
