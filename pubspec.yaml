@@ -63,6 +63,7 @@ dev_dependencies:
   json_serializable: any
   custom_lint: any
   mocktail: any
+  golden_toolkit: any
 
 flutter:
   uses-material-design: true
