@@ -86,6 +86,12 @@ class _MessageTile extends ConsumerWidget {
         return const Color(0xFFFBF2D6);
       case InboxMessageKind.system:
         return const Color(0xFFE8EEF5);
+      // M3.1-T6: team-flow kinds reuse the verification-request tone
+      // for now; T14 patches this with a dedicated palette.
+      case InboxMessageKind.teamInvitation:
+      case InboxMessageKind.teamMemberRemoved:
+      case InboxMessageKind.teamDissolved:
+        return const Color(0xFFFBF2D6);
     }
   }
 
@@ -97,6 +103,14 @@ class _MessageTile extends ConsumerWidget {
         return 'Bestätigung';
       case InboxMessageKind.system:
         return 'System';
+      // M3.1-T6: labels mirror the ARB keys inboxTeam* and will switch
+      // to AppLocalizations lookup in T14.
+      case InboxMessageKind.teamInvitation:
+        return 'Team-Einladung';
+      case InboxMessageKind.teamMemberRemoved:
+        return 'Team-Änderung';
+      case InboxMessageKind.teamDissolved:
+        return 'Team aufgelöst';
     }
   }
 

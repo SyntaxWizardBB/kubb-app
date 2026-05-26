@@ -2644,5 +2644,17 @@
   "tournamentKoHelpLinkLabel": "Mehr zum KO-Modus",
   "@tournamentKoHelpLinkLabel": {
     "description": "Link label opening the KO help section from the wizard"
+  },
+  "inboxTeamInvitation": "Team-Einladung",
+  "@inboxTeamInvitation": {
+    "description": "Inbox badge label for the team_invitation kind (M3.1-T6)"
+  },
+  "inboxTeamMemberRemoved": "Team-Änderung",
+  "@inboxTeamMemberRemoved": {
+    "description": "Inbox badge label for the team_member_removed kind (M3.1-T6)"
+  },
+  "inboxTeamDissolved": "Team aufgelöst",
+  "@inboxTeamDissolved": {
+    "description": "Inbox badge label for the team_dissolved kind (M3.1-T6)"
   }
 }

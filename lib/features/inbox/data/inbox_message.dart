@@ -10,7 +10,15 @@ enum InboxMessageKind {
   verificationRequest,
 
   /// Automated system event (account state change, security alert).
-  system;
+  system,
+
+  /// Team-flow notifications (M3.1). All three are first-class kinds on
+  /// `public.user_inbox_messages` and routed by team RPCs (T4/T5) — the
+  /// client renders them via dedicated UI in T14, not the generic
+  /// `verification_request` fallback.
+  teamInvitation,
+  teamMemberRemoved,
+  teamDissolved;
 
   static InboxMessageKind fromWire(String raw) {
     switch (raw) {
@@ -20,6 +28,12 @@ enum InboxMessageKind {
         return InboxMessageKind.verificationRequest;
       case 'system':
         return InboxMessageKind.system;
+      case 'team_invitation':
+        return InboxMessageKind.teamInvitation;
+      case 'team_member_removed':
+        return InboxMessageKind.teamMemberRemoved;
+      case 'team_dissolved':
+        return InboxMessageKind.teamDissolved;
       default:
         return InboxMessageKind.notice;
     }
