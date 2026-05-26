@@ -128,6 +128,13 @@ class _MessageTile extends ConsumerWidget {
             await actions.markRead(message.id);
           }
           if (!context.mounted) return;
+          // M3.1-T14: team-invitation items short-circuit the generic
+          // bottom-sheet path and jump straight to the dedicated
+          // invitation screen where accept/decline live.
+          if (message.kind == InboxMessageKind.teamInvitation) {
+            context.go('/teams/invitations');
+            return;
+          }
           await showModalBottomSheet<void>(
             context: context,
             isScrollControlled: true,
