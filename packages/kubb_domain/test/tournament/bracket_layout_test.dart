@@ -59,7 +59,7 @@ void main() {
       expect(third, isNotNull, reason: 'third-place box must be present');
       expect(third!.phase, BracketPhase.thirdPlace);
       final finals = layout.rects.entries
-          .where((e) => e.value.phase == BracketPhase.final_)
+          .where((e) => e.value.phase == BracketPhase.finals)
           .toList();
       expect(finals, hasLength(1));
       expect(third.x, greaterThan(finals.single.value.x));

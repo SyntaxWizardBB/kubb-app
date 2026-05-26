@@ -6,8 +6,6 @@ import 'package:meta/meta.dart';
 
 const double touchMin = 48;
 
-enum BracketPhase { winners, thirdPlace, final_ }
-
 @immutable
 class Point {
   const Point(this.x, this.y);
