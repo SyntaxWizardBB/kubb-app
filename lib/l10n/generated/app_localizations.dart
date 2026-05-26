@@ -3369,6 +3369,210 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Nicht autorisiert'**
   String get tournamentOverrideNotAuthorized;
+
+  /// Bracket view header label for the knockout phase
+  ///
+  /// In de, this message translates to:
+  /// **'KO-Phase'**
+  String get tournamentBracketPhaseKo;
+
+  /// Bracket view label for the final round
+  ///
+  /// In de, this message translates to:
+  /// **'Finale'**
+  String get tournamentBracketPhaseFinal;
+
+  /// Bracket view label for the semifinal round
+  ///
+  /// In de, this message translates to:
+  /// **'Halbfinale'**
+  String get tournamentBracketPhaseSemifinal;
+
+  /// Bracket view label for the quarterfinal round
+  ///
+  /// In de, this message translates to:
+  /// **'Viertelfinale'**
+  String get tournamentBracketPhaseQuarterfinal;
+
+  /// Bracket view label for generic round (e.g. Round of 16)
+  ///
+  /// In de, this message translates to:
+  /// **'Runde der {n}'**
+  String tournamentBracketPhaseRoundOf(int n);
+
+  /// Bracket view label for the third-place playoff (bronze match)
+  ///
+  /// In de, this message translates to:
+  /// **'Spiel um Platz 3'**
+  String get tournamentBracketPhaseThirdPlace;
+
+  /// Short label for the third-place playoff used in compact UI
+  ///
+  /// In de, this message translates to:
+  /// **'Bronze'**
+  String get tournamentBracketBronzeMatchShort;
+
+  /// Label shown on a BYE slot in the KO bracket (U5)
+  ///
+  /// In de, this message translates to:
+  /// **'Freilos'**
+  String get tournamentBracketByeLabel;
+
+  /// Tooltip on a BYE slot paraphrasing FR-FMT-11 in plain language (U6)
+  ///
+  /// In de, this message translates to:
+  /// **'Spielfreilos für Top-Seeds aus der Vorrunde — wer in der Gruppenphase vorne lag, startet eine Runde später.'**
+  String get tournamentBracketByeTooltip;
+
+  /// Seed badge prefix shown on bracket cards
+  ///
+  /// In de, this message translates to:
+  /// **'Seed {n}'**
+  String tournamentBracketSeedPrefix(int n);
+
+  /// Title of the seeding editor screen
+  ///
+  /// In de, this message translates to:
+  /// **'Seeding'**
+  String get tournamentSeedingTitle;
+
+  /// Eyebrow above the seeding editor title
+  ///
+  /// In de, this message translates to:
+  /// **'KO-Setup'**
+  String get tournamentSeedingEyebrow;
+
+  /// Seed position label in the seeding editor list
+  ///
+  /// In de, this message translates to:
+  /// **'Position {n}'**
+  String tournamentSeedingPositionLabel(int n);
+
+  /// Hint above the drag-to-reorder seeding list
+  ///
+  /// In de, this message translates to:
+  /// **'Lange tippen und ziehen zum Umsortieren.'**
+  String get tournamentSeedingDragHint;
+
+  /// Badge shown on a seed that was manually overridden by the organizer
+  ///
+  /// In de, this message translates to:
+  /// **'Manuell gesetzt'**
+  String get tournamentSeedingOverrideLabel;
+
+  /// Button that resets manual seed overrides back to the round-robin standings
+  ///
+  /// In de, this message translates to:
+  /// **'Auf Gruppen-Reihenfolge zurücksetzen'**
+  String get tournamentSeedingResetButton;
+
+  /// Primary action on the seeding editor
+  ///
+  /// In de, this message translates to:
+  /// **'Seeding speichern'**
+  String get tournamentSeedingSaveButton;
+
+  /// Title of wizard step 4.5 asking whether the tournament counts for the league
+  ///
+  /// In de, this message translates to:
+  /// **'Liga-Wertung'**
+  String get tournamentWizardStep45Title;
+
+  /// Switch label for league_eligible toggle (wizard step 4.5)
+  ///
+  /// In de, this message translates to:
+  /// **'Dieses Turnier wertet für die Liga'**
+  String get tournamentWizardLeagueEligibleLabel;
+
+  /// Helper text under the league-eligible switch explaining the bronze-match default
+  ///
+  /// In de, this message translates to:
+  /// **'Liga-Turniere spielen standardmässig das Spiel um Platz 3 — Rang 3 und 4 geben unterschiedliche Punkte.'**
+  String get tournamentWizardLeagueEligibleHelper;
+
+  /// Title of wizard step 5 for KO phase configuration
+  ///
+  /// In de, this message translates to:
+  /// **'KO-Konfiguration'**
+  String get tournamentWizardStep5Title;
+
+  /// Label for the qualifier-count integer input (U1)
+  ///
+  /// In de, this message translates to:
+  /// **'Anzahl Qualifikanten'**
+  String get tournamentWizardQualifierCountLabel;
+
+  /// Helper text for qualifier-count input (U1, U2)
+  ///
+  /// In de, this message translates to:
+  /// **'Wie viele Teams ziehen aus der Gruppenphase in die KO-Phase ein? Beliebige Zahl möglich — die App füllt fehlende Plätze mit Freilosen auf.'**
+  String get tournamentWizardQualifierCountHelper;
+
+  /// Preview line: next power of two used as bracket size (U3)
+  ///
+  /// In de, this message translates to:
+  /// **'Bracket-Grösse: {size}'**
+  String tournamentWizardQualifierPreviewBracketSize(int size);
+
+  /// Preview line: number of BYEs awarded to top seeds (U3)
+  ///
+  /// In de, this message translates to:
+  /// **'Davon {byes} Freilos(e) an die Top-Seeds'**
+  String tournamentWizardQualifierPreviewByes(int byes);
+
+  /// Preview line: number of real R1 matches after BYE deduction (U3)
+  ///
+  /// In de, this message translates to:
+  /// **'Runde 1: {matches} echte Spiele'**
+  String tournamentWizardQualifierPreviewRealMatches(int matches);
+
+  /// Switch label for with_third_place_playoff toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Spiel um Platz 3 austragen'**
+  String get tournamentWizardBronzeMatchLabel;
+
+  /// Helper text under the bronze-match switch
+  ///
+  /// In de, this message translates to:
+  /// **'Empfohlen bei Liga-Turnieren — entscheidet zwischen Rang 3 und 4.'**
+  String get tournamentWizardBronzeMatchHelper;
+
+  /// Title of wizard step 6 for tiebreaker reordering
+  ///
+  /// In de, this message translates to:
+  /// **'Tiebreaker-Reihenfolge'**
+  String get tournamentWizardStep6Title;
+
+  /// Hint above the drag-to-reorder tiebreaker list
+  ///
+  /// In de, this message translates to:
+  /// **'Lange tippen und ziehen, um die Reihenfolge der Entscheidungskriterien zu ändern.'**
+  String get tournamentWizardTiebreakerHint;
+
+  /// Button that resets the tiebreaker order to the spec default
+  ///
+  /// In de, this message translates to:
+  /// **'Standard wiederherstellen'**
+  String get tournamentWizardTiebreakerResetButton;
+
+  /// Title of the in-app help section explaining the KO phase (U8)
+  ///
+  /// In de, this message translates to:
+  /// **'Wie funktioniert der KO-Cut?'**
+  String get tournamentKoHelpTitle;
+
+  /// Body of the KO help section paraphrasing FR-FMT-11 in plain language (U8/U9)
+  ///
+  /// In de, this message translates to:
+  /// **'Die besten Teams aus der Gruppenphase ziehen ins KO-Bracket ein. Passt die Zahl nicht zu einer Zweierpotenz (2, 4, 8, 16…), bekommen die bestplatzierten Teams ein Freilos in Runde 1. So bleibt das Bracket fair und ausgeglichen — international Standard.'**
+  String get tournamentKoHelpBody;
+
+  /// Link label opening the KO help section from the wizard
+  ///
+  /// In de, this message translates to:
+  /// **'Mehr zum KO-Modus'**
+  String get tournamentKoHelpLinkLabel;
 }
 
 class _AppLocalizationsDelegate

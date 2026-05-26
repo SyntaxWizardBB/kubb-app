@@ -1797,4 +1797,128 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentOverrideNotAuthorized => 'Nicht autorisiert';
+
+  @override
+  String get tournamentBracketPhaseKo => 'KO-Phase';
+
+  @override
+  String get tournamentBracketPhaseFinal => 'Finale';
+
+  @override
+  String get tournamentBracketPhaseSemifinal => 'Halbfinale';
+
+  @override
+  String get tournamentBracketPhaseQuarterfinal => 'Viertelfinale';
+
+  @override
+  String tournamentBracketPhaseRoundOf(int n) {
+    return 'Runde der $n';
+  }
+
+  @override
+  String get tournamentBracketPhaseThirdPlace => 'Spiel um Platz 3';
+
+  @override
+  String get tournamentBracketBronzeMatchShort => 'Bronze';
+
+  @override
+  String get tournamentBracketByeLabel => 'Freilos';
+
+  @override
+  String get tournamentBracketByeTooltip =>
+      'Spielfreilos für Top-Seeds aus der Vorrunde — wer in der Gruppenphase vorne lag, startet eine Runde später.';
+
+  @override
+  String tournamentBracketSeedPrefix(int n) {
+    return 'Seed $n';
+  }
+
+  @override
+  String get tournamentSeedingTitle => 'Seeding';
+
+  @override
+  String get tournamentSeedingEyebrow => 'KO-Setup';
+
+  @override
+  String tournamentSeedingPositionLabel(int n) {
+    return 'Position $n';
+  }
+
+  @override
+  String get tournamentSeedingDragHint =>
+      'Lange tippen und ziehen zum Umsortieren.';
+
+  @override
+  String get tournamentSeedingOverrideLabel => 'Manuell gesetzt';
+
+  @override
+  String get tournamentSeedingResetButton =>
+      'Auf Gruppen-Reihenfolge zurücksetzen';
+
+  @override
+  String get tournamentSeedingSaveButton => 'Seeding speichern';
+
+  @override
+  String get tournamentWizardStep45Title => 'Liga-Wertung';
+
+  @override
+  String get tournamentWizardLeagueEligibleLabel =>
+      'Dieses Turnier wertet für die Liga';
+
+  @override
+  String get tournamentWizardLeagueEligibleHelper =>
+      'Liga-Turniere spielen standardmässig das Spiel um Platz 3 — Rang 3 und 4 geben unterschiedliche Punkte.';
+
+  @override
+  String get tournamentWizardStep5Title => 'KO-Konfiguration';
+
+  @override
+  String get tournamentWizardQualifierCountLabel => 'Anzahl Qualifikanten';
+
+  @override
+  String get tournamentWizardQualifierCountHelper =>
+      'Wie viele Teams ziehen aus der Gruppenphase in die KO-Phase ein? Beliebige Zahl möglich — die App füllt fehlende Plätze mit Freilosen auf.';
+
+  @override
+  String tournamentWizardQualifierPreviewBracketSize(int size) {
+    return 'Bracket-Grösse: $size';
+  }
+
+  @override
+  String tournamentWizardQualifierPreviewByes(int byes) {
+    return 'Davon $byes Freilos(e) an die Top-Seeds';
+  }
+
+  @override
+  String tournamentWizardQualifierPreviewRealMatches(int matches) {
+    return 'Runde 1: $matches echte Spiele';
+  }
+
+  @override
+  String get tournamentWizardBronzeMatchLabel => 'Spiel um Platz 3 austragen';
+
+  @override
+  String get tournamentWizardBronzeMatchHelper =>
+      'Empfohlen bei Liga-Turnieren — entscheidet zwischen Rang 3 und 4.';
+
+  @override
+  String get tournamentWizardStep6Title => 'Tiebreaker-Reihenfolge';
+
+  @override
+  String get tournamentWizardTiebreakerHint =>
+      'Lange tippen und ziehen, um die Reihenfolge der Entscheidungskriterien zu ändern.';
+
+  @override
+  String get tournamentWizardTiebreakerResetButton =>
+      'Standard wiederherstellen';
+
+  @override
+  String get tournamentKoHelpTitle => 'Wie funktioniert der KO-Cut?';
+
+  @override
+  String get tournamentKoHelpBody =>
+      'Die besten Teams aus der Gruppenphase ziehen ins KO-Bracket ein. Passt die Zahl nicht zu einer Zweierpotenz (2, 4, 8, 16…), bekommen die bestplatzierten Teams ein Freilos in Runde 1. So bleibt das Bracket fair und ausgeglichen — international Standard.';
+
+  @override
+  String get tournamentKoHelpLinkLabel => 'Mehr zum KO-Modus';
 }

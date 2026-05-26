@@ -2450,5 +2450,171 @@
   "tournamentOverrideStatusGate": "Nur strittige Matches können übersteuert werden.",
   "tournamentOverrideValidationReasonEmpty": "Begründung ist erforderlich",
   "tournamentOverrideValidationScoreNotDecisive": "Score muss eindeutig sein (ein Team erreicht die nötigen Sätze)",
-  "tournamentOverrideNotAuthorized": "Nicht autorisiert"
+  "tournamentOverrideNotAuthorized": "Nicht autorisiert",
+  "tournamentBracketPhaseKo": "KO-Phase",
+  "@tournamentBracketPhaseKo": {
+    "description": "Bracket view header label for the knockout phase"
+  },
+  "tournamentBracketPhaseFinal": "Finale",
+  "@tournamentBracketPhaseFinal": {
+    "description": "Bracket view label for the final round"
+  },
+  "tournamentBracketPhaseSemifinal": "Halbfinale",
+  "@tournamentBracketPhaseSemifinal": {
+    "description": "Bracket view label for the semifinal round"
+  },
+  "tournamentBracketPhaseQuarterfinal": "Viertelfinale",
+  "@tournamentBracketPhaseQuarterfinal": {
+    "description": "Bracket view label for the quarterfinal round"
+  },
+  "tournamentBracketPhaseRoundOf": "Runde der {n}",
+  "@tournamentBracketPhaseRoundOf": {
+    "description": "Bracket view label for generic round (e.g. Round of 16)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "tournamentBracketPhaseThirdPlace": "Spiel um Platz 3",
+  "@tournamentBracketPhaseThirdPlace": {
+    "description": "Bracket view label for the third-place playoff (bronze match)"
+  },
+  "tournamentBracketBronzeMatchShort": "Bronze",
+  "@tournamentBracketBronzeMatchShort": {
+    "description": "Short label for the third-place playoff used in compact UI"
+  },
+  "tournamentBracketByeLabel": "Freilos",
+  "@tournamentBracketByeLabel": {
+    "description": "Label shown on a BYE slot in the KO bracket (U5)"
+  },
+  "tournamentBracketByeTooltip": "Spielfreilos für Top-Seeds aus der Vorrunde — wer in der Gruppenphase vorne lag, startet eine Runde später.",
+  "@tournamentBracketByeTooltip": {
+    "description": "Tooltip on a BYE slot paraphrasing FR-FMT-11 in plain language (U6)"
+  },
+  "tournamentBracketSeedPrefix": "Seed {n}",
+  "@tournamentBracketSeedPrefix": {
+    "description": "Seed badge prefix shown on bracket cards",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "tournamentSeedingTitle": "Seeding",
+  "@tournamentSeedingTitle": {
+    "description": "Title of the seeding editor screen"
+  },
+  "tournamentSeedingEyebrow": "KO-Setup",
+  "@tournamentSeedingEyebrow": {
+    "description": "Eyebrow above the seeding editor title"
+  },
+  "tournamentSeedingPositionLabel": "Position {n}",
+  "@tournamentSeedingPositionLabel": {
+    "description": "Seed position label in the seeding editor list",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "tournamentSeedingDragHint": "Lange tippen und ziehen zum Umsortieren.",
+  "@tournamentSeedingDragHint": {
+    "description": "Hint above the drag-to-reorder seeding list"
+  },
+  "tournamentSeedingOverrideLabel": "Manuell gesetzt",
+  "@tournamentSeedingOverrideLabel": {
+    "description": "Badge shown on a seed that was manually overridden by the organizer"
+  },
+  "tournamentSeedingResetButton": "Auf Gruppen-Reihenfolge zurücksetzen",
+  "@tournamentSeedingResetButton": {
+    "description": "Button that resets manual seed overrides back to the round-robin standings"
+  },
+  "tournamentSeedingSaveButton": "Seeding speichern",
+  "@tournamentSeedingSaveButton": {
+    "description": "Primary action on the seeding editor"
+  },
+  "tournamentWizardStep45Title": "Liga-Wertung",
+  "@tournamentWizardStep45Title": {
+    "description": "Title of wizard step 4.5 asking whether the tournament counts for the league"
+  },
+  "tournamentWizardLeagueEligibleLabel": "Dieses Turnier wertet für die Liga",
+  "@tournamentWizardLeagueEligibleLabel": {
+    "description": "Switch label for league_eligible toggle (wizard step 4.5)"
+  },
+  "tournamentWizardLeagueEligibleHelper": "Liga-Turniere spielen standardmässig das Spiel um Platz 3 — Rang 3 und 4 geben unterschiedliche Punkte.",
+  "@tournamentWizardLeagueEligibleHelper": {
+    "description": "Helper text under the league-eligible switch explaining the bronze-match default"
+  },
+  "tournamentWizardStep5Title": "KO-Konfiguration",
+  "@tournamentWizardStep5Title": {
+    "description": "Title of wizard step 5 for KO phase configuration"
+  },
+  "tournamentWizardQualifierCountLabel": "Anzahl Qualifikanten",
+  "@tournamentWizardQualifierCountLabel": {
+    "description": "Label for the qualifier-count integer input (U1)"
+  },
+  "tournamentWizardQualifierCountHelper": "Wie viele Teams ziehen aus der Gruppenphase in die KO-Phase ein? Beliebige Zahl möglich — die App füllt fehlende Plätze mit Freilosen auf.",
+  "@tournamentWizardQualifierCountHelper": {
+    "description": "Helper text for qualifier-count input (U1, U2)"
+  },
+  "tournamentWizardQualifierPreviewBracketSize": "Bracket-Grösse: {size}",
+  "@tournamentWizardQualifierPreviewBracketSize": {
+    "description": "Preview line: next power of two used as bracket size (U3)",
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "tournamentWizardQualifierPreviewByes": "Davon {byes} Freilos(e) an die Top-Seeds",
+  "@tournamentWizardQualifierPreviewByes": {
+    "description": "Preview line: number of BYEs awarded to top seeds (U3)",
+    "placeholders": {
+      "byes": {
+        "type": "int"
+      }
+    }
+  },
+  "tournamentWizardQualifierPreviewRealMatches": "Runde 1: {matches} echte Spiele",
+  "@tournamentWizardQualifierPreviewRealMatches": {
+    "description": "Preview line: number of real R1 matches after BYE deduction (U3)",
+    "placeholders": {
+      "matches": {
+        "type": "int"
+      }
+    }
+  },
+  "tournamentWizardBronzeMatchLabel": "Spiel um Platz 3 austragen",
+  "@tournamentWizardBronzeMatchLabel": {
+    "description": "Switch label for with_third_place_playoff toggle"
+  },
+  "tournamentWizardBronzeMatchHelper": "Empfohlen bei Liga-Turnieren — entscheidet zwischen Rang 3 und 4.",
+  "@tournamentWizardBronzeMatchHelper": {
+    "description": "Helper text under the bronze-match switch"
+  },
+  "tournamentWizardStep6Title": "Tiebreaker-Reihenfolge",
+  "@tournamentWizardStep6Title": {
+    "description": "Title of wizard step 6 for tiebreaker reordering"
+  },
+  "tournamentWizardTiebreakerHint": "Lange tippen und ziehen, um die Reihenfolge der Entscheidungskriterien zu ändern.",
+  "@tournamentWizardTiebreakerHint": {
+    "description": "Hint above the drag-to-reorder tiebreaker list"
+  },
+  "tournamentWizardTiebreakerResetButton": "Standard wiederherstellen",
+  "@tournamentWizardTiebreakerResetButton": {
+    "description": "Button that resets the tiebreaker order to the spec default"
+  },
+  "tournamentKoHelpTitle": "Wie funktioniert der KO-Cut?",
+  "@tournamentKoHelpTitle": {
+    "description": "Title of the in-app help section explaining the KO phase (U8)"
+  },
+  "tournamentKoHelpBody": "Die besten Teams aus der Gruppenphase ziehen ins KO-Bracket ein. Passt die Zahl nicht zu einer Zweierpotenz (2, 4, 8, 16…), bekommen die bestplatzierten Teams ein Freilos in Runde 1. So bleibt das Bracket fair und ausgeglichen — international Standard.",
+  "@tournamentKoHelpBody": {
+    "description": "Body of the KO help section paraphrasing FR-FMT-11 in plain language (U8/U9)"
+  },
+  "tournamentKoHelpLinkLabel": "Mehr zum KO-Modus",
+  "@tournamentKoHelpLinkLabel": {
+    "description": "Link label opening the KO help section from the wizard"
+  }
 }
