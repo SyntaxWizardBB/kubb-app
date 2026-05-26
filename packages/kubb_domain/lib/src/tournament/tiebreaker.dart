@@ -65,7 +65,12 @@ class TiebreakerChain {
       final r = _apply(c, a, b);
       if (r != 0) return r;
     }
-    return 0;
+    // Stable, deterministic fallback when the configured chain is exhausted.
+    // Guarantees a total ordering even for fully-identical stats (e.g. rank
+    // 3 vs. 4 with `withThirdPlace = false`, ADR-0017 §4 last paragraph) so
+    // downstream league-point allocation in M5 is reproducible instead of
+    // implementation-defined. See TASK-M2.1-T10.
+    return a.participantId.compareTo(b.participantId);
   }
 
   int _apply(TiebreakerCriterion c, ParticipantStats a, ParticipantStats b) {

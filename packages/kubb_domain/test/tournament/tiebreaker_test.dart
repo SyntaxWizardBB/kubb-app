@@ -25,7 +25,9 @@ ParticipantStats statsFor(
 
 void main() {
   group('TiebreakerChain', () {
-    test('it returns 0 when stats are identical and chain is exhausted', () {
+    test(
+        'it falls back to participantId.compareTo when chain exhausts (stable order)',
+        () {
       const chain = TiebreakerChain([
         TiebreakerCriterion.totalPoints,
         TiebreakerCriterion.wins,
@@ -33,7 +35,10 @@ void main() {
       ]);
       final a = statsFor('a', totalPoints: 5, wins: 2, kubbsScored: 10);
       final b = statsFor('b', totalPoints: 5, wins: 2, kubbsScored: 10);
-      expect(chain.compare(a, b), equals(0));
+      expect(chain.compare(a, b), lessThan(0));
+      expect(chain.compare(b, a), greaterThan(0));
+      // Self-comparison is the only true tie.
+      expect(chain.compare(a, a), equals(0));
     });
 
     test('it ranks higher totalPoints first', () {
@@ -111,11 +116,16 @@ void main() {
       expect(chain.compare(a, b), lessThan(0));
     });
 
-    test('it returns 0 in directComparison if no direct match played', () {
+    test(
+        'it ties in directComparison if no direct match played (chain itself does not separate)',
+        () {
       const chain = TiebreakerChain([TiebreakerCriterion.directComparison]);
       final a = statsFor('a');
       final b = statsFor('b');
-      expect(chain.compare(a, b), equals(0));
+      // Chain itself does not separate, but the post-chain stable fallback
+      // by participantId kicks in.
+      expect(chain.compare(a, b), lessThan(0));
+      expect(chain.compare(b, a), greaterThan(0));
     });
 
     test('it ranks the direct winner higher in directComparison', () {

@@ -52,9 +52,12 @@ void main() {
     Glados2<ParticipantStats, ParticipantStats>(
       any.participantStats,
       any.participantStats,
-    ).test('empty chain reports every comparison as a tie', (a, b) {
+    ).test('empty chain falls back to participantId order', (a, b) {
       const chain = TiebreakerChain([]);
-      expect(chain.compare(a, b), 0);
+      expect(
+        chain.compare(a, b),
+        equals(a.participantId.compareTo(b.participantId)),
+      );
     });
 
     test('chain falls through to a later separating criterion', () {
