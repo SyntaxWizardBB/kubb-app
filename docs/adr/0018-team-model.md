@@ -1,9 +1,9 @@
 # ADR-0018: Team-Modell (Domain-Typ, DB-Schema, Mitgliedschafts-Lifecycle)
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-05-26
 - **Depends on**: ADR-0001 (Tech-Stack), ADR-0002 (Bounded Contexts), ADR-0014 (Tournament-Match-Pfad-Trennung)
-- **Bezug**: `docs/plans/m3-teams-pools-roster/architecture.md` §3.1–§3.3, `docs/specs/tournament-mode-spec.md` §3.7 FR-TEAM, OD-M3-01, OD-M3-04
+- **Bezug**: `docs/plans/m3-teams-pools-roster/architecture.md` §3.1–§3.3, `docs/specs/tournament-mode-spec.md` §3.7 FR-TEAM, OD-M3-01, OD-M3-02, OD-M3-04, OD-M3-06
 
 ## Context
 
@@ -18,6 +18,13 @@ Die Spec lässt einige Punkte offen, die für die Implementation entscheidend si
 5. **Captain-Rechte-Mechanismus** — Datenmodell oder reine RPC-Validierung?
 
 ## Decision
+
+Folgende M3-ODs werden mit dieser ADR aufgelöst (alle 2026-05-26 resolved):
+
+- **OD-M3-01** (Captain-Schutz): Option B — Audit-Event plus Inbox-Notification an alle aktiven Pool-Mitglieder bei kritischen Aktionen (Removal, Edit, Dissolve). Kein Voting, kein Cooldown. Siehe §Mitgliedschafts-Lifecycle.
+- **OD-M3-02** (Roster-Slot-Anzahl): Option B — Team-Grössen {2, 3, 4, 5, 6} im Wizard, Schema-CHECK `team_size BETWEEN 1 AND 6` bleibt. Siehe §Datenmodell.
+- **OD-M3-04** (Reservespieler): Option A für M3 — kein Reserve-Konzept, Roster hat genau `team_size` Slots. `tournament_match_lineups` als M5+ Folge-Ticket.
+- **OD-M3-06** (Team-Sieg-Punkte): Option A — Match-Sieg-Punkte (3 / 1 / 0) konsistent zu M1. Set-Tiebreaker bleibt EKC-Score. Konfigurierbarkeit (Option C) bleibt M5+ Liga-Block.
 
 ### Layering
 
