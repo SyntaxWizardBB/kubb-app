@@ -3849,6 +3849,186 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Von {name}'**
   String teamInvitationFrom(String name);
+
+  /// Header above the roster composition widget (M3.2-T13)
+  ///
+  /// In de, this message translates to:
+  /// **'Roster zusammenstellen'**
+  String get rosterComposeTitle;
+
+  /// Section label for the pool list in the roster composition widget
+  ///
+  /// In de, this message translates to:
+  /// **'Pool'**
+  String get rosterComposePoolSection;
+
+  /// Section label for the roster slots in the roster composition widget
+  ///
+  /// In de, this message translates to:
+  /// **'Slots'**
+  String get rosterComposeSlotsSection;
+
+  /// Label for an individual roster slot
+  ///
+  /// In de, this message translates to:
+  /// **'Slot {index}'**
+  String rosterComposeSlotLabel(int index);
+
+  /// Placeholder text shown for an unassigned roster slot
+  ///
+  /// In de, this message translates to:
+  /// **'Leer'**
+  String get rosterComposeSlotEmpty;
+
+  /// Prompt shown after tapping a pool entry, asking which slot to fill
+  ///
+  /// In de, this message translates to:
+  /// **'Welcher Slot?'**
+  String get rosterComposeSelectSlotPrompt;
+
+  /// Prompt shown after tapping a slot, asking which pool member to assign
+  ///
+  /// In de, this message translates to:
+  /// **'Welcher Pool-Eintrag?'**
+  String get rosterComposeSelectMemberPrompt;
+
+  /// Tooltip shown on a pool entry that is already assigned to another team roster
+  ///
+  /// In de, this message translates to:
+  /// **'Bereits in anderem Roster'**
+  String get rosterComposeConflictTooltip;
+
+  /// Validation warning when a roster contains only guests (FR-REG-12)
+  ///
+  /// In de, this message translates to:
+  /// **'Mindestens ein registriertes Mitglied'**
+  String get rosterComposeMinOneRegisteredWarning;
+
+  /// Title of the register-team screen (M3.2-T14)
+  ///
+  /// In de, this message translates to:
+  /// **'Team anmelden'**
+  String get registerTeamTitle;
+
+  /// Dropdown label for choosing which team to register
+  ///
+  /// In de, this message translates to:
+  /// **'Team auswählen'**
+  String get registerTeamSelectTeamLabel;
+
+  /// Primary submit button on the register-team screen
+  ///
+  /// In de, this message translates to:
+  /// **'Anmelden'**
+  String get registerTeamSubmitButton;
+
+  /// Hint shown when the user has no teams to register
+  ///
+  /// In de, this message translates to:
+  /// **'Du hast noch kein Team. Lege zuerst eines an.'**
+  String get registerTeamNoTeamsHint;
+
+  /// Action button that navigates to the team-create screen
+  ///
+  /// In de, this message translates to:
+  /// **'Team erstellen'**
+  String get registerTeamCreateTeamAction;
+
+  /// Snackbar/dialog message for server error BR_5_VIOLATION
+  ///
+  /// In de, this message translates to:
+  /// **'Ein Mitglied ist bereits in einem anderen Roster dieses Turniers.'**
+  String get registerTeamErrorBr5Violation;
+
+  /// Server-side error MIN_ONE_REGISTERED (FR-REG-12)
+  ///
+  /// In de, this message translates to:
+  /// **'Roster benötigt mindestens ein registriertes Mitglied.'**
+  String get registerTeamErrorMinOneRegistered;
+
+  /// Generic fallback error for the register-team screen
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldung fehlgeschlagen — bitte erneut versuchen.'**
+  String get registerTeamErrorGeneric;
+
+  /// Title of the roster editor screen (M3.2-T15)
+  ///
+  /// In de, this message translates to:
+  /// **'Roster bearbeiten'**
+  String get rosterEditorTitle;
+
+  /// Section header for the current roster on the editor screen
+  ///
+  /// In de, this message translates to:
+  /// **'Aktuelles Roster'**
+  String get rosterEditorCurrentSection;
+
+  /// Action button to replace a single roster slot
+  ///
+  /// In de, this message translates to:
+  /// **'Ersetzen'**
+  String get rosterEditorReplaceAction;
+
+  /// Title of the replace-slot dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Slot {index} ersetzen'**
+  String rosterEditorReplaceDialogTitle(int index);
+
+  /// Label for the optional reason field in the replace-slot dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Grund (optional)'**
+  String get rosterEditorReplaceReasonLabel;
+
+  /// Submit button in the replace-slot dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Übernehmen'**
+  String get rosterEditorReplaceSubmit;
+
+  /// Collapsible section header for past roster substitutions
+  ///
+  /// In de, this message translates to:
+  /// **'Verlauf'**
+  String get rosterEditorAuditSection;
+
+  /// Empty state for the audit-trail section
+  ///
+  /// In de, this message translates to:
+  /// **'Keine bisherigen Wechsel.'**
+  String get rosterEditorAuditEmpty;
+
+  /// Error message for server error ROSTER_LOCKED_DURING_MATCH (OD-M3-07)
+  ///
+  /// In de, this message translates to:
+  /// **'Substitution nur zwischen Matches möglich.'**
+  String get rosterEditorErrorLockedDuringMatch;
+
+  /// Hint shown when the tournament is finalized and roster edits are disabled
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier ist abgeschlossen — Roster nicht mehr änderbar.'**
+  String get rosterEditorFinalizedHint;
+
+  /// Tab label for the roster view on the tournament detail screen (M3.2-T17)
+  ///
+  /// In de, this message translates to:
+  /// **'Roster'**
+  String get tournamentDetailRosterTab;
+
+  /// Empty state on the roster tab
+  ///
+  /// In de, this message translates to:
+  /// **'Noch kein Roster zusammengestellt.'**
+  String get tournamentDetailRosterEmpty;
+
+  /// Match header for team matches, showing roster names (R-M3-G3-Mitigation)
+  ///
+  /// In de, this message translates to:
+  /// **'{teamName} (Roster: {members})'**
+  String tournamentDetailMatchTeamHeader(String teamName, String members);
 }
 
 class _AppLocalizationsDelegate

@@ -2073,4 +2073,108 @@ class AppLocalizationsDe extends AppLocalizations {
   String teamInvitationFrom(String name) {
     return 'Von $name';
   }
+
+  @override
+  String get rosterComposeTitle => 'Roster zusammenstellen';
+
+  @override
+  String get rosterComposePoolSection => 'Pool';
+
+  @override
+  String get rosterComposeSlotsSection => 'Slots';
+
+  @override
+  String rosterComposeSlotLabel(int index) {
+    return 'Slot $index';
+  }
+
+  @override
+  String get rosterComposeSlotEmpty => 'Leer';
+
+  @override
+  String get rosterComposeSelectSlotPrompt => 'Welcher Slot?';
+
+  @override
+  String get rosterComposeSelectMemberPrompt => 'Welcher Pool-Eintrag?';
+
+  @override
+  String get rosterComposeConflictTooltip => 'Bereits in anderem Roster';
+
+  @override
+  String get rosterComposeMinOneRegisteredWarning =>
+      'Mindestens ein registriertes Mitglied';
+
+  @override
+  String get registerTeamTitle => 'Team anmelden';
+
+  @override
+  String get registerTeamSelectTeamLabel => 'Team auswählen';
+
+  @override
+  String get registerTeamSubmitButton => 'Anmelden';
+
+  @override
+  String get registerTeamNoTeamsHint =>
+      'Du hast noch kein Team. Lege zuerst eines an.';
+
+  @override
+  String get registerTeamCreateTeamAction => 'Team erstellen';
+
+  @override
+  String get registerTeamErrorBr5Violation =>
+      'Ein Mitglied ist bereits in einem anderen Roster dieses Turniers.';
+
+  @override
+  String get registerTeamErrorMinOneRegistered =>
+      'Roster benötigt mindestens ein registriertes Mitglied.';
+
+  @override
+  String get registerTeamErrorGeneric =>
+      'Anmeldung fehlgeschlagen — bitte erneut versuchen.';
+
+  @override
+  String get rosterEditorTitle => 'Roster bearbeiten';
+
+  @override
+  String get rosterEditorCurrentSection => 'Aktuelles Roster';
+
+  @override
+  String get rosterEditorReplaceAction => 'Ersetzen';
+
+  @override
+  String rosterEditorReplaceDialogTitle(int index) {
+    return 'Slot $index ersetzen';
+  }
+
+  @override
+  String get rosterEditorReplaceReasonLabel => 'Grund (optional)';
+
+  @override
+  String get rosterEditorReplaceSubmit => 'Übernehmen';
+
+  @override
+  String get rosterEditorAuditSection => 'Verlauf';
+
+  @override
+  String get rosterEditorAuditEmpty => 'Keine bisherigen Wechsel.';
+
+  @override
+  String get rosterEditorErrorLockedDuringMatch =>
+      'Substitution nur zwischen Matches möglich.';
+
+  @override
+  String get rosterEditorFinalizedHint =>
+      'Turnier ist abgeschlossen — Roster nicht mehr änderbar.';
+
+  @override
+  String get tournamentDetailRosterTab => 'Roster';
+
+  @override
+  String get tournamentDetailRosterEmpty =>
+      'Noch kein Roster zusammengestellt.';
+
+  @override
+  String tournamentDetailMatchTeamHeader(String teamName, String members) {
+    return '$teamName (Roster: $members)';
+  }
 }

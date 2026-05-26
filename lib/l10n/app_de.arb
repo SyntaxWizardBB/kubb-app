@@ -2816,5 +2816,143 @@
         "type": "String"
       }
     }
+  },
+  "rosterComposeTitle": "Roster zusammenstellen",
+  "@rosterComposeTitle": {
+    "description": "Header above the roster composition widget (M3.2-T13)"
+  },
+  "rosterComposePoolSection": "Pool",
+  "@rosterComposePoolSection": {
+    "description": "Section label for the pool list in the roster composition widget"
+  },
+  "rosterComposeSlotsSection": "Slots",
+  "@rosterComposeSlotsSection": {
+    "description": "Section label for the roster slots in the roster composition widget"
+  },
+  "rosterComposeSlotLabel": "Slot {index}",
+  "@rosterComposeSlotLabel": {
+    "description": "Label for an individual roster slot",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "rosterComposeSlotEmpty": "Leer",
+  "@rosterComposeSlotEmpty": {
+    "description": "Placeholder text shown for an unassigned roster slot"
+  },
+  "rosterComposeSelectSlotPrompt": "Welcher Slot?",
+  "@rosterComposeSelectSlotPrompt": {
+    "description": "Prompt shown after tapping a pool entry, asking which slot to fill"
+  },
+  "rosterComposeSelectMemberPrompt": "Welcher Pool-Eintrag?",
+  "@rosterComposeSelectMemberPrompt": {
+    "description": "Prompt shown after tapping a slot, asking which pool member to assign"
+  },
+  "rosterComposeConflictTooltip": "Bereits in anderem Roster",
+  "@rosterComposeConflictTooltip": {
+    "description": "Tooltip shown on a pool entry that is already assigned to another team roster"
+  },
+  "rosterComposeMinOneRegisteredWarning": "Mindestens ein registriertes Mitglied",
+  "@rosterComposeMinOneRegisteredWarning": {
+    "description": "Validation warning when a roster contains only guests (FR-REG-12)"
+  },
+  "registerTeamTitle": "Team anmelden",
+  "@registerTeamTitle": {
+    "description": "Title of the register-team screen (M3.2-T14)"
+  },
+  "registerTeamSelectTeamLabel": "Team auswählen",
+  "@registerTeamSelectTeamLabel": {
+    "description": "Dropdown label for choosing which team to register"
+  },
+  "registerTeamSubmitButton": "Anmelden",
+  "@registerTeamSubmitButton": {
+    "description": "Primary submit button on the register-team screen"
+  },
+  "registerTeamNoTeamsHint": "Du hast noch kein Team. Lege zuerst eines an.",
+  "@registerTeamNoTeamsHint": {
+    "description": "Hint shown when the user has no teams to register"
+  },
+  "registerTeamCreateTeamAction": "Team erstellen",
+  "@registerTeamCreateTeamAction": {
+    "description": "Action button that navigates to the team-create screen"
+  },
+  "registerTeamErrorBr5Violation": "Ein Mitglied ist bereits in einem anderen Roster dieses Turniers.",
+  "@registerTeamErrorBr5Violation": {
+    "description": "Snackbar/dialog message for server error BR_5_VIOLATION"
+  },
+  "registerTeamErrorMinOneRegistered": "Roster benötigt mindestens ein registriertes Mitglied.",
+  "@registerTeamErrorMinOneRegistered": {
+    "description": "Server-side error MIN_ONE_REGISTERED (FR-REG-12)"
+  },
+  "registerTeamErrorGeneric": "Anmeldung fehlgeschlagen — bitte erneut versuchen.",
+  "@registerTeamErrorGeneric": {
+    "description": "Generic fallback error for the register-team screen"
+  },
+  "rosterEditorTitle": "Roster bearbeiten",
+  "@rosterEditorTitle": {
+    "description": "Title of the roster editor screen (M3.2-T15)"
+  },
+  "rosterEditorCurrentSection": "Aktuelles Roster",
+  "@rosterEditorCurrentSection": {
+    "description": "Section header for the current roster on the editor screen"
+  },
+  "rosterEditorReplaceAction": "Ersetzen",
+  "@rosterEditorReplaceAction": {
+    "description": "Action button to replace a single roster slot"
+  },
+  "rosterEditorReplaceDialogTitle": "Slot {index} ersetzen",
+  "@rosterEditorReplaceDialogTitle": {
+    "description": "Title of the replace-slot dialog",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "rosterEditorReplaceReasonLabel": "Grund (optional)",
+  "@rosterEditorReplaceReasonLabel": {
+    "description": "Label for the optional reason field in the replace-slot dialog"
+  },
+  "rosterEditorReplaceSubmit": "Übernehmen",
+  "@rosterEditorReplaceSubmit": {
+    "description": "Submit button in the replace-slot dialog"
+  },
+  "rosterEditorAuditSection": "Verlauf",
+  "@rosterEditorAuditSection": {
+    "description": "Collapsible section header for past roster substitutions"
+  },
+  "rosterEditorAuditEmpty": "Keine bisherigen Wechsel.",
+  "@rosterEditorAuditEmpty": {
+    "description": "Empty state for the audit-trail section"
+  },
+  "rosterEditorErrorLockedDuringMatch": "Substitution nur zwischen Matches möglich.",
+  "@rosterEditorErrorLockedDuringMatch": {
+    "description": "Error message for server error ROSTER_LOCKED_DURING_MATCH (OD-M3-07)"
+  },
+  "rosterEditorFinalizedHint": "Turnier ist abgeschlossen — Roster nicht mehr änderbar.",
+  "@rosterEditorFinalizedHint": {
+    "description": "Hint shown when the tournament is finalized and roster edits are disabled"
+  },
+  "tournamentDetailRosterTab": "Roster",
+  "@tournamentDetailRosterTab": {
+    "description": "Tab label for the roster view on the tournament detail screen (M3.2-T17)"
+  },
+  "tournamentDetailRosterEmpty": "Noch kein Roster zusammengestellt.",
+  "@tournamentDetailRosterEmpty": {
+    "description": "Empty state on the roster tab"
+  },
+  "tournamentDetailMatchTeamHeader": "{teamName} (Roster: {members})",
+  "@tournamentDetailMatchTeamHeader": {
+    "description": "Match header for team matches, showing roster names (R-M3-G3-Mitigation)",
+    "placeholders": {
+      "teamName": {
+        "type": "String"
+      },
+      "members": {
+        "type": "String"
+      }
+    }
   }
 }
