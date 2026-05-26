@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:meta/meta.dart';
 
 /// Strategy used to distribute participants into pool groups. See ADR-0019 §1.
@@ -12,6 +14,7 @@ class PoolPhaseConfig {
     required this.strategy,
     this.randomSeed,
   });
+
   final int groupCount;
   final int qualifiersPerGroup;
   final PoolGroupingStrategy strategy;
@@ -25,6 +28,94 @@ class PoolPhaseResult {
   final List<List<String?>> groups;
 }
 
-/// T3 implements this body — T1 only locks the contract.
-PoolPhaseResult generatePools(List<String> ids, PoolPhaseConfig config) =>
-    throw UnimplementedError('generatePools is implemented in M3.3-T3');
+/// Generates pool groups from a participant id list according to [config].
+///
+/// Validation (mirrored 1:1 in `_tournament_compute_pools` plpgsql in T5):
+///   * `groupCount >= 1`
+///   * `qualifiersPerGroup >= 1`
+///   * `ceil(ids.length / groupCount) >= qualifiersPerGroup`
+///
+/// Distribution per strategy:
+///   * `snake`  — row-by-row, alternating direction (S0→G0, S1→G1, ..., Sn→Gn,
+///                Sn+1→Gn, Sn+2→Gn-1, ...). Standard Schweizer-Liga pattern.
+///   * `random` — deterministic Fisher-Yates with `randomSeed`, then snake.
+///   * `seeded` — sequential block-fill, input order preserved within group.
+///
+/// BYE-Slots (`null`) are appended when `groupCount * groupSize > ids.length`,
+/// landing in the trailing (shortest) groups so KO-seeding indices stay stable.
+PoolPhaseResult generatePools(List<String> ids, PoolPhaseConfig config) {
+  if (config.groupCount < 1) {
+    throw ArgumentError.value(
+      config.groupCount,
+      'groupCount',
+      'must be at least 1',
+    );
+  }
+  if (config.qualifiersPerGroup < 1) {
+    throw ArgumentError.value(
+      config.qualifiersPerGroup,
+      'qualifiersPerGroup',
+      'must be at least 1',
+    );
+  }
+  final groupSize = (ids.length + config.groupCount - 1) ~/ config.groupCount;
+  if (groupSize < config.qualifiersPerGroup) {
+    throw ArgumentError(
+      'qualifiersPerGroup (${config.qualifiersPerGroup}) exceeds max group '
+      'size ($groupSize) for ${ids.length} participants in '
+      '${config.groupCount} groups',
+    );
+  }
+
+  final ordered = switch (config.strategy) {
+    PoolGroupingStrategy.snake => ids,
+    PoolGroupingStrategy.seeded => ids,
+    PoolGroupingStrategy.random => _shuffle(ids, config.randomSeed ?? 0),
+  };
+
+  final groups = List<List<String?>>.generate(
+    config.groupCount,
+    (_) => <String?>[],
+    growable: false,
+  );
+
+  if (config.strategy == PoolGroupingStrategy.seeded) {
+    for (var i = 0; i < ordered.length; i++) {
+      groups[i ~/ groupSize].add(ordered[i]);
+    }
+  } else {
+    // Snake (also for random after shuffle): row r, direction alternates.
+    for (var i = 0; i < ordered.length; i++) {
+      final row = i ~/ config.groupCount;
+      final col = i % config.groupCount;
+      final groupIndex =
+          row.isEven ? col : config.groupCount - 1 - col;
+      groups[groupIndex].add(ordered[i]);
+    }
+  }
+
+  // Pad shorter groups with BYE so every bucket reaches `groupSize`. The
+  // snake-last-row already places missing slots in the lowest-index groups;
+  // we reorder so the shortest groups land at the end (stable for ties).
+  groups.sort((a, b) => b.length.compareTo(a.length));
+  for (final g in groups) {
+    while (g.length < groupSize) {
+      g.add(null);
+    }
+  }
+
+  return PoolPhaseResult(groups: groups);
+}
+
+/// Deterministic Fisher-Yates using a seeded [Random]. Pure, plpgsql-portable.
+List<String> _shuffle(List<String> ids, int seed) {
+  final rng = Random(seed);
+  final out = List<String>.of(ids);
+  for (var i = out.length - 1; i > 0; i--) {
+    final j = rng.nextInt(i + 1);
+    final tmp = out[i];
+    out[i] = out[j];
+    out[j] = tmp;
+  }
+  return out;
+}
