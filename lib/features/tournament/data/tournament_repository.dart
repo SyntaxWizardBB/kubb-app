@@ -249,6 +249,7 @@ class TournamentRepository implements TournamentRemote {
   /// Forwards a `(participantId -> seed)` map into the
   /// `tournament_set_seeding` RPC. Server validates that all keys are
   /// confirmed participants and that seeds are unique.
+  @override
   Future<void> setSeeding({
     required TournamentId tournamentId,
     required Map<TournamentParticipantId, int> seeds,
@@ -267,6 +268,7 @@ class TournamentRepository implements TournamentRemote {
   /// (`serialization_failure`); this adapter swallows that code so the
   /// caller sees an idempotent success and refreshes its state instead
   /// of showing an error toast.
+  @override
   Future<void> startKoPhase(
     TournamentId tournamentId,
     KoPhaseConfig config,
@@ -293,6 +295,7 @@ class TournamentRepository implements TournamentRemote {
   /// token-prefixed server messages to an [OverrideKoPairingException]
   /// so the UI layer can render a localized error without parsing
   /// strings.
+  @override
   Future<void> overrideKoPairing({
     required TournamentMatchId matchId,
     required TournamentParticipantId participantA,
@@ -321,6 +324,7 @@ class TournamentRepository implements TournamentRemote {
   /// envelope returned by `tournament_list_matches` (M1) does not
   /// expose them. RLS on `tournament_matches` filters the rows down to
   /// what the caller is allowed to see.
+  @override
   Future<Bracket> getBracket(TournamentId tournamentId) async {
     final rows = await _client
         .from('tournament_matches')
@@ -365,34 +369,6 @@ class TournamentRepository implements TournamentRemote {
     // detail-controller. Surfacing an empty stream keeps the port
     // satisfiable without committing to a transport.
     return const Stream<TournamentMatchRef>.empty();
-  }
-
-  @override
-  Future<void> setSeeding({
-    required TournamentId tournamentId,
-    required Map<TournamentParticipantId, int> seeds,
-  }) {
-    throw UnimplementedError('setSeeding — TASK-M2.2-T7b');
-  }
-
-  @override
-  Future<void> startKoPhase(TournamentId tournamentId, KoPhaseConfig config) {
-    throw UnimplementedError('startKoPhase — TASK-M2.2-T7b');
-  }
-
-  @override
-  Future<void> overrideKoPairing({
-    required TournamentMatchId matchId,
-    required TournamentParticipantId participantA,
-    required TournamentParticipantId participantB,
-    required String reason,
-  }) {
-    throw UnimplementedError('overrideKoPairing — TASK-M2.2-T7b');
-  }
-
-  @override
-  Future<Bracket> getBracket(TournamentId tournamentId) {
-    throw UnimplementedError('getBracket — TASK-M2.2-T7b');
   }
 
   Future<void> _voidRpc(String fn, TournamentId id) {
