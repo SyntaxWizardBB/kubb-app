@@ -8,6 +8,7 @@ import 'package:kubb_app/features/tournament/application/tournament_providers.da
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_league_step.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -212,9 +213,10 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
           onMaxSets: controller.setMaxSets,
         );
       case _StepKind.league:
-        // T12 will provide `_LeagueStep`. Placeholder keeps the step
-        // navigable until that widget lands and is wired in here.
-        return _LeagueStepPlaceholder(draft: draft);
+        return WizardLeagueStep(
+          value: draft.leagueEligible,
+          onChanged: controller.setLeagueEligible,
+        );
       case _StepKind.koConfig:
         return WizardKoConfigStep(
           key: ValueKey<int>(draft.maxParticipants),
@@ -225,40 +227,6 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
       case _StepKind.summary:
         return _StepSummary(draft: draft);
     }
-  }
-}
-
-/// Temporary placeholder for the league step until T12 ships
-/// `_LeagueStep`. Renders the localized title so the wizard remains
-/// navigable in parallel-development mode without committing to a
-/// concrete API shape that would conflict with T12.
-class _LeagueStepPlaceholder extends StatelessWidget {
-  const _LeagueStepPlaceholder({required this.draft});
-
-  final TournamentConfigDraft draft;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final l10n = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          l10n.tournamentWizardLeagueEligibleLabel,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: tokens.fg,
-          ),
-        ),
-        const SizedBox(height: KubbTokens.space2),
-        Text(
-          l10n.tournamentWizardLeagueEligibleHelper,
-          style: TextStyle(fontSize: 12, color: tokens.fgMuted),
-        ),
-      ],
-    );
   }
 }
 

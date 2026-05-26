@@ -76,6 +76,10 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     state = state.copyWith(bracketSeedingMode: mode);
   }
 
+  void setLeagueEligible(bool value) {
+    state = state.copyWith(leagueEligible: value);
+  }
+
   TournamentConfigValidation validate() => state.validate();
 
   void reset() {
