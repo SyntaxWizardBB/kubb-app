@@ -1834,6 +1834,16 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get tournamentBracketTitle => 'KO-Bracket';
+
+  @override
+  String get tournamentBracketEmpty => 'KO noch nicht gestartet';
+
+  @override
+  String get tournamentBracketLoadError =>
+      'Bracket konnte nicht geladen werden';
+
+  @override
   String get tournamentSeedingTitle => 'Seeding';
 
   @override

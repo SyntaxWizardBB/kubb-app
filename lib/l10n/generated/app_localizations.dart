@@ -3430,6 +3430,24 @@ abstract class AppLocalizations {
   /// **'Seed {n}'**
   String tournamentBracketSeedPrefix(int n);
 
+  /// AppBar title of the tournament bracket screen
+  ///
+  /// In de, this message translates to:
+  /// **'KO-Bracket'**
+  String get tournamentBracketTitle;
+
+  /// Empty-state copy shown on the bracket screen while the tournament is still in the group phase
+  ///
+  /// In de, this message translates to:
+  /// **'KO noch nicht gestartet'**
+  String get tournamentBracketEmpty;
+
+  /// Error-state copy shown when the bracket fetch fails
+  ///
+  /// In de, this message translates to:
+  /// **'Bracket konnte nicht geladen werden'**
+  String get tournamentBracketLoadError;
+
   /// Title of the seeding editor screen
   ///
   /// In de, this message translates to:

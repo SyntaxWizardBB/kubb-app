@@ -24,6 +24,7 @@ import 'package:kubb_app/features/social/presentation/friends_screen.dart';
 import 'package:kubb_app/features/social/presentation/groups_screen.dart';
 import 'package:kubb_app/features/social/presentation/social_routes.dart';
 import 'package:kubb_app/features/stats/presentation/stats_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_bracket_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_conflict_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_detail_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_list_screen.dart';
@@ -234,6 +235,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/tournament/:id/standings',
         builder: (_, state) => TournamentStandingsScreen(
+          tournamentId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/tournament/:id/bracket',
+        builder: (_, state) => TournamentBracketScreen(
           tournamentId: state.pathParameters['id']!,
         ),
       ),

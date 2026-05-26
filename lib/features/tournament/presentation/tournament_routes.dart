@@ -22,6 +22,9 @@ abstract final class TournamentRoutes {
   /// Final ranking. Compose as `'$standingsBase/$tournamentId/standings'`.
   static const standingsBase = '/tournament';
 
+  /// KO bracket view. Compose as `'$bracketBase/$tournamentId/bracket'`.
+  static const bracketBase = '/tournament';
+
   static String matchesFor(String tournamentId) =>
       '$matches/$tournamentId/matches';
 
@@ -38,4 +41,7 @@ abstract final class TournamentRoutes {
 
   static String standings(String tournamentId) =>
       '$standingsBase/$tournamentId/standings';
+
+  static String bracket(String tournamentId) =>
+      '$bracketBase/$tournamentId/bracket';
 }

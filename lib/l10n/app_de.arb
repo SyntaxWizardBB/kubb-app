@@ -2501,6 +2501,18 @@
       }
     }
   },
+  "tournamentBracketTitle": "KO-Bracket",
+  "@tournamentBracketTitle": {
+    "description": "AppBar title of the tournament bracket screen"
+  },
+  "tournamentBracketEmpty": "KO noch nicht gestartet",
+  "@tournamentBracketEmpty": {
+    "description": "Empty-state copy shown on the bracket screen while the tournament is still in the group phase"
+  },
+  "tournamentBracketLoadError": "Bracket konnte nicht geladen werden",
+  "@tournamentBracketLoadError": {
+    "description": "Error-state copy shown when the bracket fetch fails"
+  },
   "tournamentSeedingTitle": "Seeding",
   "@tournamentSeedingTitle": {
     "description": "Title of the seeding editor screen"
