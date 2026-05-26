@@ -1517,6 +1517,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentDetailActionStandings => 'Endrangliste';
 
   @override
+  String get tournamentDetailActionBracket => 'Bracket anzeigen';
+
+  @override
   String get tournamentDetailAborted => 'Turnier abgebrochen.';
 
   @override

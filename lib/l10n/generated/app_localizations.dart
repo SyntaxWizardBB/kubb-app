@@ -2878,6 +2878,12 @@ abstract class AppLocalizations {
   /// **'Endrangliste'**
   String get tournamentDetailActionStandings;
 
+  /// Action: navigate to KO bracket view
+  ///
+  /// In de, this message translates to:
+  /// **'Bracket anzeigen'**
+  String get tournamentDetailActionBracket;
+
   /// Headline when status is aborted
   ///
   /// In de, this message translates to:

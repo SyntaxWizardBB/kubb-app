@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
+import 'package:kubb_app/features/tournament/application/tournament_bracket_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_detail_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -48,6 +49,7 @@ Future<void> _pump(
   WidgetTester tester,
   TournamentDetail detail, {
   String? callerUserId,
+  Bracket? bracket,
 }) async {
   final router = GoRouter(
     initialLocation: '/tournament/t-1',
@@ -65,6 +67,9 @@ Future<void> _pump(
       overrides: [
         tournamentDetailProvider(_id).overrideWith((_) async => detail),
         currentUserIdProvider.overrideWithValue(callerUserId),
+        tournamentBracketProvider(_id).overrideWith(
+          (_) async => bracket ?? (throw ArgumentError('no ko matches')),
+        ),
       ],
       child: MaterialApp.router(
         theme: KubbTheme.light(),
@@ -105,5 +110,27 @@ void main() {
       callerUserId: 'u-other',
     );
     expect(find.text('Turnier abgebrochen.'), findsOneWidget);
+  });
+
+  testWidgets('no bracket: hides bracket action while phase is group',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(status: TournamentStatus.live),
+      callerUserId: 'u-other',
+    );
+    expect(find.text('Bracket anzeigen'), findsNothing);
+  });
+
+  testWidgets('any KO match present: surfaces bracket action', (tester) async {
+    final bracket =
+        Bracket.singleElimination(const <String>['p1', 'p2', 'p3', 'p4']);
+    await _pump(
+      tester,
+      _detail(status: TournamentStatus.live),
+      callerUserId: 'u-other',
+      bracket: bracket,
+    );
+    expect(find.text('Bracket anzeigen'), findsOneWidget);
   });
 }

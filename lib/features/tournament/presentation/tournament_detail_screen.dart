@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
+import 'package:kubb_app/features/tournament/application/tournament_bracket_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
@@ -240,6 +241,17 @@ class _Actions extends ConsumerWidget {
     final status = detail.tournament.status;
     final buttons = <Widget>[];
     final pathBase = '${TournamentRoutes.detail}/${id.value}';
+    // T15: surface bracket entry once any KO/third_place/final match
+    // exists. `tournamentBracketProvider` fetches exactly those rows
+    // and throws `ArgumentError` while the tournament is still in the
+    // group phase — both `error` and `loading` map to "no bracket yet"
+    // via `maybeWhen`.
+    final hasBracket = ref.watch(tournamentBracketProvider(id)).maybeWhen(
+          data: (b) => switch (b) {
+            SingleEliminationBracket(:final rounds) => rounds.isNotEmpty,
+          },
+          orElse: () => false,
+        );
 
     Widget mk(String label, VoidCallback onTap, {Color? color}) => SizedBox(
           height: KubbTokens.touchComfortable,
@@ -300,6 +312,9 @@ class _Actions extends ConsumerWidget {
       );
     }
 
+    if (hasBracket) {
+      nav(l.tournamentDetailActionBracket, '$pathBase/bracket');
+    }
     if (isCreator &&
         status != TournamentStatus.finalized &&
         status != TournamentStatus.aborted) {
