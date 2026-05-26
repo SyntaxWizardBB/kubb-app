@@ -1,7 +1,6 @@
 import 'package:glados/glados.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:kubb_domain/src/tournament/pool_cut.dart';
-import 'package:kubb_domain/src/tournament/pool_phase.dart';
 
 import '../_support/tournament_generators.dart';
 
@@ -35,12 +34,12 @@ List<List<ParticipantStats>> _cleanFourByFour() => [
 const _cfg4x4Top2 = PoolPhaseConfig(
   groupCount: 4,
   qualifiersPerGroup: 2,
-  groupingStrategy: GroupingStrategy.snake,
+  strategy: PoolGroupingStrategy.snake,
 );
 const _cfg2x2Top1 = PoolPhaseConfig(
   groupCount: 2,
   qualifiersPerGroup: 1,
-  groupingStrategy: GroupingStrategy.snake,
+  strategy: PoolGroupingStrategy.snake,
 );
 
 void main() {
