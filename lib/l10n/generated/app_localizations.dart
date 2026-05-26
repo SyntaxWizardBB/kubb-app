@@ -3496,6 +3496,24 @@ abstract class AppLocalizations {
   /// **'Seeding speichern'**
   String get tournamentSeedingSaveButton;
 
+  /// Action that commits the seeding and triggers the start_ko_phase RPC
+  ///
+  /// In de, this message translates to:
+  /// **'KO starten'**
+  String get tournamentSeedingStartKoButton;
+
+  /// Inline banner title shown when the save or start RPC fails
+  ///
+  /// In de, this message translates to:
+  /// **'Aktion fehlgeschlagen'**
+  String get tournamentSeedingErrorTitle;
+
+  /// Placeholder shown when the auto-seed list is empty (group phase not finished)
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine qualifizierten Teilnehmer.'**
+  String get tournamentSeedingEmpty;
+
   /// Title of wizard step 4.5 asking whether the tournament counts for the league
   ///
   /// In de, this message translates to:

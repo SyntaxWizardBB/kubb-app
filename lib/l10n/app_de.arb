@@ -2550,6 +2550,18 @@
   "@tournamentSeedingSaveButton": {
     "description": "Primary action on the seeding editor"
   },
+  "tournamentSeedingStartKoButton": "KO starten",
+  "@tournamentSeedingStartKoButton": {
+    "description": "Action that commits the seeding and triggers the start_ko_phase RPC"
+  },
+  "tournamentSeedingErrorTitle": "Aktion fehlgeschlagen",
+  "@tournamentSeedingErrorTitle": {
+    "description": "Inline banner title shown when the save or start RPC fails"
+  },
+  "tournamentSeedingEmpty": "Noch keine qualifizierten Teilnehmer.",
+  "@tournamentSeedingEmpty": {
+    "description": "Placeholder shown when the auto-seed list is empty (group phase not finished)"
+  },
   "tournamentWizardStep45Title": "Liga-Wertung",
   "@tournamentWizardStep45Title": {
     "description": "Title of wizard step 4.5 asking whether the tournament counts for the league"

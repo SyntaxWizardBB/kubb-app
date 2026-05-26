@@ -1872,6 +1872,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentSeedingSaveButton => 'Seeding speichern';
 
   @override
+  String get tournamentSeedingStartKoButton => 'KO starten';
+
+  @override
+  String get tournamentSeedingErrorTitle => 'Aktion fehlgeschlagen';
+
+  @override
+  String get tournamentSeedingEmpty => 'Noch keine qualifizierten Teilnehmer.';
+
+  @override
   String get tournamentWizardStep45Title => 'Liga-Wertung';
 
   @override
