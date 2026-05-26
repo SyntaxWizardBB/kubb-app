@@ -45,9 +45,6 @@ sealed class Bracket {
 
   factory Bracket.singleElimination(
     List<String> participantIds, {
-    // Flag reserved for the third-place playoff in M1; structure unchanged
-    // in M0.
-    // ignore: avoid_unused_constructor_parameters
     bool withThirdPlace = false,
     BracketSeedingPattern seedingPattern = BracketSeedingPattern.recursive,
   }) {
@@ -93,16 +90,33 @@ sealed class Bracket {
             (_) => (placeholder, placeholder),
           ),
         ),
+      if (withThirdPlace)
+        BracketRound(
+          number: totalRounds,
+          pairings: const [(placeholder, placeholder)],
+          phase: BracketPhase.thirdPlace,
+        ),
     ];
     return SingleEliminationBracket(rounds: rounds);
   }
 
-  /// Place [participantId] into slot ([round], [position]). 1-based.
+  /// Place [participantId] into slot ([round], [position]). 1-based indices.
+  ///
+  /// [round] targets a [BracketRound] whose `phase` is not
+  /// [BracketPhase.thirdPlace]. [position] is 1-based across the round's
+  /// pairings: position 1 = first pairing's `$1`, 2 = first pairing's `$2`,
+  /// 3 = second pairing's `$1`, ...
+  ///
+  /// Pure: returns a new [Bracket] with the slot replaced; all other slots
+  /// remain identical. When the filled slot is in a non-first round of a
+  /// bracket that also carries a [BracketPhase.thirdPlace] round, the
+  /// corresponding loser of the source pairing is mirrored into the
+  /// third-place slot — see ADR-0017 §4/§5.
   Bracket fill({
     required int round,
     required int position,
     required String participantId,
-  }) => throw UnimplementedError('Bracket.fill — pending TASK-M2.1-T5');
+  });
 }
 
 List<int> _standardBracketOrder(int n) {
@@ -124,6 +138,34 @@ final class SingleEliminationBracket extends Bracket {
   final List<BracketRound> rounds;
 
   @override
+  Bracket fill({
+    required int round,
+    required int position,
+    required String participantId,
+  }) {
+    final newRounds = [...rounds];
+    final entry = (seed: 0, participantId: participantId, isBye: false);
+    _writeAt(newRounds, round, position, entry, allowThirdPlace: false);
+    // Mirror semifinal loser into the third-place playoff slot (ADR-0017 §4).
+    final thirdIdx =
+        newRounds.indexWhere((r) => r.phase == BracketPhase.thirdPlace);
+    if (thirdIdx >= 0 && round > 1) {
+      final source = newRounds.firstWhereOrNull(
+        (r) => r.number == round - 1 && r.phase != BracketPhase.thirdPlace,
+      );
+      final pair = source?.pairings.elementAtOrNull(position - 1);
+      if (pair != null) {
+        final loser = pair.$1.participantId == participantId ? pair.$2 : pair.$1;
+        if (loser.participantId != null) {
+          _writeAt(newRounds, newRounds[thirdIdx].number, position, loser,
+              allowThirdPlace: true);
+        }
+      }
+    }
+    return SingleEliminationBracket(rounds: newRounds);
+  }
+
+  @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is SingleEliminationBracket &&
@@ -131,4 +173,38 @@ final class SingleEliminationBracket extends Bracket {
 
   @override
   int get hashCode => Object.hashAll(rounds);
+}
+
+void _writeAt(
+  List<BracketRound> rounds,
+  int roundNumber,
+  int position,
+  BracketEntry entry, {
+  required bool allowThirdPlace,
+}) {
+  if (position < 1) {
+    throw ArgumentError.value(position, 'position', 'must be >= 1');
+  }
+  final idx = rounds.indexWhere((r) =>
+      r.number == roundNumber &&
+      (allowThirdPlace
+          ? r.phase == BracketPhase.thirdPlace
+          : r.phase != BracketPhase.thirdPlace));
+  if (idx < 0) {
+    throw ArgumentError.value(roundNumber, 'round', 'no matching round');
+  }
+  final target = rounds[idx];
+  final pairIdx = (position - 1) ~/ 2;
+  final slotIdx = (position - 1) % 2;
+  if (pairIdx >= target.pairings.length) {
+    throw ArgumentError.value(position, 'position', 'out of range');
+  }
+  final newPairings = [...target.pairings];
+  final cur = newPairings[pairIdx];
+  newPairings[pairIdx] = (slotIdx == 0 ? entry : cur.$1, slotIdx == 1 ? entry : cur.$2);
+  rounds[idx] = BracketRound(
+    number: target.number,
+    phase: target.phase,
+    pairings: newPairings,
+  );
 }
