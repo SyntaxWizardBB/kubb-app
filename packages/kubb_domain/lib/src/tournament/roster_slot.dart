@@ -54,6 +54,28 @@ class RosterSlotInput {
 bool requireAtLeastOneMember(List<RosterSlotInput> list) =>
     list.any((s) => s.memberUserId != null);
 
+/// Thrown by [validateRosterSlots] when a roster contains two entries with the
+/// same [RosterSlotInput.slotIndex]. Mirrors the server-side UNIQUE constraint
+/// on `(team_id, slot_index)` in `tournament_roster_slots`.
+class DuplicateSlotIndex implements Exception {
+  const DuplicateSlotIndex(this.slotIndex);
+  final int slotIndex;
+  @override
+  String toString() => 'DuplicateSlotIndex: slotIndex $slotIndex appears twice';
+}
+
+/// Validates a roster input list: each [RosterSlotInput.slotIndex] must be
+/// unique across the list. Slot-range validity is already enforced by the
+/// [RosterSlotInput] constructors.
+void validateRosterSlots(List<RosterSlotInput> list) {
+  final seen = <int>{};
+  for (final s in list) {
+    if (!seen.add(s.slotIndex)) {
+      throw DuplicateSlotIndex(s.slotIndex);
+    }
+  }
+}
+
 /// Read model for an open roster slot. Mirrors a row of
 /// `public.tournament_roster_slots` (architecture §3.3): the audit-history
 /// fields [replacedAt], [replacedBy], and [reason] are null while the slot
