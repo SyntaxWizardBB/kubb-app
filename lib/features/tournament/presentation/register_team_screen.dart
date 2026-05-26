@@ -76,10 +76,9 @@ class _State extends ConsumerState<RegisterTeamScreen> {
         if (_selectedTeam != null)
           Expanded(
             child: RosterCompositionWidget(
-              teamId: TeamId(_selectedTeam!.id),
-              tournamentId: widget.tournamentId,
+              pool: const <RosterPoolMember>[],
+              guests: const <RosterPoolGuest>[],
               availableSlots: teamSize,
-              highlightedSlotIndex: _highlightSlot,
               onChanged: (slots) => setState(() {
                 _roster = slots;
                 _highlightSlot = null;
