@@ -3633,6 +3633,192 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Team aufgelöst'**
   String get inboxTeamDissolved;
+
+  /// Team list screen app bar title (M3.1-T11)
+  ///
+  /// In de, this message translates to:
+  /// **'Teams'**
+  String get teamListTitle;
+
+  /// Team list tab — teams the user is a member of
+  ///
+  /// In de, this message translates to:
+  /// **'Meine Teams'**
+  String get teamListTabMine;
+
+  /// Team list tab — search public teams
+  ///
+  /// In de, this message translates to:
+  /// **'Suchen'**
+  String get teamListTabSearch;
+
+  /// Placeholder in the team search input
+  ///
+  /// In de, this message translates to:
+  /// **'Team suchen …'**
+  String get teamListSearchPlaceholder;
+
+  /// Empty state on the 'My Teams' tab
+  ///
+  /// In de, this message translates to:
+  /// **'Du bist noch in keinem Team. Erstelle eins oder lass dich einladen.'**
+  String get teamListEmpty;
+
+  /// FAB label on the team list to create a new team
+  ///
+  /// In de, this message translates to:
+  /// **'Team erstellen'**
+  String get teamListCreateFab;
+
+  /// Team create screen title (M3.1-T12)
+  ///
+  /// In de, this message translates to:
+  /// **'Neues Team'**
+  String get teamCreateTitle;
+
+  /// Team create form — team name field label
+  ///
+  /// In de, this message translates to:
+  /// **'Teamname'**
+  String get teamCreateNameLabel;
+
+  /// Team create form — league field label
+  ///
+  /// In de, this message translates to:
+  /// **'Liga (optional)'**
+  String get teamCreateLeagueLabel;
+
+  /// Team create form — logo URL field label
+  ///
+  /// In de, this message translates to:
+  /// **'Logo-URL (optional)'**
+  String get teamCreateLogoUrlLabel;
+
+  /// Team create form — country selector label
+  ///
+  /// In de, this message translates to:
+  /// **'Land'**
+  String get teamCreateCountryLabel;
+
+  /// Primary submit button on the team create screen
+  ///
+  /// In de, this message translates to:
+  /// **'Team anlegen'**
+  String get teamCreateSubmitButton;
+
+  /// Snackbar shown when team creation fails
+  ///
+  /// In de, this message translates to:
+  /// **'Team konnte nicht erstellt werden — bitte erneut versuchen.'**
+  String get teamCreateErrorGeneric;
+
+  /// League line in the team detail header (M3.1-T13)
+  ///
+  /// In de, this message translates to:
+  /// **'Liga: {league}'**
+  String teamDetailHeaderLeague(String league);
+
+  /// Section header for the core/pool members on the team detail screen
+  ///
+  /// In de, this message translates to:
+  /// **'Stammspieler'**
+  String get teamDetailPoolSection;
+
+  /// Section header for guest members on the team detail screen
+  ///
+  /// In de, this message translates to:
+  /// **'Gäste'**
+  String get teamDetailGuestsSection;
+
+  /// Action button to invite a new player to the team
+  ///
+  /// In de, this message translates to:
+  /// **'Spieler einladen'**
+  String get teamDetailInviteAction;
+
+  /// Action button to add a guest player to the team
+  ///
+  /// In de, this message translates to:
+  /// **'Gast hinzufügen'**
+  String get teamDetailAddGuestAction;
+
+  /// Action for a regular member to leave the team
+  ///
+  /// In de, this message translates to:
+  /// **'Team verlassen'**
+  String get teamDetailLeaveAction;
+
+  /// Owner-only action to dissolve the team
+  ///
+  /// In de, this message translates to:
+  /// **'Team auflösen'**
+  String get teamDetailDissolveAction;
+
+  /// Owner-only action to remove a member from the team
+  ///
+  /// In de, this message translates to:
+  /// **'Aus Team entfernen'**
+  String get teamDetailRemoveMember;
+
+  /// Badge label for regular pool members on the team detail screen
+  ///
+  /// In de, this message translates to:
+  /// **'Mitglied'**
+  String get teamDetailMemberBadge;
+
+  /// Badge label for guest members on the team detail screen
+  ///
+  /// In de, this message translates to:
+  /// **'Gast'**
+  String get teamDetailGuestBadge;
+
+  /// Confirm dialog body when removing a member
+  ///
+  /// In de, this message translates to:
+  /// **'Mitglied wirklich aus dem Team entfernen?'**
+  String get teamDetailConfirmRemove;
+
+  /// Confirm dialog body when the user leaves the team
+  ///
+  /// In de, this message translates to:
+  /// **'Möchtest du das Team wirklich verlassen?'**
+  String get teamDetailConfirmLeave;
+
+  /// Confirm dialog body when the owner dissolves the team
+  ///
+  /// In de, this message translates to:
+  /// **'Team wirklich auflösen? Alle Mitglieder werden entfernt.'**
+  String get teamDetailConfirmDissolve;
+
+  /// Team invitation list screen title (M3.1-T14)
+  ///
+  /// In de, this message translates to:
+  /// **'Einladungen'**
+  String get teamInvitationListTitle;
+
+  /// Accept button on a team invitation row
+  ///
+  /// In de, this message translates to:
+  /// **'Annehmen'**
+  String get teamInvitationAccept;
+
+  /// Decline button on a team invitation row
+  ///
+  /// In de, this message translates to:
+  /// **'Ablehnen'**
+  String get teamInvitationDecline;
+
+  /// Empty state on the team invitation list
+  ///
+  /// In de, this message translates to:
+  /// **'Keine offenen Einladungen.'**
+  String get teamInvitationEmpty;
+
+  /// Sender line on a team invitation row
+  ///
+  /// In de, this message translates to:
+  /// **'Von {name}'**
+  String teamInvitationFrom(String name);
 }
 
 class _AppLocalizationsDelegate

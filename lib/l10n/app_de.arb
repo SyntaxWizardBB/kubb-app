@@ -2656,5 +2656,139 @@
   "inboxTeamDissolved": "Team aufgelöst",
   "@inboxTeamDissolved": {
     "description": "Inbox badge label for the team_dissolved kind (M3.1-T6)"
+  },
+  "teamListTitle": "Teams",
+  "@teamListTitle": {
+    "description": "Team list screen app bar title (M3.1-T11)"
+  },
+  "teamListTabMine": "Meine Teams",
+  "@teamListTabMine": {
+    "description": "Team list tab — teams the user is a member of"
+  },
+  "teamListTabSearch": "Suchen",
+  "@teamListTabSearch": {
+    "description": "Team list tab — search public teams"
+  },
+  "teamListSearchPlaceholder": "Team suchen …",
+  "@teamListSearchPlaceholder": {
+    "description": "Placeholder in the team search input"
+  },
+  "teamListEmpty": "Du bist noch in keinem Team. Erstelle eins oder lass dich einladen.",
+  "@teamListEmpty": {
+    "description": "Empty state on the 'My Teams' tab"
+  },
+  "teamListCreateFab": "Team erstellen",
+  "@teamListCreateFab": {
+    "description": "FAB label on the team list to create a new team"
+  },
+  "teamCreateTitle": "Neues Team",
+  "@teamCreateTitle": {
+    "description": "Team create screen title (M3.1-T12)"
+  },
+  "teamCreateNameLabel": "Teamname",
+  "@teamCreateNameLabel": {
+    "description": "Team create form — team name field label"
+  },
+  "teamCreateLeagueLabel": "Liga (optional)",
+  "@teamCreateLeagueLabel": {
+    "description": "Team create form — league field label"
+  },
+  "teamCreateLogoUrlLabel": "Logo-URL (optional)",
+  "@teamCreateLogoUrlLabel": {
+    "description": "Team create form — logo URL field label"
+  },
+  "teamCreateCountryLabel": "Land",
+  "@teamCreateCountryLabel": {
+    "description": "Team create form — country selector label"
+  },
+  "teamCreateSubmitButton": "Team anlegen",
+  "@teamCreateSubmitButton": {
+    "description": "Primary submit button on the team create screen"
+  },
+  "teamCreateErrorGeneric": "Team konnte nicht erstellt werden — bitte erneut versuchen.",
+  "@teamCreateErrorGeneric": {
+    "description": "Snackbar shown when team creation fails"
+  },
+  "teamDetailHeaderLeague": "Liga: {league}",
+  "@teamDetailHeaderLeague": {
+    "description": "League line in the team detail header (M3.1-T13)",
+    "placeholders": {
+      "league": {
+        "type": "String"
+      }
+    }
+  },
+  "teamDetailPoolSection": "Stammspieler",
+  "@teamDetailPoolSection": {
+    "description": "Section header for the core/pool members on the team detail screen"
+  },
+  "teamDetailGuestsSection": "Gäste",
+  "@teamDetailGuestsSection": {
+    "description": "Section header for guest members on the team detail screen"
+  },
+  "teamDetailInviteAction": "Spieler einladen",
+  "@teamDetailInviteAction": {
+    "description": "Action button to invite a new player to the team"
+  },
+  "teamDetailAddGuestAction": "Gast hinzufügen",
+  "@teamDetailAddGuestAction": {
+    "description": "Action button to add a guest player to the team"
+  },
+  "teamDetailLeaveAction": "Team verlassen",
+  "@teamDetailLeaveAction": {
+    "description": "Action for a regular member to leave the team"
+  },
+  "teamDetailDissolveAction": "Team auflösen",
+  "@teamDetailDissolveAction": {
+    "description": "Owner-only action to dissolve the team"
+  },
+  "teamDetailRemoveMember": "Aus Team entfernen",
+  "@teamDetailRemoveMember": {
+    "description": "Owner-only action to remove a member from the team"
+  },
+  "teamDetailMemberBadge": "Mitglied",
+  "@teamDetailMemberBadge": {
+    "description": "Badge label for regular pool members on the team detail screen"
+  },
+  "teamDetailGuestBadge": "Gast",
+  "@teamDetailGuestBadge": {
+    "description": "Badge label for guest members on the team detail screen"
+  },
+  "teamDetailConfirmRemove": "Mitglied wirklich aus dem Team entfernen?",
+  "@teamDetailConfirmRemove": {
+    "description": "Confirm dialog body when removing a member"
+  },
+  "teamDetailConfirmLeave": "Möchtest du das Team wirklich verlassen?",
+  "@teamDetailConfirmLeave": {
+    "description": "Confirm dialog body when the user leaves the team"
+  },
+  "teamDetailConfirmDissolve": "Team wirklich auflösen? Alle Mitglieder werden entfernt.",
+  "@teamDetailConfirmDissolve": {
+    "description": "Confirm dialog body when the owner dissolves the team"
+  },
+  "teamInvitationListTitle": "Einladungen",
+  "@teamInvitationListTitle": {
+    "description": "Team invitation list screen title (M3.1-T14)"
+  },
+  "teamInvitationAccept": "Annehmen",
+  "@teamInvitationAccept": {
+    "description": "Accept button on a team invitation row"
+  },
+  "teamInvitationDecline": "Ablehnen",
+  "@teamInvitationDecline": {
+    "description": "Decline button on a team invitation row"
+  },
+  "teamInvitationEmpty": "Keine offenen Einladungen.",
+  "@teamInvitationEmpty": {
+    "description": "Empty state on the team invitation list"
+  },
+  "teamInvitationFrom": "Von {name}",
+  "@teamInvitationFrom": {
+    "description": "Sender line on a team invitation row",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

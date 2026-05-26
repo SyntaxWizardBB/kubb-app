@@ -1952,4 +1952,106 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get inboxTeamDissolved => 'Team aufgelöst';
+
+  @override
+  String get teamListTitle => 'Teams';
+
+  @override
+  String get teamListTabMine => 'Meine Teams';
+
+  @override
+  String get teamListTabSearch => 'Suchen';
+
+  @override
+  String get teamListSearchPlaceholder => 'Team suchen …';
+
+  @override
+  String get teamListEmpty =>
+      'Du bist noch in keinem Team. Erstelle eins oder lass dich einladen.';
+
+  @override
+  String get teamListCreateFab => 'Team erstellen';
+
+  @override
+  String get teamCreateTitle => 'Neues Team';
+
+  @override
+  String get teamCreateNameLabel => 'Teamname';
+
+  @override
+  String get teamCreateLeagueLabel => 'Liga (optional)';
+
+  @override
+  String get teamCreateLogoUrlLabel => 'Logo-URL (optional)';
+
+  @override
+  String get teamCreateCountryLabel => 'Land';
+
+  @override
+  String get teamCreateSubmitButton => 'Team anlegen';
+
+  @override
+  String get teamCreateErrorGeneric =>
+      'Team konnte nicht erstellt werden — bitte erneut versuchen.';
+
+  @override
+  String teamDetailHeaderLeague(String league) {
+    return 'Liga: $league';
+  }
+
+  @override
+  String get teamDetailPoolSection => 'Stammspieler';
+
+  @override
+  String get teamDetailGuestsSection => 'Gäste';
+
+  @override
+  String get teamDetailInviteAction => 'Spieler einladen';
+
+  @override
+  String get teamDetailAddGuestAction => 'Gast hinzufügen';
+
+  @override
+  String get teamDetailLeaveAction => 'Team verlassen';
+
+  @override
+  String get teamDetailDissolveAction => 'Team auflösen';
+
+  @override
+  String get teamDetailRemoveMember => 'Aus Team entfernen';
+
+  @override
+  String get teamDetailMemberBadge => 'Mitglied';
+
+  @override
+  String get teamDetailGuestBadge => 'Gast';
+
+  @override
+  String get teamDetailConfirmRemove =>
+      'Mitglied wirklich aus dem Team entfernen?';
+
+  @override
+  String get teamDetailConfirmLeave =>
+      'Möchtest du das Team wirklich verlassen?';
+
+  @override
+  String get teamDetailConfirmDissolve =>
+      'Team wirklich auflösen? Alle Mitglieder werden entfernt.';
+
+  @override
+  String get teamInvitationListTitle => 'Einladungen';
+
+  @override
+  String get teamInvitationAccept => 'Annehmen';
+
+  @override
+  String get teamInvitationDecline => 'Ablehnen';
+
+  @override
+  String get teamInvitationEmpty => 'Keine offenen Einladungen.';
+
+  @override
+  String teamInvitationFrom(String name) {
+    return 'Von $name';
+  }
 }
