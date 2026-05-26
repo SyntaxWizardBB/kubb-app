@@ -2,6 +2,42 @@ import 'dart:math' as math;
 
 import 'package:kubb_domain/kubb_domain.dart';
 
+// Roster exception classes — duplicated locally so this branch compiles
+// in isolation. TASK-M3.2-T9 lands the canonical versions in
+// `lib/features/tournament/data/tournament_repository.dart`; the
+// orchestrator merge dedupes the definitions and switches this file to
+// an `import` instead.
+
+/// Thrown when a roster registration fails FR-REG-12 (at least one
+/// member required). Mirrors the server's `MIN_ONE_REGISTERED` token.
+class MinOneRegisteredException implements Exception {
+  const MinOneRegisteredException(this.message);
+  final String message;
+  @override
+  String toString() => 'MinOneRegisteredException: $message';
+}
+
+/// Thrown when BR-5 is violated: a user is already in an open roster
+/// slot of another participant in the same tournament. Mirrors the
+/// server-side unique-exclusion (`23P01`) constraint.
+class RosterBR5Exception implements Exception {
+  const RosterBR5Exception(this.message);
+  final String message;
+  @override
+  String toString() => 'RosterBR5Exception: $message';
+}
+
+/// Thrown when roster mutation is blocked because the tournament has
+/// reached a terminal state (finalized/aborted) or the participant has
+/// an open match. Mirrors `ROSTER_LOCKED_DURING_MATCH`.
+class RosterLockedException implements Exception {
+  const RosterLockedException(this.message, {required this.cause});
+  final String message;
+  final String cause;
+  @override
+  String toString() => 'RosterLockedException($cause): $message';
+}
+
 /// In-memory [TournamentRemote] for widget-level tests. Mirrors the
 /// `tournament_propose_set_scores` consensus state machine: byte-equal
 /// proposals from both sides finalise the match (with EKC final scores);
@@ -41,6 +77,12 @@ class FakeTournamentRemote implements TournamentRemote {
   /// Mirrors the `tournament_seeding_overrides` table.
   final Map<TournamentId, Map<TournamentParticipantId, int>> _seedingOverrides =
       <TournamentId, Map<TournamentParticipantId, int>>{};
+
+  /// Per-participant roster slots (open + closed). Mirrors the
+  /// `tournament_roster_slots` table — closed history rows live alongside
+  /// open ones, distinguished by [_RosterSlot.replacedAt].
+  final Map<TournamentParticipantId, List<_RosterSlot>> _rosterByParticipant =
+      <TournamentParticipantId, List<_RosterSlot>>{};
 
   String _nextId(String prefix) => '$prefix-${++_idSeq}';
 
@@ -423,8 +465,43 @@ class FakeTournamentRemote implements TournamentRemote {
     required TournamentId tournamentId,
     required TeamId teamId,
     required List<RosterSlotInput> roster,
-  }) {
-    throw UnimplementedError();
+  }) async {
+    final t = _tournaments[tournamentId];
+    if (t == null) {
+      throw StateError('unknown tournament: ${tournamentId.value}');
+    }
+    if (!requireAtLeastOneMember(roster)) {
+      throw const MinOneRegisteredException(
+        'FR-REG-12: roster must reference at least one registered member',
+      );
+    }
+    for (final slot in roster) {
+      final userId = slot.memberUserId;
+      if (userId != null && _userAlreadyInOpenSlot(tournamentId, userId)) {
+        throw RosterBR5Exception(
+          'BR-5: user ${userId.value} already occupies an open roster slot '
+          'in tournament ${tournamentId.value}',
+        );
+      }
+    }
+    final pid = TournamentParticipantId(_nextId('p'));
+    _participants[pid] = _Participant(userId: currentUser, teamId: teamId);
+    t.participantIds.add(pid);
+    final now = DateTime.now();
+    final slots = _rosterByParticipant.putIfAbsent(pid, () => <_RosterSlot>[]);
+    for (final input in roster) {
+      slots.add(
+        _RosterSlot(
+          id: _nextId('rs'),
+          slotIndex: input.slotIndex,
+          memberUserId: input.memberUserId,
+          guestPlayerId: input.guestPlayerId,
+          assignedAt: now,
+          assignedBy: currentUser,
+        ),
+      );
+    }
+    return pid;
   }
 
   @override
@@ -433,13 +510,95 @@ class FakeTournamentRemote implements TournamentRemote {
     required int slotIndex,
     required RosterSlotInput newOccupant,
     String? reason,
-  }) {
-    throw UnimplementedError();
+  }) async {
+    final participant = _participants[participantId];
+    if (participant == null) {
+      throw StateError('unknown participant: ${participantId.value}');
+    }
+    final tournamentId = _tournamentIdFor(participantId);
+    if (tournamentId == null) {
+      throw StateError('participant ${participantId.value} not in any tournament');
+    }
+    final t = _tournaments[tournamentId]!;
+    if (t.status == TournamentStatus.finalized ||
+        t.status == TournamentStatus.aborted) {
+      throw RosterLockedException(
+        'ROSTER_LOCKED: tournament ${tournamentId.value} is ${t.status.name}',
+        cause: 'tournament-${t.status.name}',
+      );
+    }
+    final newUser = newOccupant.memberUserId;
+    if (newUser != null &&
+        _userAlreadyInOpenSlot(
+          tournamentId,
+          newUser,
+          excludeParticipant: participantId,
+        )) {
+      throw RosterBR5Exception(
+        'BR-5: user ${newUser.value} already occupies an open roster slot '
+        'in tournament ${tournamentId.value}',
+      );
+    }
+    final slots = _rosterByParticipant.putIfAbsent(
+      participantId,
+      () => <_RosterSlot>[],
+    );
+    final now = DateTime.now();
+    for (final slot in slots) {
+      if (slot.slotIndex == slotIndex && slot.replacedAt == null) {
+        slot
+          ..replacedAt = now
+          ..replacedBy = currentUser
+          ..reason = reason;
+      }
+    }
+    slots.add(
+      _RosterSlot(
+        id: _nextId('rs'),
+        slotIndex: slotIndex,
+        memberUserId: newOccupant.memberUserId,
+        guestPlayerId: newOccupant.guestPlayerId,
+        assignedAt: now,
+        assignedBy: currentUser,
+      ),
+    );
   }
 
   @override
-  Future<List<RosterSlot>> getRoster(TournamentParticipantId participantId) {
-    throw UnimplementedError();
+  Future<List<RosterSlot>> getRoster(
+    TournamentParticipantId participantId,
+  ) async {
+    final slots = _rosterByParticipant[participantId] ?? const <_RosterSlot>[];
+    final open = slots.where((s) => s.replacedAt == null).toList()
+      ..sort((a, b) => a.slotIndex.compareTo(b.slotIndex));
+    return [for (final s in open) s.toRosterSlot()];
+  }
+
+  TournamentId? _tournamentIdFor(TournamentParticipantId pid) {
+    for (final t in _tournaments.values) {
+      if (t.participantIds.contains(pid)) return t.id;
+    }
+    return null;
+  }
+
+  bool _userAlreadyInOpenSlot(
+    TournamentId tournamentId,
+    UserId userId, {
+    TournamentParticipantId? excludeParticipant,
+  }) {
+    final t = _tournaments[tournamentId];
+    if (t == null) return false;
+    for (final pid in t.participantIds) {
+      if (pid == excludeParticipant) continue;
+      final slots = _rosterByParticipant[pid];
+      if (slots == null) continue;
+      for (final slot in slots) {
+        if (slot.replacedAt == null && slot.memberUserId == userId) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   // ---------------------------------------------------------------------
@@ -689,9 +848,45 @@ class _Tournament {
 }
 
 class _Participant {
-  _Participant({required this.userId});
+  _Participant({required this.userId, this.teamId});
   final UserId userId;
+  final TeamId? teamId;
   _PStatus status = _PStatus.pending;
+}
+
+/// In-memory mirror of one `tournament_roster_slots` row. Closed rows
+/// carry [replacedAt]/[replacedBy]/[reason]; open rows leave them null.
+class _RosterSlot {
+  _RosterSlot({
+    required this.id,
+    required this.slotIndex,
+    required this.memberUserId,
+    required this.guestPlayerId,
+    required this.assignedAt,
+    required this.assignedBy,
+  });
+
+  final String id;
+  final int slotIndex;
+  final UserId? memberUserId;
+  final TeamGuestPlayerId? guestPlayerId;
+  final DateTime assignedAt;
+  final UserId? assignedBy;
+  DateTime? replacedAt;
+  UserId? replacedBy;
+  String? reason;
+
+  RosterSlot toRosterSlot() => RosterSlot(
+        id: id,
+        slotIndex: slotIndex,
+        memberUserId: memberUserId,
+        guestPlayerId: guestPlayerId,
+        assignedAt: assignedAt,
+        assignedBy: assignedBy,
+        replacedAt: replacedAt,
+        replacedBy: replacedBy,
+        reason: reason,
+      );
 }
 
 class _Match {
