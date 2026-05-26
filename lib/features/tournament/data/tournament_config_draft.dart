@@ -27,6 +27,9 @@ class TournamentConfigDraft {
       'direct_comparison',
       'wins',
     ],
+    this.koConfig,
+    this.bracketSeedingMode,
+    this.leagueEligible = false,
   });
 
   /// Visible name of the tournament. Null while the organizer hasn't
@@ -41,6 +44,20 @@ class TournamentConfigDraft {
   final int roundTimeSeconds;
   final int basekubbsPerSide;
   final List<String> tiebreakerOrder;
+
+  /// KO-phase configuration. Required when [format] is
+  /// [TournamentFormat.singleElimination] or
+  /// [TournamentFormat.roundRobinThenKo] (ADR-0017 §4).
+  final KoPhaseConfig? koConfig;
+
+  /// Seeding source for the KO bracket. Null until the wizard reaches
+  /// the seeding step; defaults to [SeedingMode.auto] there.
+  final SeedingMode? bracketSeedingMode;
+
+  /// Mirrors `tournaments.league_eligible` (ADR-0017 §4). When `true`,
+  /// [suggestedWithThirdPlacePlayoff] returns `true` so the wizard can
+  /// pre-tick the bronze-match toggle.
+  final bool leagueEligible;
 
   static const int displayNameMinChars = 3;
   static const int displayNameMaxChars = 60;
@@ -60,6 +77,9 @@ class TournamentConfigDraft {
     int? roundTimeSeconds,
     int? basekubbsPerSide,
     List<String>? tiebreakerOrder,
+    KoPhaseConfig? koConfig,
+    SeedingMode? bracketSeedingMode,
+    bool? leagueEligible,
   }) {
     return TournamentConfigDraft(
       displayName: displayName ?? this.displayName,
@@ -72,8 +92,20 @@ class TournamentConfigDraft {
       roundTimeSeconds: roundTimeSeconds ?? this.roundTimeSeconds,
       basekubbsPerSide: basekubbsPerSide ?? this.basekubbsPerSide,
       tiebreakerOrder: tiebreakerOrder ?? this.tiebreakerOrder,
+      koConfig: koConfig ?? this.koConfig,
+      bracketSeedingMode: bracketSeedingMode ?? this.bracketSeedingMode,
+      leagueEligible: leagueEligible ?? this.leagueEligible,
     );
   }
+
+  /// Whether a KO phase has to be configured for the selected [format].
+  bool get requiresKoConfig =>
+      format == TournamentFormat.singleElimination ||
+      format == TournamentFormat.roundRobinThenKo;
+
+  /// Wizard pre-fill value for the `withThirdPlacePlayoff` toggle
+  /// (ADR-0017 §4). The wizard may still let the organizer override it.
+  bool get suggestedWithThirdPlacePlayoff => leagueEligible;
 
   TournamentConfigValidation validate() {
     final issues = <String>[];
@@ -112,6 +144,10 @@ class TournamentConfigDraft {
       issues.add('Basiskubbs pro Seite muss mindestens 1 sein.');
     }
 
+    if (requiresKoConfig && koConfig == null) {
+      issues.add('KO-Phase-Konfiguration fehlt.');
+    }
+
     return (isValid: issues.isEmpty, issues: issues);
   }
 
@@ -140,7 +176,10 @@ class TournamentConfigDraft {
           other.maxSets == maxSets &&
           other.roundTimeSeconds == roundTimeSeconds &&
           other.basekubbsPerSide == basekubbsPerSide &&
-          listEquals(other.tiebreakerOrder, tiebreakerOrder);
+          listEquals(other.tiebreakerOrder, tiebreakerOrder) &&
+          other.koConfig == koConfig &&
+          other.bracketSeedingMode == bracketSeedingMode &&
+          other.leagueEligible == leagueEligible;
 
   @override
   int get hashCode => Object.hash(
@@ -154,5 +193,8 @@ class TournamentConfigDraft {
         roundTimeSeconds,
         basekubbsPerSide,
         Object.hashAll(tiebreakerOrder),
+        koConfig,
+        bracketSeedingMode,
+        leagueEligible,
       );
 }

@@ -21,6 +21,9 @@ void main() {
         'direct_comparison',
         'wins',
       ]);
+      expect(d.koConfig, isNull);
+      expect(d.bracketSeedingMode, isNull);
+      expect(d.leagueEligible, isFalse);
     });
 
     test('copyWith replaces only provided fields', () {
@@ -107,6 +110,90 @@ void main() {
       final v = d.validate();
       expect(v.isValid, isFalse);
       expect(v.issues.any((i) => i.contains('Max. Sätze')), isTrue);
+    });
+  });
+
+  group('TournamentConfigDraft KO fields', () {
+    final ko = KoPhaseConfig(qualifierCount: 4, participantCount: 8);
+
+    test('copyWith carries koConfig, seedingMode and leagueEligible', () {
+      const d = TournamentConfigDraft(displayName: 'Cup');
+      final updated = d.copyWith(
+        koConfig: ko,
+        bracketSeedingMode: SeedingMode.manual,
+        leagueEligible: true,
+      );
+      expect(updated.koConfig, same(ko));
+      expect(updated.bracketSeedingMode, SeedingMode.manual);
+      expect(updated.leagueEligible, isTrue);
+    });
+
+    test('equality covers koConfig, seedingMode and leagueEligible', () {
+      final a = TournamentConfigDraft(
+        displayName: 'Cup',
+        koConfig: ko,
+        bracketSeedingMode: SeedingMode.auto,
+        leagueEligible: true,
+      );
+      final b = TournamentConfigDraft(
+        displayName: 'Cup',
+        koConfig: KoPhaseConfig(qualifierCount: 4, participantCount: 8),
+        bracketSeedingMode: SeedingMode.auto,
+        leagueEligible: true,
+      );
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
+
+      final c = a.copyWith(leagueEligible: false);
+      expect(a, isNot(equals(c)));
+    });
+
+    test('validate flags missing koConfig for single_elimination', () {
+      const d = TournamentConfigDraft(
+        displayName: 'Cup',
+        format: TournamentFormat.singleElimination,
+      );
+      final v = d.validate();
+      expect(v.isValid, isFalse);
+      expect(v.issues.any((i) => i.contains('KO-Phase')), isTrue);
+    });
+
+    test('validate flags missing koConfig for round_robin_then_ko', () {
+      const d = TournamentConfigDraft(
+        displayName: 'Cup',
+        format: TournamentFormat.roundRobinThenKo,
+      );
+      final v = d.validate();
+      expect(v.isValid, isFalse);
+      expect(v.issues.any((i) => i.contains('KO-Phase')), isTrue);
+    });
+
+    test('validate passes when koConfig set for single_elimination', () {
+      final d = TournamentConfigDraft(
+        displayName: 'Cup',
+        format: TournamentFormat.singleElimination,
+        koConfig: ko,
+      );
+      final v = d.validate();
+      expect(v.isValid, isTrue);
+      expect(v.issues, isEmpty);
+    });
+
+    test('validate ignores koConfig for round_robin', () {
+      const d = TournamentConfigDraft(displayName: 'Cup');
+      final v = d.validate();
+      expect(v.isValid, isTrue);
+    });
+
+    test('suggestedWithThirdPlacePlayoff follows leagueEligible', () {
+      const off = TournamentConfigDraft(displayName: 'Cup');
+      expect(off.suggestedWithThirdPlacePlayoff, isFalse);
+
+      const on = TournamentConfigDraft(
+        displayName: 'Cup',
+        leagueEligible: true,
+      );
+      expect(on.suggestedWithThirdPlacePlayoff, isTrue);
     });
   });
 
