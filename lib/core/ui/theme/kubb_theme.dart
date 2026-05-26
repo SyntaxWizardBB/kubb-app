@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 
 class KubbTheme {
   const KubbTheme._();
+
+  /// Font family bundled via `pubspec.yaml` (`assets/fonts/`).
+  static const String fontFamily = 'BricolageGrotesque';
 
   static ThemeData light() => _build(KubbTokens.light, Brightness.light);
 
@@ -34,8 +36,12 @@ class KubbTheme {
       brightness: brightness,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: tokens.bg,
-      textTheme: GoogleFonts.bricolageGrotesqueTextTheme(baseTextTheme)
-          .apply(bodyColor: tokens.fg, displayColor: tokens.fg),
+      textTheme: baseTextTheme
+          .apply(
+            fontFamily: fontFamily,
+            bodyColor: tokens.fg,
+            displayColor: tokens.fg,
+          ),
       extensions: <ThemeExtension<dynamic>>[tokens],
     );
   }

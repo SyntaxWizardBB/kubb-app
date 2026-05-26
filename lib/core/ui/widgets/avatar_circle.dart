@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 
 /// Round avatar with one or two uppercase letters on a brand-palette
@@ -29,7 +29,8 @@ class AvatarCircle extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         initials,
-        style: GoogleFonts.bricolageGrotesque(
+        style: TextStyle(
+          fontFamily: KubbTheme.fontFamily,
           fontSize: size * 0.42,
           fontWeight: FontWeight.w800,
           color: tokens.onPrimary,
