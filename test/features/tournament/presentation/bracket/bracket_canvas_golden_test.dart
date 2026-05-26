@@ -4,6 +4,7 @@ import 'package:golden_toolkit/golden_toolkit.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/tournament/presentation/bracket/bracket_canvas.dart';
+import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
 /// Golden suite for [BracketCanvas].
@@ -21,7 +22,11 @@ void main() {
   Future<void> pump(WidgetTester tester, Bracket bracket) async {
     await tester.pumpWidgetBuilder(
       BracketCanvas(bracket: bracket, editable: false),
-      wrapper: materialAppWrapper(theme: KubbTheme.light()),
+      wrapper: materialAppWrapper(
+        theme: KubbTheme.light(),
+        localizations: AppLocalizations.localizationsDelegates,
+        localeOverrides: AppLocalizations.supportedLocales,
+      ),
       surfaceSize: const Size(1280, 720),
     );
   }
