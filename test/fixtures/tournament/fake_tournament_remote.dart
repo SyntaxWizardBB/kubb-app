@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:kubb_domain/kubb_domain.dart';
 
 /// In-memory [TournamentRemote] for widget-level tests. Mirrors the
@@ -6,6 +8,13 @@ import 'package:kubb_domain/kubb_domain.dart';
 /// disagreements bump `consensus_round` up to 3, the third disagreement
 /// flips the match to `disputed`. Realtime [watchMatch] is a no-op
 /// since M1 callers poll on demand.
+///
+/// KO additions (M2): the Fake mirrors the server-side
+/// `tournament_advance_ko_winner` trigger in pure Dart so that widget
+/// tests around `SeedingScreen` and the bracket view see the same
+/// shape of progressing rows that production hits via Supabase. See
+/// `supabase/migrations/20260601000016_trigger_advance_ko_winner.sql`
+/// for the wire reference.
 class FakeTournamentRemote implements TournamentRemote {
   FakeTournamentRemote({required UserId initialUser})
       : currentUser = initialUser;
@@ -22,7 +31,25 @@ class FakeTournamentRemote implements TournamentRemote {
   final Map<TournamentMatchId, _Match> _matches =
       <TournamentMatchId, _Match>{};
 
+  /// Per-tournament KO config; populated by [createTournament] from the
+  /// wizard payload when the match-format config contains a `ko_config`
+  /// block. Tests may also seed this directly via [setKoConfig].
+  final Map<TournamentId, KoPhaseConfig> _koConfig =
+      <TournamentId, KoPhaseConfig>{};
+
+  /// Per-tournament manual seeding overrides (participant → 1-based seed).
+  /// Mirrors the `tournament_seeding_overrides` table.
+  final Map<TournamentId, Map<TournamentParticipantId, int>> _seedingOverrides =
+      <TournamentId, Map<TournamentParticipantId, int>>{};
+
   String _nextId(String prefix) => '$prefix-${++_idSeq}';
+
+  /// Test-only hook to install a KO config without going through the
+  /// full wizard payload. Production code passes the config inside
+  /// `createTournament`'s `matchFormatConfig['ko_config']`.
+  void setKoConfig(TournamentId id, KoPhaseConfig config) {
+    _koConfig[id] = config;
+  }
 
   @override
   Future<List<TournamentSummaryRef>> listTournaments({
@@ -191,6 +218,7 @@ class FakeTournamentRemote implements TournamentRemote {
         ..finalScoreB = ekc.pointsForB
         ..winnerParticipant = _winnerSide(ekc, m)
         ..completedAt = DateTime.now();
+      _advanceKoWinner(m);
       return;
     }
     if (consensusRound >= 3) {
@@ -219,38 +247,352 @@ class FakeTournamentRemote implements TournamentRemote {
       ..finalScoreB = ekc.pointsForB
       ..winnerParticipant = _winnerSide(ekc, m)
       ..completedAt = DateTime.now();
+    _advanceKoWinner(m);
   }
 
   @override
   Stream<TournamentMatchRef> watchMatch(TournamentMatchId id) =>
       const Stream<TournamentMatchRef>.empty();
 
+  // ---------------------------------------------------------------------
+  // KO-phase additions (T7c). These four methods mirror the signatures
+  // the port gains in T7a (on a parallel branch); they are declared
+  // without `@override` here so the file compiles standalone. When the
+  // two branches merge, the analyzer will flag missing `@override`
+  // annotations and they get added in one sweep.
+  // ---------------------------------------------------------------------
+
+  /// FR-FMT-10 manual override. Stores the seeding map in
+  /// [_seedingOverrides]; consumed by [startKoPhase].
   @override
   Future<void> setSeeding({
     required TournamentId tournamentId,
     required Map<TournamentParticipantId, int> seeds,
-  }) {
-    throw UnimplementedError('setSeeding — TASK-M2.2-T7c');
+  }) async {
+    if (!_tournaments.containsKey(tournamentId)) {
+      throw StateError('unknown tournament: ${tournamentId.value}');
+    }
+    _seedingOverrides[tournamentId] =
+        Map<TournamentParticipantId, int>.from(seeds);
   }
 
+  /// Insert KO-match rows from current standings + seeding overrides.
+  /// Mirrors `tournament_start_ko_phase`: throws `ALREADY_STARTED` (a
+  /// [StateError]) when KO rows already exist, matching the Supabase
+  /// `ERRCODE 40001` idempotency contract.
   @override
-  Future<void> startKoPhase(TournamentId tournamentId, KoPhaseConfig config) {
-    throw UnimplementedError('startKoPhase — TASK-M2.2-T7c');
+  Future<void> startKoPhase(
+    TournamentId tournamentId,
+    KoPhaseConfig config,
+  ) async {
+    final t = _tournaments[tournamentId]!;
+    final hasKo =
+        t.matchIds.map((mid) => _matches[mid]!).any(_isKoMatch);
+    if (hasKo) {
+      throw StateError('ALREADY_STARTED: ko phase already initialised');
+    }
+
+    _koConfig[tournamentId] = config;
+
+    // Seed-order: approved participants ranked by group-phase standings,
+    // then top-N qualifiers, then manual overrides applied.
+    final approved = t.participantIds
+        .where((p) => _participants[p]!.status == _PStatus.approved)
+        .toList(growable: false);
+    final ordered = _autoSeedOrder(t, approved);
+    final overrides = _seedingOverrides[tournamentId] ?? const {};
+    final seeded = _applyOverrides(ordered, overrides);
+    final qualifiers =
+        seeded.take(config.qualifierCount).toList(growable: false);
+
+    final bracket = Bracket.singleElimination(
+      [for (final p in qualifiers) p.value],
+      withThirdPlace: config.withThirdPlacePlayoff,
+    ) as SingleEliminationBracket;
+    final finalRound = bracket.rounds
+        .where((r) => r.phase != BracketPhase.thirdPlace)
+        .map((r) => r.number)
+        .fold<int>(0, math.max);
+
+    for (final round in bracket.rounds) {
+      var bp = 0;
+      for (final pairing in round.pairings) {
+        bp += 1;
+        final mid = TournamentMatchId(_nextId('m'));
+        final aId = pairing.$1.participantId == null
+            ? null
+            : TournamentParticipantId(pairing.$1.participantId!);
+        final bId = pairing.$2.participantId == null
+            ? null
+            : TournamentParticipantId(pairing.$2.participantId!);
+        final phase = round.phase == BracketPhase.thirdPlace
+            ? BracketPhase.thirdPlace
+            : (round.number == finalRound
+                ? BracketPhase.finals
+                : BracketPhase.winners);
+        final isByePairing = round.number == 1 &&
+            phase != BracketPhase.thirdPlace &&
+            (aId == null || bId == null) &&
+            (aId != null || bId != null);
+        final winner = isByePairing ? (aId ?? bId) : null;
+        final status = isByePairing
+            ? TournamentMatchStatus.finalized
+            : TournamentMatchStatus.scheduled;
+        final m = _Match(
+          id: mid,
+          tournamentId: tournamentId,
+          roundNumber: round.number,
+          matchNumberInRound: bp,
+          participantA: aId,
+          participantB: bId,
+        )
+          ..phase = phase
+          ..bracketPosition = bp
+          ..status = status
+          ..winnerParticipant = winner
+          ..completedAt = isByePairing ? DateTime.now() : null;
+        _matches[mid] = m;
+        t.matchIds.add(mid);
+      }
+    }
+
+    // Bye-rows are inserted as `finalized` with a winner — advance them
+    // immediately so R2 picks them up, mirroring the trigger's behaviour
+    // when the start RPC inserts pre-finalised BYE rows.
+    t.matchIds
+        .map((mid) => _matches[mid]!)
+        .where((m) =>
+            _isKoMatch(m) &&
+            m.status == TournamentMatchStatus.finalized &&
+            m.roundNumber == 1)
+        .toList(growable: false)
+        .forEach(_advanceKoWinner);
   }
 
+  /// FR-PAIR-7. Swap participants of a not-yet-started KO pairing.
   @override
   Future<void> overrideKoPairing({
     required TournamentMatchId matchId,
     required TournamentParticipantId participantA,
     required TournamentParticipantId participantB,
     required String reason,
-  }) {
-    throw UnimplementedError('overrideKoPairing — TASK-M2.2-T7c');
+  }) async {
+    if (reason.trim().isEmpty) {
+      throw ArgumentError('override reason must not be blank');
+    }
+    final m = _matches[matchId]!;
+    if (m.status != TournamentMatchStatus.scheduled) {
+      throw StateError(
+        'override pairing only allowed on scheduled matches; got ${m.status}',
+      );
+    }
+    m
+      ..participantA = participantA
+      ..participantB = participantB;
   }
 
+  /// Read current bracket via the domain mapper.
   @override
-  Future<Bracket> getBracket(TournamentId tournamentId) {
-    throw UnimplementedError('getBracket — TASK-M2.2-T7c');
+  Future<Bracket> getBracket(TournamentId tournamentId) async {
+    final t = _tournaments[tournamentId]!;
+    final rows = <KoMatchRow>[
+      for (final mid in t.matchIds)
+        if (_isKoMatch(_matches[mid]!))
+          (
+            roundNumber: _matches[mid]!.roundNumber,
+            bracketPosition: _matches[mid]!.bracketPosition!,
+            phase: _matches[mid]!.phase,
+            participantA: _matches[mid]!.participantA?.value,
+            participantB: _matches[mid]!.participantB?.value,
+            winnerParticipantId: _matches[mid]!.winnerParticipant?.value,
+            isBye: _matches[mid]!.bracketPosition != null &&
+                (_matches[mid]!.participantA == null ||
+                    _matches[mid]!.participantB == null) &&
+                _matches[mid]!.roundNumber == 1,
+          ),
+    ];
+    return bracketFromMatches(rows);
+  }
+
+  // ---------------------------------------------------------------------
+  // Trigger simulation
+  // ---------------------------------------------------------------------
+
+  /// Mirrors `tournament_advance_ko_winner`: when [m] is a KO match that
+  /// just hit `finalized`/`overridden`, push the winner into the next
+  /// round and (for semifinals with third-place enabled) the loser into
+  /// the third-place playoff. See migration `..._trigger_advance_ko_winner.sql`.
+  void _advanceKoWinner(_Match m) {
+    if (!_isKoMatch(m)) return;
+    if (m.winnerParticipant == null) return;
+    if (m.status != TournamentMatchStatus.finalized &&
+        m.status != TournamentMatchStatus.overridden) {
+      return;
+    }
+    final bp = m.bracketPosition;
+    if (bp == null) return;
+
+    final loser = m.winnerParticipant == m.participantA
+        ? m.participantB
+        : (m.winnerParticipant == m.participantB ? m.participantA : null);
+    final nextRound = m.roundNumber + 1;
+    final nextPosition = (bp + 1) ~/ 2;
+    final isOdd = bp.isOdd;
+
+    // 1. Winner → next match (phase ko or final). third_place never
+    // propagates.
+    if (m.phase == BracketPhase.winners || m.phase == BracketPhase.finals) {
+      final next = _findKoMatch(
+        tournamentId: m.tournamentId,
+        roundNumber: nextRound,
+        bracketPosition: nextPosition,
+        phases: const {BracketPhase.winners, BracketPhase.finals},
+      );
+      if (next != null) {
+        if (isOdd) {
+          next.participantA = m.winnerParticipant;
+        } else {
+          next.participantB = m.winnerParticipant;
+        }
+        if (next.participantA != null &&
+            next.participantB != null &&
+            next.status == TournamentMatchStatus.scheduled) {
+          next.status = TournamentMatchStatus.awaitingResults;
+        }
+        // BYE chain: if the receiving slot completes against another BYE
+        // already-finalized winner, the trigger does not auto-finalize —
+        // production relies on a real proposal pair. We mirror that.
+      }
+    }
+
+    // 2. Semifinal loser → third_place match (phase 'ko' only, next
+    // round is final round, ko_config.with_third_place enabled).
+    if (m.phase == BracketPhase.winners && loser != null) {
+      final config = _koConfig[m.tournamentId];
+      if (config != null && config.withThirdPlacePlayoff) {
+        final finalRound = _finalRoundFor(m.tournamentId);
+        if (finalRound != null && nextRound == finalRound) {
+          final tp = _findKoMatch(
+            tournamentId: m.tournamentId,
+            roundNumber: finalRound,
+            bracketPosition: 1,
+            phases: const {BracketPhase.thirdPlace},
+          );
+          if (tp != null) {
+            if (isOdd) {
+              tp.participantA = loser;
+            } else {
+              tp.participantB = loser;
+            }
+            if (tp.participantA != null &&
+                tp.participantB != null &&
+                tp.status == TournamentMatchStatus.scheduled) {
+              tp.status = TournamentMatchStatus.awaitingResults;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  bool _isKoMatch(_Match m) =>
+      m.bracketPosition != null &&
+      (m.phase == BracketPhase.winners ||
+          m.phase == BracketPhase.finals ||
+          m.phase == BracketPhase.thirdPlace);
+
+  _Match? _findKoMatch({
+    required TournamentId tournamentId,
+    required int roundNumber,
+    required int bracketPosition,
+    required Set<BracketPhase> phases,
+  }) {
+    final t = _tournaments[tournamentId];
+    if (t == null) return null;
+    for (final mid in t.matchIds) {
+      final m = _matches[mid]!;
+      if (m.roundNumber == roundNumber &&
+          m.bracketPosition == bracketPosition &&
+          phases.contains(m.phase)) {
+        return m;
+      }
+    }
+    return null;
+  }
+
+  int? _finalRoundFor(TournamentId id) {
+    final t = _tournaments[id];
+    if (t == null) return null;
+    int? best;
+    for (final mid in t.matchIds) {
+      final m = _matches[mid]!;
+      if (m.phase == BracketPhase.finals) {
+        if (best == null || m.roundNumber > best) best = m.roundNumber;
+      }
+    }
+    return best;
+  }
+
+  /// Ranks approved participants by (wins DESC, kubb_diff DESC,
+  /// participantId ASC) over finalized group-phase matches — a
+  /// 1:1 Dart mirror of the standings ORDER BY clause in
+  /// `tournament_start_ko_phase`.
+  List<TournamentParticipantId> _autoSeedOrder(
+    _Tournament t,
+    List<TournamentParticipantId> approved,
+  ) {
+    final wins = <TournamentParticipantId, int>{
+      for (final p in approved) p: 0,
+    };
+    final diff = <TournamentParticipantId, int>{
+      for (final p in approved) p: 0,
+    };
+    for (final mid in t.matchIds) {
+      final m = _matches[mid]!;
+      if (_isKoMatch(m)) continue;
+      if (m.status != TournamentMatchStatus.finalized &&
+          m.status != TournamentMatchStatus.overridden) {
+        continue;
+      }
+      final a = m.participantA;
+      final b = m.participantB;
+      final sa = m.finalScoreA ?? 0;
+      final sb = m.finalScoreB ?? 0;
+      if (a != null) diff[a] = (diff[a] ?? 0) + (sa - sb);
+      if (b != null) diff[b] = (diff[b] ?? 0) + (sb - sa);
+      final w = m.winnerParticipant;
+      if (w != null && wins.containsKey(w)) {
+        wins[w] = (wins[w] ?? 0) + 1;
+      }
+    }
+    final sorted = [...approved]..sort((a, b) {
+        final wc = (wins[b] ?? 0).compareTo(wins[a] ?? 0);
+        if (wc != 0) return wc;
+        final dc = (diff[b] ?? 0).compareTo(diff[a] ?? 0);
+        if (dc != 0) return dc;
+        return a.value.compareTo(b.value);
+      });
+    return sorted;
+  }
+
+  List<TournamentParticipantId> _applyOverrides(
+    List<TournamentParticipantId> autoOrder,
+    Map<TournamentParticipantId, int> overrides,
+  ) {
+    if (overrides.isEmpty) return autoOrder;
+    // Effective-seed lookup matches the Supabase RPC: override-seed
+    // wins, auto-seed + 1000 fills the gaps, ties broken by auto-seed.
+    final autoSeed = <TournamentParticipantId, int>{
+      for (var i = 0; i < autoOrder.length; i++) autoOrder[i]: i + 1,
+    };
+    final ranked = [...autoOrder]..sort((a, b) {
+        final ea = overrides[a]?.toDouble() ?? (autoSeed[a]! + 1000.0);
+        final eb = overrides[b]?.toDouble() ?? (autoSeed[b]! + 1000.0);
+        final cmp = ea.compareTo(eb);
+        if (cmp != 0) return cmp;
+        return autoSeed[a]!.compareTo(autoSeed[b]!);
+      });
+    return ranked;
   }
 
   _Side _sideForCurrentUser(_Match m) {
@@ -338,8 +680,8 @@ class _Match {
   final TournamentId tournamentId;
   final int roundNumber;
   final int matchNumberInRound;
-  final TournamentParticipantId? participantA;
-  final TournamentParticipantId? participantB;
+  TournamentParticipantId? participantA;
+  TournamentParticipantId? participantB;
   TournamentMatchStatus status = TournamentMatchStatus.scheduled;
   int consensusRound = 1;
   DateTime? completedAt;
@@ -347,6 +689,16 @@ class _Match {
   int? finalScoreA;
   int? finalScoreB;
   final Map<int, Map<_Side, List<SetScore>>> proposalsByRound = {};
+
+  /// KO-only: phase marker mirroring `tournament_matches.phase`. Round-robin
+  /// matches keep [BracketPhase.winners] as a "non-KO" sentinel; the
+  /// `_isKoMatch` helper gates on [bracketPosition] being non-null to
+  /// disambiguate.
+  BracketPhase phase = BracketPhase.winners;
+
+  /// KO-only: 1-based pairing index inside the round. Null for round-robin
+  /// rows — those have [matchNumberInRound] instead.
+  int? bracketPosition;
 
   TournamentMatchRef toRef() => TournamentMatchRef(
         matchId: id,
