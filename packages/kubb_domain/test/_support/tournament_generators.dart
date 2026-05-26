@@ -13,6 +13,19 @@ extension TournamentAnys on Any {
     );
   }
 
+  /// Participant-id list whose length is **not** a power of two — keeps
+  /// FR-FMT-11 BYE invariants exercised. Range [3, 63].
+  Generator<List<String>> participantIdsNonPow2({int min = 3, int max = 63}) {
+    return intInRange(min, max).map((n) {
+      var size = 1;
+      while (size < n) {
+        size *= 2;
+      }
+      final adjusted = (n == size) ? n + 1 : n;
+      return List<String>.generate(adjusted, (i) => 'p$i', growable: false);
+    });
+  }
+
   /// Power-of-two participant counts used by bracket-size invariants.
   Generator<int> get nextPow2Friendly => choose<int>([1, 2, 4, 8, 16]);
 
