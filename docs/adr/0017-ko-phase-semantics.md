@@ -1,8 +1,9 @@
 # ADR-0017: KO-Phase-Semantik (`round_robin_then_ko` + Spiel-um-Platz-3 + Wildcard-Slots)
 
 - **Status**: Proposed
-- **Date**: 2026-05-25
-- **Bezug**: `docs/plans/m2-ko-bracket/architecture.md` §3.2, §5.2, §5.3, OD-M2-04, OD-M2-05, OD-M2-06, ADR-0014, ADR-0007
+- **Date**: 2026-05-25 (Initial Draft), 2026-05-26 (§4 + §7 Updates nach OD-M2-02/04/05 Resolutions)
+- **Bezug**: `docs/plans/m2-ko-bracket/architecture.md` §3.2, §5.2, §5.3, OD-M2-02, OD-M2-04, OD-M2-05, OD-M2-06, ADR-0014, ADR-0007
+- **Decision-Docs**: `/tmp/kubb_app/committee/server-vs-client-bracket-authority/decision.md`, `/tmp/kubb_app/kubb-knowledge/spiel-um-platz-3-schweiz/synthesis.md`, `/tmp/kubb_app/kubb-knowledge/qualifier-count-praxis/synthesis.md`
 
 ## Entscheidung
 
@@ -31,17 +32,29 @@ Beispiele:
 
 Begründung: FR-FMT-11 ist explizit, BYE-Auffüllung ist bereits in `Bracket.singleElimination` korrekt implementiert.
 
-### 4. Spiel-um-Platz-3 — Optionalität und Default
+### 4. Spiel-um-Platz-3 — Optionalität und Default (Hybrid via `league_eligible`)
 
-Pro Turnier konfigurierbar via `KoPhaseConfig.withThirdPlacePlayoff` (OD-M2-04 Empfehlung A). Default = **false**.
+Pro Turnier konfigurierbar via `KoPhaseConfig.withThirdPlacePlayoff` (OD-M2-04 Resolution 2026-05-26: Owner-Hybrid).
 
-Wenn aktiviert: zwei zusätzliche Matches werden bei der KO-Phase-Inbetriebnahme erzeugt:
+**Code-Default**: `false` in `bracket.dart:42` — technischer Fallback unverändert.
+
+**Wizard-Default (dynamisch)**: hängt vom neuen Flag `tournaments.league_eligible` ab.
+- Neue Spalte: `tournaments.league_eligible bool NOT NULL DEFAULT false`. Wird in der M2.2-Migration (`20260601000010_tournament_ko_phase.sql`) zusammen mit `ko_config` eingeführt.
+- Wizard-Schritt früh (vor KO-Konfiguration): Frage "Dieses Turnier wertet für die Liga" (Default aus, konservativ — Veranstalter muss aktiv markieren).
+- Bei `league_eligible = true` setzt der Wizard `withThirdPlacePlayoff = true` als vorgeschlagenen Default für den Bronze-Match-Toggle (entspricht SM/Masters/EKC-Empirie und Liga-Punkte-Differenz Rang 3 vs. 4 ≈ 22.5 Kubbtour-Punkte bei 20-Team-Turnier).
+- Bei `league_eligible = false` bleibt der vorgeschlagene Default `false`.
+- Veranstalter kann den vorgeschlagenen Default in beiden Fällen overriden.
+
+Wenn `withThirdPlacePlayoff` aktiviert ist: zwei zusätzliche Matches werden bei der KO-Phase-Inbetriebnahme erzeugt:
 - Das `third_place`-Match mit `participant_a` und `participant_b` initial `NULL`.
 - Werden vom `tournament_advance_ko_winner`-Trigger befüllt, wenn die Halbfinals abgeschlossen sind: Verlierer Halbfinale 1 → `participant_a`, Verlierer Halbfinale 2 → `participant_b`.
+- Forfeit/Walkover-Behandlung: nicht-antretender Halbfinal-Verlierer verliert mit Standard-Set, Gegner gewinnt Bronze. Trigger setzt Match-Status entsprechend.
 
-Das `third_place`-Match darf parallel zum Finale gespielt werden (eigene Pitch-Zuteilung). Es zählt in M2 noch nicht für Liga-Punkte (kommt M5), aber es trägt zur Endrangliste bei (Sieger = Platz 3, Verlierer = Platz 4).
+Das `third_place`-Match darf parallel zum Finale gespielt werden (eigene Pitch-Zuteilung). Es zählt in M2 noch nicht für Liga-Punkte (kommt M5), aber es trägt zur Endrangliste bei (Sieger = Platz 3, Verlierer = Platz 4). Best-of separat konfigurierbar (oft kürzer als Halbfinale).
 
-Begründung: Default-Aus ist defensiver — Veranstalter aktivieren das aktiv, wenn sie es brauchen. Schweizer-Liga-Default lässt sich später per `[domain]`-OD anpassen, wenn nötig.
+Bei `withThirdPlacePlayoff = false` muss die Tiebreaker-Chain Rang 3 vs. Rang 4 deterministisch liefern (Vorrunden-Performance, Head-to-Head — Reihenfolge in `TiebreakerChain` fixiert, siehe `packages/kubb_domain/lib/src/tournament/tiebreaker.dart`). Sonst willkürliche Liga-Punkt-Vergabe und latenter Bug in M5.
+
+Begründung: Owner-Hybrid löst die Positionierungs-Frage (Liga-Plattform vs. Freizeit-App) durch explizite Veranstalter-Markierung statt App-weitem Default. Asymmetrische Fehlerkosten werden adressiert: Liga-relevantes Turnier ohne Bronze führt zu Verbandsdispute, freies Turnier mit unnötigem Bronze ist harmlos.
 
 ### 5. Sieger-Fortschreibung — Trigger-basiert
 
@@ -71,17 +84,24 @@ Nur **vor** Match-Start (Status `scheduled`) möglich. RPC `tournament_organizer
 
 Begründung: Vermeidet, dass ein gestartetes Match nachträglich verändert wird (Match-Status-Maschine bleibt sauber). Audit-Trail-Pflicht analog zu Score-Override aus M1.
 
-### 7. Bracket-Generation — Server vs. Client
+### 7. Bracket-Generation — Server-Authority via plpgsql
 
-**Status**: Erwartet wartet auf OD-M2-02 Entscheidung. Vorläufige Empfehlung: **Client-Authority mit Server-Plausibilitätsprüfung** (Option B).
+**Status**: Resolved 2026-05-26 via Committee Vote 3:0 für **Server-Authority** (OD-M2-02 Option A). Die vorläufige Empfehlung Client-Authority (Option B) wurde überstimmt — Decision-Doc unter `/tmp/kubb_app/committee/server-vs-client-bracket-authority/decision.md`.
 
-`tournament_start_ko_phase(p_tournament_id, p_matches jsonb)` erwartet das vorgenerierte Match-Set vom Client. Server validiert:
-- Anzahl Matches entspricht der nötigen Anzahl für die gegebene Qualifier-Zahl (mit BYE-Auffüllung).
-- Jeder qualifizierte Teilnehmer ist in genau einem Match in Runde 1 (oder per BYE durchgewunken).
-- Bracket-Strukturkonsistenz: für jedes Runde-N-Match existieren die zwei Vorgänger-Matches in Runde N-1 mit korrekten `bracket_position`s.
-- Seeding-Tabelle (`tournament_seeding_overrides`) wird respektiert.
+`tournament_start_ko_phase(p_tournament_id uuid)` ist Server-Authority und folgt strikt dem `tournament_start`-Lifecycle-Pattern:
+- `SECURITY DEFINER`, `SET search_path`, `auth.uid()`-Check gegen `tournaments.created_by`.
+- `SELECT … FOR UPDATE` auf der `tournaments`-Row als Single-Veranstalter-Lock.
+- Idempotency-Guard via `EXISTS (... phase <> 'group')` mit `ERRCODE 40001` ("serialization_failure") — Dart-Client behandelt diesen Code als **idempotente Success-Semantik** (`ref.invalidate` plus kein User-Error-Toast), behebt Multi-Device-Race ohne explizite Lock-Mechanik.
+- Liest Standings + Seeding-Overrides serverseitig, generiert das Bracket via Helper-Function `_tournament_compute_ko_bracket(seeds jsonb, third_place bool)`, inserted Match-Rows mit `phase IN ('ko','third_place','final')`.
+- Audit-Event `kind='ko_phase_started'`.
 
-Race-Condition zwischen zwei parallelen Veranstalter-Geräten: in M2 unrealistisch (nur ein Veranstalter pro Turnier per RLS-Check `tournaments.created_by = auth.uid()`). Co-Veranstalter-Rollen kommen erst M5+ — dann Re-Visit dieser ADR mit Optimistic-Lock-Token.
+Der Helper `_tournament_compute_ko_bracket` ist als separate plpgsql-Function modelliert — wiederverwendbar für M5 Schweizer System, isoliert pgTAP-testbar. Der Recursive-Standard-Seeding-Algorithmus wird 1:1 aus `bracket.dart:48–61` nach plpgsql portiert. BYE-Allocation an Top-Seeds (FR-FMT-11) ist Property-Garantie.
+
+**Property-Parität als Merge-Gate**: BYE-Verteilung, Power-of-Two-Padding und Standard-Seeding müssen 1:1 mit `bracket.dart` matchen. Test-Suite: pgTAP über 8/16/32/64-Teilnehmer-Sweep, oder — falls pgTAP in Supabase-Pipeline nicht verfügbar (Pre-Task-Klärung in M2.2) — Dart-Integration-Tests gegen lokale Supabase-Instanz.
+
+Begründung: `tournament_start_ko_phase` ist strukturell Lifecycle-Materialisierung (Server schreibt Match-Rows als Folge einer Phasen-Transition), nicht "Veranstalter-Aktion mit Client-Eingabe". 13 von 18 bestehenden RPCs sind Server-Authority; `_tournament_compute_ekc` ist Präzedenz für plpgsql-Spiegelung der Dart-Domain. Server-Plausibilitäts-Checks für Option B (Power-of-Two, Seed-Vollständigkeit, BYE-Position, R1-Match-ID-Eindeutigkeit) reproduzieren faktisch die halbe Bracket-Logik — wenn der Server sowieso fast alles validieren muss, lieber direkt vollständig generieren.
+
+Doppelte-Logik-Drift (Dart-Domain ↔ plpgsql) ist akzeptiertes Risiko, abgesichert durch Property-Parität-Tests als Pflicht-Gate. Co-Veranstalter-Rollen in M5+ brauchen keinen separaten Lock-Token-Refactor — `FOR UPDATE` löst es schon heute; bei späterem Performance-Druck additiv erweiterbar.
 
 ## Kontext
 
@@ -125,10 +145,10 @@ Verworfen weil: bricht die Score-Konsens-State-Machine aus ADR-0007, eröffnet A
 
 ## Status / Tracking
 
-Wartet auf:
-- OD-M2-02 (Server- vs. Client-Authority) — Klärung sperrt §7.
-- OD-M2-04 (Spiel-um-Platz-3 Default) — Owner-Abnahme sperrt §4.
-- OD-M2-05 (Qualifier-Count Constraint) — Domain-Klärung kann §3 beeinflussen.
-- OD-M2-06 (Strikt vs. Force-Override Phasenwechsel) — kann §2 beeinflussen.
+Klärungen (Stand 2026-05-26):
+- OD-M2-02 (Server- vs. Client-Authority) — **resolved**, Committee 3:0 für Server-Authority, §7 entsprechend aktualisiert.
+- OD-M2-04 (Spiel-um-Platz-3 Default) — **resolved**, Owner-Hybrid via `tournaments.league_eligible`, §4 entsprechend aktualisiert.
+- OD-M2-05 (Qualifier-Count Constraint) — **resolved**, Owner-Bestätigung Option B mit UX-Mitigation, §3 unverändert (bereits konsistent).
+- OD-M2-06 (Strikt vs. Force-Override Phasenwechsel) — noch offen, kann §2 nachträglich beeinflussen.
 
-Nach Klärung dieser ODs: Owner-Acceptance dieser ADR.
+Status bleibt `Proposed` solange OD-M2-06 nicht resolved ist (§2-Detail). Nach OD-M2-06-Klärung: Owner-Acceptance dieser ADR.
