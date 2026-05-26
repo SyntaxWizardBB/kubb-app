@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
@@ -203,7 +204,7 @@ class _TournamentMatchDetailScreenState
     return ListView(
       padding: const EdgeInsets.all(KubbTokens.space4),
       children: [
-        _Header(match: match),
+        _Header(match: match, tournamentId: TournamentId(widget.tournamentId)),
         const SizedBox(height: KubbTokens.space3),
         ScoreConsensusBanner(attempt: match.consensusRound),
         for (var i = 0; i < _drafts.length; i++) ...[
@@ -291,17 +292,58 @@ class _ErrorBody extends StatelessWidget {
       );
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.match});
+class _Header extends ConsumerWidget {
+  const _Header({required this.match, required this.tournamentId});
   final TournamentMatchRef match;
+  final TournamentId tournamentId;
+
+  static String _shortId(String? id) => id == null
+      ? '?'
+      : (id.length <= 6 ? id : id.substring(0, 6));
+
+  /// T17 — render a roster summary for a team participant. Falls back
+  /// to the short participant id while the roster is loading or when
+  /// the RPC fails (the header itself stays useful either way).
+  String _teamLabel(
+    WidgetRef ref,
+    AppLocalizations l,
+    TournamentParticipantId? pid,
+  ) {
+    if (pid == null) return '?';
+    final roster = ref.watch(tournamentRosterProvider(pid));
+    final members = roster.maybeWhen<List<String>?>(
+      data: (slots) => <String>[
+        for (final s in slots)
+          if (s.memberUserId != null)
+            _shortId(s.memberUserId!.value)
+          else if (s.guestPlayerId != null)
+            _shortId(s.guestPlayerId!.value),
+      ],
+      orElse: () => null,
+    );
+    if (members == null || members.isEmpty) return _shortId(pid.value);
+    return l.tournamentMatchHammerCrew(members.join(', '));
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final isBye = match.participantB == null;
-    String shortId(String? id) => id == null
-        ? '?'
-        : (id.length <= 6 ? id : id.substring(0, 6));
+    // T17 — opt into the team-match header only when the tournament is
+    // configured for teams (team_size > 1). Single-player tournaments
+    // keep the M1 short-id header verbatim per acceptance criterion 4.
+    final teamSize = ref.watch(tournamentDetailProvider(tournamentId)).maybeWhen(
+          data: (d) => d?.tournament.teamSize ?? 1,
+          orElse: () => 1,
+        );
+    final isTeam = teamSize > 1;
+    final aLabel = isTeam
+        ? _teamLabel(ref, l, match.participantA)
+        : _shortId(match.participantA?.value);
+    final bLabel = isTeam
+        ? _teamLabel(ref, l, match.participantB)
+        : _shortId(match.participantB?.value);
     return Container(
       padding: const EdgeInsets.all(KubbTokens.space3),
       decoration: BoxDecoration(
@@ -322,9 +364,7 @@ class _Header extends StatelessWidget {
         Text(
           isBye
               ? l.tournamentMatchByeHeader
-              : l.tournamentMatchVersusHeader(
-                  shortId(match.participantA?.value),
-                  shortId(match.participantB?.value)),
+              : l.tournamentMatchVersusHeader(aLabel, bLabel),
           style: TextStyle(
               fontSize: 18, fontWeight: FontWeight.w800, color: tokens.fg),
         ),

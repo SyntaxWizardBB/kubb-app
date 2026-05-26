@@ -2027,6 +2027,32 @@
   "@tournamentDetailParticipantsEmpty": {
     "description": "Empty participants list"
   },
+  "tournamentDetailRoster": "Mein Roster",
+  "@tournamentDetailRoster": {
+    "description": "Section heading: caller's team roster"
+  },
+  "tournamentDetailRosterEmpty": "Noch keine Slots belegt.",
+  "@tournamentDetailRosterEmpty": {
+    "description": "Empty roster state"
+  },
+  "tournamentDetailRosterSlot": "Slot {index}",
+  "@tournamentDetailRosterSlot": {
+    "description": "Roster slot label with 1-based index",
+    "placeholders": {
+      "index": { "type": "int" }
+    }
+  },
+  "tournamentDetailRosterGuest": "Gast",
+  "@tournamentDetailRosterGuest": {
+    "description": "Marker for guest roster slot"
+  },
+  "tournamentMatchHammerCrew": "Hammer-Crew ({members})",
+  "@tournamentMatchHammerCrew": {
+    "description": "Team match header listing roster members",
+    "placeholders": {
+      "members": { "type": "String" }
+    }
+  },
   "tournamentDetailPending": "ausstehend",
   "@tournamentDetailPending": {
     "description": "Inline marker for pending registration"

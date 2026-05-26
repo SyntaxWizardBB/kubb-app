@@ -1478,6 +1478,25 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentDetailParticipantsEmpty => 'Noch keine Anmeldungen.';
 
   @override
+  String get tournamentDetailRoster => 'Mein Roster';
+
+  @override
+  String get tournamentDetailRosterEmpty => 'Noch keine Slots belegt.';
+
+  @override
+  String tournamentDetailRosterSlot(int index) {
+    return 'Slot $index';
+  }
+
+  @override
+  String get tournamentDetailRosterGuest => 'Gast';
+
+  @override
+  String tournamentMatchHammerCrew(String members) {
+    return 'Hammer-Crew ($members)';
+  }
+
+  @override
   String get tournamentDetailPending => 'ausstehend';
 
   @override

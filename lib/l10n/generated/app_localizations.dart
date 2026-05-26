@@ -2800,6 +2800,36 @@ abstract class AppLocalizations {
   /// **'Noch keine Anmeldungen.'**
   String get tournamentDetailParticipantsEmpty;
 
+  /// Section heading: caller's team roster
+  ///
+  /// In de, this message translates to:
+  /// **'Mein Roster'**
+  String get tournamentDetailRoster;
+
+  /// Empty roster state
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Slots belegt.'**
+  String get tournamentDetailRosterEmpty;
+
+  /// Roster slot label with 1-based index
+  ///
+  /// In de, this message translates to:
+  /// **'Slot {index}'**
+  String tournamentDetailRosterSlot(int index);
+
+  /// Marker for guest roster slot
+  ///
+  /// In de, this message translates to:
+  /// **'Gast'**
+  String get tournamentDetailRosterGuest;
+
+  /// Team match header listing roster members
+  ///
+  /// In de, this message translates to:
+  /// **'Hammer-Crew ({members})'**
+  String tournamentMatchHammerCrew(String members);
+
   /// Inline marker for pending registration
   ///
   /// In de, this message translates to:

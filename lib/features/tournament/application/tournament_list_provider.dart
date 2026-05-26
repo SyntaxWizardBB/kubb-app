@@ -27,6 +27,17 @@ final tournamentDetailProvider =
   },
 );
 
+/// Open roster slots for a team participant. Backed by the
+/// `tournament_roster_list` RPC (T9). Returns the slots in
+/// `slot_index` order; closed history rows are excluded server-side.
+// ignore: specify_nonobvious_property_types
+final tournamentRosterProvider =
+    FutureProvider.family<List<RosterSlot>, TournamentParticipantId>(
+  (ref, participantId) async {
+    return ref.read(tournamentRemoteProvider).getRoster(participantId);
+  },
+);
+
 /// Side-effect provider: while watched, invalidates the matching list
 /// provider every 5 seconds. Mirrors `matchPollingProvider` but the
 /// tournament data is significantly less time-sensitive than a live

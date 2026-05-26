@@ -126,6 +126,16 @@ class _Body extends ConsumerWidget {
           for (final p in visibleParts)
             _participantRow(context, ref, p, isCreator, l, tokens),
         ]),
+        // T17: Roster tab visibility. The caller's participant carries a
+        // team_id exactly when the tournament is configured for teams
+        // (team_size > 1) — single-player tournaments don't materialize
+        // a roster row. Only render when the caller is part of the pool
+        // so non-members never see the section (acceptance criterion 2).
+        if (me != null && h.teamSize > 1) ...[
+          const SizedBox(height: KubbTokens.space5),
+          _RosterCard(
+              participantId: TournamentParticipantId(me.participantId)),
+        ],
         const SizedBox(height: KubbTokens.space5),
         _Actions(detail: detail, isCreator: isCreator, me: me, id: id),
         const SizedBox(height: KubbTokens.space5),
@@ -332,6 +342,70 @@ class _Actions extends ConsumerWidget {
       ],
     );
   }
+}
+
+/// T17 — caller-side roster section. Renders the open slots returned by
+/// `tournament_roster_list` for the caller's own team participant. The
+/// section is wrapped in the same card chrome as Stammdaten /
+/// participants so the screen remains a single scroll surface (the
+/// "tab" framing in the spec maps to a section because the rest of
+/// the screen is also a flat ListView, not a TabController).
+class _RosterCard extends ConsumerWidget {
+  const _RosterCard({required this.participantId});
+  final TournamentParticipantId participantId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    final rosterAsync = ref.watch(tournamentRosterProvider(participantId));
+    return _card(context, l.tournamentDetailRoster, [
+      rosterAsync.when(
+        loading: () => const Padding(
+          padding: EdgeInsets.symmetric(vertical: KubbTokens.space2),
+          child: SizedBox(
+              height: 18, width: 18, child: CircularProgressIndicator()),
+        ),
+        error: (_, _) => Text(l.tournamentDetailRosterEmpty,
+            style: TextStyle(fontSize: 13, color: tokens.fgMuted)),
+        data: (slots) {
+          if (slots.isEmpty) {
+            return Text(l.tournamentDetailRosterEmpty,
+                style: TextStyle(fontSize: 13, color: tokens.fgMuted));
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final s in slots) _rosterRow(context, l, tokens, s),
+            ],
+          );
+        },
+      ),
+    ]);
+  }
+}
+
+Widget _rosterRow(BuildContext context, AppLocalizations l, KubbTokens tokens,
+    RosterSlot s) {
+  final label = s.memberUserId?.value ?? s.guestPlayerId?.value ?? '?';
+  final marker = s.memberUserId != null ? '' : ' · ${l.tournamentDetailRosterGuest}';
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: KubbTokens.space1),
+    child: Row(children: [
+      SizedBox(
+        width: 64,
+        child: Text(l.tournamentDetailRosterSlot(s.slotIndex),
+            style: TextStyle(fontSize: 13, color: tokens.fgMuted)),
+      ),
+      Expanded(
+        child: Text('$label$marker',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg)),
+      ),
+    ]),
+  );
 }
 
 class _AuditTail extends StatelessWidget {
