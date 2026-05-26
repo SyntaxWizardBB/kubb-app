@@ -66,7 +66,7 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockiert
 
 **Marker**: `[committee]` — UX-Bewertung. Designer im Committee kann beurteilen, ob Presets auf der Schwelle "Junior-Veranstalter versteht das" landen.
 
-## OD-M2-04: Spiel-um-Platz-3 — Optional pro Turnier oder Always-On? `[owner]`
+## OD-M2-04: Spiel-um-Platz-3 — Optional pro Turnier oder Always-On? `[resolved]`
 
 **Frage**: Ist das Spiel-um-Platz-3 immer Teil des KO-Brackets, oder optional konfigurierbar?
 
@@ -85,7 +85,7 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockiert
 
 **Empfehlung (vorläufig)**: A — Default aus. Begründung: Liga-Punkte gibt es erst ab M5 — bis dahin ist das Spiel-um-Platz-3 nur ein zusätzliches Match ohne Auswirkung auf die "echte" Wertung. Wenn Owner für Schweizer-Liga-Praxis "Default an" möchte, ist es eine Zeile Änderung.
 
-**Marker**: `[owner]` — direkt Owner-Entscheidung, weil es eine Default-Konvention für alle künftigen Turniere ist. Auch `[domain]` (Schweizer-Liga-Praxis).
+**Resolution**: Resolved 2026-05-26 via Owner-Entscheidung **Hybrid** (auf Basis Synthesis 2:1 für C). Statt einem festen Default wird das Bronze-Match-Default an die Turnier-Positionierung gekoppelt: neue Spalte `tournaments.league_eligible bool NOT NULL DEFAULT false` (Veranstalter markiert aktiv "Dieses Turnier wertet für die Liga"). Bei `league_eligible = true` schaltet der Wizard `with_third_place_playoff` automatisch auf `true` (empirische SM/Masters/EKC-Konvention), bei `false` bleibt der Default `false`. In jedem Fall kann der Veranstalter explizit overriden. Begründung: löst die Tally-Asymmetrie zwischen Tournament-Organizer/Spieler (Default an für Liga-Empirie) und Rule-Engine-Purist (Default aus wegen Regelwerk-Schweigen) ohne Positionierungs-Festlegung der App. Code-Default in `bracket.dart:42` bleibt `false` als technischer Fallback. Pflicht-Folgeaktionen unabhängig vom Default: Tiebreaker-Chain-Determinismus für Rang 3 vs. 4 bei `withThirdPlace=false`, Forfeit/Walkover-Pfad im `tournament_advance_ko_winner`-Trigger, Override-Aktion mit mandatory reason, Best-of separat konfigurierbar, Bracket-Vis-Doppel-Layout, Property-Tests glados + pgTAP für beide Varianten. Synthesis-Doc: `/tmp/kubb_app/kubb-knowledge/spiel-um-platz-3-schweiz/synthesis.md`. Domain-Notiz: `docs/domain-knowledge/spiel-um-platz-3.md`.
 
 ## OD-M2-05: Hybrid `round_robin_then_ko` — Qualifier-Anzahl Constraints? `[resolved]`
 
@@ -154,23 +154,25 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockiert
 | ID | `[committee]` | `[owner]` | `[domain]` | `[resolved]` | Blockt |
 |---|---|---|---|---|---|
 | OD-M2-01 | — | — | — | ja | M2.3-T2 |
-| OD-M2-02 | ja | — | — | — | M2.2-T3 |
+| OD-M2-02 | ja | — | — | ja | M2.2-T3 |
 | OD-M2-03 | ja | — | — | — | M2.3-T4 |
-| OD-M2-04 | — | ja | ja | — | M2.1-T3, M2.3-T4 |
-| OD-M2-05 | — | — | ja | — | M2.1-T3 |
+| OD-M2-04 | — | ja | ja | ja | M2.1-T3, M2.3-T4 |
+| OD-M2-05 | — | — | ja | ja | M2.1-T3 |
 | OD-M2-06 | ja | — | — | — | M2.2-T3, M2.3-T6 |
 | OD-M2-07 | ja | — | — | — | M2.3-T2 |
 
-Zählung: 7 ODs gesamt — 4x `[committee]`, 1x `[owner]`, 2x `[domain]`, 1x `[resolved]`. Manche tragen mehrere Marker.
+Zählung: 7 ODs gesamt — 4 resolved (OD-M2-01, -02, -04, -05), 3 offen (-03, -06, -07 — UX/Polish-Entscheidungen). Manche tragen mehrere Marker.
 
 ## Empfohlene Entscheidungs-Reihenfolge
 
 Damit M2-Implementierung starten kann, in dieser Sequenz:
 
-1. **OD-M2-04** und **OD-M2-05** — beide blocken M2.1 (Pure Domain), das ist der erste Sub-Milestone. Schnell entscheiden, beide sind low-stakes Domain-Fragen.
-2. **OD-M2-02** — blocked M2.2 (Server). Vor dem Committee-Output kann hier vorläufig die Empfehlung B verfolgt werden, eine spätere Anpassung ist additiv.
+1. ~~**OD-M2-04**~~ und ~~**OD-M2-05**~~ — resolved 2026-05-26. M2.1 (Pure Domain) entblockt: `KoPhaseConfig` mit `qualifierCount` + `withThirdPlacePlayoff` kann jetzt aktiv verdrahtet werden, BYE-Auffüllung folgt bestehendem `bracket.dart`-Code.
+2. ~~**OD-M2-02**~~ — resolved 2026-05-26 (Committee 3:0 für Server-Authority). M2.2 (Server) entblockt: plpgsql-Generator-Funktion `_tournament_compute_ko_bracket` plus `tournament_start_ko_phase` nach `tournament_start`-Vorbild.
 3. ~~**OD-M2-01**~~ — resolved 2026-05-25 (Committee 3:0 für CustomPainter, ADR-0016 Accepted). M2.3-T2 entblockt.
-4. **OD-M2-06**, **OD-M2-03**, **OD-M2-07** — UX/Polish-Entscheidungen, können parallel zur Implementation laufen, müssen aber vor M2.3 abgeschlossen sein.
+4. **OD-M2-06**, **OD-M2-03**, **OD-M2-07** — UX/Polish-Entscheidungen, können parallel zur Implementation laufen, müssen aber vor M2.3-Abschluss geklärt sein.
+
+**Stand 2026-05-26**: M2.1 und M2.2 sind entblockt, M2.3-Vorbereitung kann anlaufen (Bracket-View-Layout, Wizard-Schritte). Die drei verbleibenden ODs blocken nur M2.3-Detail-Tasks (T2, T4, T6) und sind parallel auflösbar.
 
 ## Was die ODs explizit **nicht** entscheiden
 
