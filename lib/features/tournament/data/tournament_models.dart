@@ -54,6 +54,81 @@ const Map<TournamentMatchStatus, String> _matchStatusWire = {
   TournamentMatchStatus.voided: 'voided',
 };
 
+/// Wire mapping for the `phase` column on `tournament_matches`. The
+/// `group` value sits outside the bracket — callers filter it out before
+/// projecting into a [BracketPhase].
+const Map<BracketPhase, String> _bracketPhaseWire = {
+  BracketPhase.winners: 'ko',
+  BracketPhase.thirdPlace: 'third_place',
+  BracketPhase.finals: 'final',
+};
+
+/// Wire helper for [BracketPhase]. Returns `null` for the sentinel
+/// `'group'` value so callers can drop pre-KO rows without throwing.
+extension BracketPhaseWire on BracketPhase {
+  static BracketPhase? fromWire(String raw) {
+    if (raw == 'group') return null;
+    for (final e in _bracketPhaseWire.entries) {
+      if (e.value == raw) return e.key;
+    }
+    throw ArgumentError.value(raw, 'raw', 'Unknown BracketPhase');
+  }
+
+  String toWire() => _bracketPhaseWire[this]!;
+}
+
+/// Wire mapping for the [SeedingMode] enum. Mirrors the
+/// `ko_config.seeding_mode` discriminator persisted on `tournaments`.
+const Map<SeedingMode, String> _seedingModeWire = {
+  SeedingMode.auto: 'auto',
+  SeedingMode.manual: 'manual',
+};
+
+extension SeedingModeWire on SeedingMode {
+  String toWire() => _seedingModeWire[this]!;
+}
+
+/// Encodes a [KoPhaseConfig] into the `p_ko_config` jsonb payload that
+/// `tournament_start_ko_phase` expects. The server reads
+/// `qualifier_count`, `with_third_place_playoff`, and `seeding_mode`.
+extension KoPhaseConfigWire on KoPhaseConfig {
+  Map<String, dynamic> toWire() => <String, dynamic>{
+        'qualifier_count': qualifierCount,
+        'with_third_place_playoff': withThirdPlacePlayoff,
+        'seeding_mode': seedingMode.toWire(),
+      };
+}
+
+/// Encodes a seeding map (`participantId -> seed`) into the
+/// `p_seeds` jsonb object expected by `tournament_set_seeding`.
+Map<String, dynamic> seedingMapToWire(
+    Map<TournamentParticipantId, int> seeds) {
+  return <String, dynamic>{
+    for (final entry in seeds.entries) entry.key.value: entry.value,
+  };
+}
+
+/// Decodes one row of the KO-match select used by `getBracket` into a
+/// [KoMatchRow]. Drops `phase='group'` rows by returning `null`.
+KoMatchRow? koMatchRowFromRow(Map<String, dynamic> row) {
+  final phaseRaw = row['phase'] as String;
+  final phase = BracketPhaseWire.fromWire(phaseRaw);
+  if (phase == null) return null;
+  final position = _asIntOrNull(row['bracket_position']);
+  if (position == null) return null;
+  final a = row['participant_a'] as String?;
+  final b = row['participant_b'] as String?;
+  return (
+    roundNumber: _asInt(row['round_number']),
+    bracketPosition: position,
+    phase: phase,
+    participantA: a,
+    participantB: b,
+    winnerParticipantId: row['winner_participant'] as String?,
+    isBye: a == null || b == null,
+  );
+}
+
 K _enumFromWire<K, V>(Map<K, V> table, V raw, String label) {
   for (final e in table.entries) {
     if (e.value == raw) return e.key;

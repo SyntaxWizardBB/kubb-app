@@ -33,6 +33,26 @@ TournamentSummaryRef _tournamentSummaryFromGetEnvelope(
   );
 }
 
+/// Thrown when `tournament_organizer_override_pairing` rejects the call.
+/// The server raises one of a fixed set of token-prefixed exceptions
+/// (`MISSING_REASON:`, `MATCH_NOT_FOUND:`, `MATCH_ALREADY_STARTED:`,
+/// `INVALID_PARTICIPANT:`, `PARTICIPANT_CONFLICT:`, `NOT_ORGANIZER:`);
+/// callers can switch on [code] to render a localized message.
+///
+/// See migration `20260601000013_rpc_tournament_organizer_override_pairing`.
+class OverrideKoPairingException implements Exception {
+  const OverrideKoPairingException(this.code, this.message);
+
+  /// One of: `MISSING_REASON`, `MATCH_NOT_FOUND`, `MATCH_ALREADY_STARTED`,
+  /// `INVALID_PARTICIPANT`, `PARTICIPANT_CONFLICT`, `NOT_ORGANIZER`,
+  /// or `UNKNOWN` when the server emitted an unmapped token.
+  final String code;
+  final String message;
+
+  @override
+  String toString() => 'OverrideKoPairingException($code): $message';
+}
+
 /// Wrapper around the tournament-* RPCs declared in the
 /// `tournament_*` migrations. Implements the [TournamentRemote] port
 /// from `kubb_domain`. Every call is authenticated; the
@@ -216,6 +236,127 @@ class TournamentRepository implements TournamentRemote {
         'p_reason': reason,
       },
     );
+  }
+
+  // ---- M2 KO-phase additions (T7b) ----
+  //
+  // Signatures mirror the upcoming [TournamentRemote] port extension
+  // landing in T7a. They satisfy that interface once the abstract
+  // methods appear in the port; until then they are concrete additions
+  // on the implementation class. `@override` is intentionally omitted
+  // here so this branch compiles cleanly against the pre-T7a port.
+
+  /// Forwards a `(participantId -> seed)` map into the
+  /// `tournament_set_seeding` RPC. Server validates that all keys are
+  /// confirmed participants and that seeds are unique.
+  Future<void> setSeeding({
+    required TournamentId tournamentId,
+    required Map<TournamentParticipantId, int> seeds,
+  }) {
+    return _client.rpc<void>(
+      'tournament_set_seeding',
+      params: <String, dynamic>{
+        'p_tournament_id': tournamentId.value,
+        'p_seeds': seedingMapToWire(seeds),
+      },
+    );
+  }
+
+  /// Calls `tournament_start_ko_phase`. Per ADR-0017 §7 the server
+  /// surfaces an already-initialised bracket as `ERRCODE 40001`
+  /// (`serialization_failure`); this adapter swallows that code so the
+  /// caller sees an idempotent success and refreshes its state instead
+  /// of showing an error toast.
+  Future<void> startKoPhase(
+    TournamentId tournamentId,
+    KoPhaseConfig config,
+  ) async {
+    try {
+      await _client.rpc<void>(
+        'tournament_start_ko_phase',
+        params: <String, dynamic>{
+          'p_tournament_id': tournamentId.value,
+          'p_ko_config': config.toWire(),
+        },
+      );
+    } on PostgrestException catch (e) {
+      if (e.code == '40001') {
+        // Idempotent path: KO phase already initialised on the server.
+        // Caller invalidates and re-fetches instead of bubbling an error.
+        return;
+      }
+      rethrow;
+    }
+  }
+
+  /// Calls `tournament_organizer_override_pairing`. Maps the
+  /// token-prefixed server messages to an [OverrideKoPairingException]
+  /// so the UI layer can render a localized error without parsing
+  /// strings.
+  Future<void> overrideKoPairing({
+    required TournamentMatchId matchId,
+    required TournamentParticipantId participantA,
+    required TournamentParticipantId participantB,
+    required String reason,
+  }) async {
+    try {
+      await _client.rpc<void>(
+        'tournament_organizer_override_pairing',
+        params: <String, dynamic>{
+          'p_match_id': matchId.value,
+          'p_participant_a': participantA.value,
+          'p_participant_b': participantB.value,
+          'p_reason': reason,
+        },
+      );
+    } on PostgrestException catch (e) {
+      throw _mapOverridePairingException(e);
+    }
+  }
+
+  /// Reads KO/third-place/final match rows for [tournamentId] and
+  /// rebuilds the domain [Bracket] via [bracketFromMatches]. Selecting
+  /// directly through the table client lets us pick up the `phase` and
+  /// `bracket_position` columns added in migration 20260601000010 — the
+  /// envelope returned by `tournament_list_matches` (M1) does not
+  /// expose them. RLS on `tournament_matches` filters the rows down to
+  /// what the caller is allowed to see.
+  Future<Bracket> getBracket(TournamentId tournamentId) async {
+    final rows = await _client
+        .from('tournament_matches')
+        .select(
+          'round_number, bracket_position, phase, '
+          'participant_a, participant_b, winner_participant, status',
+        )
+        .eq('tournament_id', tournamentId.value)
+        .inFilter('phase', const <String>['ko', 'third_place', 'final'])
+        .order('round_number')
+        .order('bracket_position');
+    final koRows = <KoMatchRow>[
+      for (final row in rows.cast<Map<String, dynamic>>())
+        ?koMatchRowFromRow(row),
+    ];
+    return bracketFromMatches(koRows);
+  }
+
+  OverrideKoPairingException _mapOverridePairingException(
+    PostgrestException e,
+  ) {
+    const tokens = <String>{
+      'MISSING_REASON',
+      'MATCH_NOT_FOUND',
+      'MATCH_ALREADY_STARTED',
+      'INVALID_PARTICIPANT',
+      'PARTICIPANT_CONFLICT',
+      'NOT_ORGANIZER',
+    };
+    final message = e.message;
+    for (final token in tokens) {
+      if (message.startsWith('$token:')) {
+        return OverrideKoPairingException(token, message);
+      }
+    }
+    return OverrideKoPairingException('UNKNOWN', message);
   }
 
   @override
