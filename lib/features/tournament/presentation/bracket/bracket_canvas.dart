@@ -74,7 +74,10 @@ class BracketCanvas extends ConsumerWidget {
           children: [
             Positioned.fill(
               child: CustomPaint(
-                painter: BracketConnectorPainter(layout: layout),
+                painter: BracketConnectorPainter(
+                  layout: layout,
+                  color: defaultConnectorColor(context),
+                ),
               ),
             ),
             ...cards,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/tournament/presentation/bracket/bracket_canvas.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -12,6 +13,11 @@ import 'package:kubb_domain/kubb_domain.dart';
 /// Test slots are red until that task runs (and until the T1 widget stub is
 /// merged into this branch — see briefing for the expected constructor).
 void main() {
+  setUpAll(() async {
+    GoogleFonts.config.allowRuntimeFetching = false;
+    await loadAppFonts();
+  });
+
   Future<void> pump(WidgetTester tester, Bracket bracket) async {
     await tester.pumpWidgetBuilder(
       BracketCanvas(bracket: bracket, editable: false),

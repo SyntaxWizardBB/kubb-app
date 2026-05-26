@@ -10,7 +10,7 @@ const double touchMin = 48;
 class LayoutParams {
   const LayoutParams({
     this.boxWidth = 160,
-    this.boxHeight = 60,
+    this.boxHeight = 76,
     this.roundGap = 24,
     this.matchGap = 8,
   });

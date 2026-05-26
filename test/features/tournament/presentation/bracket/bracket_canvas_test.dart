@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/tournament/presentation/bracket/bracket_canvas.dart';
 import 'package:kubb_app/features/tournament/presentation/bracket/kubb_match_card.dart';
@@ -55,6 +56,10 @@ Future<_Handle> _pump(WidgetTester tester, {bool editable = true}) async {
 }
 
 void main() {
+  setUpAll(() {
+    GoogleFonts.config.allowRuntimeFetching = false;
+  });
+
   testWidgets('8-team bracket renders 7 KubbMatchCard widgets', (tester) async {
     await _pump(tester);
     expect(find.byType(KubbMatchCard), findsNWidgets(7));
