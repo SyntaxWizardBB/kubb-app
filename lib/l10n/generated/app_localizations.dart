@@ -4023,6 +4023,144 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{teamName} (Roster: {members})'**
   String tournamentDetailMatchTeamHeader(String teamName, String members);
+
+  /// Title of the pool phase configuration step (M3.3-T9)
+  ///
+  /// In de, this message translates to:
+  /// **'Pool-Phase konfigurieren'**
+  String get poolConfigTitle;
+
+  /// Toggle to enable or disable the pool phase for the tournament
+  ///
+  /// In de, this message translates to:
+  /// **'Pool-Phase aktivieren'**
+  String get poolConfigEnableToggle;
+
+  /// Label for the group count stepper in the pool configuration
+  ///
+  /// In de, this message translates to:
+  /// **'Anzahl Gruppen'**
+  String get poolConfigGroupCountLabel;
+
+  /// Label for the qualifiers-per-group stepper in the pool configuration
+  ///
+  /// In de, this message translates to:
+  /// **'Qualifikanten pro Gruppe'**
+  String get poolConfigQualifiersLabel;
+
+  /// Label for the team distribution strategy selector
+  ///
+  /// In de, this message translates to:
+  /// **'Verteilungsstrategie'**
+  String get poolConfigStrategyLabel;
+
+  /// Strategy option — snake distribution
+  ///
+  /// In de, this message translates to:
+  /// **'Schlangenlinie'**
+  String get poolConfigStrategySnake;
+
+  /// Strategy option — random distribution
+  ///
+  /// In de, this message translates to:
+  /// **'Zufällig'**
+  String get poolConfigStrategyRandom;
+
+  /// Strategy option — seeded distribution
+  ///
+  /// In de, this message translates to:
+  /// **'Nach Setzliste'**
+  String get poolConfigStrategySeeded;
+
+  /// Label for the optional random seed input shown for the random strategy
+  ///
+  /// In de, this message translates to:
+  /// **'Zufalls-Seed (optional)'**
+  String get poolConfigRandomSeedLabel;
+
+  /// Title of the pool standings screen (M3.3-T10)
+  ///
+  /// In de, this message translates to:
+  /// **'Pool-Tabelle'**
+  String get poolStandingsTitle;
+
+  /// Title of the cross-pool standings section
+  ///
+  /// In de, this message translates to:
+  /// **'Gesamttabelle'**
+  String get poolStandingsCrossPoolTitle;
+
+  /// Header row for a single pool/group
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppe {name}'**
+  String poolStandingsGroupHeader(String name);
+
+  /// Column header for rank in the pool standings table
+  ///
+  /// In de, this message translates to:
+  /// **'Platz'**
+  String get poolStandingsRank;
+
+  /// Column header for set wins in the pool standings table
+  ///
+  /// In de, this message translates to:
+  /// **'Sätze'**
+  String get poolStandingsSets;
+
+  /// Column header for points in the pool standings table
+  ///
+  /// In de, this message translates to:
+  /// **'Punkte'**
+  String get poolStandingsPoints;
+
+  /// Column header for the Buchholz tiebreaker in the pool standings table
+  ///
+  /// In de, this message translates to:
+  /// **'Buchholz'**
+  String get poolStandingsBuchholz;
+
+  /// Badge label for teams that qualified for the KO phase
+  ///
+  /// In de, this message translates to:
+  /// **'Qualifiziert'**
+  String get poolStandingsQualified;
+
+  /// Title of the tie resolution dialog (M3.3-T11)
+  ///
+  /// In de, this message translates to:
+  /// **'Gleichstand auflösen'**
+  String get tieResolveTitle;
+
+  /// Explanation shown above the tie resolution list
+  ///
+  /// In de, this message translates to:
+  /// **'Mehrere Teams stehen punktgleich. Lege die Reihenfolge manuell fest.'**
+  String get tieResolveExplanation;
+
+  /// Submit button on the tie resolution dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Reihenfolge übernehmen'**
+  String get tieResolveSubmitButton;
+
+  /// Cancel button on the tie resolution dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Abbrechen'**
+  String get tieResolveCancelButton;
+
+  /// Snackbar shown after the tie resolution was applied
+  ///
+  /// In de, this message translates to:
+  /// **'Reihenfolge gespeichert.'**
+  String get tieResolveSuccess;
+
+  /// Tab label for the pool/groups view on the tournament detail screen (M3.3-T12)
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppen'**
+  String get tournamentDetailGroups;
 }
 
 class _AppLocalizationsDelegate

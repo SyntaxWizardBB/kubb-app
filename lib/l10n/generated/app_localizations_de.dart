@@ -2173,4 +2173,76 @@ class AppLocalizationsDe extends AppLocalizations {
   String tournamentDetailMatchTeamHeader(String teamName, String members) {
     return '$teamName (Roster: $members)';
   }
+
+  @override
+  String get poolConfigTitle => 'Pool-Phase konfigurieren';
+
+  @override
+  String get poolConfigEnableToggle => 'Pool-Phase aktivieren';
+
+  @override
+  String get poolConfigGroupCountLabel => 'Anzahl Gruppen';
+
+  @override
+  String get poolConfigQualifiersLabel => 'Qualifikanten pro Gruppe';
+
+  @override
+  String get poolConfigStrategyLabel => 'Verteilungsstrategie';
+
+  @override
+  String get poolConfigStrategySnake => 'Schlangenlinie';
+
+  @override
+  String get poolConfigStrategyRandom => 'Zufällig';
+
+  @override
+  String get poolConfigStrategySeeded => 'Nach Setzliste';
+
+  @override
+  String get poolConfigRandomSeedLabel => 'Zufalls-Seed (optional)';
+
+  @override
+  String get poolStandingsTitle => 'Pool-Tabelle';
+
+  @override
+  String get poolStandingsCrossPoolTitle => 'Gesamttabelle';
+
+  @override
+  String poolStandingsGroupHeader(String name) {
+    return 'Gruppe $name';
+  }
+
+  @override
+  String get poolStandingsRank => 'Platz';
+
+  @override
+  String get poolStandingsSets => 'Sätze';
+
+  @override
+  String get poolStandingsPoints => 'Punkte';
+
+  @override
+  String get poolStandingsBuchholz => 'Buchholz';
+
+  @override
+  String get poolStandingsQualified => 'Qualifiziert';
+
+  @override
+  String get tieResolveTitle => 'Gleichstand auflösen';
+
+  @override
+  String get tieResolveExplanation =>
+      'Mehrere Teams stehen punktgleich. Lege die Reihenfolge manuell fest.';
+
+  @override
+  String get tieResolveSubmitButton => 'Reihenfolge übernehmen';
+
+  @override
+  String get tieResolveCancelButton => 'Abbrechen';
+
+  @override
+  String get tieResolveSuccess => 'Reihenfolge gespeichert.';
+
+  @override
+  String get tournamentDetailGroups => 'Gruppen';
 }

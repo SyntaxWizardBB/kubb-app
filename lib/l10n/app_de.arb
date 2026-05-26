@@ -2950,5 +2950,102 @@
         "type": "String"
       }
     }
+  },
+  "poolConfigTitle": "Pool-Phase konfigurieren",
+  "@poolConfigTitle": {
+    "description": "Title of the pool phase configuration step (M3.3-T9)"
+  },
+  "poolConfigEnableToggle": "Pool-Phase aktivieren",
+  "@poolConfigEnableToggle": {
+    "description": "Toggle to enable or disable the pool phase for the tournament"
+  },
+  "poolConfigGroupCountLabel": "Anzahl Gruppen",
+  "@poolConfigGroupCountLabel": {
+    "description": "Label for the group count stepper in the pool configuration"
+  },
+  "poolConfigQualifiersLabel": "Qualifikanten pro Gruppe",
+  "@poolConfigQualifiersLabel": {
+    "description": "Label for the qualifiers-per-group stepper in the pool configuration"
+  },
+  "poolConfigStrategyLabel": "Verteilungsstrategie",
+  "@poolConfigStrategyLabel": {
+    "description": "Label for the team distribution strategy selector"
+  },
+  "poolConfigStrategySnake": "Schlangenlinie",
+  "@poolConfigStrategySnake": {
+    "description": "Strategy option — snake distribution"
+  },
+  "poolConfigStrategyRandom": "Zufällig",
+  "@poolConfigStrategyRandom": {
+    "description": "Strategy option — random distribution"
+  },
+  "poolConfigStrategySeeded": "Nach Setzliste",
+  "@poolConfigStrategySeeded": {
+    "description": "Strategy option — seeded distribution"
+  },
+  "poolConfigRandomSeedLabel": "Zufalls-Seed (optional)",
+  "@poolConfigRandomSeedLabel": {
+    "description": "Label for the optional random seed input shown for the random strategy"
+  },
+  "poolStandingsTitle": "Pool-Tabelle",
+  "@poolStandingsTitle": {
+    "description": "Title of the pool standings screen (M3.3-T10)"
+  },
+  "poolStandingsCrossPoolTitle": "Gesamttabelle",
+  "@poolStandingsCrossPoolTitle": {
+    "description": "Title of the cross-pool standings section"
+  },
+  "poolStandingsGroupHeader": "Gruppe {name}",
+  "@poolStandingsGroupHeader": {
+    "description": "Header row for a single pool/group",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "poolStandingsRank": "Platz",
+  "@poolStandingsRank": {
+    "description": "Column header for rank in the pool standings table"
+  },
+  "poolStandingsSets": "Sätze",
+  "@poolStandingsSets": {
+    "description": "Column header for set wins in the pool standings table"
+  },
+  "poolStandingsPoints": "Punkte",
+  "@poolStandingsPoints": {
+    "description": "Column header for points in the pool standings table"
+  },
+  "poolStandingsBuchholz": "Buchholz",
+  "@poolStandingsBuchholz": {
+    "description": "Column header for the Buchholz tiebreaker in the pool standings table"
+  },
+  "poolStandingsQualified": "Qualifiziert",
+  "@poolStandingsQualified": {
+    "description": "Badge label for teams that qualified for the KO phase"
+  },
+  "tieResolveTitle": "Gleichstand auflösen",
+  "@tieResolveTitle": {
+    "description": "Title of the tie resolution dialog (M3.3-T11)"
+  },
+  "tieResolveExplanation": "Mehrere Teams stehen punktgleich. Lege die Reihenfolge manuell fest.",
+  "@tieResolveExplanation": {
+    "description": "Explanation shown above the tie resolution list"
+  },
+  "tieResolveSubmitButton": "Reihenfolge übernehmen",
+  "@tieResolveSubmitButton": {
+    "description": "Submit button on the tie resolution dialog"
+  },
+  "tieResolveCancelButton": "Abbrechen",
+  "@tieResolveCancelButton": {
+    "description": "Cancel button on the tie resolution dialog"
+  },
+  "tieResolveSuccess": "Reihenfolge gespeichert.",
+  "@tieResolveSuccess": {
+    "description": "Snackbar shown after the tie resolution was applied"
+  },
+  "tournamentDetailGroups": "Gruppen",
+  "@tournamentDetailGroups": {
+    "description": "Tab label for the pool/groups view on the tournament detail screen (M3.3-T12)"
   }
 }
