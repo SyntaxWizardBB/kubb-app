@@ -175,6 +175,79 @@ final class SingleEliminationBracket extends Bracket {
   int get hashCode => Object.hashAll(rounds);
 }
 
+/// One KO-match row as observed by the mapper.
+///
+/// Pure-Dart input record for [bracketFromMatches]. The Supabase wire
+/// shape carries `phase`, `bracket_position`, `winner_participant`; the
+/// adapter (M2.3 wire-package) converts those into this record without
+/// pulling Flutter or `supabase_flutter` into the domain.
+///
+/// `roundNumber` is 1-based. `bracketPosition` is the 1-based pairing
+/// index inside the round (not the slot index). `participantA`/`B` may
+/// be `null` when the slot is still empty (placeholder for the trigger
+/// to fill once the feeding match finalizes).
+typedef KoMatchRow = ({
+  int roundNumber,
+  int bracketPosition,
+  BracketPhase phase,
+  String? participantA,
+  String? participantB,
+  String? winnerParticipantId,
+  bool isBye,
+});
+
+/// Pure mapper: rebuild a [Bracket] from DB-match rows.
+///
+/// The mapper is **passive** — it never auto-advances winners into
+/// follow-up matches. Filling follow-up slots is the server trigger's
+/// responsibility (see ADR-0017 §5 and TASK-M2.2-T4). The mapper just
+/// reflects whatever the DB currently holds.
+///
+/// Throws [ArgumentError] when [matches] is empty.
+Bracket bracketFromMatches(List<KoMatchRow> matches) {
+  if (matches.isEmpty) {
+    throw ArgumentError.value(matches, 'matches', 'is empty');
+  }
+  final winners = matches.where((m) => m.phase != BracketPhase.thirdPlace);
+  final thirdPlace =
+      matches.where((m) => m.phase == BracketPhase.thirdPlace).toList();
+  final byRound = <int, List<KoMatchRow>>{};
+  for (final m in winners) {
+    byRound.putIfAbsent(m.roundNumber, () => <KoMatchRow>[]).add(m);
+  }
+  final totalRounds =
+      byRound.keys.isEmpty ? 0 : byRound.keys.reduce((a, b) => a > b ? a : b);
+  final rounds = <BracketRound>[
+    for (var r = 1; r <= totalRounds; r++)
+      BracketRound(
+        number: r,
+        phase:
+            r == totalRounds ? BracketPhase.finals : BracketPhase.winners,
+        pairings: _pairingsForRound(byRound[r] ?? const <KoMatchRow>[]),
+      ),
+    if (thirdPlace.isNotEmpty)
+      BracketRound(
+        number: totalRounds,
+        phase: BracketPhase.thirdPlace,
+        pairings: _pairingsForRound(thirdPlace),
+      ),
+  ];
+  return SingleEliminationBracket(rounds: rounds);
+}
+
+List<BracketPairing> _pairingsForRound(List<KoMatchRow> rows) {
+  if (rows.isEmpty) return const <BracketPairing>[];
+  final sorted = [...rows]
+    ..sort((a, b) => a.bracketPosition.compareTo(b.bracketPosition));
+  return [
+    for (final m in sorted)
+      (
+        (seed: 0, participantId: m.participantA, isBye: m.isBye),
+        (seed: 0, participantId: m.participantB, isBye: m.isBye),
+      ),
+  ];
+}
+
 void _writeAt(
   List<BracketRound> rounds,
   int roundNumber,
