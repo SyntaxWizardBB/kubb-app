@@ -8,26 +8,35 @@ import 'package:meta/meta.dart';
 /// uncommon in real tournaments.
 enum BracketSeedingPattern { recursive, linear }
 
+/// Phase marker for a [BracketRound] — see ADR-0017 §4.
+enum BracketPhase { winners, thirdPlace, finals }
+
 typedef BracketEntry = ({int seed, String? participantId, bool isBye});
 typedef BracketPairing = (BracketEntry a, BracketEntry b);
 
 @immutable
 final class BracketRound {
-  const BracketRound({required this.number, required this.pairings});
+  const BracketRound({
+    required this.number,
+    required this.pairings,
+    this.phase = BracketPhase.winners,
+  });
 
   final int number;
   final List<BracketPairing> pairings;
+  final BracketPhase phase;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is BracketRound &&
           other.number == number &&
+          other.phase == phase &&
           const ListEquality<BracketPairing>()
               .equals(other.pairings, pairings);
 
   @override
-  int get hashCode => Object.hash(number, Object.hashAll(pairings));
+  int get hashCode => Object.hash(number, phase, Object.hashAll(pairings));
 }
 
 @immutable
@@ -87,6 +96,13 @@ sealed class Bracket {
     ];
     return SingleEliminationBracket(rounds: rounds);
   }
+
+  /// Place [participantId] into slot ([round], [position]). 1-based.
+  Bracket fill({
+    required int round,
+    required int position,
+    required String participantId,
+  }) => throw UnimplementedError('Bracket.fill — pending TASK-M2.1-T5');
 }
 
 List<int> _standardBracketOrder(int n) {
