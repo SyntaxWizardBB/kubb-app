@@ -71,7 +71,7 @@ class TeamRepository {
           'team_create',
           params: <String, dynamic>{
             'p_display_name': displayName,
-            'p_league_membership': leagueMembership.toWire(),
+            'p_league_membership': leagueMembership.wire,
             'p_logo_url': logoUrl,
             'p_country': country,
           },

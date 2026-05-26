@@ -25,8 +25,8 @@ Future<void> _pump(
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: TeamMemberCard(
-          member: _member(),
-          role: role,
+          displayName: _member().userId,
+          roleLabel: role == 'guest' ? 'Gast' : 'Mitglied',
           onTap: onTap,
         ),
       ),

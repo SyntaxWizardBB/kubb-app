@@ -54,13 +54,13 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
                 ? null
                 : _countryController.text.trim(),
           );
-      if (!mounted) return;
+      if (!mounted || id == null) return;
       context.go('/teams/${id.value}');
     } on Object catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('${l.teamCreateError}: $e'),
+        content: Text('${l.teamCreateErrorGeneric}: $e'),
         backgroundColor: KubbTokens.miss,
       ));
     }
@@ -73,7 +73,7 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
     return Scaffold(
       backgroundColor: tokens.bg,
       appBar: KubbAppBar(
-        eyebrow: l.teamCreateEyebrow,
+        eyebrow: l.teamListTitle,
         title: l.teamCreateTitle,
       ),
       body: Padding(
@@ -124,7 +124,7 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
               child: FilledButton(
                 onPressed: _canSubmit ? _submit : null,
                 child: Text(
-                  _busy ? l.teamCreateSubmitting : l.teamCreateSubmit,
+                  l.teamCreateSubmitButton,
                 ),
               ),
             ),

@@ -90,9 +90,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             const SizedBox(height: KubbTokens.space3),
             NewsCard(
-              eyebrow: l.homeTeamsEyebrow,
-              title: l.homeTeamsTitle,
-              subtitle: l.homeTeamsSubtitle,
+              eyebrow: l.teamListTitle,
+              title: l.teamListTabMine,
+              subtitle: l.teamListEmpty,
               onTap: () async => context.push('/teams'),
             ),
             const SizedBox(height: KubbTokens.space3),

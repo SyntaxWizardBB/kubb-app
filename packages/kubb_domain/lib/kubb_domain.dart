@@ -22,3 +22,4 @@ export 'src/tournament/standings.dart';
 export 'src/tournament/tiebreaker.dart';
 export 'src/values/ids.dart';
 export 'src/values/lamport_clock.dart';
+export 'src/values/league_membership.dart';

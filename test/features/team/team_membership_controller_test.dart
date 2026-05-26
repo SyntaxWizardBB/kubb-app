@@ -69,11 +69,15 @@ void main() {
     );
     final c = _container(repo);
 
-    await expectLater(
-      c.read(teamListProvider.future),
-      throwsA(isA<TeamPermissionException>()),
-    );
-    expect(c.read(teamListProvider), isA<AsyncError<List<TeamWire>>>());
+    // Subscribe to the provider so it fully resolves before we inspect.
+    c.listen<AsyncValue<List<TeamWire>>>(teamListProvider, (_, __) {});
+    // Drain the microtask queue twice — once for the listener registration,
+    // once for the awaited repository call to surface its exception.
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    final state = c.read(teamListProvider);
+    expect(state.hasError, isTrue);
+    expect(state.error, isA<TeamPermissionException>());
   });
 
   test('controller.invite forwards team-id and invitee-id to the repository',
@@ -83,8 +87,8 @@ void main() {
     final controller = c.read(teamMembershipControllerProvider.notifier);
 
     await controller.invite(
-      teamId: const TeamId('t-1'),
-      inviteeUserId: const UserId('u-2'),
+      const TeamId('t-1'),
+      const UserId('u-2'),
     );
 
     expect(repo.lastInvite, isNotNull);
