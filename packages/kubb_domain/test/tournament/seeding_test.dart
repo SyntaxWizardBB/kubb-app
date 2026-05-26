@@ -1,6 +1,5 @@
 import 'package:glados/glados.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:kubb_domain/src/tournament/seeding.dart';
 
 import '../_support/tournament_generators.dart';
 
