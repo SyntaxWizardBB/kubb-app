@@ -108,10 +108,12 @@ sealed class Bracket {
   /// 3 = second pairing's `$1`, ...
   ///
   /// Pure: returns a new [Bracket] with the slot replaced; all other slots
-  /// remain identical. When the filled slot is in a non-first round of a
-  /// bracket that also carries a [BracketPhase.thirdPlace] round, the
-  /// corresponding loser of the source pairing is mirrored into the
-  /// third-place slot — see ADR-0017 §4/§5.
+  /// remain identical. When the filled slot belongs to the FINAL round (the
+  /// last winners round) of a bracket that also carries a
+  /// [BracketPhase.thirdPlace] round, the corresponding loser of the
+  /// feeding semifinal pairing is mirrored into the third-place slot —
+  /// see ADR-0017 §4/§5. Filling earlier winners rounds has no side effect
+  /// on the third-place pairing.
   Bracket fill({
     required int round,
     required int position,
@@ -146,10 +148,16 @@ final class SingleEliminationBracket extends Bracket {
     final newRounds = [...rounds];
     final entry = (seed: 0, participantId: participantId, isBye: false);
     _writeAt(newRounds, round, position, entry, allowThirdPlace: false);
-    // Mirror semifinal loser into the third-place playoff slot (ADR-0017 §4).
+    // Mirror semifinal losers into the third-place playoff (ADR-0017 §4).
+    // Trigger only when the FINAL round (last winners round) is being filled
+    // — the third-place pairing has just one slot for each semifinal loser.
     final thirdIdx =
         newRounds.indexWhere((r) => r.phase == BracketPhase.thirdPlace);
-    if (thirdIdx >= 0 && round > 1) {
+    final finalsRound = newRounds
+        .where((r) => r.phase != BracketPhase.thirdPlace)
+        .map((r) => r.number)
+        .fold<int>(0, (a, b) => a > b ? a : b);
+    if (thirdIdx >= 0 && round == finalsRound && finalsRound > 1) {
       final source = newRounds.firstWhereOrNull(
         (r) => r.number == round - 1 && r.phase != BracketPhase.thirdPlace,
       );

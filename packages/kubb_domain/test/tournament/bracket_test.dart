@@ -184,6 +184,62 @@ void main() {
       });
     });
 
+    group('fill with third-place playoff', () {
+      test('fills semifinal positions without affecting third-place '
+          'when withThirdPlace=true', () {
+        final base = Bracket.singleElimination(
+          _ids(8),
+          withThirdPlace: true,
+        ) as SingleEliminationBracket;
+        // Semifinals = round 2 with 2 pairings (positions 1..4).
+        // Position 3 fills pair index 1 ($1 slot) — under the old mirror
+        // logic this threw because third-place only has 1 pairing.
+        final filled = base.fill(
+          round: 2,
+          position: 3,
+          participantId: 'p3',
+        ) as SingleEliminationBracket;
+        final third = filled.rounds
+            .firstWhere((r) => r.phase == BracketPhase.thirdPlace);
+        // Third-place must remain untouched: both slots stay null.
+        expect(third.pairings.single.$1.participantId, isNull);
+        expect(third.pairings.single.$2.participantId, isNull);
+      });
+
+      test('mirrors semifinal losers to third-place on 8-bracket final fill',
+          () {
+        final base = Bracket.singleElimination(
+          _ids(8),
+          withThirdPlace: true,
+        ) as SingleEliminationBracket;
+        // Play through quarterfinals — top seed wins each pairing.
+        var b = base;
+        for (var i = 0; i < base.rounds.first.pairings.length; i++) {
+          final pair = base.rounds.first.pairings[i];
+          final winner = pair.$1.seed <= pair.$2.seed
+              ? pair.$1.participantId!
+              : pair.$2.participantId!;
+          // Round 2 (semis) has 2 pairings → positions 1..4.
+          b = b.fill(round: 2, position: i + 1, participantId: winner)
+              as SingleEliminationBracket;
+        }
+        // After QFs the semifinalists in seed order are p1, p4, p3, p2.
+        // Semi-1 pair = (p1, p4) → winner p1, loser p4.
+        // Semi-2 pair = (p3, p2) → winner p2, loser p3.
+        b = b.fill(round: 3, position: 1, participantId: 'p1')
+            as SingleEliminationBracket;
+        b = b.fill(round: 3, position: 2, participantId: 'p2')
+            as SingleEliminationBracket;
+        final third =
+            b.rounds.firstWhere((r) => r.phase == BracketPhase.thirdPlace);
+        final bronzePair = third.pairings.single;
+        expect(
+          {bronzePair.$1.participantId, bronzePair.$2.participantId},
+          equals({'p4', 'p3'}),
+        );
+      });
+    });
+
     group('linear seeding', () {
       test('round-1 pairings for n=8 are 1v8, 2v7, 3v6, 4v5', () {
         final b = Bracket.singleElimination(
