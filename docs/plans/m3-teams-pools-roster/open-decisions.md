@@ -5,7 +5,7 @@
 
 Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockt mindestens einen Task aus dem Milestone-Plan.
 
-## OD-M3-01: Schutz gegen Missbrauch der gleichberechtigten Captain-Rechte? `[committee]` `[owner]`
+## OD-M3-01: Schutz gegen Missbrauch der gleichberechtigten Captain-Rechte? `[resolved]`
 
 **Frage**: FR-TEAM-5 sagt: alle registrierten Pool-Mitglieder haben identische Captain-Rechte. Spec-Open-Point 1 (§7.1) fragt nach Schutzmechanismen. Was bauen wir in M3?
 
@@ -29,7 +29,9 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockt mi
 
 **Marker**: `[committee]` (UX-Bewertung), `[owner]` (Policy-Entscheidung, weil das die Mass-Adoption-Story berührt).
 
-## OD-M3-02: Roster-Eingabe — wie viele Slots maximal? `[domain]` `[owner]`
+**Resolution**: Resolved 2026-05-26 — Architect-Empfehlung übernommen. Option B per ADR-0018 (Accepted). Audit-Event plus Inbox-Notification an alle aktiven Pool-Mitglieder bei kritischen Aktionen (Removal, Edit, Dissolve). FR-TEAM-5 Gleichberechtigung bleibt intakt, soziale Kontrolle via Transparenz. Begründung siehe ADR-0018 §Mitgliedschafts-Lifecycle.
+
+## OD-M3-02: Roster-Eingabe — wie viele Slots maximal? `[resolved]`
 
 **Frage**: `tournaments.team_size` ist heute `BETWEEN 1 AND 6` (M1-Schema). Welche Werte unterstützen wir aktiv für M3 — und damit, wie viele Roster-Slots können vorkommen?
 
@@ -50,7 +52,9 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockt mi
 
 **Marker**: `[domain]` (Kubb-Realität), `[owner]` (Zielgruppen-Frage).
 
-## OD-M3-03: Cross-Pool-Tiebreaker — Schwierigkeitsgrad pro Pool berücksichtigen? `[domain]`
+**Resolution**: Resolved 2026-05-26 — Architect-Empfehlung übernommen. Option B per ADR-0018 (Accepted). Wizard bietet {2, 3, 4, 5, 6} als Auswahlliste. Schema-CHECK `team_size BETWEEN 1 AND 6` aus M1 bleibt unverändert. UI muss bis 6 Roster-Slots responsive bleiben (Mobile 360px scrollbar). Begründung siehe ADR-0018 §Datenmodell.
+
+## OD-M3-03: Cross-Pool-Tiebreaker — Schwierigkeitsgrad pro Pool berücksichtigen? `[resolved]`
 
 **Frage**: Wenn beim Pool-Cut zwei Top-Qualifier aus verschiedenen Gruppen punkte-gleich sind — wie ranken wir sie für das KO-Seeding?
 
@@ -71,7 +75,9 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockt mi
 
 **Marker**: `[domain]` (Kubb-Realität — sollte mit `/kubb-knowledge` validiert werden).
 
-## OD-M3-04: Reservespieler im Roster? `[committee]` `[owner]`
+**Resolution**: Resolved 2026-05-26 — Architect-Empfehlung übernommen. Option A mit Anpassung per ADR-0019 (Accepted). Bestehende `TiebreakerChain` wird Cross-Pool wiederverwendet, `direct_comparison` wird automatisch übersprungen (Cross-Pool nicht definiert, gleich für alle). Begründung siehe ADR-0019 §Cross-Pool-Tiebreaker.
+
+## OD-M3-04: Reservespieler im Roster? `[resolved]`
 
 **Frage**: Soll das Roster zwischen "aktiv für aktuelles Match" und "Reserve" unterscheiden? Spec-Open-Point 2 (§7.1).
 
@@ -92,7 +98,9 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockt mi
 
 **Marker**: `[committee]` (UX-Komplexität), `[owner]` (Roadmap-Priorisierung).
 
-## OD-M3-05: Pool-Cut bei Punktegleichheit nach Pool-Tiebreaker — wer rückt nach? `[domain]` `[committee]`
+**Resolution**: Resolved 2026-05-26 — Architect-Empfehlung übernommen. Option A für M3 per ADR-0018 und ADR-0020 (Accepted). Kein Reserve-Konzept im M3-Datenmodell — Roster hat genau `team_size` Slots. `tournament_match_lineups` (Variante C) wird als M5+ Folge-Ticket erfasst. Begründung siehe ADR-0020 §Alternatives C.
+
+## OD-M3-05: Pool-Cut bei Punktegleichheit nach Pool-Tiebreaker — wer rückt nach? `[resolved]`
 
 **Frage**: Pool hat 4 Teams, Top-2 qualifizieren. Platz 2 und 3 sind nach allen Tiebreakern identisch — was passiert?
 
@@ -113,7 +121,9 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockt mi
 
 **Marker**: `[domain]` (Schweizer Praxis sollte abgefragt werden), `[committee]` (UX-Frage zur Veranstalter-Eskalation).
 
-## OD-M3-06: Team-Sieg-Punkte — pro Set oder pro Match? `[domain]` `[owner]`
+**Resolution**: Resolved 2026-05-26 — Architect-Empfehlung übernommen. Option B per ADR-0019 (Accepted). RPC `_tournament_compute_pool_cut` wirft `TIEBREAKER_NEEDS_RESOLUTION` (ERRCODE 40001) bei vollständigem Tie nach Cross-Pool-Chain, Frontend zeigt Veranstalter-Eskalations-Dialog. Manuelle Entscheidung schreibt `tournament_seeding_overrides`-Eintrag. Kein Coin-Flip, kein automatischer Stichkampf. Begründung siehe ADR-0019 §Vollständiger Tie.
+
+## OD-M3-06: Team-Sieg-Punkte — pro Set oder pro Match? `[resolved]`
 
 **Frage**: Wenn Team A 2:0 gegen Team B gewinnt — was zählt für die Team-Standings? Match-Sieg gibt z.B. 3 Punkte, oder Set-Siege zählen separat?
 
@@ -134,7 +144,9 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockt mi
 
 **Marker**: `[domain]` (Schweizer Liga-Realität), `[owner]` (Roadmap).
 
-## OD-M3-07: Substitution während laufendem Match? `[domain]`
+**Resolution**: Resolved 2026-05-26 — Architect-Empfehlung übernommen. Option A per ADR-0018 (Accepted). Match-Sieg-Punkte (3 / 1 / 0) konsistent zu M1, Set-Tiebreaker bleibt EKC-Score (Basekubb-Differenz). Konfigurierbarkeit (Option C) wird als M5+ Liga-Folgeticket erfasst, wenn Liga-Reglemente das erzwingen. Begründung siehe ADR-0018 §Decision.
+
+## OD-M3-07: Substitution während laufendem Match? `[resolved]`
 
 **Frage**: Spec FR-TEAM-13: "Roster anpassen während des Turniers". Ist das während eines laufenden Matches möglich, oder nur zwischen Matches?
 
@@ -155,31 +167,35 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockt mi
 
 **Marker**: `[domain]` (Schweizer Praxis — Schiedsrichter-Regel).
 
+**Resolution**: Resolved 2026-05-26 — Architect-Empfehlung übernommen. Option A für M3 per ADR-0020 (Accepted). Substitution nur zwischen Matches erlaubt — RPC `tournament_roster_replace` wirft `MATCH_IN_PROGRESS` wenn das Team-Participant ein Match mit Status `awaiting_results` hat. Pro-Set-Substitution (Option B) bleibt M4+ Erweiterung. Begründung siehe ADR-0020 §Mid-Tournament-Substitution.
+
 ---
 
 ## Übersicht der ODs nach Marker
 
-| ID | `[committee]` | `[owner]` | `[domain]` | Blockt |
-|---|---|---|---|---|
-| OD-M3-01 | ja | ja | — | M3.1-T2 |
-| OD-M3-02 | — | ja | ja | M3.2-T7 |
-| OD-M3-03 | — | — | ja | M3.3-T4 |
-| OD-M3-04 | ja | ja | — | M3.2-T1 (Schema-Frage) |
-| OD-M3-05 | ja | — | ja | M3.3-T4, M3.3-T6 |
-| OD-M3-06 | — | ja | ja | M3.1-T1 (Punkteformel-Speicherung), M3.2 |
-| OD-M3-07 | — | — | ja | M3.2-T2 |
+| ID | `[committee]` | `[owner]` | `[domain]` | `[resolved]` | Blockt |
+|---|---|---|---|---|---|
+| OD-M3-01 | ja | ja | — | ja | M3.1-T2 |
+| OD-M3-02 | — | ja | ja | ja | M3.2-T7 |
+| OD-M3-03 | — | — | ja | ja | M3.3-T4 |
+| OD-M3-04 | ja | ja | — | ja | M3.2-T1 (Schema-Frage) |
+| OD-M3-05 | ja | — | ja | ja | M3.3-T4, M3.3-T6 |
+| OD-M3-06 | — | ja | ja | ja | M3.1-T1 (Punkteformel-Speicherung), M3.2 |
+| OD-M3-07 | — | — | ja | ja | M3.2-T2 |
 
-Zählung: 7 ODs gesamt — 3 mit `[committee]` (OD-M3-01, -04, -05), 4 mit `[owner]` (OD-M3-01, -02, -04, -06), 5 mit `[domain]` (OD-M3-02, -03, -05, -06, -07). Manche tragen mehrere Marker.
+Zählung: 7 ODs gesamt — alle 7 resolved 2026-05-26 per Architect-Empfehlung. Implementation kann starten.
 
-## Empfohlene Entscheidungs-Reihenfolge
+## Entscheidungs-Reihenfolge — erledigt
 
-1. **OD-M3-01** (Captain-Schutz) — M3.1 startet damit. Owner plus Committee.
-2. **OD-M3-04** (Reservespieler ja / nein) — M3.2-Schema. Owner.
-3. **OD-M3-02** (Team-Grössen) und **OD-M3-06** (Punkteformel) — M3.2-Schema und Wizard. Domain plus Owner. Parallel.
-4. **OD-M3-07** (Substitution-Zeitpunkt) — M3.2-RPC. Domain (Schweizer-Knowledge-Skill).
-5. **OD-M3-03** und **OD-M3-05** (Pool-Cut-Logik) — M3.3 startet damit. Domain plus Committee.
+Alle 7 ODs sind am 2026-05-26 per Architect-Empfehlung resolved. Die ursprünglich vorgeschlagene Sequenz ist obsolet — M3.1, M3.2 und M3.3 sind parallel entblockt.
 
-Wenn Owner nur die `[owner]`-ODs schnell abnimmt und die `[committee]`-ODs an die Multi-Agent-Pipeline gibt, ist Implementations-Start nach 1 Tag möglich.
+Die Architect-Empfehlungen sind in den drei zugehörigen ADRs verankert:
+
+- **ADR-0018** (Team-Modell, Accepted): OD-M3-01, OD-M3-02, OD-M3-04, OD-M3-06.
+- **ADR-0019** (Pool-Phase-Algorithmus, Accepted): OD-M3-03, OD-M3-05.
+- **ADR-0020** (Roster-Substitution-Regeln, Accepted): OD-M3-04, OD-M3-07.
+
+Implementations-Start nach M4-Erteilung möglich.
 
 ## Was die ODs explizit NICHT entscheiden
 
