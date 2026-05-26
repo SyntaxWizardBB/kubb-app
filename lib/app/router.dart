@@ -24,6 +24,10 @@ import 'package:kubb_app/features/social/presentation/friends_screen.dart';
 import 'package:kubb_app/features/social/presentation/groups_screen.dart';
 import 'package:kubb_app/features/social/presentation/social_routes.dart';
 import 'package:kubb_app/features/stats/presentation/stats_screen.dart';
+import 'package:kubb_app/features/team/presentation/team_create_screen.dart';
+import 'package:kubb_app/features/team/presentation/team_detail_screen.dart';
+import 'package:kubb_app/features/team/presentation/team_invitation_screen.dart';
+import 'package:kubb_app/features/team/presentation/team_list_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_bracket_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_conflict_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_detail_screen.dart';
@@ -242,6 +246,24 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/tournament/:id/bracket',
         builder: (_, state) => TournamentBracketScreen(
           tournamentId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/teams',
+        builder: (_, _) => const TeamListScreen(),
+      ),
+      GoRoute(
+        path: '/teams/new',
+        builder: (_, _) => const TeamCreateScreen(),
+      ),
+      GoRoute(
+        path: '/teams/invitations',
+        builder: (_, _) => const TeamInvitationScreen(),
+      ),
+      GoRoute(
+        path: '/teams/:id',
+        builder: (_, state) => TeamDetailScreen(
+          teamId: TeamId(state.pathParameters['id']!),
         ),
       ),
     ],
