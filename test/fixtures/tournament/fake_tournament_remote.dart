@@ -783,15 +783,29 @@ class FakeTournamentRemote implements TournamentRemote {
   }
 
   _Side _sideForCurrentUser(_Match m) {
-    if (_participants[m.participantA]?.userId == currentUser) {
+    final a = m.participantA;
+    if (a != null && _participantBelongsTo(a, currentUser)) {
       return _Side.a;
     }
-    if (m.participantB != null &&
-        _participants[m.participantB]?.userId == currentUser) {
+    final b = m.participantB;
+    if (b != null && _participantBelongsTo(b, currentUser)) {
       return _Side.b;
     }
     throw StateError(
       'currentUser ${currentUser.value} is not a member of ${m.id.value}',
+    );
+  }
+
+  bool _participantBelongsTo(TournamentParticipantId pid, UserId user) {
+    final p = _participants[pid];
+    if (p == null) return false;
+    // M1 single-path: direct user match
+    if (p.userId == user) return true;
+    // M3.2 team-path: any active member of the participant's team
+    if (p.teamId == null) return false;
+    final slots = _rosterByParticipant[pid] ?? const <_RosterSlot>[];
+    return slots.any(
+      (s) => s.replacedAt == null && s.memberUserId == user,
     );
   }
 

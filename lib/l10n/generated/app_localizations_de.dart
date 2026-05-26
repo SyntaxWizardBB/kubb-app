@@ -2170,10 +2170,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentDetailRosterTab => 'Roster';
 
   @override
-  String get tournamentDetailRosterEmpty =>
-      'Noch kein Roster zusammengestellt.';
-
-  @override
   String tournamentDetailMatchTeamHeader(String teamName, String members) {
     return '$teamName (Roster: $members)';
   }

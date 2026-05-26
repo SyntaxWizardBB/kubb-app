@@ -4018,12 +4018,6 @@ abstract class AppLocalizations {
   /// **'Roster'**
   String get tournamentDetailRosterTab;
 
-  /// Empty state on the roster tab
-  ///
-  /// In de, this message translates to:
-  /// **'Noch kein Roster zusammengestellt.'**
-  String get tournamentDetailRosterEmpty;
-
   /// Match header for team matches, showing roster names (R-M3-G3-Mitigation)
   ///
   /// In de, this message translates to:

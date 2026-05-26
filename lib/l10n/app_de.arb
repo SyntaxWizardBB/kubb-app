@@ -2939,10 +2939,6 @@
   "@tournamentDetailRosterTab": {
     "description": "Tab label for the roster view on the tournament detail screen (M3.2-T17)"
   },
-  "tournamentDetailRosterEmpty": "Noch kein Roster zusammengestellt.",
-  "@tournamentDetailRosterEmpty": {
-    "description": "Empty state on the roster tab"
-  },
   "tournamentDetailMatchTeamHeader": "{teamName} (Roster: {members})",
   "@tournamentDetailMatchTeamHeader": {
     "description": "Match header for team matches, showing roster names (R-M3-G3-Mitigation)",
