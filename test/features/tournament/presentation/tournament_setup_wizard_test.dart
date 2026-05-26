@@ -293,7 +293,7 @@ void main() {
   });
 
   testWidgets(
-      'round_robin_then_ko unlocks league + ko steps for a total of 6 (T13)',
+      'round_robin_then_ko unlocks league + ko steps for a total of 7 (T13)',
       (tester) async {
     await _pumpWizard(
       tester,
@@ -302,18 +302,20 @@ void main() {
             .overrideWith(_KoSeededController.new),
       ],
     );
-    expect(find.text('Schritt 1 von 6'), findsOneWidget);
+    expect(find.text('Schritt 1 von 7'), findsOneWidget);
 
     await _typeName(tester, 'KO Cup');
     await _tapNext(tester); // -> participants
-    expect(find.text('Schritt 2 von 6'), findsOneWidget);
+    expect(find.text('Schritt 2 von 7'), findsOneWidget);
     await _tapNext(tester); // -> format
-    expect(find.text('Schritt 3 von 6'), findsOneWidget);
+    expect(find.text('Schritt 3 von 7'), findsOneWidget);
     await _tapNext(tester); // -> league (T12)
-    expect(find.text('Schritt 4 von 6'), findsOneWidget);
+    expect(find.text('Schritt 4 von 7'), findsOneWidget);
     expect(find.text('LIGA-WERTUNG'), findsOneWidget);
+    await _tapNext(tester); // -> pool config (T9)
+    expect(find.text('Schritt 5 von 7'), findsOneWidget);
     await _tapNext(tester); // -> ko config (T13)
-    expect(find.text('Schritt 5 von 6'), findsOneWidget);
+    expect(find.text('Schritt 6 von 7'), findsOneWidget);
     expect(find.text('KO-KONFIGURATION'), findsOneWidget);
     // Smart default for 8 participants is 4 → preview shows bracket 8,
     // 4 BYEs, but the smarter case is exercised explicitly in the
