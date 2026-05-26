@@ -1943,4 +1943,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentKoHelpLinkLabel => 'Mehr zum KO-Modus';
+
+  @override
+  String get inboxTeamInvitation => 'Team-Einladung';
+
+  @override
+  String get inboxTeamMemberRemoved => 'Team-Änderung';
+
+  @override
+  String get inboxTeamDissolved => 'Team aufgelöst';
 }

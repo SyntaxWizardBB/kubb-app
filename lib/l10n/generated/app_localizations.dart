@@ -3615,6 +3615,24 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Mehr zum KO-Modus'**
   String get tournamentKoHelpLinkLabel;
+
+  /// Inbox badge label for the team_invitation kind (M3.1-T6)
+  ///
+  /// In de, this message translates to:
+  /// **'Team-Einladung'**
+  String get inboxTeamInvitation;
+
+  /// Inbox badge label for the team_member_removed kind (M3.1-T6)
+  ///
+  /// In de, this message translates to:
+  /// **'Team-Änderung'**
+  String get inboxTeamMemberRemoved;
+
+  /// Inbox badge label for the team_dissolved kind (M3.1-T6)
+  ///
+  /// In de, this message translates to:
+  /// **'Team aufgelöst'**
+  String get inboxTeamDissolved;
 }
 
 class _AppLocalizationsDelegate
