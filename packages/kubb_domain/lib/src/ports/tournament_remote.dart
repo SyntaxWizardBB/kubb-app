@@ -1,4 +1,6 @@
+import 'package:kubb_domain/src/tournament/bracket.dart';
 import 'package:kubb_domain/src/tournament/ekc_score.dart';
+import 'package:kubb_domain/src/tournament/ko_phase.dart';
 import 'package:kubb_domain/src/values/ids.dart';
 import 'package:meta/meta.dart';
 
@@ -390,4 +392,45 @@ abstract interface class TournamentRemote {
 
   /// Realtime placeholder for M4. M1 implementations return an empty stream.
   Stream<TournamentMatchRef> watchMatch(TournamentMatchId id);
+
+  // KO-Phase (M2.2 — see architecture.md §4 and ADR-0017)
+
+  /// FR-FMT-10 manual override. Writes the seeding order of the qualified
+  /// participants for the upcoming KO phase. `seeds` must contain a complete
+  /// mapping of every qualified participant to a 1-based seed position.
+  Future<void> setSeeding({
+    required TournamentId tournamentId,
+    required Map<TournamentParticipantId, int> seeds,
+  });
+
+  /// Inserts the KO-match rows from the current standings + seeding.
+  /// Server-side validates that the round-robin / pool phase is fully
+  /// finalised. The Supabase adapter must treat `ERRCODE 40001` (already
+  /// started) as idempotent — see TASK-M2.2-T7b.
+  ///
+  /// Contract evolution vs. architecture.md §4: the doc-block lists only
+  /// `(tournamentId)`, but the underlying `tournament_start_ko_phase`
+  /// RPC takes a `p_ko_config jsonb` payload (TASK-M2.2-T3b). The signature
+  /// therefore accepts a [KoPhaseConfig] so callers can pass through the
+  /// qualifier count, third-place flag, and seeding mode without a second
+  /// round-trip. Architecture doc should be updated to match (handled by
+  /// the architect-domain follow-up edit).
+  Future<void> startKoPhase(TournamentId tournamentId, KoPhaseConfig config);
+
+  /// FR-PAIR-7. Swaps the participants of a not-yet-started KO pairing.
+  /// `reason` is mandatory and lands in the audit trail. Targeting a
+  /// pairing whose match has already started is rejected server-side.
+  Future<void> overrideKoPairing({
+    required TournamentMatchId matchId,
+    required TournamentParticipantId participantA,
+    required TournamentParticipantId participantB,
+    required String reason,
+  });
+
+  /// Reads the current bracket state as a domain value object for the
+  /// visualisation widget. Pure read path — adapters may compose this on
+  /// top of [listMatchesForTournament] plus the `bracketFromMatches`
+  /// mapper, or hit a dedicated read RPC. The port exposes it as a
+  /// convenience so the UI layer does not have to re-glue the parts.
+  Future<Bracket> getBracket(TournamentId tournamentId);
 }

@@ -226,6 +226,34 @@ class TournamentRepository implements TournamentRemote {
     return const Stream<TournamentMatchRef>.empty();
   }
 
+  @override
+  Future<void> setSeeding({
+    required TournamentId tournamentId,
+    required Map<TournamentParticipantId, int> seeds,
+  }) {
+    throw UnimplementedError('setSeeding — TASK-M2.2-T7b');
+  }
+
+  @override
+  Future<void> startKoPhase(TournamentId tournamentId, KoPhaseConfig config) {
+    throw UnimplementedError('startKoPhase — TASK-M2.2-T7b');
+  }
+
+  @override
+  Future<void> overrideKoPairing({
+    required TournamentMatchId matchId,
+    required TournamentParticipantId participantA,
+    required TournamentParticipantId participantB,
+    required String reason,
+  }) {
+    throw UnimplementedError('overrideKoPairing — TASK-M2.2-T7b');
+  }
+
+  @override
+  Future<Bracket> getBracket(TournamentId tournamentId) {
+    throw UnimplementedError('getBracket — TASK-M2.2-T7b');
+  }
+
   Future<void> _voidRpc(String fn, TournamentId id) {
     return _client.rpc<void>(
       fn,

@@ -106,6 +106,34 @@ class _FakeTournamentRemote implements TournamentRemote {
   @override
   Stream<TournamentMatchRef> watchMatch(TournamentMatchId id) =>
       const Stream<TournamentMatchRef>.empty();
+
+  @override
+  Future<void> setSeeding({
+    required TournamentId tournamentId,
+    required Map<TournamentParticipantId, int> seeds,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> startKoPhase(TournamentId tournamentId, KoPhaseConfig config) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> overrideKoPairing({
+    required TournamentMatchId matchId,
+    required TournamentParticipantId participantA,
+    required TournamentParticipantId participantB,
+    required String reason,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Bracket> getBracket(TournamentId tournamentId) {
+    throw UnimplementedError();
+  }
 }
 
 Future<_FakeTournamentRemote> _pumpWizard(WidgetTester tester) async {
