@@ -33,6 +33,52 @@ TournamentSummaryRef _tournamentSummaryFromGetEnvelope(
   );
 }
 
+/// Thrown when `tournament_register_team` rejects the call because no
+/// roster slot references a registered user. The server raises
+/// `ERRCODE 22023` with `HINT 'MIN_ONE_REGISTERED'` per FR-REG-12; this
+/// exception lets the UI surface the rule-specific message without
+/// parsing strings.
+///
+/// See migration `20260615000006_tournament_team_rpcs`.
+class MinOneRegisteredException implements Exception {
+  const MinOneRegisteredException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'MinOneRegisteredException: $message';
+}
+
+/// Thrown when a roster insert collides with the BR-5 trigger from
+/// migration `20260615000005_tournament_team_roster` — a player already
+/// holds an open slot for another team in the same tournament. The
+/// server raises Postgres `ERRCODE 23P01` (`exclusion_violation`) with
+/// `HINT 'BR_5_VIOLATION'`.
+class RosterBR5Exception implements Exception {
+  const RosterBR5Exception(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'RosterBR5Exception: $message';
+}
+
+/// Thrown when `tournament_roster_replace` rejects the call because the
+/// roster is locked. [cause] is `match-open` when a match the
+/// participant is part of is awaiting results (OD-M3-07,
+/// `HINT 'ROSTER_LOCKED_DURING_MATCH'`) and `tournament-finalized` when
+/// the tournament itself is locked (FR-TEAM-15, `HINT 'ROSTER_LOCKED'`).
+class RosterLockedException implements Exception {
+  const RosterLockedException({required this.cause, required this.message});
+
+  /// `match-open` or `tournament-finalized`.
+  final String cause;
+  final String message;
+
+  @override
+  String toString() => 'RosterLockedException($cause): $message';
+}
+
 /// Thrown when `tournament_organizer_override_pairing` rejects the call.
 /// The server raises one of a fixed set of token-prefixed exceptions
 /// (`MISSING_REASON:`, `MATCH_NOT_FOUND:`, `MATCH_ALREADY_STARTED:`,
@@ -376,9 +422,22 @@ class TournamentRepository implements TournamentRemote {
     required TournamentId tournamentId,
     required TeamId teamId,
     required List<RosterSlotInput> roster,
-  }) {
-    // Wired to `tournament_register_team` RPC by TASK-M3.2-T9.
-    throw UnimplementedError();
+  }) async {
+    try {
+      final response = await _client.rpc<Map<String, dynamic>>(
+        'tournament_register_team',
+        params: <String, dynamic>{
+          'p_tournament_id': tournamentId.value,
+          'p_team_id': teamId.value,
+          'p_roster_json': [
+            for (final slot in roster) _rosterSlotInputToWire(slot),
+          ],
+        },
+      );
+      return TournamentParticipantId(response['participant_id']! as String);
+    } on PostgrestException catch (e) {
+      throw _mapRosterException(e);
+    }
   }
 
   @override
@@ -387,15 +446,90 @@ class TournamentRepository implements TournamentRemote {
     required int slotIndex,
     required RosterSlotInput newOccupant,
     String? reason,
-  }) {
-    // Wired to `tournament_roster_replace` RPC by TASK-M3.2-T9.
-    throw UnimplementedError();
+  }) async {
+    try {
+      await _client.rpc<void>(
+        'tournament_roster_replace',
+        params: <String, dynamic>{
+          'p_participant_id': participantId.value,
+          'p_slot_index': slotIndex,
+          'p_new_member_user_id': newOccupant.memberUserId?.value,
+          'p_new_guest_player_id': newOccupant.guestPlayerId?.value,
+          'p_reason': reason,
+        },
+      );
+    } on PostgrestException catch (e) {
+      throw _mapRosterException(e);
+    }
   }
 
   @override
-  Future<List<RosterSlot>> getRoster(TournamentParticipantId participantId) {
-    // Wired to `tournament_roster_list` RPC by TASK-M3.2-T9.
-    throw UnimplementedError();
+  Future<List<RosterSlot>> getRoster(
+    TournamentParticipantId participantId,
+  ) async {
+    // Port carries only the participant id; `tournament_roster_list`
+    // needs both — fetch the tournament id from the participant row via
+    // RLS-filtered select. Closed history rows (`replaced_at IS NOT
+    // NULL`) are dropped client-side per the port contract.
+    final row = await _client
+        .from('tournament_participants')
+        .select('tournament_id')
+        .eq('id', participantId.value)
+        .maybeSingle();
+    if (row == null) return const <RosterSlot>[];
+    final response = await _client.rpc<Map<String, dynamic>?>(
+      'tournament_roster_list',
+      params: <String, dynamic>{
+        'p_tournament_id': row['tournament_id'] as String,
+        'p_participant_id': participantId.value,
+      },
+    );
+    if (response == null) return const <RosterSlot>[];
+    final slots = (response['slots'] as List<dynamic>? ?? const <dynamic>[])
+        .cast<Map<String, dynamic>>();
+    return [
+      for (final slot in slots)
+        if (slot['replaced_at'] == null)
+          RosterSlot.fromJson(<String, dynamic>{
+            ...slot,
+            'id': slot['slot_id'],
+          }),
+    ];
+  }
+
+  Map<String, dynamic> _rosterSlotInputToWire(RosterSlotInput slot) {
+    return <String, dynamic>{
+      'slot_index': slot.slotIndex,
+      if (slot.memberUserId != null)
+        'member_user_id': slot.memberUserId!.value,
+      if (slot.guestPlayerId != null)
+        'guest_player_id': slot.guestPlayerId!.value,
+    };
+  }
+
+  Exception _mapRosterException(PostgrestException e) {
+    // Server-side errors from the roster RPCs use Postgres `HINT` to
+    // disambiguate (see migration 20260615000006). BR-5 is special:
+    // it surfaces as `ERRCODE 23P01` from the trigger.
+    if (e.code == '23P01') {
+      return RosterBR5Exception(e.message);
+    }
+    switch (e.hint) {
+      case 'MIN_ONE_REGISTERED':
+        return MinOneRegisteredException(e.message);
+      case 'ROSTER_LOCKED_DURING_MATCH':
+        return RosterLockedException(
+          cause: 'match-open',
+          message: e.message,
+        );
+      case 'ROSTER_LOCKED':
+        return RosterLockedException(
+          cause: 'tournament-finalized',
+          message: e.message,
+        );
+      default:
+        return e;
+    }
   }
 
   Future<void> _voidRpc(String fn, TournamentId id) {
