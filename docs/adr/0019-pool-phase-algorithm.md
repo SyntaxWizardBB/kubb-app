@@ -1,6 +1,6 @@
 # ADR-0019: Pool-Phase-Algorithmus (Group-Round-Robin, Cut, Cross-Pool-Tiebreaker)
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-05-26
 - **Depends on**: ADR-0001 (Tech-Stack), ADR-0002 (Bounded Contexts), ADR-0014 (Tournament-Match-Pfad-Trennung), ADR-0017 (KO-Phase-Semantik)
 - **Bezug**: `docs/plans/m3-teams-pools-roster/architecture.md` §3.3–§3.4, `docs/specs/tournament-mode-spec.md` §3.8 FR-FMT-5, OD-M3-03, OD-M3-05
@@ -23,6 +23,11 @@ Existierende Infrastruktur:
 - ADR-0017 §7 hat Server-Authority für `tournament_start_ko_phase` als plpgsql-Spiegelung etabliert — Pool-Phase folgt diesem Pattern.
 
 ## Decision
+
+Folgende M3-ODs werden mit dieser ADR aufgelöst (alle 2026-05-26 resolved):
+
+- **OD-M3-03** (Cross-Pool-Tiebreaker): Option A mit Anpassung — bestehende `TiebreakerChain` Cross-Pool wiederverwenden, `direct_comparison` automatisch überspringen (Cross-Pool nicht definiert). Siehe §3.
+- **OD-M3-05** (Pool-Cut bei vollständigem Tie): Option B — RPC `_tournament_compute_pool_cut` wirft `TIEBREAKER_NEEDS_RESOLUTION`, Frontend zeigt Veranstalter-Eskalations-Dialog. Kein Coin-Flip, kein Stichkampf. Siehe §4.
 
 ### 1. Gruppen-Verteilung
 

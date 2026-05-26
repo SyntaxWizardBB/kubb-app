@@ -1,6 +1,6 @@
 # ADR-0020: Roster-Substitution-Regeln (BR-5, Mid-Tournament-Swap, Audit)
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-05-26
 - **Depends on**: ADR-0018 (Team-Modell), ADR-0001 (Tech-Stack), ADR-0014 (Tournament-Match-Pfad-Trennung)
 - **Bezug**: `docs/plans/m3-teams-pools-roster/architecture.md` §3.3, §4.3, `docs/specs/tournament-mode-spec.md` FR-TEAM-12..16, FR-REG-12, BR-5, BR-9, BR-29, OD-M3-07
@@ -16,6 +16,11 @@ M3.2 baut den Roster-Pfad: jedes Team meldet sich mit einer Auswahl seines Pools
 Die Spec deckt das in §3.7.3 und Kapitel 6 (BR-5, BR-9, BR-29) ab, lässt aber den Substitutions-Zeitpunkt mehrdeutig: "während des Turniers" — heisst das auch mitten in einem Match? OD-M3-07 ist die offene Frage.
 
 ## Decision
+
+Folgende M3-ODs werden mit dieser ADR aufgelöst (alle 2026-05-26 resolved):
+
+- **OD-M3-07** (Substitutions-Zeitpunkt): Option A für M3 — Substitution nur zwischen Matches erlaubt, RPC `tournament_roster_replace` wirft `MATCH_IN_PROGRESS` bei aktivem `awaiting_results`-Match. Pro-Set-Substitution (Option B) bleibt M4+. Siehe §3.
+- **OD-M3-04** (Reservespieler): Option A für M3 — kein Reserve-Konzept im Roster-Schema, Slot-Anzahl entspricht `tournaments.team_size`. `tournament_match_lineups` (Option C) als M5+ Folge-Ticket. Siehe §Alternatives C.
 
 ### 1. Roster-Slots Datenmodell
 
