@@ -137,6 +137,30 @@ class _FakeTournamentRemote implements TournamentRemote {
   Future<Bracket> getBracket(TournamentId tournamentId) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<TournamentParticipantId> registerTeam({
+    required TournamentId tournamentId,
+    required TeamId teamId,
+    required List<RosterSlotInput> roster,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> replaceRosterSlot({
+    required TournamentParticipantId participantId,
+    required int slotIndex,
+    required RosterSlotInput newOccupant,
+    String? reason,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<RosterSlot>> getRoster(TournamentParticipantId participantId) {
+    throw UnimplementedError();
+  }
 }
 
 /// Controller variant that starts the draft in a hybrid format so the

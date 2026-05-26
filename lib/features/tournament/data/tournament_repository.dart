@@ -371,6 +371,33 @@ class TournamentRepository implements TournamentRemote {
     return const Stream<TournamentMatchRef>.empty();
   }
 
+  @override
+  Future<TournamentParticipantId> registerTeam({
+    required TournamentId tournamentId,
+    required TeamId teamId,
+    required List<RosterSlotInput> roster,
+  }) {
+    // Wired to `tournament_register_team` RPC by TASK-M3.2-T9.
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> replaceRosterSlot({
+    required TournamentParticipantId participantId,
+    required int slotIndex,
+    required RosterSlotInput newOccupant,
+    String? reason,
+  }) {
+    // Wired to `tournament_roster_replace` RPC by TASK-M3.2-T9.
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<RosterSlot>> getRoster(TournamentParticipantId participantId) {
+    // Wired to `tournament_roster_list` RPC by TASK-M3.2-T9.
+    throw UnimplementedError();
+  }
+
   Future<void> _voidRpc(String fn, TournamentId id) {
     return _client.rpc<void>(
       fn,

@@ -1,6 +1,7 @@
 import 'package:kubb_domain/src/tournament/bracket.dart';
 import 'package:kubb_domain/src/tournament/ekc_score.dart';
 import 'package:kubb_domain/src/tournament/ko_phase.dart';
+import 'package:kubb_domain/src/tournament/roster_slot.dart';
 import 'package:kubb_domain/src/values/ids.dart';
 import 'package:meta/meta.dart';
 
@@ -433,4 +434,33 @@ abstract interface class TournamentRemote {
   /// mapper, or hit a dedicated read RPC. The port exposes it as a
   /// convenience so the UI layer does not have to re-glue the parts.
   Future<Bracket> getBracket(TournamentId tournamentId);
+
+  // Roster (M3.2 — see architecture.md §3.5 and tournament-mode-spec
+  // §3.6 FR-REG / §3.7 FR-TEAM)
+
+  /// FR-REG-2 + FR-REG-12. Registers a team for a tournament with an
+  /// initial roster. `roster` length must equal the tournament's team
+  /// size; at least one entry must reference a registered user
+  /// (member_user_id) per FR-REG-12. BR-5 is enforced server-side.
+  Future<TournamentParticipantId> registerTeam({
+    required TournamentId tournamentId,
+    required TeamId teamId,
+    required List<RosterSlotInput> roster,
+  });
+
+  /// FR-TEAM-13/-14. Replaces one roster slot. The previous occupant is
+  /// kept as a closed history row. `reason` is optional in the spec but
+  /// always written to the audit trail when present.
+  Future<void> replaceRosterSlot({
+    required TournamentParticipantId participantId,
+    required int slotIndex,
+    required RosterSlotInput newOccupant,
+    String? reason,
+  });
+
+  /// Reads the current roster for a participant (the team-side
+  /// equivalent of looking up an individual participant). Returns the
+  /// open slots ordered by `slot_index`. Closed history rows are not
+  /// returned here — those flow through the audit-tail view.
+  Future<List<RosterSlot>> getRoster(TournamentParticipantId participantId);
 }

@@ -415,6 +415,34 @@ class FakeTournamentRemote implements TournamentRemote {
   }
 
   // ---------------------------------------------------------------------
+  // Roster (M3.2 — stubs, real behaviour lands in TASK-M3.2-T10)
+  // ---------------------------------------------------------------------
+
+  @override
+  Future<TournamentParticipantId> registerTeam({
+    required TournamentId tournamentId,
+    required TeamId teamId,
+    required List<RosterSlotInput> roster,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> replaceRosterSlot({
+    required TournamentParticipantId participantId,
+    required int slotIndex,
+    required RosterSlotInput newOccupant,
+    String? reason,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<RosterSlot>> getRoster(TournamentParticipantId participantId) {
+    throw UnimplementedError();
+  }
+
+  // ---------------------------------------------------------------------
   // Trigger simulation
   // ---------------------------------------------------------------------
 
