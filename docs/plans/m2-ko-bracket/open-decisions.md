@@ -87,7 +87,7 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockiert
 
 **Marker**: `[owner]` — direkt Owner-Entscheidung, weil es eine Default-Konvention für alle künftigen Turniere ist. Auch `[domain]` (Schweizer-Liga-Praxis).
 
-## OD-M2-05: Hybrid `round_robin_then_ko` — Qualifier-Anzahl Constraints? `[domain]`
+## OD-M2-05: Hybrid `round_robin_then_ko` — Qualifier-Anzahl Constraints? `[resolved]`
 
 **Frage**: Welche Qualifier-Anzahlen lassen wir für `round_robin_then_ko` zu?
 
@@ -106,7 +106,7 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockiert
 
 **Empfehlung (vorläufig)**: B — beliebige Anzahl mit BYE-Auffüllung. Begründung: FR-FMT-11 ist explizit ("BYEs werden höher gesetzten Teilnehmern zugeteilt") — der Spec-Verfasser hat genau diesen Fall im Sinn. Die existierende `singleElimination`-Implementation in `bracket.dart` macht BYE-Auffüllung bereits korrekt.
 
-**Marker**: `[domain]` — Kubb-/Turnier-Spezialwissen. Schweizer Liga-Praxis ist zu prüfen: laufen reale Liga-Turniere typischerweise mit Top-N oder Top-Zweierpotenz?
+**Resolution**: Resolved 2026-05-26 via Owner-Bestätigung auf Domain-Tally **2:1 für B** (mit UX-Mitigation). Begründung: ADR-0017 §3 ist bereits Accepted für B, `bracket.dart:48–61` implementiert die BYE-Auffüllung korrekt, FR-FMT-11 bleibt aktiv (Option A würde Spec zu totem Text machen). CH-Praxis ist nicht einheitlich (ÖUFI Cup Top-8 = 2^n; SM publiziert nur "die bestplatzierten Teams"); für gemischte Teilnehmerfelder (9–14 Teams) ist Flexibilität essenziell. Minderheit (Spieler-Vote) wird nicht überstimmt — UX-Sorgen gehen als verbindliche Anforderungen ein: (U1–U4) freier Integer-Input statt 2^n-Dropdown plus Preview-Panel ("Bracket-Grösse: next_pow2(N)", "K BYEs an Seeds 1..K", "R1 hat M echte Matches") plus Smart-Default-Vorschlag; (U5–U7) BYE-Slots visuell als Freilos markiert mit Tooltip-Erklärung und Schedule-View-Hinweis zu R1-Match-Anzahl; (U8–U9) In-App-Hilfe paraphrasiert FR-FMT-11; (U10) `KoPhaseConfig` braucht kein zusätzliches Flag; (U12–U13) Property-Tests glados + pgTAP über n ∈ [2, 64] mit Invarianten zu BYE-Anzahl und Top-Seed-Allocation. Synthesis-Doc: `/tmp/kubb_app/kubb-knowledge/qualifier-count-praxis/synthesis.md`. Domain-Notiz: `docs/domain-knowledge/qualifier-count.md`.
 
 ## OD-M2-06: Phase-Wechsel-Validierung — strikt oder mit Force-Override? `[committee]`
 
