@@ -524,6 +524,40 @@ class FakeTournamentRemote implements TournamentRemote {
     }
     _poolConfig[tournamentId] = config;
     _groupLabels[tournamentId] = labels;
+
+    // Generate per-group round-robin matches (T14): only when no
+    // matches exist yet (i.e. the caller skipped [startTournament] for
+    // the pool path). Mirrors `tournament_start_pool_phase`, which
+    // inserts the same RR fan-out server-side.
+    if (t.matchIds.isEmpty) {
+      for (final group in result.groups) {
+        final ids = [for (final id in group) ?id];
+        final pool = Pool.roundRobin(ids);
+        var round = 0;
+        for (final r in pool.rounds) {
+          round += 1;
+          var num = 0;
+          for (final pairing in r.pairings) {
+            num += 1;
+            final mid = TournamentMatchId(_nextId('m'));
+            _matches[mid] = _Match(
+              id: mid,
+              tournamentId: tournamentId,
+              roundNumber: round,
+              matchNumberInRound: num,
+              participantA: TournamentParticipantId(pairing.participantA),
+              participantB: pairing.participantB == null
+                  ? null
+                  : TournamentParticipantId(pairing.participantB!),
+            );
+            t.matchIds.add(mid);
+          }
+        }
+      }
+      t
+        ..status = TournamentStatus.live
+        ..startedAt ??= DateTime.now();
+    }
   }
 
   @override
