@@ -28,3 +28,31 @@ final tournamentBracketPollingProvider =
   });
   ref.onDispose(timer.cancel);
 });
+
+/// Per-group standings snapshot for the pool phase, fetched via
+/// `TournamentRemote.getPoolStandings`. Returns one entry per group
+/// label, each pre-sorted by the tournament's tiebreaker chain
+/// (ADR-0019 §3.5). Only meaningful while
+/// `matchFormatConfig['pool_phase']` is `true`; callers gate the watch
+/// on that flag so empty pre-pool tournaments don't fire the RPC.
+//
+// ignore: specify_nonobvious_property_types
+final tournamentPoolStandingsProvider =
+    FutureProvider.family<List<PoolGroupStandings>, TournamentId>(
+        (ref, id) async {
+  return ref.read(tournamentRemoteProvider).getPoolStandings(id);
+});
+
+/// Side-effect provider keeping the pool-standings snapshot fresh while
+/// the Gruppen tab is mounted. Same 5s cadence as the bracket polling so
+/// the two phases share an invalidation tick when both are surfaced on
+/// the detail screen.
+//
+// ignore: specify_nonobvious_property_types
+final tournamentPoolStandingsPollingProvider =
+    Provider.autoDispose.family<void, TournamentId>((ref, id) {
+  final timer = Timer.periodic(const Duration(seconds: 5), (_) {
+    ref.invalidate(tournamentPoolStandingsProvider(id));
+  });
+  ref.onDispose(timer.cancel);
+});

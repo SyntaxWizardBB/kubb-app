@@ -1542,6 +1542,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentDetailAborted => 'Turnier abgebrochen.';
 
   @override
+  String get tournamentDetailPools => 'Gruppen';
+
+  @override
+  String get tournamentDetailPoolsEmpty => 'Noch keine Gruppendaten.';
+
+  @override
+  String tournamentDetailPoolGroup(String label) {
+    return 'Gruppe $label';
+  }
+
+  @override
   String get tournamentDetailAuditHeader => 'Verlauf';
 
   @override

@@ -2113,6 +2113,21 @@
   "@tournamentDetailAborted": {
     "description": "Headline when status is aborted"
   },
+  "tournamentDetailPools": "Gruppen",
+  "@tournamentDetailPools": {
+    "description": "Section heading for the pool-phase group standings on the detail screen"
+  },
+  "tournamentDetailPoolsEmpty": "Noch keine Gruppendaten.",
+  "@tournamentDetailPoolsEmpty": {
+    "description": "Empty-state message when the pool phase has not produced standings yet"
+  },
+  "tournamentDetailPoolGroup": "Gruppe {label}",
+  "@tournamentDetailPoolGroup": {
+    "description": "Heading per pool group, e.g. 'Gruppe A'",
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
   "tournamentDetailAuditHeader": "Verlauf",
   "@tournamentDetailAuditHeader": {
     "description": "Section heading: audit tail"

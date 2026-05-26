@@ -136,6 +136,16 @@ class _Body extends ConsumerWidget {
           _RosterCard(
               participantId: TournamentParticipantId(me.participantId)),
         ],
+        // T12 (M3.3): pool-phase "Gruppen" tab. The detail screen renders
+        // a flat ListView (no TabController), so the tab maps to an
+        // inline card — same pattern as `_RosterCard`. Visibility is
+        // gated on `match_format.pool_phase=true`; when the flag is
+        // absent or false the section vanishes entirely (no provider
+        // watch, no RPC).
+        if (cfg['pool_phase'] == true) ...[
+          const SizedBox(height: KubbTokens.space5),
+          _PoolStandingsCard(id: id),
+        ],
         const SizedBox(height: KubbTokens.space5),
         _Actions(detail: detail, isCreator: isCreator, me: me, id: id),
         const SizedBox(height: KubbTokens.space5),
@@ -383,6 +393,97 @@ class _RosterCard extends ConsumerWidget {
       ),
     ]);
   }
+}
+
+/// T12 (M3.3) — inline pool-standings section. Renders one sub-block
+/// per `group_label` returned by `tournament_pool_standings`. The
+/// surrounding `_Body` guards visibility on
+/// `matchFormatConfig['pool_phase']`; once a tournament with the flag
+/// is mounted, [tournamentPoolStandingsPollingProvider] keeps the
+/// snapshot fresh at the same 5s cadence as the bracket polling.
+///
+/// Stats are server-sorted by the tournament's tiebreaker chain
+/// (ADR-0019 §3.5), so the widget renders them in arrival order
+/// without re-sorting.
+class _PoolStandingsCard extends ConsumerWidget {
+  const _PoolStandingsCard({required this.id});
+  final TournamentId id;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    ref.watch(tournamentPoolStandingsPollingProvider(id));
+    final async = ref.watch(tournamentPoolStandingsProvider(id));
+    return _card(context, l.tournamentDetailPools, [
+      async.when(
+        loading: () => const Padding(
+          padding: EdgeInsets.symmetric(vertical: KubbTokens.space2),
+          child: SizedBox(
+              height: 18, width: 18, child: CircularProgressIndicator()),
+        ),
+        // Error path collapses to the empty-state copy: the pool RPC
+        // throws ahead of phase-start, which is indistinguishable from
+        // "no data yet" for the caller.
+        error: (_, _) => Text(l.tournamentDetailPoolsEmpty,
+            style: TextStyle(fontSize: 13, color: tokens.fgMuted)),
+        data: (groups) {
+          if (groups.isEmpty) {
+            return Text(l.tournamentDetailPoolsEmpty,
+                style: TextStyle(fontSize: 13, color: tokens.fgMuted));
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < groups.length; i++) ...[
+                if (i > 0) const SizedBox(height: KubbTokens.space3),
+                _poolGroup(context, l, tokens, groups[i]),
+              ],
+            ],
+          );
+        },
+      ),
+    ]);
+  }
+}
+
+Widget _poolGroup(BuildContext context, AppLocalizations l, KubbTokens tokens,
+    PoolGroupStandings g) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(l.tournamentDetailPoolGroup(g.groupLabel),
+          style: TextStyle(
+              fontSize: 13, fontWeight: FontWeight.w700, color: tokens.fg)),
+      const SizedBox(height: KubbTokens.space1),
+      for (var i = 0; i < g.stats.length; i++)
+        _poolRow(context, tokens, i + 1, g.stats[i]),
+    ],
+  );
+}
+
+Widget _poolRow(BuildContext context, KubbTokens tokens, int rank,
+    ParticipantStats s) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: KubbTokens.space1),
+    child: Row(children: [
+      SizedBox(
+        width: 28,
+        child: Text('$rank.',
+            style: TextStyle(fontSize: 13, color: tokens.fgMuted)),
+      ),
+      Expanded(
+        child: Text(s.participantId,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg)),
+      ),
+      Text('${s.totalPoints}',
+          style: TextStyle(
+              fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg)),
+    ]),
+  );
 }
 
 Widget _rosterRow(BuildContext context, AppLocalizations l, KubbTokens tokens,

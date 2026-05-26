@@ -2920,6 +2920,24 @@ abstract class AppLocalizations {
   /// **'Turnier abgebrochen.'**
   String get tournamentDetailAborted;
 
+  /// Section heading for the pool-phase group standings on the detail screen
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppen'**
+  String get tournamentDetailPools;
+
+  /// Empty-state message when the pool phase has not produced standings yet
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Gruppendaten.'**
+  String get tournamentDetailPoolsEmpty;
+
+  /// Heading per pool group, e.g. 'Gruppe A'
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppe {label}'**
+  String tournamentDetailPoolGroup(String label);
+
   /// Section heading: audit tail
   ///
   /// In de, this message translates to:
