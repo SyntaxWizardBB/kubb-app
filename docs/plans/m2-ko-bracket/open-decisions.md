@@ -24,7 +24,7 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockiert
 
 **Resolution**: Resolved 2026-05-25 via Committee Vote 3:0 für CustomPainter. Siehe ADR-0016 (Accepted).
 
-## OD-M2-02: Server-Authority oder Client-Authority für Bracket-Generation? `[committee]`
+## OD-M2-02: Server-Authority oder Client-Authority für Bracket-Generation? `[resolved]`
 
 **Frage**: Wer berechnet das KO-Bracket — der Client (clientseitige `Bracket.singleElimination` in Dart) oder der Server (plpgsql-Spiegelung)?
 
@@ -41,9 +41,9 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder Punkt blockiert
   - Pros: löst die Race-Condition explizit, Server-Logik bleibt schlank.
   - Cons: zusätzlicher API-Roundtrip, neue Token-Lebenszyklus-Logik.
 
-**Empfehlung (vorläufig)**: B mit serverseitiger Plausibilitätsprüfung (Anzahl Matches stimmt mit Bracket-Grösse überein, jeder Teilnehmer kommt genau einmal vor, jeder seed ist verwendet). Race-Condition zwischen Veranstaltern ist im MVP unrealistisch (nur ein Veranstalter pro Turnier per RLS) — der Single-Veranstalter-Lock entsteht implizit über die `tournaments.created_by`-Bedingung in den RPC-Checks.
+**Empfehlung (vorläufig)**: B mit serverseitiger Plausibilitätsprüfung. Vom Committee überstimmt — die Server-Plausibilitätsprüfungen reproduzieren faktisch die halbe Bracket-Logik, also lieber direkt vollständig serverseitig generieren und das `tournament_start`-Lifecycle-Pattern weiterführen.
 
-**Marker**: `[committee]` — technische Trade-Off-Bewertung. Komitee soll auch beantworten, ob Optimistic-Concurrency-Schutz für M2 ausreicht oder ob wir schon hier auf Lock-Tokens umstellen sollten (das spart später Refactoring, falls Co-Veranstalter-Rollen kommen).
+**Resolution**: Resolved 2026-05-26 via Committee Vote 3:0 für **A — Server-Authority via plpgsql**. Confidence high (3× high). Begründung: `tournament_start_ko_phase` ist strukturell eine Lifecycle-Materialisierung wie `tournament_start` (Server schreibt Match-Rows als Folge einer Phasen-Transition). 13 von 18 bestehenden RPCs sind Server-Authority; `_tournament_compute_ekc` ist Präzedenzfall für plpgsql-Spiegelung der Dart-Domain. Konsens-Implementation: `FOR UPDATE` auf `tournaments`-Row, Idempotency-Guard via `ERRCODE 40001`, separater Seeding-Helper `_tournament_compute_ko_bracket(seeds jsonb, third_place bool)` für M5-Wiederverwendung, Dart-Client behandelt `ERRCODE 40001` als idempotente Success-Semantik. Property-Parität-Tests (pgTAP oder Dart-Integration über 8/16/32/64-Sweep) als Merge-Gate gegen Drift Dart ↔ plpgsql. Decision-Doc: `/tmp/kubb_app/committee/server-vs-client-bracket-authority/decision.md`. ADR-0017 §7 wird entsprechend aktualisiert.
 
 ## OD-M2-03: Tiebreaker-Reorder-UI — Drag-und-Drop oder Auswahl-Liste? `[committee]`
 
