@@ -1,8 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/core/application/outbox_flusher_provider.dart'
+    show outboxFlusherProvider, scoreSubmissionOutboxDaoProvider;
+import 'package:kubb_app/core/data/app_database.dart';
+import 'package:kubb_app/core/data/device_id_provider.dart';
 import 'package:kubb_app/core/data/realtime/supabase_realtime_channel.dart';
+import 'package:kubb_app/features/auth/application/auth_providers.dart';
+import 'package:kubb_app/features/match/application/lamport_clock_provider.dart'
+    show lamportClockProvider;
 import 'package:kubb_app/features/tournament/data/tournament_models.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide RealtimeChannel;
@@ -137,8 +145,10 @@ class TournamentRepository implements TournamentRemote {
   TournamentRepository({
     required SupabaseClient client,
     RealtimeChannel? realtime,
+    Ref? ref,
   })  : _client = client,
-        _realtime = realtime ?? SupabaseRealtimeChannel(client);
+        _realtime = realtime ?? SupabaseRealtimeChannel(client),
+        _ref = ref;
 
   final SupabaseClient _client;
 
@@ -147,6 +157,14 @@ class TournamentRepository implements TournamentRemote {
   /// build the repository without the M4 wiring keep working; the
   /// provider will inject the shared instance once T8 lands.
   final RealtimeChannel _realtime;
+
+  /// Riverpod ref injected by [tournamentRemoteProvider]. Used by
+  /// [proposeSetScores] (TASK-M4.3-T10) to look up the outbox DAO, the
+  /// per-match Lamport clock, the device id, and the outbox flusher
+  /// without static singletons. Nullable so direct constructor use in
+  /// older tests keeps compiling — when absent the score-submission
+  /// path falls back to the legacy direct RPC call.
+  final Ref? _ref;
 
   @override
   Future<List<TournamentSummaryRef>> listTournaments({
@@ -286,23 +304,79 @@ class TournamentRepository implements TournamentRemote {
     return tournamentMatchRefFromRow(response);
   }
 
+  /// TASK-M4.3-T10: route every score submission through the
+  /// `ScoreSubmissionOutbox` so submissions survive offline periods and
+  /// app crashes. One outbox row per set is enqueued with a freshly
+  /// ticked Lamport counter; immediately after the inserts we kick off
+  /// `OutboxFlusher.flushPending` fire-and-forget so an online submit
+  /// reaches the RPC within the same frame. The legacy direct
+  /// `tournament_propose_set_scores` RPC path is intentionally removed.
+  ///
+  /// Falls back to the direct RPC call only when [_ref] is null — i.e.
+  /// the repository was built outside of Riverpod (e.g. legacy ad-hoc
+  /// constructions). Production wiring always supplies a [Ref] via
+  /// [tournamentRemoteProvider].
   @override
   Future<void> proposeSetScores({
     required TournamentMatchId matchId,
     required int consensusRound,
     required List<SetScore> setScores,
-  }) {
-    return _client.rpc<void>(
-      'tournament_propose_set_scores',
-      params: <String, dynamic>{
-        'p_match_id': matchId.value,
-        'p_consensus_round': consensusRound,
-        'p_set_scores': [
-          for (var i = 0; i < setScores.length; i++)
-            _setScoreToWire(i + 1, setScores[i]),
-        ],
-      },
+  }) async {
+    final ref = _ref;
+    if (ref == null) {
+      // No Riverpod context — keep the legacy path so direct
+      // instantiations (older tests) keep working until they migrate.
+      await _client.rpc<void>(
+        'tournament_propose_set_scores',
+        params: <String, dynamic>{
+          'p_match_id': matchId.value,
+          'p_consensus_round': consensusRound,
+          'p_set_scores': [
+            for (var i = 0; i < setScores.length; i++)
+              _setScoreToWire(i + 1, setScores[i]),
+          ],
+        },
+      );
+      return;
+    }
+
+    final submitterUserId = ref.read(currentUserIdProvider);
+    if (submitterUserId == null) {
+      throw StateError(
+        'proposeSetScores called without an authenticated user — '
+        'TASK-M4.3-T10 requires a known submitter for the outbox row.',
+      );
+    }
+    final deviceId = await ref.read(deviceIdProvider.future);
+    final clock = await ref.read(
+      lamportClockProvider(MatchId(matchId.value)).future,
     );
+    final dao = ref.read(scoreSubmissionOutboxDaoProvider);
+    final queuedAt = DateTime.now();
+    for (var i = 0; i < setScores.length; i++) {
+      final setIndex = i + 1;
+      final score = setScores[i];
+      final tick = clock.tick();
+      await dao.insert(
+        ScoreSubmissionOutboxCompanion.insert(
+          matchId: matchId.value,
+          consensusRound: consensusRound,
+          setIndex: setIndex,
+          submitterUserId: submitterUserId,
+          lamportCounter: tick.counter,
+          lamportDeviceId: deviceId,
+          scoreJson: jsonEncode(_setScoreToWire(setIndex, score)),
+          queuedAt: queuedAt,
+          acknowledgedAt: const Value<DateTime?>(null),
+        ),
+      );
+    }
+    // Fire-and-forget: a synchronous failure inside `flushPending`
+    // (network down, etc.) must not abort the submit path — the
+    // submission is durably enqueued and the flusher's connectivity
+    // listener will retry. We don't await to keep the UI responsive
+    // when offline.
+    unawaited(ref.read(outboxFlusherProvider).flushPending());
   }
 
   @override
@@ -867,5 +941,6 @@ final tournamentRemoteProvider = Provider<TournamentRemote>((ref) {
   return TournamentRepository(
     client: client,
     realtime: SupabaseRealtimeChannel(client),
+    ref: ref,
   );
 });
