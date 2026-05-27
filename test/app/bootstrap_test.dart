@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/app/bootstrap.dart';
+import 'package:kubb_app/core/application/outbox_flusher_provider.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 
@@ -20,10 +21,17 @@ void main() {
     await db.close();
   });
 
+  // Outbox-GC (TASK-M4.3-T13) runs as a fire-and-forget step in
+  // `appBootstrapProvider`. The in-memory DB satisfies the DAO read path
+  // so the unawaited future completes cleanly in tests instead of
+  // escaping the test zone via path_provider.
+
   test('appBootstrapProvider returns null on a fresh DAO', () async {
     final container = ProviderContainer(
       overrides: [
         cachedAuthSessionDaoProvider.overrideWithValue(db.cachedAuthSessionDao),
+        scoreSubmissionOutboxDaoProvider
+            .overrideWithValue(db.scoreSubmissionOutboxDao),
       ],
     );
     addTearDown(container.dispose);
@@ -47,6 +55,8 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         cachedAuthSessionDaoProvider.overrideWithValue(db.cachedAuthSessionDao),
+        scoreSubmissionOutboxDaoProvider
+            .overrideWithValue(db.scoreSubmissionOutboxDao),
       ],
     );
     addTearDown(container.dispose);
