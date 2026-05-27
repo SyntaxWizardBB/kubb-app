@@ -4305,6 +4305,114 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{count, plural, one{Offline — 1 Submission ausstehend} other{Offline — {count} Submissions ausstehend}}'**
   String offlineBannerQueueSize(int count);
+
+  /// Generic season label used as screen title and section header
+  ///
+  /// In de, this message translates to:
+  /// **'Saison'**
+  String get seasonTitle;
+
+  /// Title of the league-admin screen that lists and manages seasons
+  ///
+  /// In de, this message translates to:
+  /// **'Saisonen verwalten'**
+  String get seasonAdminTitle;
+
+  /// Button label that opens the create-season form
+  ///
+  /// In de, this message translates to:
+  /// **'Neue Saison'**
+  String get seasonCreateNew;
+
+  /// Season status chip — draft, not yet opened for registrations
+  ///
+  /// In de, this message translates to:
+  /// **'Entwurf'**
+  String get seasonStatusDraft;
+
+  /// Season status chip — open, accepting tournaments and registrations
+  ///
+  /// In de, this message translates to:
+  /// **'Offen'**
+  String get seasonStatusOpen;
+
+  /// Season status chip — closed, no further changes
+  ///
+  /// In de, this message translates to:
+  /// **'Abgeschlossen'**
+  String get seasonStatusClosed;
+
+  /// Title above the season standings table
+  ///
+  /// In de, this message translates to:
+  /// **'Saison-Tabelle'**
+  String get seasonStandingsTitle;
+
+  /// Empty state when the standings table has no rows yet
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Daten'**
+  String get seasonStandingsEmpty;
+
+  /// Filter pill label for selecting the league within a season
+  ///
+  /// In de, this message translates to:
+  /// **'Liga'**
+  String get seasonLeagueFilter;
+
+  /// Action that assigns an existing tournament to the current season
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier zuordnen'**
+  String get seasonAssignTournament;
+
+  /// Pairing mode label for the Swiss-system tournament format
+  ///
+  /// In de, this message translates to:
+  /// **'Schweizer System'**
+  String get tournamentSwissSystem;
+
+  /// Field label for the number of Swiss rounds
+  ///
+  /// In de, this message translates to:
+  /// **'Runden'**
+  String get tournamentSwissRounds;
+
+  /// Field label for the Swiss-system tiebreak rule selector
+  ///
+  /// In de, this message translates to:
+  /// **'Tiebreak'**
+  String get tournamentSwissTiebreak;
+
+  /// Warning hint shown when participant count exceeds the recommended Swiss-system size
+  ///
+  /// In de, this message translates to:
+  /// **'Schweizer System ist optimiert für ≤ 64 Teilnehmer'**
+  String get tournamentSwissOversize;
+
+  /// Section label for the points-formula selector
+  ///
+  /// In de, this message translates to:
+  /// **'Punkte-Modus'**
+  String get tournamentPointsMode;
+
+  /// Points mode option — use the platform-wide global formula
+  ///
+  /// In de, this message translates to:
+  /// **'Globale Formel'**
+  String get tournamentPointsGlobal;
+
+  /// Points mode option — define a custom per-tournament formula
+  ///
+  /// In de, this message translates to:
+  /// **'Eigene Punkte'**
+  String get tournamentPointsCustom;
+
+  /// Helper text under the custom-points option explaining that platform-admin approval is required
+  ///
+  /// In de, this message translates to:
+  /// **'Muss vom Plattform-Admin freigegeben werden'**
+  String get tournamentPointsCustomHint;
 }
 
 class _AppLocalizationsDelegate

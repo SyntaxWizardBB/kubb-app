@@ -3151,5 +3151,77 @@
         "type": "int"
       }
     }
+  },
+  "seasonTitle": "Saison",
+  "@seasonTitle": {
+    "description": "Generic season label used as screen title and section header"
+  },
+  "seasonAdminTitle": "Saisonen verwalten",
+  "@seasonAdminTitle": {
+    "description": "Title of the league-admin screen that lists and manages seasons"
+  },
+  "seasonCreateNew": "Neue Saison",
+  "@seasonCreateNew": {
+    "description": "Button label that opens the create-season form"
+  },
+  "seasonStatusDraft": "Entwurf",
+  "@seasonStatusDraft": {
+    "description": "Season status chip — draft, not yet opened for registrations"
+  },
+  "seasonStatusOpen": "Offen",
+  "@seasonStatusOpen": {
+    "description": "Season status chip — open, accepting tournaments and registrations"
+  },
+  "seasonStatusClosed": "Abgeschlossen",
+  "@seasonStatusClosed": {
+    "description": "Season status chip — closed, no further changes"
+  },
+  "seasonStandingsTitle": "Saison-Tabelle",
+  "@seasonStandingsTitle": {
+    "description": "Title above the season standings table"
+  },
+  "seasonStandingsEmpty": "Noch keine Daten",
+  "@seasonStandingsEmpty": {
+    "description": "Empty state when the standings table has no rows yet"
+  },
+  "seasonLeagueFilter": "Liga",
+  "@seasonLeagueFilter": {
+    "description": "Filter pill label for selecting the league within a season"
+  },
+  "seasonAssignTournament": "Turnier zuordnen",
+  "@seasonAssignTournament": {
+    "description": "Action that assigns an existing tournament to the current season"
+  },
+  "tournamentSwissSystem": "Schweizer System",
+  "@tournamentSwissSystem": {
+    "description": "Pairing mode label for the Swiss-system tournament format"
+  },
+  "tournamentSwissRounds": "Runden",
+  "@tournamentSwissRounds": {
+    "description": "Field label for the number of Swiss rounds"
+  },
+  "tournamentSwissTiebreak": "Tiebreak",
+  "@tournamentSwissTiebreak": {
+    "description": "Field label for the Swiss-system tiebreak rule selector"
+  },
+  "tournamentSwissOversize": "Schweizer System ist optimiert für ≤ 64 Teilnehmer",
+  "@tournamentSwissOversize": {
+    "description": "Warning hint shown when participant count exceeds the recommended Swiss-system size"
+  },
+  "tournamentPointsMode": "Punkte-Modus",
+  "@tournamentPointsMode": {
+    "description": "Section label for the points-formula selector"
+  },
+  "tournamentPointsGlobal": "Globale Formel",
+  "@tournamentPointsGlobal": {
+    "description": "Points mode option — use the platform-wide global formula"
+  },
+  "tournamentPointsCustom": "Eigene Punkte",
+  "@tournamentPointsCustom": {
+    "description": "Points mode option — define a custom per-tournament formula"
+  },
+  "tournamentPointsCustomHint": "Muss vom Plattform-Admin freigegeben werden",
+  "@tournamentPointsCustomHint": {
+    "description": "Helper text under the custom-points option explaining that platform-admin approval is required"
   }
 }

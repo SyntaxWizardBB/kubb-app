@@ -2328,4 +2328,60 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get seasonTitle => 'Saison';
+
+  @override
+  String get seasonAdminTitle => 'Saisonen verwalten';
+
+  @override
+  String get seasonCreateNew => 'Neue Saison';
+
+  @override
+  String get seasonStatusDraft => 'Entwurf';
+
+  @override
+  String get seasonStatusOpen => 'Offen';
+
+  @override
+  String get seasonStatusClosed => 'Abgeschlossen';
+
+  @override
+  String get seasonStandingsTitle => 'Saison-Tabelle';
+
+  @override
+  String get seasonStandingsEmpty => 'Noch keine Daten';
+
+  @override
+  String get seasonLeagueFilter => 'Liga';
+
+  @override
+  String get seasonAssignTournament => 'Turnier zuordnen';
+
+  @override
+  String get tournamentSwissSystem => 'Schweizer System';
+
+  @override
+  String get tournamentSwissRounds => 'Runden';
+
+  @override
+  String get tournamentSwissTiebreak => 'Tiebreak';
+
+  @override
+  String get tournamentSwissOversize =>
+      'Schweizer System ist optimiert für ≤ 64 Teilnehmer';
+
+  @override
+  String get tournamentPointsMode => 'Punkte-Modus';
+
+  @override
+  String get tournamentPointsGlobal => 'Globale Formel';
+
+  @override
+  String get tournamentPointsCustom => 'Eigene Punkte';
+
+  @override
+  String get tournamentPointsCustomHint =>
+      'Muss vom Plattform-Admin freigegeben werden';
 }
