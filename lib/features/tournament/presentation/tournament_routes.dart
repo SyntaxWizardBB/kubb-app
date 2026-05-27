@@ -25,6 +25,9 @@ abstract final class TournamentRoutes {
   /// KO bracket view. Compose as `'$bracketBase/$tournamentId/bracket'`.
   static const bracketBase = '/tournament';
 
+  /// Live organizer dashboard. Compose via [liveDashboard].
+  static const liveDashboardBase = '/tournament';
+
   static String matchesFor(String tournamentId) =>
       '$matches/$tournamentId/matches';
 
@@ -44,4 +47,8 @@ abstract final class TournamentRoutes {
 
   static String bracket(String tournamentId) =>
       '$bracketBase/$tournamentId/bracket';
+
+  /// Organizer live dashboard for a running tournament (M4.2-T6).
+  static String liveDashboard(String tournamentId) =>
+      '$liveDashboardBase/$tournamentId/dashboard';
 }

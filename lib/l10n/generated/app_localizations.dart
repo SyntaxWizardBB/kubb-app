@@ -2914,6 +2914,12 @@ abstract class AppLocalizations {
   /// **'Bracket anzeigen'**
   String get tournamentDetailActionBracket;
 
+  /// Action: organizer opens the live pitch dashboard
+  ///
+  /// In de, this message translates to:
+  /// **'Live-Dashboard öffnen'**
+  String get tournamentDetailActionLiveDashboard;
+
   /// Headline when status is aborted
   ///
   /// In de, this message translates to:

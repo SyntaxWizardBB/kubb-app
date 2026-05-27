@@ -2109,6 +2109,10 @@
   "@tournamentDetailActionBracket": {
     "description": "Action: navigate to KO bracket view"
   },
+  "tournamentDetailActionLiveDashboard": "Live-Dashboard öffnen",
+  "@tournamentDetailActionLiveDashboard": {
+    "description": "Action: organizer opens the live pitch dashboard"
+  },
   "tournamentDetailAborted": "Turnier abgebrochen.",
   "@tournamentDetailAborted": {
     "description": "Headline when status is aborted"
