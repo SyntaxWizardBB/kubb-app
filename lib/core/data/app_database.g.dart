@@ -3207,6 +3207,755 @@ class TournamentScoreDraftsCompanion
   }
 }
 
+class $ScoreSubmissionOutboxTable extends ScoreSubmissionOutbox
+    with TableInfo<$ScoreSubmissionOutboxTable, ScoreSubmissionOutboxRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ScoreSubmissionOutboxTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _matchIdMeta = const VerificationMeta(
+    'matchId',
+  );
+  @override
+  late final GeneratedColumn<String> matchId = GeneratedColumn<String>(
+    'match_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _consensusRoundMeta = const VerificationMeta(
+    'consensusRound',
+  );
+  @override
+  late final GeneratedColumn<int> consensusRound = GeneratedColumn<int>(
+    'consensus_round',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _setIndexMeta = const VerificationMeta(
+    'setIndex',
+  );
+  @override
+  late final GeneratedColumn<int> setIndex = GeneratedColumn<int>(
+    'set_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _submitterUserIdMeta = const VerificationMeta(
+    'submitterUserId',
+  );
+  @override
+  late final GeneratedColumn<String> submitterUserId = GeneratedColumn<String>(
+    'submitter_user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lamportCounterMeta = const VerificationMeta(
+    'lamportCounter',
+  );
+  @override
+  late final GeneratedColumn<int> lamportCounter = GeneratedColumn<int>(
+    'lamport_counter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lamportDeviceIdMeta = const VerificationMeta(
+    'lamportDeviceId',
+  );
+  @override
+  late final GeneratedColumn<String> lamportDeviceId = GeneratedColumn<String>(
+    'lamport_device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _scoreJsonMeta = const VerificationMeta(
+    'scoreJson',
+  );
+  @override
+  late final GeneratedColumn<String> scoreJson = GeneratedColumn<String>(
+    'score_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _queuedAtMeta = const VerificationMeta(
+    'queuedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> queuedAt = GeneratedColumn<DateTime>(
+    'queued_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _acknowledgedAtMeta = const VerificationMeta(
+    'acknowledgedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> acknowledgedAt =
+      GeneratedColumn<DateTime>(
+        'acknowledged_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastErrorCodeMeta = const VerificationMeta(
+    'lastErrorCode',
+  );
+  @override
+  late final GeneratedColumn<String> lastErrorCode = GeneratedColumn<String>(
+    'last_error_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _retryCountMeta = const VerificationMeta(
+    'retryCount',
+  );
+  @override
+  late final GeneratedColumn<int> retryCount = GeneratedColumn<int>(
+    'retry_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    matchId,
+    consensusRound,
+    setIndex,
+    submitterUserId,
+    lamportCounter,
+    lamportDeviceId,
+    scoreJson,
+    queuedAt,
+    acknowledgedAt,
+    lastErrorCode,
+    retryCount,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'score_submission_outbox';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ScoreSubmissionOutboxRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('match_id')) {
+      context.handle(
+        _matchIdMeta,
+        matchId.isAcceptableOrUnknown(data['match_id']!, _matchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_matchIdMeta);
+    }
+    if (data.containsKey('consensus_round')) {
+      context.handle(
+        _consensusRoundMeta,
+        consensusRound.isAcceptableOrUnknown(
+          data['consensus_round']!,
+          _consensusRoundMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_consensusRoundMeta);
+    }
+    if (data.containsKey('set_index')) {
+      context.handle(
+        _setIndexMeta,
+        setIndex.isAcceptableOrUnknown(data['set_index']!, _setIndexMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_setIndexMeta);
+    }
+    if (data.containsKey('submitter_user_id')) {
+      context.handle(
+        _submitterUserIdMeta,
+        submitterUserId.isAcceptableOrUnknown(
+          data['submitter_user_id']!,
+          _submitterUserIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_submitterUserIdMeta);
+    }
+    if (data.containsKey('lamport_counter')) {
+      context.handle(
+        _lamportCounterMeta,
+        lamportCounter.isAcceptableOrUnknown(
+          data['lamport_counter']!,
+          _lamportCounterMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lamportCounterMeta);
+    }
+    if (data.containsKey('lamport_device_id')) {
+      context.handle(
+        _lamportDeviceIdMeta,
+        lamportDeviceId.isAcceptableOrUnknown(
+          data['lamport_device_id']!,
+          _lamportDeviceIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lamportDeviceIdMeta);
+    }
+    if (data.containsKey('score_json')) {
+      context.handle(
+        _scoreJsonMeta,
+        scoreJson.isAcceptableOrUnknown(data['score_json']!, _scoreJsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_scoreJsonMeta);
+    }
+    if (data.containsKey('queued_at')) {
+      context.handle(
+        _queuedAtMeta,
+        queuedAt.isAcceptableOrUnknown(data['queued_at']!, _queuedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_queuedAtMeta);
+    }
+    if (data.containsKey('acknowledged_at')) {
+      context.handle(
+        _acknowledgedAtMeta,
+        acknowledgedAt.isAcceptableOrUnknown(
+          data['acknowledged_at']!,
+          _acknowledgedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_error_code')) {
+      context.handle(
+        _lastErrorCodeMeta,
+        lastErrorCode.isAcceptableOrUnknown(
+          data['last_error_code']!,
+          _lastErrorCodeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('retry_count')) {
+      context.handle(
+        _retryCountMeta,
+        retryCount.isAcceptableOrUnknown(data['retry_count']!, _retryCountMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {
+      matchId,
+      consensusRound,
+      setIndex,
+      submitterUserId,
+      lamportCounter,
+      lamportDeviceId,
+    },
+  ];
+  @override
+  ScoreSubmissionOutboxRow map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ScoreSubmissionOutboxRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      matchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}match_id'],
+      )!,
+      consensusRound: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}consensus_round'],
+      )!,
+      setIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}set_index'],
+      )!,
+      submitterUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}submitter_user_id'],
+      )!,
+      lamportCounter: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}lamport_counter'],
+      )!,
+      lamportDeviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}lamport_device_id'],
+      )!,
+      scoreJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}score_json'],
+      )!,
+      queuedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}queued_at'],
+      )!,
+      acknowledgedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}acknowledged_at'],
+      ),
+      lastErrorCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error_code'],
+      ),
+      retryCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}retry_count'],
+      )!,
+    );
+  }
+
+  @override
+  $ScoreSubmissionOutboxTable createAlias(String alias) {
+    return $ScoreSubmissionOutboxTable(attachedDatabase, alias);
+  }
+}
+
+class ScoreSubmissionOutboxRow extends DataClass
+    implements Insertable<ScoreSubmissionOutboxRow> {
+  final int id;
+  final String matchId;
+  final int consensusRound;
+  final int setIndex;
+  final String submitterUserId;
+  final int lamportCounter;
+  final String lamportDeviceId;
+  final String scoreJson;
+  final DateTime queuedAt;
+  final DateTime? acknowledgedAt;
+  final String? lastErrorCode;
+  final int retryCount;
+  const ScoreSubmissionOutboxRow({
+    required this.id,
+    required this.matchId,
+    required this.consensusRound,
+    required this.setIndex,
+    required this.submitterUserId,
+    required this.lamportCounter,
+    required this.lamportDeviceId,
+    required this.scoreJson,
+    required this.queuedAt,
+    this.acknowledgedAt,
+    this.lastErrorCode,
+    required this.retryCount,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['match_id'] = Variable<String>(matchId);
+    map['consensus_round'] = Variable<int>(consensusRound);
+    map['set_index'] = Variable<int>(setIndex);
+    map['submitter_user_id'] = Variable<String>(submitterUserId);
+    map['lamport_counter'] = Variable<int>(lamportCounter);
+    map['lamport_device_id'] = Variable<String>(lamportDeviceId);
+    map['score_json'] = Variable<String>(scoreJson);
+    map['queued_at'] = Variable<DateTime>(queuedAt);
+    if (!nullToAbsent || acknowledgedAt != null) {
+      map['acknowledged_at'] = Variable<DateTime>(acknowledgedAt);
+    }
+    if (!nullToAbsent || lastErrorCode != null) {
+      map['last_error_code'] = Variable<String>(lastErrorCode);
+    }
+    map['retry_count'] = Variable<int>(retryCount);
+    return map;
+  }
+
+  ScoreSubmissionOutboxCompanion toCompanion(bool nullToAbsent) {
+    return ScoreSubmissionOutboxCompanion(
+      id: Value(id),
+      matchId: Value(matchId),
+      consensusRound: Value(consensusRound),
+      setIndex: Value(setIndex),
+      submitterUserId: Value(submitterUserId),
+      lamportCounter: Value(lamportCounter),
+      lamportDeviceId: Value(lamportDeviceId),
+      scoreJson: Value(scoreJson),
+      queuedAt: Value(queuedAt),
+      acknowledgedAt: acknowledgedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(acknowledgedAt),
+      lastErrorCode: lastErrorCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastErrorCode),
+      retryCount: Value(retryCount),
+    );
+  }
+
+  factory ScoreSubmissionOutboxRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ScoreSubmissionOutboxRow(
+      id: serializer.fromJson<int>(json['id']),
+      matchId: serializer.fromJson<String>(json['matchId']),
+      consensusRound: serializer.fromJson<int>(json['consensusRound']),
+      setIndex: serializer.fromJson<int>(json['setIndex']),
+      submitterUserId: serializer.fromJson<String>(json['submitterUserId']),
+      lamportCounter: serializer.fromJson<int>(json['lamportCounter']),
+      lamportDeviceId: serializer.fromJson<String>(json['lamportDeviceId']),
+      scoreJson: serializer.fromJson<String>(json['scoreJson']),
+      queuedAt: serializer.fromJson<DateTime>(json['queuedAt']),
+      acknowledgedAt: serializer.fromJson<DateTime?>(json['acknowledgedAt']),
+      lastErrorCode: serializer.fromJson<String?>(json['lastErrorCode']),
+      retryCount: serializer.fromJson<int>(json['retryCount']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'matchId': serializer.toJson<String>(matchId),
+      'consensusRound': serializer.toJson<int>(consensusRound),
+      'setIndex': serializer.toJson<int>(setIndex),
+      'submitterUserId': serializer.toJson<String>(submitterUserId),
+      'lamportCounter': serializer.toJson<int>(lamportCounter),
+      'lamportDeviceId': serializer.toJson<String>(lamportDeviceId),
+      'scoreJson': serializer.toJson<String>(scoreJson),
+      'queuedAt': serializer.toJson<DateTime>(queuedAt),
+      'acknowledgedAt': serializer.toJson<DateTime?>(acknowledgedAt),
+      'lastErrorCode': serializer.toJson<String?>(lastErrorCode),
+      'retryCount': serializer.toJson<int>(retryCount),
+    };
+  }
+
+  ScoreSubmissionOutboxRow copyWith({
+    int? id,
+    String? matchId,
+    int? consensusRound,
+    int? setIndex,
+    String? submitterUserId,
+    int? lamportCounter,
+    String? lamportDeviceId,
+    String? scoreJson,
+    DateTime? queuedAt,
+    Value<DateTime?> acknowledgedAt = const Value.absent(),
+    Value<String?> lastErrorCode = const Value.absent(),
+    int? retryCount,
+  }) => ScoreSubmissionOutboxRow(
+    id: id ?? this.id,
+    matchId: matchId ?? this.matchId,
+    consensusRound: consensusRound ?? this.consensusRound,
+    setIndex: setIndex ?? this.setIndex,
+    submitterUserId: submitterUserId ?? this.submitterUserId,
+    lamportCounter: lamportCounter ?? this.lamportCounter,
+    lamportDeviceId: lamportDeviceId ?? this.lamportDeviceId,
+    scoreJson: scoreJson ?? this.scoreJson,
+    queuedAt: queuedAt ?? this.queuedAt,
+    acknowledgedAt: acknowledgedAt.present
+        ? acknowledgedAt.value
+        : this.acknowledgedAt,
+    lastErrorCode: lastErrorCode.present
+        ? lastErrorCode.value
+        : this.lastErrorCode,
+    retryCount: retryCount ?? this.retryCount,
+  );
+  ScoreSubmissionOutboxRow copyWithCompanion(
+    ScoreSubmissionOutboxCompanion data,
+  ) {
+    return ScoreSubmissionOutboxRow(
+      id: data.id.present ? data.id.value : this.id,
+      matchId: data.matchId.present ? data.matchId.value : this.matchId,
+      consensusRound: data.consensusRound.present
+          ? data.consensusRound.value
+          : this.consensusRound,
+      setIndex: data.setIndex.present ? data.setIndex.value : this.setIndex,
+      submitterUserId: data.submitterUserId.present
+          ? data.submitterUserId.value
+          : this.submitterUserId,
+      lamportCounter: data.lamportCounter.present
+          ? data.lamportCounter.value
+          : this.lamportCounter,
+      lamportDeviceId: data.lamportDeviceId.present
+          ? data.lamportDeviceId.value
+          : this.lamportDeviceId,
+      scoreJson: data.scoreJson.present ? data.scoreJson.value : this.scoreJson,
+      queuedAt: data.queuedAt.present ? data.queuedAt.value : this.queuedAt,
+      acknowledgedAt: data.acknowledgedAt.present
+          ? data.acknowledgedAt.value
+          : this.acknowledgedAt,
+      lastErrorCode: data.lastErrorCode.present
+          ? data.lastErrorCode.value
+          : this.lastErrorCode,
+      retryCount: data.retryCount.present
+          ? data.retryCount.value
+          : this.retryCount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ScoreSubmissionOutboxRow(')
+          ..write('id: $id, ')
+          ..write('matchId: $matchId, ')
+          ..write('consensusRound: $consensusRound, ')
+          ..write('setIndex: $setIndex, ')
+          ..write('submitterUserId: $submitterUserId, ')
+          ..write('lamportCounter: $lamportCounter, ')
+          ..write('lamportDeviceId: $lamportDeviceId, ')
+          ..write('scoreJson: $scoreJson, ')
+          ..write('queuedAt: $queuedAt, ')
+          ..write('acknowledgedAt: $acknowledgedAt, ')
+          ..write('lastErrorCode: $lastErrorCode, ')
+          ..write('retryCount: $retryCount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    matchId,
+    consensusRound,
+    setIndex,
+    submitterUserId,
+    lamportCounter,
+    lamportDeviceId,
+    scoreJson,
+    queuedAt,
+    acknowledgedAt,
+    lastErrorCode,
+    retryCount,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ScoreSubmissionOutboxRow &&
+          other.id == this.id &&
+          other.matchId == this.matchId &&
+          other.consensusRound == this.consensusRound &&
+          other.setIndex == this.setIndex &&
+          other.submitterUserId == this.submitterUserId &&
+          other.lamportCounter == this.lamportCounter &&
+          other.lamportDeviceId == this.lamportDeviceId &&
+          other.scoreJson == this.scoreJson &&
+          other.queuedAt == this.queuedAt &&
+          other.acknowledgedAt == this.acknowledgedAt &&
+          other.lastErrorCode == this.lastErrorCode &&
+          other.retryCount == this.retryCount);
+}
+
+class ScoreSubmissionOutboxCompanion
+    extends UpdateCompanion<ScoreSubmissionOutboxRow> {
+  final Value<int> id;
+  final Value<String> matchId;
+  final Value<int> consensusRound;
+  final Value<int> setIndex;
+  final Value<String> submitterUserId;
+  final Value<int> lamportCounter;
+  final Value<String> lamportDeviceId;
+  final Value<String> scoreJson;
+  final Value<DateTime> queuedAt;
+  final Value<DateTime?> acknowledgedAt;
+  final Value<String?> lastErrorCode;
+  final Value<int> retryCount;
+  const ScoreSubmissionOutboxCompanion({
+    this.id = const Value.absent(),
+    this.matchId = const Value.absent(),
+    this.consensusRound = const Value.absent(),
+    this.setIndex = const Value.absent(),
+    this.submitterUserId = const Value.absent(),
+    this.lamportCounter = const Value.absent(),
+    this.lamportDeviceId = const Value.absent(),
+    this.scoreJson = const Value.absent(),
+    this.queuedAt = const Value.absent(),
+    this.acknowledgedAt = const Value.absent(),
+    this.lastErrorCode = const Value.absent(),
+    this.retryCount = const Value.absent(),
+  });
+  ScoreSubmissionOutboxCompanion.insert({
+    this.id = const Value.absent(),
+    required String matchId,
+    required int consensusRound,
+    required int setIndex,
+    required String submitterUserId,
+    required int lamportCounter,
+    required String lamportDeviceId,
+    required String scoreJson,
+    required DateTime queuedAt,
+    this.acknowledgedAt = const Value.absent(),
+    this.lastErrorCode = const Value.absent(),
+    this.retryCount = const Value.absent(),
+  }) : matchId = Value(matchId),
+       consensusRound = Value(consensusRound),
+       setIndex = Value(setIndex),
+       submitterUserId = Value(submitterUserId),
+       lamportCounter = Value(lamportCounter),
+       lamportDeviceId = Value(lamportDeviceId),
+       scoreJson = Value(scoreJson),
+       queuedAt = Value(queuedAt);
+  static Insertable<ScoreSubmissionOutboxRow> custom({
+    Expression<int>? id,
+    Expression<String>? matchId,
+    Expression<int>? consensusRound,
+    Expression<int>? setIndex,
+    Expression<String>? submitterUserId,
+    Expression<int>? lamportCounter,
+    Expression<String>? lamportDeviceId,
+    Expression<String>? scoreJson,
+    Expression<DateTime>? queuedAt,
+    Expression<DateTime>? acknowledgedAt,
+    Expression<String>? lastErrorCode,
+    Expression<int>? retryCount,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (matchId != null) 'match_id': matchId,
+      if (consensusRound != null) 'consensus_round': consensusRound,
+      if (setIndex != null) 'set_index': setIndex,
+      if (submitterUserId != null) 'submitter_user_id': submitterUserId,
+      if (lamportCounter != null) 'lamport_counter': lamportCounter,
+      if (lamportDeviceId != null) 'lamport_device_id': lamportDeviceId,
+      if (scoreJson != null) 'score_json': scoreJson,
+      if (queuedAt != null) 'queued_at': queuedAt,
+      if (acknowledgedAt != null) 'acknowledged_at': acknowledgedAt,
+      if (lastErrorCode != null) 'last_error_code': lastErrorCode,
+      if (retryCount != null) 'retry_count': retryCount,
+    });
+  }
+
+  ScoreSubmissionOutboxCompanion copyWith({
+    Value<int>? id,
+    Value<String>? matchId,
+    Value<int>? consensusRound,
+    Value<int>? setIndex,
+    Value<String>? submitterUserId,
+    Value<int>? lamportCounter,
+    Value<String>? lamportDeviceId,
+    Value<String>? scoreJson,
+    Value<DateTime>? queuedAt,
+    Value<DateTime?>? acknowledgedAt,
+    Value<String?>? lastErrorCode,
+    Value<int>? retryCount,
+  }) {
+    return ScoreSubmissionOutboxCompanion(
+      id: id ?? this.id,
+      matchId: matchId ?? this.matchId,
+      consensusRound: consensusRound ?? this.consensusRound,
+      setIndex: setIndex ?? this.setIndex,
+      submitterUserId: submitterUserId ?? this.submitterUserId,
+      lamportCounter: lamportCounter ?? this.lamportCounter,
+      lamportDeviceId: lamportDeviceId ?? this.lamportDeviceId,
+      scoreJson: scoreJson ?? this.scoreJson,
+      queuedAt: queuedAt ?? this.queuedAt,
+      acknowledgedAt: acknowledgedAt ?? this.acknowledgedAt,
+      lastErrorCode: lastErrorCode ?? this.lastErrorCode,
+      retryCount: retryCount ?? this.retryCount,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (matchId.present) {
+      map['match_id'] = Variable<String>(matchId.value);
+    }
+    if (consensusRound.present) {
+      map['consensus_round'] = Variable<int>(consensusRound.value);
+    }
+    if (setIndex.present) {
+      map['set_index'] = Variable<int>(setIndex.value);
+    }
+    if (submitterUserId.present) {
+      map['submitter_user_id'] = Variable<String>(submitterUserId.value);
+    }
+    if (lamportCounter.present) {
+      map['lamport_counter'] = Variable<int>(lamportCounter.value);
+    }
+    if (lamportDeviceId.present) {
+      map['lamport_device_id'] = Variable<String>(lamportDeviceId.value);
+    }
+    if (scoreJson.present) {
+      map['score_json'] = Variable<String>(scoreJson.value);
+    }
+    if (queuedAt.present) {
+      map['queued_at'] = Variable<DateTime>(queuedAt.value);
+    }
+    if (acknowledgedAt.present) {
+      map['acknowledged_at'] = Variable<DateTime>(acknowledgedAt.value);
+    }
+    if (lastErrorCode.present) {
+      map['last_error_code'] = Variable<String>(lastErrorCode.value);
+    }
+    if (retryCount.present) {
+      map['retry_count'] = Variable<int>(retryCount.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ScoreSubmissionOutboxCompanion(')
+          ..write('id: $id, ')
+          ..write('matchId: $matchId, ')
+          ..write('consensusRound: $consensusRound, ')
+          ..write('setIndex: $setIndex, ')
+          ..write('submitterUserId: $submitterUserId, ')
+          ..write('lamportCounter: $lamportCounter, ')
+          ..write('lamportDeviceId: $lamportDeviceId, ')
+          ..write('scoreJson: $scoreJson, ')
+          ..write('queuedAt: $queuedAt, ')
+          ..write('acknowledgedAt: $acknowledgedAt, ')
+          ..write('lastErrorCode: $lastErrorCode, ')
+          ..write('retryCount: $retryCount')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3222,6 +3971,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $CachedAuthSessionTable(this);
   late final $TournamentScoreDraftsTable tournamentScoreDrafts =
       $TournamentScoreDraftsTable(this);
+  late final $ScoreSubmissionOutboxTable scoreSubmissionOutbox =
+      $ScoreSubmissionOutboxTable(this);
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final SessionDao sessionDao = SessionDao(this as AppDatabase);
   late final SessionEventDao sessionEventDao = SessionEventDao(
@@ -3237,6 +3988,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final TournamentScoreDraftDao tournamentScoreDraftDao =
       TournamentScoreDraftDao(this as AppDatabase);
+  late final ScoreSubmissionOutboxDao scoreSubmissionOutboxDao =
+      ScoreSubmissionOutboxDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3249,6 +4002,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     finisseurStickEvents,
     cachedAuthSession,
     tournamentScoreDrafts,
+    scoreSubmissionOutbox,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -5645,6 +6399,366 @@ typedef $$TournamentScoreDraftsTableProcessedTableManager =
       TournamentScoreDraftRow,
       PrefetchHooks Function()
     >;
+typedef $$ScoreSubmissionOutboxTableCreateCompanionBuilder =
+    ScoreSubmissionOutboxCompanion Function({
+      Value<int> id,
+      required String matchId,
+      required int consensusRound,
+      required int setIndex,
+      required String submitterUserId,
+      required int lamportCounter,
+      required String lamportDeviceId,
+      required String scoreJson,
+      required DateTime queuedAt,
+      Value<DateTime?> acknowledgedAt,
+      Value<String?> lastErrorCode,
+      Value<int> retryCount,
+    });
+typedef $$ScoreSubmissionOutboxTableUpdateCompanionBuilder =
+    ScoreSubmissionOutboxCompanion Function({
+      Value<int> id,
+      Value<String> matchId,
+      Value<int> consensusRound,
+      Value<int> setIndex,
+      Value<String> submitterUserId,
+      Value<int> lamportCounter,
+      Value<String> lamportDeviceId,
+      Value<String> scoreJson,
+      Value<DateTime> queuedAt,
+      Value<DateTime?> acknowledgedAt,
+      Value<String?> lastErrorCode,
+      Value<int> retryCount,
+    });
+
+class $$ScoreSubmissionOutboxTableFilterComposer
+    extends Composer<_$AppDatabase, $ScoreSubmissionOutboxTable> {
+  $$ScoreSubmissionOutboxTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get matchId => $composableBuilder(
+    column: $table.matchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get consensusRound => $composableBuilder(
+    column: $table.consensusRound,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get setIndex => $composableBuilder(
+    column: $table.setIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get submitterUserId => $composableBuilder(
+    column: $table.submitterUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lamportCounter => $composableBuilder(
+    column: $table.lamportCounter,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lamportDeviceId => $composableBuilder(
+    column: $table.lamportDeviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get scoreJson => $composableBuilder(
+    column: $table.scoreJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get queuedAt => $composableBuilder(
+    column: $table.queuedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get acknowledgedAt => $composableBuilder(
+    column: $table.acknowledgedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastErrorCode => $composableBuilder(
+    column: $table.lastErrorCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ScoreSubmissionOutboxTableOrderingComposer
+    extends Composer<_$AppDatabase, $ScoreSubmissionOutboxTable> {
+  $$ScoreSubmissionOutboxTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get matchId => $composableBuilder(
+    column: $table.matchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get consensusRound => $composableBuilder(
+    column: $table.consensusRound,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get setIndex => $composableBuilder(
+    column: $table.setIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get submitterUserId => $composableBuilder(
+    column: $table.submitterUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lamportCounter => $composableBuilder(
+    column: $table.lamportCounter,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lamportDeviceId => $composableBuilder(
+    column: $table.lamportDeviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get scoreJson => $composableBuilder(
+    column: $table.scoreJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get queuedAt => $composableBuilder(
+    column: $table.queuedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get acknowledgedAt => $composableBuilder(
+    column: $table.acknowledgedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastErrorCode => $composableBuilder(
+    column: $table.lastErrorCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ScoreSubmissionOutboxTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ScoreSubmissionOutboxTable> {
+  $$ScoreSubmissionOutboxTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get matchId =>
+      $composableBuilder(column: $table.matchId, builder: (column) => column);
+
+  GeneratedColumn<int> get consensusRound => $composableBuilder(
+    column: $table.consensusRound,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get setIndex =>
+      $composableBuilder(column: $table.setIndex, builder: (column) => column);
+
+  GeneratedColumn<String> get submitterUserId => $composableBuilder(
+    column: $table.submitterUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lamportCounter => $composableBuilder(
+    column: $table.lamportCounter,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lamportDeviceId => $composableBuilder(
+    column: $table.lamportDeviceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get scoreJson =>
+      $composableBuilder(column: $table.scoreJson, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get queuedAt =>
+      $composableBuilder(column: $table.queuedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get acknowledgedAt => $composableBuilder(
+    column: $table.acknowledgedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastErrorCode => $composableBuilder(
+    column: $table.lastErrorCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => column,
+  );
+}
+
+class $$ScoreSubmissionOutboxTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ScoreSubmissionOutboxTable,
+          ScoreSubmissionOutboxRow,
+          $$ScoreSubmissionOutboxTableFilterComposer,
+          $$ScoreSubmissionOutboxTableOrderingComposer,
+          $$ScoreSubmissionOutboxTableAnnotationComposer,
+          $$ScoreSubmissionOutboxTableCreateCompanionBuilder,
+          $$ScoreSubmissionOutboxTableUpdateCompanionBuilder,
+          (
+            ScoreSubmissionOutboxRow,
+            BaseReferences<
+              _$AppDatabase,
+              $ScoreSubmissionOutboxTable,
+              ScoreSubmissionOutboxRow
+            >,
+          ),
+          ScoreSubmissionOutboxRow,
+          PrefetchHooks Function()
+        > {
+  $$ScoreSubmissionOutboxTableTableManager(
+    _$AppDatabase db,
+    $ScoreSubmissionOutboxTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ScoreSubmissionOutboxTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ScoreSubmissionOutboxTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ScoreSubmissionOutboxTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> matchId = const Value.absent(),
+                Value<int> consensusRound = const Value.absent(),
+                Value<int> setIndex = const Value.absent(),
+                Value<String> submitterUserId = const Value.absent(),
+                Value<int> lamportCounter = const Value.absent(),
+                Value<String> lamportDeviceId = const Value.absent(),
+                Value<String> scoreJson = const Value.absent(),
+                Value<DateTime> queuedAt = const Value.absent(),
+                Value<DateTime?> acknowledgedAt = const Value.absent(),
+                Value<String?> lastErrorCode = const Value.absent(),
+                Value<int> retryCount = const Value.absent(),
+              }) => ScoreSubmissionOutboxCompanion(
+                id: id,
+                matchId: matchId,
+                consensusRound: consensusRound,
+                setIndex: setIndex,
+                submitterUserId: submitterUserId,
+                lamportCounter: lamportCounter,
+                lamportDeviceId: lamportDeviceId,
+                scoreJson: scoreJson,
+                queuedAt: queuedAt,
+                acknowledgedAt: acknowledgedAt,
+                lastErrorCode: lastErrorCode,
+                retryCount: retryCount,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String matchId,
+                required int consensusRound,
+                required int setIndex,
+                required String submitterUserId,
+                required int lamportCounter,
+                required String lamportDeviceId,
+                required String scoreJson,
+                required DateTime queuedAt,
+                Value<DateTime?> acknowledgedAt = const Value.absent(),
+                Value<String?> lastErrorCode = const Value.absent(),
+                Value<int> retryCount = const Value.absent(),
+              }) => ScoreSubmissionOutboxCompanion.insert(
+                id: id,
+                matchId: matchId,
+                consensusRound: consensusRound,
+                setIndex: setIndex,
+                submitterUserId: submitterUserId,
+                lamportCounter: lamportCounter,
+                lamportDeviceId: lamportDeviceId,
+                scoreJson: scoreJson,
+                queuedAt: queuedAt,
+                acknowledgedAt: acknowledgedAt,
+                lastErrorCode: lastErrorCode,
+                retryCount: retryCount,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ScoreSubmissionOutboxTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ScoreSubmissionOutboxTable,
+      ScoreSubmissionOutboxRow,
+      $$ScoreSubmissionOutboxTableFilterComposer,
+      $$ScoreSubmissionOutboxTableOrderingComposer,
+      $$ScoreSubmissionOutboxTableAnnotationComposer,
+      $$ScoreSubmissionOutboxTableCreateCompanionBuilder,
+      $$ScoreSubmissionOutboxTableUpdateCompanionBuilder,
+      (
+        ScoreSubmissionOutboxRow,
+        BaseReferences<
+          _$AppDatabase,
+          $ScoreSubmissionOutboxTable,
+          ScoreSubmissionOutboxRow
+        >,
+      ),
+      ScoreSubmissionOutboxRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5663,4 +6777,6 @@ class $AppDatabaseManager {
       $$CachedAuthSessionTableTableManager(_db, _db.cachedAuthSession);
   $$TournamentScoreDraftsTableTableManager get tournamentScoreDrafts =>
       $$TournamentScoreDraftsTableTableManager(_db, _db.tournamentScoreDrafts);
+  $$ScoreSubmissionOutboxTableTableManager get scoreSubmissionOutbox =>
+      $$ScoreSubmissionOutboxTableTableManager(_db, _db.scoreSubmissionOutbox);
 }

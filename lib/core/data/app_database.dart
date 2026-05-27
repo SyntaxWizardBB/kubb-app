@@ -2,12 +2,14 @@ import 'package:drift/drift.dart';
 import 'package:kubb_app/core/data/dao/app_settings_dao.dart';
 import 'package:kubb_app/core/data/dao/finisseur_stick_event_dao.dart';
 import 'package:kubb_app/core/data/dao/player_dao.dart';
+import 'package:kubb_app/core/data/dao/score_submission_outbox_dao.dart';
 import 'package:kubb_app/core/data/dao/session_dao.dart';
 import 'package:kubb_app/core/data/dao/session_event_dao.dart';
 import 'package:kubb_app/core/data/dao/tournament_score_draft_dao.dart';
 import 'package:kubb_app/core/data/tables/app_settings_table.dart';
 import 'package:kubb_app/core/data/tables/finisseur_stick_events.dart';
 import 'package:kubb_app/core/data/tables/players.dart';
+import 'package:kubb_app/core/data/tables/score_submission_outbox.dart';
 import 'package:kubb_app/core/data/tables/session_events.dart';
 import 'package:kubb_app/core/data/tables/sessions.dart';
 import 'package:kubb_app/core/data/tables/tournament_score_drafts.dart';
@@ -25,6 +27,7 @@ part 'app_database.g.dart';
     FinisseurStickEvents,
     CachedAuthSession,
     TournamentScoreDrafts,
+    ScoreSubmissionOutbox,
   ],
   daos: [
     PlayerDao,
@@ -34,13 +37,14 @@ part 'app_database.g.dart';
     FinisseurStickEventDao,
     CachedAuthSessionDao,
     TournamentScoreDraftDao,
+    ScoreSubmissionOutboxDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -78,6 +82,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 5) {
             await m.createTable(tournamentScoreDrafts);
+          }
+          if (from < 6) {
+            await m.createTable(scoreSubmissionOutbox);
           }
         },
       );
