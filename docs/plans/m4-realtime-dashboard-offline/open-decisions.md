@@ -1,11 +1,11 @@
 # M4 — Realtime + Live-Dashboard + Offline — Offene Entscheidungen
 
-> Status: Entwurf, wartet auf Abnahme
+> Status: alle ODs resolved (2026-05-27)
 > Datum: 2026-05-27
 
-Folgende Punkte sind vor Implementierungsstart zu klären. Jeder blockt mindestens einen Task aus dem Milestone-Plan.
+Folgende Punkte waren vor Implementierungsstart zu klären. Jeder blockt mindestens einen Task aus dem Milestone-Plan. Alle 7 ODs sind per Owner-Mandat 1:1 nach Architect-Empfehlung resolved (autonom bis nach M5).
 
-## OD-M4-01: Realtime-Channel-Granularität — per-Tournament oder per-Match?
+## OD-M4-01: Realtime-Channel-Granularität — per-Tournament oder per-Match? `[resolved]`
 
 **Frage**: Wie schneiden wir die Supabase-Realtime-Channels — ein Channel pro Turnier (alle Match-Updates eines Turniers auf einem WS-Channel) oder ein Channel pro Match (jedes Match hat seinen eigenen)?
 
@@ -29,7 +29,9 @@ Implementiert als `subscribe(table='tournament_matches', filterColumn='tournamen
 
 **Marker**: `[committee]` (Skalierungs-Strategie), `[owner]` (Tier-Roadmap).
 
-## OD-M4-02: Polling-Fallback — als Default behalten oder nur als Notfall?
+**Resolution** (2026-05-27): Architect-Empfehlung A übernommen per Owner-Mandat (autonom bis nach M5). Per-Tournament-Channel mit clientseitiger Filterung, `subscribe(table='tournament_matches', filterColumn='tournament_id', filterValue=':id')`. Siehe ADR-0021.
+
+## OD-M4-02: Polling-Fallback — als Default behalten oder nur als Notfall? `[resolved]`
 
 **Frage**: M1–M3 nutzten 5 s Polling für Match-Liste / Detail / Bracket. M4 ersetzt das durch Realtime. Was passiert mit den Polling-Providern?
 
@@ -51,7 +53,9 @@ Implementiert als `subscribe(table='tournament_matches', filterColumn='tournamen
 
 **Marker**: `[committee]` (Operative Resilience).
 
-## OD-M4-03: Spectator-Auth — anonym mit Public-Read-RLS oder Light-Auth?
+**Resolution** (2026-05-27): Architect-Empfehlung A übernommen per Owner-Mandat (autonom bis nach M5). Polling-Provider bleiben als Fallback, default-deaktiviert solange Realtime joined ist. Fallback-Trigger: Channel-State `errored` länger als 60 s. Siehe ADR-0021.
+
+## OD-M4-03: Spectator-Auth — anonym mit Public-Read-RLS oder Light-Auth? `[resolved]`
 
 **Frage**: Wer sieht öffentliche Turnier-Sichten — anonyme Browser ohne Login, oder verlangen wir Mindest-Login (z.B. Magic-Link, oder einen pseudonymen Account)?
 
@@ -75,7 +79,9 @@ Folgemassnahme: `tournaments.public bool DEFAULT true`. Veranstalter kann pro Tu
 
 **Marker**: `[owner]` (Policy: was darf öffentlich sichtbar sein), `[committee]` (UX-Tradeoff).
 
-## OD-M4-04: Push-Notifications — eigener Folge-Milestone oder in M4 mit drin?
+**Resolution** (2026-05-27): Architect-Empfehlung A übernommen per Owner-Mandat (autonom bis nach M5). Anonym mit Public-Read-RLS, `tournaments.public bool DEFAULT true` plus Wizard-Toggle. Siehe ADR-0023.
+
+## OD-M4-04: Push-Notifications — eigener Folge-Milestone oder in M4 mit drin? `[resolved]`
 
 **Frage**: Spec verlangt Push-Notifications (FCM Android, APNs iOS) für Match-Start, Konflikt, Score-Erinnerung. Headline-M4-Outline aus Tournament-Foundation-Plan listet das auf. Schaffen wir das in 8–10 Tagen?
 
@@ -99,7 +105,9 @@ iOS-Push-Pfad bleibt ohnehin gesperrt bis Apple Developer Account vorliegt (ADR-
 
 **Marker**: `[owner]` (Roadmap-Priorisierung), `[committee]` (Scope-Realismus).
 
-## OD-M4-05: Lamport-Clock-Aktivierung im Event-Log — jetzt in M4 oder später?
+**Resolution** (2026-05-27): Architect-Empfehlung B übernommen per Owner-Mandat (autonom bis nach M5). Push-Notifications werden als eigener Folge-Milestone M4.5 nach M4.3 geplant (FCM-Android-only konsistent mit ADR-0015; iOS gesperrt bis Apple Developer Account). M4-Scope bleibt 8–10 Tage.
+
+## OD-M4-05: Lamport-Clock-Aktivierung im Event-Log — jetzt in M4 oder später? `[resolved]`
 
 **Frage**: ADR-0006 verlangt Lamport-Hydration und produktive Nutzung beim App-Start. Bisher (M0–M3) ist `LamportClock` implementiert aber nirgends im Schreib-Pfad genutzt. Schalten wir Lamport jetzt scharf, oder erst wenn Solo-Match-Live-Multi-Device kommt?
 
@@ -121,7 +129,9 @@ iOS-Push-Pfad bleibt ohnehin gesperrt bis Apple Developer Account vorliegt (ADR-
 
 **Marker**: `[committee]` (technische Schuld).
 
-## OD-M4-06: Sync-Outbox in drift — eigene Tabelle oder Update-Flag pro Match?
+**Resolution** (2026-05-27): Architect-Empfehlung A übernommen per Owner-Mandat (autonom bis nach M5). Lamport-Clock wird in M4 produktiv aktiviert (Hydration aus Outbox-MAX + Server-Stream-MAX, Counter + Device-ID in jeder Outbox-Row). ADR-0006-Folgemassnahmen werden in M4.3-T2 und M4.3-T7 eingelöst. Siehe ADR-0022.
+
+## OD-M4-06: Sync-Outbox in drift — eigene Tabelle oder Update-Flag pro Match? `[resolved]`
 
 **Frage**: Wo persistieren wir ausstehende Score-Submissions — eigene drift-Tabelle `score_submission_outbox` oder ein Update-Flag (`pending_sync bool`) auf der bestehenden `tournament_score_drafts`-Tabelle?
 
@@ -145,7 +155,9 @@ Außerdem: Outbox-GC (Retention 30 Tage nach Ack) ist sauberer auf eigener Tabel
 
 **Marker**: `[committee]` (Schema-Design).
 
-## OD-M4-07: Realtime-Channel-Auth — RLS-basiert oder ChannelAuthToken?
+**Resolution** (2026-05-27): Architect-Empfehlung A übernommen per Owner-Mandat (autonom bis nach M5). Eigene drift-Tabelle `score_submission_outbox` mit Payload-JSON, Lamport-Marker, Retry-Counter, Ack-Status. Drafts bleiben unverändert als UI-State. GC nach 30 Tagen Ack. Siehe ADR-0022.
+
+## OD-M4-07: Realtime-Channel-Auth — RLS-basiert oder ChannelAuthToken? `[resolved]`
 
 **Frage**: Supabase Realtime kennt zwei Auth-Modelle für Channels: RLS-basiert (jeder mit gültigem JWT subscribt, RLS filtert die Rows) oder ChannelAuthToken (per-Channel-Permission-Token, das der Server vor Subscribe ausgibt).
 
@@ -167,19 +179,21 @@ Außerdem: Outbox-GC (Retention 30 Tage nach Ack) ist sauberer auf eigener Tabel
 
 **Marker**: `[committee]` (Security-Modell).
 
+**Resolution** (2026-05-27): Architect-Empfehlung A übernommen per Owner-Mandat (autonom bis nach M5). RLS-basierte Channel-Auth mit User-JWT bzw. Anon-JWT, keine ChannelAuthTokens. M4 hat keine Channel-Schreib-Komponente. pgTAP-Tests in M4.2-T2 sichern RLS-Korrektheit. Siehe ADR-0021.
+
 ---
 
 ## Übersicht der ODs nach Marker
 
-| ID | `[committee]` | `[owner]` | `[domain]` | Blockt |
-|---|---|---|---|---|
-| OD-M4-01 | ja | ja | — | M4.1-T1 |
-| OD-M4-02 | ja | — | — | M4.1-T5 |
-| OD-M4-03 | ja | ja | — | M4.2-T1 |
-| OD-M4-04 | ja | ja | — | M4-Scope |
-| OD-M4-05 | ja | — | — | M4.3-T2, M4.3-T7 |
-| OD-M4-06 | ja | — | — | M4.3-T1 |
-| OD-M4-07 | ja | — | — | M4.1-T2, M4.2-T1 |
+| ID | `[committee]` | `[owner]` | `[domain]` | Blockt | Status |
+|---|---|---|---|---|---|
+| OD-M4-01 | ja | ja | — | M4.1-T1 | resolved |
+| OD-M4-02 | ja | — | — | M4.1-T5 | resolved |
+| OD-M4-03 | ja | ja | — | M4.2-T1 | resolved |
+| OD-M4-04 | ja | ja | — | M4-Scope | resolved |
+| OD-M4-05 | ja | — | — | M4.3-T2, M4.3-T7 | resolved |
+| OD-M4-06 | ja | — | — | M4.3-T1 | resolved |
+| OD-M4-07 | ja | — | — | M4.1-T2, M4.2-T1 | resolved |
 
 Zählung: 7 ODs gesamt. Marker-Verteilung:
 - `[committee]`: 7 (alle — Technik / Skalierung / UX)
@@ -188,16 +202,17 @@ Zählung: 7 ODs gesamt. Marker-Verteilung:
 
 ## Entscheidungs-Reihenfolge
 
-Sequenz vor Implementations-Start:
+Alle 7 ODs sind am 2026-05-27 in einem Aufwasch resolved worden — Architect-Empfehlungen 1:1 per Owner-Mandat übernommen (autonom bis nach M5, analog M2/M3-Verfahren). Die ursprünglich vorgesehene Sequenz (OD-M4-01 → OD-M4-04 → OD-M4-03 → OD-M4-07 → OD-M4-05/06 → OD-M4-02) entfällt, weil die Architect-Empfehlungen in sich konsistent sind und keine Zwischen-Abstimmung benötigt wird.
 
-1. **OD-M4-01** entscheiden — Channel-Granularität ist die Architektur-Grundsatzentscheidung.
-2. **OD-M4-04** entscheiden — bestimmt M4-Scope (Push drin oder nicht).
-3. **OD-M4-03** entscheiden — Spectator-Auth bestimmt RLS-Policy-Form.
-4. **OD-M4-07** entscheiden — Channel-Auth-Modell (folgt aus OD-M4-03).
-5. **OD-M4-05** und **OD-M4-06** parallel — beide M4.3-spezifisch.
-6. **OD-M4-02** kann zuletzt — Polling-Fallback ist taktische Frage.
+Implementations-Start auf Basis der resolved ODs:
 
-Bei Architect-Empfehlung-Übernahme: alle 7 ODs in einem Aufwasch resolvable (analog M2/M3-Verfahren).
+- M4.1-T1 (Channel-Granularität): per-Tournament (OD-M4-01).
+- M4.1-T2 / M4.2-T1 (Channel-Auth): RLS-basiert (OD-M4-07).
+- M4.1-T5 (Polling-Fallback): bleibt (OD-M4-02).
+- M4.2-T1 (Spectator-RLS): Public-Read mit Anon-JWT (OD-M4-03).
+- M4.3-T1 (Outbox-Tabelle): eigene drift-Tabelle (OD-M4-06).
+- M4.3-T2 / M4.3-T7 (Lamport): produktiv aktivieren (OD-M4-05).
+- M4-Scope: Push als M4.5 nachgelagert (OD-M4-04).
 
 ## Was die ODs explizit NICHT entscheiden
 
