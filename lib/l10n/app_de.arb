@@ -3078,5 +3078,49 @@
   "realtimeConnecting": "Verbinde…",
   "@realtimeConnecting": {
     "description": "Realtime banner state — websocket connection is being established"
+  },
+  "liveDashboardTitle": "Live-Dashboard",
+  "@liveDashboardTitle": {
+    "description": "Title of the live dashboard screen showing all pitches in real time (M4.2-T12)"
+  },
+  "liveDashboardOpenButton": "Live-Dashboard öffnen",
+  "@liveDashboardOpenButton": {
+    "description": "Button label to navigate to the live dashboard screen"
+  },
+  "pitchStatusScheduled": "Geplant",
+  "@pitchStatusScheduled": {
+    "description": "Pitch status label — match is scheduled but not yet started"
+  },
+  "pitchStatusLive": "Live",
+  "@pitchStatusLive": {
+    "description": "Pitch status label — match is currently in progress"
+  },
+  "pitchStatusStalled": "Wartend",
+  "@pitchStatusStalled": {
+    "description": "Pitch status label — match is stalled / waiting on input"
+  },
+  "pitchStatusDisputed": "Strittig",
+  "@pitchStatusDisputed": {
+    "description": "Pitch status label — match has a dispute that requires resolution"
+  },
+  "publicTournamentSchedule": "Spielplan",
+  "@publicTournamentSchedule": {
+    "description": "Public tournament view tab label — schedule"
+  },
+  "publicTournamentStandings": "Rangliste",
+  "@publicTournamentStandings": {
+    "description": "Public tournament view tab label — standings"
+  },
+  "publicTournamentBracket": "Bracket",
+  "@publicTournamentBracket": {
+    "description": "Public tournament view tab label — knockout bracket"
+  },
+  "liveModeToggle": "Live-Modus",
+  "@liveModeToggle": {
+    "description": "Toggle label for switching the public view into live mode"
+  },
+  "publicNotAvailable": "Dieses Turnier ist nicht öffentlich",
+  "@publicNotAvailable": {
+    "description": "Message shown when a tournament is not publicly accessible"
   }
 }

@@ -2268,4 +2268,37 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get realtimeConnecting => 'Verbinde…';
+
+  @override
+  String get liveDashboardTitle => 'Live-Dashboard';
+
+  @override
+  String get liveDashboardOpenButton => 'Live-Dashboard öffnen';
+
+  @override
+  String get pitchStatusScheduled => 'Geplant';
+
+  @override
+  String get pitchStatusLive => 'Live';
+
+  @override
+  String get pitchStatusStalled => 'Wartend';
+
+  @override
+  String get pitchStatusDisputed => 'Strittig';
+
+  @override
+  String get publicTournamentSchedule => 'Spielplan';
+
+  @override
+  String get publicTournamentStandings => 'Rangliste';
+
+  @override
+  String get publicTournamentBracket => 'Bracket';
+
+  @override
+  String get liveModeToggle => 'Live-Modus';
+
+  @override
+  String get publicNotAvailable => 'Dieses Turnier ist nicht öffentlich';
 }

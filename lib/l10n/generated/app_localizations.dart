@@ -4203,6 +4203,72 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Verbinde…'**
   String get realtimeConnecting;
+
+  /// Title of the live dashboard screen showing all pitches in real time (M4.2-T12)
+  ///
+  /// In de, this message translates to:
+  /// **'Live-Dashboard'**
+  String get liveDashboardTitle;
+
+  /// Button label to navigate to the live dashboard screen
+  ///
+  /// In de, this message translates to:
+  /// **'Live-Dashboard öffnen'**
+  String get liveDashboardOpenButton;
+
+  /// Pitch status label — match is scheduled but not yet started
+  ///
+  /// In de, this message translates to:
+  /// **'Geplant'**
+  String get pitchStatusScheduled;
+
+  /// Pitch status label — match is currently in progress
+  ///
+  /// In de, this message translates to:
+  /// **'Live'**
+  String get pitchStatusLive;
+
+  /// Pitch status label — match is stalled / waiting on input
+  ///
+  /// In de, this message translates to:
+  /// **'Wartend'**
+  String get pitchStatusStalled;
+
+  /// Pitch status label — match has a dispute that requires resolution
+  ///
+  /// In de, this message translates to:
+  /// **'Strittig'**
+  String get pitchStatusDisputed;
+
+  /// Public tournament view tab label — schedule
+  ///
+  /// In de, this message translates to:
+  /// **'Spielplan'**
+  String get publicTournamentSchedule;
+
+  /// Public tournament view tab label — standings
+  ///
+  /// In de, this message translates to:
+  /// **'Rangliste'**
+  String get publicTournamentStandings;
+
+  /// Public tournament view tab label — knockout bracket
+  ///
+  /// In de, this message translates to:
+  /// **'Bracket'**
+  String get publicTournamentBracket;
+
+  /// Toggle label for switching the public view into live mode
+  ///
+  /// In de, this message translates to:
+  /// **'Live-Modus'**
+  String get liveModeToggle;
+
+  /// Message shown when a tournament is not publicly accessible
+  ///
+  /// In de, this message translates to:
+  /// **'Dieses Turnier ist nicht öffentlich'**
+  String get publicNotAvailable;
 }
 
 class _AppLocalizationsDelegate
