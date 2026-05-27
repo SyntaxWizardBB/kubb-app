@@ -1,11 +1,15 @@
 # M5 — Schweizer System + Liga-Punkte + Saisontabelle — Offene Entscheidungen
 
-> Status: Entwurf, wartet auf Abnahme
+> Status: Resolved — alle 7 ODs am 2026-05-27 vom Owner per Autonom-Mandat geschlossen, Architect-Empfehlungen 1:1 übernommen.
 > Datum: 2026-05-27
+> ADR-Anker: ADR-0024 (OD-M5-01, OD-M5-02), ADR-0025 (OD-M5-03, OD-M5-04). OD-M5-05..-07 bleiben in dieser Datei dokumentiert (kein eigener ADR nötig).
 
 Folgende Punkte sind vor Implementierungsstart zu klären. Jeder blockt mindestens einen Task aus dem Milestone-Plan. Jeder OD bekommt eine Architect-Empfehlung plus eine Eskalations-Frage an den Owner.
 
 ## OD-M5-01: Tiebreaker-Reihenfolge im Schweizer System
+
+**Status**: Resolved — Option B (Buchholz → Direct-Encounter → Random mit Seed).
+**Resolution**: Architect-Empfehlung übernommen. Kubb-WM-Konvention ohne Sonneborn-Berger; Random deterministisch via Seed (Turnier-ID + Runden-Nr). Verankert in ADR-0024.
 
 **Frage**: Welche Tiebreaker-Reihenfolge gilt bei gleichem Score im Pairing und in der Schluss-Rangliste — Buchholz, Sonneborn-Berger, Direct-Encounter, Random?
 
@@ -22,6 +26,9 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder blockt mindeste
 **Eskalations-Frage an Owner**: "Folgt euer Liga-Reglement (oder das angepeilte Schweizer Kubb-Reglement) der FIDE-Konvention mit Sonneborn-Berger, oder reicht Buchholz + Direct-Encounter?" — Researcher-Frage an Verbands-Dokumente (Schweizer Kubb-Verband / EKC) falls Owner unsicher.
 
 ## OD-M5-02: Liga-Punkte-Schema Default (3-1-0 vs 1-1-1)
+
+**Status**: Resolved — Option A (3-1-0 als Default, pro Turnier konfigurierbar).
+**Resolution**: Architect-Empfehlung übernommen. Match-Punkte sind orthogonal zu Liga-Punkten (FR-POINTS-1) und beeinflussen nur die Buchholz-Sortierung im Pairing. Konfigurierbarkeit erlaubt EKC-/Vereins-Reglemente. Verankert in ADR-0024.
 
 **Frage**: Bei der Berechnung von Match-Punkten innerhalb des Turniers — wie viele Punkte gibt es für Sieg / Unentschieden / Niederlage? Fussball-Schema (3-1-0) oder Kubb-EKC-Schema (1-1-1, also alle bekommen Anwesenheitspunkt)?
 
@@ -40,6 +47,9 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder blockt mindeste
 
 ## OD-M5-03: Cross-Tournament-Aggregation — linear oder mit Decay?
 
+**Status**: Resolved — Option A (linear additiv, kein Decay, keine Streichresultate).
+**Resolution**: Architect-Empfehlung übernommen. `v_season_standings` ist `SUM(final_points)` über alle Awards der Saison. Spätere ATP-/Streichresultat-Logik bleibt als View-Migration möglich, kein Schema-Bruch. Verankert in ADR-0025.
+
 **Frage**: Wenn ein Spieler in 3 Turnieren je 10 Punkte holt — bekommt er 30 Punkte in der Saison-Tabelle (linear) oder weniger, weil ältere Turniere abgewertet werden (Decay, z.B. ATP-Style)?
 
 **Warum blockierend**: Bestimmt die View `v_season_standings`-Definition. Linear ist trivial (`SUM(final_points)`). Decay verlangt Zeit-Gewichtung im SELECT.
@@ -55,6 +65,9 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder blockt mindeste
 **Eskalations-Frage an Owner**: "Soll die Saison-Tabelle alle Turniere linear summieren, oder gibt es im Liga-Reglement eine Streichresultat-Regel (z.B. schlechtestes Turnier zählt nicht)?"
 
 ## OD-M5-04: Schweizer-System-Rundenzahl + Pairing-Ort
+
+**Status**: Resolved — (a) Default `ceil(log2(n))`, im Wizard Min 3 / Max 9; (b) Client-Pairing mit RPC-Validation.
+**Resolution**: Architect-Empfehlung übernommen. Algorithmus lebt in `kubb_domain` (Dart, property-testbar), Server-RPC `tournament_pair_round` validiert Permutation, Repeat-Schutz und Bye-Constraints (~30 LOC PL/pgSQL). Edge-Function-Option bleibt als Härtung in M6 möglich. Verankert in ADR-0025.
 
 **Frage**: Zwei verwobene Sub-Fragen:
 (a) Default-Rundenzahl = ceil(log2(n))? Veranstalter-konfigurierbar?
@@ -74,6 +87,9 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder blockt mindeste
 
 ## OD-M5-05: Saison-Termin-Vergabe und -Granularität
 
+**Status**: Resolved — Option A (frei konfigurierbar, `transfer_window_*` nullable als Reserve).
+**Resolution**: Architect-Empfehlung übernommen. `seasons` bekommt `started_on`, `ended_on`, `transfer_window_start`, `transfer_window_end`; letztere bleiben in M5 NULL. Spieltag-Slots (Option C) sind Premature-Structure für die Pilot-Phase und werden erst bei Bedarf nachgezogen.
+
 **Frage**: Wie streng modellieren wir Saisons? Pro Saison ein Wochenend-Turnier? Saison-Start- und Endedatum frei konfigurierbar? Was passiert mit Turnieren, deren Datum ausserhalb der Saison liegt?
 
 **Warum blockierend**: Bestimmt die Felder von `seasons` (started_on, ended_on, ggf. registration_window) und die Validation bei `season_tournaments`-Insert.
@@ -89,6 +105,9 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder blockt mindeste
 **Eskalations-Frage an Owner**: "Welche Saison-Strukturen siehst du in der Pilot-Phase real? Wenn eine echte Liga mit 8 Spieltagen pro Saison startet, brauchen wir Spieltag-Slots (Option C). Sonst belassen wir's bei Option A."
 
 ## OD-M5-06: Saison-Tabellen-Sortierung — Punkte / Anwesenheit / Hybrid
+
+**Status**: Resolved — Option A (Σ Punkte desc, Tiebreak Turnier-Anzahl, danach Anzeigename).
+**Resolution**: Architect-Empfehlung übernommen. Punkte sind das primäre Ranking-Signal (FR-RANK-1), Anwesenheit ist sekundärer Tiebreak. Liga-Konfigurierbarkeit (Option D) ist Premature-Customization und wird bei Bedarf als UI-Erweiterung nachgezogen. Kein Mindest-Teilnahme-Filter — alle Liga-Mitglieder erscheinen in der Tabelle.
 
 **Frage**: Default-Sortierung im `season_standings_screen` — nach Σ Punkten allein, nach Anzahl Turniere (Anwesenheit), oder Hybrid (z.B. nur Spieler mit ≥N Turnieren werden sortiert, andere am Ende)?
 
@@ -106,6 +125,9 @@ Folgende Punkte sind vor Implementierungsstart zu klären. Jeder blockt mindeste
 **Eskalations-Frage an Owner**: "Erwartest du, dass Liga-Mitglieder mit nur 1 Turnier in der Saison-Tabelle voll mitgezählt werden, oder soll es eine Mindest-Teilnahme geben?"
 
 ## OD-M5-07: Punkte-Vergabe-Zeitpunkt und Re-Compute-Verhalten
+
+**Status**: Resolved — Append-only-Ledger mit Reversal-Rows.
+**Resolution**: Architect-Empfehlung übernommen. Punkte werden sofort bei `tournament.status = finalized` als Award geschrieben. Korrekturen erzeugen Reversal-Rows (negative `final_points` + Note) plus neue Awards. View `v_season_standings` summiert über alle Rows — vollständige Audit-Trail, kein Mutations-Bug-Risiko, deckt FR-POINTS-13. Keine Einspruchs-Frist.
 
 **Frage**: Wann werden Liga-Punkte fest? Sofort bei Turnier-Finalisierung (immutable Award-Row), oder erst nach Konflikt-Frist (z.B. 24h Einspruchs-Fenster)? Was passiert, wenn nachträglich ein Score korrigiert wird?
 
