@@ -1,6 +1,6 @@
 # ADR-0023: Spectator-View — Public-Read-RLS mit anonymem JWT
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-05-27
 - **Depends on**: ADR-0001 (Supabase als Auth- und Datenbank-Backend), ADR-0003 (Auth + User-Management — anon-Role ist Supabase-Standard), ADR-0014 (Tournament-Match-Coexistence)
 - **Bezug**: `docs/plans/m4-realtime-dashboard-offline/architecture.md` §3.3, `open-decisions.md` OD-M4-03, OD-M4-07, FR-PUB-1..-3, FR-PUB-9, FR-PUB-11
@@ -165,4 +165,8 @@ Für die Realtime-Subscribes auf Public-Channels (M4.2-T9 Live-Modus-Toggle) wir
 
 ## Status-Notiz
 
-Sobald M4-Auftrag erteilt und OD-M4-03 vom Owner / Committee bestätigt ist, wird dieser ADR auf "Accepted" gehoben.
+Am 2026-05-27 vom Owner per Mandat (autonom bis nach M5) auf "Accepted" gehoben. OD-M4-03 ist in `open-decisions.md` resolved — Architect-Empfehlung 1:1 übernommen:
+
+- OD-M4-03 → Anonymes JWT mit Public-Read-RLS, `tournaments.public bool DEFAULT true` als Per-Turnier-Toggle.
+- Veranstalter-Override via Wizard-Flag bzw. Detail-Screen-Setting (`public=false` für interne Turniere).
+- pgTAP-Tests in M4.2-T2 sind merge-blocking, weil RLS-Bug private Daten leaken würde.

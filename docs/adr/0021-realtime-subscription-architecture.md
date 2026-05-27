@@ -1,6 +1,6 @@
 # ADR-0021: Realtime-Subscription-Architektur
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-05-27
 - **Depends on**: ADR-0001 (Tech-Stack — Supabase Realtime ist im SDK), ADR-0002 (Bounded Contexts — Realtime ist Cross-Cut, kein neuer Kontext), ADR-0004 (Scaling-Strategie — Tier-Limits 200 / 500 concurrent), ADR-0014 (Tournament-Match-Coexistence), ADR-0015 (Cross-Platform-Sequencing)
 - **Bezug**: `docs/plans/m4-realtime-dashboard-offline/architecture.md` §3.1, `open-decisions.md` OD-M4-01, OD-M4-02, OD-M4-07
@@ -121,4 +121,8 @@ abstract interface class RealtimeChannel {
 
 ## Status-Notiz
 
-Sobald M4-Auftrag erteilt ist und OD-M4-01 / OD-M4-02 / OD-M4-07 vom Owner / Committee bestätigt sind, wird dieser ADR auf "Accepted" gehoben.
+Am 2026-05-27 vom Owner per Mandat (autonom bis nach M5) auf "Accepted" gehoben. Die ODs OD-M4-01, OD-M4-02 und OD-M4-07 sind in `open-decisions.md` resolved — Architect-Empfehlungen 1:1 übernommen:
+
+- OD-M4-01 → Per-Tournament-Channel (Tier-Limit ist die kritische Constraint).
+- OD-M4-02 → Polling-Fallback bleibt erhalten (operative Resilienz bei Realtime-Ausfall).
+- OD-M4-07 → RLS-basierte Channel-Auth (kein ChannelAuthToken in M4).

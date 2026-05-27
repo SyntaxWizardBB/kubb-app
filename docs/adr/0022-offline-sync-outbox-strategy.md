@@ -1,6 +1,6 @@
 # ADR-0022: Offline-Sync-Strategie — Outbox + Lamport-Idempotency
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-05-27
 - **Depends on**: ADR-0001 (Sync-Model — append-only event log, Lamport ordering), ADR-0004 (Pre-work — Realtime-Abstraktion), ADR-0006 (Lamport-Clock-Invariants), ADR-0014 (Tournament-Match-Coexistence)
 - **Bezug**: `docs/plans/m4-realtime-dashboard-offline/architecture.md` §3.4, `open-decisions.md` OD-M4-05, OD-M4-06, `docs/specs/score-input-conflict-spec.md` DSCORE-94..-104
@@ -149,4 +149,7 @@ Wall-Clock-Timestamp (`queuedAt`) bleibt für UI-Anzeige und GC. Ordering passie
 
 ## Status-Notiz
 
-Sobald M4-Auftrag erteilt ist und OD-M4-05 / OD-M4-06 vom Committee bestätigt sind, wird dieser ADR auf "Accepted" gehoben.
+Am 2026-05-27 vom Owner per Mandat (autonom bis nach M5) auf "Accepted" gehoben. Die ODs OD-M4-05 und OD-M4-06 sind in `open-decisions.md` resolved — Architect-Empfehlungen 1:1 übernommen:
+
+- OD-M4-06 → Eigene drift-Tabelle `score_submission_outbox` (Trennung UI-State / Sync-State).
+- OD-M4-05 → Lamport-Clock wird in M4 produktiv aktiviert (ADR-0006-Followups eingelöst).
