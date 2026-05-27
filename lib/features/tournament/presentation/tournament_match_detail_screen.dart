@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kubb_app/core/application/outbox_flusher.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/features/tournament/application/outbox_pending_provider.dart';
 import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
@@ -12,6 +14,7 @@ import 'package:kubb_app/features/tournament/application/tournament_realtime_pro
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/score_consensus_banner.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/score_pending_indicator.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_set_input.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -224,11 +227,33 @@ class _TournamentMatchDetailScreenState
     final validationMessage = _validate(l);
     final ekc = computeEkc(_setScores());
 
+    // TASK-M4.3-T11: drive pending / conflict markers off the outbox.
+    final outboxAsync = ref.watch(outboxPendingProvider(match.matchId));
+    final outboxRows = outboxAsync.maybeWhen(
+      data: (rows) => rows,
+      orElse: () => const <OutboxRow>[],
+    );
+    final hasPending = outboxRows.any((r) =>
+        r.acknowledgedAt == null && r.lastErrorCode == null);
+    final hasStaleConflict = outboxRows.any(
+        (r) => r.lastErrorCode == 'STALE_CONSENSUS_ROUND');
+
     return ListView(
       padding: const EdgeInsets.all(KubbTokens.space4),
       children: [
-        _Header(match: match, tournamentId: TournamentId(widget.tournamentId)),
+        _Header(
+          match: match,
+          tournamentId: TournamentId(widget.tournamentId),
+          showPending: hasPending,
+        ),
         const SizedBox(height: KubbTokens.space3),
+        if (hasStaleConflict && !readOnly)
+          ScoreConflictBanner(onReenter: () {
+            setState(() {
+              _prefilledForRound = match.consensusRound;
+              _drafts = const <_SetDraft>[_SetDraft()];
+            });
+          }),
         ScoreConsensusBanner(attempt: match.consensusRound),
         for (var i = 0; i < _drafts.length; i++) ...[
           TournamentSetInput(
@@ -316,9 +341,14 @@ class _ErrorBody extends StatelessWidget {
 }
 
 class _Header extends ConsumerWidget {
-  const _Header({required this.match, required this.tournamentId});
+  const _Header({
+    required this.match,
+    required this.tournamentId,
+    this.showPending = false,
+  });
   final TournamentMatchRef match;
   final TournamentId tournamentId;
+  final bool showPending;
 
   static String _shortId(String? id) => id == null
       ? '?'
@@ -391,6 +421,7 @@ class _Header extends ConsumerWidget {
           style: TextStyle(
               fontSize: 18, fontWeight: FontWeight.w800, color: tokens.fg),
         ),
+        if (showPending) const ScorePendingIndicator(),
       ]),
     );
   }
