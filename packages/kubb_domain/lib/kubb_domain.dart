@@ -12,6 +12,7 @@ export 'src/ports/realtime_channel.dart';
 export 'src/ports/tournament_remote.dart';
 export 'src/rules/opening_rule.dart';
 export 'src/rules/rule_set.dart';
+export 'src/season/season_standings.dart';
 export 'src/tournament/bracket.dart';
 export 'src/tournament/bracket_advance_event.dart';
 export 'src/tournament/bracket_layout.dart';
