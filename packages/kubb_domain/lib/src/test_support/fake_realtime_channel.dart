@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:kubb_domain/src/ports/realtime_channel.dart';
+import 'package:kubb_domain/src/values/realtime_change.dart';
 
 /// Deterministic channel-key derived from the subscribe filter triple.
 /// Tests use the same scheme when calling [FakeRealtimeChannel.emit] and
