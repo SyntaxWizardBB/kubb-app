@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kubb_app/app/public_router_shell.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/presentation/account_link_screen.dart';
@@ -28,6 +29,8 @@ import 'package:kubb_app/features/team/presentation/team_create_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_detail_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_invitation_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_list_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/public/public_match_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/public/public_tournament_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_bracket_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_conflict_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_detail_screen.dart';
@@ -58,6 +61,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: notifier,
     redirect: (context, state) {
+      // Public spectator routes (M4.2) bypass the auth gate entirely —
+      // the PublicRouterShell bootstraps an anonymous Supabase session
+      // before the child mounts.
+      if (state.matchedLocation.startsWith('/public/')) {
+        return null;
+      }
       final auth = ref.read(authControllerProvider);
       // Loading without a previous value: stay put. KubbApp renders the
       // splash while appBootstrapProvider resolves, so by the time the
@@ -271,6 +280,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/teams/:id',
         builder: (_, state) => TeamDetailScreen(
           teamId: TeamId(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/public/tournament/:id',
+        builder: (_, state) => PublicRouterShell(
+          child: PublicTournamentScreen(
+            tournamentId: TournamentId(state.pathParameters['id']!),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/public/match/:matchId',
+        builder: (_, state) => PublicRouterShell(
+          child: PublicMatchScreen(
+            matchId: state.pathParameters['matchId']!,
+          ),
         ),
       ),
     ],
