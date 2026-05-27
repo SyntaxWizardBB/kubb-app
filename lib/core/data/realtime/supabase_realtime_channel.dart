@@ -13,12 +13,18 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 /// come and go quickly (R-M4.1-2-Mitigation). Channel errors trigger an
 /// exponential-backoff resubscribe (1 / 2 / 4 / 8 / 30 s).
 class SupabaseRealtimeChannel implements RealtimeChannel {
-  SupabaseRealtimeChannel(this._client);
+  SupabaseRealtimeChannel(
+    this._client, {
+    this.closeDebounce = const Duration(milliseconds: 500),
+    List<Duration>? backoffSchedule,
+  }) : _backoff = backoffSchedule ?? _defaultBackoff;
 
   final sb.SupabaseClient _client;
   final Map<String, _ChannelEntry> _entries = <String, _ChannelEntry>{};
+  final Duration closeDebounce;
+  final List<Duration> _backoff;
 
-  static const List<Duration> _backoff = <Duration>[
+  static const List<Duration> _defaultBackoff = <Duration>[
     Duration(seconds: 1),
     Duration(seconds: 2),
     Duration(seconds: 4),
@@ -141,7 +147,7 @@ class SupabaseRealtimeChannel implements RealtimeChannel {
     if (entry.refCount > 0) return;
     entry.pendingClose?.cancel();
     entry.pendingClose =
-        Timer(const Duration(milliseconds: 500), () => _disposeEntry(entry));
+        Timer(closeDebounce, () => _disposeEntry(entry));
   }
 
   Future<void> _disposeEntry(_ChannelEntry entry) async {
@@ -176,6 +182,36 @@ class SupabaseRealtimeChannel implements RealtimeChannel {
   @visibleForTesting
   int referenceCount(String channelKey) =>
       _entries[channelKey]?.refCount ?? 0;
+
+  /// True while the entry exists (regardless of refcount). Test-only.
+  @visibleForTesting
+  bool hasChannel(String channelKey) => _entries.containsKey(channelKey);
+
+  /// Total number of reconnect attempts triggered for [channelKey]. Reset
+  /// to zero when a `joined` status arrives. Test-only.
+  @visibleForTesting
+  int reconnectAttempts(String channelKey) =>
+      _entries[channelKey]?.backoffIndex ?? 0;
+
+  /// Forces the entry into [state] without touching the underlying
+  /// Supabase channel. Mirrors what the real adapter does on a
+  /// `channelError`/`joined` status. Test-only.
+  @visibleForTesting
+  void debugTransitionTo(String channelKey, RealtimeChannelState state) {
+    final entry = _entries[channelKey];
+    if (entry == null) return;
+    switch (state) {
+      case RealtimeChannelState.joined:
+        entry.backoffIndex = 0;
+        entry.stateController.add(state);
+      case RealtimeChannelState.errored:
+        entry.stateController.add(state);
+        _scheduleReconnect(entry, '', '', '');
+      case RealtimeChannelState.connecting:
+      case RealtimeChannelState.closed:
+        entry.stateController.add(state);
+    }
+  }
 }
 
 class _ChannelEntry {
