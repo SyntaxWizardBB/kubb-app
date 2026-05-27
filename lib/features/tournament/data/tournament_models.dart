@@ -215,6 +215,37 @@ TournamentAuditEvent tournamentAuditEventFromRow(Map<String, dynamic> row) {
   );
 }
 
+/// Decodes a raw `tournament_matches` CDC row (column-name keyed, as
+/// delivered by `RealtimeChannel`) into a domain [TournamentMatchRef].
+///
+/// The RPC-shaped wire used by [tournamentMatchRefFromRow] renames `id` to
+/// `match_id` and `participant_a`/`_b` to `participant_a_id`/`_b_id`;
+/// Realtime CDC payloads ship the raw table columns instead. Keeping the
+/// two parsers separate avoids leaking the rename into the table schema.
+TournamentMatchRef tournamentMatchRefFromCdcRow(Map<String, Object?> row) {
+  return TournamentMatchRef(
+    matchId: TournamentMatchId(row['id']! as String),
+    tournamentId: TournamentId(row['tournament_id']! as String),
+    roundNumber: _asInt(row['round_number']),
+    matchNumberInRound: _asInt(row['match_number_in_round']),
+    participantA: row['participant_a'] == null
+        ? null
+        : TournamentParticipantId(row['participant_a']! as String),
+    participantB: row['participant_b'] == null
+        ? null
+        : TournamentParticipantId(row['participant_b']! as String),
+    status: TournamentMatchStatusWire.fromWire(row['status']! as String),
+    consensusRound: _asInt(row['consensus_round']),
+    startedAt: _asDateOrNull(row['started_at']),
+    completedAt: _asDateOrNull(row['finalized_at']),
+    winnerParticipant: row['winner_participant'] == null
+        ? null
+        : TournamentParticipantId(row['winner_participant']! as String),
+    finalScoreA: _asIntOrNull(row['final_score_a']),
+    finalScoreB: _asIntOrNull(row['final_score_b']),
+  );
+}
+
 /// Decodes a wire row into a domain [TournamentMatchRef].
 TournamentMatchRef tournamentMatchRefFromRow(Map<String, dynamic> row) {
   return TournamentMatchRef(

@@ -1,6 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:kubb_domain/kubb_domain.dart';
+// Test_support sits under `lib/src/` and is not exported from the public
+// `kubb_domain` library — the test-double API stays out of production
+// imports. Pulling it in via the `src/` path keeps the fixture
+// self-contained without widening the package's public surface.
+import 'package:kubb_domain/src/test_support/fake_realtime_channel.dart';
 
 // Roster exception classes — duplicated locally so this branch compiles
 // in isolation. TASK-M3.2-T9 lands the canonical versions in
@@ -69,13 +74,32 @@ class TieResolutionRequiredException implements Exception {
 /// `supabase/migrations/20260601000016_trigger_advance_ko_winner.sql`
 /// for the wire reference.
 class FakeTournamentRemote implements TournamentRemote {
-  FakeTournamentRemote({required UserId initialUser})
-      : currentUser = initialUser;
+  FakeTournamentRemote({
+    required UserId initialUser,
+    FakeRealtimeChannel? realtime,
+  })  : currentUser = initialUser,
+        realtime = realtime ?? FakeRealtimeChannel();
 
   /// "Logged-in" user that subsequent calls run as. Tests flip this to
   /// drive the same flow from different participants / the organizer.
   UserId currentUser;
   int _idSeq = 0;
+
+  /// Realtime adapter the `watch*` streams subscribe through. Tests drive
+  /// events with [FakeRealtimeChannel.emit] addressed by
+  /// [fakeRealtimeChannelKey] (see [matchesChannelKeyFor]).
+  final FakeRealtimeChannel realtime;
+
+  /// Channel key for the `tournament_matches` slice of [tournamentId].
+  /// Tests use this to address `realtime.emit` / `realtime.setState`;
+  /// production adapters mirror the same `<table>:<column>=<value>`
+  /// scheme.
+  static String matchesChannelKeyFor(TournamentId tournamentId) =>
+      fakeRealtimeChannelKey(
+        table: 'tournament_matches',
+        filterColumn: 'tournament_id',
+        filterValue: tournamentId.value,
+      );
 
   final Map<TournamentId, _Tournament> _tournaments =
       <TournamentId, _Tournament>{};
@@ -325,24 +349,123 @@ class FakeTournamentRemote implements TournamentRemote {
 
   @override
   Stream<TournamentMatchRef> watchMatch(TournamentMatchId id) {
-    // Realtime body lands in TASK-M4.1-T9 via the FakeRealtimeChannel.
-    throw UnimplementedError(
-      'FakeTournamentRemote.watchMatch lands in TASK-M4.1-T9',
-    );
+    final m = _matches[id];
+    if (m == null) {
+      // Unknown match — return an empty stream rather than throw so the
+      // M1 placeholder contract (returning nothing) keeps working for
+      // callers that fire the watch before the match row exists.
+      return const Stream<TournamentMatchRef>.empty();
+    }
+    return watchTournamentMatches(m.tournamentId)
+        .where((r) => r.matchId == id);
   }
 
   @override
   Stream<TournamentMatchRef> watchTournamentMatches(TournamentId tournamentId) {
-    throw UnimplementedError(
-      'FakeTournamentRemote.watchTournamentMatches lands in TASK-M4.1-T9',
-    );
+    return realtime
+        .subscribe(
+          table: 'tournament_matches',
+          filterColumn: 'tournament_id',
+          filterValue: tournamentId.value,
+        )
+        .where((c) => c.eventType != RealtimeEventType.delete)
+        .map((c) => _tournamentMatchRefFromCdcRow(c.newRow));
   }
 
   @override
   Stream<BracketAdvanceEvent> watchBracketAdvances(TournamentId tournamentId) {
-    throw UnimplementedError(
-      'FakeTournamentRemote.watchBracketAdvances lands in TASK-M4.1-T9',
+    return realtime
+        .subscribe(
+          table: 'tournament_matches',
+          filterColumn: 'tournament_id',
+          filterValue: tournamentId.value,
+        )
+        .where(_isBracketAdvanceChange)
+        .map(_bracketAdvanceFromChange);
+  }
+
+  bool _isBracketAdvanceChange(RealtimeChange change) {
+    if (change.eventType == RealtimeEventType.delete) return false;
+    final status = change.newRow['status'];
+    if (status != 'finalized' && status != 'overridden') return false;
+    if (change.newRow['winner_participant'] == null) return false;
+    if (change.eventType == RealtimeEventType.update) {
+      final prev = change.oldRow['status'];
+      if (prev == 'finalized' || prev == 'overridden') return false;
+    }
+    return true;
+  }
+
+  BracketAdvanceEvent _bracketAdvanceFromChange(RealtimeChange change) {
+    final row = change.newRow;
+    final round = _asInt(row['round_number']);
+    final matchNumber = _asInt(row['match_number_in_round']);
+    return BracketAdvanceEvent(
+      tournamentId: TournamentId(row['tournament_id']! as String),
+      advancedMatchId: TournamentMatchId(row['id']! as String),
+      targetRound: round + 1,
+      targetMatchNumber: (matchNumber + 1) ~/ 2,
+      winnerParticipant:
+          TournamentParticipantId(row['winner_participant']! as String),
+      at: change.receivedAt,
     );
+  }
+
+  // Local CDC-row parser. Mirrors `tournamentMatchRefFromCdcRow` in
+  // `lib/features/tournament/data/tournament_models.dart`; duplicated so
+  // this fixture stays domain-only (no `kubb_app` import). The
+  // orchestrator merge can collapse the two if/when the fixture moves
+  // under `lib/`.
+  TournamentMatchRef _tournamentMatchRefFromCdcRow(Map<String, Object?> row) {
+    return TournamentMatchRef(
+      matchId: TournamentMatchId(row['id']! as String),
+      tournamentId: TournamentId(row['tournament_id']! as String),
+      roundNumber: _asInt(row['round_number']),
+      matchNumberInRound: _asInt(row['match_number_in_round']),
+      participantA: row['participant_a'] == null
+          ? null
+          : TournamentParticipantId(row['participant_a']! as String),
+      participantB: row['participant_b'] == null
+          ? null
+          : TournamentParticipantId(row['participant_b']! as String),
+      status: _matchStatusFromWire(row['status']! as String),
+      consensusRound: _asInt(row['consensus_round']),
+      startedAt: _asDateOrNull(row['started_at']),
+      completedAt: _asDateOrNull(row['finalized_at']),
+      winnerParticipant: row['winner_participant'] == null
+          ? null
+          : TournamentParticipantId(row['winner_participant']! as String),
+      finalScoreA: _asIntOrNull(row['final_score_a']),
+      finalScoreB: _asIntOrNull(row['final_score_b']),
+    );
+  }
+
+  int _asInt(Object? r) {
+    if (r is int) return r;
+    if (r is num) return r.toInt();
+    throw ArgumentError.value(r, 'r', 'expected num');
+  }
+  int? _asIntOrNull(Object? r) => r == null ? null : _asInt(r);
+  DateTime? _asDateOrNull(Object? r) =>
+      r == null ? null : DateTime.parse(r as String);
+
+  TournamentMatchStatus _matchStatusFromWire(String raw) {
+    switch (raw) {
+      case 'scheduled':
+        return TournamentMatchStatus.scheduled;
+      case 'awaiting_results':
+        return TournamentMatchStatus.awaitingResults;
+      case 'disputed':
+        return TournamentMatchStatus.disputed;
+      case 'finalized':
+        return TournamentMatchStatus.finalized;
+      case 'overridden':
+        return TournamentMatchStatus.overridden;
+      case 'voided':
+        return TournamentMatchStatus.voided;
+      default:
+        throw ArgumentError.value(raw, 'raw', 'Unknown TournamentMatchStatus');
+    }
   }
 
   // ---------------------------------------------------------------------

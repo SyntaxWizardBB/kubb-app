@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/core/data/realtime/supabase_realtime_channel.dart';
 import 'package:kubb_app/features/tournament/data/tournament_models.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide RealtimeChannel;
 
 /// Projects a `tournament_get` envelope into a [TournamentSummaryRef].
 ///
@@ -132,9 +134,19 @@ class OverrideKoPairingException implements Exception {
 /// from `kubb_domain`. Every call is authenticated; the
 /// SECURITY DEFINER functions on the server enforce role rules.
 class TournamentRepository implements TournamentRemote {
-  TournamentRepository({required SupabaseClient client}) : _client = client;
+  TournamentRepository({
+    required SupabaseClient client,
+    RealtimeChannel? realtime,
+  })  : _client = client,
+        _realtime = realtime ?? SupabaseRealtimeChannel(client);
 
   final SupabaseClient _client;
+
+  /// Realtime adapter used by the `watch*` streams. Defaulted to a
+  /// `SupabaseRealtimeChannel` over [_client] so existing callers that
+  /// build the repository without the M4 wiring keep working; the
+  /// provider will inject the shared instance once T8 lands.
+  final RealtimeChannel _realtime;
 
   @override
   Future<List<TournamentSummaryRef>> listTournaments({
@@ -440,27 +452,78 @@ class TournamentRepository implements TournamentRemote {
   }
 
   @override
-  Stream<TournamentMatchRef> watchMatch(TournamentMatchId id) {
-    // Realtime body lands in TASK-M4.1-T9 via the RealtimeChannel port.
-    // Throwing here surfaces accidental wiring before the adapter is in
-    // place — the M1 empty-stream placeholder is intentionally dropped
-    // so the analyzer flags any caller still depending on it.
-    throw UnimplementedError(
-      'TournamentRepository.watchMatch lands in TASK-M4.1-T9',
-    );
+  Stream<TournamentMatchRef> watchMatch(TournamentMatchId id) async* {
+    // Per OD-M4-01 / port doc-block: subscribe to the per-tournament
+    // channel and filter client-side on [id]. We need the tournament id
+    // to address the channel, so look it up once via the existing read
+    // path. Returning an empty stream when the match is gone matches
+    // the M1 placeholder contract callers may still rely on.
+    final ref = await getMatch(id);
+    if (ref == null) return;
+    yield* watchTournamentMatches(ref.tournamentId)
+        .where((r) => r.matchId == id);
   }
 
   @override
   Stream<TournamentMatchRef> watchTournamentMatches(TournamentId tournamentId) {
-    throw UnimplementedError(
-      'TournamentRepository.watchTournamentMatches lands in TASK-M4.1-T9',
-    );
+    return _realtime
+        .subscribe(
+          table: 'tournament_matches',
+          filterColumn: 'tournament_id',
+          filterValue: tournamentId.value,
+        )
+        .where((c) => c.eventType != RealtimeEventType.delete)
+        .map((c) => tournamentMatchRefFromCdcRow(c.newRow));
   }
 
   @override
   Stream<BracketAdvanceEvent> watchBracketAdvances(TournamentId tournamentId) {
-    throw UnimplementedError(
-      'TournamentRepository.watchBracketAdvances lands in TASK-M4.1-T9',
+    // KO-advance signal: a row in [tournamentId] flips to `finalized`
+    // (or `overridden`) and carries a winner. The trigger that copies
+    // the winner into the parent slot fires server-side; the next
+    // `update` on that parent row is what the dashboard needs to redraw.
+    // Mapping the just-finalised row gives the UI both the source match
+    // id and the (round, match-number) of the slot that just filled —
+    // enough to invalidate the bracket view without a re-fetch.
+    return _realtime
+        .subscribe(
+          table: 'tournament_matches',
+          filterColumn: 'tournament_id',
+          filterValue: tournamentId.value,
+        )
+        .where(_isBracketAdvanceChange)
+        .map(_bracketAdvanceFromChange);
+  }
+
+  bool _isBracketAdvanceChange(RealtimeChange change) {
+    if (change.eventType == RealtimeEventType.delete) return false;
+    final status = change.newRow['status'];
+    if (status != 'finalized' && status != 'overridden') return false;
+    if (change.newRow['winner_participant'] == null) return false;
+    // For updates, fire only on the transition into a terminal state —
+    // re-emits of an already-finalised row would spam the dashboard.
+    if (change.eventType == RealtimeEventType.update) {
+      final prev = change.oldRow['status'];
+      if (prev == 'finalized' || prev == 'overridden') return false;
+    }
+    return true;
+  }
+
+  BracketAdvanceEvent _bracketAdvanceFromChange(RealtimeChange change) {
+    final row = change.newRow;
+    final round = _asInt(row['round_number']);
+    final matchNumber = _asInt(row['match_number_in_round']);
+    return BracketAdvanceEvent(
+      tournamentId: TournamentId(row['tournament_id']! as String),
+      advancedMatchId: TournamentMatchId(row['id']! as String),
+      // Parent slot the winner advances into: (round+1, ceil(n/2)).
+      // For the final round there is no parent — the consumer treats
+      // (round, matchNumber) as the addressed slot in that case.
+      targetRound: round + 1,
+      targetMatchNumber: (matchNumber + 1) ~/ 2,
+      winnerParticipant:
+          TournamentParticipantId(row['winner_participant']! as String),
+      at: change.receivedAt,
     );
   }
 
@@ -751,5 +814,12 @@ class TournamentRepository implements TournamentRemote {
 }
 
 final tournamentRemoteProvider = Provider<TournamentRemote>((ref) {
-  return TournamentRepository(client: Supabase.instance.client);
+  // Realtime adapter is composed inline: M4.1-T8 will replace this with
+  // a dedicated `realtimeChannelProvider` so the same instance is
+  // shared across repositories and survives re-reads.
+  final client = Supabase.instance.client;
+  return TournamentRepository(
+    client: client,
+    realtime: SupabaseRealtimeChannel(client),
+  );
 });
