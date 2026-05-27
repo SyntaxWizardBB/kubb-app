@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:kubb_domain/src/values/ids.dart';
 import 'package:meta/meta.dart';
 
@@ -50,6 +52,7 @@ class LamportClock {
 
   final DeviceId deviceId;
   int _counter;
+  StreamSubscription<int>? _serverSubscription;
 
   int get counter => _counter;
 
@@ -71,24 +74,42 @@ class LamportClock {
   /// outbox for a given `(matchId, deviceId)` pair.
   ///
   /// After hydration, the next [tick] must return a counter strictly greater
-  /// than [outboxMax]. Implementation lands in M4.3-T8.
+  /// than [outboxMax]. The `matchId` and `deviceId` parameters are passed so
+  /// callers can document the scoping intent; lookup of the maximum value
+  /// itself happens upstream (DAO query) and is provided here as
+  /// [outboxMax]. The internal counter is lifted to
+  /// `max(currentCounter, outboxMax)` so a subsequent [tick] emits a strictly
+  /// greater value.
   void hydrateFromOutbox(
     MatchId matchId,
     DeviceId deviceId,
     int outboxMax,
   ) {
-    throw UnimplementedError(
-      'LamportClock.hydrateFromOutbox is implemented in M4.3-T8',
-    );
+    if (outboxMax > _counter) {
+      _counter = outboxMax;
+    }
   }
 
   /// Subscribes to a server-side stream of observed lamport counters and
   /// advances this clock whenever a higher value is seen.
   ///
-  /// Implementation lands in M4.3-T8.
+  /// On every emitted value `serverMax`, sets the internal counter to
+  /// `max(currentCounter, serverMax)`. A subsequent [tick] therefore returns
+  /// a counter strictly greater than any value observed on the stream so far.
+  /// Calling this method again cancels the previous subscription.
   void observeFromStream(Stream<int> serverMax) {
-    throw UnimplementedError(
-      'LamportClock.observeFromStream is implemented in M4.3-T8',
-    );
+    unawaited(_serverSubscription?.cancel());
+    _serverSubscription = serverMax.listen((value) {
+      if (value > _counter) {
+        _counter = value;
+      }
+    });
+  }
+
+  /// Cancels any active server-counter subscription. Safe to call multiple
+  /// times.
+  Future<void> dispose() async {
+    await _serverSubscription?.cancel();
+    _serverSubscription = null;
   }
 }

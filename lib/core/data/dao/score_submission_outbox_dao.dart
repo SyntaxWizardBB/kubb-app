@@ -59,4 +59,21 @@ class ScoreSubmissionOutboxDao extends DatabaseAccessor<AppDatabase>
           ))
         .go();
   }
+
+  /// Returns the maximum `lamport_counter` previously written for the
+  /// `(matchId, lamportDeviceId)` pair, or `0` when the outbox has no
+  /// row yet for that pair. Used by the lamport-clock-hydration provider
+  /// (TASK-M4.3-T8) to seed the per-match clock so the next local tick
+  /// always emits a counter strictly greater than any value still queued
+  /// from a previous app session.
+  Future<int> maxCounterFor(String matchId, String deviceId) async {
+    final row = await customSelect(
+      'SELECT COALESCE(MAX(lamport_counter), 0) AS max_counter '
+      'FROM score_submission_outbox '
+      'WHERE match_id = ?1 AND lamport_device_id = ?2',
+      variables: [Variable<String>(matchId), Variable<String>(deviceId)],
+      readsFrom: {scoreSubmissionOutbox},
+    ).getSingle();
+    return row.read<int>('max_counter');
+  }
 }
