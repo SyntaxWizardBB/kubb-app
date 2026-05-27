@@ -217,12 +217,6 @@ void main() {
   });
 }
 
-/// Placeholder for the wave-8 conflict exception (TASK-M4.3-T6). The
-/// real type lands in `packages/kubb_domain/lib/src/tournament/`.
-class TournamentScoreConflictException implements Exception {
-  const TournamentScoreConflictException(this.code);
-  final String code;
-
-  @override
-  String toString() => 'TournamentScoreConflictException($code)';
-}
+// `TournamentScoreConflictException` is now provided by
+// `package:kubb_domain/kubb_domain.dart` (TASK-M4.3-T6 landed the real
+// type in `lib/src/ports/tournament_remote.dart`).

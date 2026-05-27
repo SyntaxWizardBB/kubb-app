@@ -327,6 +327,22 @@ class TournamentDetail {
   }
 }
 
+/// Thrown when a `proposeSetScoreWithLamport` submission cannot be
+/// applied because the server has already moved on to a newer consensus
+/// retry round (token `STALE_CONSENSUS_ROUND`) or rejected the payload
+/// for another conflict reason. The [code] mirrors the server-side
+/// token so the outbox flusher and UI can switch on it without parsing
+/// messages. See M4.3 architecture §3.5.
+class TournamentScoreConflictException implements Exception {
+  const TournamentScoreConflictException(this.code);
+
+  /// Server-side token, e.g. `STALE_CONSENSUS_ROUND`.
+  final String code;
+
+  @override
+  String toString() => 'TournamentScoreConflictException($code)';
+}
+
 /// Port for cloud-side tournament data.
 ///
 /// Per ADR-0014, tournament matches use per-match-result semantics with
@@ -384,6 +400,28 @@ abstract interface class TournamentRemote {
     required TournamentMatchId matchId,
     required int consensusRound,
     required List<SetScore> setScores,
+  });
+
+  /// Idempotent variant of [proposeSetScores] that carries the local
+  /// Lamport tick alongside one single-set payload. The server treats a
+  /// repeated submission with identical `(matchId, consensusRound,
+  /// setIndex, submitter, lamportCounter, deviceId)` as already-applied
+  /// and returns the current [TournamentMatchRef] snapshot without
+  /// recording a new score row. Used by the outbox flusher so retries
+  /// stay safe under at-least-once delivery (see M4.3 architecture §3.5
+  /// and migration `20260701000001_score_rpc_idempotency.sql`).
+  ///
+  /// Throws [TournamentScoreConflictException] with code
+  /// `STALE_CONSENSUS_ROUND` when the server has already moved on to a
+  /// later consensus retry round.
+  Future<TournamentMatchRef> proposeSetScoreWithLamport({
+    required TournamentMatchId matchId,
+    required int consensusRound,
+    required int setIndex,
+    required TournamentParticipantId submitter,
+    required SetScore score,
+    required int lamportCounter,
+    required String deviceId,
   });
 
   /// Organizer override. `reason` is mandatory per FR-CONF-3 and the

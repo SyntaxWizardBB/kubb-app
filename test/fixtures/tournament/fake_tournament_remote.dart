@@ -139,6 +139,20 @@ class FakeTournamentRemote implements TournamentRemote {
   final Map<TournamentId, List<TournamentParticipantId>> _crossPoolOverrides =
       <TournamentId, List<TournamentParticipantId>>{};
 
+  /// In-memory idempotency set for [proposeSetScoreWithLamport]. Mirrors
+  /// the server-side `(match, round, set, submitter, counter, device)`
+  /// unique key from migration `20260701000001_score_rpc_idempotency.sql`.
+  /// A second call with the same tuple short-circuits to the current
+  /// match snapshot without recording another proposal.
+  final Set<String> _lamportIdempotency = <String>{};
+
+  /// Test hook — when set, the next [proposeSetScoreWithLamport] call
+  /// for the registered match throws [TournamentScoreConflictException]
+  /// with `STALE_CONSENSUS_ROUND`. Cleared after firing so subsequent
+  /// calls behave normally.
+  final Set<TournamentMatchId> _staleConsensusInjections =
+      <TournamentMatchId>{};
+
   String _nextId(String prefix) => '$prefix-${++_idSeq}';
 
   /// Test-only hook to install a KO config without going through the
@@ -325,6 +339,41 @@ class FakeTournamentRemote implements TournamentRemote {
     m
       ..consensusRound = consensusRound + 1
       ..status = TournamentMatchStatus.awaitingResults;
+  }
+
+  /// Test helper. Marks [matchId] so the next
+  /// [proposeSetScoreWithLamport] call throws
+  /// `TournamentScoreConflictException('STALE_CONSENSUS_ROUND')`. The
+  /// flag clears itself after firing once.
+  void setStaleConsensusRound(TournamentMatchId matchId) {
+    _staleConsensusInjections.add(matchId);
+  }
+
+  @override
+  Future<TournamentMatchRef> proposeSetScoreWithLamport({
+    required TournamentMatchId matchId,
+    required int consensusRound,
+    required int setIndex,
+    required TournamentParticipantId submitter,
+    required SetScore score,
+    required int lamportCounter,
+    required String deviceId,
+  }) async {
+    if (_staleConsensusInjections.remove(matchId)) {
+      throw const TournamentScoreConflictException('STALE_CONSENSUS_ROUND');
+    }
+    final m = _matches[matchId]!;
+    final key = '${matchId.value}|$consensusRound|$setIndex|'
+        '${submitter.value}|$lamportCounter|$deviceId';
+    if (_lamportIdempotency.contains(key)) {
+      // Duplicate submission — return the current snapshot unchanged.
+      return m.toRef();
+    }
+    _lamportIdempotency.add(key);
+    if (m.status == TournamentMatchStatus.scheduled) {
+      m.status = TournamentMatchStatus.awaitingResults;
+    }
+    return m.toRef();
   }
 
   @override

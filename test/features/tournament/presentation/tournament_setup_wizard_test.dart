@@ -107,6 +107,19 @@ class _FakeTournamentRemote implements TournamentRemote {
   }) async {}
 
   @override
+  Future<TournamentMatchRef> proposeSetScoreWithLamport({
+    required TournamentMatchId matchId,
+    required int consensusRound,
+    required int setIndex,
+    required TournamentParticipantId submitter,
+    required SetScore score,
+    required int lamportCounter,
+    required String deviceId,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
   Stream<TournamentMatchRef> watchMatch(TournamentMatchId id) =>
       const Stream<TournamentMatchRef>.empty();
 

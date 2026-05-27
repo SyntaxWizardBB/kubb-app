@@ -306,6 +306,52 @@ class TournamentRepository implements TournamentRemote {
   }
 
   @override
+  Future<TournamentMatchRef> proposeSetScoreWithLamport({
+    required TournamentMatchId matchId,
+    required int consensusRound,
+    required int setIndex,
+    required TournamentParticipantId submitter,
+    required SetScore score,
+    required int lamportCounter,
+    required String deviceId,
+  }) async {
+    try {
+      final row = await _client.rpc<Map<String, dynamic>>(
+        'tournament_propose_set_score',
+        params: <String, dynamic>{
+          'p_match_id': matchId.value,
+          'p_consensus_round': consensusRound,
+          'p_set_index': setIndex,
+          'p_score': _setScoreToWire(setIndex, score),
+          'p_lamport_counter': lamportCounter,
+          'p_device_id': deviceId,
+        },
+      );
+      return tournamentMatchRefFromRow(row);
+    } on PostgrestException catch (e) {
+      final token = _scoreConflictTokenFromException(e);
+      if (token != null) {
+        throw TournamentScoreConflictException(token);
+      }
+      rethrow;
+    }
+  }
+
+  /// Extracts the score-conflict token (e.g. `STALE_CONSENSUS_ROUND`)
+  /// from a PostgREST error. The server raises the conflict via
+  /// `RAISE EXCEPTION USING HINT = '<TOKEN>'` per
+  /// `20260701000001_score_rpc_idempotency.sql`; PostgREST surfaces the
+  /// HINT on [PostgrestException.hint]. Returns `null` when the
+  /// exception does not look like a score conflict so the caller can
+  /// rethrow unchanged.
+  String? _scoreConflictTokenFromException(PostgrestException e) {
+    const knownTokens = <String>{'STALE_CONSENSUS_ROUND'};
+    final hint = e.hint;
+    if (hint != null && knownTokens.contains(hint)) return hint;
+    return null;
+  }
+
+  @override
   Future<void> organizerOverride({
     required TournamentMatchId matchId,
     required List<SetScore> finalSetScores,
