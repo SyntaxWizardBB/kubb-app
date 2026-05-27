@@ -5,6 +5,7 @@ import 'package:kubb_app/app/router.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/theme/theme_choice.dart';
+import 'package:kubb_app/core/ui/widgets/offline_banner.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:logging/logging.dart';
 
@@ -58,6 +59,12 @@ class KubbApp extends ConsumerWidget {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           debugShowCheckedModeBanner: false,
+          builder: (context, child) => Column(
+            children: [
+              const OfflineBanner(),
+              Expanded(child: child ?? const SizedBox.shrink()),
+            ],
+          ),
         );
       },
     );
