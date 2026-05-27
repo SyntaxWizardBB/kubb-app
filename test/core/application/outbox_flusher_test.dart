@@ -1,6 +1,3 @@
-@Tags(['tdd-red'])
-library;
-
 import 'dart:async';
 import 'dart:io';
 
@@ -129,10 +126,12 @@ void main() {
     connectivity = _FakeConnectivityService();
   });
 
-  OutboxFlusher build(OutboxStore store) => OutboxFlusherStub(
+  OutboxFlusher build(OutboxStore store) => OutboxFlusherImpl(
         store: store,
         submitter: submitter,
         connectivity: connectivity,
+        backoffSchedule: const [Duration(milliseconds: 1)],
+        backoffCap: const Duration(milliseconds: 1),
       );
 
   test('flushes rows in queuedAt ASC order', () async {

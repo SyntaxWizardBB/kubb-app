@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:kubb_domain/kubb_domain.dart';
 
 /// Lifecycle status of the score-submission outbox flusher. Surfaced to
@@ -122,41 +125,167 @@ abstract class OutboxFlusher {
   Stream<OutboxFlushStatus> get statusStream;
 }
 
-/// Wave-7 stub implementation. Every entrypoint throws
-/// [UnimplementedError]; TASK-M4.3-T7 (wave 8) replaces this class with
-/// the real flusher and turns the property-tests green.
-class OutboxFlusherStub implements OutboxFlusher {
-  OutboxFlusherStub({
+/// Sentinel error code stamped on outbox rows whose server-side
+/// consensus round drifted past the locally queued submission.
+const String kStaleConsensusRoundCode = 'STALE_CONSENSUS_ROUND';
+
+/// Concrete flusher implementation per TASK-M4.3-T7.
+///
+/// Drains the outbox sequentially, retries [SocketException] with
+/// capped exponential backoff, and terminates a row on a
+/// `STALE_CONSENSUS_ROUND` conflict by stamping `lastErrorCode`.
+/// Subscribes to [ConnectivityProbe.onlineStream] in the constructor so
+/// offline → online transitions trigger a fresh flush pass.
+class OutboxFlusherImpl implements OutboxFlusher {
+  OutboxFlusherImpl({
     required OutboxStore store,
     required ScoreLamportSubmitter submitter,
     required ConnectivityProbe connectivity,
+    DateTime Function() now = DateTime.now,
+    List<Duration> backoffSchedule = _defaultBackoff,
+    Duration backoffCap = const Duration(seconds: 30),
+    int maxRetries = 4,
   })  : _store = store,
         _submitter = submitter,
-        _connectivity = connectivity;
+        _connectivity = connectivity,
+        _now = now,
+        _backoffSchedule = backoffSchedule,
+        _backoffCap = backoffCap,
+        _maxRetries = maxRetries,
+        _paused = !connectivity.isOnline {
+    _onlineSub = connectivity.onlineStream.listen(
+      (online) => unawaited(onConnectivityChange(online)),
+    );
+  }
 
-  // Fields are wired but unused — the stub exists only to pin down the
-  // constructor surface so the wave-8 impl (TASK-M4.3-T7) can drop in
-  // without breaking call sites or test setUp blocks.
-  // ignore: unused_field
+  static const List<Duration> _defaultBackoff = [
+    Duration(seconds: 1),
+    Duration(seconds: 2),
+    Duration(seconds: 4),
+  ];
+
   final OutboxStore _store;
-  // Reserved for wave-8 impl; see comment on _store.
-  // ignore: unused_field
   final ScoreLamportSubmitter _submitter;
-  // Reserved for wave-8 impl; see comment on _store.
-  // ignore: unused_field
   final ConnectivityProbe _connectivity;
+  final DateTime Function() _now;
+  final List<Duration> _backoffSchedule;
+  final Duration _backoffCap;
+  final int _maxRetries;
+
+  final StreamController<OutboxFlushStatus> _statusController =
+      StreamController<OutboxFlushStatus>.broadcast();
+  late final StreamSubscription<bool> _onlineSub;
+
+  bool _paused;
+  bool _flushing = false;
+  OutboxFlushStatus _lastStatus = OutboxFlushStatus.idle;
 
   @override
-  Future<void> flushPending() =>
-      throw UnimplementedError('OutboxFlusher.flushPending — see TASK-M4.3-T7');
+  Stream<OutboxFlushStatus> get statusStream async* {
+    yield _lastStatus;
+    yield* _statusController.stream;
+  }
+
+  void _emitStatus(OutboxFlushStatus status) {
+    _lastStatus = status;
+    _statusController.add(status);
+  }
 
   @override
-  Future<void> onConnectivityChange(bool online) => throw UnimplementedError(
-        'OutboxFlusher.onConnectivityChange — see TASK-M4.3-T7',
+  Future<void> flushPending() async {
+    if (_paused || _flushing) {
+      return;
+    }
+    _flushing = true;
+    _emitStatus(OutboxFlushStatus.flushing);
+    var sawError = false;
+    try {
+      final rows = await _store.pending();
+      for (final row in rows) {
+        if (_paused) break;
+        final outcome = await _processRow(row);
+        if (outcome == _RowOutcome.conflict) {
+          sawError = true;
+        }
+      }
+    } finally {
+      _flushing = false;
+      _emitStatus(
+        sawError ? OutboxFlushStatus.error : OutboxFlushStatus.idle,
       );
+    }
+  }
+
+  Future<_RowOutcome> _processRow(OutboxRow row) async {
+    var attempt = 0;
+    while (true) {
+      try {
+        await _store.markAttempt(row.id, _now());
+        await _submitter.proposeSetScoreWithLamport(
+          matchId: row.matchId,
+          consensusRound: row.consensusRound,
+          setIndex: row.setIndex,
+          submitter: row.submitterUserId,
+          score: row.score,
+          lamportCounter: row.lamportCounter,
+          deviceId: row.lamportDeviceId,
+        );
+        await _store.markAcknowledged(row.id, _now());
+        return _RowOutcome.acknowledged;
+      } on SocketException {
+        if (!_connectivity.isOnline || attempt >= _maxRetries) {
+          return _RowOutcome.givenUp;
+        }
+        await Future<void>.delayed(_backoffFor(attempt));
+        attempt += 1;
+        if (_paused) return _RowOutcome.givenUp;
+      } on Exception catch (e) {
+        final code = _conflictCode(e);
+        if (code == kStaleConsensusRoundCode) {
+          await _store.markError(row.id, code!, _now());
+          return _RowOutcome.conflict;
+        }
+        rethrow;
+      }
+    }
+  }
+
+  Duration _backoffFor(int attempt) {
+    if (attempt < _backoffSchedule.length) {
+      return _backoffSchedule[attempt];
+    }
+    return _backoffCap;
+  }
+
+  /// Duck-typed extractor for the conflict code carried by the wave-8
+  /// `TournamentScoreConflictException` (TASK-M4.3-T6). Kept structural
+  /// so the flusher does not have to import the domain exception while
+  /// T6 is still in flight.
+  String? _conflictCode(Object error) {
+    if (error.runtimeType.toString() != 'TournamentScoreConflictException') {
+      return null;
+    }
+    final dynamic value = (error as dynamic).code;
+    if (value is String) return value;
+    return null;
+  }
 
   @override
-  Stream<OutboxFlushStatus> get statusStream => throw UnimplementedError(
-        'OutboxFlusher.statusStream — see TASK-M4.3-T7',
-      );
+  Future<void> onConnectivityChange(bool online) async {
+    _paused = !online;
+    if (!online) {
+      _emitStatus(OutboxFlushStatus.paused);
+      return;
+    }
+    await flushPending();
+  }
+
+  /// Releases the connectivity subscription and the status stream.
+  /// Wired from the Riverpod provider's `onDispose` hook.
+  Future<void> dispose() async {
+    await _onlineSub.cancel();
+    await _statusController.close();
+  }
 }
+
+enum _RowOutcome { acknowledged, conflict, givenUp }
