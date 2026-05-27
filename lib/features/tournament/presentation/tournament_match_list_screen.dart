@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
+import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_match_card.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -20,7 +23,15 @@ class TournamentMatchListScreen extends ConsumerWidget {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final id = TournamentId(tournamentId);
     final l = AppLocalizations.of(context);
-    ref.watch(tournamentMatchListPollingProvider(id));
+    // M4.1-T12: realtime first, polling only when the per-tournament
+    // channel has fallen back (M4.1-T10).
+    ref.watch(tournamentMatchListRealtimeProvider(id));
+    final fallbackActive = ref
+        .watch(realtimeFallbackProvider(id))
+        .maybeWhen(data: (v) => v, orElse: () => false);
+    if (fallbackActive) {
+      ref.watch(tournamentMatchListPollingProvider(id));
+    }
     final async = ref.watch(tournamentMatchListProvider(id));
 
     return Scaffold(
@@ -39,22 +50,29 @@ class TournamentMatchListScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(KubbTokens.space5),
-            child: Text(
-              '${l.tournamentMatchLoadError}: $e',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: KubbTokens.miss),
+      body: Column(
+        children: [
+          RealtimeStateBanner(tournamentId: id),
+          Expanded(
+            child: async.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(KubbTokens.space5),
+                  child: Text(
+                    '${l.tournamentMatchLoadError}: $e',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: KubbTokens.miss),
+                  ),
+                ),
+              ),
+              data: (matches) => _MatchListBody(
+                tournamentId: tournamentId,
+                matches: matches,
+              ),
             ),
           ),
-        ),
-        data: (matches) => _MatchListBody(
-          tournamentId: tournamentId,
-          matches: matches,
-        ),
+        ],
       ),
     );
   }

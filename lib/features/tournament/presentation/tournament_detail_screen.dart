@@ -4,10 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
+import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_bracket_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
+import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_card.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_status_pill.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -25,7 +28,20 @@ class TournamentDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
-    ref.watch(tournamentDetailPollingProvider(tournamentId));
+    // M4.1-T12: subscribe to the bracket realtime stream so winner
+    // propagations (`bracket_advance`) re-fetch the bracket without
+    // touching the detail poll. The match-list realtime keeps the
+    // participant counters and audit tail aligned via its provider
+    // invalidation chain (M4.1-T8).
+    ref
+      ..watch(tournamentMatchListRealtimeProvider(tournamentId))
+      ..watch(tournamentBracketRealtimeProvider(tournamentId));
+    final fallbackActive = ref
+        .watch(realtimeFallbackProvider(tournamentId))
+        .maybeWhen(data: (v) => v, orElse: () => false);
+    if (fallbackActive) {
+      ref.watch(tournamentDetailPollingProvider(tournamentId));
+    }
     final detailAsync = ref.watch(tournamentDetailProvider(tournamentId));
     final myUserId = ref.watch(currentUserIdProvider);
 
@@ -37,19 +53,26 @@ class TournamentDetailScreen extends ConsumerWidget {
             data: (d) => d?.tournament.displayName ?? l.tournamentDetailEyebrow,
             orElse: () => l.tournamentDetailEyebrow),
       ),
-      body: detailAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(KubbTokens.space5),
-            child: Text(e.toString(),
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: KubbTokens.miss)),
+      body: Column(
+        children: [
+          RealtimeStateBanner(tournamentId: tournamentId),
+          Expanded(
+            child: detailAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(KubbTokens.space5),
+                  child: Text(e.toString(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: KubbTokens.miss)),
+                ),
+              ),
+              data: (d) => d == null
+                  ? Center(child: Text(l.tournamentDetailNotFound))
+                  : _Body(detail: d, myUserId: myUserId, id: tournamentId),
+            ),
           ),
-        ),
-        data: (d) => d == null
-            ? Center(child: Text(l.tournamentDetailNotFound))
-            : _Body(detail: d, myUserId: myUserId, id: tournamentId),
+        ],
       ),
     );
   }

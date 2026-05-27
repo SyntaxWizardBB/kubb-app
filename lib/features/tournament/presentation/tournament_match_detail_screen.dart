@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
+import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/score_consensus_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_set_input.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -165,7 +168,19 @@ class _TournamentMatchDetailScreenState
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final id = TournamentMatchId(widget.matchId);
-    ref.watch(tournamentMatchPollingProvider(id));
+    final tid = TournamentId(widget.tournamentId);
+    // M4.1-T12: subscribe to the realtime stream first. Each event
+    // invalidates [tournamentMatchDetailProvider] inside the realtime
+    // provider, so the read path below stays the single source of UI
+    // truth. Polling activates only when the channel falls back
+    // (M4.1-T10).
+    ref.watch(tournamentMatchDetailRealtimeProvider(id));
+    final fallbackActive = ref
+        .watch(realtimeFallbackProvider(tid))
+        .maybeWhen(data: (v) => v, orElse: () => false);
+    if (fallbackActive) {
+      ref.watch(tournamentMatchPollingProvider(id));
+    }
     final detailAsync = ref.watch(tournamentMatchDetailProvider(id));
 
     return Scaffold(
@@ -179,16 +194,24 @@ class _TournamentMatchDetailScreenState
         ),
         title: Text(l.tournamentMatchDetailTitle),
       ),
-      body: detailAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => _ErrorBody(message: '${l.tournamentMatchLoadError}: $e'),
-        data: (match) {
-          if (match == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          _ensureDraftForRound(match);
-          return _renderBody(context, match, l, tokens);
-        },
+      body: Column(
+        children: [
+          RealtimeStateBanner(tournamentId: tid),
+          Expanded(
+            child: detailAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) =>
+                  _ErrorBody(message: '${l.tournamentMatchLoadError}: $e'),
+              data: (match) {
+                if (match == null) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                _ensureDraftForRound(match);
+                return _renderBody(context, match, l, tokens);
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
