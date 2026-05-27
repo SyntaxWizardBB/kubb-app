@@ -111,6 +111,14 @@ class _FakeTournamentRemote implements TournamentRemote {
       const Stream<TournamentMatchRef>.empty();
 
   @override
+  Stream<TournamentMatchRef> watchTournamentMatches(TournamentId tournamentId) =>
+      const Stream<TournamentMatchRef>.empty();
+
+  @override
+  Stream<BracketAdvanceEvent> watchBracketAdvances(TournamentId tournamentId) =>
+      const Stream<BracketAdvanceEvent>.empty();
+
+  @override
   Future<void> setSeeding({
     required TournamentId tournamentId,
     required Map<TournamentParticipantId, int> seeds,

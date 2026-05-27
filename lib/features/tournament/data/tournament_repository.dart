@@ -441,10 +441,27 @@ class TournamentRepository implements TournamentRemote {
 
   @override
   Stream<TournamentMatchRef> watchMatch(TournamentMatchId id) {
-    // Real-time delivery lands in M4; the MVP-slice polls via the
-    // detail-controller. Surfacing an empty stream keeps the port
-    // satisfiable without committing to a transport.
-    return const Stream<TournamentMatchRef>.empty();
+    // Realtime body lands in TASK-M4.1-T9 via the RealtimeChannel port.
+    // Throwing here surfaces accidental wiring before the adapter is in
+    // place — the M1 empty-stream placeholder is intentionally dropped
+    // so the analyzer flags any caller still depending on it.
+    throw UnimplementedError(
+      'TournamentRepository.watchMatch lands in TASK-M4.1-T9',
+    );
+  }
+
+  @override
+  Stream<TournamentMatchRef> watchTournamentMatches(TournamentId tournamentId) {
+    throw UnimplementedError(
+      'TournamentRepository.watchTournamentMatches lands in TASK-M4.1-T9',
+    );
+  }
+
+  @override
+  Stream<BracketAdvanceEvent> watchBracketAdvances(TournamentId tournamentId) {
+    throw UnimplementedError(
+      'TournamentRepository.watchBracketAdvances lands in TASK-M4.1-T9',
+    );
   }
 
   @override

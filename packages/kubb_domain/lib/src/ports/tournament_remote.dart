@@ -1,4 +1,5 @@
 import 'package:kubb_domain/src/tournament/bracket.dart';
+import 'package:kubb_domain/src/tournament/bracket_advance_event.dart';
 import 'package:kubb_domain/src/tournament/ekc_score.dart';
 import 'package:kubb_domain/src/tournament/ko_phase.dart';
 import 'package:kubb_domain/src/tournament/pool_group_standings.dart';
@@ -393,8 +394,29 @@ abstract interface class TournamentRemote {
     required String reason,
   });
 
-  /// Realtime placeholder for M4. M1 implementations return an empty stream.
+  /// Realtime-Subscribe (M4). Replaces the M1 placeholder. Emits one
+  /// match snapshot per row-update event from Supabase Realtime.
+  /// Implementations route through the `RealtimeChannel` port and
+  /// translate raw CDC payloads into [TournamentMatchRef]. Backward
+  /// compat: returns an empty stream if Realtime is disabled by the
+  /// feature flag. Internally subscribes to the per-tournament channel
+  /// and filters client-side on [id].
   Stream<TournamentMatchRef> watchMatch(TournamentMatchId id);
+
+  /// Realtime-Subscribe für die Match-Liste eines Turniers. Fires on
+  /// insert/update/delete of any `tournament_matches` row carrying the
+  /// given [tournamentId]. Used by the live dashboard and the spectator
+  /// view; for the latter the underlying subscription runs with the
+  /// anon role, so RLS gates visibility.
+  Stream<TournamentMatchRef> watchTournamentMatches(TournamentId tournamentId);
+
+  /// Realtime-Subscribe für Bracket-Advances. Fires whenever a KO row
+  /// in [tournamentId] flips to `finalized` and the winner has been
+  /// propagated into the parent bracket slot. Convenience over
+  /// [watchTournamentMatches] with a status-finalised filter; the UI
+  /// uses it to invalidate the bracket view without re-fetching the
+  /// full match list.
+  Stream<BracketAdvanceEvent> watchBracketAdvances(TournamentId tournamentId);
 
   // KO-Phase (M2.2 — see architecture.md §4 and ADR-0017)
 

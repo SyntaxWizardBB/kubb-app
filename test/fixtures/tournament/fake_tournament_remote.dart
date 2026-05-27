@@ -324,8 +324,26 @@ class FakeTournamentRemote implements TournamentRemote {
   }
 
   @override
-  Stream<TournamentMatchRef> watchMatch(TournamentMatchId id) =>
-      const Stream<TournamentMatchRef>.empty();
+  Stream<TournamentMatchRef> watchMatch(TournamentMatchId id) {
+    // Realtime body lands in TASK-M4.1-T9 via the FakeRealtimeChannel.
+    throw UnimplementedError(
+      'FakeTournamentRemote.watchMatch lands in TASK-M4.1-T9',
+    );
+  }
+
+  @override
+  Stream<TournamentMatchRef> watchTournamentMatches(TournamentId tournamentId) {
+    throw UnimplementedError(
+      'FakeTournamentRemote.watchTournamentMatches lands in TASK-M4.1-T9',
+    );
+  }
+
+  @override
+  Stream<BracketAdvanceEvent> watchBracketAdvances(TournamentId tournamentId) {
+    throw UnimplementedError(
+      'FakeTournamentRemote.watchBracketAdvances lands in TASK-M4.1-T9',
+    );
+  }
 
   // ---------------------------------------------------------------------
   // KO-phase additions (T7c). These four methods mirror the signatures
