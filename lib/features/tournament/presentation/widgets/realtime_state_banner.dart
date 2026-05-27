@@ -11,11 +11,23 @@ import 'package:kubb_domain/kubb_domain.dart';
 /// not linger. Strings are inline constants until TASK-M4.1-T13
 /// migrates them into the generated l10n.
 class RealtimeStateBanner extends StatefulWidget {
-  const RealtimeStateBanner({required this.stateStream, super.key});
+  const RealtimeStateBanner({
+    this.stateStream,
+    this.tournamentId,
+    super.key,
+  }) : assert(
+          stateStream != null || tournamentId != null,
+          'RealtimeStateBanner requires stateStream or tournamentId',
+        );
 
   /// Source of channel-state transitions. Typically the
   /// `RealtimeChannel.stateStream(key)` exposed by the adapter.
-  final Stream<RealtimeChannelState> stateStream;
+  final Stream<RealtimeChannelState>? stateStream;
+
+  /// Convenience for screens: resolves stateStream from the
+  /// realtimeChannelProvider for this tournament. Either this or
+  /// [stateStream] must be supplied.
+  final TournamentId? tournamentId;
 
   // Inline DE strings — replaced with `S.of(context).realtime*` in T13.
   static const String labelConnecting = 'verbinde…';
@@ -42,7 +54,8 @@ class _RealtimeStateBannerState extends State<RealtimeStateBanner> {
   @override
   void initState() {
     super.initState();
-    _sub = widget.stateStream.listen(_onState);
+    final stream = widget.stateStream;
+    if (stream != null) _sub = stream.listen(_onState);
   }
 
   @override
@@ -50,7 +63,8 @@ class _RealtimeStateBannerState extends State<RealtimeStateBanner> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.stateStream != widget.stateStream) {
       unawaited(_sub?.cancel() ?? Future<void>.value());
-      _sub = widget.stateStream.listen(_onState);
+      final stream = widget.stateStream;
+      _sub = stream?.listen(_onState);
     }
   }
 
