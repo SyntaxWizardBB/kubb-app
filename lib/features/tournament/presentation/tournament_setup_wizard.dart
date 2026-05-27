@@ -10,6 +10,7 @@ import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_league_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_pool_config_step.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/swiss_config_section.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -45,6 +46,10 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
   // organizer can flip it off without losing the previously typed values
   // until they advance the wizard.
   bool _poolPhaseEnabled = false;
+  // T10: round-count for the Swiss-System format (default ceil(log2(n)),
+  // clamped 3..9). Stored locally — round-count isn't part of the create-
+  // RPC contract yet, the pairing engine receives it client-side.
+  int? _swissRounds;
 
   /// Logical step list for the current draft. Hybrid formats unlock
   /// [_StepKind.league] (T12) and [_StepKind.koConfig] (T13); pure
@@ -235,6 +240,9 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
           onFormat: controller.setFormat,
           onSetsToWin: controller.setSetsToWin,
           onMaxSets: controller.setMaxSets,
+          swissRounds: _swissRounds ??
+              SwissConfigSection.defaultRounds(draft.maxParticipants),
+          onSwissRoundsChanged: (v) => setState(() => _swissRounds = v),
         );
       case _StepKind.league:
         return WizardLeagueStep(
@@ -491,12 +499,18 @@ class _StepFormat extends StatelessWidget {
     required this.onFormat,
     required this.onSetsToWin,
     required this.onMaxSets,
+    required this.swissRounds,
+    required this.onSwissRoundsChanged,
   });
 
   final TournamentConfigDraft draft;
   final ValueChanged<TournamentFormat> onFormat;
   final ValueChanged<int> onSetsToWin;
   final ValueChanged<int> onMaxSets;
+  // T10: Swiss-System round count — surfaced inline when
+  // `draft.format == TournamentFormat.swiss`. State lives in the wizard.
+  final int swissRounds;
+  final ValueChanged<int> onSwissRoundsChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -515,17 +529,29 @@ class _StepFormat extends StatelessWidget {
           ),
         ),
         const SizedBox(height: KubbTokens.space2),
-        for (final f in TournamentFormat.values)
+        for (final f in TournamentFormat.values) ...[
           _FormatRow(
             format: f,
             selected: draft.format == f,
-            enabled: f == TournamentFormat.roundRobin,
+            // T10: Swiss-System unlocked alongside round-robin
+            // (PairingStrategyKind.swissSystem). Hybrid + KO-only formats
+            // stay gated until their respective tasks land.
+            enabled: f == TournamentFormat.roundRobin ||
+                f == TournamentFormat.swiss,
             label: f == TournamentFormat.roundRobin
                 ? l10n.tournamentWizardFormatRoundRobin
                 : _humanFormatLabel(f),
             comingSoonLabel: l10n.tournamentWizardFormatComingSoon,
             onTap: () => onFormat(f),
           ),
+          if (f == TournamentFormat.swiss &&
+              draft.format == TournamentFormat.swiss)
+            SwissConfigSection(
+              participantCount: draft.maxParticipants,
+              rounds: swissRounds,
+              onRoundsChanged: onSwissRoundsChanged,
+            ),
+        ],
         const SizedBox(height: KubbTokens.space5),
         _NumberStepper(
           label: l10n.tournamentWizardSetsToWinLabel,
