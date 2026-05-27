@@ -66,4 +66,29 @@ class LamportClock {
     }
     return LamportTimestamp(counter: _counter, deviceId: deviceId);
   }
+
+  /// Hydrates this clock from the maximum lamport counter seen in the local
+  /// outbox for a given `(matchId, deviceId)` pair.
+  ///
+  /// After hydration, the next [tick] must return a counter strictly greater
+  /// than [outboxMax]. Implementation lands in M4.3-T8.
+  void hydrateFromOutbox(
+    MatchId matchId,
+    DeviceId deviceId,
+    int outboxMax,
+  ) {
+    throw UnimplementedError(
+      'LamportClock.hydrateFromOutbox is implemented in M4.3-T8',
+    );
+  }
+
+  /// Subscribes to a server-side stream of observed lamport counters and
+  /// advances this clock whenever a higher value is seen.
+  ///
+  /// Implementation lands in M4.3-T8.
+  void observeFromStream(Stream<int> serverMax) {
+    throw UnimplementedError(
+      'LamportClock.observeFromStream is implemented in M4.3-T8',
+    );
+  }
 }
