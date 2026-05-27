@@ -4269,6 +4269,42 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Dieses Turnier ist nicht öffentlich'**
   String get publicNotAvailable;
+
+  /// Status label shown next to a score submission while the device is offline and the submission is queued for sync
+  ///
+  /// In de, this message translates to:
+  /// **'ausstehend, wird übertragen'**
+  String get scorePending;
+
+  /// Dialog title shown when a queued score submission was rejected by the server because the opponent already corrected the score
+  ///
+  /// In de, this message translates to:
+  /// **'Sync-Konflikt'**
+  String get scoreConflictTitle;
+
+  /// Body text in the sync conflict dialog explaining why the submission was rejected
+  ///
+  /// In de, this message translates to:
+  /// **'Dein Vorschlag konnte nicht übertragen werden, weil der Gegner schon korrigiert hat. Bitte erneut eingeben.'**
+  String get scoreConflictExplanation;
+
+  /// Primary action in the sync conflict dialog that lets the user re-enter the score
+  ///
+  /// In de, this message translates to:
+  /// **'Erneut eingeben'**
+  String get scoreConflictReenterButton;
+
+  /// Short offline indicator label used when no queue size is shown
+  ///
+  /// In de, this message translates to:
+  /// **'Offline'**
+  String get offlineBannerLabel;
+
+  /// Offline banner showing the number of queued submissions waiting to be synced
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, one{Offline — 1 Submission ausstehend} other{Offline — {count} Submissions ausstehend}}'**
+  String offlineBannerQueueSize(int count);
 }
 
 class _AppLocalizationsDelegate

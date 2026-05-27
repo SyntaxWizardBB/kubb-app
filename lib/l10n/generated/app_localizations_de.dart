@@ -2301,4 +2301,31 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get publicNotAvailable => 'Dieses Turnier ist nicht öffentlich';
+
+  @override
+  String get scorePending => 'ausstehend, wird übertragen';
+
+  @override
+  String get scoreConflictTitle => 'Sync-Konflikt';
+
+  @override
+  String get scoreConflictExplanation =>
+      'Dein Vorschlag konnte nicht übertragen werden, weil der Gegner schon korrigiert hat. Bitte erneut eingeben.';
+
+  @override
+  String get scoreConflictReenterButton => 'Erneut eingeben';
+
+  @override
+  String get offlineBannerLabel => 'Offline';
+
+  @override
+  String offlineBannerQueueSize(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Offline — $count Submissions ausstehend',
+      one: 'Offline — 1 Submission ausstehend',
+    );
+    return '$_temp0';
+  }
 }

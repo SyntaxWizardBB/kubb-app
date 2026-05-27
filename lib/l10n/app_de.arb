@@ -3122,5 +3122,34 @@
   "publicNotAvailable": "Dieses Turnier ist nicht öffentlich",
   "@publicNotAvailable": {
     "description": "Message shown when a tournament is not publicly accessible"
+  },
+  "scorePending": "ausstehend, wird übertragen",
+  "@scorePending": {
+    "description": "Status label shown next to a score submission while the device is offline and the submission is queued for sync"
+  },
+  "scoreConflictTitle": "Sync-Konflikt",
+  "@scoreConflictTitle": {
+    "description": "Dialog title shown when a queued score submission was rejected by the server because the opponent already corrected the score"
+  },
+  "scoreConflictExplanation": "Dein Vorschlag konnte nicht übertragen werden, weil der Gegner schon korrigiert hat. Bitte erneut eingeben.",
+  "@scoreConflictExplanation": {
+    "description": "Body text in the sync conflict dialog explaining why the submission was rejected"
+  },
+  "scoreConflictReenterButton": "Erneut eingeben",
+  "@scoreConflictReenterButton": {
+    "description": "Primary action in the sync conflict dialog that lets the user re-enter the score"
+  },
+  "offlineBannerLabel": "Offline",
+  "@offlineBannerLabel": {
+    "description": "Short offline indicator label used when no queue size is shown"
+  },
+  "offlineBannerQueueSize": "{count, plural, one{Offline — 1 Submission ausstehend} other{Offline — {count} Submissions ausstehend}}",
+  "@offlineBannerQueueSize": {
+    "description": "Offline banner showing the number of queued submissions waiting to be synced",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }
