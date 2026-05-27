@@ -89,9 +89,8 @@ CREATE POLICY season_standings_awards_public_read
   USING (
     EXISTS (
       SELECT 1
-        FROM public.season_tournaments st
-        JOIN public.seasons s ON s.id = st.season_id
-       WHERE st.id = season_standings_awards.season_tournament_id
+        FROM public.seasons s
+       WHERE s.id = season_standings_awards.season_id
          AND s.status IN ('open', 'closed')
     )
   );
