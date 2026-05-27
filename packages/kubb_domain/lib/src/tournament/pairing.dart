@@ -1,21 +1,32 @@
 import 'package:kubb_domain/src/tournament/pool.dart';
 import 'package:meta/meta.dart';
 
-/// Catalogue of pairing strategies described in FR-PAIR-2. Only
-/// [roundRobin] has an implementation in M0; the remaining values are
-/// placeholders for later milestones (M5).
-enum PairingStrategyKind { roundRobin, oneVsTwo, topVsBottom, danish }
+export 'package:kubb_domain/src/tournament/pairing/buchholz.dart';
+export 'package:kubb_domain/src/tournament/pairing/swiss_system.dart';
+
+/// Catalogue of pairing strategies described in FR-PAIR-2. [roundRobin]
+/// ships in M0, [swissSystem] in M5; the remaining values are placeholders
+/// for later milestones.
+enum PairingStrategyKind { roundRobin, swissSystem, oneVsTwo, topVsBottom, danish }
 
 /// Shared pairing output across pool-based (Round-Robin, Swiss) and
 /// bracket-based (KO) strategies. Distinct from [PoolPairing] so that
 /// bracket strategies can emit pairings without depending on the pool
 /// abstraction.
+///
+/// [repeated] is set to `true` by Swiss-System when backtracking failed to
+/// avoid a previously played pairing (R-M5.1-2).
 @immutable
 final class PlannedPairing {
-  const PlannedPairing({required this.participantA, this.participantB});
+  const PlannedPairing({
+    required this.participantA,
+    this.participantB,
+    this.repeated = false,
+  });
 
   final String participantA;
   final String? participantB;
+  final bool repeated;
 
   bool get isBye => participantB == null;
 
@@ -24,10 +35,11 @@ final class PlannedPairing {
       identical(this, other) ||
       other is PlannedPairing &&
           other.participantA == participantA &&
-          other.participantB == participantB;
+          other.participantB == participantB &&
+          other.repeated == repeated;
 
   @override
-  int get hashCode => Object.hash(participantA, participantB);
+  int get hashCode => Object.hash(participantA, participantB, repeated);
 }
 
 /// One planned round emitted by a [PairingStrategy]. [roundNumber] is
