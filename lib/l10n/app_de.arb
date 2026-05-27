@@ -3062,5 +3062,17 @@
   "tournamentDetailGroups": "Gruppen",
   "@tournamentDetailGroups": {
     "description": "Tab label for the pool/groups view on the tournament detail screen (M3.3-T12)"
+  },
+  "realtimeLive": "Live",
+  "@realtimeLive": {
+    "description": "Realtime banner state — websocket connected and receiving updates"
+  },
+  "realtimePolling": "Offline — Polling aktiv",
+  "@realtimePolling": {
+    "description": "Realtime banner state — websocket unavailable, fallback polling is active"
+  },
+  "realtimeConnecting": "Verbinde…",
+  "@realtimeConnecting": {
+    "description": "Realtime banner state — websocket connection is being established"
   }
 }

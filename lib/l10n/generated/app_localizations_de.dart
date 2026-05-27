@@ -2256,4 +2256,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentDetailGroups => 'Gruppen';
+
+  @override
+  String get realtimeLive => 'Live';
+
+  @override
+  String get realtimePolling => 'Offline — Polling aktiv';
+
+  @override
+  String get realtimeConnecting => 'Verbinde…';
 }

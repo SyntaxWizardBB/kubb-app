@@ -4179,6 +4179,24 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Gruppen'**
   String get tournamentDetailGroups;
+
+  /// Realtime banner state — websocket connected and receiving updates
+  ///
+  /// In de, this message translates to:
+  /// **'Live'**
+  String get realtimeLive;
+
+  /// Realtime banner state — websocket unavailable, fallback polling is active
+  ///
+  /// In de, this message translates to:
+  /// **'Offline — Polling aktiv'**
+  String get realtimePolling;
+
+  /// Realtime banner state — websocket connection is being established
+  ///
+  /// In de, this message translates to:
+  /// **'Verbinde…'**
+  String get realtimeConnecting;
 }
 
 class _AppLocalizationsDelegate
