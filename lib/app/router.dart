@@ -252,7 +252,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/tournament/:id/dashboard',
         builder: (_, state) => TournamentLiveDashboardScreen(
-          tournamentId: TournamentId(state.pathParameters['id']!),
+          tournamentId: state.pathParameters['id']!,
         ),
       ),
       GoRoute(

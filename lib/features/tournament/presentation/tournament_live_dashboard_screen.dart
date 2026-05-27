@@ -8,9 +8,9 @@ import 'package:kubb_domain/kubb_domain.dart';
 
 /// Live-Dashboard für Veranstalter: Grid aller aktiven Spielfelder eines
 /// Turniers. Konsumiert [tournamentLiveDashboardProvider] (M4.2-T4).
-/// Pro Pitch-Karte: Match-Nummer, beide Teams, aktueller Satzstand und
-/// ein Status-Border in Farbcode (grau = geplant, gelb = warten,
-/// grün = abgeschlossen, rot = strittig). Tap öffnet das Match-Detail.
+/// Pro Pitch-Karte: beide Teams, Status-Border in Farbcode
+/// (grau = geplant, gelb = warten, grün = abgeschlossen, rot = strittig).
+/// Tap öffnet das Match-Detail.
 class TournamentLiveDashboardScreen extends ConsumerWidget {
   const TournamentLiveDashboardScreen({
     required this.tournamentId,
@@ -47,15 +47,13 @@ class TournamentLiveDashboardScreen extends ConsumerWidget {
                 style: const TextStyle(color: KubbTokens.miss)),
           ),
         ),
-        data: (pitches) {
-          if (pitches.isEmpty) {
+        data: (data) {
+          if (data.pitches.isEmpty) {
             return Center(
               child: Text('Keine aktiven Spielfelder.',
                   style: TextStyle(color: tokens.fgMuted)),
             );
           }
-          final keys = pitches.keys.toList()
-            ..sort((a, b) => a.value.compareTo(b.value));
           return GridView.count(
             crossAxisCount: cross,
             padding: const EdgeInsets.all(KubbTokens.space4),
@@ -63,11 +61,12 @@ class TournamentLiveDashboardScreen extends ConsumerWidget {
             crossAxisSpacing: KubbTokens.space3,
             childAspectRatio: 1.4,
             children: [
-              for (final k in keys)
+              for (final p in data.pitches)
                 _PitchCard(
-                  status: pitches[k]!,
+                  cardKey: ValueKey('live-card-${p.matchId.value}'),
+                  status: p,
                   onTap: () => context.go(TournamentRoutes.matchDetail(
-                      tournamentId, pitches[k]!.match.matchId.value)),
+                      tournamentId, p.matchId.value)),
                 ),
             ],
           );
@@ -78,21 +77,23 @@ class TournamentLiveDashboardScreen extends ConsumerWidget {
 }
 
 class _PitchCard extends StatelessWidget {
-  const _PitchCard({required this.status, required this.onTap});
+  const _PitchCard({
+    required this.status,
+    required this.onTap,
+    required this.cardKey,
+  });
 
   final PitchStatus status;
   final VoidCallback onTap;
+  final Key cardKey;
 
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final m = status.match;
-    final color = _color(m.status);
-    final a = _shortId(m.participantA?.value);
-    final b = m.participantB == null ? 'BYE' : _shortId(m.participantB?.value);
-    final score = (status.currentSetA != null && status.currentSetB != null)
-        ? '${status.currentSetA}:${status.currentSetB}'
-        : '–:–';
+    final color = _color(status.status);
+    final names = status.participantNames;
+    final a = names.isNotEmpty ? names[0] : '?';
+    final b = names.length > 1 ? names[1] : 'BYE';
     final radius = BorderRadius.circular(KubbTokens.radiusLg);
     final teamStyle = TextStyle(
         fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg);
@@ -104,6 +105,7 @@ class _PitchCard extends StatelessWidget {
         borderRadius: radius,
         onTap: onTap,
         child: Container(
+          key: cardKey,
           padding: const EdgeInsets.all(KubbTokens.space3),
           decoration: BoxDecoration(
               borderRadius: radius, border: Border.all(color: color, width: 2)),
@@ -111,18 +113,12 @@ class _PitchCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(children: [
-                Text('Feld ${status.pitchNumber.value}',
+                Text('Runde ${status.currentRound}',
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
                         color: tokens.fgMuted,
                         letterSpacing: 0.5)),
-                const Spacer(),
-                Text('#${m.matchNumberInRound}',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: tokens.fgSubtle)),
               ]),
               const SizedBox(height: KubbTokens.space2),
               Text(a,
@@ -131,12 +127,6 @@ class _PitchCard extends StatelessWidget {
                   maxLines: 1, overflow: TextOverflow.ellipsis, style: teamStyle),
               const Spacer(),
               Row(children: [
-                Text(score,
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: tokens.fg,
-                        fontFeatures: const [FontFeature.tabularFigures()])),
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -145,7 +135,7 @@ class _PitchCard extends StatelessWidget {
                       color: color.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
                       border: Border.all(color: color)),
-                  child: Text(_label(m.status),
+                  child: Text(_label(status.status),
                       style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
@@ -158,9 +148,6 @@ class _PitchCard extends StatelessWidget {
       ),
     );
   }
-
-  String _shortId(String? raw) =>
-      raw == null ? '?' : (raw.length < 6 ? raw : raw.substring(0, 6));
 
   Color _color(TournamentMatchStatus s) {
     switch (s) {
