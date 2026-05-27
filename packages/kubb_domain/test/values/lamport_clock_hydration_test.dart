@@ -22,7 +22,8 @@ void main() {
       expect(clock.tick().counter, equals(8));
     });
 
-    test('observeFromStream lifts the counter above later server max', () {
+    test('observeFromStream lifts the counter above later server max',
+        () async {
       final clock = LamportClock(deviceId: const DeviceId('dev-a'));
       const matchId = MatchId('match-1');
       const deviceId = DeviceId('dev-a');
@@ -32,9 +33,8 @@ void main() {
       final controller = StreamController<int>();
       clock.observeFromStream(controller.stream);
       controller.add(15);
+      await Future<void>.delayed(Duration.zero);
 
-      // The clock must have absorbed the server-side maximum before the
-      // next local tick; the next emission must therefore be 16.
       expect(clock.tick().counter, equals(16));
       unawaited(controller.close());
     });
