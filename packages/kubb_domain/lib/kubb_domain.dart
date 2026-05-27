@@ -13,6 +13,7 @@ export 'src/ports/tournament_remote.dart';
 export 'src/rules/opening_rule.dart';
 export 'src/rules/rule_set.dart';
 export 'src/tournament/bracket.dart';
+export 'src/tournament/bracket_advance_event.dart';
 export 'src/tournament/bracket_layout.dart';
 export 'src/tournament/ekc_score.dart';
 export 'src/tournament/ko_phase.dart';
