@@ -10,7 +10,7 @@ import 'package:kubb_app/l10n/generated/app_localizations.dart';
 TeamMembershipWire _member() => TeamMembershipWire(
       membershipId: 'mem-1',
       userId: 'u-1',
-      joinedAt: DateTime.utc(2026, 5, 1),
+      joinedAt: DateTime.utc(2026, 5),
     );
 
 Future<void> _pump(

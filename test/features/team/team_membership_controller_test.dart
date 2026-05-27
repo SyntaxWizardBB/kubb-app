@@ -15,7 +15,7 @@ class _FakeTeamRepository implements TeamRepository {
   _FakeTeamRepository({this.teams = const <TeamWire>[], this.throwOnList});
 
   final List<TeamWire> teams;
-  final Object? throwOnList;
+  final Exception? throwOnList;
   ({TeamId teamId, UserId inviteeUserId})? lastInvite;
 
   @override
@@ -38,7 +38,7 @@ TeamWire _wire(String id, String name) => TeamWire(
       id: id,
       displayName: name,
       leagueMembership: 'B',
-      createdAt: DateTime.utc(2026, 5, 1),
+      createdAt: DateTime.utc(2026, 5),
     );
 
 ProviderContainer _container(_FakeTeamRepository repo) {
@@ -67,10 +67,9 @@ void main() {
     final repo = _FakeTeamRepository(
       throwOnList: const TeamPermissionException('not_authenticated'),
     );
-    final c = _container(repo);
-
     // Subscribe to the provider so it fully resolves before we inspect.
-    c.listen<AsyncValue<List<TeamWire>>>(teamListProvider, (_, __) {});
+    final c = _container(repo)
+      ..listen<AsyncValue<List<TeamWire>>>(teamListProvider, (_, _) {});
     // Drain the microtask queue twice — once for the listener registration,
     // once for the awaited repository call to surface its exception.
     await Future<void>.delayed(Duration.zero);

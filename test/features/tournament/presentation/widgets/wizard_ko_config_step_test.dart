@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
-// ignore: implementation_imports — Test exercises private wizard helper.
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -11,7 +10,7 @@ import 'package:kubb_domain/kubb_domain.dart';
 /// last config that was pushed via the callback, so the test can read it
 /// back without standing up the whole wizard.
 class _Host extends StatefulWidget {
-  const _Host({super.key, required this.draft});
+  const _Host({required this.draft, super.key});
 
   final TournamentConfigDraft draft;
 
@@ -82,7 +81,6 @@ void main() {
       tester,
       draft: const TournamentConfigDraft(
         displayName: 'Cup',
-        maxParticipants: 8,
         format: TournamentFormat.roundRobinThenKo,
       ),
     );
@@ -128,7 +126,6 @@ void main() {
       tester,
       draft: const TournamentConfigDraft(
         displayName: 'Cup',
-        maxParticipants: 8,
         format: TournamentFormat.roundRobinThenKo,
       ),
     );
@@ -152,7 +149,6 @@ void main() {
       tester,
       draft: const TournamentConfigDraft(
         displayName: 'Cup',
-        maxParticipants: 8,
         format: TournamentFormat.roundRobinThenKo,
         leagueEligible: true,
       ),

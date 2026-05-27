@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/data/realtime/supabase_realtime_channel.dart';
@@ -17,7 +19,6 @@ void main() {
   const filterColumn = 'tournament_id';
   const filterValue = 't1';
   const key = '$table:$filterColumn=$filterValue';
-  const debounce = Duration(milliseconds: 500);
   const backoff = [
     Duration(seconds: 1),
     Duration(seconds: 2),
@@ -28,7 +29,6 @@ void main() {
 
   SupabaseRealtimeChannel build() => SupabaseRealtimeChannel(
         _MockSupabaseClient(),
-        closeDebounce: debounce,
         backoffSchedule: backoff,
       );
 
@@ -57,7 +57,7 @@ void main() {
         final adapter = build();
         subscribe(adapter);
         subscribe(adapter);
-        adapter.close(key);
+        unawaited(adapter.close(key));
         async.elapse(const Duration(seconds: 2));
         expect(adapter.referenceCount(key), equals(1));
         expect(adapter.hasChannel(key), isTrue);
@@ -70,7 +70,7 @@ void main() {
       FakeAsync().run((async) {
         final adapter = build();
         subscribe(adapter);
-        adapter.close(key);
+        unawaited(adapter.close(key));
         async.elapse(const Duration(milliseconds: 499));
         expect(adapter.hasChannel(key), isTrue);
         async.elapse(const Duration(milliseconds: 1));
@@ -83,7 +83,7 @@ void main() {
       FakeAsync().run((async) {
         final adapter = build();
         subscribe(adapter);
-        adapter.close(key);
+        unawaited(adapter.close(key));
         async.elapse(const Duration(milliseconds: 200));
         subscribe(adapter);
         async.elapse(const Duration(seconds: 1));
@@ -112,8 +112,9 @@ void main() {
         subscribe(adapter);
         adapter.debugTransitionTo(key, RealtimeChannelState.errored);
         async.elapse(const Duration(seconds: 1));
-        adapter.debugTransitionTo(key, RealtimeChannelState.joined);
-        adapter.debugTransitionTo(key, RealtimeChannelState.errored);
+        adapter
+          ..debugTransitionTo(key, RealtimeChannelState.joined)
+          ..debugTransitionTo(key, RealtimeChannelState.errored);
         async.elapse(const Duration(milliseconds: 999));
         expect(adapter.reconnectAttempts(key), equals(1));
         async.elapse(const Duration(milliseconds: 1));
