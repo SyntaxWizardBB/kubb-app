@@ -1,4 +1,5 @@
 import 'package:kubb_domain/src/season/season_standings.dart';
+import 'package:kubb_domain/src/tournament/tournament_points_award.dart';
 import 'package:test/test.dart';
 
 TournamentPointsAward award({
@@ -12,8 +13,10 @@ TournamentPointsAward award({
     participantId: participantId,
     displayName: displayName,
     tournamentId: tournamentId,
+    placement: 1,
     basePoints: basePoints ?? finalPoints,
     finalPoints: finalPoints,
+    breakdown: '',
   );
 }
 

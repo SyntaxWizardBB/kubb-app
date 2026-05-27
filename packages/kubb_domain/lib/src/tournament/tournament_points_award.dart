@@ -10,15 +10,19 @@ import 'package:meta/meta.dart';
 class TournamentPointsAward {
   const TournamentPointsAward({
     required this.participantId,
-    required this.leagueId,
     required this.placement,
     required this.basePoints,
     required this.finalPoints,
     required this.breakdown,
+    this.leagueId,
+    this.tournamentId,
+    this.displayName,
   });
 
   final String participantId;
   final String? leagueId;
+  final String? tournamentId;
+  final String? displayName;
   final int placement;
   final double basePoints;
   final double finalPoints;
@@ -30,6 +34,8 @@ class TournamentPointsAward {
       other is TournamentPointsAward &&
           other.participantId == participantId &&
           other.leagueId == leagueId &&
+          other.tournamentId == tournamentId &&
+          other.displayName == displayName &&
           other.placement == placement &&
           other.basePoints == basePoints &&
           other.finalPoints == finalPoints &&
@@ -39,6 +45,8 @@ class TournamentPointsAward {
   int get hashCode => Object.hash(
         participantId,
         leagueId,
+        tournamentId,
+        displayName,
         placement,
         basePoints,
         finalPoints,

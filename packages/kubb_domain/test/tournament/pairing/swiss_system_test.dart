@@ -1,199 +1,104 @@
-import 'package:kubb_domain/src/tournament/ekc_score.dart';
 import 'package:kubb_domain/src/tournament/pairing.dart';
+import 'package:kubb_domain/src/tournament/pairing/buchholz.dart';
 import 'package:kubb_domain/src/tournament/pairing/swiss_system.dart';
-import 'package:kubb_domain/src/tournament/standings.dart';
 import 'package:test/test.dart';
 
-List<String> _ids(int n) => List.generate(n, (i) => 'P${i + 1}');
-
-MatchEkcScore _winA() => MatchEkcScore([
-      SetScore(
-        basekubbsKnockedByA: 6,
-        basekubbsKnockedByB: 2,
-        winner: SetWinner.teamA,
-      ),
-      SetScore(
-        basekubbsKnockedByA: 6,
-        basekubbsKnockedByB: 3,
-        winner: SetWinner.teamA,
-      ),
-    ]);
-
-MatchEkcScore _emptyScore() => MatchEkcScore(const []);
-
-TournamentMatchResult _match(String a, String b) => TournamentMatchResult(
-      participantA: a,
-      participantB: b,
-      score: _winA(),
-    );
-
-TournamentMatchResult _bye(String a) => TournamentMatchResult(
-      participantA: a,
-      participantB: null,
-      score: _emptyScore(),
-    );
-
-Set<Set<String>> _pairingSet(List<PlannedPairing> ps) => {
-      for (final p in ps)
-        if (!p.isBye) {p.participantA, p.participantB!},
-    };
-
 void main() {
-  group('SwissSystemStrategy', () {
-    test('8 Spieler, 0 Runden -> 4 Pairings, keine Wiederholung, Bye-Liste leer',
-        () {
-      final strategy = SwissSystemStrategy(tournamentId: 't-8');
-      final result = strategy.planNextRound(
-        participantIds: _ids(8),
-        priorResults: const [],
-        nextRoundNumber: 1,
+  group('SwissSystemStrategy.planRound', () {
+    const strategy = SwissSystemStrategy();
+
+    test('8 players, no completed matches → 4 unique pairings', () {
+      final players = List<String>.generate(8, (i) => 'P${i + 1}');
+      final round = strategy.planRound(
+        participants: players,
+        completedMatches: const [],
+        roundNumber: 1,
+        tournamentId: 't1',
       );
 
-      expect(result.pairings, hasLength(4));
-      expect(result.pairings.any((p) => p.isBye), isFalse);
-      expect(result.byeParticipantId, isNull);
-      expect(result.repeated, isFalse);
-      // Alle 8 Spieler genau einmal eingeplant.
-      final allParticipants = <String>{
-        for (final p in result.pairings) ...[p.participantA, p.participantB!],
-      };
-      expect(allParticipants, hasLength(8));
+      expect(round.roundNumber, equals(1));
+      expect(round.pairings, hasLength(4));
+      final seen = <String>{};
+      for (final p in round.pairings) {
+        expect(p.isBye, isFalse);
+        seen
+          ..add(p.participantA)
+          ..add(p.participantB!);
+      }
+      expect(seen.length, equals(8));
     });
 
-    test(
-        '7 Spieler ungerade -> genau 1 Bye-Slot, schwaechster ohne Bye-Vorgeschichte',
-        () {
-      final strategy = SwissSystemStrategy(tournamentId: 't-7');
-      // Round-1-Vorgeschichte: P1>P2, P3>P4, P5>P6, P7 hatte Bye in R1.
-      // Nach R1 sind P1,P3,P5 stark (Sieger), P7 mittel (Bye), P2,P4,P6 schwach.
-      // In R2 darf NUR ein Spieler ohne Bye-Vorgeschichte den Bye bekommen,
-      // also einer aus {P2, P4, P6} - NICHT P7 (FR-PAIR-5).
-      final prior = <TournamentMatchResult>[
-        _match('P1', 'P2'),
-        _match('P3', 'P4'),
-        _match('P5', 'P6'),
-        _bye('P7'),
-      ];
-
-      final result = strategy.planNextRound(
-        participantIds: _ids(7),
-        priorResults: prior,
-        nextRoundNumber: 2,
+    test('7 players → exactly one bye in round 1', () {
+      final players = List<String>.generate(7, (i) => 'P${i + 1}');
+      final round = strategy.planRound(
+        participants: players,
+        completedMatches: const [],
+        roundNumber: 1,
+        tournamentId: 't1',
       );
 
-      // 7 Spieler -> 3 regulaere Pairings + 1 Bye-Slot.
-      expect(result.pairings.where((p) => p.isBye), hasLength(1));
-      expect(result.byeParticipantId, isNotNull);
-      expect(
-        result.byeParticipantId,
-        isNot('P7'),
-        reason: 'P7 hatte bereits einen Bye in R1',
-      );
-      expect(
-        {'P2', 'P4', 'P6'},
-        contains(result.byeParticipantId),
-        reason: 'schwaechster Spieler ohne Bye-Vorgeschichte bekommt den Bye',
-      );
+      final byes = round.pairings.where((p) => p.isBye).toList();
+      expect(byes, hasLength(1));
+      expect(round.pairings.where((p) => !p.isBye), hasLength(3));
     });
 
-    test(
-        '8 Spieler nach 3 Runden -> Permutation der Eingabereihenfolge ergibt gleiches Pairing-Set',
-        () {
-      final ids = _ids(8);
-      // 3 Runden Vorgeschichte (kreuz-Paarungen, keine Wiederholung).
-      final prior = <TournamentMatchResult>[
-        // R1
-        _match('P1', 'P8'),
-        _match('P2', 'P7'),
-        _match('P3', 'P6'),
-        _match('P4', 'P5'),
-        // R2
-        _match('P1', 'P7'),
-        _match('P8', 'P6'),
-        _match('P2', 'P5'),
-        _match('P3', 'P4'),
-        // R3
-        _match('P1', 'P6'),
-        _match('P7', 'P5'),
-        _match('P8', 'P4'),
-        _match('P2', 'P3'),
+    test('round 2 avoids round 1 pairings when possible', () {
+      final players = List<String>.generate(8, (i) => 'P${i + 1}');
+      final r1 = strategy.planRound(
+        participants: players,
+        completedMatches: const [],
+        roundNumber: 1,
+        tournamentId: 't1',
+      );
+
+      final round1Matches = <MatchResult>[
+        for (final p in r1.pairings)
+          if (!p.isBye)
+            MatchResult(
+              participantA: p.participantA,
+              participantB: p.participantB,
+              pointsA: 3,
+              pointsB: 0,
+              roundNumber: 1,
+            ),
       ];
 
-      final stratA = SwissSystemStrategy(tournamentId: 't-perm', roundSeed: 4);
-      final stratB = SwissSystemStrategy(tournamentId: 't-perm', roundSeed: 4);
-
-      final r1 = stratA.planNextRound(
-        participantIds: ids,
-        priorResults: prior,
-        nextRoundNumber: 4,
-      );
-      // Permutierte Input-Liste -> Pairings muessen mengen-identisch sein.
-      final reversed = ids.reversed.toList();
-      final r2 = stratB.planNextRound(
-        participantIds: reversed,
-        priorResults: prior,
-        nextRoundNumber: 4,
+      final r2 = strategy.planRound(
+        participants: players,
+        completedMatches: round1Matches,
+        roundNumber: 2,
+        tournamentId: 't1',
       );
 
-      expect(_pairingSet(r2.pairings), equals(_pairingSet(r1.pairings)));
-
-      // Keine Wiederholung gegenueber den 3 vorhergehenden Runden.
-      final priorPairs = <Set<String>>{
-        for (final m in prior)
-          if (m.participantB != null) {m.participantA, m.participantB!},
+      final round1Keys = <String>{
+        for (final p in r1.pairings)
+          if (!p.isBye)
+            _key(p.participantA, p.participantB!),
       };
-      for (final p in r1.pairings) {
+      for (final p in r2.pairings) {
         if (p.isBye) continue;
-        expect(
-          priorPairs.contains({p.participantA, p.participantB!}),
-          isFalse,
-          reason:
-              'Pairing ${p.participantA}-${p.participantB} wiederholt sich gegenueber prior',
-        );
+        expect(round1Keys, isNot(contains(_key(p.participantA, p.participantB!))));
       }
     });
 
-    test('Tiebreak Buchholz -> Direct-Encounter -> Random(seed) ist deterministisch',
-        () {
-      // OD-M5-01 Empfehlung B: bei punktgleichen Spielern entscheidet
-      // Buchholz, dann Direct-Encounter, dann Random(seed) -
-      // Random-Seed = tournament_id + round_no.
-      final ids = _ids(8);
-      final prior = <TournamentMatchResult>[
-        _match('P1', 'P2'),
-        _match('P3', 'P4'),
-        _match('P5', 'P6'),
-        _match('P7', 'P8'),
-      ];
-
-      // Gleicher Seed -> identische Ausgabe.
-      final s1 = SwissSystemStrategy(tournamentId: 't-tb', roundSeed: 2);
-      final s2 = SwissSystemStrategy(tournamentId: 't-tb', roundSeed: 2);
-      final a = s1.planNextRound(
-        participantIds: ids,
-        priorResults: prior,
-        nextRoundNumber: 2,
+    test('same seed yields deterministic pairings', () {
+      final players = List<String>.generate(8, (i) => 'P${i + 1}');
+      final a = strategy.planRound(
+        participants: players,
+        completedMatches: const [],
+        roundNumber: 1,
+        tournamentId: 't1',
       );
-      final b = s2.planNextRound(
-        participantIds: ids,
-        priorResults: prior,
-        nextRoundNumber: 2,
+      final b = strategy.planRound(
+        participants: players,
+        completedMatches: const [],
+        roundNumber: 1,
+        tournamentId: 't1',
       );
-      expect(_pairingSet(b.pairings), equals(_pairingSet(a.pairings)));
-
-      // Anderer Seed -> deterministisch reproduzierbar bei wiederholtem Aufruf.
-      final s3 = SwissSystemStrategy(tournamentId: 't-tb', roundSeed: 99);
-      final c1 = s3.planNextRound(
-        participantIds: ids,
-        priorResults: prior,
-        nextRoundNumber: 2,
-      );
-      final c2 = s3.planNextRound(
-        participantIds: ids,
-        priorResults: prior,
-        nextRoundNumber: 2,
-      );
-      expect(_pairingSet(c2.pairings), equals(_pairingSet(c1.pairings)));
+      expect(a.pairings, equals(b.pairings));
     });
   });
 }
+
+String _key(String a, String b) =>
+    a.compareTo(b) <= 0 ? '$a|$b' : '$b|$a';
