@@ -71,6 +71,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  assets:
+    - docs/legal/privacy-policy-de.md
   fonts:
     - family: BricolageGrotesque
       fonts:

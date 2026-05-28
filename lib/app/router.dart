@@ -15,6 +15,7 @@ import 'package:kubb_app/features/auth/presentation/onboarding_tour.dart';
 import 'package:kubb_app/features/auth/presentation/restore_flow.dart';
 import 'package:kubb_app/features/auth/presentation/sign_in_screen.dart';
 import 'package:kubb_app/features/inbox/presentation/inbox_screen.dart';
+import 'package:kubb_app/features/legal/presentation/privacy_policy_screen.dart';
 import 'package:kubb_app/features/match/presentation/match_await_others_screen.dart';
 import 'package:kubb_app/features/match/presentation/match_config_screen.dart';
 import 'package:kubb_app/features/match/presentation/match_finished_screen.dart';
@@ -81,6 +82,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       if (state.matchedLocation.startsWith('/public/')) {
         return null;
       }
+      // Legal pages (DSGVO Art. 13/14) muessen ohne Auth erreichbar
+      // sein — sowohl fuer Pre-Sign-Up-Aufrufer als auch fuer den Store-
+      // Review.
+      if (state.matchedLocation.startsWith('/legal/')) {
+        return null;
+      }
       final auth = ref.read(authControllerProvider);
       // Loading without a previous value: stay put. KubbApp renders the
       // splash while appBootstrapProvider resolves, so by the time the
@@ -134,6 +141,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AuthRoutes.onboardingTour,
         builder: (_, _) => const OnboardingTour(),
+      ),
+      GoRoute(
+        path: '/legal/privacy',
+        builder: (_, _) => const PrivacyPolicyScreen(),
       ),
       GoRoute(
         path: '/public/tournament/:id',

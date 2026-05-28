@@ -4905,6 +4905,30 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Bei {trigger} freigeschaltet'**
   String achievementsLockedChip(String trigger);
+
+  /// Eyebrow shown above legal-section screen titles
+  ///
+  /// In de, this message translates to:
+  /// **'Recht'**
+  String get legalEyebrow;
+
+  /// Title of the privacy policy screen
+  ///
+  /// In de, this message translates to:
+  /// **'Datenschutzerklärung'**
+  String get legalPrivacyPolicyTitle;
+
+  /// Loading state while the privacy policy markdown asset is read
+  ///
+  /// In de, this message translates to:
+  /// **'Datenschutzerklärung wird geladen…'**
+  String get legalPrivacyPolicyLoading;
+
+  /// Fallback message when the privacy policy asset cannot be loaded
+  ///
+  /// In de, this message translates to:
+  /// **'Datenschutzerklärung ist gerade nicht verfügbar. Bitte später erneut versuchen.'**
+  String get legalPrivacyPolicyUnavailable;
 }
 
 class _AppLocalizationsDelegate

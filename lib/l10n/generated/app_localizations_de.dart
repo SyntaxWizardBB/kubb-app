@@ -2666,4 +2666,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String achievementsLockedChip(String trigger) {
     return 'Bei $trigger freigeschaltet';
   }
+
+  @override
+  String get legalEyebrow => 'Recht';
+
+  @override
+  String get legalPrivacyPolicyTitle => 'Datenschutzerklärung';
+
+  @override
+  String get legalPrivacyPolicyLoading => 'Datenschutzerklärung wird geladen…';
+
+  @override
+  String get legalPrivacyPolicyUnavailable =>
+      'Datenschutzerklärung ist gerade nicht verfügbar. Bitte später erneut versuchen.';
 }
