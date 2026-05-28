@@ -4617,6 +4617,84 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Los geht\'s'**
   String get onboardingDone;
+
+  /// Status chip: match is actively being played (Sprint-B W3-T4)
+  ///
+  /// In de, this message translates to:
+  /// **'Live'**
+  String get statusMatchLive;
+
+  /// Status chip: tournament match score is disputed
+  ///
+  /// In de, this message translates to:
+  /// **'Disput'**
+  String get statusMatchDisputed;
+
+  /// Status chip: match is finalized / finished
+  ///
+  /// In de, this message translates to:
+  /// **'Fertig'**
+  String get statusMatchFinished;
+
+  /// Status chip: match is awaiting input (scheduled, pending invites, awaiting results)
+  ///
+  /// In de, this message translates to:
+  /// **'Wartet'**
+  String get statusMatchWaiting;
+
+  /// Status chip: tournament match result was overridden by an organizer
+  ///
+  /// In de, this message translates to:
+  /// **'Korrigiert'**
+  String get statusMatchOverridden;
+
+  /// Status chip: match was voided / cancelled
+  ///
+  /// In de, this message translates to:
+  /// **'Abgebrochen'**
+  String get statusMatchVoided;
+
+  /// Status chip: tournament is still a draft (not published)
+  ///
+  /// In de, this message translates to:
+  /// **'Entwurf'**
+  String get statusTournamentDraft;
+
+  /// Status chip: tournament is published but registration not yet open
+  ///
+  /// In de, this message translates to:
+  /// **'Veröffentlicht'**
+  String get statusTournamentPublished;
+
+  /// Status chip: tournament registration is open
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldung offen'**
+  String get statusTournamentRegistrationOpen;
+
+  /// Status chip: tournament registration is closed, waiting for start
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldung geschlossen'**
+  String get statusTournamentRegistrationClosed;
+
+  /// Status chip: tournament is live / running
+  ///
+  /// In de, this message translates to:
+  /// **'Live'**
+  String get statusTournamentRunning;
+
+  /// Status chip: tournament has finished
+  ///
+  /// In de, this message translates to:
+  /// **'Beendet'**
+  String get statusTournamentFinished;
+
+  /// Status chip: tournament was aborted / cancelled
+  ///
+  /// In de, this message translates to:
+  /// **'Abgebrochen'**
+  String get statusTournamentCancelled;
 }
 
 class _AppLocalizationsDelegate

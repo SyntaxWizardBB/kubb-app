@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_status_chip.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/match/application/match_providers.dart';
 import 'package:kubb_app/features/match/data/match_models.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
-import 'package:kubb_app/features/match/presentation/widgets/match_status_pill.dart';
+import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 /// Pre-game lobby. Shows the team rosters and the invitation status of
@@ -119,6 +120,7 @@ class _LobbyBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
 
     // Server tags the creator on `match_get`; the cancel RPC enforces
     // the same rule. The button is a UX hint, not a security boundary.
@@ -135,7 +137,10 @@ class _LobbyBody extends StatelessWidget {
           children: [
             _MetaChip(text: _formatLabel(detail.match.format)),
             const Spacer(),
-            MatchStatusPill(status: detail.match.status),
+            // W3-T4: central status mapping — distinguishes live (hit),
+            // awaiting (heli) and finalized (info) tones instead of the
+            // old meadow-everything pill.
+            KubbStatusChip.match(status: detail.match.status, l: l),
           ],
         ),
         const SizedBox(height: KubbTokens.space4),

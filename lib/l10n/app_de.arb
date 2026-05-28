@@ -3364,5 +3364,57 @@
   "onboardingDone": "Los geht's",
   "@onboardingDone": {
     "description": "Bottom CTA on the last onboarding slide"
+  },
+  "statusMatchLive": "Live",
+  "@statusMatchLive": {
+    "description": "Status chip: match is actively being played (Sprint-B W3-T4)"
+  },
+  "statusMatchDisputed": "Disput",
+  "@statusMatchDisputed": {
+    "description": "Status chip: tournament match score is disputed"
+  },
+  "statusMatchFinished": "Fertig",
+  "@statusMatchFinished": {
+    "description": "Status chip: match is finalized / finished"
+  },
+  "statusMatchWaiting": "Wartet",
+  "@statusMatchWaiting": {
+    "description": "Status chip: match is awaiting input (scheduled, pending invites, awaiting results)"
+  },
+  "statusMatchOverridden": "Korrigiert",
+  "@statusMatchOverridden": {
+    "description": "Status chip: tournament match result was overridden by an organizer"
+  },
+  "statusMatchVoided": "Abgebrochen",
+  "@statusMatchVoided": {
+    "description": "Status chip: match was voided / cancelled"
+  },
+  "statusTournamentDraft": "Entwurf",
+  "@statusTournamentDraft": {
+    "description": "Status chip: tournament is still a draft (not published)"
+  },
+  "statusTournamentPublished": "Veröffentlicht",
+  "@statusTournamentPublished": {
+    "description": "Status chip: tournament is published but registration not yet open"
+  },
+  "statusTournamentRegistrationOpen": "Anmeldung offen",
+  "@statusTournamentRegistrationOpen": {
+    "description": "Status chip: tournament registration is open"
+  },
+  "statusTournamentRegistrationClosed": "Anmeldung geschlossen",
+  "@statusTournamentRegistrationClosed": {
+    "description": "Status chip: tournament registration is closed, waiting for start"
+  },
+  "statusTournamentRunning": "Live",
+  "@statusTournamentRunning": {
+    "description": "Status chip: tournament is live / running"
+  },
+  "statusTournamentFinished": "Beendet",
+  "@statusTournamentFinished": {
+    "description": "Status chip: tournament has finished"
+  },
+  "statusTournamentCancelled": "Abgebrochen",
+  "@statusTournamentCancelled": {
+    "description": "Status chip: tournament was aborted / cancelled"
   }
 }

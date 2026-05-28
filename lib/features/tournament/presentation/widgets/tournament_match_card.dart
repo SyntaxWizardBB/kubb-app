@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_status_chip.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -30,7 +31,6 @@ class TournamentMatchCard extends StatelessWidget {
         ? l.tournamentMatchBye
         : nameFor(match.participantB!);
     final scoreLabel = _scoreLabel(match);
-    final statusLabel = _statusLabel(l, match.status);
 
     return Material(
       color: tokens.bgRaised,
@@ -103,7 +103,11 @@ class TournamentMatchCard extends StatelessWidget {
                   ),
                 ),
               const SizedBox(width: KubbTokens.space3),
-              _StatusPill(label: statusLabel, status: match.status),
+              // W3-T4: central status mapping replaces the local
+              // `_StatusPill` so `disputed` paints penalty, `finalized`
+              // paints info (meadow-500 solid), `awaiting` paints heli
+              // (wood-100) — each status now has a distinct tone.
+              KubbStatusChip.tournamentMatch(status: match.status, l: l),
             ],
           ),
         ),
@@ -122,69 +126,4 @@ class TournamentMatchCard extends StatelessWidget {
     return '$a:$b';
   }
 
-  String _statusLabel(AppLocalizations l, TournamentMatchStatus s) {
-    switch (s) {
-      case TournamentMatchStatus.scheduled:
-        return l.tournamentMatchStatusScheduled;
-      case TournamentMatchStatus.awaitingResults:
-        return l.tournamentMatchStatusAwaiting;
-      case TournamentMatchStatus.disputed:
-        return l.tournamentMatchStatusDisputed;
-      case TournamentMatchStatus.finalized:
-        return l.tournamentMatchStatusFinalized;
-      case TournamentMatchStatus.overridden:
-        return l.tournamentMatchStatusOverridden;
-      case TournamentMatchStatus.voided:
-        return l.tournamentMatchStatusVoided;
-    }
-  }
-}
-
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.label, required this.status});
-
-  final String label;
-  final TournamentMatchStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final color = _color(status);
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: KubbTokens.space2,
-        vertical: 4,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-        border: Border.all(color: color),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          color: tokens.fg,
-        ),
-      ),
-    );
-  }
-
-  Color _color(TournamentMatchStatus s) {
-    switch (s) {
-      case TournamentMatchStatus.scheduled:
-        return KubbTokens.stone400;
-      case TournamentMatchStatus.awaitingResults:
-        return KubbTokens.wood400;
-      case TournamentMatchStatus.disputed:
-        return KubbTokens.miss;
-      case TournamentMatchStatus.finalized:
-        return KubbTokens.meadow500;
-      case TournamentMatchStatus.overridden:
-        return KubbTokens.meadow700;
-      case TournamentMatchStatus.voided:
-        return KubbTokens.stone400;
-    }
-  }
 }

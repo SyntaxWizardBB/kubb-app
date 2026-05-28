@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
-import 'package:kubb_app/features/tournament/presentation/widgets/tournament_status_pill.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_status_chip.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -43,7 +43,10 @@ class TournamentCard extends StatelessWidget {
                             color: tokens.fg)),
                   ),
                   const SizedBox(width: KubbTokens.space2),
-                  TournamentStatusPill(status: summary.status),
+                  // W3-T4: central status mapping — `live` paints in the
+                  // hit-tone (meadow-100), `draft` in neutral stone-100,
+                  // `aborted` in the miss surface, etc.
+                  KubbStatusChip.tournament(status: summary.status, l: l),
                 ],
               ),
               const SizedBox(height: KubbTokens.space2),

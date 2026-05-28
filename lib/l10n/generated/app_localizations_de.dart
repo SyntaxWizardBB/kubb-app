@@ -2500,4 +2500,43 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingDone => 'Los geht\'s';
+
+  @override
+  String get statusMatchLive => 'Live';
+
+  @override
+  String get statusMatchDisputed => 'Disput';
+
+  @override
+  String get statusMatchFinished => 'Fertig';
+
+  @override
+  String get statusMatchWaiting => 'Wartet';
+
+  @override
+  String get statusMatchOverridden => 'Korrigiert';
+
+  @override
+  String get statusMatchVoided => 'Abgebrochen';
+
+  @override
+  String get statusTournamentDraft => 'Entwurf';
+
+  @override
+  String get statusTournamentPublished => 'Veröffentlicht';
+
+  @override
+  String get statusTournamentRegistrationOpen => 'Anmeldung offen';
+
+  @override
+  String get statusTournamentRegistrationClosed => 'Anmeldung geschlossen';
+
+  @override
+  String get statusTournamentRunning => 'Live';
+
+  @override
+  String get statusTournamentFinished => 'Beendet';
+
+  @override
+  String get statusTournamentCancelled => 'Abgebrochen';
 }

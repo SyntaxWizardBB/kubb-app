@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/application/outbox_flusher.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_status_chip.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/application/outbox_pending_provider.dart';
 import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
@@ -506,14 +507,26 @@ class _Header extends ConsumerWidget {
         borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(
-          l.tournamentMatchHeaderRound(
-              match.roundNumber, match.matchNumberInRound),
-          style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: tokens.fgMuted,
-              letterSpacing: 0.5),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l.tournamentMatchHeaderRound(
+                    match.roundNumber, match.matchNumberInRound),
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: tokens.fgMuted,
+                    letterSpacing: 0.5),
+              ),
+            ),
+            // W3-T4 (Mängel #1): status chip with the central
+            // semantic-tone mapping. Previously the detail header was
+            // status-blind; the user had to read the body to know
+            // whether the match was live, awaiting results or already
+            // disputed.
+            KubbStatusChip.tournamentMatch(status: match.status, l: l),
+          ],
         ),
         const SizedBox(height: KubbTokens.space2),
         Text(
