@@ -1,4 +1,5 @@
 import 'package:kubb_app/features/auth/data/cloud_profile_repository.dart';
+import 'package:kubb_domain/kubb_domain.dart';
 
 class FakeCloudProfileRepository implements CloudProfileRepository {
   final Map<String, CloudProfile> _rows = <String, CloudProfile>{};
@@ -56,6 +57,7 @@ class FakeCloudProfileRepository implements CloudProfileRepository {
     String? nickname,
     String? avatarColor,
     bool? onboardingCompleted,
+    ProfileVisibility? visibility,
   }) async {
     updateCount += 1;
     final existing = _rows[userId];
@@ -68,6 +70,7 @@ class FakeCloudProfileRepository implements CloudProfileRepository {
       avatarColor: avatarColor ?? existing.avatarColor,
       onboardingCompleted:
           onboardingCompleted ?? existing.onboardingCompleted,
+      visibility: visibility ?? existing.visibility,
     );
     _rows[userId] = next;
 

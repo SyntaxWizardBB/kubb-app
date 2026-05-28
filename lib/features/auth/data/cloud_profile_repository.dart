@@ -1,3 +1,5 @@
+import 'package:kubb_domain/kubb_domain.dart';
+
 /// Snapshot of the cloud-side `user_profiles` row.
 class CloudProfile {
   const CloudProfile({
@@ -5,12 +7,35 @@ class CloudProfile {
     required this.nickname,
     this.avatarColor,
     this.onboardingCompleted = false,
+    this.visibility = ProfileVisibility.friendsOnly,
   });
 
   final String userId;
   final String nickname;
   final String? avatarColor;
   final bool onboardingCompleted;
+
+  /// Visibility tier for the profile row — drives the RLS read policy
+  /// server-side and the picker on the Settings screen. Defaults to
+  /// [ProfileVisibility.friendsOnly] (Privacy-by-Default per DSGVO
+  /// Art. 25).
+  final ProfileVisibility visibility;
+
+  CloudProfile copyWith({
+    String? userId,
+    String? nickname,
+    String? avatarColor,
+    bool? onboardingCompleted,
+    ProfileVisibility? visibility,
+  }) {
+    return CloudProfile(
+      userId: userId ?? this.userId,
+      nickname: nickname ?? this.nickname,
+      avatarColor: avatarColor ?? this.avatarColor,
+      onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
+      visibility: visibility ?? this.visibility,
+    );
+  }
 }
 
 /// Read / upsert / patch the current user's `user_profiles` row.
@@ -37,5 +62,6 @@ abstract class CloudProfileRepository {
     String? nickname,
     String? avatarColor,
     bool? onboardingCompleted,
+    ProfileVisibility? visibility,
   });
 }

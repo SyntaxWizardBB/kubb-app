@@ -1,4 +1,5 @@
 import 'package:kubb_app/features/auth/data/cloud_profile_repository.dart';
+import 'package:kubb_domain/kubb_domain.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CloudProfileRepositoryImpl implements CloudProfileRepository {
@@ -32,7 +33,10 @@ class CloudProfileRepositoryImpl implements CloudProfileRepository {
   Future<CloudProfile?> getProfile({required String userId}) async {
     final rows = await _client
         .from('user_profiles')
-        .select('user_id, nickname, avatar_color, onboarding_completed')
+        .select(
+          'user_id, nickname, avatar_color, onboarding_completed, '
+          'profile_visibility',
+        )
         .eq('user_id', userId)
         .limit(1);
     if (rows.isEmpty) return null;
@@ -45,6 +49,7 @@ class CloudProfileRepositoryImpl implements CloudProfileRepository {
     String? nickname,
     String? avatarColor,
     bool? onboardingCompleted,
+    ProfileVisibility? visibility,
   }) async {
     // Routed through fn_profile_update_with_hash so a nickname change
     // recomputes user_keypair_backups.nickname_hash atomically. A plain
@@ -58,7 +63,29 @@ class CloudProfileRepositoryImpl implements CloudProfileRepository {
         'p_onboarding_done': onboardingCompleted,
       },
     );
-    return _fromRow(response);
+    var profile = _fromRow(response);
+
+    // The visibility tier is intentionally not yet a parameter of the
+    // hash-keeping RPC (the RPC's whole job is the nickname / backup-
+    // hash atom). A direct UPDATE on the column is safe because the
+    // owner-update RLS policy already restricts the write to the
+    // calling user's own row, and the value is constrained by the
+    // CHECK constraint on the column.
+    if (visibility != null) {
+      final updated = await _client
+          .from('user_profiles')
+          .update(<String, dynamic>{
+            'profile_visibility': visibility.wireValue,
+          })
+          .eq('user_id', userId)
+          .select(
+            'user_id, nickname, avatar_color, onboarding_completed, '
+            'profile_visibility',
+          )
+          .single();
+      profile = _fromRow(updated);
+    }
+    return profile;
   }
 
   CloudProfile _fromRow(Map<String, dynamic> row) {
@@ -68,6 +95,8 @@ class CloudProfileRepositoryImpl implements CloudProfileRepository {
       avatarColor: row['avatar_color'] as String?,
       onboardingCompleted:
           (row['onboarding_completed'] as bool?) ?? false,
+      visibility:
+          ProfileVisibility.fromWire(row['profile_visibility'] as String?),
     );
   }
 }

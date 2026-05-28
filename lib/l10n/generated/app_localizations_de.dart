@@ -822,6 +822,34 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsPrivacyLinkLabel => 'Datenschutzerklärung öffnen';
 
   @override
+  String get settingsVisibilitySection => 'Profil';
+
+  @override
+  String get settingsRowVisibility => 'Profil-Sichtbarkeit';
+
+  @override
+  String get settingsRowVisibilitySub => 'Wer dein Profil sehen kann';
+
+  @override
+  String get settingsVisibilityPublic => 'Öffentlich';
+
+  @override
+  String get settingsVisibilityFriendsOnly => 'Nur Freunde';
+
+  @override
+  String get settingsVisibilityPrivate => 'Privat';
+
+  @override
+  String get settingsVisibilityPickerTitle => 'Profil-Sichtbarkeit';
+
+  @override
+  String get settingsVisibilitySavedSnack => 'Sichtbarkeit gespeichert';
+
+  @override
+  String get settingsVisibilityErrorSnack =>
+      'Sichtbarkeit konnte nicht gespeichert werden';
+
+  @override
   String get settingsFooterTagline => 'Für die Wiese gebaut.';
 
   @override

@@ -1588,6 +1588,60 @@ abstract class AppLocalizations {
   /// **'Datenschutzerklärung öffnen'**
   String get settingsPrivacyLinkLabel;
 
+  /// Header of the profile-visibility section in settings
+  ///
+  /// In de, this message translates to:
+  /// **'Profil'**
+  String get settingsVisibilitySection;
+
+  /// Label of the profile-visibility settings row
+  ///
+  /// In de, this message translates to:
+  /// **'Profil-Sichtbarkeit'**
+  String get settingsRowVisibility;
+
+  /// Subtitle below the visibility row
+  ///
+  /// In de, this message translates to:
+  /// **'Wer dein Profil sehen kann'**
+  String get settingsRowVisibilitySub;
+
+  /// Visibility picker option: public
+  ///
+  /// In de, this message translates to:
+  /// **'Öffentlich'**
+  String get settingsVisibilityPublic;
+
+  /// Visibility picker option: friends-only (default)
+  ///
+  /// In de, this message translates to:
+  /// **'Nur Freunde'**
+  String get settingsVisibilityFriendsOnly;
+
+  /// Visibility picker option: private (owner only)
+  ///
+  /// In de, this message translates to:
+  /// **'Privat'**
+  String get settingsVisibilityPrivate;
+
+  /// Picker dialog title
+  ///
+  /// In de, this message translates to:
+  /// **'Profil-Sichtbarkeit'**
+  String get settingsVisibilityPickerTitle;
+
+  /// Snackbar shown after a successful visibility save
+  ///
+  /// In de, this message translates to:
+  /// **'Sichtbarkeit gespeichert'**
+  String get settingsVisibilitySavedSnack;
+
+  /// Snackbar shown after a failed visibility save
+  ///
+  /// In de, this message translates to:
+  /// **'Sichtbarkeit konnte nicht gespeichert werden'**
+  String get settingsVisibilityErrorSnack;
+
   /// Footer tagline below version
   ///
   /// In de, this message translates to:

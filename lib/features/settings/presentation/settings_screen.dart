@@ -8,6 +8,7 @@ import 'package:kubb_app/features/settings/application/danger_actions_notifier.d
 import 'package:kubb_app/features/settings/presentation/confirm_dialog.dart';
 import 'package:kubb_app/features/settings/presentation/csv_export_modal.dart';
 import 'package:kubb_app/features/settings/presentation/widgets/app_section.dart';
+import 'package:kubb_app/features/settings/presentation/widgets/profile_visibility_section.dart';
 import 'package:kubb_app/features/settings/presentation/widgets/settings_row.dart';
 import 'package:kubb_app/features/settings/presentation/widgets/settings_section.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -29,6 +30,7 @@ class SettingsScreen extends ConsumerWidget {
         padding: const EdgeInsets.only(bottom: KubbTokens.space8),
         children: [
           const AccountSection(),
+          const ProfileVisibilitySection(),
           SettingsSection(
             title: l.settingsDataSection,
             children: [

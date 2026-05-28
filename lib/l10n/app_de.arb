@@ -1167,6 +1167,42 @@
   "@settingsPrivacyLinkLabel": {
     "description": "CTA label that opens the privacy policy screen"
   },
+  "settingsVisibilitySection": "Profil",
+  "@settingsVisibilitySection": {
+    "description": "Header of the profile-visibility section in settings"
+  },
+  "settingsRowVisibility": "Profil-Sichtbarkeit",
+  "@settingsRowVisibility": {
+    "description": "Label of the profile-visibility settings row"
+  },
+  "settingsRowVisibilitySub": "Wer dein Profil sehen kann",
+  "@settingsRowVisibilitySub": {
+    "description": "Subtitle below the visibility row"
+  },
+  "settingsVisibilityPublic": "Öffentlich",
+  "@settingsVisibilityPublic": {
+    "description": "Visibility picker option: public"
+  },
+  "settingsVisibilityFriendsOnly": "Nur Freunde",
+  "@settingsVisibilityFriendsOnly": {
+    "description": "Visibility picker option: friends-only (default)"
+  },
+  "settingsVisibilityPrivate": "Privat",
+  "@settingsVisibilityPrivate": {
+    "description": "Visibility picker option: private (owner only)"
+  },
+  "settingsVisibilityPickerTitle": "Profil-Sichtbarkeit",
+  "@settingsVisibilityPickerTitle": {
+    "description": "Picker dialog title"
+  },
+  "settingsVisibilitySavedSnack": "Sichtbarkeit gespeichert",
+  "@settingsVisibilitySavedSnack": {
+    "description": "Snackbar shown after a successful visibility save"
+  },
+  "settingsVisibilityErrorSnack": "Sichtbarkeit konnte nicht gespeichert werden",
+  "@settingsVisibilityErrorSnack": {
+    "description": "Snackbar shown after a failed visibility save"
+  },
   "settingsFooterTagline": "Für die Wiese gebaut.",
   "@settingsFooterTagline": {
     "description": "Footer tagline below version"
