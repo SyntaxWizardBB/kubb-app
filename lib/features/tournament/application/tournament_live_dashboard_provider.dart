@@ -110,6 +110,11 @@ String _pitchKeyFor(TournamentMatchRef m) {
   return m.matchId.value;
 }
 
+// TODO(W3-T4-consumer): replace the nickname/displayLabel lookup with
+// the per-side `participantADisplayName`/`participantBDisplayName`
+// fields on `TournamentMatchRef` (W3-T4 surfaces them on the match-row
+// itself, so the detour through `tournamentDetailProvider` is no longer
+// needed). Wave-B-Polish — R14-F-10.
 String _resolveName(
   TournamentParticipantId? id,
   Map<String, String> nameById,

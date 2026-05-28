@@ -36,18 +36,24 @@ Map<String, dynamic> _participantRow({
   String status = 'pending',
   Object? seed,
   String? respondedAt,
+  Object? displayName = 'Alice',
 }) =>
     <String, dynamic>{
       'participant_id': 'p-1',
       'user_id': 'u-1',
       'nickname': 'alice',
+      'display_name': displayName,
       'registration_status': status,
       'seed': seed,
       'registered_at': '2026-05-24T10:00:00.000Z',
       'responded_at': respondedAt,
     };
 
-Map<String, dynamic> _matchRow({String status = 'scheduled'}) =>
+Map<String, dynamic> _matchRow({
+  String status = 'scheduled',
+  Object? aDisplayName = 'Alice',
+  Object? bDisplayName = 'Bob',
+}) =>
     <String, dynamic>{
       'match_id': 'm-1',
       'tournament_id': 't-1',
@@ -55,6 +61,8 @@ Map<String, dynamic> _matchRow({String status = 'scheduled'}) =>
       'match_number_in_round': 2,
       'participant_a_id': 'p-1',
       'participant_b_id': 'p-2',
+      'participant_a_display_name': aDisplayName,
+      'participant_b_display_name': bDisplayName,
       'status': status,
       'consensus_round': 0,
       'started_at': null,
@@ -129,7 +137,10 @@ void main() {
       expect(p.registrationStatus, TournamentParticipantStatus.pending);
       expect(p.seed, isNull);
       expect(p.respondedAt, isNull);
-      expect(p.displayLabel, 'alice');
+      expect(p.displayName, 'Alice');
+      // displayLabel now prefers the server-projected display_name
+      // (W3-T4) over the nickname-only fallback.
+      expect(p.displayLabel, 'Alice');
     });
 
     test('parses approved participant with seed and responded_at', () {
@@ -141,6 +152,30 @@ void main() {
       expect(p.registrationStatus, TournamentParticipantStatus.approved);
       expect(p.seed, 3);
       expect(p.respondedAt, isNotNull);
+    });
+
+    test('W3-T4: falls back to nickname when display_name absent on wire',
+        () {
+      final p = tournamentParticipantFromRow(_participantRow(displayName: null));
+      expect(p.displayName, isNull);
+      expect(p.displayLabel, 'alice');
+    });
+  });
+
+  group('tournamentMatchRefFromRow (W3-T4)', () {
+    test('parses participant display names from the RPC envelope', () {
+      final m = tournamentMatchRefFromRow(_matchRow());
+      expect(m.participantADisplayName, 'Alice');
+      expect(m.participantBDisplayName, 'Bob');
+    });
+
+    test('leaves display names null when the RPC omits them', () {
+      final m = tournamentMatchRefFromRow(_matchRow(
+        aDisplayName: null,
+        bDisplayName: null,
+      ));
+      expect(m.participantADisplayName, isNull);
+      expect(m.participantBDisplayName, isNull);
     });
   });
 

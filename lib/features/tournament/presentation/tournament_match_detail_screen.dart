@@ -8,7 +8,6 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/application/outbox_pending_provider.dart';
 import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
-import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
@@ -467,32 +466,24 @@ class _Header extends ConsumerWidget {
   final TournamentId tournamentId;
   final bool showPending;
 
-  static String _shortId(String? id) => id == null
-      ? '?'
-      : (id.length <= 6 ? id : id.substring(0, 6));
-
-  /// T17 — render a roster summary for a team participant. Falls back
-  /// to the short participant id while the roster is loading or when
-  /// the RPC fails (the header itself stays useful either way).
-  String _teamLabel(
-    WidgetRef ref,
+  /// W3-T4 / R10-F-06: prefer the server-projected display name. The
+  /// `tournament_match_get` RPC now emits
+  /// `participant_{a,b}_display_name` per
+  /// `20260601000003_tournament_get_with_display_names`; the old UUID
+  /// substring fallback (`ba9c12…`) is gone. When the display_name is
+  /// genuinely absent (e.g. a row from before the migration landed, or
+  /// a participant with no nickname/team name), the localized
+  /// `tournamentParticipantUnknown` label is used so the header never
+  /// shows raw ids.
+  String _participantLabel(
     AppLocalizations l,
     TournamentParticipantId? pid,
+    String? displayName,
   ) {
     if (pid == null) return '?';
-    final roster = ref.watch(tournamentRosterProvider(pid));
-    final members = roster.maybeWhen<List<String>?>(
-      data: (slots) => <String>[
-        for (final s in slots)
-          if (s.memberUserId != null)
-            _shortId(s.memberUserId!.value)
-          else if (s.guestPlayerId != null)
-            _shortId(s.guestPlayerId!.value),
-      ],
-      orElse: () => null,
-    );
-    if (members == null || members.isEmpty) return _shortId(pid.value);
-    return l.tournamentMatchHammerCrew(members.join(', '));
+    final name = displayName?.trim();
+    if (name == null || name.isEmpty) return l.tournamentParticipantUnknown;
+    return name;
   }
 
   @override
@@ -500,20 +491,10 @@ class _Header extends ConsumerWidget {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final isBye = match.participantB == null;
-    // T17 — opt into the team-match header only when the tournament is
-    // configured for teams (team_size > 1). Single-player tournaments
-    // keep the M1 short-id header verbatim per acceptance criterion 4.
-    final teamSize = ref.watch(tournamentDetailProvider(tournamentId)).maybeWhen(
-          data: (d) => d?.tournament.teamSize ?? 1,
-          orElse: () => 1,
-        );
-    final isTeam = teamSize > 1;
-    final aLabel = isTeam
-        ? _teamLabel(ref, l, match.participantA)
-        : _shortId(match.participantA?.value);
-    final bLabel = isTeam
-        ? _teamLabel(ref, l, match.participantB)
-        : _shortId(match.participantB?.value);
+    final aLabel = _participantLabel(
+        l, match.participantA, match.participantADisplayName);
+    final bLabel = _participantLabel(
+        l, match.participantB, match.participantBDisplayName);
     return Container(
       padding: const EdgeInsets.all(KubbTokens.space3),
       decoration: BoxDecoration(

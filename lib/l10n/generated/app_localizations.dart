@@ -3094,6 +3094,12 @@ abstract class AppLocalizations {
   /// **'Freilos'**
   String get tournamentMatchByeHeader;
 
+  /// Fallback label for a tournament participant whose server-projected display_name is missing (W3-T4).
+  ///
+  /// In de, this message translates to:
+  /// **'Unbekannt'**
+  String get tournamentParticipantUnknown;
+
   /// Consensus banner — current retry round indicator
   ///
   /// In de, this message translates to:

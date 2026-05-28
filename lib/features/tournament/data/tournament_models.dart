@@ -159,11 +159,19 @@ DateTime? _asDateOrNull(Object? r) =>
     r == null ? null : DateTime.parse(r as String);
 
 /// Decodes a `participants[]` row into a [TournamentParticipant].
+///
+/// `display_name` is the server-side projection introduced by
+/// `20260601000003_tournament_get_with_display_names`
+/// (`COALESCE(user_profiles.nickname, teams.display_name)`). It's
+/// optional on the wire so wire-rows from older RPC versions still
+/// decode — callers fall back to the localized `tournamentParticipantUnknown`
+/// string in that case.
 TournamentParticipant tournamentParticipantFromRow(Map<String, dynamic> row) {
   return TournamentParticipant(
     participantId: row['participant_id'] as String,
     userId: row['user_id'] as String?,
     nickname: row['nickname'] as String?,
+    displayName: row['display_name'] as String?,
     registrationStatus: TournamentParticipantStatusWire.fromWire(
         row['registration_status'] as String),
     seed: _asIntOrNull(row['seed']),
@@ -247,6 +255,13 @@ TournamentMatchRef tournamentMatchRefFromCdcRow(Map<String, Object?> row) {
 }
 
 /// Decodes a wire row into a domain [TournamentMatchRef].
+///
+/// `participant_{a,b}_display_name` are the server-projected display
+/// names added by `20260601000003_tournament_get_with_display_names`
+/// so the match-detail header (R10-F-06) can render `Alice vs. Bob`
+/// instead of `ba9c12 vs. f02e91`. Both fields are optional on the
+/// wire — wire payloads from older RPC revisions or the realtime CDC
+/// channel still decode cleanly.
 TournamentMatchRef tournamentMatchRefFromRow(Map<String, dynamic> row) {
   return TournamentMatchRef(
     matchId: TournamentMatchId(row['match_id'] as String),
@@ -259,6 +274,8 @@ TournamentMatchRef tournamentMatchRefFromRow(Map<String, dynamic> row) {
     participantB: row['participant_b_id'] == null
         ? null
         : TournamentParticipantId(row['participant_b_id'] as String),
+    participantADisplayName: row['participant_a_display_name'] as String?,
+    participantBDisplayName: row['participant_b_display_name'] as String?,
     status: TournamentMatchStatusWire.fromWire(row['status'] as String),
     consensusRound: _asInt(row['consensus_round']),
     startedAt: _asDateOrNull(row['started_at']),

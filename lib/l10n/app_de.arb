@@ -2258,6 +2258,10 @@
   "@tournamentMatchByeHeader": {
     "description": "Header text when match is a BYE"
   },
+  "tournamentParticipantUnknown": "Unbekannt",
+  "@tournamentParticipantUnknown": {
+    "description": "Fallback label for a tournament participant whose server-projected display_name is missing (W3-T4)."
+  },
   "tournamentMatchConsensusAttempt": "Versuch {attempt} von {max}",
   "@tournamentMatchConsensusAttempt": {
     "description": "Consensus banner — current retry round indicator",

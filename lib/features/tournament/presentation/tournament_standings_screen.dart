@@ -164,6 +164,10 @@ class _DataRow extends StatelessWidget {
       child: Row(
         children: [
           _cell('$rank', flex: 1, tokens: tokens, bold: true),
+          // TODO(W3-T4-consumer): swap to participant.displayName from the
+          // tournament_get RPC (`COALESCE(user_profiles.nickname,
+          // teams.display_name)`) so standings stop showing UUID
+          // substrings — Wave-B-Polish nachgezogen (R13-F-02).
           _cell(_short(stats.participantId), flex: 4, tokens: tokens),
           _cell('${stats.totalPoints}', flex: 2, tokens: tokens),
           _cell('${stats.wins}', flex: 2, tokens: tokens),

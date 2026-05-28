@@ -116,6 +116,8 @@ class TournamentMatchRef {
     this.winnerParticipant,
     this.finalScoreA,
     this.finalScoreB,
+    this.participantADisplayName,
+    this.participantBDisplayName,
   });
 
   final TournamentMatchId matchId;
@@ -131,6 +133,15 @@ class TournamentMatchRef {
   final TournamentParticipantId? winnerParticipant;
   final int? finalScoreA;
   final int? finalScoreB;
+
+  /// W3-T4: server-projected display name for participant A — same
+  /// `COALESCE(user_profiles.nickname, teams.display_name)` shape used by
+  /// the participants[] block, replicated onto the match row so the
+  /// detail header / live dashboard don't need a join hop. Null when
+  /// the slot is empty (BYE) or the participant has neither a nickname
+  /// nor a team name on record.
+  final String? participantADisplayName;
+  final String? participantBDisplayName;
 
   @override
   bool operator ==(Object other) =>
@@ -148,7 +159,9 @@ class TournamentMatchRef {
           other.completedAt == completedAt &&
           other.winnerParticipant == winnerParticipant &&
           other.finalScoreA == finalScoreA &&
-          other.finalScoreB == finalScoreB;
+          other.finalScoreB == finalScoreB &&
+          other.participantADisplayName == participantADisplayName &&
+          other.participantBDisplayName == participantBDisplayName;
 
   @override
   int get hashCode => Object.hash(
@@ -165,6 +178,8 @@ class TournamentMatchRef {
         winnerParticipant,
         finalScoreA,
         finalScoreB,
+        participantADisplayName,
+        participantBDisplayName,
       );
 }
 
@@ -252,17 +267,29 @@ class TournamentParticipant {
     required this.seed,
     required this.registeredAt,
     required this.respondedAt,
+    this.displayName,
   });
 
   final String participantId;
   final String? userId;
   final String? nickname;
+
+  /// Server-projected display name for this participant — single source
+  /// for the four UI surfaces that previously fell back to UUID
+  /// substrings (R10-F-06 / R13-F-02 / R14-F-10 / R19-F-09). Filled by
+  /// the `tournament_get` RPC as
+  /// `COALESCE(user_profiles.nickname, teams.display_name)`. Nullable so
+  /// older adapters that haven't been re-pointed still compile; callers
+  /// should render `tournamentParticipantUnknown` ("Unbekannt") when
+  /// it's missing.
+  final String? displayName;
+
   final TournamentParticipantStatus registrationStatus;
   final int? seed;
   final DateTime registeredAt;
   final DateTime? respondedAt;
 
-  String get displayLabel => nickname ?? '?';
+  String get displayLabel => displayName ?? nickname ?? '?';
 }
 
 /// Header block within the full tournament payload — the row from

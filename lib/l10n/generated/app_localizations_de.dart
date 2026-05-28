@@ -1639,6 +1639,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentMatchByeHeader => 'Freilos';
 
   @override
+  String get tournamentParticipantUnknown => 'Unbekannt';
+
+  @override
   String tournamentMatchConsensusAttempt(int attempt, int max) {
     return 'Versuch $attempt von $max';
   }
