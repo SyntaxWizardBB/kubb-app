@@ -2071,6 +2071,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get teamCreateLeagueLabel => 'Liga (optional)';
 
   @override
+  String get teamCreateLeagueHelper =>
+      'A · Profi, B · Haupt-Tour, C · Neben-Tour';
+
+  @override
   String get teamCreateLogoUrlLabel => 'Logo-URL (optional)';
 
   @override

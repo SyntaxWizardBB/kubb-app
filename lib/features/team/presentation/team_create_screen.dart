@@ -101,7 +101,10 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
             const SizedBox(height: KubbTokens.space3),
             DropdownButtonFormField<LeagueMembership>(
               initialValue: _league,
-              decoration: InputDecoration(labelText: l.teamCreateLeagueLabel),
+              decoration: InputDecoration(
+                labelText: l.teamCreateLeagueLabel,
+                helperText: l.teamCreateLeagueHelper,
+              ),
               items: const [
                 DropdownMenuItem(value: LeagueMembership.a, child: Text('A')),
                 DropdownMenuItem(value: LeagueMembership.b, child: Text('B')),

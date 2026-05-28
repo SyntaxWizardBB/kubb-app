@@ -3838,6 +3838,12 @@ abstract class AppLocalizations {
   /// **'Liga (optional)'**
   String get teamCreateLeagueLabel;
 
+  /// Team create form — helper text under the league selector explaining the Swiss A/B/C league classes (Mängel #2.3, R19-A-03)
+  ///
+  /// In de, this message translates to:
+  /// **'A · Profi, B · Haupt-Tour, C · Neben-Tour'**
+  String get teamCreateLeagueHelper;
+
   /// Team create form — logo URL field label
   ///
   /// In de, this message translates to:

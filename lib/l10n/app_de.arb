@@ -2807,6 +2807,10 @@
   "@teamCreateLeagueLabel": {
     "description": "Team create form — league field label"
   },
+  "teamCreateLeagueHelper": "A · Profi, B · Haupt-Tour, C · Neben-Tour",
+  "@teamCreateLeagueHelper": {
+    "description": "Team create form — helper text under the league selector explaining the Swiss A/B/C league classes (Mängel #2.3, R19-A-03)"
+  },
   "teamCreateLogoUrlLabel": "Logo-URL (optional)",
   "@teamCreateLogoUrlLabel": {
     "description": "Team create form — logo URL field label"
