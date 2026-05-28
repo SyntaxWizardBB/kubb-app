@@ -7,6 +7,7 @@ import 'package:kubb_app/core/ui/icons.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_mode_card.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/player/presentation/player_hub_sheet.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
@@ -100,11 +101,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onTap: () => context.push(TournamentRoutes.list),
             ),
             const SizedBox(height: KubbTokens.space3),
-            NewsCard(
-              eyebrow: l.teamListTitle,
+            KubbModeCard(
               title: l.teamListTabMine,
               subtitle: l.teamListEmpty,
-              onTap: () async => context.push('/teams'),
+              icon: KubbIcons.players,
+              accentTone: KubbChipTone.sniperMeadow,
+              onTap: () => unawaited(context.push('/teams')),
             ),
             const SizedBox(height: KubbTokens.space3),
             NewsCard(
