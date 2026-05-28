@@ -94,6 +94,12 @@ void main() {
           path: '/sign-in/delete',
           builder: (_, _) => const Placeholder(),
         ),
+        GoRoute(
+          path: '/legal/privacy',
+          builder: (_, _) => const Scaffold(
+            body: Center(child: Text('Privacy Policy Stub')),
+          ),
+        ),
       ],
     );
     await tester.pumpWidget(
@@ -172,6 +178,29 @@ void main() {
     expect(find.text('Daten'), findsOneWidget);
     expect(find.text('App'), findsOneWidget);
     expect(find.text('Sessions zurücksetzen'), findsOneWidget);
+  });
+
+  testWidgets('privacy section shows synced-data copy and link to /legal/privacy',
+      (tester) async {
+    await pump(tester);
+
+    await tester.scrollUntilVisible(
+      find.text('Datenschutzerklärung öffnen'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Supabase-Backend in der EU synchronisiert'),
+      findsOneWidget,
+    );
+    expect(find.text('Datenschutzerklärung öffnen'), findsOneWidget);
+
+    await tester.tap(find.text('Datenschutzerklärung öffnen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Privacy Policy Stub'), findsOneWidget);
   });
 
   testWidgets('confirm on reset deletes all sessions', (tester) async {

@@ -1579,8 +1579,14 @@ abstract class AppLocalizations {
   /// Static privacy notice
   ///
   /// In de, this message translates to:
-  /// **'Alle Daten bleiben lokal auf deinem Gerät. Die App sendet nichts an externe Server.'**
+  /// **'Lokale Daten (Trainings-Sessions, lokale Drafts) bleiben auf deinem Gerät. Matches, Turniere, Freundschaften und Inbox-Nachrichten werden mit unserem Supabase-Backend in der EU synchronisiert, damit du Geräte wechseln kannst und Mitspieler dich sehen können.'**
   String get settingsPrivacyBody;
+
+  /// CTA label that opens the privacy policy screen
+  ///
+  /// In de, this message translates to:
+  /// **'Datenschutzerklärung öffnen'**
+  String get settingsPrivacyLinkLabel;
 
   /// Footer tagline below version
   ///

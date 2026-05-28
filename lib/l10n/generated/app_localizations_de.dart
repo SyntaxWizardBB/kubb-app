@@ -816,7 +816,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsPrivacyBody =>
-      'Alle Daten bleiben lokal auf deinem Gerät. Die App sendet nichts an externe Server.';
+      'Lokale Daten (Trainings-Sessions, lokale Drafts) bleiben auf deinem Gerät. Matches, Turniere, Freundschaften und Inbox-Nachrichten werden mit unserem Supabase-Backend in der EU synchronisiert, damit du Geräte wechseln kannst und Mitspieler dich sehen können.';
+
+  @override
+  String get settingsPrivacyLinkLabel => 'Datenschutzerklärung öffnen';
 
   @override
   String get settingsFooterTagline => 'Für die Wiese gebaut.';

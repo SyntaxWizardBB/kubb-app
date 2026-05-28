@@ -161,6 +161,20 @@ class SettingsAppBlock extends ConsumerWidget {
                 const SizedBox(height: KubbTokens.space1),
                 Text(l.settingsPrivacyBody,
                     style: TextStyle(color: tokens.fgMuted, fontSize: 12)),
+                const SizedBox(height: KubbTokens.space1),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 32),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      alignment: AlignmentDirectional.centerStart,
+                    ),
+                    onPressed: () => context.push('/legal/privacy'),
+                    child: Text(l.settingsPrivacyLinkLabel),
+                  ),
+                ),
               ],
             ),
           ),
