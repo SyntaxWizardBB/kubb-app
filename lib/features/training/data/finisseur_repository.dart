@@ -76,7 +76,10 @@ class FinisseurRepository {
       penaltyHits2: Value(result.penalty2),
       createdAt: Value(DateTime.now().toUtc()),
     );
-    await _sticks.insert(entity);
+    // insertOrReplace defends the unique (session_id, stick_index) index
+    // when a retry or out-of-band write hits the same slot — the notifier
+    // mutex prevents the in-process race, this covers the rest.
+    await _sticks.upsert(entity);
   }
 
   Future<void> markCompleted({required String sessionId}) {

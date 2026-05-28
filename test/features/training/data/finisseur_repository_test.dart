@@ -129,21 +129,26 @@ void main() {
     expect(await repo.loadStickEvents(s.id), isEmpty);
   });
 
-  test('unique constraint blocks duplicate stickIndex per session', () async {
+  test('recordStick at the same index upserts instead of throwing', () async {
+    // Race-safety follow-up (W2-T8, refs R5-F-01..02): the unique index
+    // on (session_id, stick_index) is still in place, but recordStick now
+    // upserts so a retry, crash-resume, or a second tap that slipped past
+    // the notifier mutex replaces the existing row instead of crashing.
     final s = await repo.startFinisseur(playerId: 'p1', field: 7, base: 3);
     await repo.recordStick(
       sessionId: s.id,
       stickIndex: 0,
       result: const StickResult(fieldHits: 1),
     );
-
-    await expectLater(
-      repo.recordStick(
-        sessionId: s.id,
-        stickIndex: 0,
-        result: const StickResult(fieldHits: 2),
-      ),
-      throwsA(isA<Exception>()),
+    await repo.recordStick(
+      sessionId: s.id,
+      stickIndex: 0,
+      result: const StickResult(fieldHits: 2),
     );
+
+    final events = await repo.loadStickEvents(s.id);
+    expect(events, hasLength(1));
+    expect(events.single.stickIndex, 0);
+    expect(events.single.fieldKubbsHit, 2);
   });
 }

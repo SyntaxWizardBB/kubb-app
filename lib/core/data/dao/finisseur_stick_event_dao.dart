@@ -13,6 +13,14 @@ class FinisseurStickEventDao extends DatabaseAccessor<AppDatabase>
     return into(finisseurStickEvents).insert(companion);
   }
 
+  /// Insert-or-replace on the natural key `(session_id, stick_index)`.
+  /// A retry, crash-resume, or out-of-band write that lands on the same
+  /// slot updates the existing row instead of tripping the UNIQUE index.
+  Future<void> upsert(FinisseurStickEventsCompanion companion) {
+    return into(finisseurStickEvents)
+        .insert(companion, mode: InsertMode.insertOrReplace);
+  }
+
   Future<List<FinisseurStickEvent>> forSession(String sessionId) {
     return (select(finisseurStickEvents)
           ..where((e) => e.sessionId.equals(sessionId))

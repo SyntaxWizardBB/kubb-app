@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/data/app_settings.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
@@ -23,29 +25,54 @@ class ActiveFinisseurNotifier
 
   FinisseurRepository get _repo => ref.read(finisseurRepositoryProvider);
 
+  /// Serializes every mutating call (start/advance/rollback/giveUp/…) so
+  /// concurrent double-taps cannot race on the same `currentIndex`.
+  Completer<void>? _inFlight;
+
+  /// True while a mutating call holds the in-flight lock. Surface so the
+  /// UI can grey out advance/continue buttons instead of racing the
+  /// notifier.
+  bool get isLocked => _inFlight != null;
+
+  Future<T> _serialize<T>(Future<T> Function() op) async {
+    while (_inFlight != null) {
+      await _inFlight!.future;
+    }
+    final gate = Completer<void>();
+    _inFlight = gate;
+    try {
+      return await op();
+    } finally {
+      _inFlight = null;
+      gate.complete();
+    }
+  }
+
   Future<void> startSession({
     required String playerId,
     required int field,
     required int base,
-  }) async {
-    final s = await _repo.startFinisseur(
-      playerId: playerId,
-      field: field,
-      base: base,
-    );
-    state = AsyncData(
-      ActiveFinisseurState(
-        sessionId: s.id,
+  }) {
+    return _serialize(() async {
+      final s = await _repo.startFinisseur(
+        playerId: playerId,
         field: field,
         base: base,
-        sticks: List<StickResult>.filled(
-          ActiveFinisseurState.totalSticks,
-          const StickResult(),
+      );
+      state = AsyncData(
+        ActiveFinisseurState(
+          sessionId: s.id,
+          field: field,
+          base: base,
+          sticks: List<StickResult>.filled(
+            ActiveFinisseurState.totalSticks,
+            const StickResult(),
+          ),
+          currentIndex: 0,
+          startedAt: s.startedAt,
         ),
-        currentIndex: 0,
-        startedAt: s.startedAt,
-      ),
-    );
+      );
+    });
   }
 
   void updateCurrentStick(StickResult patch) {
@@ -57,7 +84,11 @@ class ActiveFinisseurNotifier
   /// Persists the current stick, advances the index, and recomputes the next
   /// phase. Returns the outcome so the UI knows whether to navigate, ask, or
   /// keep going.
-  Future<FinisseurAdvanceOutcome> advance() async {
+  Future<FinisseurAdvanceOutcome> advance() {
+    return _serialize(_advance);
+  }
+
+  Future<FinisseurAdvanceOutcome> _advance() async {
     final s = state.value;
     if (s == null) return FinisseurAdvanceOutcome.carryOn;
     await _repo.recordStick(
@@ -107,28 +138,32 @@ class ActiveFinisseurNotifier
 
   /// Player decided to keep going past stock 6. Grow the stick buffer by one
   /// and rerun the phase logic.
-  Future<void> continueBeyondStocks() async {
-    final s = state.value;
-    if (s == null) return;
-    final settings =
-        ref.read(appSettingsProvider).value ?? const AppSettings();
-    final extended = List<StickResult>.from(s.sticks)
-      ..add(const StickResult());
-    var next = s.copyWith(
-      sticks: extended,
-      continuedBeyondSticks: true,
-      phase: FinisseurPhase.field,
-    );
-    next = _ensurePhase(next, settings);
-    state = AsyncData(next);
+  Future<void> continueBeyondStocks() {
+    return _serialize(() async {
+      final s = state.value;
+      if (s == null) return;
+      final settings =
+          ref.read(appSettingsProvider).value ?? const AppSettings();
+      final extended = List<StickResult>.from(s.sticks)
+        ..add(const StickResult());
+      var next = s.copyWith(
+        sticks: extended,
+        continuedBeyondSticks: true,
+        phase: FinisseurPhase.field,
+      );
+      next = _ensurePhase(next, settings);
+      state = AsyncData(next);
+    });
   }
 
   /// Player gave up after stock 6. Persist as completed (failed) and clear.
-  Future<void> giveUp() async {
-    final s = state.value;
-    if (s == null) return;
-    await _repo.markCompleted(sessionId: s.sessionId);
-    state = const AsyncData(null);
+  Future<void> giveUp() {
+    return _serialize(() async {
+      final s = state.value;
+      if (s == null) return;
+      await _repo.markCompleted(sessionId: s.sessionId);
+      state = const AsyncData(null);
+    });
   }
 
   bool _hasWon(ActiveFinisseurState s, AppSettings settings) {
@@ -170,18 +205,22 @@ class ActiveFinisseurNotifier
     return s.copyWith(phase: FinisseurPhase.field);
   }
 
-  Future<void> complete() async {
-    final s = state.value;
-    if (s == null) return;
-    await _repo.markCompleted(sessionId: s.sessionId);
-    state = const AsyncData(null);
+  Future<void> complete() {
+    return _serialize(() async {
+      final s = state.value;
+      if (s == null) return;
+      await _repo.markCompleted(sessionId: s.sessionId);
+      state = const AsyncData(null);
+    });
   }
 
-  Future<void> abortAndDelete() async {
-    final s = state.value;
-    if (s == null) return;
-    await _repo.discard(sessionId: s.sessionId);
-    state = const AsyncData(null);
+  Future<void> abortAndDelete() {
+    return _serialize(() async {
+      final s = state.value;
+      if (s == null) return;
+      await _repo.discard(sessionId: s.sessionId);
+      state = const AsyncData(null);
+    });
   }
 
   /// Drops the most recently committed stick and rewinds the index by one.
@@ -194,33 +233,39 @@ class ActiveFinisseurNotifier
   /// can re-trigger.
   ///
   /// Returns false when there is nothing to roll back (already at stick 0).
-  Future<bool> rollbackLastStick() async {
-    final s = state.value;
-    if (s == null) return false;
-    if (s.currentIndex == 0) return false;
-    final prev = s.currentIndex - 1;
-    await _repo.deleteStickAt(sessionId: s.sessionId, stickIndex: prev);
-    final restored = List<StickResult>.from(s.sticks);
-    // Drop any appended Verlängerungs-slot beyond the new current index so
-    // the buffer never carries trailing empty slots.
-    while (restored.length > ActiveFinisseurState.totalSticks &&
-        restored.length > prev + 1) {
-      restored.removeLast();
-    }
-    if (prev < restored.length) {
-      restored[prev] = const StickResult();
-    }
-    final stillBeyondSticks = prev >= ActiveFinisseurState.totalSticks;
-    final settings =
-        ref.read(appSettingsProvider).value ?? const AppSettings();
-    var next = s.copyWith(
-      sticks: restored,
-      currentIndex: prev,
-      continuedBeyondSticks: stillBeyondSticks && s.continuedBeyondSticks,
-    );
-    next = _ensurePhase(next, settings);
-    state = AsyncData(next);
-    return true;
+  Future<bool> rollbackLastStick() {
+    return _serialize(() async {
+      final s = state.value;
+      if (s == null) return false;
+      if (s.currentIndex == 0) return false;
+      final prev = s.currentIndex - 1;
+      await _repo.deleteStickAt(sessionId: s.sessionId, stickIndex: prev);
+      // Re-read state after await; another serialized op may have moved
+      // the index between when we captured `s` and now.
+      final fresh = state.value ?? s;
+      final restored = List<StickResult>.from(fresh.sticks);
+      // Drop any appended Verlängerungs-slot beyond the new current index so
+      // the buffer never carries trailing empty slots.
+      while (restored.length > ActiveFinisseurState.totalSticks &&
+          restored.length > prev + 1) {
+        restored.removeLast();
+      }
+      if (prev < restored.length) {
+        restored[prev] = const StickResult();
+      }
+      final stillBeyondSticks = prev >= ActiveFinisseurState.totalSticks;
+      final settings =
+          ref.read(appSettingsProvider).value ?? const AppSettings();
+      var next = fresh.copyWith(
+        sticks: restored,
+        currentIndex: prev,
+        continuedBeyondSticks:
+            stillBeyondSticks && fresh.continuedBeyondSticks,
+      );
+      next = _ensurePhase(next, settings);
+      state = AsyncData(next);
+      return true;
+    });
   }
 }
 
