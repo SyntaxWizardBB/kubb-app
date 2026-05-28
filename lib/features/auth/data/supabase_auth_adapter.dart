@@ -78,6 +78,22 @@ abstract class SupabaseAuthAdapter {
   /// Stream of state changes. Emits the current state on subscribe.
   Stream<AuthAdapterState> get onAuthStateChange;
 
+  /// Returns the access token of the underlying wire session, or `null`
+  /// when no live Supabase session exists. Used by bootstrap and the
+  /// pre-flight guard to detect cache-without-wire-session drift: the
+  /// drift cache can hold a keypair/OAuth session while the gotrue
+  /// session is empty (cold start, expired token), which would surface
+  /// as `authentication required` on the next authenticated RPC.
+  String? get wireAccessToken;
+
+  /// Refreshes the underlying gotrue session via the refresh token.
+  /// Used to recover OAuth sessions where the drift cache holds a
+  /// session but the wire access token is missing or expired. Returns
+  /// the post-refresh state. Throws when the refresh fails (no refresh
+  /// token, server rejection) — callers are expected to fall back to a
+  /// sign-out path.
+  Future<AuthAdapterState> refreshSession();
+
   /// Starts an OAuth sign-in. Returns once the browser tab / external
   /// app has been launched — the actual session lands later via
   /// [onAuthStateChange] when the deep-link / web callback fires.

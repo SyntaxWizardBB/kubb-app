@@ -4,12 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/features/auth/application/account_setup_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
+import 'package:kubb_app/features/auth/application/keypair_signing_service.dart';
 import 'package:kubb_app/features/auth/data/auth_telemetry.dart';
 import 'package:kubb_app/features/auth/data/dao/cached_auth_session_dao.dart';
 import 'package:kubb_app/features/auth/data/keypair_storage.dart';
 import 'package:kubb_app/features/auth/data/supabase_auth_adapter.dart';
 import 'package:kubb_app/features/auth/data/supabase_auth_adapter_impl.dart';
+import 'package:logging/logging.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+final _wireSessionLog = Logger('auth.bootstrap');
 
 /// Production [SupabaseAuthAdapter] backed by the live Supabase
 /// client. Tests override this with a fake.
@@ -34,6 +38,118 @@ final authTelemetryProvider = Provider<AuthTelemetry>((ref) {
 /// router watches it for redirect decisions.
 final authControllerProvider =
     AsyncNotifierProvider<AuthController, AuthSession>(AuthController.new);
+
+/// Outcome of [ensureWireSession]. Surfaced so call-sites can branch
+/// (and tests can assert) without parsing log lines.
+enum WireSessionOutcome {
+  /// Wire token already present — no work was needed.
+  alreadyLive,
+
+  /// Keypair session detected and `signInWithChallenge` succeeded.
+  keypairResigned,
+
+  /// OAuth session detected and `refreshSession` succeeded.
+  oauthRefreshed,
+
+  /// No cached session — bootstrap will end up signed-out, no re-sign
+  /// possible. Not an error.
+  noCachedSession,
+
+  /// Cache shows a session the helper cannot recover (anonymous, or
+  /// keypair without a private key still in secure storage). The
+  /// caller decides whether to drop the cache or surface the issue.
+  unrecoverable,
+
+  /// Recovery was attempted but failed (network, server reject). The
+  /// drift cache stays as-is so a retry on the next bootstrap can try
+  /// again; routing logic should treat the user as effectively
+  /// signed-out for authenticated work.
+  failed,
+}
+
+/// Pre-flight guard: ensures the underlying Supabase wire session is
+/// live before any authenticated RPC fires. Resolves the cache-hydration
+/// race documented as R1-F-02 (Mängel #9, `authentication required` on
+/// tournament create): the drift cache may hold a keypair/OAuth session
+/// while `supabase.auth.currentSession` is empty, e.g. after a cold
+/// start, an OAuth refresh-token rotation, or a Phase-1 keypair access
+/// token expiry.
+///
+/// Strategy:
+///   - Keypair → run [KeypairSigningService.signInWithChallenge] which
+///     re-derives the public key, requests a fresh challenge, signs it,
+///     and lets the adapter hydrate the gotrue session via
+///     `recoverSession`.
+///   - OAuth → call [SupabaseAuthAdapter.refreshSession], which goes
+///     through gotrue's standard refresh-token rotation.
+///   - Anonymous → nothing to re-sign (anonymous sessions are minted
+///     once per device install); reported as `unrecoverable`.
+///
+/// The helper is exported via [ensureWireSessionProvider] but is *not*
+/// wired into every RPC call-site — that backlog lands in W2-T1.
+/// Bootstrap calls it once after the drift cache is read; future
+/// per-RPC guards can layer on top.
+Future<WireSessionOutcome> ensureWireSession(Ref ref) async {
+  final adapter = ref.read(supabaseAuthAdapterProvider);
+  if (adapter.wireAccessToken != null) {
+    return WireSessionOutcome.alreadyLive;
+  }
+
+  final cached = await ref.read(cachedAuthSessionDaoProvider).current();
+  if (cached == null) {
+    return WireSessionOutcome.noCachedSession;
+  }
+
+  switch (cached.kind) {
+    case 'keypair':
+      final keypair = ref.read(keypairStorageProvider);
+      final privateKey = await keypair.load();
+      if (privateKey == null) {
+        _wireSessionLog.warning(
+          'wire re-sign skipped: keypair cached but private key missing',
+        );
+        return WireSessionOutcome.unrecoverable;
+      }
+      try {
+        _wireSessionLog.info(
+          'wire re-sign triggered: keypair cache without live wire token',
+        );
+        await ref.read(keypairSigningServiceProvider).signInWithChallenge();
+        return WireSessionOutcome.keypairResigned;
+      } on Object catch (e, st) {
+        _wireSessionLog.warning('wire re-sign failed (keypair)', e, st);
+        return WireSessionOutcome.failed;
+      }
+    case 'oauth_google':
+    case 'oauth_apple':
+      try {
+        _wireSessionLog.info(
+          'wire re-sign triggered: oauth cache without live wire token',
+        );
+        await adapter.refreshSession();
+        return WireSessionOutcome.oauthRefreshed;
+      } on Object catch (e, st) {
+        _wireSessionLog.warning('wire re-sign failed (oauth)', e, st);
+        return WireSessionOutcome.failed;
+      }
+    case 'anonymous':
+      // Anonymous sessions cannot be re-minted without losing the
+      // user_id, which would orphan local data. Treat as a no-op and
+      // let the caller decide (today: nothing).
+      return WireSessionOutcome.unrecoverable;
+    default:
+      return WireSessionOutcome.unrecoverable;
+  }
+}
+
+/// Riverpod handle on [ensureWireSession] so consumers can read it
+/// without dragging a `Ref` around manually. Tests override
+/// `supabaseAuthAdapterProvider` / `keypairSigningServiceProvider` to
+/// drive the branches.
+final ensureWireSessionProvider =
+    Provider<Future<WireSessionOutcome> Function()>((ref) {
+  return () => ensureWireSession(ref);
+});
 
 /// Riverpod-side AsyncNotifier for the active [AuthSession].
 ///

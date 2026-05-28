@@ -37,6 +37,17 @@ class SupabaseAuthAdapterImpl implements SupabaseAuthAdapter {
   }
 
   @override
+  String? get wireAccessToken => _client.auth.currentSession?.accessToken;
+
+  @override
+  Future<AuthAdapterState> refreshSession() async {
+    final response = await _client.auth.refreshSession();
+    _state = _stateFromSession(response.session);
+    _controller.add(_state);
+    return _state;
+  }
+
+  @override
   Future<void> signInWithOAuth(AuthOAuthProvider provider) async {
     await _client.auth.signInWithOAuth(
       provider == AuthOAuthProvider.google

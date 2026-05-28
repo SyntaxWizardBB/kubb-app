@@ -39,6 +39,16 @@ class FakeSupabaseAuthAdapter implements SupabaseAuthAdapter {
   int anonymousCount = 0;
   int attachKeypairCount = 0;
   int linkOAuthCount = 0;
+  int refreshSessionCount = 0;
+
+  /// Controls what [wireAccessToken] returns. Tests can set this to
+  /// `null` to simulate the cache-hydrated-but-wire-empty drift
+  /// scenario from R1-F-02 / Mängel #9.
+  String? wireAccessTokenOverride = 'fake-wire-token';
+
+  /// When non-null, the next [refreshSession] swaps the wire token in
+  /// for [wireAccessTokenOverride] and emits the matching state.
+  String? refreshTokenResult = 'fake-refreshed-wire-token';
 
   void _maybeThrow() {
     final t = throwOnNextCall;
@@ -61,6 +71,19 @@ class FakeSupabaseAuthAdapter implements SupabaseAuthAdapter {
 
   @override
   Stream<AuthAdapterState> get onAuthStateChange => _controller.stream;
+
+  @override
+  String? get wireAccessToken => wireAccessTokenOverride;
+
+  @override
+  Future<AuthAdapterState> refreshSession() async {
+    _maybeThrow();
+    refreshSessionCount += 1;
+    wireAccessTokenOverride = refreshTokenResult;
+    // Re-emit the current state so any listener wakes up.
+    _controller.add(_state);
+    return _state;
+  }
 
   @override
   Future<void> signInWithOAuth(AuthOAuthProvider provider) async {
