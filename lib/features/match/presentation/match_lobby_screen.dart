@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_status_chip.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/match/application/match_providers.dart';
@@ -16,6 +18,11 @@ import 'package:lucide_icons/lucide_icons.dart';
 ///
 /// Polling is kept alive by reading [matchPollingProvider] for its side
 /// effect — its value isn't otherwise consumed here.
+///
+/// Sprint B / W5-T2: aligned with the mobile-kit `MatchScreen.jsx`
+/// lobby tab. Uses [KubbAppBar] (eyebrow `Match · Lobby`), the inset-card
+/// pattern with eyebrow section-headers for the "Mitspieler" block, and
+/// [KubbButton] primary / ghost variants for the action row.
 class MatchLobbyScreen extends ConsumerWidget {
   const MatchLobbyScreen({required this.matchId, super.key});
 
@@ -56,12 +63,20 @@ class MatchLobbyScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      // TODO(sprintB-followup): migrate to KubbAppBar
-      appBar: AppBar(
-        backgroundColor: tokens.bg,
-        elevation: 0,
-        leading: BackButton(onPressed: () => context.go('/')),
-        title: const Text('Match-Lobby'),
+      appBar: KubbAppBar(
+        eyebrow: 'Match · Lobby',
+        title: 'Lobby',
+        leading: IconButton(
+          icon: const Icon(LucideIcons.arrowLeft),
+          color: tokens.fg,
+          iconSize: 24,
+          splashRadius: 24,
+          constraints: const BoxConstraints.tightFor(
+            width: KubbTokens.touchMin,
+            height: KubbTokens.touchMin,
+          ),
+          onPressed: () => context.go('/'),
+        ),
       ),
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -83,6 +98,7 @@ class MatchLobbyScreen extends ConsumerWidget {
             detail: detail,
             myUserId: myUserId,
             onCancel: () => _runCancel(context, ref),
+            onAccept: () => _runAccept(context, ref),
           );
         },
       ),
@@ -104,6 +120,20 @@ class MatchLobbyScreen extends ConsumerWidget {
       );
     }
   }
+
+  Future<void> _runAccept(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(matchActionsProvider).acceptInvite(matchId);
+    } on Object catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Annehmen fehlgeschlagen: $e'),
+          backgroundColor: KubbTokens.miss,
+        ),
+      );
+    }
+  }
 }
 
 class _LobbyBody extends StatelessWidget {
@@ -111,11 +141,13 @@ class _LobbyBody extends StatelessWidget {
     required this.detail,
     required this.myUserId,
     required this.onCancel,
+    required this.onAccept,
   });
 
   final MatchDetail detail;
   final String? myUserId;
   final VoidCallback onCancel;
+  final VoidCallback onAccept;
 
   @override
   Widget build(BuildContext context) {
@@ -127,11 +159,32 @@ class _LobbyBody extends StatelessWidget {
     final canCancel = detail.isCallerCreator(myUserId) &&
         detail.match.status == MatchStatus.pendingInvites;
 
+    // The "Bereit" CTA only makes sense while the caller still has a
+    // pending invitation row of their own. Once accepted, the lobby is
+    // a watch-state until the server flips the match to `active`.
+    MatchParticipant? myParticipant;
+    if (myUserId != null) {
+      for (final p in detail.participants) {
+        if (p.userId == myUserId) {
+          myParticipant = p;
+          break;
+        }
+      }
+    }
+    final canAccept = myParticipant != null &&
+        myParticipant.invitationStatus == MatchInvitationStatus.pending &&
+        detail.match.status == MatchStatus.pendingInvites;
+
     final teamA = detail.participants.where((p) => p.teamId == 'A').toList();
     final teamB = detail.participants.where((p) => p.teamId == 'B').toList();
 
     return ListView(
-      padding: const EdgeInsets.all(KubbTokens.space4),
+      padding: const EdgeInsets.fromLTRB(
+        KubbTokens.space4,
+        KubbTokens.space2,
+        KubbTokens.space4,
+        KubbTokens.space6,
+      ),
       children: [
         Row(
           children: [
@@ -143,29 +196,46 @@ class _LobbyBody extends StatelessWidget {
             KubbStatusChip.match(status: detail.match.status, l: l),
           ],
         ),
-        const SizedBox(height: KubbTokens.space4),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: _TeamPanel(
-                title: 'Team A',
-                accent: KubbTokens.meadow600,
-                participants: teamA,
-              ),
-            ),
-            const SizedBox(width: KubbTokens.space3),
-            Expanded(
-              child: _TeamPanel(
-                title: 'Team B',
-                accent: KubbTokens.wood400,
-                participants: teamB,
-              ),
-            ),
-          ],
-        ),
         const SizedBox(height: KubbTokens.space5),
-        if (detail.match.status == MatchStatus.pendingInvites)
+        // Section header in the eyebrow style (`docs/design/quality-gates/
+        // mobile-kit-overview.md` §Section-Header). Matches the section
+        // labels used inside MatchScreen.jsx → Lobby ("Direkter Vergleich",
+        // "Match-Setup").
+        const _SectionHeader(text: 'Mitspieler'),
+        const SizedBox(height: KubbTokens.space2),
+        // Inset card pattern: bgRaised surface, 14dp radius, single-px
+        // line border to mirror the mobile-kit `h2hList` / `setupList`
+        // surfaces.
+        _InsetCard(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _TeamPanel(
+                  title: 'Team A',
+                  accent: KubbTokens.meadow600,
+                  participants: teamA,
+                ),
+              ),
+              Container(
+                width: 1,
+                margin: const EdgeInsets.symmetric(
+                  vertical: KubbTokens.space2,
+                ),
+                color: tokens.line,
+              ),
+              Expanded(
+                child: _TeamPanel(
+                  title: 'Team B',
+                  accent: KubbTokens.wood400,
+                  participants: teamB,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (detail.match.status == MatchStatus.pendingInvites) ...[
+          const SizedBox(height: KubbTokens.space4),
           Container(
             padding: const EdgeInsets.all(KubbTokens.space3),
             decoration: BoxDecoration(
@@ -185,22 +255,75 @@ class _LobbyBody extends StatelessWidget {
               ],
             ),
           ),
-        if (canCancel) ...[
+        ],
+        if (canAccept || canCancel) ...[
           const SizedBox(height: KubbTokens.space5),
-          SizedBox(
-            height: KubbTokens.touchComfortable,
-            child: FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: KubbTokens.miss),
+          if (canAccept)
+            KubbButton(
+              variant: KubbButtonVariant.primary,
+              onPressed: onAccept,
+              child: const Text('Bereit'),
+            ),
+          if (canAccept && canCancel)
+            const SizedBox(height: KubbTokens.space2),
+          if (canCancel)
+            KubbButton(
+              variant: KubbButtonVariant.ghost,
               onPressed: onCancel,
               child: const Text('Match abbrechen'),
             ),
-          ),
         ],
       ],
     );
   }
 
   String _formatLabel(MatchFormat f) => 'BO${f.n}';
+}
+
+/// Inset card surface (`bgRaised` + hairline border, 14dp radius) —
+/// canonical pattern from `docs/design/quality-gates/mobile-kit-overview.md`
+/// §Inset-Card.
+class _InsetCard extends StatelessWidget {
+  const _InsetCard({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Container(
+      decoration: BoxDecoration(
+        color: tokens.bgRaised,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: tokens.line),
+      ),
+      padding: const EdgeInsets.all(KubbTokens.space3),
+      child: child,
+    );
+  }
+}
+
+/// Eyebrow-style section header — see `docs/design/quality-gates/
+/// mobile-kit-overview.md` §Section-Header.
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space2),
+      child: Text(
+        text.toUpperCase(),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.88,
+          color: tokens.fgMuted,
+        ),
+      ),
+    );
+  }
 }
 
 class _MetaChip extends StatelessWidget {
@@ -245,23 +368,24 @@ class _TeamPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return Container(
-      padding: const EdgeInsets.all(KubbTokens.space3),
-      decoration: BoxDecoration(
-        color: tokens.bgSunken,
-        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
-        border: Border(left: BorderSide(color: accent, width: 4)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: tokens.fg,
-            ),
+          Row(
+            children: [
+              Container(width: 4, height: 14, color: accent),
+              const SizedBox(width: KubbTokens.space2),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: tokens.fg,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: KubbTokens.space2),
           for (final p in participants) ...[
