@@ -9,12 +9,12 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 /// Bottom-sheet hub triggered from the home-screen player icon. Replaces
 /// the direct navigation to ProfileScreen with a single jumping-off
-/// point for everything player-shaped: own profile, social graph
-/// (friends + groups, both upcoming), and the in-app inbox.
+/// point for everything player-shaped: own profile, friends graph, and
+/// the in-app inbox.
 ///
-/// Friends + Groups are stub entries on purpose — the data model + flows
-/// for those land alongside the upcoming Match / Tournament features
-/// (see ADR notes in the conversation that introduced this hub).
+/// Note: the former "Gruppen" entry was removed in Sprint B (Mängel #2.1
+/// / R19-F-03 / R20-F-01). Teams replace the groups concept per
+/// ADR-0018; the corresponding Datenmigration lands in Sprint C.
 class PlayerHubSheet extends StatelessWidget {
   const PlayerHubSheet({super.key});
 
@@ -85,15 +85,6 @@ class PlayerHubSheet extends StatelessWidget {
               onTap: () {
                 Navigator.of(context).pop();
                 unawaited(context.push<void>(SocialRoutes.friends));
-              },
-            ),
-            _HubRow(
-              icon: Icons.groups_outlined,
-              label: 'Gruppen',
-              sub: 'Stamm-Teams und Vereins-Listen',
-              onTap: () {
-                Navigator.of(context).pop();
-                unawaited(context.push<void>(SocialRoutes.groups));
               },
             ),
             _HubRow(

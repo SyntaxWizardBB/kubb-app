@@ -23,7 +23,6 @@ import 'package:kubb_app/features/match/presentation/match_routes.dart';
 import 'package:kubb_app/features/player/presentation/profile_screen.dart';
 import 'package:kubb_app/features/settings/presentation/settings_screen.dart';
 import 'package:kubb_app/features/social/presentation/friends_screen.dart';
-import 'package:kubb_app/features/social/presentation/groups_screen.dart';
 import 'package:kubb_app/features/social/presentation/social_routes.dart';
 import 'package:kubb_app/features/stats/presentation/stats_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_create_screen.dart';
@@ -184,10 +183,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: SocialRoutes.friends,
                 builder: (_, _) => const FriendsScreen(),
-              ),
-              GoRoute(
-                path: SocialRoutes.groups,
-                builder: (_, _) => const GroupsScreen(),
               ),
               GoRoute(
                 path: '/training/sniper/config',
