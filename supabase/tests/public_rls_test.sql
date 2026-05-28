@@ -1,10 +1,19 @@
--- Anon-RLS-Tests fuer den `tournaments.public`-Flag (TASK-M4.2-T2).
+-- Defense-in-Depth-Layer fuer den anon-Spectator-Pfad (urspruenglich
+-- TASK-M4.2-T2, seit Sprint-A W3-T3 / ADR-0026 sekundaerer Pfad).
 --
--- Merge-Gate fuer M4.2 (R-M4.2-1): verifiziert, dass die T1-Migration
+-- HINWEIS: Der primaere anon-Read-Pfad laeuft seit ADR-0026 Strategie A
+-- ueber die `public_*_get`-RPCs (siehe `public_rpc_test.sql`). Diese
+-- Datei testet die Tabellen-Policies aus
+-- `20260701000002_tournaments_public_flag.sql`, die nur noch als
+-- Sekundaer-Schutz gegen direkte PostgREST-Tablezugriffe bestehen
+-- bleiben (z.B. Mis-Konfiguration eines Realtime-Channels).
+--
+-- Merge-Gate fuer M4.2 (R-M4.2-1): verifiziert, dass die Policies
 -- (`tournaments.public bool DEFAULT true NOT NULL` plus die vier
 -- `FOR SELECT TO anon`-Policies auf `tournaments`, `tournament_matches`,
 -- `tournament_participants`, `tournament_set_score_proposals`) das
--- erwartete Lese- und Schreibverhalten gegenueber einem anon-JWT zeigt.
+-- erwartete Lese- und Schreibverhalten gegenueber einem anon-Caller
+-- zeigen.
 --
 -- Pflicht-Cases aus tasks.md §M4.2-T2:
 --   1. public=true  → SELECT erfolgreich
