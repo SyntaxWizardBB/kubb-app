@@ -3583,5 +3583,25 @@
   "legalPrivacyPolicyUnavailable": "Datenschutzerklärung ist gerade nicht verfügbar. Bitte später erneut versuchen.",
   "@legalPrivacyPolicyUnavailable": {
     "description": "Fallback message when the privacy policy asset cannot be loaded"
+  },
+  "legalImprintTitle": "Impressum",
+  "@legalImprintTitle": {
+    "description": "Title of the imprint screen"
+  },
+  "legalImprintLoading": "Impressum wird geladen…",
+  "@legalImprintLoading": {
+    "description": "Loading state while the imprint markdown asset is read"
+  },
+  "legalImprintUnavailable": "Impressum ist gerade nicht verfügbar. Bitte später erneut versuchen.",
+  "@legalImprintUnavailable": {
+    "description": "Fallback message when the imprint asset cannot be loaded"
+  },
+  "settingsRowPrivacyPolicy": "Datenschutz",
+  "@settingsRowPrivacyPolicy": {
+    "description": "Settings row label that opens the privacy policy screen"
+  },
+  "settingsRowImprint": "Impressum",
+  "@settingsRowImprint": {
+    "description": "Settings row label that opens the imprint screen"
   }
 }

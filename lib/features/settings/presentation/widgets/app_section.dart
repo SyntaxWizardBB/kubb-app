@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/theme/theme_choice.dart';
@@ -163,8 +164,45 @@ class SettingsAppBlock extends ConsumerWidget {
               ],
             ),
           ),
+          _LegalRow(
+            label: l.settingsRowPrivacyPolicy,
+            onTap: () => context.push('/legal/privacy'),
+          ),
+          _LegalRow(
+            label: l.settingsRowImprint,
+            onTap: () => context.push('/legal/imprint'),
+          ),
           const _VersionRow(),
         ],
+      ),
+    );
+  }
+}
+
+class _LegalRow extends StatelessWidget {
+  const _LegalRow({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: KubbTokens.space4,
+          vertical: KubbTokens.space2,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(label, style: TextStyle(color: tokens.fg)),
+            ),
+            Icon(Icons.chevron_right, color: tokens.fgMuted, size: 18),
+          ],
+        ),
       ),
     );
   }

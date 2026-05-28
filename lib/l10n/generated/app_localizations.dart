@@ -4929,6 +4929,36 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Datenschutzerklärung ist gerade nicht verfügbar. Bitte später erneut versuchen.'**
   String get legalPrivacyPolicyUnavailable;
+
+  /// Title of the imprint screen
+  ///
+  /// In de, this message translates to:
+  /// **'Impressum'**
+  String get legalImprintTitle;
+
+  /// Loading state while the imprint markdown asset is read
+  ///
+  /// In de, this message translates to:
+  /// **'Impressum wird geladen…'**
+  String get legalImprintLoading;
+
+  /// Fallback message when the imprint asset cannot be loaded
+  ///
+  /// In de, this message translates to:
+  /// **'Impressum ist gerade nicht verfügbar. Bitte später erneut versuchen.'**
+  String get legalImprintUnavailable;
+
+  /// Settings row label that opens the privacy policy screen
+  ///
+  /// In de, this message translates to:
+  /// **'Datenschutz'**
+  String get settingsRowPrivacyPolicy;
+
+  /// Settings row label that opens the imprint screen
+  ///
+  /// In de, this message translates to:
+  /// **'Impressum'**
+  String get settingsRowImprint;
 }
 
 class _AppLocalizationsDelegate

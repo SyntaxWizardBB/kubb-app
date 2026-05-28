@@ -2679,4 +2679,20 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get legalPrivacyPolicyUnavailable =>
       'Datenschutzerklärung ist gerade nicht verfügbar. Bitte später erneut versuchen.';
+
+  @override
+  String get legalImprintTitle => 'Impressum';
+
+  @override
+  String get legalImprintLoading => 'Impressum wird geladen…';
+
+  @override
+  String get legalImprintUnavailable =>
+      'Impressum ist gerade nicht verfügbar. Bitte später erneut versuchen.';
+
+  @override
+  String get settingsRowPrivacyPolicy => 'Datenschutz';
+
+  @override
+  String get settingsRowImprint => 'Impressum';
 }

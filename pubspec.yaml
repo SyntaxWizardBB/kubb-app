@@ -73,6 +73,7 @@ flutter:
   generate: true
   assets:
     - docs/legal/privacy-policy-de.md
+    - docs/legal/imprint-de.md
   fonts:
     - family: BricolageGrotesque
       fonts:

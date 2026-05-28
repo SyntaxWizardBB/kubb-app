@@ -8,6 +8,7 @@ import 'package:flutter/services.dart' show rootBundle;
 /// (siehe Sprint-C-Briefing). Loader bleibt deshalb ein reiner String-
 /// Read und kennt keine Markdown-AST-Strukturen.
 const String _privacyPolicyDeAsset = 'docs/legal/privacy-policy-de.md';
+const String _imprintDeAsset = 'docs/legal/imprint-de.md';
 
 /// Liest die deutsche Datenschutzerklaerung aus dem Asset-Bundle.
 ///
@@ -15,4 +16,12 @@ const String _privacyPolicyDeAsset = 'docs/legal/privacy-policy-de.md';
 /// Fallback-Text statt zu crashen.
 Future<String> loadPrivacyPolicyDe() {
   return rootBundle.loadString(_privacyPolicyDeAsset);
+}
+
+/// Liest das deutsche Impressum aus dem Asset-Bundle.
+///
+/// Gleicher Vertrag wie [loadPrivacyPolicyDe]: wirft bei fehlendem Asset,
+/// die UI rendert in dem Fall ihren Fallback-Text.
+Future<String> loadImprintDe() {
+  return rootBundle.loadString(_imprintDeAsset);
 }

@@ -15,6 +15,7 @@ import 'package:kubb_app/features/auth/presentation/onboarding_tour.dart';
 import 'package:kubb_app/features/auth/presentation/restore_flow.dart';
 import 'package:kubb_app/features/auth/presentation/sign_in_screen.dart';
 import 'package:kubb_app/features/inbox/presentation/inbox_screen.dart';
+import 'package:kubb_app/features/legal/presentation/imprint_screen.dart';
 import 'package:kubb_app/features/legal/presentation/privacy_policy_screen.dart';
 import 'package:kubb_app/features/match/presentation/match_await_others_screen.dart';
 import 'package:kubb_app/features/match/presentation/match_config_screen.dart';
@@ -145,6 +146,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/legal/privacy',
         builder: (_, _) => const PrivacyPolicyScreen(),
+      ),
+      GoRoute(
+        path: '/legal/imprint',
+        builder: (_, _) => const ImprintScreen(),
       ),
       GoRoute(
         path: '/public/tournament/:id',
