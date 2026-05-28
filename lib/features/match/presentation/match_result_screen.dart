@@ -194,9 +194,17 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      appBar: const KubbAppBar(
+      // BH-A-03: result screen is entered via `context.go`, so the nav
+      // stack has nothing to pop back to and `automaticallyImplyLeading`
+      // renders no back affordance. Supply an explicit leading that
+      // routes home so the user is never trapped on this screen.
+      appBar: KubbAppBar(
         eyebrow: 'Resultat',
         title: 'Halbsatz eintragen',
+        leading: BackButton(
+          color: tokens.fg,
+          onPressed: () => context.go('/'),
+        ),
       ),
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

@@ -75,10 +75,13 @@ class _MatchAwaitOthersScreenState
       appBar: KubbAppBar(
         eyebrow: 'Match',
         title: 'Warten auf Bestätigung',
+        // BH-A-04: routing back to the lobby would just re-redirect us
+        // here once the lobby's status-listener fires (status is already
+        // `awaiting_results`). Send the user home instead so the back
+        // gesture actually leaves the await-others screen.
         leading: BackButton(
           color: tokens.fg,
-          onPressed: () =>
-              context.go('${MatchRoutes.lobby}/${widget.matchId}'),
+          onPressed: () => context.go('/'),
         ),
       ),
       body: detailAsync.when(
@@ -162,9 +165,19 @@ class _AwaitBody extends StatelessWidget {
         Center(
           child: KubbButton(
             variant: KubbButtonVariant.ghost,
-            // TODO(sprintB-followup): wire to actual re-notify mutation
-            // (W5-T4 polish is presentation-only).
-            onPressed: () {},
+            // BH-A-02 / BH-B-02: the underlying push-notification mutation is
+            // not wired yet. Until it lands we surface the status as a
+            // SnackBar so the button feels alive instead of looking broken.
+            // TODO(sprintB-followup): replace stub with real re-notify mutation.
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Benachrichtigung folgt in einem späteren Update',
+                  ),
+                ),
+              );
+            },
             child: const Text('Erneut benachrichtigen'),
           ),
         ),

@@ -25,13 +25,28 @@ import 'package:lucide_icons/lucide_icons.dart';
 /// lobby tab. Uses [KubbAppBar] (eyebrow `Match · Lobby`), the inset-card
 /// pattern with eyebrow section-headers for the "Mitspieler" block, and
 /// [KubbButton] primary / ghost variants for the action row.
-class MatchLobbyScreen extends ConsumerWidget {
+///
+/// W5.1 / BH-B-01: the accept/cancel buttons set `_busy` while their RPC
+/// is in flight so a rapid double-tap can't fire the mutation twice.
+class MatchLobbyScreen extends ConsumerStatefulWidget {
   const MatchLobbyScreen({required this.matchId, super.key});
 
   final String matchId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MatchLobbyScreen> createState() => _MatchLobbyScreenState();
+}
+
+class _MatchLobbyScreenState extends ConsumerState<MatchLobbyScreen> {
+  /// In-flight guard for accept / cancel. Set before the RPC fires and
+  /// cleared in `finally`; the action handlers bail out when already
+  /// busy so a double-tap is a no-op.
+  bool _busy = false;
+
+  String get matchId => widget.matchId;
+
+  @override
+  Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     ref.watch(matchPollingProvider(matchId));
     final detailAsync = ref.watch(matchDetailProvider(matchId));
@@ -104,8 +119,9 @@ class MatchLobbyScreen extends ConsumerWidget {
                 child: _LobbyBody(
                   detail: detail,
                   myUserId: myUserId,
-                  onCancel: () => _runCancel(context, ref),
-                  onAccept: () => _runAccept(context, ref),
+                  busy: _busy,
+                  onCancel: _busy ? null : _runCancel,
+                  onAccept: _busy ? null : _runAccept,
                 ),
               ),
             ],
@@ -115,33 +131,41 @@ class MatchLobbyScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _runCancel(BuildContext context, WidgetRef ref) async {
+  Future<void> _runCancel() async {
+    if (_busy) return;
+    setState(() => _busy = true);
     try {
       await ref.read(matchActionsProvider).cancelMatch(matchId);
-      if (!context.mounted) return;
+      if (!mounted) return;
       context.go('/');
     } on Object catch (e) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Abbrechen fehlgeschlagen: $e'),
           backgroundColor: KubbTokens.miss,
         ),
       );
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
-  Future<void> _runAccept(BuildContext context, WidgetRef ref) async {
+  Future<void> _runAccept() async {
+    if (_busy) return;
+    setState(() => _busy = true);
     try {
       await ref.read(matchActionsProvider).acceptInvite(matchId);
     } on Object catch (e) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Annehmen fehlgeschlagen: $e'),
           backgroundColor: KubbTokens.miss,
         ),
       );
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 }
@@ -150,14 +174,19 @@ class _LobbyBody extends StatelessWidget {
   const _LobbyBody({
     required this.detail,
     required this.myUserId,
+    required this.busy,
     required this.onCancel,
     required this.onAccept,
   });
 
   final MatchDetail detail;
   final String? myUserId;
-  final VoidCallback onCancel;
-  final VoidCallback onAccept;
+
+  /// True while an accept/cancel RPC is in flight. Used to disable both
+  /// CTAs so a double-tap can't enqueue two requests.
+  final bool busy;
+  final VoidCallback? onCancel;
+  final VoidCallback? onAccept;
 
   @override
   Widget build(BuildContext context) {
@@ -300,7 +329,10 @@ class _LobbyBody extends StatelessWidget {
           if (canAccept)
             KubbButton(
               variant: KubbButtonVariant.primary,
-              onPressed: onAccept,
+              // Disabled while a request is in flight so the user can't
+              // submit twice (BH-B-01).
+              onPressed: busy ? null : onAccept,
+              isLoading: busy,
               child: const Text('Bereit'),
             ),
           if (canAccept && canCancel)
@@ -308,7 +340,7 @@ class _LobbyBody extends StatelessWidget {
           if (canCancel)
             KubbButton(
               variant: KubbButtonVariant.ghost,
-              onPressed: onCancel,
+              onPressed: busy ? null : onCancel,
               child: const Text('Match abbrechen'),
             ),
         ],
