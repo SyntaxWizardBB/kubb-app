@@ -80,7 +80,6 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
     return Scaffold(
       backgroundColor: tokens.bg,
       resizeToAvoidBottomInset: true,
-      // TODO(sprintB-followup): migrate to KubbAppBar
       // TODO(sprintB-followup): add InboxBellAction
       appBar: KubbAppBar(
         eyebrow: l.teamListTitle,
