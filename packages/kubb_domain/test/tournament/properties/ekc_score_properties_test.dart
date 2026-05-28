@@ -1,6 +1,7 @@
 import 'package:glados/glados.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
+import '../../_support/king_outcome_generators.dart';
 import '../../_support/tournament_generators.dart';
 
 void main() {
@@ -47,5 +48,15 @@ void main() {
       expect(rebuilt.setsWonA, match.setsWonA);
       expect(rebuilt.setsWonB, match.setsWonB);
     });
+
+    // R11-F-01: a TimedOut set contributes 0:0 to the EKC tally, so a
+    // match made entirely of TimedOut sets must score 0 for both teams.
+    Glados<MatchEkcScore>(any.timedOutMatch()).test(
+      'a TimedOut-only match scores zero EKC points additively',
+      (match) {
+        expect(match.pointsForA, 0);
+        expect(match.pointsForB, 0);
+      },
+    );
   });
 }

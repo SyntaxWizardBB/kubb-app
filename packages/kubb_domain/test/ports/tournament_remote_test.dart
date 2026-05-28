@@ -1,5 +1,12 @@
+// W2-T2 (R11-F-01): `TournamentSetScoreProposal.kingOutcome` is specified
+// here but lands in W2-T3. The ignore keeps `dart analyze` clean until
+// then.
+// ignore_for_file: undefined_named_parameter, undefined_getter
+
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:test/test.dart';
+
+import '../_support/king_outcome_stub.dart';
 
 void main() {
   group('TournamentSummaryRef', () {
@@ -142,6 +149,71 @@ void main() {
         score: score,
       );
       expect(a, isNot(equals(b)));
+    });
+
+    test('kingOutcome is part of the proposal payload', () {
+      final score = SetScore(
+        basekubbsKnockedByA: 5,
+        basekubbsKnockedByB: 3,
+        winner: SetWinner.teamA,
+      );
+      final proposal = TournamentSetScoreProposal(
+        matchId: const TournamentMatchId('m1'),
+        consensusRound: 1,
+        setNumber: 1,
+        submitterUserId: const UserId('u1'),
+        score: score,
+
+        kingOutcome: const KingHitBy(TournamentParticipantId('pA')),
+      );
+
+      expect(proposal.kingOutcome, isA<KingHitBy>());
+    });
+
+    test('differing kingOutcome breaks equality', () {
+      final score = SetScore(
+        basekubbsKnockedByA: 5,
+        basekubbsKnockedByB: 3,
+        winner: SetWinner.teamA,
+      );
+      final a = TournamentSetScoreProposal(
+        matchId: const TournamentMatchId('m1'),
+        consensusRound: 1,
+        setNumber: 1,
+        submitterUserId: const UserId('u1'),
+        score: score,
+
+        kingOutcome: const KingHitBy(TournamentParticipantId('pA')),
+      );
+      final b = TournamentSetScoreProposal(
+        matchId: const TournamentMatchId('m1'),
+        consensusRound: 1,
+        setNumber: 1,
+        submitterUserId: const UserId('u1'),
+        score: score,
+
+        kingOutcome: const KingMissed(),
+      );
+      expect(a, isNot(equals(b)));
+    });
+
+    test('TimedOut is a valid kingOutcome on the proposal', () {
+      final score = SetScore(
+        basekubbsKnockedByA: 0,
+        basekubbsKnockedByB: 0,
+        winner: SetWinner.teamA,
+      );
+      final proposal = TournamentSetScoreProposal(
+        matchId: const TournamentMatchId('m1'),
+        consensusRound: 1,
+        setNumber: 1,
+        submitterUserId: const UserId('u1'),
+        score: score,
+
+        kingOutcome: const KingTimedOut(),
+      );
+
+      expect(proposal.kingOutcome, isA<KingTimedOut>());
     });
   });
 
