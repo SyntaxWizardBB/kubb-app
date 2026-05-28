@@ -5,6 +5,9 @@
 /// (interfaces) that infrastructure adapters implement.
 library;
 
+export 'src/achievements/badge.dart';
+export 'src/achievements/badge_catalog.dart';
+export 'src/achievements/badge_trigger.dart';
 export 'src/match/match_event.dart';
 export 'src/match/match_state.dart';
 export 'src/ports/match_event_repository.dart';
