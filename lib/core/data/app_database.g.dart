@@ -3956,6 +3956,468 @@ class ScoreSubmissionOutboxCompanion
   }
 }
 
+class $InboxMessagesTable extends InboxMessages
+    with TableInfo<$InboxMessagesTable, CachedInboxMessage> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $InboxMessagesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bodyJsonMeta = const VerificationMeta(
+    'bodyJson',
+  );
+  @override
+  late final GeneratedColumn<String> bodyJson = GeneratedColumn<String>(
+    'body_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _readAtMeta = const VerificationMeta('readAt');
+  @override
+  late final GeneratedColumn<int> readAt = GeneratedColumn<int>(
+    'read_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _repliedAtMeta = const VerificationMeta(
+    'repliedAt',
+  );
+  @override
+  late final GeneratedColumn<int> repliedAt = GeneratedColumn<int>(
+    'replied_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    userId,
+    kind,
+    bodyJson,
+    createdAt,
+    readAt,
+    repliedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'inbox_messages';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CachedInboxMessage> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('body_json')) {
+      context.handle(
+        _bodyJsonMeta,
+        bodyJson.isAcceptableOrUnknown(data['body_json']!, _bodyJsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bodyJsonMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('read_at')) {
+      context.handle(
+        _readAtMeta,
+        readAt.isAcceptableOrUnknown(data['read_at']!, _readAtMeta),
+      );
+    }
+    if (data.containsKey('replied_at')) {
+      context.handle(
+        _repliedAtMeta,
+        repliedAt.isAcceptableOrUnknown(data['replied_at']!, _repliedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CachedInboxMessage map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedInboxMessage(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      bodyJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}body_json'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      readAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}read_at'],
+      ),
+      repliedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}replied_at'],
+      ),
+    );
+  }
+
+  @override
+  $InboxMessagesTable createAlias(String alias) {
+    return $InboxMessagesTable(attachedDatabase, alias);
+  }
+}
+
+class CachedInboxMessage extends DataClass
+    implements Insertable<CachedInboxMessage> {
+  final String id;
+  final String userId;
+  final String kind;
+  final String bodyJson;
+
+  /// Epoch milliseconds (UTC) for the original server `sent_at`.
+  /// Stored as `int` to keep the row trivially comparable across
+  /// platforms without leaning on drift's `DateTime` encoding rules.
+  final int createdAt;
+
+  /// Epoch milliseconds (UTC); nullable mirror of the server column.
+  final int? readAt;
+
+  /// Epoch milliseconds (UTC); nullable mirror of the server column.
+  final int? repliedAt;
+  const CachedInboxMessage({
+    required this.id,
+    required this.userId,
+    required this.kind,
+    required this.bodyJson,
+    required this.createdAt,
+    this.readAt,
+    this.repliedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['kind'] = Variable<String>(kind);
+    map['body_json'] = Variable<String>(bodyJson);
+    map['created_at'] = Variable<int>(createdAt);
+    if (!nullToAbsent || readAt != null) {
+      map['read_at'] = Variable<int>(readAt);
+    }
+    if (!nullToAbsent || repliedAt != null) {
+      map['replied_at'] = Variable<int>(repliedAt);
+    }
+    return map;
+  }
+
+  InboxMessagesCompanion toCompanion(bool nullToAbsent) {
+    return InboxMessagesCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      kind: Value(kind),
+      bodyJson: Value(bodyJson),
+      createdAt: Value(createdAt),
+      readAt: readAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(readAt),
+      repliedAt: repliedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repliedAt),
+    );
+  }
+
+  factory CachedInboxMessage.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedInboxMessage(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      bodyJson: serializer.fromJson<String>(json['bodyJson']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      readAt: serializer.fromJson<int?>(json['readAt']),
+      repliedAt: serializer.fromJson<int?>(json['repliedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'kind': serializer.toJson<String>(kind),
+      'bodyJson': serializer.toJson<String>(bodyJson),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'readAt': serializer.toJson<int?>(readAt),
+      'repliedAt': serializer.toJson<int?>(repliedAt),
+    };
+  }
+
+  CachedInboxMessage copyWith({
+    String? id,
+    String? userId,
+    String? kind,
+    String? bodyJson,
+    int? createdAt,
+    Value<int?> readAt = const Value.absent(),
+    Value<int?> repliedAt = const Value.absent(),
+  }) => CachedInboxMessage(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    kind: kind ?? this.kind,
+    bodyJson: bodyJson ?? this.bodyJson,
+    createdAt: createdAt ?? this.createdAt,
+    readAt: readAt.present ? readAt.value : this.readAt,
+    repliedAt: repliedAt.present ? repliedAt.value : this.repliedAt,
+  );
+  CachedInboxMessage copyWithCompanion(InboxMessagesCompanion data) {
+    return CachedInboxMessage(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      bodyJson: data.bodyJson.present ? data.bodyJson.value : this.bodyJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      readAt: data.readAt.present ? data.readAt.value : this.readAt,
+      repliedAt: data.repliedAt.present ? data.repliedAt.value : this.repliedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedInboxMessage(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('kind: $kind, ')
+          ..write('bodyJson: $bodyJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('readAt: $readAt, ')
+          ..write('repliedAt: $repliedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, userId, kind, bodyJson, createdAt, readAt, repliedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedInboxMessage &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.kind == this.kind &&
+          other.bodyJson == this.bodyJson &&
+          other.createdAt == this.createdAt &&
+          other.readAt == this.readAt &&
+          other.repliedAt == this.repliedAt);
+}
+
+class InboxMessagesCompanion extends UpdateCompanion<CachedInboxMessage> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> kind;
+  final Value<String> bodyJson;
+  final Value<int> createdAt;
+  final Value<int?> readAt;
+  final Value<int?> repliedAt;
+  final Value<int> rowid;
+  const InboxMessagesCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.bodyJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.readAt = const Value.absent(),
+    this.repliedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  InboxMessagesCompanion.insert({
+    required String id,
+    required String userId,
+    required String kind,
+    required String bodyJson,
+    required int createdAt,
+    this.readAt = const Value.absent(),
+    this.repliedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       userId = Value(userId),
+       kind = Value(kind),
+       bodyJson = Value(bodyJson),
+       createdAt = Value(createdAt);
+  static Insertable<CachedInboxMessage> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? kind,
+    Expression<String>? bodyJson,
+    Expression<int>? createdAt,
+    Expression<int>? readAt,
+    Expression<int>? repliedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (kind != null) 'kind': kind,
+      if (bodyJson != null) 'body_json': bodyJson,
+      if (createdAt != null) 'created_at': createdAt,
+      if (readAt != null) 'read_at': readAt,
+      if (repliedAt != null) 'replied_at': repliedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  InboxMessagesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? userId,
+    Value<String>? kind,
+    Value<String>? bodyJson,
+    Value<int>? createdAt,
+    Value<int?>? readAt,
+    Value<int?>? repliedAt,
+    Value<int>? rowid,
+  }) {
+    return InboxMessagesCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      kind: kind ?? this.kind,
+      bodyJson: bodyJson ?? this.bodyJson,
+      createdAt: createdAt ?? this.createdAt,
+      readAt: readAt ?? this.readAt,
+      repliedAt: repliedAt ?? this.repliedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (bodyJson.present) {
+      map['body_json'] = Variable<String>(bodyJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (readAt.present) {
+      map['read_at'] = Variable<int>(readAt.value);
+    }
+    if (repliedAt.present) {
+      map['replied_at'] = Variable<int>(repliedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InboxMessagesCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('kind: $kind, ')
+          ..write('bodyJson: $bodyJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('readAt: $readAt, ')
+          ..write('repliedAt: $repliedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3973,6 +4435,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $TournamentScoreDraftsTable(this);
   late final $ScoreSubmissionOutboxTable scoreSubmissionOutbox =
       $ScoreSubmissionOutboxTable(this);
+  late final $InboxMessagesTable inboxMessages = $InboxMessagesTable(this);
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final SessionDao sessionDao = SessionDao(this as AppDatabase);
   late final SessionEventDao sessionEventDao = SessionEventDao(
@@ -3990,6 +4453,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       TournamentScoreDraftDao(this as AppDatabase);
   late final ScoreSubmissionOutboxDao scoreSubmissionOutboxDao =
       ScoreSubmissionOutboxDao(this as AppDatabase);
+  late final InboxMessagesDao inboxMessagesDao = InboxMessagesDao(
+    this as AppDatabase,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4003,6 +4469,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     cachedAuthSession,
     tournamentScoreDrafts,
     scoreSubmissionOutbox,
+    inboxMessages,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -6759,6 +7226,248 @@ typedef $$ScoreSubmissionOutboxTableProcessedTableManager =
       ScoreSubmissionOutboxRow,
       PrefetchHooks Function()
     >;
+typedef $$InboxMessagesTableCreateCompanionBuilder =
+    InboxMessagesCompanion Function({
+      required String id,
+      required String userId,
+      required String kind,
+      required String bodyJson,
+      required int createdAt,
+      Value<int?> readAt,
+      Value<int?> repliedAt,
+      Value<int> rowid,
+    });
+typedef $$InboxMessagesTableUpdateCompanionBuilder =
+    InboxMessagesCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> kind,
+      Value<String> bodyJson,
+      Value<int> createdAt,
+      Value<int?> readAt,
+      Value<int?> repliedAt,
+      Value<int> rowid,
+    });
+
+class $$InboxMessagesTableFilterComposer
+    extends Composer<_$AppDatabase, $InboxMessagesTable> {
+  $$InboxMessagesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bodyJson => $composableBuilder(
+    column: $table.bodyJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get readAt => $composableBuilder(
+    column: $table.readAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get repliedAt => $composableBuilder(
+    column: $table.repliedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$InboxMessagesTableOrderingComposer
+    extends Composer<_$AppDatabase, $InboxMessagesTable> {
+  $$InboxMessagesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bodyJson => $composableBuilder(
+    column: $table.bodyJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get readAt => $composableBuilder(
+    column: $table.readAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get repliedAt => $composableBuilder(
+    column: $table.repliedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$InboxMessagesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $InboxMessagesTable> {
+  $$InboxMessagesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get bodyJson =>
+      $composableBuilder(column: $table.bodyJson, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get readAt =>
+      $composableBuilder(column: $table.readAt, builder: (column) => column);
+
+  GeneratedColumn<int> get repliedAt =>
+      $composableBuilder(column: $table.repliedAt, builder: (column) => column);
+}
+
+class $$InboxMessagesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $InboxMessagesTable,
+          CachedInboxMessage,
+          $$InboxMessagesTableFilterComposer,
+          $$InboxMessagesTableOrderingComposer,
+          $$InboxMessagesTableAnnotationComposer,
+          $$InboxMessagesTableCreateCompanionBuilder,
+          $$InboxMessagesTableUpdateCompanionBuilder,
+          (
+            CachedInboxMessage,
+            BaseReferences<
+              _$AppDatabase,
+              $InboxMessagesTable,
+              CachedInboxMessage
+            >,
+          ),
+          CachedInboxMessage,
+          PrefetchHooks Function()
+        > {
+  $$InboxMessagesTableTableManager(_$AppDatabase db, $InboxMessagesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$InboxMessagesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$InboxMessagesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$InboxMessagesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> bodyJson = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int?> readAt = const Value.absent(),
+                Value<int?> repliedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => InboxMessagesCompanion(
+                id: id,
+                userId: userId,
+                kind: kind,
+                bodyJson: bodyJson,
+                createdAt: createdAt,
+                readAt: readAt,
+                repliedAt: repliedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String userId,
+                required String kind,
+                required String bodyJson,
+                required int createdAt,
+                Value<int?> readAt = const Value.absent(),
+                Value<int?> repliedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => InboxMessagesCompanion.insert(
+                id: id,
+                userId: userId,
+                kind: kind,
+                bodyJson: bodyJson,
+                createdAt: createdAt,
+                readAt: readAt,
+                repliedAt: repliedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$InboxMessagesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $InboxMessagesTable,
+      CachedInboxMessage,
+      $$InboxMessagesTableFilterComposer,
+      $$InboxMessagesTableOrderingComposer,
+      $$InboxMessagesTableAnnotationComposer,
+      $$InboxMessagesTableCreateCompanionBuilder,
+      $$InboxMessagesTableUpdateCompanionBuilder,
+      (
+        CachedInboxMessage,
+        BaseReferences<_$AppDatabase, $InboxMessagesTable, CachedInboxMessage>,
+      ),
+      CachedInboxMessage,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6779,4 +7488,6 @@ class $AppDatabaseManager {
       $$TournamentScoreDraftsTableTableManager(_db, _db.tournamentScoreDrafts);
   $$ScoreSubmissionOutboxTableTableManager get scoreSubmissionOutbox =>
       $$ScoreSubmissionOutboxTableTableManager(_db, _db.scoreSubmissionOutbox);
+  $$InboxMessagesTableTableManager get inboxMessages =>
+      $$InboxMessagesTableTableManager(_db, _db.inboxMessages);
 }

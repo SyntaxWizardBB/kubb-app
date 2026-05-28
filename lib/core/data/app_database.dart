@@ -15,6 +15,8 @@ import 'package:kubb_app/core/data/tables/sessions.dart';
 import 'package:kubb_app/core/data/tables/tournament_score_drafts.dart';
 import 'package:kubb_app/features/auth/data/dao/cached_auth_session_dao.dart';
 import 'package:kubb_app/features/auth/data/tables/cached_auth_session_table.dart';
+import 'package:kubb_app/features/inbox/data/dao/inbox_messages_dao.dart';
+import 'package:kubb_app/features/inbox/data/tables/inbox_messages_table.dart';
 
 part 'app_database.g.dart';
 
@@ -28,6 +30,7 @@ part 'app_database.g.dart';
     CachedAuthSession,
     TournamentScoreDrafts,
     ScoreSubmissionOutbox,
+    InboxMessages,
   ],
   daos: [
     PlayerDao,
@@ -38,13 +41,14 @@ part 'app_database.g.dart';
     CachedAuthSessionDao,
     TournamentScoreDraftDao,
     ScoreSubmissionOutboxDao,
+    InboxMessagesDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -85,6 +89,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 6) {
             await m.createTable(scoreSubmissionOutbox);
+          }
+          if (from < 7) {
+            await m.createTable(inboxMessages);
           }
         },
       );
