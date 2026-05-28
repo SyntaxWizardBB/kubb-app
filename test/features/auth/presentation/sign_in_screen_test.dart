@@ -151,6 +151,46 @@ void main() {
   );
 
   testWidgets(
+    'renders the brand block, OAuth + anonymous buttons, restore link and EST footer in order',
+    (tester) async {
+      final adapter = _BlockingOAuthAdapter();
+      final connectivity = FakeConnectivityService();
+
+      await pump(tester, adapter: adapter, connectivity: connectivity);
+
+      // Brand block — eyebrow, wordmark, tagline.
+      expect(find.text('KUBB CLUB'), findsOneWidget);
+      expect(find.text('Kubb Club'), findsOneWidget);
+      expect(find.text('Trainings-Tracker für die Wiese'), findsOneWidget);
+
+      // Buttons — Google first, Apple skipped on this test platform
+      // (kIsWeb = false but Platform.isIOS = false in unit tests), then
+      // the divider, anonymous, restore link.
+      final google = find.text('Mit Google anmelden');
+      final divider = find.text('ODER');
+      final anonymous = find.text('Ohne Konto starten (anonym)');
+      final restore = find.text('Konto auf neuem Gerät wiederherstellen');
+      final foot = find.text('EST. 2025 · DACH');
+
+      expect(google, findsOneWidget);
+      expect(divider, findsOneWidget);
+      expect(anonymous, findsOneWidget);
+      expect(restore, findsOneWidget);
+      expect(foot, findsOneWidget);
+
+      // Vertical order Google -> Divider -> Anonymous -> Restore -> Foot.
+      double y(Finder f) => tester.getCenter(f).dy;
+      expect(y(google) < y(divider), isTrue);
+      expect(y(divider) < y(anonymous), isTrue);
+      expect(y(anonymous) < y(restore), isTrue);
+      expect(y(restore) < y(foot), isTrue);
+
+      // No spinners in the idle layout.
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    },
+  );
+
+  testWidgets(
     'blocks OAuth dispatch and disables buttons when offline',
     (tester) async {
       final adapter = _BlockingOAuthAdapter();

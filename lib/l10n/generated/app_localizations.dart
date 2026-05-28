@@ -1756,6 +1756,18 @@ abstract class AppLocalizations {
   /// **'Nur Buchstaben, Zahlen, \'-\' und \'_\'.'**
   String get authSignupNicknameInvalidChars;
 
+  /// Caption under the avatar-initial preview before the user has typed a nickname
+  ///
+  /// In de, this message translates to:
+  /// **'Dein Avatar-Buchstabe'**
+  String get authSignupNicknameAvatarHint;
+
+  /// Inline reassurance shown on step 1 of the anonymous signup wizard
+  ///
+  /// In de, this message translates to:
+  /// **'Anonyme Sessions kannst du via Recovery-Phrase auf ein neues Gerät übertragen — die Wörter generieren wir gleich.'**
+  String get authSignupNicknameRecoveryHint;
+
   /// Step 2 title
   ///
   /// In de, this message translates to:

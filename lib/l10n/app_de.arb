@@ -1276,6 +1276,14 @@
   "@authSignupNicknameInvalidChars": {
     "description": "Nickname error"
   },
+  "authSignupNicknameAvatarHint": "Dein Avatar-Buchstabe",
+  "@authSignupNicknameAvatarHint": {
+    "description": "Caption under the avatar-initial preview before the user has typed a nickname"
+  },
+  "authSignupNicknameRecoveryHint": "Anonyme Sessions kannst du via Recovery-Phrase auf ein neues Gerät übertragen — die Wörter generieren wir gleich.",
+  "@authSignupNicknameRecoveryHint": {
+    "description": "Inline reassurance shown on step 1 of the anonymous signup wizard"
+  },
   "authSignupDisclaimerTitle": "Sichere deine Passphrase",
   "@authSignupDisclaimerTitle": {
     "description": "Step 2 title"

@@ -912,6 +912,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Nur Buchstaben, Zahlen, \'-\' und \'_\'.';
 
   @override
+  String get authSignupNicknameAvatarHint => 'Dein Avatar-Buchstabe';
+
+  @override
+  String get authSignupNicknameRecoveryHint =>
+      'Anonyme Sessions kannst du via Recovery-Phrase auf ein neues Gerät übertragen — die Wörter generieren wir gleich.';
+
+  @override
   String get authSignupDisclaimerTitle => 'Sichere deine Passphrase';
 
   @override

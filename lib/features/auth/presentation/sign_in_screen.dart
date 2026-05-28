@@ -89,62 +89,68 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           builder: (context, constraints) {
             return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(
-                horizontal: KubbTokens.space6,
+                horizontal: KubbTokens.space4,
               ),
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Column(
                     children: [
-                      const SizedBox(height: KubbTokens.space10),
+                      const SizedBox(height: KubbTokens.space8),
                       _BrandBlock(
                         appName: l10n.authAppName,
                         tagline: l10n.authSigninTagline,
                       ),
                       const Spacer(),
-                      if (offline) ...[
-                        _OfflineBanner(message: l10n.authSigninOffline),
-                        const SizedBox(height: KubbTokens.space3),
-                      ],
-                      if (_showError) ...[
-                        _ErrorBanner(
-                          key: const ValueKey('signInOauthError'),
-                          message: l10n.authSigninOauthError,
-                        ),
-                        const SizedBox(height: KubbTokens.space3),
-                      ],
-                      OAuthProviderButton(
-                        provider: AuthProvider.google,
-                        label: l10n.authSigninGoogle,
-                        loading: _loading == _SignInLoading.google,
-                        onPressed: offline ? null : _onPickGoogle,
-                      ),
-                      const SizedBox(height: KubbTokens.space3),
-                      if (_showApple) ...[
-                        OAuthProviderButton(
-                          provider: AuthProvider.apple,
-                          label: l10n.authSigninApple,
-                          loading: _loading == _SignInLoading.apple,
-                          onPressed: offline ? null : _onPickApple,
-                        ),
-                        const SizedBox(height: KubbTokens.space3),
-                      ],
-                      _OrDivider(label: l10n.authSigninOr),
-                      const SizedBox(height: KubbTokens.space3),
-                      _AnonymousButton(
-                        label: l10n.authSigninAnonymous,
-                        loading: false,
-                        onPressed: _onPickAnonymous,
-                      ),
-                      const SizedBox(height: KubbTokens.space3),
-                      TextButton(
-                        onPressed: _onPickRestore,
-                        style: TextButton.styleFrom(
-                          foregroundColor: tokens.primary,
-                        ),
-                        child: Text(l10n.authSigninRestore),
+                      _SignInCard(
+                        children: [
+                          if (offline) ...[
+                            _OfflineBanner(message: l10n.authSigninOffline),
+                            const SizedBox(height: KubbTokens.space3),
+                          ],
+                          if (_showError) ...[
+                            _ErrorBanner(
+                              key: const ValueKey('signInOauthError'),
+                              message: l10n.authSigninOauthError,
+                            ),
+                            const SizedBox(height: KubbTokens.space3),
+                          ],
+                          OAuthProviderButton(
+                            provider: AuthProvider.google,
+                            label: l10n.authSigninGoogle,
+                            loading: _loading == _SignInLoading.google,
+                            onPressed: offline ? null : _onPickGoogle,
+                          ),
+                          const SizedBox(height: KubbTokens.space3),
+                          if (_showApple) ...[
+                            OAuthProviderButton(
+                              provider: AuthProvider.apple,
+                              label: l10n.authSigninApple,
+                              loading: _loading == _SignInLoading.apple,
+                              onPressed: offline ? null : _onPickApple,
+                            ),
+                            const SizedBox(height: KubbTokens.space3),
+                          ],
+                          _OrDivider(label: l10n.authSigninOr),
+                          const SizedBox(height: KubbTokens.space3),
+                          _AnonymousButton(
+                            label: l10n.authSigninAnonymous,
+                            loading: false,
+                            onPressed: _onPickAnonymous,
+                          ),
+                          const SizedBox(height: KubbTokens.space2),
+                          TextButton(
+                            onPressed: _onPickRestore,
+                            style: TextButton.styleFrom(
+                              foregroundColor: tokens.primary,
+                            ),
+                            child: Text(l10n.authSigninRestore),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: KubbTokens.space5),
+                      _EstFooter(text: 'EST. 2025 · DACH', color: tokens.fgMuted),
+                      const SizedBox(height: KubbTokens.space4),
                     ],
                   ),
                 ),
@@ -152,6 +158,55 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+class _SignInCard extends StatelessWidget {
+  const _SignInCard({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(
+        KubbTokens.space4,
+        KubbTokens.space5,
+        KubbTokens.space4,
+        KubbTokens.space4,
+      ),
+      decoration: BoxDecoration(
+        color: tokens.bgRaised,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusXl + 4),
+        border: Border.all(color: tokens.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    );
+  }
+}
+
+class _EstFooter extends StatelessWidget {
+  const _EstFooter({required this.text, required this.color});
+
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 3,
+        color: color,
       ),
     );
   }
@@ -175,7 +230,7 @@ class _BrandBlock extends StatelessWidget {
           height: 88,
           decoration: BoxDecoration(
             color: tokens.bgRaised,
-            borderRadius: BorderRadius.circular(KubbTokens.radiusXl),
+            borderRadius: BorderRadius.circular(KubbTokens.radiusXl + 4),
             boxShadow: [
               BoxShadow(
                 color: tokens.fg.withValues(alpha: 0.10),
@@ -187,7 +242,17 @@ class _BrandBlock extends StatelessWidget {
           alignment: Alignment.center,
           child: const _KubbLogo(size: 56),
         ),
-        const SizedBox(height: KubbTokens.space3),
+        const SizedBox(height: KubbTokens.space4),
+        Text(
+          'Kubb Club'.toUpperCase(),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.5,
+            color: tokens.fgMuted,
+          ),
+        ),
+        const SizedBox(height: 4),
         Text(
           appName,
           style: TextStyle(

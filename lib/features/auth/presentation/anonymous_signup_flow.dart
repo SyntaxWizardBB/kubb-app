@@ -207,17 +207,27 @@ class _NicknameStepState extends State<_NicknameStep> {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final err = _validate(context, _nick);
 
+    final hasName = _nick.trim().isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: KubbTokens.space3),
+        const SizedBox(height: KubbTokens.space4),
+        Center(
+          child: AvatarInitialPreview(
+            nickname: _nick,
+            label: hasName
+                ? _nick
+                : l10n.authSignupNicknameAvatarHint,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space5),
         Text(
           l10n.authSignupNicknameLabel,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.w600,
             color: tokens.fgMuted,
-            letterSpacing: 0.4,
+            letterSpacing: 1.2,
           ),
         ),
         const SizedBox(height: 6),
@@ -229,11 +239,11 @@ class _NicknameStepState extends State<_NicknameStep> {
             hintText: l10n.authSignupNicknamePlaceholder,
             counterText: '',
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+              borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
               borderSide: BorderSide(color: tokens.lineStrong, width: 1.5),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+              borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
               borderSide: BorderSide(
                 color: err != null ? KubbTokens.miss : tokens.lineStrong,
                 width: 1.5,
@@ -241,17 +251,23 @@ class _NicknameStepState extends State<_NicknameStep> {
             ),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         if (err != null)
           Text(
             err,
-            style: const TextStyle(fontSize: 12, color: KubbTokens.miss),
+            style: const TextStyle(
+              fontSize: 12,
+              color: KubbTokens.miss,
+              fontWeight: FontWeight.w600,
+            ),
           )
         else
           Text(
             l10n.authSignupNicknameHelper,
             style: TextStyle(fontSize: 12, color: tokens.fgMuted),
           ),
+        const SizedBox(height: KubbTokens.space4),
+        const _RecoveryHint(),
         const Spacer(),
         AuthPrimaryButton(
           label: l10n.authCommonContinue,
@@ -259,6 +275,109 @@ class _NicknameStepState extends State<_NicknameStep> {
         ),
         const SizedBox(height: KubbTokens.space5),
       ],
+    );
+  }
+}
+
+/// Live preview disc — gradient ring + meadow circle with the first
+/// uppercase character of the nickname, falling back to "?". Mirrors
+/// the avatar treatment on ProfileScreen so the cue carries through.
+class AvatarInitialPreview extends StatelessWidget {
+  const AvatarInitialPreview({
+    required this.nickname,
+    required this.label,
+    super.key,
+  });
+
+  final String nickname;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final trimmed = nickname.trim();
+    final initial = trimmed.isEmpty ? '?' : trimmed.characters.first.toUpperCase();
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final muted = trimmed.isEmpty;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: muted
+                ? null
+                : const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [KubbTokens.meadow500, KubbTokens.wood500],
+                  ),
+            color: muted ? tokens.line : null,
+          ),
+          child: Container(
+            width: 96,
+            height: 96,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: muted ? tokens.bgSunken : tokens.primary,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              initial,
+              style: TextStyle(
+                color: muted ? tokens.fgMuted : tokens.onPrimary,
+                fontSize: 42,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -1,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.2,
+            color: tokens.fgMuted,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RecoveryHint extends StatelessWidget {
+  const _RecoveryHint();
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.all(KubbTokens.space3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFBF2D6),
+        border: Border.all(color: const Color(0xFFD4AE3B), width: 1.5),
+        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.lock_outline, size: 18, color: Color(0xFF5A4500)),
+          const SizedBox(width: KubbTokens.space2),
+          Expanded(
+            child: Text(
+              l10n.authSignupNicknameRecoveryHint,
+              style: TextStyle(fontSize: 13, height: 1.4, color: tokens.fg),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
