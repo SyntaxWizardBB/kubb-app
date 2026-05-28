@@ -1,19 +1,23 @@
-<!doctype html>
-<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
-<style>
-  body { padding: 20px; background: var(--bk-bg); }
-  .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-  .sw { border-radius: 6px; height: 64px; display: flex; align-items: flex-end; padding: 6px 8px; color: #fff; font-family: var(--bk-font-mono); font-size: 10px; }
-  .sw.dark { color: var(--bk-stone-900); }
-  .label { font-size: 11px; color: var(--bk-fg-muted); margin-top: 4px; font-family: var(--bk-font-mono);}
-</style></head>
-<body>
-  <div class="bk-overline" style="margin-bottom:10px">Holz — Kubb Wood (accent)</div>
-  <div class="row">
-    <div><div class="sw dark" style="background:var(--bk-wood-50)">50</div><div class="label">#faf3e6</div></div>
-    <div><div class="sw dark" style="background:var(--bk-wood-200)">200</div><div class="label">#e6c98c</div></div>
-    <div><div class="sw dark" style="background:var(--bk-wood-400)">400★</div><div class="label">#c08a33</div></div>
-    <div><div class="sw" style="background:var(--bk-wood-600)">600</div><div class="label">#80561c</div></div>
-    <div><div class="sw" style="background:var(--bk-wood-800)">800</div><div class="label">#422c0e</div></div>
-  </div>
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>body{margin:0;padding:24px;background:var(--kc-bg)}
+.row{display:grid;grid-template-columns:repeat(9,1fr);gap:8px;align-items:end}
+.sw{height:80px;border-radius:8px;display:flex;flex-direction:column;justify-content:flex-end;padding:8px;color:#fbfaf6;font-family:var(--kc-font-mono);font-size:10px;line-height:1.2}
+.dark{color:#0c0b07}
+.label{font-size:9px;opacity:0.75}
+h3{font-family:var(--kc-font-display);font-weight:700;font-size:16px;margin:0 0 10px;letter-spacing:-0.02em}
+.sub{font-family:var(--kc-font-mono);font-size:10px;color:var(--kc-fg-muted);margin-bottom:8px}
+</style></head><body>
+<h3>Wood — Holz (Accent)</h3>
+<div class="sub">--kc-wood-50 → 800 · accent 400 · kubb-block fill</div>
+<div class="row">
+<div class="sw dark" style="background:#faf3e6"><div class="label">50</div>FAF3E6</div>
+<div class="sw dark" style="background:#f1e1bf"><div class="label">100</div>F1E1BF</div>
+<div class="sw dark" style="background:#e6c98c"><div class="label">200</div>E6C98C</div>
+<div class="sw dark" style="background:#d6ab57"><div class="label">300</div>D6AB57</div>
+<div class="sw dark" style="background:#c08a33;outline:3px solid #0c0b07;outline-offset:-3px"><div class="label">400★</div>C08A33</div>
+<div class="sw" style="background:#a16f24"><div class="label">500</div>A16F24</div>
+<div class="sw" style="background:#80561c"><div class="label">600</div>80561C</div>
+<div class="sw" style="background:#604015"><div class="label">700</div>604015</div>
+<div class="sw" style="background:#422c0e"><div class="label">800</div>422C0E</div>
+</div>
 </body></html>

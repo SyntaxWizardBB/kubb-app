@@ -1,20 +1,20 @@
-<!doctype html>
-<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
-<style>
-  body { padding: 20px; background: var(--bk-bg); }
-  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-  .tok { display: flex; flex-direction: column; gap: 6px; }
-  .sw { height: 64px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--bk-font-display); font-weight: 700; font-size: 13px; }
-  .nm { font-size: 11px; font-family: var(--bk-font-mono); color: var(--bk-fg); }
-  .sub { font-size: 10px; color: var(--bk-fg-muted); }
-</style></head>
-<body>
-  <div class="bk-overline" style="margin-bottom:10px">Semantische Spielereignisse — gameplay events</div>
-  <div class="grid">
-    <div class="tok"><div class="sw" style="background:var(--bk-hit)">Treffer</div><div class="nm">--bk-hit</div><div class="sub">Hit</div></div>
-    <div class="tok"><div class="sw" style="background:var(--bk-miss)">Miss</div><div class="nm">--bk-miss</div><div class="sub">Fehlschuss</div></div>
-    <div class="tok"><div class="sw" style="background:var(--bk-heli);color:#0c0b07">Heli</div><div class="nm">--bk-heli</div><div class="sub">Helikopter</div></div>
-    <div class="tok"><div class="sw" style="background:var(--bk-penalty)">Strafe</div><div class="nm">--bk-penalty</div><div class="sub">Strafkubb</div></div>
-    <div class="tok"><div class="sw" style="background:var(--bk-king);color:#0c0b07">König</div><div class="nm">--bk-king</div><div class="sub">King</div></div>
-  </div>
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>body{margin:0;padding:24px;background:var(--kc-bg)}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.cell{padding:14px;border-radius:12px;color:#fbfaf6;display:flex;flex-direction:column;gap:4px;min-height:84px}
+.name{font-family:var(--kc-font-display);font-weight:700;font-size:15px;letter-spacing:-0.01em}
+.use{font-family:var(--kc-font-mono);font-size:10px;opacity:0.85}
+.hex{font-family:var(--kc-font-mono);font-size:10px;opacity:0.7;margin-top:auto}
+h3{font-family:var(--kc-font-display);font-weight:700;font-size:16px;margin:0 0 10px;letter-spacing:-0.02em}
+.sub{font-family:var(--kc-font-mono);font-size:10px;color:var(--kc-fg-muted);margin-bottom:10px}
+</style></head><body>
+<h3>Semantic action colors</h3>
+<div class="sub">The five named outcomes the app tracks per stick</div>
+<div class="grid">
+<div class="cell" style="background:#2d6324"><div class="name">Hit</div><div class="use">Treffer</div><div class="hex">#2D6324</div></div>
+<div class="cell" style="background:#b73a2a"><div class="name">Miss</div><div class="use">Fehlschuss</div><div class="hex">#B73A2A</div></div>
+<div class="cell" style="background:#c08a33"><div class="name">Heli</div><div class="use">Helikopter · caution</div><div class="hex">#C08A33</div></div>
+<div class="cell" style="background:#8a1f3d"><div class="name">Penalty</div><div class="use">Strafkubb</div><div class="hex">#8A1F3D</div></div>
+<div class="cell" style="background:#c89b3d;color:#0c0b07"><div class="name">King</div><div class="use">König</div><div class="hex">#C89B3D</div></div>
+</div>
 </body></html>

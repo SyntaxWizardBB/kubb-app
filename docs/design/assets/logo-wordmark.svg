@@ -1,25 +1,120 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="520" height="120" viewBox="0 0 520 120">
-  <rect width="520" height="120" fill="#fbfaf6"></rect>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="200" viewBox="0 0 640 200" role="img" aria-label="Kubb Club">
+  <defs>
+    <linearGradient id="woodW" x1="0.25" y1="0" x2="0.75" y2="1">
+      <stop offset="0" stop-color="#f0d28c"></stop>
+      <stop offset="0.5" stop-color="#c89548"></stop>
+      <stop offset="1" stop-color="#8e631d"></stop>
+    </linearGradient>
+    <linearGradient id="woodEndW" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a87a25"></stop>
+      <stop offset="1" stop-color="#6e4810"></stop>
+    </linearGradient>
+    <linearGradient id="goldW" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fce19a"></stop>
+      <stop offset="0.45" stop-color="#d9b14a"></stop>
+      <stop offset="1" stop-color="#8a5e15"></stop>
+    </linearGradient>
+    <linearGradient id="goldRimW" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a8801f"></stop>
+      <stop offset="1" stop-color="#5e3f0c"></stop>
+    </linearGradient>
+    <linearGradient id="meadowW" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#56a142"></stop>
+      <stop offset="1" stop-color="#1f4615"></stop>
+    </linearGradient>
+    <filter id="liftW" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0c0b07" flood-opacity="0.38"></feDropShadow>
+    </filter>
+    <filter id="liftShW" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0c0b07" flood-opacity="0.36"></feDropShadow>
+    </filter>
+  </defs>
 
   
-  <g font-family="&#39;Bricolage Grotesque&#39;, system-ui, sans-serif" font-weight="800" letter-spacing="-2">
-    <text x="20" y="68" font-size="56" fill="#0c0b07">BROSI&#39;S</text>
-    <text x="20" y="108" font-size="36" fill="#3a7c2e" letter-spacing="6">KUBB</text>
+  <g transform="translate(8 12) scale(0.74)">
+    
+    <rect width="240" height="240" rx="52" fill="url(#meadowW)"></rect>
+    <rect x="7" y="7" width="226" height="226" rx="46" fill="none" stroke="#fbfaf6" stroke-width="1.3" stroke-opacity="0.35"></rect>
+
+    
+    <g transform="translate(20 4)">
+      <g filter="url(#liftW)">
+        
+        <g transform="rotate(-44 102 152)">
+          <rect x="96" y="135" width="95" height="34" rx="5" fill="url(#woodW)"></rect>
+          <rect x="180" y="135" width="11" height="34" rx="3" fill="url(#woodEndW)"></rect>
+          <rect x="96" y="135" width="95" height="3.5" rx="1.5" fill="#fce19a" opacity="0.55"></rect>
+          <rect x="96" y="165" width="95" height="3" rx="1.5" fill="#4a2e08" opacity="0.30"></rect>
+          <path d="M 102 142 Q 130 141 158 143 T 188 142" stroke="#5a3a10" stroke-width="0.7" fill="none" opacity="0.32"></path>
+          <path d="M 102 148 Q 130 149 158 147 T 188 148" stroke="#5a3a10" stroke-width="0.5" fill="none" opacity="0.22"></path>
+          <path d="M 102 155 Q 130 154 158 156 T 188 155" stroke="#5a3a10" stroke-width="0.8" fill="none" opacity="0.30"></path>
+          <path d="M 102 161 Q 130 162 158 160 T 188 161" stroke="#5a3a10" stroke-width="0.5" fill="none" opacity="0.20"></path>
+          <ellipse cx="148" cy="151" rx="3" ry="1.6" fill="#4a2e08" opacity="0.55"></ellipse>
+          <ellipse cx="148" cy="151" rx="1.2" ry="0.6" fill="#2a1d05" opacity="0.7"></ellipse>
+        </g>
+        
+        <g transform="rotate(44 102 152)">
+          <rect x="96" y="135" width="95" height="34" rx="5" fill="url(#woodW)"></rect>
+          <rect x="180" y="135" width="11" height="34" rx="3" fill="url(#woodEndW)"></rect>
+          <rect x="96" y="135" width="95" height="3.5" rx="1.5" fill="#fce19a" opacity="0.55"></rect>
+          <rect x="96" y="165" width="95" height="3" rx="1.5" fill="#4a2e08" opacity="0.30"></rect>
+          <path d="M 102 142 Q 130 143 158 141 T 188 142" stroke="#5a3a10" stroke-width="0.7" fill="none" opacity="0.32"></path>
+          <path d="M 102 148 Q 130 147 158 149 T 188 148" stroke="#5a3a10" stroke-width="0.5" fill="none" opacity="0.22"></path>
+          <path d="M 102 155 Q 130 156 158 154 T 188 155" stroke="#5a3a10" stroke-width="0.8" fill="none" opacity="0.30"></path>
+          <path d="M 102 161 Q 130 160 158 162 T 188 161" stroke="#5a3a10" stroke-width="0.5" fill="none" opacity="0.20"></path>
+        </g>
+        
+        <rect x="42" y="76" width="62" height="134" rx="6" fill="url(#woodW)"></rect>
+        <rect x="44" y="80" width="4" height="126" rx="2" fill="#fce19a" opacity="0.62"></rect>
+        <rect x="100" y="80" width="3" height="126" rx="1.5" fill="#4a2e08" opacity="0.32"></rect>
+        <rect x="42" y="76" width="62" height="4" rx="2" fill="#fce19a" opacity="0.45"></rect>
+        <rect x="42" y="206" width="62" height="4" rx="2" fill="#4a2e08" opacity="0.30"></rect>
+        <path d="M 50 84 Q 51 130 49 165 T 50 206" stroke="#5a3a10" stroke-width="0.8" fill="none" opacity="0.32"></path>
+        <path d="M 56 82 Q 57 110 55 150 Q 54 180 56 207" stroke="#5a3a10" stroke-width="0.5" fill="none" opacity="0.22"></path>
+        <path d="M 64 84 Q 66 120 62 155 Q 64 185 65 206" stroke="#5a3a10" stroke-width="1.0" fill="none" opacity="0.34"></path>
+        <path d="M 72 82 Q 74 130 71 160 T 73 207" stroke="#5a3a10" stroke-width="0.5" fill="none" opacity="0.18"></path>
+        <path d="M 80 84 Q 78 115 81 145 Q 79 178 80 206" stroke="#5a3a10" stroke-width="0.7" fill="none" opacity="0.26"></path>
+        <path d="M 88 82 Q 90 130 88 165 T 89 207" stroke="#5a3a10" stroke-width="0.5" fill="none" opacity="0.20"></path>
+        <path d="M 96 84 Q 95 125 97 158 T 96 206" stroke="#5a3a10" stroke-width="0.9" fill="none" opacity="0.30"></path>
+        <ellipse cx="76" cy="118" rx="3.6" ry="2" fill="#4a2e08" opacity="0.55"></ellipse>
+        <ellipse cx="76" cy="118" rx="1.5" ry="0.8" fill="#2a1d05" opacity="0.75"></ellipse>
+        <ellipse cx="84" cy="178" rx="2.8" ry="1.5" fill="#4a2e08" opacity="0.5"></ellipse>
+        <ellipse cx="84" cy="178" rx="1.1" ry="0.55" fill="#2a1d05" opacity="0.7"></ellipse>
+      </g>
+
+      
+      <g filter="url(#liftShW)">
+        <path d="M 36 64 L 49 26 L 64 64 Z" fill="url(#goldW)" stroke="url(#goldRimW)" stroke-width="1.4" stroke-linejoin="round"></path>
+        <path d="M 86 64 L 101 26 L 114 64 Z" fill="url(#goldW)" stroke="url(#goldRimW)" stroke-width="1.4" stroke-linejoin="round"></path>
+        <path d="M 60 64 L 75 12 L 90 64 Z" fill="url(#goldW)" stroke="url(#goldRimW)" stroke-width="1.4" stroke-linejoin="round"></path>
+        <circle cx="49" cy="26" r="4.5" fill="url(#goldW)" stroke="url(#goldRimW)" stroke-width="1"></circle>
+        <circle cx="101" cy="26" r="4.5" fill="url(#goldW)" stroke="url(#goldRimW)" stroke-width="1"></circle>
+        <rect x="72" y="4" width="6" height="16" rx="1.2" fill="url(#goldW)" stroke="url(#goldRimW)" stroke-width="1"></rect>
+        <rect x="67" y="9" width="16" height="6" rx="1.2" fill="url(#goldW)" stroke="url(#goldRimW)" stroke-width="1"></rect>
+        <rect x="30" y="62" width="90" height="22" rx="4" fill="url(#goldW)" stroke="url(#goldRimW)" stroke-width="1.4"></rect>
+        <rect x="30" y="79" width="90" height="5" rx="1.8" fill="#8a661a"></rect>
+        <rect x="32" y="63.5" width="86" height="2.5" rx="1" fill="#fce19a" opacity="0.75"></rect>
+        <circle cx="75" cy="73" r="6" fill="#3a7c2e" stroke="url(#goldRimW)" stroke-width="1.2"></circle>
+        <circle cx="73.5" cy="71.5" r="2.4" fill="#aed3a2" opacity="0.9"></circle>
+        <circle cx="48" cy="73" r="2.5" fill="#fbfaf6" stroke="url(#goldRimW)" stroke-width="0.7"></circle>
+        <circle cx="102" cy="73" r="2.5" fill="#fbfaf6" stroke="url(#goldRimW)" stroke-width="0.7"></circle>
+      </g>
+    </g>
+    
+    <rect x="38" y="224" width="164" height="2" rx="1" fill="#fbfaf6" opacity="0.6"></rect>
   </g>
 
   
-  <g transform="translate(360 30)">
-    <rect x="0" y="40" width="22" height="50" rx="2" fill="#c08a33"></rect>
-    <rect x="0" y="40" width="22" height="5" fill="#a16f24"></rect>
-    <rect x="34" y="40" width="22" height="50" rx="2" fill="#c08a33"></rect>
-    <rect x="34" y="40" width="22" height="5" fill="#a16f24"></rect>
-    <rect x="68" y="40" width="22" height="50" rx="2" fill="#c08a33"></rect>
-    <rect x="68" y="40" width="22" height="5" fill="#a16f24"></rect>
-    
-    <rect x="115" y="20" width="28" height="70" rx="2" fill="#c89b3d"></rect>
-    <rect x="115" y="20" width="28" height="6" fill="#a17a24"></rect>
-    <rect x="113" y="14" width="32" height="8" fill="#c89b3d"></rect>
-    
-    <rect x="-8" y="92" width="160" height="2" fill="#0c0b07"></rect>
+  <g font-family="&#39;Fraunces&#39;, Georgia, serif" font-weight="700" fill="#0c0b07" style="font-variation-settings:&#39;opsz&#39; 144, &#39;SOFT&#39; 30;">
+    <text x="208" y="92" font-size="76" letter-spacing="-3.5">Kubb</text>
+    <text x="208" y="158" font-size="68" letter-spacing="-2.5" fill="#3a7c2e">Club.</text>
   </g>
+
+  
+  <g font-family="&#39;JetBrains Mono&#39;, ui-monospace, monospace" font-size="11" fill="#777567" letter-spacing="3">
+    <text x="212" y="180">EST. 2025 · DACH</text>
+  </g>
+
+  
+  <line x1="208" y1="186" x2="600" y2="186" stroke="#c89b3d" stroke-width="1.2" stroke-opacity="0.65"></line>
 </svg>

@@ -1,20 +1,24 @@
-<!doctype html>
-<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
-<style>
-  body { padding: 20px; background: var(--bk-bg); }
-  .row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
-  .sw { border-radius: 6px; height: 60px; display: flex; align-items: flex-end; padding: 6px 8px; color: #fff; font-family: var(--bk-font-mono); font-size: 10px; }
-  .sw.dark { color: var(--bk-stone-900); }
-  .label { font-size: 10px; color: var(--bk-fg-muted); margin-top: 4px; font-family: var(--bk-font-mono);}
-</style></head>
-<body>
-  <div class="bk-overline" style="margin-bottom:10px">Stein — Stone (neutrals)</div>
-  <div class="row">
-    <div><div class="sw dark" style="background:var(--bk-stone-50);box-shadow:inset 0 0 0 1px var(--bk-line)">50</div><div class="label">#f4f3f0</div></div>
-    <div><div class="sw dark" style="background:var(--bk-stone-200)">200</div><div class="label">#cfccc1</div></div>
-    <div><div class="sw" style="background:var(--bk-stone-400)">400</div><div class="label">#777567</div></div>
-    <div><div class="sw" style="background:var(--bk-stone-600)">600</div><div class="label">#34322a</div></div>
-    <div><div class="sw" style="background:var(--bk-stone-800)">800</div><div class="label">#161510</div></div>
-    <div><div class="sw" style="background:var(--bk-stone-900)">900★</div><div class="label">#0c0b07</div></div>
-  </div>
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>body{margin:0;padding:24px;background:var(--kc-bg)}
+.row{display:grid;grid-template-columns:repeat(10,1fr);gap:8px;align-items:end}
+.sw{height:80px;border-radius:8px;display:flex;flex-direction:column;justify-content:flex-end;padding:8px;color:#fbfaf6;font-family:var(--kc-font-mono);font-size:10px;line-height:1.2;border:1px solid rgba(0,0,0,0.06)}
+.dark{color:#0c0b07}
+.label{font-size:9px;opacity:0.75}
+h3{font-family:var(--kc-font-display);font-weight:700;font-size:16px;margin:0 0 10px;letter-spacing:-0.02em}
+.sub{font-family:var(--kc-font-mono);font-size:10px;color:var(--kc-fg-muted);margin-bottom:8px}
+</style></head><body>
+<h3>Stone &amp; Chalk — Neutrals</h3>
+<div class="sub">warm-tinted charcoals (stone) + off-whites (chalk)</div>
+<div class="row">
+<div class="sw dark" style="background:#ffffff"><div class="label">chalk-0</div>FFFFFF</div>
+<div class="sw dark" style="background:#fbfaf6"><div class="label">chalk-50</div>FBFAF6</div>
+<div class="sw dark" style="background:#f4f1e8"><div class="label">chalk-100</div>F4F1E8</div>
+<div class="sw dark" style="background:#e8e2d2"><div class="label">chalk-200</div>E8E2D2</div>
+<div class="sw dark" style="background:#cfccc1"><div class="label">stone-200</div>CFCCC1</div>
+<div class="sw dark" style="background:#a8a597"><div class="label">stone-300</div>A8A597</div>
+<div class="sw" style="background:#777567"><div class="label">stone-400</div>777567</div>
+<div class="sw" style="background:#4d4b40"><div class="label">stone-500</div>4D4B40</div>
+<div class="sw" style="background:#232118"><div class="label">stone-700</div>232118</div>
+<div class="sw" style="background:#0c0b07"><div class="label">stone-900</div>0C0B07</div>
+</div>
 </body></html>

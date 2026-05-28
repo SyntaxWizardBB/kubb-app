@@ -1,21 +1,14 @@
-<!doctype html>
-<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
-<style>
-  body { padding: 18px; background: var(--bk-bg); }
-  .strip { display:grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: var(--bk-bg-raised); border-radius: 16px; padding: 14px 18px; box-shadow: var(--bk-shadow-1); }
-  .stat { display:flex; flex-direction:column; gap: 2px; }
-  .lbl { font-family: var(--bk-font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--bk-fg-muted); }
-  .val { font-family: var(--bk-font-display); font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-  .val.hit  { color: var(--bk-hit); }
-  .val.miss { color: var(--bk-miss); }
-  .val.heli { color: var(--bk-heli); }
-</style></head>
-<body>
-  <div class="bk-overline" style="margin-bottom:10px">Counter strip — top of training screen</div>
-  <div class="strip">
-    <div class="stat"><span class="lbl">Würfe</span><span class="val">17</span></div>
-    <div class="stat"><span class="lbl">Treffer</span><span class="val hit">11</span></div>
-    <div class="stat"><span class="lbl">Miss</span><span class="val miss">6</span></div>
-    <div class="stat"><span class="lbl">Heli</span><span class="val heli">0</span></div>
-  </div>
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>body{margin:0;padding:24px;background:var(--kc-bg);color:var(--kc-fg);font-family:var(--kc-font-ui);display:flex;gap:20px;align-items:center}
+.counter{font-family:var(--kc-font-ui);font-weight:800;font-size:120px;line-height:0.85;letter-spacing:-0.05em;font-variant-numeric:tabular-nums;color:var(--kc-fg)}
+.unit{font-family:var(--kc-font-ui);font-weight:600;font-size:20px;color:var(--kc-fg-muted)}
+.stack{display:flex;flex-direction:column;gap:6px;font-family:var(--kc-font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--kc-fg-muted)}
+.stack b{font-family:var(--kc-font-ui);font-weight:700;font-size:32px;letter-spacing:-0.02em;color:var(--kc-fg);text-transform:none}
+.hit{color:var(--kc-hit)}
+</style></head><body>
+<div><div class="counter">11</div><div class="stack" style="margin-top:4px">Treffer von 17</div></div>
+<div class="stack"><span>Würfe gesamt</span><b>17</b></div>
+<div class="stack"><span>Miss</span><b style="color:var(--kc-miss)">6</b></div>
+<div class="stack"><span>Heli</span><b style="color:var(--kc-heli)">0</b></div>
+<div class="stack"><span>Quote</span><b class="hit">64<span class="unit" style="font-weight:600;font-size:18px">%</span></b></div>
 </body></html>

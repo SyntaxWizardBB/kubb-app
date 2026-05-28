@@ -1,23 +1,19 @@
-<!doctype html>
-<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
-<style>
-  body { padding: 18px; background: var(--bk-bg); }
-  .pad { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 520px; }
-  .tap { min-height: 88px; border-radius: 16px; border: 0; font-family: var(--bk-font-display); font-weight: 700; font-size: 22px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 0 22px; }
-  .tap.hit { background: var(--bk-hit); color: #fff; }
-  .tap.miss { background: var(--bk-miss); color: #fff; }
-  .tap.heli { background: var(--bk-heli); color: var(--bk-stone-900); }
-  .tap.minus { background: var(--bk-bg-raised); color: var(--bk-fg); box-shadow: inset 0 0 0 2px var(--bk-line); font-weight: 600; }
-  .sign { font-family: var(--bk-font-display); font-size: 36px; font-weight: 800; line-height: 1; }
-</style></head>
-<body>
-  <div class="bk-overline" style="margin-bottom:10px">Tap-Pad — primary input on training screen</div>
-  <div class="pad">
-    <button class="tap hit">Hit <span class="sign">+</span></button>
-    <button class="tap minus">Hit <span class="sign">−</span></button>
-    <button class="tap miss">Miss <span class="sign">+</span></button>
-    <button class="tap minus">Miss <span class="sign">−</span></button>
-    <button class="tap heli">Heli <span class="sign">+</span></button>
-    <button class="tap minus">Heli <span class="sign">−</span></button>
-  </div>
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>body{margin:0;padding:20px;background:var(--kc-bg);color:var(--kc-fg);font-family:var(--kc-font-ui);display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pad{min-height:96px;padding:12px 16px;border-radius:18px;display:flex;align-items:center;justify-content:space-between;border:0;cursor:pointer;font-family:inherit;text-align:left}
+.hit{background:var(--kc-hit);color:#fbfaf6}
+.miss{background:var(--kc-miss);color:#fbfaf6}
+.heli{background:var(--kc-heli);color:#0c0b07}
+.ghost{background:var(--kc-bg-raised);color:var(--kc-fg);box-shadow:inset 0 0 0 1.5px var(--kc-stone-200)}
+.lab{font-family:var(--kc-font-ui);font-weight:800;font-size:24px;letter-spacing:-0.02em}
+.btn{width:42px;height:42px;border-radius:999px;background:rgba(255,255,255,0.18);display:grid;place-items:center}
+.ghost .btn{background:var(--kc-stone-100);color:var(--kc-fg)}
+.ico{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
+</style></head><body>
+<div class="pad hit"><span class="lab">Hit</span><div class="btn"><svg viewBox="0 0 24 24" class="ico"><path d="M12 5v14M5 12h14"/></svg></div></div>
+<div class="pad ghost"><span class="lab">Hit</span><div class="btn"><svg viewBox="0 0 24 24" class="ico"><path d="M5 12h14"/></svg></div></div>
+<div class="pad miss"><span class="lab">Miss</span><div class="btn"><svg viewBox="0 0 24 24" class="ico"><path d="M12 5v14M5 12h14"/></svg></div></div>
+<div class="pad ghost"><span class="lab">Miss</span><div class="btn"><svg viewBox="0 0 24 24" class="ico"><path d="M5 12h14"/></svg></div></div>
+<div class="pad heli"><span class="lab">Heli</span><div class="btn" style="background:rgba(12,11,7,0.18)"><svg viewBox="0 0 24 24" class="ico"><path d="M12 5v14M5 12h14"/></svg></div></div>
+<div class="pad ghost"><span class="lab">Heli</span><div class="btn"><svg viewBox="0 0 24 24" class="ico"><path d="M5 12h14"/></svg></div></div>
 </body></html>

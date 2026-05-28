@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kubb Club — Splash Screen</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { height:100%; margin:0; background:#0c0b07; }
+  body { display:flex; flex-direction:column; align-items:center; padding:48px 16px; gap:48px; }
+  .row { display:flex; gap:32px; flex-wrap:wrap; justify-content:center; }
+  .col { display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .caption { font-family:var(--kc-font-mono); font-size:11px; color:var(--kc-stone-300); letter-spacing:0.08em; text-transform:uppercase; }
+  .device { width:300px; height:650px; border-radius:48px; border:6px solid #232118; overflow:hidden; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.4); }
+  .device-wide { width:480px; height:300px; border-radius:18px; }
+
+  /* === SPLASH base — used by all variants === */
+  .splash { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; color:#fbfaf6; }
+  .splash.meadow { background:linear-gradient(180deg,#56a142 0%,#1f4615 100%); }
+  .splash.chalk  { background:linear-gradient(180deg,#fbfaf6 0%,#ece6d2 100%); color:#0c0b07; }
+  .splash.ink    { background:radial-gradient(circle at 40% 45%, rgba(58,124,46,0.35) 0%, #0a0905 65%), linear-gradient(180deg,#232118 0%,#0a0905 100%); }
+  .splash .mark { width:140px; height:140px; filter:drop-shadow(0 4px 12px rgba(0,0,0,0.35)); }
+  .splash .wordmark { font-family:'Fraunces', Georgia, serif; font-weight:700; font-size:42px; letter-spacing:-0.025em; line-height:1; font-variation-settings:'opsz' 144, 'SOFT' 30; white-space:nowrap; }; }
+  .splash .wordmark .club { color:#d9b14a; }
+  .splash .tagline { font-family:'JetBrains Mono', ui-monospace, monospace; font-size:10px; letter-spacing:0.3em; opacity:0.7; text-transform:uppercase; }
+  .splash .pitch { width:120px; height:1px; background:currentColor; opacity:0.4; margin-top:4px; }
+
+  /* loading bar */
+  .loader { position:absolute; left:50%; transform:translateX(-50%); bottom:64px; width:120px; height:3px; background:rgba(255,255,255,0.15); border-radius:999px; overflow:hidden; }
+  .loader::after { content:""; position:absolute; left:0; top:0; bottom:0; width:40%; background:#fce19a; border-radius:999px; animation:slide 1.6s cubic-bezier(0.3,0,0,1) infinite; }
+  @keyframes slide { 0% { left:-40%; } 100% { left:100%; } }
+
+  /* breathing dot */
+  .dots { position:absolute; left:50%; transform:translateX(-50%); bottom:96px; display:flex; gap:8px; }
+  .dots span { width:8px; height:8px; border-radius:999px; background:currentColor; opacity:0.55; animation:breathe 1.4s ease-in-out infinite; }
+  .dots span:nth-child(2) { animation-delay:0.2s; }
+  .dots span:nth-child(3) { animation-delay:0.4s; }
+  @keyframes breathe { 0%,100% { opacity:0.25; transform:scale(0.85); } 50% { opacity:0.85; transform:scale(1.15); } }
+
+  /* the meadow grass ticks at the bottom */
+  .grass { position:absolute; bottom:0; left:0; right:0; height:50px; display:flex; align-items:flex-end; justify-content:center; gap:5px; padding-bottom:14px; }
+  .grass i { display:block; width:1.5px; background:#aed3a2; border-radius:1px; opacity:0.55; }
+  .grass i:nth-child(odd) { height:14px; }
+  .grass i:nth-child(even) { height:10px; }
+
+  /* Pulsing crown subtle anim on the mark */
+  .mark { animation:rise 0.8s var(--kc-ease-emphasized,cubic-bezier(0.3,0,0,1)) backwards; }
+  @keyframes rise { from { opacity:0; transform:translateY(8px) scale(0.96); } to { opacity:1; transform:none; } }
+  .wordmark { animation:rise 0.8s 0.15s var(--kc-ease-emphasized,cubic-bezier(0.3,0,0,1)) backwards; }
+  .tagline  { animation:rise 0.8s 0.30s var(--kc-ease-emphasized,cubic-bezier(0.3,0,0,1)) backwards; }
+
+  .header { color:#fbfaf6; font-family:'Fraunces', Georgia, serif; font-size:28px; font-weight:600; letter-spacing:-0.02em; }
+  .sub { color:var(--kc-stone-300); font-family:var(--kc-font-mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; }
+</style>
+</head>
+<body>
+
+<div class="header">Kubb Club — Splash Screen Konzepte</div>
+<div class="sub">Mobile (iOS / Android) · Web · Tablet = Desktop</div>
+
+<!-- ===================== MOBILE ROW ===================== -->
+<div class="row">
+
+  <div class="col">
+    <div class="device">
+      <div class="splash meadow">
+        <img src="../assets/logo-mark.svg" class="mark" alt="">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+          <div class="wordmark">Kubb <span class="club">Club.</span></div>
+          <div class="pitch"></div>
+          <div class="tagline">EST. 2025 · DACH</div>
+        </div>
+        <div class="loader"></div>
+        <div class="grass">
+          <i style="height:12px"></i><i style="height:8px"></i><i style="height:14px"></i><i style="height:10px"></i><i style="height:16px"></i><i style="height:8px"></i><i style="height:13px"></i><i style="height:11px"></i><i style="height:15px"></i><i style="height:9px"></i><i style="height:12px"></i><i style="height:14px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:13px"></i><i style="height:10px"></i><i style="height:16px"></i><i style="height:9px"></i><i style="height:12px"></i><i style="height:15px"></i><i style="height:8px"></i><i style="height:11px"></i><i style="height:14px"></i><i style="height:10px"></i>
+        </div>
+      </div>
+    </div>
+    <div class="caption">A · Meadow + Wordmark</div>
+  </div>
+
+  <div class="col">
+    <div class="device">
+      <div class="splash meadow">
+        <img src="../assets/logo-mark.svg" class="mark" style="width:170px; height:170px" alt="">
+        <div class="dots"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+    <div class="caption">B · Mark Only (App Store)</div>
+  </div>
+
+  <div class="col">
+    <div class="device">
+      <div class="splash chalk">
+        <img src="../assets/logo-mark.svg" class="mark" alt="">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+          <div class="wordmark">Kubb <span class="club">Club.</span></div>
+          <div class="pitch" style="background:#3a7c2e; opacity:0.7"></div>
+          <div class="tagline" style="opacity:0.55">EST. 2025 · DACH</div>
+        </div>
+        <div class="loader" style="background:rgba(12,11,7,0.10)">
+        </div>
+      </div>
+    </div>
+    <div class="caption">C · Chalk Daytime</div>
+  </div>
+
+  <div class="col">
+    <div class="device">
+      <div class="splash ink">
+        <img src="../assets/logo-mark-ink.svg" class="mark" alt="" style="filter:drop-shadow(0 8px 24px rgba(58,124,46,0.4))">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+          <div class="wordmark" style="color:#fbfaf6">Kubb <span class="club">Club.</span></div>
+          <div class="pitch"></div>
+          <div class="tagline" style="color:#d9b14a; opacity:0.8">EST. 2025 · DACH</div>
+        </div>
+        <div class="dots"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+    <div class="caption">D · Ink Dusk Mode</div>
+  </div>
+
+</div>
+
+<div class="header" style="margin-top:24px">Web / Tablet (1280 × 800)</div>
+
+<!-- ===================== WIDE ROW (Desktop / Tablet) ===================== -->
+<div class="row">
+  <div class="col">
+    <div class="device device-wide">
+      <div class="splash meadow">
+        <div style="display:flex; align-items:center; gap:24px;">
+          <img src="../assets/logo-mark.svg" class="mark" style="width:96px; height:96px" alt="">
+          <div style="text-align:left">
+            <div class="wordmark" style="font-size:48px">Kubb <span class="club">Club.</span></div>
+            <div class="tagline" style="margin-top:8px">EST. 2025 · DACH</div>
+          </div>
+        </div>
+        <div class="loader" style="bottom:32px"></div>
+      </div>
+    </div>
+    <div class="caption">E · Web — horizontal lockup</div>
+  </div>
+</div>
+
+</body>
+</html>

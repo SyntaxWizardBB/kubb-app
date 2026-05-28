@@ -1,21 +1,15 @@
-<!doctype html>
-<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
-<style>
-  body { padding: 20px; background: var(--bk-bg); }
-  .grid { display:grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
-  .item { display:flex; flex-direction:column; align-items:center; gap:6px; }
-  .box { width: 64px; height: 64px; background: var(--bk-meadow-500); }
-  .nm { font-family: var(--bk-font-mono); font-size: 10px; color: var(--bk-fg-muted); text-align:center; }
-</style></head>
-<body>
-  <div class="bk-overline" style="margin-bottom:10px">Radii — pitch tool, restrained</div>
-  <div class="grid">
-    <div class="item"><div class="box" style="border-radius:var(--bk-radius-xs)"></div><div class="nm">xs · 2</div></div>
-    <div class="item"><div class="box" style="border-radius:var(--bk-radius-sm)"></div><div class="nm">sm · 4</div></div>
-    <div class="item"><div class="box" style="border-radius:var(--bk-radius-md)"></div><div class="nm">md · 8</div></div>
-    <div class="item"><div class="box" style="border-radius:var(--bk-radius-lg)"></div><div class="nm">lg · 12</div></div>
-    <div class="item"><div class="box" style="border-radius:var(--bk-radius-xl)"></div><div class="nm">xl · 16</div></div>
-    <div class="item"><div class="box" style="border-radius:var(--bk-radius-2xl)"></div><div class="nm">2xl · 20</div></div>
-    <div class="item"><div class="box" style="border-radius:var(--bk-radius-pill)"></div><div class="nm">pill</div></div>
-  </div>
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>body{margin:0;padding:24px;background:var(--kc-bg);color:var(--kc-fg);font-family:var(--kc-font-mono);font-size:10px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}
+.cell{display:flex;flex-direction:column;align-items:center;gap:6px}
+.box{width:72px;height:54px;background:var(--kc-meadow-500);color:#fbfaf6;display:grid;place-items:center;font-weight:700;font-family:var(--kc-font-ui);font-size:11px}
+.lab{color:var(--kc-fg-muted)}
+</style></head><body>
+<div class="cell"><div class="box" style="border-radius:2px">xs</div><div class="lab">2px</div></div>
+<div class="cell"><div class="box" style="border-radius:4px">sm</div><div class="lab">4px</div></div>
+<div class="cell"><div class="box" style="border-radius:8px">md</div><div class="lab">8px</div></div>
+<div class="cell"><div class="box" style="border-radius:12px">lg</div><div class="lab">12px</div></div>
+<div class="cell"><div class="box" style="border-radius:16px">xl</div><div class="lab">16px</div></div>
+<div class="cell"><div class="box" style="border-radius:20px">2xl</div><div class="lab">20px</div></div>
+<div class="cell"><div class="box" style="border-radius:28px">3xl</div><div class="lab">28px</div></div>
+<div class="cell"><div class="box" style="border-radius:999px;width:90px">pill</div><div class="lab">999px</div></div>
 </body></html>

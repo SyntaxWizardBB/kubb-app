@@ -1,20 +1,21 @@
-<!doctype html>
-<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
-<style>
-  body { padding: 18px; background: var(--bk-bg); display:flex; gap: 12px; flex-wrap: wrap; }
-  .chip { min-height: 36px; padding: 6px 14px; border-radius: 999px; font-family: var(--bk-font-display); font-weight: 600; font-size: 14px; display:inline-flex; align-items:center; gap: 6px; box-shadow: inset 0 0 0 1px var(--bk-line); background: var(--bk-bg-raised); color: var(--bk-fg); }
-  .chip.on { background: var(--bk-stone-900); color: var(--bk-chalk-50); box-shadow: none; }
-  .chip.hit { background: var(--bk-meadow-100); color: var(--bk-meadow-700); box-shadow: inset 0 0 0 1px var(--bk-meadow-300); }
-  .chip.penalty { background: #fbe9ee; color: var(--bk-penalty); box-shadow: inset 0 0 0 1px #e6b3c2; }
-  .chip.king { background: #fbf1d6; color: #6b4a0a; box-shadow: inset 0 0 0 1px var(--bk-wood-300); }
-  .dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; }
-</style></head>
-<body>
-  <div class="bk-overline" style="width:100%;margin-bottom:6px">Chips & tags</div>
-  <span class="chip">7 Feldkubbs</span>
-  <span class="chip">3 Basiskubbs</span>
-  <span class="chip on">Stock 4 / 6</span>
-  <span class="chip hit"><span class="dot"></span>8m-Treffer</span>
-  <span class="chip penalty"><span class="dot"></span>Strafkubb</span>
-  <span class="chip king"><span class="dot"></span>König oben durch</span>
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>body{margin:0;padding:24px;background:var(--kc-bg);color:var(--kc-fg);font-family:var(--kc-font-ui);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 14px;border-radius:999px;font-size:13px;font-weight:600}
+.tag{background:var(--kc-meadow-100);color:var(--kc-meadow-700)}
+.tag2{background:var(--kc-wood-100);color:var(--kc-wood-700)}
+.tag3{background:var(--kc-stone-100);color:var(--kc-stone-700)}
+.solid{background:var(--kc-meadow-500);color:#fbfaf6}
+.outline{background:transparent;box-shadow:inset 0 0 0 1.5px var(--kc-stone-900);color:var(--kc-fg)}
+.toggle{background:var(--kc-stone-900);color:#fbfaf6}
+.bad{background:#f8e2dd;color:#7a2517}
+.heli{background:var(--kc-wood-100);color:var(--kc-wood-700)}
+</style></head><body>
+<span class="chip tag">Sniper</span>
+<span class="chip tag2">Finisseur</span>
+<span class="chip tag3">Match</span>
+<span class="chip solid">8 m · aktiv</span>
+<span class="chip outline">7/3 · Standard</span>
+<span class="chip toggle">Heli ein</span>
+<span class="chip bad">Strafkubb</span>
+<span class="chip heli">Helikopter</span>
 </body></html>

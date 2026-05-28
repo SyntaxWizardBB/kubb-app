@@ -18,12 +18,12 @@ function HomeScreen({ onPick, onOpenAppSettings, onOpenProfile }) {
         {/* Top bar */}
         <header style={h.topbar}>
           <button style={h.iconBtn} onClick={onOpenAppSettings} aria-label="Menü"><Icon.Menu/></button>
-          <img src="../../assets/logo-mark.svg" width="34" height="34" alt="Brosi's Kubb"/>
+          <img src="../../assets/logo-mark.svg" width="34" height="34" alt="Kubb Club"/>
           <button style={h.iconBtn} onClick={onOpenProfile} aria-label="Profil"><Icon.Profile/></button>
         </header>
 
         <div style={h.greetBlock}>
-          <div style={h.eyebrow}>Brosi's Kubb</div>
+          <div style={h.eyebrow}>Kubb Club</div>
           <div style={h.greeting}>Servus, Marc.</div>
         </div>
 

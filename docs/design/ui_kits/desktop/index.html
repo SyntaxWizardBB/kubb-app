@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kubb Club — Desktop UI Kit</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="icon" type="image/svg+xml" href="../../assets/logo-monogram.svg">
+<style>
+  html, body { height:100%; margin:0; }
+  body { background:#0c0b07; color:var(--kc-fg); font-family:var(--kc-font-ui); display:flex; flex-direction:column; min-height:100vh; }
+
+  /* Top toolbar — switches between screens */
+  .toolbar { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:14px 24px; gap:18px; background:#0c0b07; border-bottom:1px solid #1b1a14; position:sticky; top:0; z-index:60; }
+  .brand { display:flex; align-items:center; gap:12px; color:var(--kc-chalk-50); text-decoration:none; min-width:0; }
+  .brand .name { font-family:var(--kc-font-display); font-weight:700; font-size:20px; letter-spacing:-0.02em; font-variation-settings:'opsz' 36; line-height:1; }
+  .brand .tag  { font-family:var(--kc-font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--kc-stone-400); margin-top:3px; white-space:nowrap; }
+  .pills { display:inline-flex; gap:4px; flex-wrap:wrap; background:rgba(255,255,255,0.04); padding:4px; border-radius:999px; justify-self:center; max-width:100%; row-gap:4px; }
+  .pill { background:transparent; color:var(--kc-stone-300); border:0; min-height:34px; padding:0 14px; border-radius:999px; font-family:var(--kc-font-ui); font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap; }
+  .pill.on { background:var(--kc-meadow-500); color:#fff; }
+  .controls { display:flex; gap:8px; align-items:center; justify-self:end; }
+  .ctl-btn { background:rgba(255,255,255,0.04); border:1px solid #1b1a14; color:var(--kc-stone-300); height:34px; padding:0 14px; border-radius:8px; font-family:var(--kc-font-mono); font-size:11px; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; }
+  .ctl-btn.on { background:var(--kc-wood-500); color:#fff; border-color:transparent; }
+
+  /* The stage: scaled-down browser-window-like frame */
+  .stage { flex:1; padding:32px 32px 64px; display:flex; justify-content:center; align-items:flex-start; }
+  .frame {
+    width:1440px; height:920px;
+    background:var(--kc-bg);
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.45), 0 0 0 1px #1b1a14;
+    transform-origin: top center;
+  }
+  .frame-wrap {
+    /* Reserved by JS to keep the scaled frame's footprint stable */
+    display:flex; justify-content:center;
+  }
+  .chrome {
+    height:36px; background:#13120e; display:flex; align-items:center; gap:8px; padding:0 14px; border-bottom:1px solid #1b1a14;
+  }
+  .chrome .dot { width:11px; height:11px; border-radius:999px; background:#2a2922; }
+  .chrome .url { flex:1; text-align:center; font-family:var(--kc-font-mono); font-size:11px; color:var(--kc-stone-400); letter-spacing:0.04em; }
+  .chrome .url b { color:var(--kc-stone-200); font-weight:500; }
+  .canvas { height:calc(100% - 36px); overflow:hidden; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <a class="brand" href="#">
+    <img src="../../assets/logo-mark.svg" width="36" height="36" alt="">
+    <div>
+      <div class="name">Kubb Club</div>
+      <div class="tag">Desktop UI Kit · Tablet & Web</div>
+    </div>
+  </a>
+  <div class="pills" id="navPills"></div>
+  <div class="controls">
+    <button class="ctl-btn" id="themeBtn" aria-pressed="false">Dark</button>
+    <a class="ctl-btn" href="../mobile/index.html" style="text-decoration:none">↗ Mobile</a>
+  </div>
+</div>
+
+<div class="stage" id="stage">
+  <div class="frame-wrap" id="frameWrap">
+    <div class="frame" id="frame">
+      <div class="chrome">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <div class="url" id="chromeUrl">kubbclub.app / <b>dashboard</b></div>
+        <div style="width:42px"></div>
+      </div>
+      <div class="canvas" id="canvas"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="shared.jsx"></script>
+<script type="text/babel" src="DashboardScreen.jsx"></script>
+<script type="text/babel" src="TrainingScreen.jsx"></script>
+<script type="text/babel" src="FinisseurStickScreen.jsx"></script>
+<script type="text/babel" src="SummaryScreen.jsx"></script>
+<script type="text/babel" src="StatsScreen.jsx"></script>
+<script type="text/babel" src="TournamentScreen.jsx"></script>
+<script type="text/babel" src="MatchScreen.jsx"></script>
+<script type="text/babel" src="ProfileScreen.jsx"></script>
+<script type="text/babel" src="AppSettingsModal.jsx"></script>
+<script type="text/babel" src="CsvExportModal.jsx"></script>
+<script type="text/babel" src="SettingsScreen.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const ROUTES = [
+  ['dashboard',  'Dashboard'],
+  ['training',   'Training'],
+  ['finstick',   'Finisseur Live'],
+  ['summary',    'Summary'],
+  ['match',      'Match'],
+  ['tournament', 'Turniere'],
+  ['stats',      'Statistik'],
+  ['profile',    'Profil'],
+  ['settings',   'Einstellungen'],
+];
+
+function App() {
+  const [route, setRoute] = React.useState('dashboard');
+
+  // Persist between reloads
+  React.useEffect(() => {
+    const saved = localStorage.getItem('kc-desktop-route');
+    if (saved && ROUTES.some(r => r[0] === saved)) setRoute(saved);
+  }, []);
+  React.useEffect(() => { localStorage.setItem('kc-desktop-route', route); }, [route]);
+
+  // Render the nav pills
+  React.useEffect(() => {
+    const el = document.getElementById('navPills');
+    el.innerHTML = '';
+    ROUTES.forEach(([k, label]) => {
+      const b = document.createElement('button');
+      b.className = 'pill' + (route===k ? ' on' : '');
+      b.textContent = label;
+      b.onclick = () => setRoute(k);
+      el.appendChild(b);
+    });
+    document.getElementById('chromeUrl').innerHTML = 'kubbclub.app / <b>' + route + '</b>';
+  }, [route]);
+
+  const screens = {
+    dashboard:  <DashboardScreen onRoute={setRoute}/>,
+    training:   <TrainingScreen onRoute={setRoute}/>,
+    finstick:   <FinisseurStickScreen onRoute={setRoute}/>,
+    summary:    <SummaryScreen onRoute={setRoute}/>,
+    stats:      <StatsScreen onRoute={setRoute}/>,
+    tournament: <TournamentScreen onRoute={setRoute}/>,
+    match:      <MatchScreen onRoute={setRoute}/>,
+    profile:    <ProfileScreen onRoute={setRoute}/>,
+    settings:   <SettingsScreen onRoute={setRoute}/>,
+  };
+
+  return (
+    <Shell route={route} onRoute={setRoute} badges={{ inbox:3, tournament:1 }}>
+      {screens[route]}
+    </Shell>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('canvas')).render(<App/>);
+
+// ---- responsive scale ----
+function fit() {
+  const frame = document.getElementById('frame');
+  const wrap  = document.getElementById('frameWrap');
+  const stage = document.getElementById('stage');
+  const avail = stage.clientWidth - 64;
+  const availH = window.innerHeight - 64 - 32 - 32;
+  const scale = Math.min(1, avail / 1440, availH / 920);
+  frame.style.transform = `scale(${scale})`;
+  wrap.style.width  = (1440 * scale) + 'px';
+  wrap.style.height = (920 * scale) + 'px';
+}
+fit();
+window.addEventListener('resize', fit);
+
+// ---- theme toggle ----
+document.getElementById('themeBtn').onclick = (e) => {
+  const on = document.documentElement.classList.toggle('kc-dark');
+  e.currentTarget.classList.toggle('on', on);
+  e.currentTarget.textContent = on ? 'Light' : 'Dark';
+  e.currentTarget.setAttribute('aria-pressed', on ? 'true' : 'false');
+};
+</script>
+
+</body></html>

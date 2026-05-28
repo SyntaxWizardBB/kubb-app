@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="Kubb Club — Roundel Crest">
+  <defs>
+    <linearGradient id="woodR" x1="0.25" y1="0" x2="0.75" y2="1">
+      <stop offset="0" stop-color="#f0d28c"></stop>
+      <stop offset="0.5" stop-color="#c89548"></stop>
+      <stop offset="1" stop-color="#8e631d"></stop>
+    </linearGradient>
+    <linearGradient id="woodEndR" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a87a25"></stop>
+      <stop offset="1" stop-color="#6e4810"></stop>
+    </linearGradient>
+    <linearGradient id="goldR" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fce19a"></stop>
+      <stop offset="0.45" stop-color="#d9b14a"></stop>
+      <stop offset="1" stop-color="#8a5e15"></stop>
+    </linearGradient>
+    <linearGradient id="goldRimR" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a8801f"></stop>
+      <stop offset="1" stop-color="#5e3f0c"></stop>
+    </linearGradient>
+    <linearGradient id="meadowR" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#56a142"></stop>
+      <stop offset="1" stop-color="#1f4615"></stop>
+    </linearGradient>
+    <linearGradient id="chalkInnerR" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbfaf6"></stop>
+      <stop offset="1" stop-color="#e8e2d2"></stop>
+    </linearGradient>
+    <filter id="liftR" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="2.5" stdDeviation="3" flood-color="#0c0b07" flood-opacity="0.32"></feDropShadow>
+    </filter>
+    <filter id="liftShR" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1.8" flood-color="#0c0b07" flood-opacity="0.34"></feDropShadow>
+    </filter>
+    <path id="topArcR" d="M 22 120 A 98 98 0 0 1 218 120" fill="none"></path>
+    <path id="botArcR" d="M 22 122 A 98 98 0 0 0 218 122" fill="none"></path>
+  </defs>
+
+  
+  <circle cx="120" cy="120" r="116" fill="url(#meadowR)"></circle>
+  <circle cx="120" cy="120" r="108" fill="none" stroke="#d9b14a" stroke-width="1.5" stroke-opacity="0.7"></circle>
+
+  
+  <g font-family="&#39;Fraunces&#39;, Georgia, serif" font-weight="700" letter-spacing="5" fill="#fbfaf6" style="font-variation-settings:&#39;opsz&#39; 144;">
+    <text font-size="13"><textPath href="#topArcR" startOffset="50%" text-anchor="middle">KUBB · CLUB</textPath></text>
+  </g>
+  
+  <g font-family="&#39;JetBrains Mono&#39;, ui-monospace, monospace" font-size="10" letter-spacing="2.5" fill="#fbfaf6">
+    <text><textPath href="#botArcR" startOffset="50%" text-anchor="middle">★  EST. 2025  ★</textPath></text>
+  </g>
+
+  
+  <circle cx="120" cy="120" r="84" fill="url(#chalkInnerR)"></circle>
+  <circle cx="120" cy="120" r="80" fill="none" stroke="#0c0b07" stroke-width="1.2" stroke-opacity="0.18"></circle>
+
+  
+  <g transform="translate(120 122) scale(0.66) translate(-120 -120)">
+    
+    <rect x="38" y="224" width="164" height="2.2" rx="1" fill="#3a7c2e" opacity="0.7"></rect>
+
+    <g transform="translate(20 4)">
+      <g filter="url(#liftR)">
+        <g transform="rotate(-44 102 152)">
+          <rect x="96" y="135" width="95" height="34" rx="5" fill="url(#woodR)"></rect>
+          <rect x="180" y="135" width="11" height="34" rx="3" fill="url(#woodEndR)"></rect>
+          <rect x="96" y="135" width="95" height="3.5" rx="1.5" fill="#fce19a" opacity="0.55"></rect>
+          <rect x="96" y="165" width="95" height="3" rx="1.5" fill="#4a2e08" opacity="0.30"></rect>
+          <path d="M 102 142 Q 130 141 158 143 T 188 142" stroke="#5a3a10" stroke-width="0.7" fill="none" opacity="0.32"></path>
+          <path d="M 102 155 Q 130 154 158 156 T 188 155" stroke="#5a3a10" stroke-width="0.8" fill="none" opacity="0.30"></path>
+          <ellipse cx="148" cy="151" rx="3" ry="1.6" fill="#4a2e08" opacity="0.55"></ellipse>
+        </g>
+        <g transform="rotate(44 102 152)">
+          <rect x="96" y="135" width="95" height="34" rx="5" fill="url(#woodR)"></rect>
+          <rect x="180" y="135" width="11" height="34" rx="3" fill="url(#woodEndR)"></rect>
+          <rect x="96" y="135" width="95" height="3.5" rx="1.5" fill="#fce19a" opacity="0.55"></rect>
+          <rect x="96" y="165" width="95" height="3" rx="1.5" fill="#4a2e08" opacity="0.30"></rect>
+          <path d="M 102 142 Q 130 143 158 141 T 188 142" stroke="#5a3a10" stroke-width="0.7" fill="none" opacity="0.32"></path>
+          <path d="M 102 155 Q 130 156 158 154 T 188 155" stroke="#5a3a10" stroke-width="0.8" fill="none" opacity="0.30"></path>
+        </g>
+        <rect x="42" y="76" width="62" height="134" rx="6" fill="url(#woodR)"></rect>
+        <rect x="44" y="80" width="4" height="126" rx="2" fill="#fce19a" opacity="0.62"></rect>
+        <rect x="100" y="80" width="3" height="126" rx="1.5" fill="#4a2e08" opacity="0.32"></rect>
+        <path d="M 50 84 Q 51 130 49 165 T 50 206" stroke="#5a3a10" stroke-width="0.8" fill="none" opacity="0.32"></path>
+        <path d="M 64 84 Q 66 120 62 155 Q 64 185 65 206" stroke="#5a3a10" stroke-width="1.0" fill="none" opacity="0.34"></path>
+        <path d="M 80 84 Q 78 115 81 145 Q 79 178 80 206" stroke="#5a3a10" stroke-width="0.7" fill="none" opacity="0.26"></path>
+        <path d="M 96 84 Q 95 125 97 158 T 96 206" stroke="#5a3a10" stroke-width="0.9" fill="none" opacity="0.30"></path>
+        <ellipse cx="76" cy="118" rx="3.6" ry="2" fill="#4a2e08" opacity="0.55"></ellipse>
+        <ellipse cx="76" cy="118" rx="1.5" ry="0.8" fill="#2a1d05" opacity="0.75"></ellipse>
+        <ellipse cx="84" cy="178" rx="2.8" ry="1.5" fill="#4a2e08" opacity="0.5"></ellipse>
+      </g>
+
+      <g filter="url(#liftShR)">
+        <path d="M 36 64 L 49 26 L 64 64 Z" fill="url(#goldR)" stroke="url(#goldRimR)" stroke-width="1.4" stroke-linejoin="round"></path>
+        <path d="M 86 64 L 101 26 L 114 64 Z" fill="url(#goldR)" stroke="url(#goldRimR)" stroke-width="1.4" stroke-linejoin="round"></path>
+        <path d="M 60 64 L 75 12 L 90 64 Z" fill="url(#goldR)" stroke="url(#goldRimR)" stroke-width="1.4" stroke-linejoin="round"></path>
+        <circle cx="49" cy="26" r="4.5" fill="url(#goldR)" stroke="url(#goldRimR)" stroke-width="1"></circle>
+        <circle cx="101" cy="26" r="4.5" fill="url(#goldR)" stroke="url(#goldRimR)" stroke-width="1"></circle>
+        <rect x="72" y="4" width="6" height="16" rx="1.2" fill="url(#goldR)" stroke="url(#goldRimR)" stroke-width="1"></rect>
+        <rect x="67" y="9" width="16" height="6" rx="1.2" fill="url(#goldR)" stroke="url(#goldRimR)" stroke-width="1"></rect>
+        <rect x="30" y="62" width="90" height="22" rx="4" fill="url(#goldR)" stroke="url(#goldRimR)" stroke-width="1.4"></rect>
+        <rect x="30" y="79" width="90" height="5" rx="1.8" fill="#8a661a"></rect>
+        <rect x="32" y="63.5" width="86" height="2.5" rx="1" fill="#fce19a" opacity="0.75"></rect>
+        <circle cx="75" cy="73" r="6" fill="#3a7c2e" stroke="url(#goldRimR)" stroke-width="1.2"></circle>
+        <circle cx="73.5" cy="71.5" r="2.4" fill="#aed3a2" opacity="0.9"></circle>
+        <circle cx="48" cy="73" r="2.5" fill="#fbfaf6" stroke="url(#goldRimR)" stroke-width="0.7"></circle>
+        <circle cx="102" cy="73" r="2.5" fill="#fbfaf6" stroke="url(#goldRimR)" stroke-width="0.7"></circle>
+      </g>
+    </g>
+  </g>
+</svg>

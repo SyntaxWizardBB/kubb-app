@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="Kubb Club monogram">
+  <defs>
+    <linearGradient id="woodM" x1="0.3" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#ecca84"></stop>
+      <stop offset="0.35" stop-color="#d6ab57"></stop>
+      <stop offset="0.7" stop-color="#b88330"></stop>
+      <stop offset="1" stop-color="#8e631d"></stop>
+    </linearGradient>
+    <linearGradient id="woodEndM" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8e631d"></stop>
+      <stop offset="1" stop-color="#604015"></stop>
+    </linearGradient>
+    <linearGradient id="goldM" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fce19a"></stop>
+      <stop offset="0.45" stop-color="#d9b14a"></stop>
+      <stop offset="1" stop-color="#8a5e15"></stop>
+    </linearGradient>
+    <linearGradient id="goldRimM" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a8801f"></stop>
+      <stop offset="1" stop-color="#5e3f0c"></stop>
+    </linearGradient>
+  </defs>
+  
+  <g transform="translate(-8 0)">
+    <g transform="rotate(-44 100 148)">
+      <rect x="92" y="132" width="120" height="32" rx="4" fill="url(#woodM)"></rect>
+      <rect x="201" y="132" width="11" height="32" rx="3" fill="url(#woodEndM)"></rect>
+      <rect x="100" y="138.5" width="100" height="1.2" fill="#6e4810" opacity="0.32"></rect>
+      <rect x="100" y="153.5" width="100" height="1.2" fill="#6e4810" opacity="0.32"></rect>
+      <rect x="92" y="132" width="120" height="3.5" rx="1.5" fill="#fce19a" opacity="0.6"></rect>
+    </g>
+    <g transform="rotate(44 100 148)">
+      <rect x="92" y="132" width="120" height="32" rx="4" fill="url(#woodM)"></rect>
+      <rect x="201" y="132" width="11" height="32" rx="3" fill="url(#woodEndM)"></rect>
+      <rect x="100" y="138.5" width="100" height="1.2" fill="#6e4810" opacity="0.32"></rect>
+      <rect x="100" y="153.5" width="100" height="1.2" fill="#6e4810" opacity="0.32"></rect>
+      <rect x="92" y="132" width="120" height="3.5" rx="1.5" fill="#fce19a" opacity="0.6"></rect>
+    </g>
+    <rect x="44" y="78" width="60" height="148" rx="5" fill="url(#woodM)"></rect>
+    <rect x="44" y="78" width="60" height="12" rx="3" fill="url(#woodEndM)"></rect>
+    <rect x="45.5" y="93" width="3" height="128" rx="1.5" fill="#fce19a" opacity="0.55"></rect>
+    <rect x="52" y="110" width="44" height="1.2" fill="#6e4810" opacity="0.30"></rect>
+    <rect x="52" y="160" width="44" height="1.2" fill="#6e4810" opacity="0.30"></rect>
+    <ellipse cx="68" cy="172" rx="3.2" ry="1.8" fill="#5a3a10" opacity="0.45"></ellipse>
+  </g>
+  <g transform="translate(-8 0)">
+    <path d="M 38 62 L 50 26 L 64 62 Z" fill="url(#goldM)" stroke="url(#goldRimM)" stroke-width="1.4" stroke-linejoin="round"></path>
+    <path d="M 84 62 L 98 26 L 110 62 Z" fill="url(#goldM)" stroke="url(#goldRimM)" stroke-width="1.4" stroke-linejoin="round"></path>
+    <path d="M 60 62 L 74 12 L 88 62 Z" fill="url(#goldM)" stroke="url(#goldRimM)" stroke-width="1.4" stroke-linejoin="round"></path>
+    <circle cx="50" cy="26" r="4" fill="url(#goldM)" stroke="url(#goldRimM)" stroke-width="1"></circle>
+    <circle cx="98" cy="26" r="4" fill="url(#goldM)" stroke="url(#goldRimM)" stroke-width="1"></circle>
+    <rect x="71" y="6" width="6" height="14" rx="1.2" fill="url(#goldM)" stroke="url(#goldRimM)" stroke-width="1"></rect>
+    <rect x="67" y="10" width="14" height="6" rx="1.2" fill="url(#goldM)" stroke="url(#goldRimM)" stroke-width="1"></rect>
+    <rect x="32" y="60" width="84" height="22" rx="4" fill="url(#goldM)" stroke="url(#goldRimM)" stroke-width="1.4"></rect>
+    <rect x="32" y="77" width="84" height="5" rx="1.8" fill="#8a661a"></rect>
+    <circle cx="74" cy="71" r="5.2" fill="#3a7c2e" stroke="url(#goldRimM)" stroke-width="1.2"></circle>
+    <circle cx="50" cy="71" r="2.2" fill="#fbfaf6" stroke="url(#goldRimM)" stroke-width="0.7"></circle>
+    <circle cx="98" cy="71" r="2.2" fill="#fbfaf6" stroke="url(#goldRimM)" stroke-width="0.7"></circle>
+  </g>
+</svg>

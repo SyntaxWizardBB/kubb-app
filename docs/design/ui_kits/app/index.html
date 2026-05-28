@@ -3,27 +3,37 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Brosi's Kubb — UI Kit</title>
+<title>Kubb Club — Mobile UI Kit</title>
 <link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="icon" type="image/svg+xml" href="../../assets/logo-monogram.svg">
 <style>
   html, body { height:100%; margin:0; }
-  body { background: #0c0b07; font-family: var(--bk-font-body); color: var(--bk-fg); display:flex; align-items:flex-start; justify-content:center; padding: 80px 24px 48px; gap: 24px; min-height:100vh; }
-  .stage { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; justify-content: center; max-width: 1400px; }
-  .device-wrap { display:flex; flex-direction:column; align-items:center; gap:10px; width: 250px; }
-  .phone-box { width: 390px; height: 844px; transform: scale(0.6); transform-origin: top left; margin-left: 0; }
-  .phone-box-outer { width: 234px; height: 506px; overflow: hidden; }
-  .device-wrap .caption { color: var(--bk-stone-300); font-family: var(--bk-font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
-  .nav { position: fixed; top: 16px; left: 16px; right: 16px; display:flex; justify-content:space-between; align-items:center; gap:10px; z-index:50; }
-  .nav .pills { display:flex; gap:6px; flex-wrap:wrap; background: rgba(255,255,255,0.04); padding:4px; border-radius:999px; backdrop-filter: blur(8px); }
-  .nav .pill { background:transparent; color:var(--bk-stone-300); border:0; min-height:32px; padding:0 14px; border-radius:999px; font-family:var(--bk-font-display); font-weight:600; font-size:12px; cursor:pointer; }
-  .nav .pill.on { background: var(--bk-meadow-500); color:#fff; }
-  .nav .brand { color: var(--bk-stone-300); font-family: var(--bk-font-display); font-weight:700; font-size:14px; letter-spacing:0.06em; text-transform: uppercase; }
+  body { background:#0c0b07; font-family:var(--kc-font-ui); color:var(--kc-fg); display:flex; align-items:flex-start; justify-content:center; padding:96px 24px 56px; gap:24px; min-height:100vh; }
+  .stage { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; justify-content:center; max-width:1400px; }
+  .device-wrap { display:flex; flex-direction:column; align-items:center; gap:10px; width:250px; }
+  .phone-box { width:390px; height:844px; transform:scale(0.6); transform-origin:top left; }
+  .phone-box-outer { width:234px; height:506px; overflow:hidden; }
+  .caption { color:var(--kc-stone-300); font-family:var(--kc-font-mono); font-size:11px; letter-spacing:0.06em; text-transform:uppercase; }
+  .nav { position:fixed; top:16px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:center; gap:10px; z-index:50; }
+  .nav .pills { display:flex; gap:6px; flex-wrap:wrap; background:rgba(255,255,255,0.04); padding:4px; border-radius:999px; backdrop-filter:blur(8px); }
+  .nav .pill { background:transparent; color:var(--kc-stone-300); border:0; min-height:32px; padding:0 14px; border-radius:999px; font-family:var(--kc-font-ui); font-weight:600; font-size:12px; cursor:pointer; }
+  .nav .pill.on { background:var(--kc-meadow-500); color:#fff; }
+  .brand { display:flex; align-items:center; gap:10px; color:var(--kc-chalk-50); }
+  .brand img { display:block; }
+  .brand .name { font-family:var(--kc-font-display); font-weight:700; font-size:18px; letter-spacing:-0.02em; font-variation-settings:'opsz' 36; }
+  .brand .tag { font-family:var(--kc-font-mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--kc-stone-400); }
 </style>
 </head>
 <body>
 
 <div class="nav">
-  <div class="brand">Brosi's Kubb · UI Kit</div>
+  <div class="brand">
+    <img src="../../assets/logo-mark.svg" width="32" height="32" alt="">
+    <div>
+      <div class="name">Kubb Club</div>
+      <div class="tag">Mobile UI Kit · iOS / Android</div>
+    </div>
+  </div>
   <div class="pills" id="navPills"></div>
 </div>
 
@@ -45,6 +55,8 @@
 <script type="text/babel" src="FinisseurStickScreen.jsx"></script>
 <script type="text/babel" src="SummaryScreen.jsx"></script>
 <script type="text/babel" src="StatsScreen.jsx"></script>
+<script type="text/babel" src="MatchScreen.jsx"></script>
+<script type="text/babel" src="TournamentScreen.jsx"></script>
 
 <script type="text/babel" data-presets="react">
 function HomeWithModals({ onPick, onOpenStats, onOpenProfile, openModal, setOpenModal }) {
@@ -71,14 +83,39 @@ function HomeWithModals({ onPick, onOpenStats, onOpenProfile, openModal, setOpen
   );
 }
 
+function HomePreviewWith({ modal }) {
+  const [open, setOpen] = React.useState(modal);
+  return (
+    <div style={{position:'relative', height:'100%'}}>
+      <HomeScreen onPick={()=>{}} onOpenAppSettings={()=>setOpen('app')} onOpenProfile={()=>{}}/>
+      {open === 'app' && (
+        <AppSettingsModal
+          onClose={() => setOpen(null)}
+          onOpenStats={()=>{}}
+          onOpenAchievements={()=>{}}
+          onOpenExport={() => setOpen('export')}
+          onOpenReset={()=>{}}
+        />
+      )}
+      {open === 'export' && (
+        <CsvExportModal onClose={() => setOpen(null)}/>
+      )}
+    </div>
+  );
+}
+
+function MatchScreenWith({ stage }) {
+  return <MatchScreen onBack={()=>{}} initialStage={stage} key={stage}/>;
+}
+
 function Root() {
   const [route, setRoute] = React.useState('home');
   const [config, setConfig] = React.useState({ field:7, base:3 });
   const [openModal, setOpenModal] = React.useState(null);
-  const [userPresets, setUserPresets] = React.useState([
+  const userPresets = [
     { id:'p-clean', label:'Sauber', f:6, b:4 },
     { id:'p-late',  label:'Heim',   f:8, b:2 },
-  ]);
+  ];
 
   const Phone = ({ children }) => (
     <div className="phone-box-outer">
@@ -101,19 +138,13 @@ function Root() {
   const flows = {
     home: [
       ['Home',           home],
-      ['Hamburger Modal',
-        <HomePreviewWith modal="app">
-          {home}
-        </HomePreviewWith>],
-      ['CSV-Export',
-        <HomePreviewWith modal="export">
-          {home}
-        </HomePreviewWith>],
+      ['Hamburger',      <HomePreviewWith modal="app"/>],
+      ['CSV-Export',     <HomePreviewWith modal="export"/>],
       ['Profil',         <ProfileScreen onBack={()=>setRoute('home')}/>],
     ],
     '8m': [
       ['Sniper',  <SniperTrainingScreen onBack={()=>setRoute('home')} onFinish={()=>setRoute('8m')}/>],
-      ['Summary',  <SummaryScreen kind="8m" onBack={()=>setRoute('8m')} onSave={()=>setRoute('home')} onDiscard={()=>setRoute('home')} onRestart={()=>setRoute('8m')}/>],
+      ['Summary', <SummaryScreen kind="8m" onBack={()=>setRoute('8m')} onSave={()=>setRoute('home')} onDiscard={()=>setRoute('home')} onRestart={()=>setRoute('8m')}/>],
     ],
     finconf: [
       ['Konfig',   <FinisseurConfigScreen onBack={()=>setRoute('home')} onStart={(cfg)=>{setConfig(cfg);}}/>],
@@ -128,6 +159,16 @@ function Root() {
       ['Home',     home],
       ['Statistik',<StatsScreen onBack={()=>setRoute('home')} userPresets={userPresets}/>],
     ],
+    match: [
+      ['Home',     home],
+      ['Lobby',    <MatchScreenWith stage="lobby"/>],
+      ['Live',     <MatchScreenWith stage="live"/>],
+      ['Ergebnis', <MatchScreenWith stage="result"/>],
+    ],
+    tournament: [
+      ['Home',       home],
+      ['Übersicht',  <TournamentScreen onBack={()=>setRoute('home')} onOpenMatch={()=>setRoute('match')}/>],
+    ],
   };
   const screens = flows[route] || flows.home;
 
@@ -135,6 +176,8 @@ function Root() {
     ['home','Home + Modals'],
     ['8m','Sniper Flow'],
     ['finconf','Finisseur Flow'],
+    ['match','Match Flow'],
+    ['tournament','Turniere'],
     ['profile','Profil'],
     ['stats','Stats'],
   ];
@@ -160,28 +203,6 @@ function Root() {
         </div>
       ))}
     </>
-  );
-}
-
-// Helper: renders a Home with a preset modal pinned open (for the kit canvas)
-function HomePreviewWith({ modal, children }) {
-  const [open, setOpen] = React.useState(modal);
-  return (
-    <div style={{position:'relative', height:'100%'}}>
-      <HomeScreen onPick={()=>{}} onOpenAppSettings={()=>setOpen('app')} onOpenProfile={()=>{}}/>
-      {open === 'app' && (
-        <AppSettingsModal
-          onClose={() => setOpen(null)}
-          onOpenStats={()=>{}}
-          onOpenAchievements={()=>{}}
-          onOpenExport={() => setOpen('export')}
-          onOpenReset={()=>{}}
-        />
-      )}
-      {open === 'export' && (
-        <CsvExportModal onClose={() => setOpen(null)}/>
-      )}
-    </div>
   );
 }
 

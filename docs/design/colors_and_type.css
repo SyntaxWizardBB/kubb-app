@@ -1,228 +1,248 @@
 /* ============================================================
-   Brosi's Kubb — Design Tokens
-   Outdoor-first, high-contrast training UI.
-   Use the CSS variables; semantic classes at the bottom.
+   KUBB CLUB — Design Tokens
+   Rebrand of "Brosi's Kubb". Same outdoor-first foundation,
+   tightened typography, slightly more "club crest" palette.
+   ------------------------------------------------------------
+   Var prefix: --kc-*  (canonical, Kubb Club)
+   Legacy --bk-* aliases preserved at the bottom so existing
+   Flutter / JSX surfaces keep working through the cut-over.
    ============================================================ */
 
-/* ---------- Fonts (Google Fonts, with local fallback intent) ---------- */
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+/* ---------- Fonts (Google Fonts placeholders — see fonts/README.md) ---------- */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
   /* ============================================================
-     COLOR — Brand
-     "Kubb-Holz, Wiesen-Grün, hoher Kontrast"
+     COLOR — Brand palette
+     "Holz, Wiese, Kreide, Stein, hoher Kontrast"
+     Kept compatible with the original Brosi palette so existing
+     ThemeData / Flutter widgets render unchanged.
      ============================================================ */
 
-  /* Wiesen — meadow green. Primary brand. Mid-deep, slightly cool. */
-  --bk-meadow-50:  #eef6ec;
-  --bk-meadow-100: #d6ead0;
-  --bk-meadow-200: #aed3a2;
-  --bk-meadow-300: #7fb56f;
-  --bk-meadow-400: #569748;
-  --bk-meadow-500: #3a7c2e;   /* primary */
-  --bk-meadow-600: #2d6324;
-  --bk-meadow-700: #234e1c;
-  --bk-meadow-800: #1a3a16;
-  --bk-meadow-900: #112710;
+  /* Wiese — meadow green. Primary brand. */
+  --kc-meadow-50:  #eef6ec;
+  --kc-meadow-100: #d6ead0;
+  --kc-meadow-200: #aed3a2;
+  --kc-meadow-300: #7fb56f;
+  --kc-meadow-400: #569748;
+  --kc-meadow-500: #3a7c2e;   /* primary */
+  --kc-meadow-600: #2d6324;
+  --kc-meadow-700: #234e1c;
+  --kc-meadow-800: #1a3a16;
+  --kc-meadow-900: #112710;
 
-  /* Holz — kubb wood. Warm oak / pine accent. */
-  --bk-wood-50:  #faf3e6;
-  --bk-wood-100: #f1e1bf;
-  --bk-wood-200: #e6c98c;
-  --bk-wood-300: #d6ab57;
-  --bk-wood-400: #c08a33;   /* accent */
-  --bk-wood-500: #a16f24;
-  --bk-wood-600: #80561c;
-  --bk-wood-700: #604015;
-  --bk-wood-800: #422c0e;
+  /* Holz — kubb wood. Accent / tournament tile. */
+  --kc-wood-50:  #faf3e6;
+  --kc-wood-100: #f1e1bf;
+  --kc-wood-200: #e6c98c;
+  --kc-wood-300: #d6ab57;
+  --kc-wood-400: #c08a33;   /* accent */
+  --kc-wood-500: #a16f24;
+  --kc-wood-600: #80561c;
+  --kc-wood-700: #604015;
+  --kc-wood-800: #422c0e;
 
-  /* Chalk — pitch-line white & off-white. */
-  --bk-chalk-0:   #ffffff;
-  --bk-chalk-50:  #fbfaf6;   /* warm paper */
-  --bk-chalk-100: #f4f1e8;
-  --bk-chalk-200: #e8e2d2;
+  /* Kreide — pitch-line whites & off-whites. */
+  --kc-chalk-0:   #ffffff;
+  --kc-chalk-50:  #fbfaf6;   /* warm paper, default page bg */
+  --kc-chalk-100: #f4f1e8;
+  --kc-chalk-200: #e8e2d2;
 
-  /* Stone — neutral charcoals; warmed slightly to sit with wood. */
-  --bk-stone-50:  #f4f3f0;
-  --bk-stone-100: #e7e5df;
-  --bk-stone-200: #cfccc1;
-  --bk-stone-300: #a8a597;
-  --bk-stone-400: #777567;
-  --bk-stone-500: #4d4b40;
-  --bk-stone-600: #34322a;
-  --bk-stone-700: #232118;
-  --bk-stone-800: #161510;
-  --bk-stone-900: #0c0b07;   /* near-black, the "ink" */
+  /* Stein — neutral charcoals; warmed slightly to sit with wood. */
+  --kc-stone-50:  #f4f3f0;
+  --kc-stone-100: #e7e5df;
+  --kc-stone-200: #cfccc1;
+  --kc-stone-300: #a8a597;
+  --kc-stone-400: #777567;
+  --kc-stone-500: #4d4b40;
+  --kc-stone-600: #34322a;
+  --kc-stone-700: #232118;
+  --kc-stone-800: #161510;
+  --kc-stone-900: #0c0b07;   /* near-black, the "ink" */
 
-  /* Semantic accents */
-  --bk-hit:     #2d6324;   /* meadow-600 — Treffer */
-  --bk-miss:    #b73a2a;   /* deep brick — Fehlschuss */
-  --bk-heli:    #c08a33;   /* wood-400 — Helikopter (caution) */
-  --bk-penalty: #8a1f3d;   /* dark cranberry — Strafkubb */
-  --bk-king:    #c89b3d;   /* gilded — König */
+  /* Semantic / action colors */
+  --kc-hit:     #2d6324;     /* meadow-600 — Treffer / hit */
+  --kc-miss:    #b73a2a;     /* deep brick — Fehlschuss / miss */
+  --kc-heli:    #c08a33;     /* wood-400 — Helikopter (caution) */
+  --kc-penalty: #8a1f3d;     /* dark cranberry — Strafkubb */
+  --kc-king:    #c89b3d;     /* gilded — König */
 
   /* ============================================================
      COLOR — Semantic surface tokens (light theme — default)
      ============================================================ */
-  --bk-bg:          var(--bk-chalk-50);
-  --bk-bg-raised:   var(--bk-chalk-0);
-  --bk-bg-sunken:   var(--bk-chalk-100);
-  --bk-bg-inverse:  var(--bk-stone-900);
+  --kc-bg:          var(--kc-chalk-50);
+  --kc-bg-raised:   var(--kc-chalk-0);
+  --kc-bg-sunken:   var(--kc-chalk-100);
+  --kc-bg-inverse:  var(--kc-stone-900);
 
-  --bk-fg:          var(--bk-stone-900);   /* primary ink */
-  --bk-fg-muted:    var(--bk-stone-500);
-  --bk-fg-subtle:   var(--bk-stone-400);
-  --bk-fg-inverse:  var(--bk-chalk-50);
+  --kc-fg:          var(--kc-stone-900);
+  --kc-fg-muted:    var(--kc-stone-500);
+  --kc-fg-subtle:   var(--kc-stone-400);
+  --kc-fg-inverse:  var(--kc-chalk-50);
 
-  --bk-line:        var(--bk-stone-200);   /* hairline borders */
-  --bk-line-strong: var(--bk-stone-900);   /* high-contrast pitch line */
+  --kc-line:        var(--kc-stone-200);
+  --kc-line-strong: var(--kc-stone-900);
 
-  --bk-primary:        var(--bk-meadow-500);
-  --bk-primary-hover:  var(--bk-meadow-600);
-  --bk-primary-press:  var(--bk-meadow-700);
-  --bk-on-primary:     var(--bk-chalk-50);
+  --kc-primary:        var(--kc-meadow-500);
+  --kc-primary-hover:  var(--kc-meadow-600);
+  --kc-primary-press:  var(--kc-meadow-700);
+  --kc-on-primary:     var(--kc-chalk-50);
 
-  --bk-accent:        var(--bk-wood-400);
-  --bk-accent-hover:  var(--bk-wood-500);
-  --bk-on-accent:     var(--bk-stone-900);
+  --kc-accent:        var(--kc-wood-400);
+  --kc-accent-hover:  var(--kc-wood-500);
+  --kc-on-accent:     var(--kc-stone-900);
 
-  --bk-danger:        var(--bk-miss);
-  --bk-on-danger:     var(--bk-chalk-50);
+  --kc-danger:        var(--kc-miss);
+  --kc-on-danger:     var(--kc-chalk-50);
 
   /* ============================================================
      TYPE
+     Display: Fraunces (serif, club crest character — used for the
+              wordmark, hero numbers, page heroes).
+     UI:      Bricolage Grotesque (display + body, screens).
+     Mono:    JetBrains Mono (stat tables, per-stick log).
+     The mobile app screens stay on Bricolage (Brosi continuity);
+     the new desktop / marketing surfaces lean on Fraunces.
      ============================================================ */
-  --bk-font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --bk-font-body:    'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --bk-font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --kc-font-display: 'Fraunces', 'Bricolage Grotesque', ui-serif, Georgia, serif;
+  --kc-font-ui:      'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --kc-font-body:    'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --kc-font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
-  /* Type scale — outdoor-readable. Counter sizes go up to absurd. */
-  --bk-text-2xs:  11px;
-  --bk-text-xs:   13px;
-  --bk-text-sm:   15px;
-  --bk-text-base: 17px;   /* mobile body, slightly larger than web default */
-  --bk-text-lg:   20px;
-  --bk-text-xl:   24px;
-  --bk-text-2xl:  32px;
-  --bk-text-3xl:  44px;
-  --bk-text-4xl:  60px;
-  --bk-text-5xl:  84px;   /* primary counter */
-  --bk-text-6xl:  120px;  /* hero counter, single number */
+  /* Type scale — outdoor-readable. Counter sizes go absurd. */
+  --kc-text-2xs:  11px;
+  --kc-text-xs:   13px;
+  --kc-text-sm:   15px;
+  --kc-text-base: 17px;
+  --kc-text-lg:   20px;
+  --kc-text-xl:   24px;
+  --kc-text-2xl:  32px;
+  --kc-text-3xl:  44px;
+  --kc-text-4xl:  60px;
+  --kc-text-5xl:  84px;     /* primary counter */
+  --kc-text-6xl:  120px;    /* hero counter */
+  --kc-text-7xl:  168px;    /* desktop hero counter */
 
   /* Weights */
-  --bk-w-regular:  400;
-  --bk-w-medium:   500;
-  --bk-w-semibold: 600;
-  --bk-w-bold:     700;
-  --bk-w-black:    800;
+  --kc-w-regular:  400;
+  --kc-w-medium:   500;
+  --kc-w-semibold: 600;
+  --kc-w-bold:     700;
+  --kc-w-black:    800;
 
   /* Line heights */
-  --bk-lh-tight:   1.05;
-  --bk-lh-snug:    1.2;
-  --bk-lh-normal:  1.45;
-  --bk-lh-loose:   1.6;
+  --kc-lh-tight:   1.05;
+  --kc-lh-snug:    1.2;
+  --kc-lh-normal:  1.45;
+  --kc-lh-loose:   1.6;
 
-  /* Letter spacing — display tightens, micro labels open up */
-  --bk-tracking-tight:  -0.02em;
-  --bk-tracking-normal: 0;
-  --bk-tracking-wide:   0.04em;
-  --bk-tracking-uppercase: 0.08em;
+  /* Letter spacing */
+  --kc-tracking-tight:     -0.02em;
+  --kc-tracking-normal:    0;
+  --kc-tracking-wide:      0.04em;
+  --kc-tracking-uppercase: 0.08em;
 
   /* ============================================================
      SPACING — 4px base
      ============================================================ */
-  --bk-space-0:  0;
-  --bk-space-1:  4px;
-  --bk-space-2:  8px;
-  --bk-space-3:  12px;
-  --bk-space-4:  16px;
-  --bk-space-5:  20px;
-  --bk-space-6:  24px;
-  --bk-space-8:  32px;
-  --bk-space-10: 40px;
-  --bk-space-12: 48px;   /* min touch target */
-  --bk-space-14: 56px;
-  --bk-space-16: 64px;
-  --bk-space-20: 80px;
-  --bk-space-24: 96px;
+  --kc-space-0:  0;
+  --kc-space-1:  4px;
+  --kc-space-2:  8px;
+  --kc-space-3:  12px;
+  --kc-space-4:  16px;
+  --kc-space-5:  20px;
+  --kc-space-6:  24px;
+  --kc-space-8:  32px;
+  --kc-space-10: 40px;
+  --kc-space-12: 48px;
+  --kc-space-14: 56px;
+  --kc-space-16: 64px;
+  --kc-space-20: 80px;
+  --kc-space-24: 96px;
+  --kc-space-32: 128px;
 
   /* Touch target floor — DO NOT go below */
-  --bk-touch-min: 48px;
-  --bk-touch-comfortable: 64px;   /* preferred for primary action buttons */
+  --kc-touch-min:         48px;
+  --kc-touch-comfortable: 64px;
+
+  /* Layout maxes (desktop) */
+  --kc-container-narrow: 720px;
+  --kc-container:        1080px;
+  --kc-container-wide:   1280px;
 
   /* ============================================================
      RADII — restrained. Pitch-tool, not a candy app.
      ============================================================ */
-  --bk-radius-xs:   2px;
-  --bk-radius-sm:   4px;
-  --bk-radius-md:   8px;
-  --bk-radius-lg:   12px;
-  --bk-radius-xl:   16px;
-  --bk-radius-2xl:  20px;
-  --bk-radius-pill: 999px;
+  --kc-radius-xs:   2px;
+  --kc-radius-sm:   4px;
+  --kc-radius-md:   8px;
+  --kc-radius-lg:   12px;
+  --kc-radius-xl:   16px;
+  --kc-radius-2xl:  20px;
+  --kc-radius-3xl:  28px;
+  --kc-radius-pill: 999px;
 
   /* ============================================================
-     SHADOWS / ELEVATION
-     Soft, low-spread. Outdoor UI rarely needs deep shadows.
+     SHADOWS / ELEVATION — soft, low-spread.
      ============================================================ */
-  --bk-shadow-1: 0 1px 0 rgb(12 11 7 / 0.06), 0 1px 2px rgb(12 11 7 / 0.06);
-  --bk-shadow-2: 0 1px 2px rgb(12 11 7 / 0.06), 0 4px 12px rgb(12 11 7 / 0.08);
-  --bk-shadow-3: 0 2px 4px rgb(12 11 7 / 0.08), 0 12px 24px rgb(12 11 7 / 0.12);
-  --bk-shadow-pressed: inset 0 2px 0 rgb(12 11 7 / 0.18);
+  --kc-shadow-1: 0 1px 0 rgb(12 11 7 / 0.06), 0 1px 2px rgb(12 11 7 / 0.06);
+  --kc-shadow-2: 0 1px 2px rgb(12 11 7 / 0.06), 0 4px 12px rgb(12 11 7 / 0.08);
+  --kc-shadow-3: 0 2px 4px rgb(12 11 7 / 0.08), 0 12px 24px rgb(12 11 7 / 0.12);
+  --kc-shadow-4: 0 4px 8px rgb(12 11 7 / 0.10), 0 24px 48px rgb(12 11 7 / 0.18);
+  --kc-shadow-pressed: inset 0 2px 0 rgb(12 11 7 / 0.18);
 
   /* Focus ring — meadow, thick enough to see in sun */
-  --bk-focus-ring: 0 0 0 3px var(--bk-chalk-50), 0 0 0 6px var(--bk-meadow-500);
+  --kc-focus-ring: 0 0 0 3px var(--kc-chalk-50), 0 0 0 6px var(--kc-meadow-500);
 
   /* ============================================================
      MOTION — restrained. No bounces.
      ============================================================ */
-  --bk-ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --bk-ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
-  --bk-dur-fast: 120ms;
-  --bk-dur-base: 200ms;
-  --bk-dur-slow: 320ms;
+  --kc-ease-standard:   cubic-bezier(0.2, 0, 0, 1);
+  --kc-ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
+  --kc-dur-fast: 120ms;
+  --kc-dur-base: 200ms;
+  --kc-dur-slow: 320ms;
 }
 
 /* ============================================================
    HIGH-CONTRAST MODE
-   Triggered by .bk-hc on any ancestor (or system pref).
-   Goes maximum contrast; flattens shadows.
+   Triggered by .kc-hc on any ancestor (or system pref).
    ============================================================ */
-.bk-hc, .bk-hc :where(*) {
-  --bk-bg:        #ffffff;
-  --bk-bg-raised: #ffffff;
-  --bk-bg-sunken: #f0efe8;
-  --bk-fg:        #000000;
-  --bk-fg-muted:  #1a1a1a;
-  --bk-line:      #000000;
-  --bk-primary:   #0f4a08;
-  --bk-on-primary: #ffffff;
-  --bk-accent:    #6e3c00;
-  --bk-shadow-1: 0 0 0 1px #000;
-  --bk-shadow-2: 0 0 0 2px #000;
-  --bk-shadow-3: 0 0 0 2px #000;
+.kc-hc, .kc-hc :where(*) {
+  --kc-bg:        #ffffff;
+  --kc-bg-raised: #ffffff;
+  --kc-bg-sunken: #f0efe8;
+  --kc-fg:        #000000;
+  --kc-fg-muted:  #1a1a1a;
+  --kc-line:      #000000;
+  --kc-primary:   #0f4a08;
+  --kc-on-primary:#ffffff;
+  --kc-accent:    #6e3c00;
+  --kc-shadow-1: 0 0 0 1px #000;
+  --kc-shadow-2: 0 0 0 2px #000;
+  --kc-shadow-3: 0 0 0 2px #000;
 }
 
 /* ============================================================
-   DARK MODE — for dusk play and indoor stat review
+   DARK MODE
    ============================================================ */
-.bk-dark {
-  --bk-bg:          var(--bk-stone-900);
-  --bk-bg-raised:   var(--bk-stone-800);
-  --bk-bg-sunken:   #050402;
-  --bk-bg-inverse:  var(--bk-chalk-50);
+.kc-dark {
+  --kc-bg:          var(--kc-stone-900);
+  --kc-bg-raised:   var(--kc-stone-800);
+  --kc-bg-sunken:   #050402;
+  --kc-bg-inverse:  var(--kc-chalk-50);
 
-  --bk-fg:          var(--bk-chalk-50);
-  --bk-fg-muted:    var(--bk-stone-300);
-  --bk-fg-subtle:   var(--bk-stone-400);
-  --bk-fg-inverse:  var(--bk-stone-900);
+  --kc-fg:          var(--kc-chalk-50);
+  --kc-fg-muted:    var(--kc-stone-300);
+  --kc-fg-subtle:   var(--kc-stone-400);
+  --kc-fg-inverse:  var(--kc-stone-900);
 
-  --bk-line:        var(--bk-stone-700);
-  --bk-line-strong: var(--bk-chalk-50);
+  --kc-line:        var(--kc-stone-700);
+  --kc-line-strong: var(--kc-chalk-50);
 
-  --bk-primary:        var(--bk-meadow-400);
-  --bk-primary-hover:  var(--bk-meadow-300);
-  --bk-on-primary:     var(--bk-stone-900);
+  --kc-primary:        var(--kc-meadow-400);
+  --kc-primary-hover:  var(--kc-meadow-300);
+  --kc-on-primary:     var(--kc-stone-900);
 }
 
 /* ============================================================
@@ -231,98 +251,166 @@
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
-  font-family: var(--bk-font-body);
-  font-size: var(--bk-text-base);
-  line-height: var(--bk-lh-normal);
-  color: var(--bk-fg);
-  background: var(--bk-bg);
+  font-family: var(--kc-font-body);
+  font-size: var(--kc-text-base);
+  line-height: var(--kc-lh-normal);
+  color: var(--kc-fg);
+  background: var(--kc-bg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 /* ============================================================
    SEMANTIC TYPE CLASSES
-   Use these as utilities or as component-level styles.
    ============================================================ */
-.bk-display {
-  font-family: var(--bk-font-display);
-  font-size: var(--bk-text-4xl);
-  font-weight: var(--bk-w-bold);
-  line-height: var(--bk-lh-tight);
-  letter-spacing: var(--bk-tracking-tight);
+.kc-display {
+  font-family: var(--kc-font-display);
+  font-size: var(--kc-text-5xl);
+  font-weight: var(--kc-w-bold);
+  line-height: var(--kc-lh-tight);
+  letter-spacing: var(--kc-tracking-tight);
+  font-variation-settings: "opsz" 96, "SOFT" 50;
 }
-
-.bk-h1 {
-  font-family: var(--bk-font-display);
-  font-size: var(--bk-text-3xl);
-  font-weight: var(--bk-w-bold);
-  line-height: var(--bk-lh-tight);
-  letter-spacing: var(--bk-tracking-tight);
+.kc-h1 {
+  font-family: var(--kc-font-display);
+  font-size: var(--kc-text-4xl);
+  font-weight: var(--kc-w-bold);
+  line-height: var(--kc-lh-tight);
+  letter-spacing: var(--kc-tracking-tight);
+  font-variation-settings: "opsz" 72;
 }
-.bk-h2 {
-  font-family: var(--bk-font-display);
-  font-size: var(--bk-text-2xl);
-  font-weight: var(--bk-w-semibold);
-  line-height: var(--bk-lh-snug);
-  letter-spacing: var(--bk-tracking-tight);
+.kc-h2 {
+  font-family: var(--kc-font-display);
+  font-size: var(--kc-text-3xl);
+  font-weight: var(--kc-w-semibold);
+  line-height: var(--kc-lh-snug);
+  letter-spacing: var(--kc-tracking-tight);
+  font-variation-settings: "opsz" 36;
 }
-.bk-h3 {
-  font-family: var(--bk-font-display);
-  font-size: var(--bk-text-xl);
-  font-weight: var(--bk-w-semibold);
-  line-height: var(--bk-lh-snug);
+.kc-h3 {
+  font-family: var(--kc-font-ui);
+  font-size: var(--kc-text-xl);
+  font-weight: var(--kc-w-semibold);
+  line-height: var(--kc-lh-snug);
 }
-.bk-body {
-  font-size: var(--bk-text-base);
-  line-height: var(--bk-lh-normal);
+.kc-body {
+  font-size: var(--kc-text-base);
+  line-height: var(--kc-lh-normal);
 }
-.bk-body-sm {
-  font-size: var(--bk-text-sm);
-  line-height: var(--bk-lh-normal);
+.kc-body-sm {
+  font-size: var(--kc-text-sm);
+  line-height: var(--kc-lh-normal);
 }
-.bk-caption {
-  font-size: var(--bk-text-xs);
-  line-height: var(--bk-lh-normal);
-  color: var(--bk-fg-muted);
+.kc-caption {
+  font-size: var(--kc-text-xs);
+  line-height: var(--kc-lh-normal);
+  color: var(--kc-fg-muted);
 }
-.bk-overline {
-  font-size: var(--bk-text-xs);
-  font-weight: var(--bk-w-semibold);
-  letter-spacing: var(--bk-tracking-uppercase);
+.kc-overline {
+  font-family: var(--kc-font-ui);
+  font-size: var(--kc-text-xs);
+  font-weight: var(--kc-w-semibold);
+  letter-spacing: var(--kc-tracking-uppercase);
   text-transform: uppercase;
-  color: var(--bk-fg-muted);
+  color: var(--kc-fg-muted);
 }
 
-/* THE counter style — used on the training screens.
-   Tabular numerals so digits don't shift width as the count climbs. */
-.bk-counter {
-  font-family: var(--bk-font-display);
-  font-size: var(--bk-text-5xl);
-  font-weight: var(--bk-w-bold);
+/* THE counter style — tabular numerals so digits don't shift width. */
+.kc-counter {
+  font-family: var(--kc-font-ui);
+  font-size: var(--kc-text-5xl);
+  font-weight: var(--kc-w-bold);
   line-height: 0.9;
   letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1, 'ss01' 1;
 }
-.bk-counter-hero {
-  font-family: var(--bk-font-display);
-  font-size: var(--bk-text-6xl);
-  font-weight: var(--bk-w-black);
+.kc-counter-hero {
+  font-family: var(--kc-font-ui);
+  font-size: var(--kc-text-6xl);
+  font-weight: var(--kc-w-black);
   line-height: 0.85;
   letter-spacing: -0.05em;
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1;
 }
-.bk-mono {
-  font-family: var(--bk-font-mono);
+.kc-mono {
+  font-family: var(--kc-font-mono);
   font-variant-numeric: tabular-nums;
 }
 
-/* ============================================================
-   UTIL — sport-pitch hairline (used as section separator)
-   ============================================================ */
-.bk-pitch-line {
+/* Wordmark style — Fraunces, used for the Kubb Club logotype */
+.kc-wordmark {
+  font-family: var(--kc-font-display);
+  font-weight: var(--kc-w-bold);
+  font-style: normal;
+  letter-spacing: -0.03em;
+  font-variation-settings: "opsz" 144, "SOFT" 30;
+}
+
+/* Pitch-line — used as section separator */
+.kc-pitch-line {
   height: 2px;
-  background: var(--bk-line-strong);
+  background: var(--kc-line-strong);
   border: 0;
+}
+
+/* ============================================================
+   LEGACY ALIASES — keep --bk-* working through migration.
+   When the Flutter side adopts --kc-* directly, this can be
+   removed.
+   ============================================================ */
+:root {
+  --bk-meadow-50: var(--kc-meadow-50); --bk-meadow-100: var(--kc-meadow-100);
+  --bk-meadow-200: var(--kc-meadow-200); --bk-meadow-300: var(--kc-meadow-300);
+  --bk-meadow-400: var(--kc-meadow-400); --bk-meadow-500: var(--kc-meadow-500);
+  --bk-meadow-600: var(--kc-meadow-600); --bk-meadow-700: var(--kc-meadow-700);
+  --bk-meadow-800: var(--kc-meadow-800); --bk-meadow-900: var(--kc-meadow-900);
+  --bk-wood-50: var(--kc-wood-50); --bk-wood-100: var(--kc-wood-100);
+  --bk-wood-200: var(--kc-wood-200); --bk-wood-300: var(--kc-wood-300);
+  --bk-wood-400: var(--kc-wood-400); --bk-wood-500: var(--kc-wood-500);
+  --bk-wood-600: var(--kc-wood-600); --bk-wood-700: var(--kc-wood-700);
+  --bk-wood-800: var(--kc-wood-800);
+  --bk-chalk-0: var(--kc-chalk-0); --bk-chalk-50: var(--kc-chalk-50);
+  --bk-chalk-100: var(--kc-chalk-100); --bk-chalk-200: var(--kc-chalk-200);
+  --bk-stone-50: var(--kc-stone-50); --bk-stone-100: var(--kc-stone-100);
+  --bk-stone-200: var(--kc-stone-200); --bk-stone-300: var(--kc-stone-300);
+  --bk-stone-400: var(--kc-stone-400); --bk-stone-500: var(--kc-stone-500);
+  --bk-stone-600: var(--kc-stone-600); --bk-stone-700: var(--kc-stone-700);
+  --bk-stone-800: var(--kc-stone-800); --bk-stone-900: var(--kc-stone-900);
+  --bk-hit: var(--kc-hit); --bk-miss: var(--kc-miss);
+  --bk-heli: var(--kc-heli); --bk-penalty: var(--kc-penalty); --bk-king: var(--kc-king);
+  --bk-bg: var(--kc-bg); --bk-bg-raised: var(--kc-bg-raised); --bk-bg-sunken: var(--kc-bg-sunken);
+  --bk-bg-inverse: var(--kc-bg-inverse);
+  --bk-fg: var(--kc-fg); --bk-fg-muted: var(--kc-fg-muted); --bk-fg-subtle: var(--kc-fg-subtle);
+  --bk-fg-inverse: var(--kc-fg-inverse);
+  --bk-line: var(--kc-line); --bk-line-strong: var(--kc-line-strong);
+  --bk-primary: var(--kc-primary); --bk-primary-hover: var(--kc-primary-hover);
+  --bk-primary-press: var(--kc-primary-press); --bk-on-primary: var(--kc-on-primary);
+  --bk-accent: var(--kc-accent); --bk-accent-hover: var(--kc-accent-hover);
+  --bk-on-accent: var(--kc-on-accent); --bk-danger: var(--kc-danger); --bk-on-danger: var(--kc-on-danger);
+  --bk-font-display: var(--kc-font-ui); --bk-font-body: var(--kc-font-body); --bk-font-mono: var(--kc-font-mono);
+  --bk-text-2xs: var(--kc-text-2xs); --bk-text-xs: var(--kc-text-xs); --bk-text-sm: var(--kc-text-sm);
+  --bk-text-base: var(--kc-text-base); --bk-text-lg: var(--kc-text-lg); --bk-text-xl: var(--kc-text-xl);
+  --bk-text-2xl: var(--kc-text-2xl); --bk-text-3xl: var(--kc-text-3xl); --bk-text-4xl: var(--kc-text-4xl);
+  --bk-text-5xl: var(--kc-text-5xl); --bk-text-6xl: var(--kc-text-6xl);
+  --bk-w-regular: var(--kc-w-regular); --bk-w-medium: var(--kc-w-medium);
+  --bk-w-semibold: var(--kc-w-semibold); --bk-w-bold: var(--kc-w-bold); --bk-w-black: var(--kc-w-black);
+  --bk-lh-tight: var(--kc-lh-tight); --bk-lh-snug: var(--kc-lh-snug);
+  --bk-lh-normal: var(--kc-lh-normal); --bk-lh-loose: var(--kc-lh-loose);
+  --bk-tracking-tight: var(--kc-tracking-tight); --bk-tracking-normal: var(--kc-tracking-normal);
+  --bk-tracking-wide: var(--kc-tracking-wide); --bk-tracking-uppercase: var(--kc-tracking-uppercase);
+  --bk-space-1: var(--kc-space-1); --bk-space-2: var(--kc-space-2); --bk-space-3: var(--kc-space-3);
+  --bk-space-4: var(--kc-space-4); --bk-space-5: var(--kc-space-5); --bk-space-6: var(--kc-space-6);
+  --bk-space-8: var(--kc-space-8); --bk-space-10: var(--kc-space-10); --bk-space-12: var(--kc-space-12);
+  --bk-touch-min: var(--kc-touch-min); --bk-touch-comfortable: var(--kc-touch-comfortable);
+  --bk-radius-xs: var(--kc-radius-xs); --bk-radius-sm: var(--kc-radius-sm);
+  --bk-radius-md: var(--kc-radius-md); --bk-radius-lg: var(--kc-radius-lg);
+  --bk-radius-xl: var(--kc-radius-xl); --bk-radius-2xl: var(--kc-radius-2xl);
+  --bk-radius-pill: var(--kc-radius-pill);
+  --bk-shadow-1: var(--kc-shadow-1); --bk-shadow-2: var(--kc-shadow-2);
+  --bk-shadow-3: var(--kc-shadow-3); --bk-shadow-pressed: var(--kc-shadow-pressed);
+  --bk-focus-ring: var(--kc-focus-ring);
+  --bk-ease-standard: var(--kc-ease-standard); --bk-ease-emphasized: var(--kc-ease-emphasized);
+  --bk-dur-fast: var(--kc-dur-fast); --bk-dur-base: var(--kc-dur-base); --bk-dur-slow: var(--kc-dur-slow);
 }

@@ -1,0 +1,19 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>body{margin:0;padding:24px;background:var(--kc-bg);color:var(--kc-fg);font-family:var(--kc-font-mono);font-size:11px}
+.grid{display:grid;grid-template-columns:140px 1fr;gap:8px 18px;align-items:center}
+.tok{font-weight:700;color:var(--kc-stone-700)}
+.bar{height:3px;background:var(--kc-line);position:relative;border-radius:2px;overflow:hidden}
+.bar::after{content:"";position:absolute;left:0;top:0;bottom:0;width:0;background:var(--kc-meadow-500);animation-duration:var(--d);animation-timing-function:var(--e);animation-iteration-count:infinite;animation-name:run}
+@keyframes run{0%{width:0}50%{width:100%}51%{width:0}100%{width:0}}
+.val{color:var(--kc-fg-muted)}
+</style></head><body>
+<div class="grid">
+<div class="tok">dur-fast</div><div class="bar" style="--d:0.6s;--e:cubic-bezier(0.2,0,0,1)"></div>
+<div class="val">120 ms · taps, micro-feedback</div><div></div>
+<div class="tok">dur-base</div><div class="bar" style="--d:1s;--e:cubic-bezier(0.2,0,0,1)"></div>
+<div class="val">200 ms · standard transitions</div><div></div>
+<div class="tok">dur-slow</div><div class="bar" style="--d:1.6s;--e:cubic-bezier(0.3,0,0,1)"></div>
+<div class="val">320 ms · sheets, modals, route changes</div><div></div>
+</div>
+<div style="margin-top:14px;color:var(--kc-fg-muted);font-size:10px">No bounces. ease-standard cubic-bezier(0.2,0,0,1) for utilitarian; ease-emphasized (0.3,0,0,1) for route transitions.</div>
+</body></html>

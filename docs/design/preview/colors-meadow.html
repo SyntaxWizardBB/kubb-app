@@ -1,19 +1,24 @@
-<!doctype html>
-<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
-<style>
-  body { padding: 20px; background: var(--bk-bg); }
-  .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-  .sw { border-radius: 6px; height: 64px; display: flex; align-items: flex-end; padding: 6px 8px; color: #fff; font-family: var(--bk-font-mono); font-size: 10px; }
-  .sw.dark { color: var(--bk-stone-900); }
-  .label { font-size: 11px; color: var(--bk-fg-muted); margin-top: 4px; font-family: var(--bk-font-mono);}
-</style></head>
-<body>
-  <div class="bk-overline" style="margin-bottom:10px">Wiesen — Meadow Green (primary)</div>
-  <div class="row">
-    <div><div class="sw dark" style="background:var(--bk-meadow-50)">50</div><div class="label">#eef6ec</div></div>
-    <div><div class="sw dark" style="background:var(--bk-meadow-200)">200</div><div class="label">#aed3a2</div></div>
-    <div><div class="sw" style="background:var(--bk-meadow-500)">500★</div><div class="label">#3a7c2e</div></div>
-    <div><div class="sw" style="background:var(--bk-meadow-700)">700</div><div class="label">#234e1c</div></div>
-    <div><div class="sw" style="background:var(--bk-meadow-900)">900</div><div class="label">#112710</div></div>
-  </div>
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>body{margin:0;padding:24px;background:var(--kc-bg)}
+.row{display:grid;grid-template-columns:repeat(10,1fr);gap:8px;align-items:end}
+.sw{height:80px;border-radius:8px;display:flex;flex-direction:column;justify-content:flex-end;padding:8px;color:#fbfaf6;font-family:var(--kc-font-mono);font-size:10px;line-height:1.2}
+.dark{color:#0c0b07}
+.label{font-size:9px;opacity:0.75}
+h3{font-family:var(--kc-font-display);font-weight:700;font-size:16px;margin:0 0 10px;letter-spacing:-0.02em}
+.sub{font-family:var(--kc-font-mono);font-size:10px;color:var(--kc-fg-muted);margin-bottom:8px}
+</style></head><body>
+<h3>Meadow — Wiese (Primary)</h3>
+<div class="sub">--kc-meadow-50 → 900 · primary 500</div>
+<div class="row">
+<div class="sw dark" style="background:#eef6ec"><div class="label">50</div>EEF6EC</div>
+<div class="sw dark" style="background:#d6ead0"><div class="label">100</div>D6EAD0</div>
+<div class="sw dark" style="background:#aed3a2"><div class="label">200</div>AED3A2</div>
+<div class="sw" style="background:#7fb56f"><div class="label">300</div>7FB56F</div>
+<div class="sw" style="background:#569748"><div class="label">400</div>569748</div>
+<div class="sw" style="background:#3a7c2e;outline:3px solid #0c0b07;outline-offset:-3px"><div class="label">500★</div>3A7C2E</div>
+<div class="sw" style="background:#2d6324"><div class="label">600</div>2D6324</div>
+<div class="sw" style="background:#234e1c"><div class="label">700</div>234E1C</div>
+<div class="sw" style="background:#1a3a16"><div class="label">800</div>1A3A16</div>
+<div class="sw" style="background:#112710"><div class="label">900</div>112710</div>
+</div>
 </body></html>
