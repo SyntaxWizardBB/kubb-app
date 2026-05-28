@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/icons.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/player/presentation/player_hub_sheet.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
@@ -119,12 +120,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      // Smoke-Migration auf KubbButton (W2-T4 Sprint B). Andere Konsumenten
+      // werden im Sweep-Follow-up migriert.
+      floatingActionButton: KubbButton(
+        variant: KubbButtonVariant.primary,
+        size: KubbButtonSize.large,
         onPressed: () => TrainingSheet.show(context),
-        backgroundColor: tokens.primary,
-        foregroundColor: tokens.onPrimary,
-        icon: KubbIcon(LucideIcons.plus, color: tokens.onPrimary),
-        label: Text(l.homeFabLabel),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const KubbIcon(LucideIcons.plus),
+            const SizedBox(width: KubbTokens.space2),
+            Text(l.homeFabLabel),
+          ],
+        ),
       ),
     );
   }

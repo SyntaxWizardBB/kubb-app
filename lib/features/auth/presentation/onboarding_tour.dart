@@ -528,6 +528,8 @@ class _SlideSoon extends StatelessWidget {
   }
 }
 
+// TODO(W2-T4-followup): durch KubbChip(tone: hit) ersetzen — semantik
+// identisch (meadow-Pille fuer "demnaechst"-Hinweis im Tour-Flow).
 class _SoonChip extends StatelessWidget {
   const _SoonChip({required this.label});
   final String label;

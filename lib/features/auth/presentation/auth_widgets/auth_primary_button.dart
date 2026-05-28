@@ -10,6 +10,9 @@ enum AuthButtonTone { primary, danger }
 
 /// Filled primary button used across the auth flows: full width,
 /// comfortable touch height, optional inline loading spinner.
+// TODO(W2-T4-followup): auf KubbButton (variant primary/danger, size large,
+// isLoading) umstellen. Spezialitaet hier ist nur das `width: double.infinity`,
+// der Rest deckt sich mit der Brand-Komponente.
 class AuthPrimaryButton extends StatelessWidget {
   const AuthPrimaryButton({
     required this.label,

@@ -77,6 +77,9 @@ class FinisseurFieldChips extends StatelessWidget {
   }
 }
 
+// TODO(W2-T4-followup): durch KubbChip(tone: info/neutral) ersetzen — die
+// `selected`-Boolean-Variante braucht ggf. einen zusaetzlichen Selected-Flag
+// auf KubbChip oder den Wrap in einen InkWell.
 class _BigChip extends StatelessWidget {
   const _BigChip({
     required this.label,

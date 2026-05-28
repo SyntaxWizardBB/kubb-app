@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 
 /// Outlined secondary button used across the auth flows.
+// TODO(W2-T4-followup): auf KubbButton (variant secondary, size large)
+// umstellen, sobald die Komponente mit `width: double.infinity` umgehen kann.
 class AuthSecondaryButton extends StatelessWidget {
   const AuthSecondaryButton({
     required this.label,
