@@ -53,7 +53,7 @@ class _State extends ConsumerState<TournamentListScreen>
       appBar: KubbAppBar(
         eyebrow: l.tournamentListEyebrow,
         title: l.tournamentListTitle,
-        actions: const InboxBellAction(),
+        actions: const [InboxBellAction()],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(TournamentRoutes.newTournament),

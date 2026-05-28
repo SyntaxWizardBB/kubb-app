@@ -35,15 +35,41 @@ void main() {
       tester,
       KubbAppBar(
         title: 'Home',
-        actions: IconButton(
-          key: const ValueKey('settings-btn'),
-          icon: const Icon(Icons.settings),
-          onPressed: () {},
-        ),
+        actions: [
+          IconButton(
+            key: const ValueKey('settings-btn'),
+            icon: const Icon(Icons.settings),
+            onPressed: () {},
+          ),
+        ],
       ),
     );
 
     expect(find.byKey(const ValueKey('settings-btn')), findsOneWidget);
+  });
+
+  testWidgets('renders multiple actions in a row', (tester) async {
+    await pump(
+      tester,
+      KubbAppBar(
+        title: 'Home',
+        actions: [
+          IconButton(
+            key: const ValueKey('action-a'),
+            icon: const Icon(Icons.search),
+            onPressed: () {},
+          ),
+          IconButton(
+            key: const ValueKey('action-b'),
+            icon: const Icon(Icons.notifications),
+            onPressed: () {},
+          ),
+        ],
+      ),
+    );
+
+    expect(find.byKey(const ValueKey('action-a')), findsOneWidget);
+    expect(find.byKey(const ValueKey('action-b')), findsOneWidget);
   });
 
   testWidgets('exposes preferred size with status-bar padding', (tester) async {
@@ -97,17 +123,17 @@ void main() {
     expect(find.text('STATS'), findsNothing);
   });
 
-  testWidgets('trailing wins over deprecated actions slot', (tester) async {
+  testWidgets('trailing wins over the actions list', (tester) async {
     await pump(
       tester,
       const KubbAppBar(
         title: 'X',
-        actions: Icon(Icons.notifications, key: ValueKey('legacy-action')),
+        actions: [Icon(Icons.notifications, key: ValueKey('list-action'))],
         trailing: Icon(Icons.search, key: ValueKey('new-trailing')),
       ),
     );
 
     expect(find.byKey(const ValueKey('new-trailing')), findsOneWidget);
-    expect(find.byKey(const ValueKey('legacy-action')), findsNothing);
+    expect(find.byKey(const ValueKey('list-action')), findsNothing);
   });
 }

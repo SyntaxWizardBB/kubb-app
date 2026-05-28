@@ -66,15 +66,17 @@ class SniperSessionScreen extends ConsumerWidget {
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: handleBack,
         ),
-        actions: IconButton(
-          tooltip: l.sniperConfigEyebrow,
-          icon: KubbIcon(
-            settings.sniperEyeToggleHidden ? LucideIcons.eyeOff : LucideIcons.eye,
+        actions: [
+          IconButton(
+            tooltip: l.sniperConfigEyebrow,
+            icon: KubbIcon(
+              settings.sniperEyeToggleHidden ? LucideIcons.eyeOff : LucideIcons.eye,
+            ),
+            onPressed: () => ref
+                .read(appSettingsProvider.notifier)
+                .setEyeHidden(value: !settings.sniperEyeToggleHidden),
           ),
-          onPressed: () => ref
-              .read(appSettingsProvider.notifier)
-              .setEyeHidden(value: !settings.sniperEyeToggleHidden),
-        ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space4),

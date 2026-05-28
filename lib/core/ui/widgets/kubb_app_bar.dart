@@ -20,21 +20,27 @@ import 'package:lucide_icons/lucide_icons.dart';
 ///   eyebrow- or title-line (e.g. tabs, badges, brand mark).
 class KubbAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// Legacy / convenience constructor. Renders [title] + optional [eyebrow]
-  /// in the brand typography. Either [actions] or [trailing] can be supplied
-  /// for the right-side icon slot; [trailing] wins when both are set.
+  /// in the brand typography.
+  ///
+  /// For the right-side slot, prefer the Material-style [actions] list — it
+  /// renders as a right-aligned [Row] so screens can stack multiple icon
+  /// buttons. The single-widget [trailing] slot is the lower-level escape
+  /// hatch (custom layout, badges, etc.) and wins over [actions] when both
+  /// are supplied.
   const KubbAppBar({
     required String title,
     super.key,
     String? eyebrow,
     this.leading,
-    Widget? actions,
+    List<Widget>? actions,
     Widget? trailing,
     this.automaticallyImplyLeading = true,
   })  : _titleSlot = null,
         _eyebrowSlot = null,
         _titleText = title,
         _eyebrowText = eyebrow,
-        _trailing = trailing ?? actions;
+        _actions = actions,
+        _trailing = trailing;
 
   /// Slot-based constructor following the mobile-kit `BK.AppBar` contract.
   /// All slots are optional widgets, except [title] which is required and
@@ -50,6 +56,7 @@ class KubbAppBar extends StatelessWidget implements PreferredSizeWidget {
         _eyebrowSlot = eyebrow,
         _titleText = null,
         _eyebrowText = null,
+        _actions = null,
         _trailing = trailing;
 
   /// Left-side slot. Defaults to a back-button when the route can pop and
@@ -68,7 +75,9 @@ class KubbAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? _titleText;
   final String? _eyebrowText;
 
-  // Right-side slot, normalised across both constructors.
+  // Right-side slots. Either a Material-style list of icon buttons, or a
+  // single trailing widget. `_trailing` takes precedence when both are set.
+  final List<Widget>? _actions;
   final Widget? _trailing;
 
   /// Spec target for the top padding (incl. status-bar inset) from
@@ -107,6 +116,11 @@ class KubbAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     final eyebrowWidget = _eyebrowSlot ?? _buildEyebrowText(textTheme, tokens);
     final titleWidget = _titleSlot ?? _buildTitleText(textTheme, tokens);
+    final actions = _actions;
+    final trailingWidget = _trailing ??
+        (actions != null && actions.isNotEmpty
+            ? Row(mainAxisSize: MainAxisSize.min, children: actions)
+            : null);
 
     return Material(
       color: tokens.bg,
@@ -133,7 +147,7 @@ class KubbAppBar extends StatelessWidget implements PreferredSizeWidget {
               constraints: const BoxConstraints(minWidth: KubbTokens.touchMin),
               child: Align(
                 alignment: Alignment.centerRight,
-                child: _trailing ?? const SizedBox.shrink(),
+                child: trailingWidget ?? const SizedBox.shrink(),
               ),
             ),
           ],
