@@ -6,6 +6,7 @@ import 'package:kubb_app/core/application/outbox_gc_task.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/dao/score_submission_outbox_dao.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
+import 'package:kubb_app/features/auth/application/keypair_session_refresher.dart';
 import 'package:logging/logging.dart';
 
 final _bootstrapLog = Logger('Bootstrap');
@@ -30,6 +31,16 @@ final _bootstrapLog = Logger('Bootstrap');
 // a failure must not block sign-in, so we log and continue.
 final appBootstrapProvider = FutureProvider<CachedAuthSessionData?>(
   (ref) async {
+    // Eagerly construct the keypair refresher so its adapter listener
+    // is attached before any session emission. Per ADR-0010 §"Auth
+    // challenge for keypair accounts" the Phase-1 JWT has no refresh
+    // token and only a 1h lifetime; the refresher takes over the
+    // re-mint role that `autoRefreshToken` plays for the OAuth path
+    // (W2-T1 / R1-F-03). Without this read the provider would only
+    // materialise on first use, missing the bootstrap-time keypair
+    // session that ensureWireSession is about to hydrate.
+    ref.read(keypairSessionRefresherProvider);
+
     final dao = ref.read(cachedAuthSessionDaoProvider);
     final session = await dao.current();
     if (session != null) {

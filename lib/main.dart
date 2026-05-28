@@ -22,13 +22,17 @@ Future<void> main() async {
     );
   }
 
+  // gotrue's `autoRefreshToken` defaults to true and stays enabled —
+  // OAuth (ADR-0010 §"Path A") needs it to rotate the refresh_token
+  // shortly before access-token expiry. The Phase-1 keypair JWT has no
+  // refresh_token and is handled separately by `KeypairSessionRefresher`
+  // (W2-T1 / R1-F-03), which re-mints by re-signing a fresh challenge
+  // well before expiry. When gotrue's auto-refresh fires against a
+  // keypair-hydrated session it has no refresh_token to send and the
+  // refresher's earlier re-sign has already replaced the session.
   await Supabase.initialize(
     url: _supabaseUrl,
     anonKey: _supabaseAnonKey,
-    // Phase-1 keypair tokens have no refresh_token (the keypair-verify
-    // edge function only mints access_token). Auto-refresh would fire
-    // ~5 min before expiry, fail, and trigger an immediate signOut.
-    authOptions: const FlutterAuthClientOptions(autoRefreshToken: false),
   );
 
   runApp(

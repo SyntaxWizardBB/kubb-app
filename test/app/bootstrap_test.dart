@@ -7,17 +7,21 @@ import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 
 import '../_helpers/sqlite_open.dart';
+import '../fixtures/auth/fake_supabase_auth_adapter.dart';
 
 void main() {
   setUpAll(registerLinuxSqliteOverride);
 
   late AppDatabase db;
+  late FakeSupabaseAuthAdapter adapter;
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
+    adapter = FakeSupabaseAuthAdapter();
   });
 
   tearDown(() async {
+    await adapter.dispose();
     await db.close();
   });
 
@@ -32,6 +36,10 @@ void main() {
         cachedAuthSessionDaoProvider.overrideWithValue(db.cachedAuthSessionDao),
         scoreSubmissionOutboxDaoProvider
             .overrideWithValue(db.scoreSubmissionOutboxDao),
+        // The W2-T1 keypair refresher is constructed eagerly in
+        // bootstrap; without this override it would try to read
+        // Supabase.instance, which is not initialised in this suite.
+        supabaseAuthAdapterProvider.overrideWithValue(adapter),
       ],
     );
     addTearDown(container.dispose);
@@ -57,6 +65,10 @@ void main() {
         cachedAuthSessionDaoProvider.overrideWithValue(db.cachedAuthSessionDao),
         scoreSubmissionOutboxDaoProvider
             .overrideWithValue(db.scoreSubmissionOutboxDao),
+        // The W2-T1 keypair refresher is constructed eagerly in
+        // bootstrap; without this override it would try to read
+        // Supabase.instance, which is not initialised in this suite.
+        supabaseAuthAdapterProvider.overrideWithValue(adapter),
       ],
     );
     addTearDown(container.dispose);
