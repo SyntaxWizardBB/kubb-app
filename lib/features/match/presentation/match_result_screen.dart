@@ -249,6 +249,13 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // BH-C-05: dark score strip header at the very top.
+                      _ResultScoreStrip(
+                        detail: detail,
+                        scoreA: _scoreA,
+                        scoreB: _scoreB,
+                      ),
+                      const SizedBox(height: KubbTokens.space4),
                       _SectionHeader(
                         label: 'Aktueller Halbsatz · $formatLabel',
                       ),
@@ -319,7 +326,7 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
                 // polish placeholder; real ELO/Tabellen-Delta follows
                 // when the league module wires up.
                 const _SectionHeader(
-                  label: 'Liga-Impact',
+                  label: 'Liga-Hinweis',
                 ),
                 const SizedBox(height: KubbTokens.space2),
                 const _LeagueImpactCard(),
@@ -361,7 +368,7 @@ class _SectionHeader extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          letterSpacing: 1,
+          letterSpacing: 0.88,
           color: tokens.fgMuted,
         ),
       ),
@@ -570,6 +577,11 @@ class _LeagueImpactCard extends StatelessWidget {
                 label: 'Tabellen-Auswirkung',
                 icon: LucideIcons.trendingUp,
               ),
+              const SizedBox(width: KubbTokens.space2),
+              const KubbChip(
+                tone: KubbChipTone.info,
+                label: 'Vorschau · Demo',
+              ),
               const Spacer(),
               Icon(
                 LucideIcons.trophy,
@@ -703,6 +715,113 @@ class _StepBtn extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Stone-900 hero strip above the current-set editor. Shows the overall
+/// set-wins per team (derived from accepted half-set history) plus a
+/// live indicator. Real-time wiring follows in M4.
+class _ResultScoreStrip extends StatelessWidget {
+  const _ResultScoreStrip({
+    required this.detail,
+    required this.scoreA,
+    required this.scoreB,
+  });
+
+  final MatchDetail detail;
+  final int scoreA;
+  final int scoreB;
+
+  @override
+  Widget build(BuildContext context) {
+    var winsA = 0;
+    var winsB = 0;
+    for (final h in extractHalfsetHistory(detail.auditTail)) {
+      final w = deriveWinner(h.scoreA, h.scoreB);
+      if (w == 'A') winsA += 1;
+      if (w == 'B') winsB += 1;
+    }
+    final teams = {for (final t in detail.teams) t.teamId: t};
+    final nameA = teams['A']?.displayName ?? 'Team A';
+    final nameB = teams['B']?.displayName ?? 'Team B';
+    const muted = TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.88,
+      color: KubbTokens.chalk50,
+    );
+    return Container(
+      padding: const EdgeInsets.fromLTRB(KubbTokens.space4, KubbTokens.space4,
+          KubbTokens.space4, KubbTokens.space3),
+      decoration: BoxDecoration(
+        color: KubbTokens.stone900,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+      ),
+      child: Column(children: [
+        Row(children: [
+          Expanded(child: _StripTeam(name: nameA, leading: true)),
+          Text('$winsA:$winsB',
+              style: const TextStyle(
+                  fontSize: 44,
+                  fontWeight: FontWeight.w800,
+                  color: KubbTokens.chalk50,
+                  height: 1,
+                  fontFeatures: [FontFeature.tabularFigures()])),
+          Expanded(child: _StripTeam(name: nameB, leading: false)),
+        ]),
+        const SizedBox(height: KubbTokens.space2),
+        Row(children: [
+          Expanded(
+              child: Text(
+                  'Halbsatz ${detail.match.currentRound} / ${detail.match.format.n}',
+                  style: muted)),
+          const Text('● LIVE läuft…',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.88,
+                  color: KubbTokens.miss)),
+        ]),
+      ]),
+    );
+  }
+}
+
+class _StripTeam extends StatelessWidget {
+  const _StripTeam({required this.name, required this.leading});
+  final String name;
+  final bool leading;
+  @override
+  Widget build(BuildContext context) {
+    final initial = name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
+    final avatar = Container(
+      width: 28,
+      height: 28,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+          color: KubbTokens.stone700, shape: BoxShape.circle),
+      child: Text(initial,
+          style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: KubbTokens.chalk50)),
+    );
+    final label = Flexible(
+      child: Text(name,
+          textAlign: leading ? TextAlign.left : TextAlign.right,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: KubbTokens.chalk50)),
+    );
+    return Row(
+      mainAxisAlignment:
+          leading ? MainAxisAlignment.start : MainAxisAlignment.end,
+      children: leading
+          ? [avatar, const SizedBox(width: 8), label]
+          : [label, const SizedBox(width: 8), avatar],
     );
   }
 }

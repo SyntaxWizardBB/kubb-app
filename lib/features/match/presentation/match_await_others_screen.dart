@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,6 +31,22 @@ class MatchAwaitOthersScreen extends ConsumerStatefulWidget {
 class _MatchAwaitOthersScreenState
     extends ConsumerState<MatchAwaitOthersScreen> {
   int? _seenRound;
+  DateTime _lastRefresh = DateTime.now();
+  Timer? _tickTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tickTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +62,7 @@ class _MatchAwaitOthersScreenState
       (prev, next) {
         final d = next.value;
         if (d == null) return;
+        _lastRefresh = DateTime.now();
         _seenRound ??= d.match.currentRound;
 
         final prevD = prev?.value;
@@ -108,7 +128,11 @@ class _MatchAwaitOthersScreenState
             children: [
               MatchStageIndicator(status: detail.match.status),
               Expanded(
-                child: _AwaitBody(round: detail.match.currentRound, players: inApp),
+                child: _AwaitBody(
+                  round: detail.match.currentRound,
+                  players: inApp,
+                  lastRefresh: _lastRefresh,
+                ),
               ),
             ],
           );
@@ -119,10 +143,15 @@ class _MatchAwaitOthersScreenState
 }
 
 class _AwaitBody extends StatelessWidget {
-  const _AwaitBody({required this.round, required this.players});
+  const _AwaitBody({
+    required this.round,
+    required this.players,
+    required this.lastRefresh,
+  });
 
   final int round;
   final List<MatchParticipant> players;
+  final DateTime lastRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -161,6 +190,18 @@ class _AwaitBody extends StatelessWidget {
         ),
         const SizedBox(height: KubbTokens.space6),
         _WaitingListCard(round: round, players: players),
+        const SizedBox(height: KubbTokens.space2),
+        Center(
+          child: Text(
+            'Aktualisiert vor ${DateTime.now().difference(lastRefresh).inSeconds} s',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: tokens.fgMuted,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
         const SizedBox(height: KubbTokens.space5),
         Center(
           child: KubbButton(
@@ -204,7 +245,7 @@ class _WaitingListCard extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: tokens.bgRaised,
-        borderRadius: BorderRadius.circular(KubbTokens.radiusLg + 2),
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
         border: Border.all(color: tokens.line),
       ),
       child: Column(

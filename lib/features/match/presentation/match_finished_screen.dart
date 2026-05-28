@@ -229,25 +229,29 @@ class _BigScoreRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        _BigNumber(value: scoreA, highlight: winner == 'A'),
-        const SizedBox(width: KubbTokens.space3),
-        const Text(
-          ':',
-          style: TextStyle(
-            fontSize: 56,
-            fontWeight: FontWeight.w600,
-            color: KubbTokens.chalk50,
-            height: 0.85,
+    return Semantics(
+      container: true,
+      label: 'Endstand ${scoreA ?? '–'} zu ${scoreB ?? '–'}',
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          _BigNumber(value: scoreA, highlight: winner == 'A'),
+          const SizedBox(width: KubbTokens.space3),
+          const Text(
+            ':',
+            style: TextStyle(
+              fontSize: 56,
+              fontWeight: FontWeight.w600,
+              color: KubbTokens.chalk50,
+              height: 0.85,
+            ),
           ),
-        ),
-        const SizedBox(width: KubbTokens.space3),
-        _BigNumber(value: scoreB, highlight: winner == 'B'),
-      ],
+          const SizedBox(width: KubbTokens.space3),
+          _BigNumber(value: scoreB, highlight: winner == 'B'),
+        ],
+      ),
     );
   }
 }
@@ -260,17 +264,20 @@ class _BigNumber extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      value?.toString() ?? '–',
-      style: TextStyle(
-        fontSize: 80,
-        fontWeight: FontWeight.w800,
-        height: 0.85,
-        letterSpacing: -2.5,
-        color: highlight
-            ? KubbTokens.chalk50
-            : KubbTokens.chalk50.withValues(alpha: 0.55),
-        fontFeatures: const [FontFeature.tabularFigures()],
+    return Semantics(
+      label: 'Punkte ${value ?? '–'}',
+      child: Text(
+        value?.toString() ?? '–',
+        style: TextStyle(
+          fontSize: 80,
+          fontWeight: FontWeight.w800,
+          height: 0.85,
+          letterSpacing: -2.5,
+          color: highlight
+              ? KubbTokens.chalk50
+              : KubbTokens.chalk50.withValues(alpha: 0.55),
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
       ),
     );
   }
