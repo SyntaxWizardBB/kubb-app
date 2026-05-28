@@ -172,7 +172,6 @@ function Root() {
       ['Home',       home],
       ['Übersicht',  <TournamentScreen onBack={()=>setRoute('home')} onOpenMatch={()=>setRoute('match')}/>],
     ],
-<<<<<<< HEAD
     signin: [
       ['Sign-In',  <SignInScreen onPickGoogle={()=>{}} onPickApple={()=>{}} onPickAnonymous={()=>setRoute('anon')} onPickRestore={()=>{}}/>],
       ['Offline',  <SignInScreen onPickGoogle={()=>{}} onPickApple={()=>{}} onPickAnonymous={()=>setRoute('anon')} onPickRestore={()=>{}} offline/>],
@@ -181,13 +180,12 @@ function Root() {
     anon: [
       ['Sign-In',  <SignInScreen onPickGoogle={()=>{}} onPickApple={()=>{}} onPickAnonymous={()=>setRoute('anon')} onPickRestore={()=>{}}/>],
       ['Spielname',<AnonymousSignupScreen onBack={()=>setRoute('signin')} onClose={()=>setRoute('signin')} onContinue={()=>{}}/>],
-=======
+    ],
     onboarding: [
       ['Slide 1 · Sniper',     <OnboardingScreen initialIndex={0} onDone={()=>setRoute('home')}/>],
       ['Slide 2 · Finisseur',  <OnboardingScreen initialIndex={1} onDone={()=>setRoute('home')}/>],
       ['Slide 3 · Turniere',   <OnboardingScreen initialIndex={2} onDone={()=>setRoute('home')}/>],
       ['Slide 4 · Freunde',    <OnboardingScreen initialIndex={3} onDone={()=>setRoute('home')}/>],
->>>>>>> 2c53416 (feat(auth): implement onboarding tour with four kubb club slides)
     ],
   };
   const screens = flows[route] || flows.home;
