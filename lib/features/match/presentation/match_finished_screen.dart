@@ -24,9 +24,8 @@ class MatchFinishedScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      appBar: KubbAppBar(
+      appBar: const KubbAppBar(
         title: 'Match beendet',
-        leading: BackButton(onPressed: () => context.go('/')),
       ),
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

@@ -152,11 +152,8 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      appBar: KubbAppBar(
+      appBar: const KubbAppBar(
         title: 'Resultat',
-        leading: BackButton(
-          onPressed: () => context.go('${MatchRoutes.lobby}/${widget.matchId}'),
-        ),
       ),
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

@@ -77,9 +77,8 @@ class _MatchConfigScreenState extends ConsumerState<MatchConfigScreen> {
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      appBar: KubbAppBar(
+      appBar: const KubbAppBar(
         title: 'Neues Match',
-        leading: BackButton(onPressed: () => context.go('/')),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
