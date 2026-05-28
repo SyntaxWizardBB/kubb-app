@@ -34,6 +34,32 @@
 </head>
 <body>
   <!--
+    Kubb Club launch splash — Variant B "Mark Only".
+    Meadow (#2D6324) background + centered K+Crown mark.
+    Flutter overwrites the body content on first frame, so no teardown is needed.
+  -->
+  <style>
+    #kc-launch-splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #2D6324;
+      z-index: 2147483647;
+    }
+    #kc-launch-splash img {
+      width: 170px;
+      height: 170px;
+      max-width: 40vmin;
+      max-height: 40vmin;
+    }
+  </style>
+  <div id="kc-launch-splash" aria-hidden="true">
+    <img src="icons/Icon-512.png" alt="">
+  </div>
+
+  <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
     or to give the user feedback during the initialization process.

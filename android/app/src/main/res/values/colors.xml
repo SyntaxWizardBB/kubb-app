@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Kubb Club brand tokens -->
+    <!-- Meadow 600 — primary launch background. Source: docs/design/colors_and_type.css -->
+    <color name="launch_meadow">#2D6324</color>
+</resources>
