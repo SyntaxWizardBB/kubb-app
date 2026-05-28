@@ -88,9 +88,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
                 color: tokens.fg,
               ),
         ),
-        trailing: showFilter
-            ? IconButton(
-        actions: Row(
+        trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (showFilter)
