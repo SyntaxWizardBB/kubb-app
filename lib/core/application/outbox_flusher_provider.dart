@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/application/outbox_flusher.dart';
 import 'package:kubb_app/core/data/app_database.dart';
@@ -10,6 +12,7 @@ import 'package:kubb_app/core/data/connectivity/connectivity_service.dart';
 import 'package:kubb_app/core/data/dao/score_submission_outbox_dao.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 /// DI seam for [ScoreSubmissionOutboxDao]. Tests override this provider
 /// with an in-memory DAO when exercising the flusher end-to-end.
@@ -105,17 +108,31 @@ SetScore _decodeSetScore(String raw) {
   );
 }
 
+/// Test seam: returns the production [ScoreLamportSubmitter] adapter
+/// wired to [remote]. Lets unit-tests in
+/// `test/core/application/outbox_flusher_provider_test.dart` exercise
+/// the file-private adapter without exposing the class itself.
+@visibleForTesting
+ScoreLamportSubmitter buildScoreLamportSubmitterForTest(
+  TournamentRemote remote,
+) =>
+    _RemoteScoreLamportSubmitter(remote);
+
 /// Adapter from [TournamentRemote] to the [ScoreLamportSubmitter] port.
-/// Delegates to the wave-8 `proposeSetScoreWithLamport` method added in
-/// TASK-M4.3-T6. Until that port method lands this adapter raises
-/// [UnimplementedError]; the provider itself stays compileable so
-/// downstream wiring (TASK-M4.3-T10) can already reference it.
+/// Delegates to `TournamentRemote.proposeSetScoreWithLamport` (TASK-M4.3-T6)
+/// and classifies infrastructure failures into the stable
+/// [TransientSubmitException] / [TerminalSubmitException] taxonomy so the
+/// flusher can drive retry vs. terminal-conflict logic without depending
+/// on `dart:io` or PostgREST internals (TASK-W1-T1, R17-F-01).
+///
+/// Type bridge: the outbox row carries the local [UserId] of the
+/// submitter, while the remote port speaks [TournamentParticipantId]
+/// (R17-B-01). The server's RPC sources the effective submitter from
+/// `auth.uid()`, so the parameter is routing/idempotency information
+/// only — we forward the same opaque token across the boundary.
 class _RemoteScoreLamportSubmitter implements ScoreLamportSubmitter {
   _RemoteScoreLamportSubmitter(this._remote);
 
-  // Held for the wave-8 swap (TASK-M4.3-T6); the adapter delegates to
-  // `_remote.proposeSetScoreWithLamport(...)` once the port method ships.
-  // ignore: unused_field
   final TournamentRemote _remote;
 
   @override
@@ -127,10 +144,76 @@ class _RemoteScoreLamportSubmitter implements ScoreLamportSubmitter {
     required SetScore score,
     required int lamportCounter,
     required String deviceId,
-  }) {
-    throw UnimplementedError(
-      'TournamentRemote.proposeSetScoreWithLamport — see TASK-M4.3-T6',
-    );
+  }) async {
+    try {
+      return await _remote.proposeSetScoreWithLamport(
+        matchId: matchId,
+        consensusRound: consensusRound,
+        setIndex: setIndex,
+        // R17-B-01 bridge: the remote port expects a participant id but
+        // the RPC keys the submitter via `auth.uid()`. Forwarding the
+        // user-scoped token keeps the wire payload stable; the
+        // participant context is recovered server-side.
+        submitter: TournamentParticipantId(submitter.value),
+        score: score,
+        lamportCounter: lamportCounter,
+        deviceId: deviceId,
+      );
+    } on SocketException catch (e) {
+      throw TransientSubmitException(reason: 'network_socket', cause: e);
+    } on TimeoutException catch (e) {
+      throw TransientSubmitException(reason: 'rpc_timeout', cause: e);
+    } on TournamentScoreConflictException catch (e) {
+      // The repository already mapped a HINT-tagged PostgREST error to
+      // the domain conflict type (e.g. `STALE_CONSENSUS_ROUND`). Lift
+      // it into the submitter taxonomy so the flusher sees a uniform
+      // terminal contract.
+      throw TerminalSubmitException(reason: e.code, cause: e);
+    } on PostgrestException catch (e) {
+      final reason = _terminalReasonFor(e);
+      if (reason != null) {
+        throw TerminalSubmitException(reason: reason, cause: e);
+      }
+      rethrow;
+    }
+  }
+
+  /// Classifies a [PostgrestException] into a stable reason token.
+  ///
+  /// Order of precedence:
+  ///   1. `e.hint` — set explicitly by the server via
+  ///      `RAISE EXCEPTION USING HINT = '<TOKEN>'`. This is the
+  ///      contract for `STALE_CONSENSUS_ROUND` and forthcoming
+  ///      conflict tokens (`lamport_regression`, `override_pending`,
+  ///      `conflict_*`).
+  ///   2. `e.code` — when the hint is absent we accept the same
+  ///      token vocabulary via SQLSTATE-adjacent fields some
+  ///      PostgREST builds populate (defensive, future-proof).
+  ///
+  /// Returns `null` for unclassified errors so the caller can rethrow
+  /// the original exception unchanged. Never returns
+  /// `runtimeType.toString()` — reason codes are part of the public
+  /// contract and must be stable.
+  String? _terminalReasonFor(PostgrestException e) {
+    const knownTokens = <String>{
+      'STALE_CONSENSUS_ROUND',
+      'lamport_regression',
+      'override_pending',
+    };
+    String? candidate;
+    final hint = e.hint;
+    if (hint != null && hint.isNotEmpty) {
+      candidate = hint;
+    } else {
+      final code = e.code;
+      if (code != null && code.isNotEmpty) {
+        candidate = code;
+      }
+    }
+    if (candidate == null) return null;
+    if (knownTokens.contains(candidate)) return candidate;
+    if (candidate.startsWith('conflict_')) return candidate;
+    return null;
   }
 }
 

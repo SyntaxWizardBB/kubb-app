@@ -129,6 +129,46 @@ abstract class OutboxFlusher {
 /// consensus round drifted past the locally queued submission.
 const String kStaleConsensusRoundCode = 'STALE_CONSENSUS_ROUND';
 
+/// Submitter-side classification of a transient failure: the network
+/// hiccupped or the RPC timed out; the row stays pending and the
+/// flusher counts an attempt + backs off. Adapter implementations
+/// rethrow this in place of raw `SocketException`/`TimeoutException`
+/// so callers can rely on a stable, port-level taxonomy instead of
+/// branching on `dart:io` types (TASK-W1-T1 / R17-F-01).
+class TransientSubmitException implements Exception {
+  const TransientSubmitException({required this.reason, this.cause});
+
+  /// Stable token, e.g. `network_socket` or `rpc_timeout`. Never the
+  /// `runtimeType.toString()` of the underlying error — see R17-F-01.
+  final String reason;
+
+  /// Original failure, kept for logging/debugging. Not part of the
+  /// classification surface.
+  final Object? cause;
+
+  @override
+  String toString() => 'TransientSubmitException($reason)';
+}
+
+/// Submitter-side classification of a terminal failure: the server
+/// rejected the proposal with a known conflict token (lamport
+/// regression, override pending, stale consensus, etc.). The row is
+/// stamped with [reason] via [OutboxStore.markError] and not retried.
+class TerminalSubmitException implements Exception {
+  const TerminalSubmitException({required this.reason, this.cause});
+
+  /// Stable token surfaced to the UI / outbox row, e.g.
+  /// `STALE_CONSENSUS_ROUND`, `lamport_regression`, `override_pending`,
+  /// or `conflict_*`. Stable across releases so downstream consumers
+  /// can switch on it.
+  final String reason;
+
+  final Object? cause;
+
+  @override
+  String toString() => 'TerminalSubmitException($reason)';
+}
+
 /// Concrete flusher implementation per TASK-M4.3-T7.
 ///
 /// Drains the outbox sequentially, retries [SocketException] with
@@ -239,6 +279,22 @@ class OutboxFlusherImpl implements OutboxFlusher {
         await Future<void>.delayed(_backoffFor(attempt));
         attempt += 1;
         if (_paused) return _RowOutcome.givenUp;
+      } on TransientSubmitException {
+        // Adapter-mapped transient failure (network/timeout). Same
+        // retry semantics as a raw `SocketException` — the previous
+        // `markAttempt` above already recorded the attempt.
+        if (!_connectivity.isOnline || attempt >= _maxRetries) {
+          return _RowOutcome.givenUp;
+        }
+        await Future<void>.delayed(_backoffFor(attempt));
+        attempt += 1;
+        if (_paused) return _RowOutcome.givenUp;
+      } on TerminalSubmitException catch (e) {
+        // Adapter-mapped terminal failure (lamport regression, override
+        // pending, stale consensus, …). Stamp the reason token on the
+        // row and stop retrying.
+        await _store.markError(row.id, e.reason, _now());
+        return _RowOutcome.conflict;
       } on Exception catch (e) {
         final code = _conflictCode(e);
         if (code == kStaleConsensusRoundCode) {
