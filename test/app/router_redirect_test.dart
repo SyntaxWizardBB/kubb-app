@@ -9,6 +9,7 @@ import 'package:kubb_app/app/router.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
+import 'package:kubb_app/features/social/presentation/social_routes.dart';
 import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
 
@@ -87,13 +88,18 @@ void main() {
   }
 
   group('redirect — unauthenticated', () {
-    testWidgets('signedOut cold start lands on /sign-in', (tester) async {
+    // R20-F-04: `/` is on the public whitelist (landing-page slot for the
+    // pre-auth splash), so a signed-out cold start now stays on `/`
+    // instead of bouncing — the SignInScreen is reachable via explicit
+    // navigation. Anything outside the whitelist still routes to
+    // `/sign-in` (see other tests in this group).
+    testWidgets('signedOut cold start stays on / (whitelist)', (tester) async {
       final container = await pumpApp(
         tester,
         controllerFactory: () =>
             _StubAuthController(const AuthSession.signedOut()),
       );
-      expect(currentPath(container), AuthRoutes.signIn);
+      expect(currentPath(container), '/');
     });
 
     testWidgets('signedOut user navigating to /onboarding-tour stays',
@@ -108,7 +114,10 @@ void main() {
       expect(currentPath(container), AuthRoutes.onboardingTour);
     });
 
-    testWidgets('signedOut user on /sign-in/account-link stays', (tester) async {
+    // R20-F-04: account-link + delete are authenticated-only. Direct-Link
+    // ohne Session muss auf /sign-in zurueckfallen.
+    testWidgets('signedOut user on /sign-in/account-link redirects to /sign-in',
+        (tester) async {
       final container = await pumpApp(
         tester,
         controllerFactory: () =>
@@ -116,7 +125,72 @@ void main() {
       );
       container.read(goRouterProvider).go(AuthRoutes.accountLink);
       await tester.pumpAndSettle();
-      expect(currentPath(container), AuthRoutes.accountLink);
+      expect(currentPath(container), AuthRoutes.signIn);
+    });
+
+    testWidgets('signedOut user on /sign-in/delete redirects to /sign-in',
+        (tester) async {
+      final container = await pumpApp(
+        tester,
+        controllerFactory: () =>
+            _StubAuthController(const AuthSession.signedOut()),
+      );
+      container.read(goRouterProvider).go(AuthRoutes.deleteAccount);
+      await tester.pumpAndSettle();
+      expect(currentPath(container), AuthRoutes.signIn);
+    });
+
+    // Public legal routes (W1-T1/T2 register the screens in parallel; the
+    // gate must already allow them through so the wave merges cleanly).
+    testWidgets('signedOut user on /legal/privacy passes the gate',
+        (tester) async {
+      final container = await pumpApp(
+        tester,
+        controllerFactory: () =>
+            _StubAuthController(const AuthSession.signedOut()),
+      );
+      // /legal/privacy has no registered GoRoute in this worktree yet
+      // (W1-T1 lands the screen in parallel). The redirect callback is
+      // the unit under test: it must not bounce to /sign-in. We assert
+      // on the resolved router configuration without pumping the error-
+      // page widget, which would otherwise mount and pollute teardown.
+      final router = container.read(goRouterProvider)..go('/legal/privacy');
+      expect(
+        router.routerDelegate.currentConfiguration.uri.path,
+        '/legal/privacy',
+      );
+    });
+
+    testWidgets('signedOut user on /public/tournament/:id passes the gate',
+        (tester) async {
+      final container = await pumpApp(
+        tester,
+        controllerFactory: () =>
+            _StubAuthController(const AuthSession.signedOut()),
+      );
+      // The redirect callback is the unit under test here — we assert it
+      // does not bounce to /sign-in. We deliberately read the resolved
+      // configuration before pumping the screen frame because the real
+      // PublicTournamentScreen wires a TabController whose teardown
+      // throws in the test harness (orthogonal — see widget tests).
+      final router = container.read(goRouterProvider)
+        ..go('/public/tournament/123');
+      expect(
+        router.routerDelegate.currentConfiguration.uri.path,
+        '/public/tournament/123',
+      );
+    });
+
+    testWidgets('signedOut user on /social/friends redirects to /sign-in',
+        (tester) async {
+      final container = await pumpApp(
+        tester,
+        controllerFactory: () =>
+            _StubAuthController(const AuthSession.signedOut()),
+      );
+      container.read(goRouterProvider).go('/social/friends');
+      await tester.pumpAndSettle();
+      expect(currentPath(container), AuthRoutes.signIn);
     });
   });
 
@@ -173,16 +247,21 @@ void main() {
 
   group('redirect — anonymous session', () {
     // Anonymous is a transient state during the keypair-attach flow.
-    // `isAuthenticated` is false on the AuthSession side, so a cold-start
-    // anonymous still routes to /sign-in (the AccountSetupController owns
-    // the on-screen flow, not the router).
-    testWidgets('anonymous cold start routes to /sign-in', (tester) async {
+    // `isAuthenticated` is false on the AuthSession side. Cold-start `/`
+    // is whitelisted (R20-F-04), so an anonymous session stays on `/`
+    // rather than bouncing — the AccountSetupController owns the on-
+    // screen upgrade flow, not the router. Navigating to a protected
+    // route still triggers the gate.
+    testWidgets('anonymous user navigating to /inbox routes to /sign-in',
+        (tester) async {
       final container = await pumpApp(
         tester,
         controllerFactory: () => _StubAuthController(
           const AuthSession.anonymous(userId: 'u1'),
         ),
       );
+      container.read(goRouterProvider).go(AuthRoutes.inbox);
+      await tester.pumpAndSettle();
       expect(currentPath(container), AuthRoutes.signIn);
     });
   });
@@ -239,7 +318,12 @@ void main() {
         controllerFactory: () => stub,
       );
 
-      // Cold start: signed-out → redirected to /sign-in.
+      // Cold start at `/` is on the public whitelist (R20-F-04).
+      expect(currentPath(container), '/');
+
+      // Navigate into a protected area — should bounce to /sign-in.
+      container.read(goRouterProvider).go(SocialRoutes.friends);
+      await tester.pumpAndSettle();
       expect(currentPath(container), AuthRoutes.signIn);
 
       // Flip the controller to authenticated; refreshListenable must fire.

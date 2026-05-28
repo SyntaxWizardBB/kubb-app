@@ -329,6 +329,14 @@ void main() {
       for (var i = 0; i < 5; i++) {
         await tester.pump(const Duration(milliseconds: 50));
       }
+      // R20-F-04: navigate explicitly into the auth-flow — `/` is now on
+      // the public whitelist, so signedOut no longer bounces from cold
+      // start. The BottomNav-suppression rule we're guarding here only
+      // matters once we reach an actual auth-flow route.
+      container.read(goRouterProvider).go(AuthRoutes.signIn);
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
 
       expect(currentPath(container), AuthRoutes.signIn);
       // The shell scaffold may still linger in the inactive Navigator

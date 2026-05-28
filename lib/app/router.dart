@@ -66,6 +66,33 @@ abstract final class ShellTab {
   static const profile = 3;
 }
 
+/// Whitelist exact-match routes reachable without an authenticated
+/// session. Anything not on this list (or matching [_publicPrefixes])
+/// requires `session.isAuthenticated == true`.
+///
+/// Hintergrund (R20-F-04): die alte `inAuthFlow`-Logik war eine
+/// Blacklist, die alles unter `/sign-in/*` als public behandelt hat.
+/// Direct-Links auf `/sign-in/account-link` und `/sign-in/delete`
+/// waren damit auch fuer signedOut-User erreichbar — beide Screens
+/// sind aber nur fuer eine bestehende Session sinnvoll und konnten
+/// crashen oder Account-Operationen auf einer Anon-Session ausloesen.
+const _publicRoutes = <String>{
+  '/',
+  '/sign-in',
+  '/sign-in/anonymous',
+  '/sign-in/restore',
+  '/onboarding-tour',
+  '/legal/privacy',
+  '/legal/imprint',
+};
+
+/// Whitelist prefix-match routes — used for dynamic spectator URLs
+/// like `/public/tournament/:id` (ADR-0026) where the suffix is
+/// variable.
+const _publicPrefixes = <String>{
+  '/public/',
+};
+
 final goRouterProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthRefresh();
   ref
@@ -76,11 +103,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: notifier,
     redirect: (context, state) {
+      final loc = state.matchedLocation;
       // Public spectator routes (M4.2 / ADR-0026) bypass the auth gate
       // entirely — der anon-`apikey` aus dem Standard-SupabaseClient
       // reicht fuer die `public_*_get`-RPCs (Strategie A, kein
-      // signInAnonymously()-Round-Trip mehr).
-      if (state.matchedLocation.startsWith('/public/')) {
+      // signInAnonymously()-Round-Trip mehr). Prefix-Match, weil die
+      // Suffixe dynamisch sind (`/public/tournament/:id`).
+      if (_publicPrefixes.any(loc.startsWith)) {
         return null;
       }
       // Legal pages (DSGVO Art. 13/14) muessen ohne Auth erreichbar
@@ -102,13 +131,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final session = auth.hasValue
           ? auth.requireValue
           : const AuthSession.signedOut();
-      final loc = state.matchedLocation;
-      final inAuthFlow = loc == AuthRoutes.signIn ||
-          loc.startsWith('${AuthRoutes.signIn}/') ||
-          loc == AuthRoutes.onboardingTour;
 
       if (!session.isAuthenticated) {
-        return inAuthFlow ? null : AuthRoutes.signIn;
+        // Whitelist: nur explizit oeffentliche Routen duerfen ohne
+        // Session passieren (R20-F-04). Alles andere — inklusive
+        // `/sign-in/account-link` und `/sign-in/delete` — wird auf
+        // den Sign-In-Screen umgeleitet.
+        return _publicRoutes.contains(loc) ? null : AuthRoutes.signIn;
       }
       if (loc == AuthRoutes.signIn ||
           loc == AuthRoutes.anonymousSignup ||
