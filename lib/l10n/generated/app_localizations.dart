@@ -3190,6 +3190,78 @@ abstract class AppLocalizations {
   /// **'Dieses Spiel ist bereits abgeschlossen.'**
   String get tournamentMatchReadOnlyNotice;
 
+  /// Action button label that opens the forfeit declaration sheet (DSCORE-63)
+  ///
+  /// In de, this message translates to:
+  /// **'Forfeit erklären'**
+  String get tournamentForfeitAction;
+
+  /// Bottom-sheet title for the forfeit-declaration surface
+  ///
+  /// In de, this message translates to:
+  /// **'Forfeit erklären'**
+  String get tournamentForfeitSheetTitle;
+
+  /// Radio-group label for the absent-side selection
+  ///
+  /// In de, this message translates to:
+  /// **'Welche Seite ist nicht erschienen?'**
+  String get tournamentForfeitAbsentSideLabel;
+
+  /// Radio label for the A side in the forfeit sheet
+  ///
+  /// In de, this message translates to:
+  /// **'Team A'**
+  String get tournamentForfeitSideA;
+
+  /// Radio label for the B side in the forfeit sheet
+  ///
+  /// In de, this message translates to:
+  /// **'Team B'**
+  String get tournamentForfeitSideB;
+
+  /// Reason text-field label for the forfeit sheet
+  ///
+  /// In de, this message translates to:
+  /// **'Begründung'**
+  String get tournamentForfeitReasonLabel;
+
+  /// Reason text-field hint enforcing the DSCORE-65 minimum
+  ///
+  /// In de, this message translates to:
+  /// **'Mindestens 10 Zeichen'**
+  String get tournamentForfeitReasonHint;
+
+  /// Validation error when the reason is shorter than 10 chars
+  ///
+  /// In de, this message translates to:
+  /// **'Begründung muss mindestens 10 Zeichen enthalten.'**
+  String get tournamentForfeitReasonTooShort;
+
+  /// Validation error when no absent side has been picked
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte abwesende Seite auswählen.'**
+  String get tournamentForfeitSideRequired;
+
+  /// Submit button label inside the forfeit sheet
+  ///
+  /// In de, this message translates to:
+  /// **'Forfeit speichern'**
+  String get tournamentForfeitSubmitButton;
+
+  /// Snackbar shown when the forfeit RPC fails
+  ///
+  /// In de, this message translates to:
+  /// **'Forfeit konnte nicht gespeichert werden: {error}'**
+  String tournamentForfeitSubmitError(String error);
+
+  /// Confirmation snackbar after a successful forfeit declaration
+  ///
+  /// In de, this message translates to:
+  /// **'Forfeit gespeichert — Match abgeschlossen.'**
+  String get tournamentForfeitSuccessToast;
+
   /// Validation error when a set has neither score nor king
   ///
   /// In de, this message translates to:

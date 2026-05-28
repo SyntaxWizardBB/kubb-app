@@ -134,4 +134,21 @@ class TournamentActions {
         );
     _ref.invalidate(tournamentMatchDetailProvider(matchId));
   }
+
+  /// W3-T1 / DSCORE-62..-66: organizer declares a no-show forfeit on
+  /// behalf of the absent side. Server validates the status gate, the
+  /// reason length and writes the audit-event hook. Refreshes the match
+  /// detail so the screen picks up the `finalized` state immediately.
+  Future<void> declareForfeit({
+    required TournamentMatchId matchId,
+    required ForfeitAbsentSide absentSide,
+    required String reason,
+  }) async {
+    await _ref.read(tournamentRemoteProvider).declareForfeit(
+          matchId: matchId,
+          absentSide: absentSide,
+          reason: reason,
+        );
+    _ref.invalidate(tournamentMatchDetailProvider(matchId));
+  }
 }

@@ -396,6 +396,40 @@ class FakeTournamentRemote implements TournamentRemote {
     _advanceKoWinner(m);
   }
 
+  /// W3-T1 mirror of `tournament_match_forfeit`. The fake re-uses the
+  /// stored tournament's `forfeit_points` to derive the score and flips
+  /// the match to `finalized` — same observable effect as the server
+  /// RPC for fixture-driven tests.
+  @override
+  Future<void> declareForfeit({
+    required TournamentMatchId matchId,
+    required ForfeitAbsentSide absentSide,
+    required String reason,
+  }) async {
+    if (reason.trim().length < 10) {
+      throw ArgumentError('forfeit reason must be >= 10 chars');
+    }
+    final m = _matches[matchId]!;
+    // The fake mirrors the schema default (`tournaments.forfeit_points`
+    // DEFAULT 18) since the test surface has no configurable header.
+    const points = 18;
+    if (absentSide == ForfeitAbsentSide.a) {
+      m
+        ..finalScoreA = 0
+        ..finalScoreB = points
+        ..winnerParticipant = m.participantB;
+    } else {
+      m
+        ..finalScoreA = points
+        ..finalScoreB = 0
+        ..winnerParticipant = m.participantA;
+    }
+    m
+      ..status = TournamentMatchStatus.finalized
+      ..completedAt = DateTime.now();
+    _advanceKoWinner(m);
+  }
+
   @override
   Stream<TournamentMatchRef> watchMatch(TournamentMatchId id) {
     final m = _matches[id];

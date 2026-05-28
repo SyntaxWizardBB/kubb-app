@@ -1694,6 +1694,48 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dieses Spiel ist bereits abgeschlossen.';
 
   @override
+  String get tournamentForfeitAction => 'Forfeit erklären';
+
+  @override
+  String get tournamentForfeitSheetTitle => 'Forfeit erklären';
+
+  @override
+  String get tournamentForfeitAbsentSideLabel =>
+      'Welche Seite ist nicht erschienen?';
+
+  @override
+  String get tournamentForfeitSideA => 'Team A';
+
+  @override
+  String get tournamentForfeitSideB => 'Team B';
+
+  @override
+  String get tournamentForfeitReasonLabel => 'Begründung';
+
+  @override
+  String get tournamentForfeitReasonHint => 'Mindestens 10 Zeichen';
+
+  @override
+  String get tournamentForfeitReasonTooShort =>
+      'Begründung muss mindestens 10 Zeichen enthalten.';
+
+  @override
+  String get tournamentForfeitSideRequired =>
+      'Bitte abwesende Seite auswählen.';
+
+  @override
+  String get tournamentForfeitSubmitButton => 'Forfeit speichern';
+
+  @override
+  String tournamentForfeitSubmitError(String error) {
+    return 'Forfeit konnte nicht gespeichert werden: $error';
+  }
+
+  @override
+  String get tournamentForfeitSuccessToast =>
+      'Forfeit gespeichert — Match abgeschlossen.';
+
+  @override
   String tournamentMatchValidationEmpty(int n) {
     return 'Satz $n: Eingabe fehlt.';
   }

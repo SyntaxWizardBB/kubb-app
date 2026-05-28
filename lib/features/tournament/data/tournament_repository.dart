@@ -444,6 +444,26 @@ class TournamentRepository implements TournamentRemote {
     );
   }
 
+  /// W3-T1: forwards the no-show forfeit declaration to the
+  /// `tournament_match_forfeit` RPC. The server validates the absent
+  /// side, the reason length (>= 10) and the tournament status; the
+  /// score is derived from `tournaments.forfeit_points`.
+  @override
+  Future<void> declareForfeit({
+    required TournamentMatchId matchId,
+    required ForfeitAbsentSide absentSide,
+    required String reason,
+  }) {
+    return _client.rpc<void>(
+      'tournament_match_forfeit',
+      params: <String, dynamic>{
+        'p_match_id': matchId.value,
+        'p_absent_side': absentSide.toWire(),
+        'p_reason': reason,
+      },
+    );
+  }
+
   // ---- M2 KO-phase additions (T7b) ----
   //
   // Signatures mirror the upcoming [TournamentRemote] port extension

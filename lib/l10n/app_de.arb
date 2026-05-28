@@ -2348,6 +2348,59 @@
   "@tournamentMatchReadOnlyNotice": {
     "description": "Hint shown when match status is terminal"
   },
+  "tournamentForfeitAction": "Forfeit erklären",
+  "@tournamentForfeitAction": {
+    "description": "Action button label that opens the forfeit declaration sheet (DSCORE-63)"
+  },
+  "tournamentForfeitSheetTitle": "Forfeit erklären",
+  "@tournamentForfeitSheetTitle": {
+    "description": "Bottom-sheet title for the forfeit-declaration surface"
+  },
+  "tournamentForfeitAbsentSideLabel": "Welche Seite ist nicht erschienen?",
+  "@tournamentForfeitAbsentSideLabel": {
+    "description": "Radio-group label for the absent-side selection"
+  },
+  "tournamentForfeitSideA": "Team A",
+  "@tournamentForfeitSideA": {
+    "description": "Radio label for the A side in the forfeit sheet"
+  },
+  "tournamentForfeitSideB": "Team B",
+  "@tournamentForfeitSideB": {
+    "description": "Radio label for the B side in the forfeit sheet"
+  },
+  "tournamentForfeitReasonLabel": "Begründung",
+  "@tournamentForfeitReasonLabel": {
+    "description": "Reason text-field label for the forfeit sheet"
+  },
+  "tournamentForfeitReasonHint": "Mindestens 10 Zeichen",
+  "@tournamentForfeitReasonHint": {
+    "description": "Reason text-field hint enforcing the DSCORE-65 minimum"
+  },
+  "tournamentForfeitReasonTooShort": "Begründung muss mindestens 10 Zeichen enthalten.",
+  "@tournamentForfeitReasonTooShort": {
+    "description": "Validation error when the reason is shorter than 10 chars"
+  },
+  "tournamentForfeitSideRequired": "Bitte abwesende Seite auswählen.",
+  "@tournamentForfeitSideRequired": {
+    "description": "Validation error when no absent side has been picked"
+  },
+  "tournamentForfeitSubmitButton": "Forfeit speichern",
+  "@tournamentForfeitSubmitButton": {
+    "description": "Submit button label inside the forfeit sheet"
+  },
+  "tournamentForfeitSubmitError": "Forfeit konnte nicht gespeichert werden: {error}",
+  "@tournamentForfeitSubmitError": {
+    "description": "Snackbar shown when the forfeit RPC fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "tournamentForfeitSuccessToast": "Forfeit gespeichert — Match abgeschlossen.",
+  "@tournamentForfeitSuccessToast": {
+    "description": "Confirmation snackbar after a successful forfeit declaration"
+  },
   "tournamentMatchValidationEmpty": "Satz {n}: Eingabe fehlt.",
   "@tournamentMatchValidationEmpty": {
     "description": "Validation error when a set has neither score nor king",

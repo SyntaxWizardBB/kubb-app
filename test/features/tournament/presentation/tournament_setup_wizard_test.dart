@@ -107,6 +107,13 @@ class _FakeTournamentRemote implements TournamentRemote {
   }) async {}
 
   @override
+  Future<void> declareForfeit({
+    required TournamentMatchId matchId,
+    required ForfeitAbsentSide absentSide,
+    required String reason,
+  }) async {}
+
+  @override
   Future<TournamentMatchRef> proposeSetScoreWithLamport({
     required TournamentMatchId matchId,
     required int consensusRound,

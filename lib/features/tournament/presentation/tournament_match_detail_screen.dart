@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/application/outbox_flusher.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/application/outbox_pending_provider.dart';
 import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
@@ -16,6 +17,7 @@ import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/score_consensus_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/score_pending_indicator.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/tournament_forfeit_sheet.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_set_input.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -265,6 +267,28 @@ class _TournamentMatchDetailScreenState
     final validationMessage = _validate(l, drafts);
     final ekc = computeEkc(_setScores(drafts));
 
+    // W3-T1: organizer-only Forfeit-Action. Visible while the
+    // tournament is live, the match has two participants and is not yet
+    // in a terminal state. The sheet itself drives the validation; the
+    // server re-checks the role / status gate.
+    final detailAsync =
+        ref.watch(tournamentDetailProvider(TournamentId(widget.tournamentId)));
+    final callerUserId = ref.watch(currentUserIdProvider);
+    final isCreator = detailAsync
+            .maybeWhen<bool>(
+              data: (d) => d?.isCallerCreator(callerUserId) ?? false,
+              orElse: () => false,
+            );
+    final tournamentLive = detailAsync.maybeWhen<bool>(
+      data: (d) => d?.tournament.status == TournamentStatus.live,
+      orElse: () => false,
+    );
+    final canForfeit = isCreator &&
+        tournamentLive &&
+        !readOnly &&
+        match.participantA != null &&
+        match.participantB != null;
+
     // TASK-M4.3-T11: drive pending / conflict markers off the outbox.
     final outboxAsync = ref.watch(outboxPendingProvider(match.matchId));
     final outboxRows = outboxAsync.maybeWhen(
@@ -361,8 +385,34 @@ class _TournamentMatchDetailScreenState
             child: Text(l.tournamentMatchReadOnlyNotice,
                 style: TextStyle(color: tokens.fgMuted, fontSize: 13)),
           ),
+        if (canForfeit) ...[
+          const SizedBox(height: KubbTokens.space3),
+          SizedBox(
+            height: KubbTokens.touchComfortable,
+            child: OutlinedButton.icon(
+              onPressed: _submitting
+                  ? null
+                  : () => _openForfeitSheet(match),
+              icon: const Icon(LucideIcons.userX),
+              label: Text(l.tournamentForfeitAction),
+            ),
+          ),
+        ],
       ],
     );
+  }
+
+  Future<void> _openForfeitSheet(TournamentMatchRef match) async {
+    final ok = await TournamentForfeitSheet.show(
+      context,
+      matchId: match.matchId,
+    );
+    if (ok == true && mounted) {
+      // The action provider already invalidates the detail provider;
+      // pop back to the match list so the organizer sees the finalised
+      // status reflected immediately.
+      context.go(TournamentRoutes.matchesFor(widget.tournamentId));
+    }
   }
 }
 

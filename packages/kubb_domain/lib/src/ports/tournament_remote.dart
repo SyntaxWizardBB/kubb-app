@@ -361,6 +361,16 @@ class TournamentScoreConflictException implements Exception {
   String toString() => 'TournamentScoreConflictException($code)';
 }
 
+/// Which side of a match was absent at the pitch when the organizer
+/// declared a forfeit (spec DSCORE-63). Wire format is the single-char
+/// upper-case token expected by the `tournament_match_forfeit` RPC.
+enum ForfeitAbsentSide {
+  a,
+  b;
+
+  String toWire() => this == ForfeitAbsentSide.a ? 'A' : 'B';
+}
+
 /// Port for cloud-side tournament data.
 ///
 /// Per ADR-0014, tournament matches use per-match-result semantics with
@@ -447,6 +457,17 @@ abstract interface class TournamentRemote {
   Future<void> organizerOverride({
     required TournamentMatchId matchId,
     required List<SetScore> finalSetScores,
+    required String reason,
+  });
+
+  /// Organizer-driven forfeit declaration (spec DSCORE-62..-66 +
+  /// FR-MATCH-7 + FR-CFG-11). The absent side is recorded, the score
+  /// derives from `tournaments.forfeit_points`, and the match is moved
+  /// to `finalized`. `reason` is mandatory and the server enforces a
+  /// minimum length of 10 characters per DSCORE-65.
+  Future<void> declareForfeit({
+    required TournamentMatchId matchId,
+    required ForfeitAbsentSide absentSide,
     required String reason,
   });
 
