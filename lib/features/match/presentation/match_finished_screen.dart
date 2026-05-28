@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/features/match/application/match_providers.dart';
 import 'package:kubb_app/features/match/data/match_models.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 /// Terminal screen for `finalized` or `voided` matches. Replaces the
 /// previous redirect into the lobby (which had no branch for either
@@ -22,9 +22,14 @@ class MatchFinishedScreen extends ConsumerWidget {
     ref.watch(matchPollingProvider(matchId));
     final detailAsync = ref.watch(matchDetailProvider(matchId));
 
+    final formatLabel = detailAsync.value != null
+        ? 'Match · bo${detailAsync.value!.match.format.n}'
+        : 'Match';
+
     return Scaffold(
       backgroundColor: tokens.bg,
-      appBar: const KubbAppBar(
+      appBar: KubbAppBar(
+        eyebrow: formatLabel,
         title: 'Match beendet',
       ),
       body: detailAsync.when(
@@ -57,51 +62,41 @@ class _FinishedBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
     final isVoided = detail.match.status == MatchStatus.voided;
     final winner = detail.derivedWinner;
     final isTie = !isVoided && winner == null;
 
+    final verdict = isVoided
+        ? 'Match abgebrochen'
+        : (isTie ? 'Unentschieden' : 'Sieger: ${_teamLabel(winner!)}');
+
     return ListView(
-      padding: const EdgeInsets.all(KubbTokens.space4),
+      padding: const EdgeInsets.fromLTRB(
+        KubbTokens.space4,
+        KubbTokens.space4,
+        KubbTokens.space4,
+        KubbTokens.space6,
+      ),
       children: [
-        const SizedBox(height: KubbTokens.space4),
-        Icon(
-          isVoided ? LucideIcons.x : LucideIcons.trophy,
-          size: 56,
-          color: isVoided ? KubbTokens.miss : KubbTokens.king,
+        _ScoreHeroCard(
+          verdict: verdict,
+          scoreA: detail.match.finalScoreA,
+          scoreB: detail.match.finalScoreB,
+          winner: winner,
+          isVoided: isVoided,
+        ),
+        const SizedBox(height: KubbTokens.space6),
+        KubbButton(
+          variant: KubbButtonVariant.primary,
+          size: KubbButtonSize.large,
+          onPressed: () => context.go(MatchRoutes.newMatch),
+          child: const Text('Neues Match'),
         ),
         const SizedBox(height: KubbTokens.space3),
-        Text(
-          isVoided
-              ? 'Match abgebrochen'
-              : (isTie ? 'Unentschieden' : 'Sieger: ${_teamLabel(winner!)}'),
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: tokens.fg,
-          ),
-        ),
-        if (!isVoided) ...[
-          const SizedBox(height: KubbTokens.space5),
-          _FinalScoreCard(detail: detail),
-        ],
-        const SizedBox(height: KubbTokens.space8),
-        SizedBox(
-          height: KubbTokens.touchComfortable,
-          child: FilledButton(
-            onPressed: () => context.go(MatchRoutes.newMatch),
-            child: const Text('Neues Match'),
-          ),
-        ),
-        const SizedBox(height: KubbTokens.space3),
-        SizedBox(
-          height: KubbTokens.touchComfortable,
-          child: OutlinedButton(
-            onPressed: () => context.go('/'),
-            child: const Text('Zurück zur Übersicht'),
-          ),
+        KubbButton(
+          variant: KubbButtonVariant.ghost,
+          onPressed: () => context.go('/'),
+          child: const Text('Zurück zur Übersicht'),
         ),
       ],
     );
@@ -116,98 +111,122 @@ class _FinishedBody extends StatelessWidget {
   }
 }
 
-class _FinalScoreCard extends StatelessWidget {
-  const _FinalScoreCard({required this.detail});
+/// Meadow-500 hero block — Big-Number score plus verdict eyebrow.
+/// Mirrors the `Result` hero in `docs/design/ui_kits/app/MatchScreen.jsx`
+/// (resultHero / resultBig styles) and the meadow-500 verdict surface in
+/// `SummaryScreen.jsx`.
+class _ScoreHeroCard extends StatelessWidget {
+  const _ScoreHeroCard({
+    required this.verdict,
+    required this.scoreA,
+    required this.scoreB,
+    required this.winner,
+    required this.isVoided,
+  });
 
-  final MatchDetail detail;
+  final String verdict;
+  final int? scoreA;
+  final int? scoreB;
+  final String? winner;
+  final bool isVoided;
 
   @override
   Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final scoreA = detail.match.finalScoreA;
-    final scoreB = detail.match.finalScoreB;
-    final winner = detail.derivedWinner;
+    final background = isVoided ? KubbTokens.stone700 : KubbTokens.meadow500;
     return Container(
-      padding: const EdgeInsets.all(KubbTokens.space4),
-      decoration: BoxDecoration(
-        color: tokens.bgSunken,
-        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+      padding: const EdgeInsets.fromLTRB(
+        KubbTokens.space5,
+        KubbTokens.space6,
+        KubbTokens.space5,
+        KubbTokens.space5,
       ),
-      child: Row(
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg + 6),
+      ),
+      child: Column(
         children: [
-          Expanded(
-            child: _TeamScore(
-              label: 'Team A',
-              accent: KubbTokens.meadow600,
-              score: scoreA,
-              highlight: winner == 'A',
+          Text(
+            verdict.toUpperCase(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.96,
+              color: KubbTokens.chalk50,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: KubbTokens.space3,
+          const SizedBox(height: KubbTokens.space3),
+          if (!isVoided)
+            _BigScoreRow(scoreA: scoreA, scoreB: scoreB, winner: winner)
+          else
+            const Icon(
+              Icons.close_rounded,
+              color: KubbTokens.chalk50,
+              size: 72,
             ),
-            child: Text(
-              ':',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                color: tokens.fgMuted,
-              ),
-            ),
-          ),
-          Expanded(
-            child: _TeamScore(
-              label: 'Team B',
-              accent: KubbTokens.wood400,
-              score: scoreB,
-              highlight: winner == 'B',
-            ),
-          ),
         ],
       ),
     );
   }
 }
 
-class _TeamScore extends StatelessWidget {
-  const _TeamScore({
-    required this.label,
-    required this.accent,
-    required this.score,
-    required this.highlight,
+class _BigScoreRow extends StatelessWidget {
+  const _BigScoreRow({
+    required this.scoreA,
+    required this.scoreB,
+    required this.winner,
   });
 
-  final String label;
-  final Color accent;
-  final int? score;
+  final int? scoreA;
+  final int? scoreB;
+  final String? winner;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        _BigNumber(value: scoreA, highlight: winner == 'A'),
+        const SizedBox(width: KubbTokens.space3),
+        const Text(
+          ':',
+          style: TextStyle(
+            fontSize: 56,
+            fontWeight: FontWeight.w600,
+            color: KubbTokens.chalk50,
+            height: 0.85,
+          ),
+        ),
+        const SizedBox(width: KubbTokens.space3),
+        _BigNumber(value: scoreB, highlight: winner == 'B'),
+      ],
+    );
+  }
+}
+
+class _BigNumber extends StatelessWidget {
+  const _BigNumber({required this.value, required this.highlight});
+
+  final int? value;
   final bool highlight;
 
   @override
   Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return Column(
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: accent,
-            letterSpacing: 0.6,
-          ),
-        ),
-        const SizedBox(height: KubbTokens.space2),
-        Text(
-          score?.toString() ?? '–',
-          style: TextStyle(
-            fontSize: 40,
-            fontWeight: FontWeight.w800,
-            color: highlight ? tokens.fg : tokens.fgMuted,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
-      ],
+    return Text(
+      value?.toString() ?? '–',
+      style: TextStyle(
+        fontSize: 80,
+        fontWeight: FontWeight.w800,
+        height: 0.85,
+        letterSpacing: -2.5,
+        color: highlight
+            ? KubbTokens.chalk50
+            : KubbTokens.chalk50.withValues(alpha: 0.55),
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
     );
   }
 }

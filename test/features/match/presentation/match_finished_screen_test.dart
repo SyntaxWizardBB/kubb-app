@@ -71,7 +71,9 @@ void main() {
       (tester) async {
     await _pump(tester, _detail());
 
-    expect(find.text('Sieger: Team A'), findsOneWidget);
+    // Verdict is rendered as an uppercased eyebrow inside the meadow
+    // hero card — see _ScoreHeroCard in match_finished_screen.dart.
+    expect(find.text('SIEGER: TEAM A'), findsOneWidget);
     expect(find.text('6'), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
     expect(find.text('Neues Match'), findsOneWidget);
@@ -85,7 +87,7 @@ void main() {
       _detail(status: MatchStatus.voided, winner: null, scoreA: null, scoreB: null),
     );
 
-    expect(find.text('Match abgebrochen'), findsOneWidget);
-    expect(find.textContaining('Sieger'), findsNothing);
+    expect(find.text('MATCH ABGEBROCHEN'), findsOneWidget);
+    expect(find.textContaining('SIEGER'), findsNothing);
   });
 }
