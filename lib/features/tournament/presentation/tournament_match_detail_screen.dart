@@ -11,6 +11,7 @@ import 'package:kubb_app/features/tournament/application/tournament_list_provide
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
+import 'package:kubb_app/features/tournament/application/tournament_score_draft_controller.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/score_consensus_banner.dart';
@@ -44,8 +45,6 @@ class TournamentMatchDetailScreen extends ConsumerStatefulWidget {
 
 class _TournamentMatchDetailScreenState
     extends ConsumerState<TournamentMatchDetailScreen> {
-  List<_SetDraft> _drafts = const <_SetDraft>[_SetDraft()];
-  int? _prefilledForRound;
   bool _submitting = false;
 
   /// Spec default per DSCORE-15. Wizard-configurable; threaded through
@@ -56,34 +55,41 @@ class _TournamentMatchDetailScreenState
   /// through once the wizard surfaces it.
   static const int _maxSets = 3;
 
+  TournamentMatchId get _matchId => TournamentMatchId(widget.matchId);
+
+  ScoreDraftController get _draftController =>
+      ref.read(scoreDraftControllerProvider(_matchId).notifier);
+
+  List<ScoreDraftSet> get _drafts =>
+      ref.read(scoreDraftControllerProvider(_matchId)).sets;
+
   void _ensureDraftForRound(TournamentMatchRef m) {
-    if (_prefilledForRound == m.consensusRound) return;
-    setState(() {
-      _prefilledForRound = m.consensusRound;
-      _drafts = const <_SetDraft>[_SetDraft()];
-    });
+    // TODO(W1-T2-followup): clear on finished — DSCORE-22 GC hook.
+    unawaited(_draftController.init(m.consensusRound));
   }
 
-  void _update(int i, TournamentSetInputValue v) => setState(() {
-        final next = List<_SetDraft>.of(_drafts);
-        next[i] = _SetDraft(
-            basekubbsA: v.basekubbsA, basekubbsB: v.basekubbsB, king: v.king);
-        _drafts = next;
-      });
+  void _update(int i, int consensusRound, TournamentSetInputValue v) {
+    final next = List<ScoreDraftSet>.of(_drafts);
+    next[i] = ScoreDraftSet(
+        basekubbsA: v.basekubbsA, basekubbsB: v.basekubbsB, king: v.king);
+    unawaited(_draftController.setSets(consensusRound, next));
+  }
 
-  void _addSet() {
+  void _addSet(int consensusRound) {
     if (_drafts.length >= _maxSets) return;
-    setState(() => _drafts = <_SetDraft>[..._drafts, const _SetDraft()]);
+    unawaited(_draftController.setSets(
+        consensusRound, <ScoreDraftSet>[..._drafts, const ScoreDraftSet()]));
   }
 
-  void _removeSet() {
+  void _removeSet(int consensusRound) {
     if (_drafts.length <= 1) return;
-    setState(() => _drafts = _drafts.sublist(0, _drafts.length - 1));
+    unawaited(_draftController.setSets(
+        consensusRound, _drafts.sublist(0, _drafts.length - 1)));
   }
 
-  String? _validate(AppLocalizations l) {
-    for (var i = 0; i < _drafts.length; i++) {
-      final d = _drafts[i];
+  String? _validate(AppLocalizations l, List<ScoreDraftSet> drafts) {
+    for (var i = 0; i < drafts.length; i++) {
+      final d = drafts[i];
       if (d.king == null && d.basekubbsA == 0 && d.basekubbsB == 0) {
         return l.tournamentMatchValidationEmpty(i + 1);
       }
@@ -97,8 +103,8 @@ class _TournamentMatchDetailScreenState
     return null;
   }
 
-  List<SetScore> _setScores() => <SetScore>[
-        for (final d in _drafts)
+  List<SetScore> _setScores(List<ScoreDraftSet> drafts) => <SetScore>[
+        for (final d in drafts)
           SetScore(
             basekubbsKnockedByA: d.basekubbsA,
             basekubbsKnockedByB: d.basekubbsB,
@@ -111,15 +117,19 @@ class _TournamentMatchDetailScreenState
 
   Future<void> _submit(TournamentMatchRef match) async {
     final l = AppLocalizations.of(context);
-    if (_submitting || _validate(l) != null) return;
+    final drafts = _drafts;
+    if (_submitting || _validate(l, drafts) != null) return;
     setState(() => _submitting = true);
     final prevConsensus = match.consensusRound;
     try {
       await ref.read(tournamentActionsProvider).proposeSetScores(
             matchId: match.matchId,
             consensusRound: prevConsensus,
-            setScores: _setScores(),
+            setScores: _setScores(drafts),
           );
+      // DSCORE-21: drop the draft for the round we just submitted. The
+      // outbox queues the propose RPC so this counts as "acknowledged".
+      await _draftController.clear(consensusRound: prevConsensus);
       if (!mounted) return;
       final next = await ref
           .read(tournamentMatchDetailProvider(match.matchId).future);
@@ -144,10 +154,7 @@ class _TournamentMatchDetailScreenState
         return;
       }
       if (next.consensusRound > prevConsensus) {
-        setState(() {
-          _prefilledForRound = next.consensusRound;
-          _drafts = const <_SetDraft>[_SetDraft()];
-        });
+        await _draftController.init(next.consensusRound);
         if (mounted) {
           unawaited(context.push<void>(TournamentRoutes.conflict(
               widget.tournamentId, match.matchId.value)));
@@ -253,8 +260,10 @@ class _TournamentMatchDetailScreenState
     final readOnly = match.status == TournamentMatchStatus.finalized ||
         match.status == TournamentMatchStatus.overridden ||
         match.status == TournamentMatchStatus.voided;
-    final validationMessage = _validate(l);
-    final ekc = computeEkc(_setScores());
+    final drafts =
+        ref.watch(scoreDraftControllerProvider(_matchId)).sets;
+    final validationMessage = _validate(l, drafts);
+    final ekc = computeEkc(_setScores(drafts));
 
     // TASK-M4.3-T11: drive pending / conflict markers off the outbox.
     final outboxAsync = ref.watch(outboxPendingProvider(match.matchId));
@@ -278,21 +287,19 @@ class _TournamentMatchDetailScreenState
         const SizedBox(height: KubbTokens.space3),
         if (hasStaleConflict && !readOnly)
           ScoreConflictBanner(onReenter: () {
-            setState(() {
-              _prefilledForRound = match.consensusRound;
-              _drafts = const <_SetDraft>[_SetDraft()];
-            });
+            unawaited(_draftController.clear(
+                consensusRound: match.consensusRound));
           }),
         ScoreConsensusBanner(attempt: match.consensusRound),
-        for (var i = 0; i < _drafts.length; i++) ...[
+        for (var i = 0; i < drafts.length; i++) ...[
           TournamentSetInput(
             setNumber: i + 1,
-            basekubbsA: _drafts[i].basekubbsA,
-            basekubbsB: _drafts[i].basekubbsB,
-            king: _drafts[i].king,
+            basekubbsA: drafts[i].basekubbsA,
+            basekubbsB: drafts[i].basekubbsB,
+            king: drafts[i].king,
             maxBasekubbs: _maxBasekubbs,
             enabled: !readOnly,
-            onChanged: (v) => _update(i, v),
+            onChanged: (v) => _update(i, match.consensusRound, v),
           ),
           const SizedBox(height: KubbTokens.space3),
         ],
@@ -300,7 +307,9 @@ class _TournamentMatchDetailScreenState
           Row(children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: _drafts.length <= 1 ? null : _removeSet,
+                onPressed: drafts.length <= 1
+                    ? null
+                    : () => _removeSet(match.consensusRound),
                 icon: const Icon(LucideIcons.minus),
                 label: Text(l.tournamentMatchRemoveSet),
               ),
@@ -308,7 +317,9 @@ class _TournamentMatchDetailScreenState
             const SizedBox(width: KubbTokens.space3),
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: _drafts.length >= _maxSets ? null : _addSet,
+                onPressed: drafts.length >= _maxSets
+                    ? null
+                    : () => _addSet(match.consensusRound),
                 icon: const Icon(LucideIcons.plus),
                 label: Text(l.tournamentMatchAddSet),
               ),
@@ -488,12 +499,4 @@ class _LivePreview extends StatelessWidget {
       ]),
     );
   }
-}
-
-@immutable
-class _SetDraft {
-  const _SetDraft({this.basekubbsA = 0, this.basekubbsB = 0, this.king});
-  final int basekubbsA;
-  final int basekubbsB;
-  final SetWinner? king;
 }

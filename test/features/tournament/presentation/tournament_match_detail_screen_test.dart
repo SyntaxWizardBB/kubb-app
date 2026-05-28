@@ -4,12 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kubb_app/core/data/app_database.dart';
+import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_match_detail_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+
+import '../../../_helpers/sqlite_open.dart';
 
 class _FakeRemote implements TournamentRemote {
   _FakeRemote(
@@ -73,6 +77,7 @@ Future<_FakeRemote> _pump(
   required TournamentMatchRef match,
   TournamentMatchRef? afterPropose,
   Stream<TournamentMatchRef>? matchStream,
+  AppDatabase? db,
 }) async {
   // Tall viewport so the bottom of the match-detail ListView (with
   // the submit button) is built without scrolling.
@@ -85,6 +90,8 @@ Future<_FakeRemote> _pump(
     afterPropose: afterPropose,
     matchStream: matchStream,
   );
+  final database = db ?? await openTestDatabase();
+  if (db == null) addTearDown(database.close);
   final router = GoRouter(
     initialLocation: '/tournament/t-1/match/m-1',
     routes: [
@@ -113,6 +120,7 @@ Future<_FakeRemote> _pump(
     ProviderScope(
       overrides: [
         tournamentRemoteProvider.overrideWithValue(fake),
+        appDatabaseProvider.overrideWithValue(database),
       ],
       child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -132,6 +140,8 @@ Future<_FakeRemote> _pump(
 }
 
 void main() {
+  setUpAll(registerLinuxSqliteOverride);
+
   testWidgets('renders header, default first-set inputs and submit button',
       (tester) async {
     await _pump(tester, match: _match());
@@ -217,6 +227,66 @@ void main() {
     await tester.pump(const Duration(milliseconds: 16));
     await tester.pump(const Duration(milliseconds: 16));
     expect(find.text('conflict-screen'), findsOneWidget);
+  });
+
+  testWidgets('pre-fills inputs from persisted draft on reopen (DSCORE-20)',
+      (tester) async {
+    final db = await openTestDatabase();
+    addTearDown(db.close);
+    // Seed a draft for the round the screen will hydrate.
+    await db.tournamentScoreDraftDao.save(
+      const TournamentMatchId('m-1'),
+      1,
+      [
+        SetScore(
+          basekubbsKnockedByA: 5,
+          basekubbsKnockedByB: 3,
+          winner: SetWinner.teamA,
+        ),
+      ],
+    );
+    await _pump(tester, match: _match(), db: db);
+    // The hydration is async; one extra frame for the notifier to flush.
+    await tester.pump();
+    expect(find.text('5'), findsWidgets);
+    expect(find.text('3'), findsWidgets);
+  });
+
+  testWidgets('persists every edit to drift (DSCORE-19)', (tester) async {
+    final db = await openTestDatabase();
+    addTearDown(db.close);
+    await _pump(tester, match: _match(), db: db);
+    final plus = find.byIcon(LucideIcons.plus).first;
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(plus);
+      await tester.pump();
+    }
+    // Each tap upserts asynchronously; settle the queue.
+    await tester.pump(const Duration(milliseconds: 16));
+    final loaded =
+        await db.tournamentScoreDraftDao.load(const TournamentMatchId('m-1'), 1);
+    expect(loaded, isNotNull);
+    expect(loaded!.single.basekubbsKnockedByA, 3);
+  });
+
+  testWidgets('clears draft after a successful submit (DSCORE-21)',
+      (tester) async {
+    final db = await openTestDatabase();
+    addTearDown(db.close);
+    await _pump(tester, match: _match(), db: db);
+    final plus = find.byIcon(LucideIcons.plus).first;
+    for (var i = 0; i < 5; i++) {
+      await tester.tap(plus);
+      await tester.pump();
+    }
+    await tester.tap(find.text('Team A'));
+    await tester.pump();
+    await tester.tap(find.text('Einreichen'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    final remaining =
+        await db.tournamentScoreDraftDao.load(const TournamentMatchId('m-1'), 1);
+    expect(remaining, isNull);
   });
 
   testWidgets('finalized match shows read-only notice and hides submit',
