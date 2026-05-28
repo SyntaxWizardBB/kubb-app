@@ -12,6 +12,7 @@ enum AuthEvent {
   refreshFailure,
   logout,
   accountDelete,
+  accountDeleteWipedLocal,
   accountUpgrade,
   profileUpdate,
   restoreAttempted,
@@ -83,6 +84,17 @@ class AuthTelemetry {
   void accountDelete({required String userId}) {
     _emit(
       AuthEvent.accountDelete,
+      message: 'userId=${_prefix(userId)}',
+    );
+  }
+
+  /// Logged after the local drift database has been truncated as part of
+  /// the account-deletion flow. Emitted in addition to [accountDelete] so
+  /// the audit trail records both the server-side removal and the
+  /// device-local GDPR Art. 17 cleanup as separate signals.
+  void accountDeleteWipedLocal({required String userId}) {
+    _emit(
+      AuthEvent.accountDeleteWipedLocal,
       message: 'userId=${_prefix(userId)}',
     );
   }

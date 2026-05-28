@@ -88,4 +88,31 @@ class AppDatabase extends _$AppDatabase {
           }
         },
       );
+
+  /// Truncates every table the database owns inside a single transaction.
+  ///
+  /// Used by the account-deletion flow to satisfy GDPR Art. 17 — the
+  /// server-side row removal handled by `deleteCurrentAccount` only takes
+  /// care of cloud-persisted state, while a meaningful chunk of user data
+  /// (training sessions, drafts, outbox, cached auth, app settings) lives
+  /// here in drift and would otherwise survive into the next account on
+  /// the same device.
+  ///
+  /// Iterating `allTables` keeps the wipe exhaustive without a hand-
+  /// maintained list — any future `tables:` addition is covered for free.
+  /// The reverse order matters when `PRAGMA foreign_keys = ON`: child
+  /// tables (session_events, finisseur_stick_events) reference sessions
+  /// which references players, and a restrict-action FK would refuse the
+  /// delete if we processed the parent first.
+  ///
+  /// Wrapping the loop in a single transaction guarantees the wipe is
+  /// atomic: a partial wipe would leave foreign-key fragments behind and
+  /// is worse than no wipe at all.
+  Future<void> wipeAll() async {
+    await transaction(() async {
+      for (final table in allTables.toList().reversed) {
+        await delete(table).go();
+      }
+    });
+  }
 }

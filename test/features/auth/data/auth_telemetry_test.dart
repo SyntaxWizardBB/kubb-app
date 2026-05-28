@@ -184,6 +184,8 @@ void main() {
       AuthEvent.logout: () => telemetry.logout(userId: 'u'),
       AuthEvent.accountDelete: () =>
           telemetry.accountDelete(userId: 'u'),
+      AuthEvent.accountDeleteWipedLocal: () =>
+          telemetry.accountDeleteWipedLocal(userId: 'u'),
       AuthEvent.accountUpgrade: () =>
           telemetry.accountUpgrade(userId: 'u', toKind: 'k'),
       AuthEvent.profileUpdate: () => telemetry.profileUpdate(
