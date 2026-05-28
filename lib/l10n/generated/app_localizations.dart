@@ -4551,6 +4551,72 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Live-Updates pausiert, lade automatisch nach.'**
   String get realtimeStatusPolling;
+
+  /// AUDIT §2.4 slide 1 title — 8m distance training
+  ///
+  /// In de, this message translates to:
+  /// **'Sniper-Training'**
+  String get onboardingSlide1Title;
+
+  /// AUDIT §2.4 slide 1 body — sniper mode explainer
+  ///
+  /// In de, this message translates to:
+  /// **'Wurf-Konstanz trainieren — 4 bis 8 m Distanz, eigene Sessions, eigene Stats.'**
+  String get onboardingSlide1Body;
+
+  /// AUDIT §2.4 slide 2 title — match endgame trainer
+  ///
+  /// In de, this message translates to:
+  /// **'Finisseur'**
+  String get onboardingSlide2Title;
+
+  /// AUDIT §2.4 slide 2 body — finisseur mode explainer
+  ///
+  /// In de, this message translates to:
+  /// **'Das Match-Endspiel üben. 6 Stöcke, Field-, Base- und Königs-Phase.'**
+  String get onboardingSlide2Body;
+
+  /// AUDIT §2.4 slide 3 title — tournament module
+  ///
+  /// In de, this message translates to:
+  /// **'Turniere & Ligen'**
+  String get onboardingSlide3Title;
+
+  /// AUDIT §2.4 slide 3 body — tournament module explainer
+  ///
+  /// In de, this message translates to:
+  /// **'Turniere veranstalten, Spielpläne live verfolgen, Saisontabellen lesen.'**
+  String get onboardingSlide3Body;
+
+  /// AUDIT §2.4 slide 4 title — social module
+  ///
+  /// In de, this message translates to:
+  /// **'Mit Freunden trainieren'**
+  String get onboardingSlide4Title;
+
+  /// AUDIT §2.4 slide 4 body — social module explainer
+  ///
+  /// In de, this message translates to:
+  /// **'Teams gründen, Freunde einladen, gemeinsam besser werden.'**
+  String get onboardingSlide4Body;
+
+  /// Top-right skip button on the onboarding tour
+  ///
+  /// In de, this message translates to:
+  /// **'Überspringen'**
+  String get onboardingSkip;
+
+  /// Bottom CTA on the onboarding tour, slides 1–3
+  ///
+  /// In de, this message translates to:
+  /// **'Weiter'**
+  String get onboardingNext;
+
+  /// Bottom CTA on the last onboarding slide
+  ///
+  /// In de, this message translates to:
+  /// **'Los geht\'s'**
+  String get onboardingDone;
 }
 
 class _AppLocalizationsDelegate

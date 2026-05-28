@@ -2,16 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
-import 'package:kubb_app/features/auth/application/auth_controller.dart';
-import 'package:kubb_app/features/auth/application/auth_session.dart';
+import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/auth_primary_button.dart';
-import 'package:kubb_app/features/auth/presentation/disclaimer_block.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
-/// 4-slide onboarding tour per design brief #9 (M5-T12, template
-/// `OnboardingTour.jsx`). The reminder slide is only shown for
-/// anonymous keypair sessions so OAuth users don't see the disclaimer
-/// twice.
+/// Volatile flag that records whether the onboarding tour has run in
+/// this app process. Setting it on completion gives the router a hook
+/// to skip the tour on subsequent visits. Persistence is intentionally
+/// deferred — once a `sharedPreferencesProvider` (or equivalent
+/// key/value store) lands in the bootstrap layer, [OnboardingDone]
+/// should be swapped for a notifier that reads/writes `onboarding_done`
+/// from disk.
+class OnboardingDone extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void markDone() => state = true;
+}
+
+final onboardingDoneProvider =
+    NotifierProvider<OnboardingDone, bool>(OnboardingDone.new);
+
+/// 4-slide onboarding tour per AUDIT §2.4. Each slide combines a
+/// K+Crown vignette with the verbatim title/body strings the audit
+/// laid out for sniper / finisseur / tournaments / social. The tour
+/// ends on the Sign-In hub.
 class OnboardingTour extends ConsumerStatefulWidget {
   const OnboardingTour({super.key});
 
@@ -47,42 +62,39 @@ class _OnboardingTourState extends ConsumerState<OnboardingTour> {
     }
   }
 
-  Future<void> _back() async {
-    if (_animating || _index == 0) return;
-    _animating = true;
-    try {
-      await _controller.previousPage(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOut,
-      );
-    } finally {
-      if (mounted) _animating = false;
-    }
-  }
-
-  void _skip() {
-    _finish();
-  }
+  void _skip() => _finish();
 
   void _finish() {
-    GoRouter.of(context).go('/');
+    ref.read(onboardingDoneProvider.notifier).markDone();
+    GoRouter.of(context).go(AuthRoutes.signIn);
   }
 
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l10n = AppLocalizations.of(context);
-    final session = ref.watch(authControllerProvider).maybeWhen(
-          data: (s) => s,
-          orElse: () => const AuthSession.signedOut(),
-        );
-    final isAnonymous = session.isAnonymousKeypair;
 
-    final slides = <Widget>[
-      _SlideWelcome(session: session),
-      const _SlideModes(),
-      const _SlideSoon(),
-      if (isAnonymous) const _SlideReminder(),
+    final slides = <_SlideData>[
+      _SlideData(
+        title: l10n.onboardingSlide1Title,
+        body: l10n.onboardingSlide1Body,
+        glyph: Icons.gps_fixed,
+      ),
+      _SlideData(
+        title: l10n.onboardingSlide2Title,
+        body: l10n.onboardingSlide2Body,
+        glyph: Icons.workspace_premium,
+      ),
+      _SlideData(
+        title: l10n.onboardingSlide3Title,
+        body: l10n.onboardingSlide3Body,
+        glyph: Icons.emoji_events_outlined,
+      ),
+      _SlideData(
+        title: l10n.onboardingSlide4Title,
+        body: l10n.onboardingSlide4Body,
+        glyph: Icons.groups_outlined,
+      ),
     ];
     final total = slides.length;
     final isLast = _index >= total - 1;
@@ -95,15 +107,14 @@ class _OnboardingTourState extends ConsumerState<OnboardingTour> {
             _Header(
               total: total,
               current: _index,
-              showSkip: !isLast,
-              onBack: _index == 0 ? null : _back,
               onSkip: _skip,
             ),
             Expanded(
-              child: PageView(
+              child: PageView.builder(
                 controller: _controller,
+                itemCount: total,
                 onPageChanged: (i) => setState(() => _index = i),
-                children: slides,
+                itemBuilder: (context, i) => _Slide(data: slides[i]),
               ),
             ),
             Padding(
@@ -114,7 +125,7 @@ class _OnboardingTourState extends ConsumerState<OnboardingTour> {
                 KubbTokens.space5,
               ),
               child: AuthPrimaryButton(
-                label: isLast ? l10n.authOnboardingDone : l10n.authOnboardingNext,
+                label: isLast ? l10n.onboardingDone : l10n.onboardingNext,
                 onPressed: () => _next(total),
               ),
             ),
@@ -125,19 +136,26 @@ class _OnboardingTourState extends ConsumerState<OnboardingTour> {
   }
 }
 
+class _SlideData {
+  const _SlideData({
+    required this.title,
+    required this.body,
+    required this.glyph,
+  });
+  final String title;
+  final String body;
+  final IconData glyph;
+}
+
 class _Header extends StatelessWidget {
   const _Header({
     required this.total,
     required this.current,
-    required this.showSkip,
-    required this.onBack,
     required this.onSkip,
   });
 
   final int total;
   final int current;
-  final bool showSkip;
-  final VoidCallback? onBack;
   final VoidCallback onSkip;
 
   @override
@@ -153,17 +171,7 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          SizedBox(
-            width: KubbTokens.touchMin,
-            height: KubbTokens.touchMin,
-            child: onBack != null
-                ? IconButton(
-                    onPressed: onBack,
-                    icon: const Icon(Icons.arrow_back),
-                    tooltip: l10n.authCommonBack,
-                  )
-                : null,
-          ),
+          const SizedBox(width: 90),
           Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -188,24 +196,22 @@ class _Header extends StatelessWidget {
           ),
           SizedBox(
             width: 90,
-            child: showSkip
-                ? Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: onSkip,
-                      style: TextButton.styleFrom(
-                        foregroundColor: tokens.fgMuted,
-                      ),
-                      child: Text(
-                        l10n.authOnboardingSkip,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  )
-                : null,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: onSkip,
+                style: TextButton.styleFrom(
+                  foregroundColor: tokens.fgMuted,
+                ),
+                child: Text(
+                  l10n.onboardingSkip,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -213,37 +219,23 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _SlideWelcome extends StatelessWidget {
-  const _SlideWelcome({required this.session});
+class _Slide extends StatelessWidget {
+  const _Slide({required this.data});
 
-  final AuthSession session;
+  final _SlideData data;
 
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space6),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: KubbTokens.space5),
-          Container(
-            width: 200,
-            height: 140,
-            decoration: BoxDecoration(
-              color: KubbTokens.meadow100,
-              borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
-            ),
-            alignment: Alignment.center,
-            child: const Icon(
-              Icons.sports_score,
-              size: 80,
-              color: KubbTokens.meadow700,
-            ),
-          ),
-          const SizedBox(height: KubbTokens.space4),
+          _Vignette(glyph: data.glyph),
+          const SizedBox(height: KubbTokens.space6),
           Text(
-            l10n.authOnboardingWelcomeTitle,
+            data.title,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 28,
@@ -254,7 +246,7 @@ class _SlideWelcome extends StatelessWidget {
           ),
           const SizedBox(height: KubbTokens.space3),
           Text(
-            l10n.authOnboardingWelcomeBody,
+            data.body,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 15,
@@ -262,340 +254,48 @@ class _SlideWelcome extends StatelessWidget {
               color: tokens.fgMuted,
             ),
           ),
-          const SizedBox(height: KubbTokens.space4),
-          _AccountBadge(session: session),
         ],
       ),
     );
   }
 }
 
-class _AccountBadge extends StatelessWidget {
-  const _AccountBadge({required this.session});
+/// K+Crown vignette per design brief — a meadow-tinted disc with the
+/// mode glyph and a small wood-coloured crown accent sitting on top.
+class _Vignette extends StatelessWidget {
+  const _Vignette({required this.glyph});
 
-  final AuthSession session;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final (label, icon) = session.maybeWhen(
-      keypair: (_, _, _) => (l10n.authOnboardingBadgeAnon, Icons.lock_outline),
-      oauth: (_, _, p, _, _) => p == AuthProvider.apple
-          ? (l10n.authOnboardingBadgeApple, Icons.apple)
-          : (l10n.authOnboardingBadgeGoogle, Icons.account_circle_outlined),
-      orElse: () => (l10n.authOnboardingBadgeAnon, Icons.lock_outline),
-    );
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: KubbTokens.space3,
-        vertical: KubbTokens.space2,
-      ),
-      decoration: BoxDecoration(
-        color: KubbTokens.meadow100,
-        borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: KubbTokens.meadow700),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: KubbTokens.meadow800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SlideModes extends StatelessWidget {
-  const _SlideModes();
+  final IconData glyph;
 
   @override
   Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final l10n = AppLocalizations.of(context);
-    final modes = <_ModeRowData>[
-      _ModeRowData(
-        name: l10n.authOnboardingModeSniperName,
-        sub: l10n.authOnboardingModeSniperSub,
-        icon: Icons.gps_fixed,
-        soon: false,
-      ),
-      _ModeRowData(
-        name: l10n.authOnboardingModeFinisseurName,
-        sub: l10n.authOnboardingModeFinisseurSub,
-        icon: Icons.workspace_premium,
-        soon: false,
-      ),
-      _ModeRowData(
-        name: l10n.authOnboardingMode4mName,
-        sub: l10n.authOnboardingMode4mSub,
-        icon: Icons.local_fire_department,
-        soon: true,
-      ),
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: KubbTokens.space5),
-          Text(
-            l10n.authOnboardingModesTitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.6,
-              color: tokens.fg,
-            ),
-          ),
-          const SizedBox(height: KubbTokens.space4),
-          for (final m in modes) ...[
-            _ModeRow(data: m),
-            const SizedBox(height: KubbTokens.space2),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _ModeRowData {
-  const _ModeRowData({
-    required this.name,
-    required this.sub,
-    required this.icon,
-    required this.soon,
-  });
-  final String name;
-  final String sub;
-  final IconData icon;
-  final bool soon;
-}
-
-class _ModeRow extends StatelessWidget {
-  const _ModeRow({required this.data});
-
-  final _ModeRowData data;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final l10n = AppLocalizations.of(context);
-    return Container(
-      padding: const EdgeInsets.all(KubbTokens.space3),
-      decoration: BoxDecoration(
-        color: tokens.bgRaised,
-        border: Border.all(color: tokens.line, width: 1.5),
-        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
-      ),
-      child: Row(
+    return SizedBox(
+      width: 168,
+      height: 168,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
         children: [
           Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: KubbTokens.meadow100,
-              borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-            ),
-            alignment: Alignment.center,
-            child: Icon(data.icon, color: KubbTokens.meadow700, size: 22),
-          ),
-          const SizedBox(width: KubbTokens.space3),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        data.name,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: tokens.fg,
-                        ),
-                      ),
-                    ),
-                    if (data.soon) ...[
-                      const SizedBox(width: KubbTokens.space2),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: KubbTokens.wood100,
-                          borderRadius:
-                              BorderRadius.circular(KubbTokens.radiusPill),
-                        ),
-                        child: Text(
-                          l10n.authOnboardingSoonPill,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.6,
-                            color: KubbTokens.wood700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  data.sub,
-                  style: TextStyle(fontSize: 13, color: tokens.fgMuted),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SlideSoon extends StatelessWidget {
-  const _SlideSoon();
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space6),
-      child: Column(
-        children: [
-          const SizedBox(height: KubbTokens.space5),
-          Container(
-            width: 120,
-            height: 120,
+            width: 160,
+            height: 160,
             decoration: const BoxDecoration(
               color: KubbTokens.meadow100,
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: const Icon(
-              Icons.emoji_events_outlined,
-              size: 60,
-              color: KubbTokens.meadow600,
+            child: Icon(
+              glyph,
+              size: 72,
+              color: KubbTokens.meadow700,
             ),
           ),
-          const SizedBox(height: KubbTokens.space4),
-          Text(
-            l10n.authOnboardingSoonTitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.6,
-              color: tokens.fg,
-            ),
-          ),
-          const SizedBox(height: KubbTokens.space3),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.center,
-            children: [
-              _SoonChip(label: l10n.authOnboardingSoonTournaments),
-              _SoonChip(label: l10n.authOnboardingSoonFriendMatch),
-            ],
-          ),
-          const SizedBox(height: KubbTokens.space3),
-          Text(
-            l10n.authOnboardingSoonBody,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 15,
-              height: 1.5,
-              color: tokens.fgMuted,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// TODO(W2-T4-followup): durch KubbChip(tone: hit) ersetzen — semantik
-// identisch (meadow-Pille fuer "demnaechst"-Hinweis im Tour-Flow).
-class _SoonChip extends StatelessWidget {
-  const _SoonChip({required this.label});
-  final String label;
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: KubbTokens.space3,
-        vertical: KubbTokens.space2,
-      ),
-      decoration: BoxDecoration(
-        color: KubbTokens.meadow100,
-        borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: KubbTokens.meadow800,
-        ),
-      ),
-    );
-  }
-}
-
-class _SlideReminder extends StatelessWidget {
-  const _SlideReminder();
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final l10n = AppLocalizations.of(context);
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: KubbTokens.space4),
-          Text(
-            l10n.authOnboardingReminderTitle,
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
-              color: tokens.fg,
-            ),
-          ),
-          const SizedBox(height: KubbTokens.space3),
-          const DisclaimerBlock(),
-          const SizedBox(height: KubbTokens.space3),
-          Text(
-            l10n.authOnboardingReminderQuestion,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: tokens.fg,
-            ),
-          ),
-          const SizedBox(height: KubbTokens.space2),
-          Text(
-            l10n.authOnboardingReminderBody,
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.5,
-              color: tokens.fgMuted,
+          const Positioned(
+            top: -4,
+            child: Icon(
+              Icons.workspace_premium,
+              size: 32,
+              color: KubbTokens.wood400,
             ),
           ),
         ],

@@ -2463,4 +2463,41 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get realtimeStatusPolling =>
       'Live-Updates pausiert, lade automatisch nach.';
+
+  @override
+  String get onboardingSlide1Title => 'Sniper-Training';
+
+  @override
+  String get onboardingSlide1Body =>
+      'Wurf-Konstanz trainieren — 4 bis 8 m Distanz, eigene Sessions, eigene Stats.';
+
+  @override
+  String get onboardingSlide2Title => 'Finisseur';
+
+  @override
+  String get onboardingSlide2Body =>
+      'Das Match-Endspiel üben. 6 Stöcke, Field-, Base- und Königs-Phase.';
+
+  @override
+  String get onboardingSlide3Title => 'Turniere & Ligen';
+
+  @override
+  String get onboardingSlide3Body =>
+      'Turniere veranstalten, Spielpläne live verfolgen, Saisontabellen lesen.';
+
+  @override
+  String get onboardingSlide4Title => 'Mit Freunden trainieren';
+
+  @override
+  String get onboardingSlide4Body =>
+      'Teams gründen, Freunde einladen, gemeinsam besser werden.';
+
+  @override
+  String get onboardingSkip => 'Überspringen';
+
+  @override
+  String get onboardingNext => 'Weiter';
+
+  @override
+  String get onboardingDone => 'Los geht\'s';
 }

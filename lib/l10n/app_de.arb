@@ -3320,5 +3320,49 @@
   "realtimeStatusPolling": "Live-Updates pausiert, lade automatisch nach.",
   "@realtimeStatusPolling": {
     "description": "Banner shown when the realtime channel has flipped to the polling fallback"
+  },
+  "onboardingSlide1Title": "Sniper-Training",
+  "@onboardingSlide1Title": {
+    "description": "AUDIT §2.4 slide 1 title — 8m distance training"
+  },
+  "onboardingSlide1Body": "Wurf-Konstanz trainieren — 4 bis 8 m Distanz, eigene Sessions, eigene Stats.",
+  "@onboardingSlide1Body": {
+    "description": "AUDIT §2.4 slide 1 body — sniper mode explainer"
+  },
+  "onboardingSlide2Title": "Finisseur",
+  "@onboardingSlide2Title": {
+    "description": "AUDIT §2.4 slide 2 title — match endgame trainer"
+  },
+  "onboardingSlide2Body": "Das Match-Endspiel üben. 6 Stöcke, Field-, Base- und Königs-Phase.",
+  "@onboardingSlide2Body": {
+    "description": "AUDIT §2.4 slide 2 body — finisseur mode explainer"
+  },
+  "onboardingSlide3Title": "Turniere & Ligen",
+  "@onboardingSlide3Title": {
+    "description": "AUDIT §2.4 slide 3 title — tournament module"
+  },
+  "onboardingSlide3Body": "Turniere veranstalten, Spielpläne live verfolgen, Saisontabellen lesen.",
+  "@onboardingSlide3Body": {
+    "description": "AUDIT §2.4 slide 3 body — tournament module explainer"
+  },
+  "onboardingSlide4Title": "Mit Freunden trainieren",
+  "@onboardingSlide4Title": {
+    "description": "AUDIT §2.4 slide 4 title — social module"
+  },
+  "onboardingSlide4Body": "Teams gründen, Freunde einladen, gemeinsam besser werden.",
+  "@onboardingSlide4Body": {
+    "description": "AUDIT §2.4 slide 4 body — social module explainer"
+  },
+  "onboardingSkip": "Überspringen",
+  "@onboardingSkip": {
+    "description": "Top-right skip button on the onboarding tour"
+  },
+  "onboardingNext": "Weiter",
+  "@onboardingNext": {
+    "description": "Bottom CTA on the onboarding tour, slides 1–3"
+  },
+  "onboardingDone": "Los geht's",
+  "@onboardingDone": {
+    "description": "Bottom CTA on the last onboarding slide"
   }
 }
