@@ -5,27 +5,47 @@ import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/inbox/data/inbox_message.dart';
 import 'package:kubb_app/features/inbox/data/inbox_repository.dart';
 
-/// Stream of the current user's inbox. Recomputes whenever the auth
-/// session flips so a sign-out followed by a different user signing
-/// in doesn't show stale messages.
-final inboxMessagesProvider = FutureProvider<List<InboxMessage>>((ref) async {
-  final isAuthed = ref.watch(isAuthenticatedProvider);
-  if (!isAuthed) return const <InboxMessage>[];
-  return ref.read(inboxRepositoryProvider).list();
+/// Stream of the current user's inbox. Backed by the drift cache so
+/// the first frame after app open can render without a network call
+/// (ADR-0012 / bug-hunt R20-F-03). On subscription the provider also
+/// kicks off a Supabase refresh in the background; the result is
+/// upserted into the cache and the stream re-emits automatically.
+final inboxMessagesProvider = StreamProvider<List<InboxMessage>>((ref) {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) {
+    return Stream<List<InboxMessage>>.value(const <InboxMessage>[]);
+  }
+  final repo = ref.read(inboxRepositoryProvider);
+  // Fire-and-forget. The stream below will emit the refreshed payload
+  // once the upsert into the drift cache lands; if the network call
+  // fails (offline at the pitch) the subscriber still sees the cached
+  // snapshot from disk.
+  unawaited(
+    repo.refreshFromRemote(userId).catchError(
+          (Object _) => const <InboxMessage>[],
+        ),
+  );
+  return repo.watchForUser(userId);
 });
 
 /// Polling sentinel — a screen that `watch`es this keeps a Timer alive
-/// that invalidates [inboxMessagesProvider] every second, so an
-/// incoming friend or match invite shows up without manual refresh.
-/// Same shape as the friends- and match-detail polling providers.
+/// that triggers a remote refresh every second, so an incoming friend
+/// or match invite shows up without manual refresh. The refresh upserts
+/// into the drift cache, which in turn drives the stream emission;
+/// there is no provider invalidation involved.
 // Riverpod's autoDispose-provider type names are not part of the
 // public API, so the lint stays suppressed.
 // ignore: specify_nonobvious_property_types
 final inboxPollingProvider = Provider.autoDispose<void>((ref) {
-  final timer = Timer.periodic(
-    const Duration(seconds: 1),
-    (_) => ref.invalidate(inboxMessagesProvider),
-  );
+  final timer = Timer.periodic(const Duration(seconds: 1), (_) {
+    final userId = ref.read(currentUserIdProvider);
+    if (userId == null) return;
+    unawaited(
+      ref.read(inboxRepositoryProvider).refreshFromRemote(userId).catchError(
+            (Object _) => const <InboxMessage>[],
+          ),
+    );
+  });
   ref.onDispose(timer.cancel);
 });
 
@@ -42,8 +62,7 @@ final inboxUnreadCountProvider = Provider<int>((ref) {
 /// Imperative action surface for the inbox screen. Reads fall back to
 /// [inboxMessagesProvider]; this notifier exists for the writes
 /// (mark-read / reply / archive) so the screen can dispatch without
-/// re-implementing the FutureProvider invalidation pattern at every
-/// callsite.
+/// re-implementing the stream-refresh pattern at every callsite.
 final inboxActionsProvider = Provider<InboxActions>((ref) {
   return InboxActions(ref);
 });
@@ -54,16 +73,13 @@ class InboxActions {
 
   Future<void> markRead(String id) async {
     await _ref.read(inboxRepositoryProvider).markRead(id);
-    _ref.invalidate(inboxMessagesProvider);
   }
 
   Future<void> reply(String id, Map<String, dynamic> payload) async {
     await _ref.read(inboxRepositoryProvider).reply(id, payload);
-    _ref.invalidate(inboxMessagesProvider);
   }
 
   Future<void> archive(String id) async {
     await _ref.read(inboxRepositoryProvider).archive(id);
-    _ref.invalidate(inboxMessagesProvider);
   }
 }

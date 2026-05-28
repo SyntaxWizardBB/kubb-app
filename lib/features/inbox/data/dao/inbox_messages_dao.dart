@@ -54,4 +54,33 @@ class InboxMessagesDao extends DatabaseAccessor<AppDatabase>
   Future<int> deleteForUser(String userId) {
     return (delete(inboxMessages)..where((t) => t.userId.equals(userId))).go();
   }
+
+  /// Removes the cached row for [id] regardless of owner. Mirrors the
+  /// archive action: an archived message disappears from the inbox
+  /// view, so the local cache should follow the same model rather than
+  /// keeping a stale entry around.
+  Future<int> deleteById(String id) {
+    return (delete(inboxMessages)..where((t) => t.id.equals(id))).go();
+  }
+
+  /// Updates the read / replied timestamps on the cached row for [id].
+  /// Used after a mutating Supabase call (markRead / reply) so the
+  /// local mirror stays in sync without a full refresh. No-op when the
+  /// row is not cached locally.
+  Future<int> stampTimestamps(
+    String id, {
+    DateTime? readAt,
+    DateTime? repliedAt,
+  }) {
+    final companion = InboxMessagesCompanion(
+      readAt: readAt == null
+          ? const Value.absent()
+          : Value(readAt.toUtc().millisecondsSinceEpoch),
+      repliedAt: repliedAt == null
+          ? const Value.absent()
+          : Value(repliedAt.toUtc().millisecondsSinceEpoch),
+    );
+    return (update(inboxMessages)..where((t) => t.id.equals(id)))
+        .write(companion);
+  }
 }
