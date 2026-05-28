@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
@@ -52,7 +53,8 @@ class TournamentStandingsScreen extends ConsumerWidget {
         title: Text(l.tournamentStandingsTitle),
       ),
       body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        // AUDIT §4.3 — fuenf Skeleton-Tabellenzeilen statt Spinner.
+        loading: () => const _StandingsSkeleton(),
         error: (e, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(KubbTokens.space5),
@@ -69,6 +71,44 @@ class TournamentStandingsScreen extends ConsumerWidget {
           displayNameById: displayNameById,
         ),
       ),
+    );
+  }
+}
+
+/// AUDIT §4.3 — Skeleton-Variante der Standings-Tabelle: Header + 5 Rows.
+class _StandingsSkeleton extends StatelessWidget {
+  const _StandingsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Column(
+      key: const Key('standings.skeleton'),
+      children: [
+        Container(
+          color: tokens.bgSunken,
+          padding: const EdgeInsets.symmetric(
+            horizontal: KubbTokens.space3,
+            vertical: KubbTokens.space2,
+          ),
+          child: KubbSkeleton.row(
+            key: const Key('standings.skeleton.header'),
+            columns: 6,
+            height: 10,
+          ),
+        ),
+        const Divider(height: 1),
+        for (var i = 0; i < 5; i++)
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: KubbTokens.space3,
+            ),
+            child: KubbSkeleton.row(
+              key: ValueKey('standings.skeleton.row.$i'),
+              columns: 6,
+            ),
+          ),
+      ],
     );
   }
 }

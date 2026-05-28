@@ -5,6 +5,7 @@ import 'package:kubb_app/core/ui/icons.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/stats/application/stats_aggregate_provider.dart';
 import 'package:kubb_app/features/stats/data/stats_aggregate.dart';
 import 'package:kubb_app/features/stats/presentation/widgets/active_filter_tags.dart';
@@ -141,7 +142,8 @@ class _SniperTab extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final asyncAgg = ref.watch(statsAggregateProvider);
     return asyncAgg.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      // AUDIT §4.3 — graue Wellen statt CircularProgressIndicator.
+      loading: () => const _StatsSkeleton(),
       error: (e, _) => Center(
         child: Padding(
           padding: const EdgeInsets.all(KubbTokens.space6),
@@ -149,6 +151,60 @@ class _SniperTab extends ConsumerWidget {
         ),
       ),
       data: (agg) => _Body(aggregate: agg, tokens: tokens, l: l),
+    );
+  }
+}
+
+/// AUDIT §4.3 — Skeleton-Variante der Sniper-Tab-Inhalte.
+class _StatsSkeleton extends StatelessWidget {
+  const _StatsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return SingleChildScrollView(
+      key: const Key('stats.skeleton'),
+      padding: const EdgeInsets.fromLTRB(
+        KubbTokens.space4,
+        KubbTokens.space4,
+        KubbTokens.space4,
+        KubbTokens.space8,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: tokens.bgRaised,
+              borderRadius: BorderRadius.circular(KubbTokens.radiusXl),
+            ),
+            padding: const EdgeInsets.all(KubbTokens.space4),
+            child: KubbSkeleton.chart(
+              key: const Key('stats.skeleton.chart'),
+            ),
+          ),
+          const SizedBox(height: KubbTokens.space5),
+          Container(
+            decoration: BoxDecoration(
+              color: tokens.bgRaised,
+              borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: KubbTokens.space3,
+              vertical: KubbTokens.space2,
+            ),
+            child: Column(
+              children: [
+                for (var i = 0; i < 3; i++)
+                  KubbSkeleton.row(
+                    key: ValueKey('stats.skeleton.row.$i'),
+                    columns: 2,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -9,6 +9,7 @@ import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_mode_card.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/player/presentation/player_hub_sheet.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
@@ -39,10 +40,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final profile = ref.watch(displayProfileProvider);
-    final recent = ref.watch(recentSessionsProvider).maybeWhen(
-          data: (items) => items,
-          orElse: () => const <RecentSessionView>[],
-        );
+    final recentAsync = ref.watch(recentSessionsProvider);
+    final recent = recentAsync.maybeWhen(
+      data: (items) => items,
+      orElse: () => const <RecentSessionView>[],
+    );
+    // Skeleton greift nur fuer den allerersten Load (kein data verfuegbar).
+    final showRecentSkeleton = recentAsync.isLoading && !recentAsync.hasValue;
 
     ref.listen(crashRecoveryProvider, (_, next) {
       next.whenData((session) {
@@ -122,7 +126,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               subtitle: l.homeNewsSubtitle,
               onTap: _openNews,
             ),
-            if (recent.isNotEmpty) ...[
+            if (showRecentSkeleton) ...[
+              const SizedBox(height: KubbTokens.space5),
+              _RecentSkeleton(title: l.homeRecentTitle),
+            ] else if (recent.isNotEmpty) ...[
               const SizedBox(height: KubbTokens.space5),
               RecentSection(title: l.homeRecentTitle, items: recent.take(3).toList()),
             ],
@@ -149,5 +156,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _openNews() async {
     await launchUrl(Uri.parse(_newsUrl), mode: LaunchMode.externalApplication);
+  }
+}
+
+/// AUDIT §4.3 — drei Skeleton-Zeilen waehrend `recentSessionsProvider` laedt.
+class _RecentSkeleton extends StatelessWidget {
+  const _RecentSkeleton({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final t = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title.toUpperCase(),
+          style: t.labelSmall?.copyWith(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.88,
+            color: tokens.fgMuted,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        Container(
+          key: const Key('home.recent.skeleton'),
+          decoration: BoxDecoration(
+            color: tokens.bgRaised,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: KubbTokens.space3,
+            vertical: KubbTokens.space2,
+          ),
+          child: Column(
+            children: [
+              for (var i = 0; i < 3; i++)
+                KubbSkeleton.row(
+                  key: ValueKey('home.recent.skeleton.row.$i'),
+                  columns: 3,
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
