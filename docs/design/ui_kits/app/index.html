@@ -57,6 +57,8 @@
 <script type="text/babel" src="StatsScreen.jsx"></script>
 <script type="text/babel" src="MatchScreen.jsx"></script>
 <script type="text/babel" src="TournamentScreen.jsx"></script>
+<script type="text/babel" src="SignInScreen.jsx"></script>
+<script type="text/babel" src="AnonymousSignupScreen.jsx"></script>
 
 <script type="text/babel" data-presets="react">
 function HomeWithModals({ onPick, onOpenStats, onOpenProfile, openModal, setOpenModal }) {
@@ -169,11 +171,22 @@ function Root() {
       ['Home',       home],
       ['Übersicht',  <TournamentScreen onBack={()=>setRoute('home')} onOpenMatch={()=>setRoute('match')}/>],
     ],
+    signin: [
+      ['Sign-In',  <SignInScreen onPickGoogle={()=>{}} onPickApple={()=>{}} onPickAnonymous={()=>setRoute('anon')} onPickRestore={()=>{}}/>],
+      ['Offline',  <SignInScreen onPickGoogle={()=>{}} onPickApple={()=>{}} onPickAnonymous={()=>setRoute('anon')} onPickRestore={()=>{}} offline/>],
+      ['Fehler',   <SignInScreen onPickGoogle={()=>{}} onPickApple={()=>{}} onPickAnonymous={()=>setRoute('anon')} onPickRestore={()=>{}} error/>],
+    ],
+    anon: [
+      ['Sign-In',  <SignInScreen onPickGoogle={()=>{}} onPickApple={()=>{}} onPickAnonymous={()=>setRoute('anon')} onPickRestore={()=>{}}/>],
+      ['Spielname',<AnonymousSignupScreen onBack={()=>setRoute('signin')} onClose={()=>setRoute('signin')} onContinue={()=>{}}/>],
+    ],
   };
   const screens = flows[route] || flows.home;
 
   const routes = [
     ['home','Home + Modals'],
+    ['signin','Sign-In'],
+    ['anon','Anonym'],
     ['8m','Sniper Flow'],
     ['finconf','Finisseur Flow'],
     ['match','Match Flow'],
