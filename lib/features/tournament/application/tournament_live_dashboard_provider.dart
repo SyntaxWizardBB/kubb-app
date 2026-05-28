@@ -1,15 +1,15 @@
 import 'package:flutter/foundation.dart' show immutable;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
 /// One row of the live-dashboard payload — a single pitch's current
-/// match. `participantNames` is already display-ready (resolved via the
-/// tournament's participant roster, falls back to `?` for empty slots
-/// or unknown ids). `currentRound` mirrors the consensus-retry counter
-/// from the underlying match (1..3, stays put after `finalized`).
+/// match. `participantNames` carries the server-projected display name
+/// per side (`null` when the slot has no resolvable display_name — UI
+/// renders the localized `tournamentParticipantUnknown` fallback).
+/// `currentRound` mirrors the consensus-retry counter from the
+/// underlying match (1..3, stays put after `finalized`).
 @immutable
 class PitchStatus {
   const PitchStatus({
@@ -26,7 +26,11 @@ class PitchStatus {
   /// (M5+ migration, see `m4-realtime-dashboard-offline/tasks.md` §T4).
   final String pitchKey;
   final TournamentMatchId matchId;
-  final List<String> participantNames;
+
+  /// Display names for participant A and B (`[a, b]`). Either entry is
+  /// `null` when the slot has no projected display_name — the consuming
+  /// screen renders the localized `tournamentParticipantUnknown` label.
+  final List<String?> participantNames;
   final TournamentMatchStatus status;
   final int currentRound;
 }
@@ -57,9 +61,12 @@ class LiveDashboardData {
 /// eigene Pitch-Karte erscheint. Sobald `pitch_number` ergänzt ist,
 /// reicht ein Patch in [_pitchKeyFor].
 ///
-/// Participant-Namen werden über [tournamentDetailProvider] aufgelöst.
-/// Solange das Detail noch lädt, liefert das Lookup leere Strings —
-/// der konsumierende Screen kann dann einen Skeleton-State zeigen.
+/// Participant-Namen kommen direkt vom Match-Row aus
+/// `tournament_get`/`tournament_match_get`
+/// (`participant_{a,b}_display_name`, projiziert per
+/// `COALESCE(user_profiles.nickname, teams.display_name)` — siehe
+/// Migration `20260601000003`). Der Detour über
+/// `tournamentDetailProvider` aus M4.2 ist entfallen.
 //
 // ignore: specify_nonobvious_property_types
 final tournamentLiveDashboardProvider = Provider.autoDispose
@@ -72,32 +79,22 @@ final tournamentLiveDashboardProvider = Provider.autoDispose
     ..watch(tournamentBracketRealtimeProvider(tournamentId));
 
   final matchesAsync = ref.watch(tournamentMatchListProvider(tournamentId));
-  final detailAsync = ref.watch(tournamentDetailProvider(tournamentId));
 
   return matchesAsync.whenData((matches) {
-    final detail = detailAsync.asData?.value;
-    final nameById = <String, String>{
-      for (final p in detail?.participants ?? const <TournamentParticipant>[])
-        p.participantId: p.displayLabel,
-    };
-
-    final entries = matches.map((m) => _toPitchStatus(m, nameById)).toList()
+    final entries = matches.map(_toPitchStatus).toList()
       ..sort((a, b) => a.pitchKey.compareTo(b.pitchKey));
 
     return LiveDashboardData(pitches: entries);
   });
 });
 
-PitchStatus _toPitchStatus(
-  TournamentMatchRef m,
-  Map<String, String> nameById,
-) {
+PitchStatus _toPitchStatus(TournamentMatchRef m) {
   return PitchStatus(
     pitchKey: _pitchKeyFor(m),
     matchId: m.matchId,
-    participantNames: <String>[
-      _resolveName(m.participantA, nameById),
-      _resolveName(m.participantB, nameById),
+    participantNames: <String?>[
+      _resolveName(m.participantA, m.participantADisplayName),
+      _resolveName(m.participantB, m.participantBDisplayName),
     ],
     status: m.status,
     currentRound: m.consensusRound,
@@ -110,15 +107,13 @@ String _pitchKeyFor(TournamentMatchRef m) {
   return m.matchId.value;
 }
 
-// TODO(W3-T4-consumer): replace the nickname/displayLabel lookup with
-// the per-side `participantADisplayName`/`participantBDisplayName`
-// fields on `TournamentMatchRef` (W3-T4 surfaces them on the match-row
-// itself, so the detour through `tournamentDetailProvider` is no longer
-// needed). Wave-B-Polish — R14-F-10.
-String _resolveName(
-  TournamentParticipantId? id,
-  Map<String, String> nameById,
-) {
-  if (id == null) return '?';
-  return nameById[id.value] ?? '?';
+/// Returns the per-side display name from the match row. `null` signals
+/// either an empty slot (BYE) or a participant whose server-projected
+/// `display_name` is absent; the consuming screen renders the localized
+/// `tournamentParticipantUnknown` fallback in both cases.
+String? _resolveName(TournamentParticipantId? id, String? displayName) {
+  if (id == null) return null;
+  final name = displayName?.trim();
+  if (name == null || name.isEmpty) return null;
+  return name;
 }

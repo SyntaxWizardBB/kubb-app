@@ -5,6 +5,7 @@ import 'package:kubb_app/features/tournament/application/public_tournament_provi
 import 'package:kubb_app/features/tournament/data/public_tournament_models.dart';
 import 'package:kubb_app/features/tournament/presentation/bracket/bracket_canvas.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_status_pill.dart';
+import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
 /// Public, read-only tournament view for anon spectators.
@@ -185,6 +186,7 @@ class _ScheduleTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
     final matches = detail.matches;
     if (matches.isEmpty) {
       return Center(
@@ -200,8 +202,12 @@ class _ScheduleTab extends StatelessWidget {
       byRound.putIfAbsent(m.roundNumber, () => <PublicMatchDetail>[]).add(m);
     }
     final ordered = byRound.keys.toList()..sort();
-    String label(TournamentParticipantId? id) =>
-        detail.displayNameFor(id) ?? (id == null ? 'BYE' : '?');
+    // W3-T5: Public-Roster zeigt Namen oder `tournamentParticipantUnknown`
+    // ("Unbekannt"). BYE bleibt eigener Marker fuer leere Slots.
+    String label(TournamentParticipantId? id) {
+      if (id == null) return 'BYE';
+      return detail.displayNameFor(id) ?? l.tournamentParticipantUnknown;
+    }
     return ListView(
       padding: const EdgeInsets.all(KubbTokens.space4),
       children: [
@@ -282,6 +288,7 @@ class _StandingsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
     final finished = detail.matches.where(_isStandingsCounted).toList();
     if (finished.isEmpty) {
       return Center(
@@ -316,11 +323,13 @@ class _StandingsTab extends StatelessWidget {
       itemBuilder: (context, i) {
         final s = rows[i];
         final diff = s.kubbsScored - s.kubbsConceded;
+        // W3-T5: Standings nutzen denselben Roster-Lookup wie der
+        // Spielplan-Tab; ohne Treffer faellt der Eintrag auf das
+        // lokalisierte `tournamentParticipantUnknown` zurueck statt auf
+        // den UUID-Substring-Hack (R13-F-02).
         final name = detail.displayNameFor(
                 TournamentParticipantId(s.participantId)) ??
-            (s.participantId.length <= 8
-                ? s.participantId
-                : s.participantId.substring(0, 8));
+            l.tournamentParticipantUnknown;
         return Container(
           padding: const EdgeInsets.symmetric(
               horizontal: KubbTokens.space4,

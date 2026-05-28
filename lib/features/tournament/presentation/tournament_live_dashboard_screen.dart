@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/tournament/application/tournament_live_dashboard_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
+import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
 /// Live-Dashboard für Veranstalter: Grid aller aktiven Spielfelder eines
@@ -91,10 +92,12 @@ class _PitchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
     final color = _color(status.status);
     final names = status.participantNames;
-    final a = names.isNotEmpty ? names[0] : '?';
-    final b = names.length > 1 ? names[1] : 'BYE';
+    final unknown = l.tournamentParticipantUnknown;
+    final a = names.isNotEmpty ? (names[0] ?? unknown) : unknown;
+    final b = names.length > 1 ? (names[1] ?? unknown) : unknown;
     final radius = BorderRadius.circular(KubbTokens.radiusLg);
     final teamStyle = TextStyle(
         fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg);

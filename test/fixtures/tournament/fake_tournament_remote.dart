@@ -179,10 +179,63 @@ class FakeTournamentRemote implements TournamentRemote {
 
   @override
   Future<TournamentDetail?> getTournamentDetail(TournamentId id) async {
-    // M1 integration tests don't drive UI that reads the full detail.
-    // Returning null is safe — the only consumer would be the detail
-    // screen, which is not part of these scenarios.
-    return null;
+    // Minimal Detail-Payload: reicht fuer Konsumenten, die die
+    // Display-Name-Lookup ueber das Participant-Array machen (W3-T5
+    // Standings, Tournament-Detail). Display-Name spiegelt die
+    // Participant-Id, sodass Integration-Tests die Slots ueber den
+    // gewohnten String anfassen koennen.
+    final t = _tournaments[id];
+    if (t == null) return null;
+    final participants = <TournamentParticipant>[
+      for (final pid in t.participantIds)
+        TournamentParticipant(
+          participantId: pid.value,
+          userId: _participants[pid]?.userId.value,
+          nickname: null,
+          displayName: pid.value,
+          registrationStatus: _toParticipantStatus(_participants[pid]?.status),
+          seed: null,
+          registeredAt: DateTime.utc(2026),
+          respondedAt: null,
+        ),
+    ];
+    return TournamentDetail(
+      tournament: TournamentDetailHeader(
+        tournamentId: t.id.value,
+        displayName: t.displayName,
+        createdByUserId: t.createdByUserId.value,
+        teamSize: 1,
+        minParticipants: 2,
+        maxParticipants: t.participantIds.length,
+        format: t.format,
+        scoring: TournamentScoring.ekc,
+        matchFormatConfig: const <String, Object?>{},
+        tiebreakerOrder: const <String>[],
+        byePoints: 0,
+        forfeitPoints: 0,
+        status: t.status,
+        publishedAt: null,
+        startedAt: t.startedAt,
+        completedAt: t.completedAt,
+      ),
+      participants: participants,
+      matches: const <TournamentMatchRef>[],
+      auditTail: const <TournamentAuditEvent>[],
+    );
+  }
+
+  TournamentParticipantStatus _toParticipantStatus(_PStatus? s) {
+    switch (s) {
+      case _PStatus.approved:
+        return TournamentParticipantStatus.approved;
+      case _PStatus.withdrawn:
+        return TournamentParticipantStatus.withdrawn;
+      case _PStatus.rejected:
+        return TournamentParticipantStatus.rejected;
+      case _PStatus.pending:
+      case null:
+        return TournamentParticipantStatus.pending;
+    }
   }
 
   @override

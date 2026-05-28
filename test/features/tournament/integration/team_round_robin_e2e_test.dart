@@ -209,10 +209,13 @@ void main() {
       );
 
       // Soft audit check — T10 may or may not wire `getTournamentDetail`
-      // in this iteration. If it does, the roster-replacement event
-      // should land in the audit tail.
+      // in this iteration. If it does AND the fake also tracks audit
+      // events, the roster-replacement event should land in the audit
+      // tail. After Sprint-B-W3-T5 the fake exposes a minimal Detail-
+      // Payload for the display-name lookup but still leaves auditTail
+      // empty, so the assertion stays gated on a non-empty tail.
       final detail = await remote.getTournamentDetail(tid);
-      if (detail != null) {
+      if (detail != null && detail.auditTail.isNotEmpty) {
         expect(
           detail.auditTail.any((e) => e.kind.contains('roster')),
           isTrue,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
+import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -22,7 +23,21 @@ class TournamentStandingsScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final id = TournamentId(tournamentId);
     final async = ref.watch(tournamentStandingsProvider(id));
+    final detailAsync = ref.watch(tournamentDetailProvider(id));
     final myId = ref.watch(currentUserIdProvider);
+
+    // W3-T5: display-name-Lookup ueber `tournamentDetailProvider`. Die
+    // Sprint-A-W3-T4-Mapping legt `displayName` (server-projiziert per
+    // `COALESCE(user_profiles.nickname, teams.display_name)`) auf jeden
+    // Participant — die Rangliste liest hier nur aus, der UUID-Substring-
+    // Fallback ist entfallen.
+    final displayNameById = <String, String>{
+      for (final p
+          in detailAsync.asData?.value?.participants ??
+              const <TournamentParticipant>[])
+        if ((p.displayName ?? '').trim().isNotEmpty)
+          p.participantId: p.displayName!.trim(),
+    };
 
     return Scaffold(
       backgroundColor: tokens.bg,
@@ -48,17 +63,26 @@ class TournamentStandingsScreen extends ConsumerWidget {
             ),
           ),
         ),
-        data: (rows) => _Table(rows: rows, callerId: myId),
+        data: (rows) => _Table(
+          rows: rows,
+          callerId: myId,
+          displayNameById: displayNameById,
+        ),
       ),
     );
   }
 }
 
 class _Table extends StatelessWidget {
-  const _Table({required this.rows, required this.callerId});
+  const _Table({
+    required this.rows,
+    required this.callerId,
+    required this.displayNameById,
+  });
 
   final List<ParticipantStats> rows;
   final String? callerId;
+  final Map<String, String> displayNameById;
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +110,13 @@ class _Table extends StatelessWidget {
             itemBuilder: (context, i) {
               final s = rows[i];
               final isMe = callerId != null && s.participantId == callerId;
-              return _DataRow(rank: i + 1, stats: s, highlight: isMe);
+              return _DataRow(
+                rank: i + 1,
+                stats: s,
+                highlight: isMe,
+                displayName: displayNameById[s.participantId] ??
+                    l.tournamentParticipantUnknown,
+              );
             },
           ),
         ),
@@ -139,11 +169,13 @@ class _DataRow extends StatelessWidget {
     required this.rank,
     required this.stats,
     required this.highlight,
+    required this.displayName,
   });
 
   final int rank;
   final ParticipantStats stats;
   final bool highlight;
+  final String displayName;
 
   @override
   Widget build(BuildContext context) {
@@ -165,11 +197,7 @@ class _DataRow extends StatelessWidget {
       child: Row(
         children: [
           _cell('$rank', flex: 1, tokens: tokens, bold: true),
-          // TODO(W3-T4-consumer): swap to participant.displayName from the
-          // tournament_get RPC (`COALESCE(user_profiles.nickname,
-          // teams.display_name)`) so standings stop showing UUID
-          // substrings — Wave-B-Polish nachgezogen (R13-F-02).
-          _cell(_short(stats.participantId), flex: 4, tokens: tokens),
+          _cell(displayName, flex: 4, tokens: tokens),
           _cell('${stats.totalPoints}', flex: 2, tokens: tokens),
           _cell('${stats.wins}', flex: 2, tokens: tokens),
           _cell('$buchholz', flex: 2, tokens: tokens),
@@ -178,8 +206,6 @@ class _DataRow extends StatelessWidget {
       ),
     );
   }
-
-  String _short(String s) => s.length <= 8 ? s : s.substring(0, 8);
 
   Widget _cell(
     String s, {
