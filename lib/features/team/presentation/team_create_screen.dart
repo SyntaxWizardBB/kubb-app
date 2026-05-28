@@ -42,27 +42,34 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
 
   Future<void> _submit() async {
     final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     setState(() => _busy = true);
     try {
-      final id = await ref.read(teamMembershipControllerProvider.notifier).create(
-            displayName: _nameController.text.trim(),
-            leagueMembership: _league,
-            logoUrl: _logoController.text.trim().isEmpty
-                ? null
-                : _logoController.text.trim(),
-            country: _countryController.text.trim().isEmpty
-                ? null
-                : _countryController.text.trim(),
-          );
-      if (!mounted || id == null) return;
-      context.go('/teams/${id.value}');
-    } on Object catch (e) {
+      final result =
+          await ref.read(teamMembershipControllerProvider.notifier).create(
+                displayName: _nameController.text.trim(),
+                leagueMembership: _league,
+                logoUrl: _logoController.text.trim().isEmpty
+                    ? null
+                    : _logoController.text.trim(),
+                country: _countryController.text.trim().isEmpty
+                    ? null
+                    : _countryController.text.trim(),
+              );
       if (!mounted) return;
-      setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('${l.teamCreateErrorGeneric}: $e'),
-        backgroundColor: KubbTokens.miss,
-      ));
+      switch (result) {
+        case TeamActionSuccess<TeamId>(:final value):
+          context.go('/teams/${value.value}');
+        case TeamActionFailure<TeamId>():
+          messenger.showSnackBar(SnackBar(
+            content: Text(l.teamCreateErrorGeneric),
+            backgroundColor: KubbTokens.miss,
+          ));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
     }
   }
 
