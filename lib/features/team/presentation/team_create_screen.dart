@@ -112,7 +112,6 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
               initialValue: _league,
               decoration: InputDecoration(
                 labelText: l.teamCreateLeagueLabel,
-                helperText: l.teamCreateLeagueHelper,
               ),
               items: const [
                 DropdownMenuItem(value: LeagueMembership.a, child: Text('A')),
@@ -122,6 +121,16 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
               onChanged: (v) {
                 if (v != null) setState(() => _league = v);
               },
+            ),
+            Padding(
+              padding: const EdgeInsets.only(
+                top: KubbTokens.space2,
+                left: KubbTokens.space2,
+              ),
+              child: Text(
+                l.teamCreateLeagueHelper,
+                style: TextStyle(fontSize: 12, color: tokens.fgMuted),
+              ),
             ),
             const SizedBox(height: KubbTokens.space3),
             TextField(
