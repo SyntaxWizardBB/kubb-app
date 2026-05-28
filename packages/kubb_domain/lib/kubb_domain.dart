@@ -13,6 +13,7 @@ export 'src/match/match_state.dart';
 export 'src/ports/match_event_repository.dart';
 export 'src/ports/realtime_channel.dart';
 export 'src/ports/tournament_remote.dart';
+export 'src/profile/profile_visibility.dart';
 export 'src/rules/opening_rule.dart';
 export 'src/rules/rule_set.dart';
 export 'src/season/season_standings.dart';
