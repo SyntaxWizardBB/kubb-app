@@ -2442,4 +2442,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get setKingOutcomeNone => 'Keiner';
+
+  @override
+  String get outboxStatusFlushing => 'Synchronisiere ausstehende Spielstände …';
+
+  @override
+  String get outboxStatusError =>
+      'Spielstand konnte nicht synchronisiert werden.';
+
+  @override
+  String get realtimeStatusReconnecting => 'Verbinde mit Live-Updates …';
+
+  @override
+  String get realtimeStatusPolling =>
+      'Live-Updates pausiert, lade automatisch nach.';
 }

@@ -44,6 +44,15 @@ final outboxFlusherProvider = Provider<OutboxFlusher>((ref) {
   return flusher;
 });
 
+/// Reactive lifecycle status of the score-submission outbox. Re-exports
+/// [OutboxFlusher.statusStream] as a Riverpod provider so the
+/// `OutboxStatusBanner` mounted in the app shell can rebuild on
+/// `flushing` / `error` transitions without binding to the imperative
+/// flusher handle directly (R17-F-15).
+final outboxFlushStatusProvider = StreamProvider<OutboxFlushStatus>((ref) {
+  return ref.watch(outboxFlusherProvider).statusStream;
+});
+
 /// Adapter from the wave-7 drift DAO to the [OutboxStore] port. The
 /// scoreJson column round-trips through [SetScore] here so the flusher
 /// stays agnostic of the storage representation.

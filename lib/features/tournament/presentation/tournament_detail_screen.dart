@@ -11,6 +11,7 @@ import 'package:kubb_app/features/tournament/application/tournament_providers.da
 import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/realtime_status_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_card.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_status_pill.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -56,6 +57,7 @@ class TournamentDetailScreen extends ConsumerWidget {
       body: Column(
         children: [
           RealtimeStateBanner(tournamentId: tournamentId),
+          RealtimeStatusBanner(tournamentId: tournamentId),
           Expanded(
             child: detailAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),

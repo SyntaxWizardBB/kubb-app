@@ -7,6 +7,7 @@ import 'package:kubb_app/features/tournament/application/tournament_match_provid
 import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/realtime_status_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_match_card.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -53,6 +54,7 @@ class TournamentMatchListScreen extends ConsumerWidget {
       body: Column(
         children: [
           RealtimeStateBanner(tournamentId: id),
+          RealtimeStatusBanner(tournamentId: id),
           Expanded(
             child: async.when(
               loading: () => const Center(child: CircularProgressIndicator()),

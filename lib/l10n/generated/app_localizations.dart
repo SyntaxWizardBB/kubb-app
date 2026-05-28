@@ -4515,6 +4515,30 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Keiner'**
   String get setKingOutcomeNone;
+
+  /// App-shell banner shown while the score-submission outbox is draining queued rows to the server
+  ///
+  /// In de, this message translates to:
+  /// **'Synchronisiere ausstehende Spielstände …'**
+  String get outboxStatusFlushing;
+
+  /// App-shell banner shown when an outbox row terminated with a conflict (e.g. STALE_CONSENSUS_ROUND) and the user must intervene
+  ///
+  /// In de, this message translates to:
+  /// **'Spielstand konnte nicht synchronisiert werden.'**
+  String get outboxStatusError;
+
+  /// Banner shown while the realtime channel is reconnecting after an error
+  ///
+  /// In de, this message translates to:
+  /// **'Verbinde mit Live-Updates …'**
+  String get realtimeStatusReconnecting;
+
+  /// Banner shown when the realtime channel has flipped to the polling fallback
+  ///
+  /// In de, this message translates to:
+  /// **'Live-Updates pausiert, lade automatisch nach.'**
+  String get realtimeStatusPolling;
 }
 
 class _AppLocalizationsDelegate

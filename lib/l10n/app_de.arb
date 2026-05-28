@@ -3296,5 +3296,21 @@
   "setKingOutcomeNone": "Keiner",
   "@setKingOutcomeNone": {
     "description": "Tri-toggle option in the set-card: king was not hit, set timed out, contributes 0:0 to the EKC tally. Sprint A W3-T2 / R11-F-01."
+  },
+  "outboxStatusFlushing": "Synchronisiere ausstehende Spielstände …",
+  "@outboxStatusFlushing": {
+    "description": "App-shell banner shown while the score-submission outbox is draining queued rows to the server"
+  },
+  "outboxStatusError": "Spielstand konnte nicht synchronisiert werden.",
+  "@outboxStatusError": {
+    "description": "App-shell banner shown when an outbox row terminated with a conflict (e.g. STALE_CONSENSUS_ROUND) and the user must intervene"
+  },
+  "realtimeStatusReconnecting": "Verbinde mit Live-Updates …",
+  "@realtimeStatusReconnecting": {
+    "description": "Banner shown while the realtime channel is reconnecting after an error"
+  },
+  "realtimeStatusPolling": "Live-Updates pausiert, lade automatisch nach.",
+  "@realtimeStatusPolling": {
+    "description": "Banner shown when the realtime channel has flipped to the polling fallback"
   }
 }

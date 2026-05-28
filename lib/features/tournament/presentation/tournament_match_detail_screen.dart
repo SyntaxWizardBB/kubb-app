@@ -14,6 +14,7 @@ import 'package:kubb_app/features/tournament/application/tournament_realtime_pro
 import 'package:kubb_app/features/tournament/application/tournament_score_draft_controller.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/realtime_status_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/score_consensus_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/score_pending_indicator.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_forfeit_sheet.dart';
@@ -264,6 +265,7 @@ class _TournamentMatchDetailScreenState
       body: Column(
         children: [
           RealtimeStateBanner(tournamentId: tid),
+          RealtimeStatusBanner(tournamentId: tid),
           Expanded(
             child: detailAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),

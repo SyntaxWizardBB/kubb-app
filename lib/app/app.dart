@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/app/bootstrap.dart';
 import 'package:kubb_app/app/router.dart';
+import 'package:kubb_app/core/presentation/outbox_status_banner.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/theme/theme_choice.dart';
@@ -62,6 +63,7 @@ class KubbApp extends ConsumerWidget {
           builder: (context, child) => Column(
             children: [
               const OfflineBanner(),
+              const OutboxStatusBanner(),
               Expanded(child: child ?? const SizedBox.shrink()),
             ],
           ),
