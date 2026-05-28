@@ -244,6 +244,61 @@ class AuthController extends AsyncNotifier<AuthSession> {
     _subscribe();
   }
 
+  /// Reflects a successful cloud-profile mutation back into the cached
+  /// session so the display-profile provider (and every UI surface
+  /// derived from it) sees the new nickname/avatar without waiting for
+  /// the next adapter emission. The DAO row is upserted in lock-step with the
+  /// in-memory state to keep the two sources of truth aligned across a
+  /// cold restart. No-op when the session is signed-out/anonymous —
+  /// those flows have no cloud profile to mirror.
+  Future<void> updateCachedProfile({
+    required String displayName,
+    String? avatarColor,
+  }) async {
+    final current = state.value;
+    if (current is! KeypairSession && current is! OAuthSession) return;
+    final AuthSession next;
+    final String kind;
+    if (current is KeypairSession) {
+      next = AuthSession.keypair(
+        userId: current.userId,
+        displayName: displayName,
+        avatarColor: avatarColor,
+      );
+      kind = 'keypair';
+    } else if (current is OAuthSession) {
+      next = AuthSession.oauth(
+        userId: current.userId,
+        displayName: displayName,
+        provider: current.provider,
+        avatarColor: avatarColor,
+        hasKeypairFallback: current.hasKeypairFallback,
+      );
+      kind = current.provider == AuthProvider.google
+          ? 'oauth_google'
+          : 'oauth_apple';
+    } else {
+      return;
+    }
+    final userId = next.userId;
+    if (userId == null) return;
+    // Preserve the existing token deadlines — only the display fields
+    // change. Fall back to the conservative one-hour horizon used
+    // elsewhere when the row is absent (e.g. test containers).
+    final existing = await _dao.current();
+    final now = DateTime.now().toUtc();
+    await _dao.upsert(
+      userId: userId,
+      kind: existing?.kind ?? kind,
+      displayName: displayName,
+      avatarColor: avatarColor,
+      expiresAt: existing?.expiresAt ?? now.add(const Duration(hours: 1)),
+      refreshAfter:
+          existing?.refreshAfter ?? now.add(const Duration(minutes: 50)),
+    );
+    state = AsyncData(next);
+  }
+
   Future<void> _onAdapterState(
     AuthAdapterState adapterState,
     int eventGeneration,

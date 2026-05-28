@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
+import 'package:kubb_app/features/team/application/team_detail_provider.dart';
+import 'package:kubb_app/features/team/application/team_list_provider.dart';
 import 'package:kubb_app/features/team/data/team_models.dart';
 import 'package:kubb_app/features/team/data/team_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -74,10 +76,21 @@ class TeamActions {
   Future<void> respondInvitation(
     TeamInvitationId id, {
     required bool accept,
+    TeamId? teamId,
   }) async {
     await _ref
         .read(teamRepositoryProvider)
         .respondInvitation(id, accept: accept);
     _ref.invalidate(pendingInvitationsProvider);
+    // R19-F-17: an accepted invitation grows the caller's pool roster
+    // and adds the team to "Meine Teams". The list/detail caches are
+    // FutureProviders driven by `team_get` / `list_my_teams` RPCs, so
+    // without an explicit invalidation the user lands on a detail
+    // screen that still hides them from the pool until the next cold
+    // start. A decline only needs the invitation list refresh.
+    if (accept) {
+      _ref.invalidate(teamListProvider);
+      if (teamId != null) _ref.invalidate(teamDetailProvider(teamId));
+    }
   }
 }

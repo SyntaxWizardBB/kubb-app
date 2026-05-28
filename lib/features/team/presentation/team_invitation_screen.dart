@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/team/application/team_providers.dart';
+import 'package:kubb_domain/kubb_domain.dart';
 
 /// Lists the caller's `state = 'pending'` team invitations and lets the
 /// user accept or decline each one. Acceptance navigates to the new
@@ -139,7 +140,11 @@ class _InvitationCard extends ConsumerWidget {
   }) async {
     final actions = ref.read(teamActionsProvider);
     try {
-      await actions.respondInvitation(item.invitationId, accept: accept);
+      await actions.respondInvitation(
+        item.invitationId,
+        accept: accept,
+        teamId: TeamId(item.team.id),
+      );
       if (!context.mounted) return;
       if (accept) {
         context.go('/teams/${item.team.id}');

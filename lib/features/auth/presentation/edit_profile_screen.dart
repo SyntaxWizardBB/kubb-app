@@ -37,8 +37,8 @@ String _toHex(Color c) =>
     '${(c.b * 255).round().toRadixString(16).padLeft(2, '0')}';
 
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
-  late final String _initialNick;
-  late final String _initialColor;
+  late String _initialNick;
+  late String _initialColor;
   late final TextEditingController _nickController;
   late String _color;
 
@@ -114,6 +114,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             nickname: _nick,
             avatarColor: _color,
           );
+      // R2-F-02: mirror the cloud write into the cached auth session so
+      // `displayProfileProvider` (and every UI surface derived from it
+      // — profile tab, header avatar, …) reflects the new nickname /
+      // avatar on the very next frame. Without this the Save banner
+      // says "Gespeichert" but every other tab keeps rendering the old
+      // values until the next cold start / adapter refresh.
+      final savedNick = _nick;
+      final savedColor = _color;
+      await ref.read(authControllerProvider.notifier).updateCachedProfile(
+            displayName: savedNick,
+            avatarColor: savedColor,
+          );
       ref.read(authTelemetryProvider).profileUpdate(
             userId: profile.userId,
             didRenameNickname: didRenameNickname,
@@ -123,6 +135,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       setState(() {
         _saving = false;
         _success = true;
+        // Re-baseline the dirty tracker so the Save button correctly
+        // disables again until the user makes a fresh edit.
+        _initialNick = savedNick;
+        _initialColor = savedColor;
       });
     } on Object catch (_) {
       if (!mounted) return;

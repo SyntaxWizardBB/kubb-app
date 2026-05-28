@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/features/team/application/team_detail_provider.dart';
 import 'package:kubb_app/features/team/application/team_list_provider.dart';
+import 'package:kubb_app/features/team/application/team_providers.dart';
 import 'package:kubb_app/features/team/data/team_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:logging/logging.dart';
@@ -111,13 +112,24 @@ class TeamMembershipController extends Notifier<AsyncValue<void>> {
 
   /// Accepts or declines an inbox invitation. When accepted the new
   /// team shows up in "Meine Teams" after the list refetches.
+  ///
+  /// [teamId] is optional because the inbox row historically carried
+  /// only the invitation id. When the caller can supply it (e.g. the
+  /// invitation screen reads it from the joined `teams!inner` row), the
+  /// per-team detail cache is invalidated as well so the new pool
+  /// roster surfaces without a manual pull-to-refresh (R19-F-17).
   Future<void> respondInvitation(
     TeamInvitationId invitationId, {
     required bool accept,
+    TeamId? teamId,
   }) {
     return _run(() async {
       await _repo.respondInvitation(invitationId, accept: accept);
-      if (accept) ref.invalidate(teamListProvider);
+      ref.invalidate(pendingInvitationsProvider);
+      if (accept) {
+        ref.invalidate(teamListProvider);
+        if (teamId != null) ref.invalidate(teamDetailProvider(teamId));
+      }
     });
   }
 
