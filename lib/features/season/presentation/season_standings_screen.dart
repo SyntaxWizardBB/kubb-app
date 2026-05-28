@@ -4,6 +4,7 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/season/application/season_standings_provider.dart';
 import 'package:kubb_app/features/season/presentation/widgets/standings_row.dart';
+import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
 /// Saison-Tabelle (TASK-M5.3-T12). Lists the cross-tournament standings
 /// sorted per OD-M5-06 A. `ListView.builder` keeps rendering lazy so
@@ -30,11 +31,12 @@ class _SeasonStandingsScreenState
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
     final async = ref.watch(seasonStandingsProvider(widget.seasonId));
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      appBar: const KubbAppBar(title: 'Saison-Tabelle'),
+      appBar: KubbAppBar(title: l.seasonStandingsTitle),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
@@ -63,15 +65,19 @@ class _SeasonStandingsScreenState
                   ),
                   child: DropdownButtonFormField<String?>(
                     initialValue: _leagueFilter,
-                    decoration: const InputDecoration(
-                        labelText: 'Liga-Filter', isDense: true),
+                    key: ValueKey(_leagueFilter),
+                    decoration: InputDecoration(
+                        labelText: l.seasonLeagueFilter, isDense: true),
                     items: [
-                      const DropdownMenuItem<String?>(
-                          child: Text('Alle Ligen')),
+                      DropdownMenuItem<String?>(
+                        child: Text(l.leagueFilterAll),
+                      ),
                       for (final id in standings.leagueIds)
                         DropdownMenuItem<String?>(
                           value: id,
-                          child: Text(id.length <= 8 ? id : id.substring(0, 8)),
+                          child: Text(
+                            'Liga ${id.length <= 8 ? id : id.substring(0, 8)}',
+                          ),
                         ),
                     ],
                     onChanged: (v) => setState(() => _leagueFilter = v),
@@ -84,7 +90,7 @@ class _SeasonStandingsScreenState
                       ? ListView(children: [
                           Padding(
                             padding: const EdgeInsets.all(KubbTokens.space6),
-                            child: Text('Noch keine Punkte vergeben.',
+                            child: Text(l.seasonStandingsEmpty,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(color: tokens.fgMuted)),
                           ),

@@ -43,7 +43,11 @@ class TournamentSeedingScreen extends ConsumerWidget {
         data: (standings) => detailAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text(e.toString())),
-          data: (_) {
+          data: (detail) {
+            final nameMap = <String, String>{
+              for (final p in detail?.participants ?? <TournamentParticipant>[])
+                if (p.displayName != null) p.participantId: p.displayName!,
+            };
             final auto = <TournamentParticipantId>[
               for (final s in standings)
                 TournamentParticipantId(s.participantId),
@@ -68,7 +72,12 @@ class TournamentSeedingScreen extends ConsumerWidget {
                 ),
               );
             }
-            return _Editor(tournamentId: id, l: l, tokens: tokens);
+            return _Editor(
+              tournamentId: id,
+              displayNames: nameMap,
+              l: l,
+              tokens: tokens,
+            );
           },
         ),
       ),
@@ -86,13 +95,25 @@ class TournamentSeedingScreen extends ConsumerWidget {
 class _Editor extends ConsumerWidget {
   const _Editor({
     required this.tournamentId,
+    required this.displayNames,
     required this.l,
     required this.tokens,
   });
 
   final TournamentId tournamentId;
+
+  /// participantId → display name, built from `TournamentDetail.participants`.
+  final Map<String, String> displayNames;
+
   final AppLocalizations l;
   final KubbTokens tokens;
+
+  String _nameFor(TournamentParticipantId id) {
+    final name = displayNames[id.value];
+    if (name != null && name.isNotEmpty) return name;
+    final v = id.value;
+    return v.length <= 8 ? v : v.substring(0, 8);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -146,6 +167,11 @@ class _Editor extends ConsumerWidget {
               onReorder: busy ? (_, _) {} : notifier.reorder,
               itemBuilder: (context, i) {
                 final id = state.order[i];
+                final label = displayNames.containsKey(id.value)
+                    ? (displayNames[id.value]!.isNotEmpty
+                        ? displayNames[id.value]!
+                        : l.tournamentParticipantUnknown)
+                    : _nameFor(id);
                 return Card(
                   key: ValueKey(id.value),
                   margin: const EdgeInsets.symmetric(vertical: 2),
@@ -155,8 +181,7 @@ class _Editor extends ConsumerWidget {
                       child: Text('${i + 1}',
                           style: const TextStyle(fontSize: 13)),
                     ),
-                    title:
-                        Text(id.value, overflow: TextOverflow.ellipsis),
+                    title: Text(label, overflow: TextOverflow.ellipsis),
                     subtitle:
                         Text(l.tournamentSeedingPositionLabel(i + 1)),
                     trailing: const Icon(Icons.drag_handle),

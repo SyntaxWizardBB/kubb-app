@@ -4462,6 +4462,12 @@ abstract class AppLocalizations {
   /// **'Liga'**
   String get seasonLeagueFilter;
 
+  /// Dropdown item that clears the league filter and shows all leagues
+  ///
+  /// In de, this message translates to:
+  /// **'Alle Ligen'**
+  String get leagueFilterAll;
+
   /// Action that assigns an existing tournament to the current season
   ///
   /// In de, this message translates to:

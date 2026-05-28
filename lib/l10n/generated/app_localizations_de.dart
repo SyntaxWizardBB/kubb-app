@@ -2417,6 +2417,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get seasonLeagueFilter => 'Liga';
 
   @override
+  String get leagueFilterAll => 'Alle Ligen';
+
+  @override
   String get seasonAssignTournament => 'Turnier zuordnen';
 
   @override

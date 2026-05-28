@@ -3261,6 +3261,10 @@
   "@seasonLeagueFilter": {
     "description": "Filter pill label for selecting the league within a season"
   },
+  "leagueFilterAll": "Alle Ligen",
+  "@leagueFilterAll": {
+    "description": "Dropdown item that clears the league filter and shows all leagues"
+  },
   "seasonAssignTournament": "Turnier zuordnen",
   "@seasonAssignTournament": {
     "description": "Action that assigns an existing tournament to the current season"
