@@ -79,14 +79,23 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
     final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: tokens.bg,
+      resizeToAvoidBottomInset: true,
       // TODO(sprintB-followup): migrate to KubbAppBar
       // TODO(sprintB-followup): add InboxBellAction
       appBar: KubbAppBar(
         eyebrow: l.teamListTitle,
         title: l.teamCreateTitle,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(KubbTokens.space4),
+      // Mängel #2.4: Form muss in einen Scrollable und mit viewInsets.bottom
+      // gepuffert werden, damit der Submit-Button beim Erscheinen der
+      // Software-Tastatur nicht hinter dem Keyboard verschwindet.
+      body: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          left: KubbTokens.space4,
+          right: KubbTokens.space4,
+          top: KubbTokens.space4,
+          bottom: MediaQuery.viewInsetsOf(context).bottom + KubbTokens.space4,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -130,7 +139,7 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
                 counterText: '',
               ),
             ),
-            const Spacer(),
+            const SizedBox(height: KubbTokens.space5),
             SizedBox(
               height: KubbTokens.touchComfortable,
               child: FilledButton(
