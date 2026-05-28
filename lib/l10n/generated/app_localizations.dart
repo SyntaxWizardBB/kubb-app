@@ -4713,6 +4713,78 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Abgebrochen'**
   String get statusTournamentCancelled;
+
+  /// KubbEmptyState title on Home (no recent training sessions)
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Sessions'**
+  String get emptySessionsTitle;
+
+  /// KubbEmptyState body on Home (encourages first session)
+  ///
+  /// In de, this message translates to:
+  /// **'Spiel ein paar Trainings — danach siehst du sie hier.'**
+  String get emptySessionsBody;
+
+  /// KubbEmptyState CTA on Home — opens the training sheet
+  ///
+  /// In de, this message translates to:
+  /// **'Erste Session starten'**
+  String get emptySessionsCta;
+
+  /// KubbEmptyState title on Friends screen
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Freunde'**
+  String get emptyFriendsTitle;
+
+  /// KubbEmptyState body on Friends screen
+  ///
+  /// In de, this message translates to:
+  /// **'Such oben nach einem Spielernamen und schick eine Anfrage.'**
+  String get emptyFriendsBody;
+
+  /// KubbEmptyState CTA on Friends screen — focuses the search field
+  ///
+  /// In de, this message translates to:
+  /// **'Freund suchen'**
+  String get emptyFriendsCta;
+
+  /// KubbEmptyState title on Tournament list
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Turniere'**
+  String get emptyTournamentsTitle;
+
+  /// KubbEmptyState body on Tournament list
+  ///
+  /// In de, this message translates to:
+  /// **'Erstelle dein erstes Turnier — Setup ist in unter zwei Minuten erledigt.'**
+  String get emptyTournamentsBody;
+
+  /// KubbEmptyState CTA on Tournament list — opens setup wizard
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier erstellen'**
+  String get emptyTournamentsCta;
+
+  /// KubbEmptyState title on Inbox
+  ///
+  /// In de, this message translates to:
+  /// **'Postfach ist leer'**
+  String get emptyInboxTitle;
+
+  /// KubbEmptyState body on Inbox
+  ///
+  /// In de, this message translates to:
+  /// **'Match-Einladungen und Freundschaftsanfragen landen hier.'**
+  String get emptyInboxBody;
+
+  /// KubbEmptyState CTA on Inbox — jumps to friends search
+  ///
+  /// In de, this message translates to:
+  /// **'Freunde finden'**
+  String get emptyInboxCta;
 }
 
 class _AppLocalizationsDelegate

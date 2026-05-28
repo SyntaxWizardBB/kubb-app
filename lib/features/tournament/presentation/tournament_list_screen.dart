@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
@@ -76,12 +78,10 @@ class _State extends ConsumerState<TournamentListScreen>
               controller: _tab,
               children: [
                 _Tab(
-                  emptyMessage: l.tournamentListEmptyMine,
                   filter: (s) =>
                       myUserId != null && s.createdBy?.value == myUserId,
                 ),
                 _Tab(
-                  emptyMessage: l.tournamentListEmptyPublic,
                   filter: (s) =>
                       s.status == TournamentStatus.registrationOpen ||
                       s.status == TournamentStatus.registrationClosed ||
@@ -97,14 +97,12 @@ class _State extends ConsumerState<TournamentListScreen>
 }
 
 class _Tab extends ConsumerWidget {
-  const _Tab({required this.emptyMessage, required this.filter});
+  const _Tab({required this.filter});
 
-  final String emptyMessage;
   final bool Function(TournamentSummaryRef) filter;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
     // Watched so the tab rebuilds on auth changes; the actual filter
     // for "mine" is enforced via RLS on the server side.
     ref.watch(currentUserIdProvider);
@@ -122,12 +120,17 @@ class _Tab extends ConsumerWidget {
       data: (rows) {
         final filtered = rows.where(filter).toList(growable: false);
         if (filtered.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(KubbTokens.space6),
-              child: Text(emptyMessage,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: tokens.fgMuted)),
+          final l = AppLocalizations.of(context);
+          // Erst-Nutzer-Pfad fuer beide Tabs (Mine / Public): einheitlicher
+          // Empty-State, CTA fuehrt in den Setup-Wizard. Adressiert
+          // AUDIT §4.2 und R18-F-14 (Mängel #1).
+          return KubbEmptyState(
+            title: l.emptyTournamentsTitle,
+            body: l.emptyTournamentsBody,
+            cta: KubbButton(
+              variant: KubbButtonVariant.primary,
+              onPressed: () => context.push(TournamentRoutes.newTournament),
+              child: Text(l.emptyTournamentsCta),
             ),
           );
         }

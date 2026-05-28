@@ -3433,5 +3433,53 @@
   "statusTournamentCancelled": "Abgebrochen",
   "@statusTournamentCancelled": {
     "description": "Status chip: tournament was aborted / cancelled"
+  },
+  "emptySessionsTitle": "Noch keine Sessions",
+  "@emptySessionsTitle": {
+    "description": "KubbEmptyState title on Home (no recent training sessions)"
+  },
+  "emptySessionsBody": "Spiel ein paar Trainings — danach siehst du sie hier.",
+  "@emptySessionsBody": {
+    "description": "KubbEmptyState body on Home (encourages first session)"
+  },
+  "emptySessionsCta": "Erste Session starten",
+  "@emptySessionsCta": {
+    "description": "KubbEmptyState CTA on Home — opens the training sheet"
+  },
+  "emptyFriendsTitle": "Noch keine Freunde",
+  "@emptyFriendsTitle": {
+    "description": "KubbEmptyState title on Friends screen"
+  },
+  "emptyFriendsBody": "Such oben nach einem Spielernamen und schick eine Anfrage.",
+  "@emptyFriendsBody": {
+    "description": "KubbEmptyState body on Friends screen"
+  },
+  "emptyFriendsCta": "Freund suchen",
+  "@emptyFriendsCta": {
+    "description": "KubbEmptyState CTA on Friends screen — focuses the search field"
+  },
+  "emptyTournamentsTitle": "Noch keine Turniere",
+  "@emptyTournamentsTitle": {
+    "description": "KubbEmptyState title on Tournament list"
+  },
+  "emptyTournamentsBody": "Erstelle dein erstes Turnier — Setup ist in unter zwei Minuten erledigt.",
+  "@emptyTournamentsBody": {
+    "description": "KubbEmptyState body on Tournament list"
+  },
+  "emptyTournamentsCta": "Turnier erstellen",
+  "@emptyTournamentsCta": {
+    "description": "KubbEmptyState CTA on Tournament list — opens setup wizard"
+  },
+  "emptyInboxTitle": "Postfach ist leer",
+  "@emptyInboxTitle": {
+    "description": "KubbEmptyState title on Inbox"
+  },
+  "emptyInboxBody": "Match-Einladungen und Freundschaftsanfragen landen hier.",
+  "@emptyInboxBody": {
+    "description": "KubbEmptyState body on Inbox"
+  },
+  "emptyInboxCta": "Freunde finden",
+  "@emptyInboxCta": {
+    "description": "KubbEmptyState CTA on Inbox — jumps to friends search"
   }
 }

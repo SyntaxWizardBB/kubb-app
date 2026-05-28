@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/features/inbox/application/inbox_controller.dart';
 import 'package:kubb_app/features/inbox/data/inbox_message.dart';
 import 'package:kubb_app/features/match/application/match_providers.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
 import 'package:kubb_app/features/social/application/social_providers.dart';
+import 'package:kubb_app/features/social/presentation/social_routes.dart';
+import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
 /// Minimal inbox screen: lists the user's non-archived messages,
 /// renders each as a tappable tile that opens a body view, and lets
@@ -37,13 +41,18 @@ class InboxScreen extends ConsumerWidget {
       body: async.when(
         data: (msgs) {
           if (msgs.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(KubbTokens.space5),
-                child: Text(
-                  'Keine Nachrichten.',
-                  style: TextStyle(fontSize: 14, color: tokens.fgMuted),
-                ),
+            final l = AppLocalizations.of(context);
+            // Erst-Nutzer-Pfad: leeres Postfach → Vignette + CTA Richtung
+            // Friends-Search (typische Quelle erster Inbox-Eintraege:
+            // Match-Einladungen / Freundschaftsanfragen). Adressiert
+            // AUDIT §4.2 und R18-F-14 (Mängel #1).
+            return KubbEmptyState(
+              title: l.emptyInboxTitle,
+              body: l.emptyInboxBody,
+              cta: KubbButton(
+                variant: KubbButtonVariant.primary,
+                onPressed: () => context.go(SocialRoutes.friends),
+                child: Text(l.emptyInboxCta),
               ),
             );
           }

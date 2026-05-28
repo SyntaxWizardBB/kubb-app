@@ -2557,4 +2557,44 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get statusTournamentCancelled => 'Abgebrochen';
+
+  @override
+  String get emptySessionsTitle => 'Noch keine Sessions';
+
+  @override
+  String get emptySessionsBody =>
+      'Spiel ein paar Trainings — danach siehst du sie hier.';
+
+  @override
+  String get emptySessionsCta => 'Erste Session starten';
+
+  @override
+  String get emptyFriendsTitle => 'Noch keine Freunde';
+
+  @override
+  String get emptyFriendsBody =>
+      'Such oben nach einem Spielernamen und schick eine Anfrage.';
+
+  @override
+  String get emptyFriendsCta => 'Freund suchen';
+
+  @override
+  String get emptyTournamentsTitle => 'Noch keine Turniere';
+
+  @override
+  String get emptyTournamentsBody =>
+      'Erstelle dein erstes Turnier — Setup ist in unter zwei Minuten erledigt.';
+
+  @override
+  String get emptyTournamentsCta => 'Turnier erstellen';
+
+  @override
+  String get emptyInboxTitle => 'Postfach ist leer';
+
+  @override
+  String get emptyInboxBody =>
+      'Match-Einladungen und Freundschaftsanfragen landen hier.';
+
+  @override
+  String get emptyInboxCta => 'Freunde finden';
 }

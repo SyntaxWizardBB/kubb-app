@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/social/application/social_providers.dart';
 import 'package:kubb_app/features/social/data/friend_models.dart';
+import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 /// Phase-1 friends surface (ADR-0012). Two stacked sections:
@@ -23,6 +26,7 @@ class FriendsScreen extends ConsumerStatefulWidget {
 
 class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   final TextEditingController _queryCtrl = TextEditingController();
+  final FocusNode _queryFocus = FocusNode();
   String _query = '';
   Timer? _debounce;
 
@@ -30,6 +34,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   void dispose() {
     _debounce?.cancel();
     _queryCtrl.dispose();
+    _queryFocus.dispose();
     super.dispose();
   }
 
@@ -68,6 +73,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             const SizedBox(height: KubbTokens.space2),
             TextField(
               controller: _queryCtrl,
+              focusNode: _queryFocus,
               autocorrect: false,
               onChanged: _onQueryChanged,
               decoration: InputDecoration(
@@ -101,6 +107,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                     return _FriendsList(
                       entries: visible,
                       callerId: callerId,
+                      onSearchFocus: _queryFocus.requestFocus,
                     );
                   },
                   loading: () =>
@@ -177,30 +184,30 @@ class _SearchResults extends ConsumerWidget {
 }
 
 class _FriendsList extends ConsumerWidget {
-  const _FriendsList({required this.entries, required this.callerId});
+  const _FriendsList({
+    required this.entries,
+    required this.callerId,
+    required this.onSearchFocus,
+  });
 
   final List<FriendEntry> entries;
   final String? callerId;
+  final VoidCallback onSearchFocus;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
     if (entries.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(KubbTokens.space5),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(LucideIcons.userPlus, size: 36, color: tokens.fgMuted),
-              const SizedBox(height: KubbTokens.space3),
-              Text(
-                'Noch keine Freunde.\nSuche oben nach einem Spielernamen.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: tokens.fgMuted),
-              ),
-            ],
-          ),
+      final l = AppLocalizations.of(context);
+      // Erst-Nutzer-Pfad: keine Freunde → KubbEmptyState mit CTA, das den
+      // Such-Input darueber fokussiert. Adressiert AUDIT §4.2 und
+      // R18-F-14 (Mängel #1).
+      return KubbEmptyState(
+        title: l.emptyFriendsTitle,
+        body: l.emptyFriendsBody,
+        cta: KubbButton(
+          variant: KubbButtonVariant.primary,
+          onPressed: onSearchFocus,
+          child: Text(l.emptyFriendsCta),
         ),
       );
     }

@@ -8,6 +8,7 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_mode_card.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
@@ -132,6 +133,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ] else if (recent.isNotEmpty) ...[
               const SizedBox(height: KubbTokens.space5),
               RecentSection(title: l.homeRecentTitle, items: recent.take(3).toList()),
+            ] else ...[
+              const SizedBox(height: KubbTokens.space5),
+              // Erst-Nutzer-Pfad: keine Sessions → Vignette + CTA, oeffnet
+              // dieselbe TrainingSheet wie der FAB. Adressiert AUDIT §4.2
+              // und R18-F-14 (Mängel #1: spartanische Empty-States).
+              KubbEmptyState(
+                title: l.emptySessionsTitle,
+                body: l.emptySessionsBody,
+                cta: KubbButton(
+                  variant: KubbButtonVariant.primary,
+                  onPressed: () => TrainingSheet.show(context),
+                  child: Text(l.emptySessionsCta),
+                ),
+              ),
             ],
           ],
         ),
