@@ -1,12 +1,10 @@
-// W2-T2 (R11-F-01): the `kingOutcome` named parameter on `SetScore` is
-// specified here but lands in W2-T3. The ignore keeps `dart analyze`
-// clean until then.
-// ignore_for_file: undefined_named_parameter
-
+// W2-T3 (R11-F-01): the `kingOutcome` named parameter on `SetScore` and
+// the `KingOutcome` sealed class now live in `kubb_domain`. The explicit
+// `KingMissed()` arguments below match the field default; that is
+// intentional — the tests are the executable spec for the Missed variant.
+// ignore_for_file: avoid_redundant_argument_values
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:test/test.dart';
-
-import '../_support/king_outcome_stub.dart';
 
 void main() {
   group('SetScore', () {

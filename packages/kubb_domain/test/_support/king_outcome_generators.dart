@@ -1,13 +1,7 @@
-// W2-T2 (R11-F-01): generators that pin the `kingOutcome` named parameter
-// on `SetScore`. The parameter lands in W2-T3; until then the ignore keeps
-// `dart analyze` clean. Test loading fails until the impl is in place —
-// that is the expected red-state for the test-first hand-off.
-// ignore_for_file: undefined_named_parameter
-
+// W2-T3 (R11-F-01): generators that pin the `kingOutcome` named parameter
+// on `SetScore`. The `KingOutcome` sealed class now lives in `kubb_domain`.
 import 'package:glados/glados.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-
-import 'king_outcome_stub.dart';
 
 extension KingOutcomeAnys on Any {
   /// A set whose king-outcome is explicitly `TimedOut`. Used by the

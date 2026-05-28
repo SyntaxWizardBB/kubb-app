@@ -1,6 +1,7 @@
 import 'package:kubb_domain/src/tournament/bracket.dart';
 import 'package:kubb_domain/src/tournament/bracket_advance_event.dart';
 import 'package:kubb_domain/src/tournament/ekc_score.dart';
+import 'package:kubb_domain/src/tournament/king_outcome.dart';
 import 'package:kubb_domain/src/tournament/ko_phase.dart';
 import 'package:kubb_domain/src/tournament/pool_group_standings.dart';
 import 'package:kubb_domain/src/tournament/pool_phase.dart';
@@ -177,6 +178,7 @@ class TournamentSetScoreProposal {
     required this.setNumber,
     required this.submitterUserId,
     required this.score,
+    this.kingOutcome = const KingMissed(),
   });
 
   final TournamentMatchId matchId;
@@ -184,6 +186,20 @@ class TournamentSetScoreProposal {
   final int setNumber;
   final UserId submitterUserId;
   final SetScore score;
+
+  /// Per R11-F-01: the king-outcome attached to this set proposal. Drives
+  /// the EKC tally on consensus and is part of the wire payload Wave 3
+  /// will ship to the server. Defaults to [KingMissed] so the field is
+  /// optional for the current UI call sites that still emit the legacy
+  /// `kingHitBy?` shape; they go through [KingOutcome.fromLegacy] to
+  /// upgrade.
+  final KingOutcome kingOutcome;
+
+  /// Backward-compat projection of [kingOutcome] into the legacy nullable
+  /// participant shape. UI call sites that have not yet migrated to the
+  /// tri-toggle read this getter; Wave 3 removes it. TODO(W3): migrate
+  /// readers to the [KingOutcome] sealed class and drop this getter.
+  TournamentParticipantId? get kingHitBy => kingOutcome.legacyKingHitBy;
 
   @override
   bool operator ==(Object other) =>
@@ -193,7 +209,8 @@ class TournamentSetScoreProposal {
           other.consensusRound == consensusRound &&
           other.setNumber == setNumber &&
           other.submitterUserId == submitterUserId &&
-          other.score == score;
+          other.score == score &&
+          other.kingOutcome == kingOutcome;
 
   @override
   int get hashCode => Object.hash(
@@ -202,6 +219,7 @@ class TournamentSetScoreProposal {
         setNumber,
         submitterUserId,
         score,
+        kingOutcome,
       );
 }
 

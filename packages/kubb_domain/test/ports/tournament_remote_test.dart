@@ -1,12 +1,10 @@
-// W2-T2 (R11-F-01): `TournamentSetScoreProposal.kingOutcome` is specified
-// here but lands in W2-T3. The ignore keeps `dart analyze` clean until
-// then.
-// ignore_for_file: undefined_named_parameter, undefined_getter
-
+// W2-T3 (R11-F-01): `TournamentSetScoreProposal.kingOutcome` and the
+// `KingOutcome` sealed class now live in `kubb_domain`. The explicit
+// `KingMissed()` below matches the field default; that is intentional —
+// the test contrasts the two outcomes for equality.
+// ignore_for_file: avoid_redundant_argument_values
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:test/test.dart';
-
-import '../_support/king_outcome_stub.dart';
 
 void main() {
   group('TournamentSummaryRef', () {

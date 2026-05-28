@@ -17,6 +17,7 @@ export 'src/tournament/bracket.dart';
 export 'src/tournament/bracket_advance_event.dart';
 export 'src/tournament/bracket_layout.dart';
 export 'src/tournament/ekc_score.dart';
+export 'src/tournament/king_outcome.dart';
 export 'src/tournament/ko_phase.dart';
 export 'src/tournament/league_points_engine.dart';
 export 'src/tournament/pairing.dart';

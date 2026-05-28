@@ -1,8 +1,6 @@
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:test/test.dart';
 
-import '../_support/king_outcome_stub.dart';
-
 void main() {
   group('KingOutcome', () {
     test('HitBy carries the scoring participant id', () {
