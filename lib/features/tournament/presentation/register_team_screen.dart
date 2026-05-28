@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/features/team/application/team_detail_provider.dart';
 import 'package:kubb_app/features/team/application/team_list_provider.dart';
 import 'package:kubb_app/features/team/data/team_models.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
@@ -74,17 +75,7 @@ class _State extends ConsumerState<RegisterTeamScreen> {
         ),
         const SizedBox(height: KubbTokens.space4),
         if (_selectedTeam != null)
-          Expanded(
-            child: RosterCompositionWidget(
-              pool: const <RosterPoolMember>[],
-              guests: const <RosterPoolGuest>[],
-              availableSlots: teamSize,
-              onChanged: (slots) => setState(() {
-                _roster = slots;
-                _highlightSlot = null;
-              }),
-            ),
-          )
+          Expanded(child: _rosterSection(_selectedTeam!, teamSize))
         else
           const Spacer(),
         const SizedBox(height: KubbTokens.space2),
@@ -99,6 +90,61 @@ class _State extends ConsumerState<RegisterTeamScreen> {
         ),
       ]),
     );
+  }
+
+  Widget _rosterSection(TeamWire team, int teamSize) {
+    final detailAsync = ref.watch(teamDetailProvider(TeamId(team.id)));
+    return detailAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => _error('$e'),
+      data: (data) {
+        final pool = _poolFrom(data);
+        final guests = _guestsFrom(data);
+        return RosterCompositionWidget(
+          key: ValueKey<String>('roster-${team.id}'),
+          pool: pool,
+          guests: guests,
+          availableSlots: teamSize,
+          onChanged: (slots) => setState(() {
+            _roster = slots;
+            _highlightSlot = null;
+          }),
+        );
+      },
+    );
+  }
+
+  /// Maps the `pool` array of the `team_get` jsonb envelope onto the
+  /// widget's [RosterPoolMember] shape. The RPC payload carries `user_id`
+  /// + `membership_id` per row; `display_name` is not yet projected
+  /// there, so we fall back to the user-id token (parity with
+  /// `team_detail_screen.dart`). Conflict detection happens server-side
+  /// at `registerTeam` time — surface `conflicted: false` until the
+  /// dedicated `team_pool_with_tournament_conflicts` RPC is wired.
+  List<RosterPoolMember> _poolFrom(Map<String, dynamic> data) {
+    final raw = (data['pool'] as List? ?? const <dynamic>[])
+        .cast<Map<String, dynamic>>();
+    return [
+      for (final m in raw)
+        RosterPoolMember(
+          userId: UserId(m['user_id'] as String),
+          displayName:
+              (m['display_name'] as String?) ?? (m['user_id'] as String),
+          conflicted: false,
+        ),
+    ];
+  }
+
+  List<RosterPoolGuest> _guestsFrom(Map<String, dynamic> data) {
+    final raw = (data['guests'] as List? ?? const <dynamic>[])
+        .cast<Map<String, dynamic>>();
+    return [
+      for (final g in raw)
+        RosterPoolGuest(
+          guestId: TeamGuestPlayerId(g['guest_id'] as String),
+          displayName: (g['display_name'] as String?) ?? '?',
+        ),
+    ];
   }
 
   void _onTeamChanged(TeamWire? team) => setState(() {
