@@ -86,6 +86,7 @@ class KubbTokens extends ThemeExtension<KubbTokens> {
 
   // Spacing scale (4px base) — `--kc-space-<n>`.
   static const double space1 = 4;    // --kc-space-1
+  static const double space1half = 6; // half-step: `BK.AppBar` bottom-gap per shared.jsx
   static const double space2 = 8;    // --kc-space-2
   static const double space3 = 12;   // --kc-space-3
   static const double space4 = 16;   // --kc-space-4

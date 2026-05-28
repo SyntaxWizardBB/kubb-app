@@ -71,8 +71,17 @@ class KubbAppBar extends StatelessWidget implements PreferredSizeWidget {
   // Right-side slot, normalised across both constructors.
   final Widget? _trailing;
 
+  /// Spec target for the top padding (incl. status-bar inset) from
+  /// `shared.jsx` BK.AppBar (`padding: 54px 12px 6px`). On notch devices the
+  /// 44dp inset eats most of it, leaving ~10dp visual gap below the cutout;
+  /// on inset-free surfaces the full 54dp keeps the eyebrow off the edge.
+  static const double _specTop = 54;
+
+  /// Fixed height claimed in the Scaffold layout: spec-top (54) + 48dp
+  /// leading/trailing slot (matches the centered eyebrow+title column) +
+  /// spec-bottom (6) = 108.
   @override
-  Size get preferredSize => const Size.fromHeight(88);
+  Size get preferredSize => const Size.fromHeight(108);
 
   @override
   Widget build(BuildContext context) {
@@ -104,9 +113,9 @@ class KubbAppBar extends StatelessWidget implements PreferredSizeWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           KubbTokens.space3,
-          KubbTokens.space6,
+          _specTop,
           KubbTokens.space3,
-          KubbTokens.space2,
+          KubbTokens.space1half,
         ),
         child: Row(
           children: [
