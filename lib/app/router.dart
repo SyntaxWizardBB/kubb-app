@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/app/public_router_shell.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_bottom_nav.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/presentation/account_link_screen.dart';
@@ -51,6 +52,18 @@ import 'package:kubb_app/features/training/presentation/sniper_session_screen.da
 import 'package:kubb_app/features/training/presentation/summary_screen.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
+/// Branch-Indizes des [StatefulShellRoute.indexedStack].
+///
+/// Wird sowohl vom Shell-Builder als auch von der [KubbBottomNav]
+/// referenziert. Aenderungen hier muessen mit den Branches in
+/// [goRouterProvider] synchron bleiben.
+abstract final class ShellTab {
+  static const home = 0;
+  static const training = 1;
+  static const tournaments = 2;
+  static const profile = 3;
+}
+
 final goRouterProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthRefresh();
   ref
@@ -97,6 +110,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: <RouteBase>[
+      // ── Public / auth flows — OUTSIDE the BottomNav shell ──
       GoRoute(
         path: AuthRoutes.signIn,
         builder: (_, _) => const SignInScreen(),
@@ -122,168 +136,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const OnboardingTour(),
       ),
       GoRoute(
-        path: AuthRoutes.editProfile,
-        builder: (_, _) => const EditProfileScreen(),
-      ),
-      GoRoute(
-        path: AuthRoutes.inbox,
-        builder: (_, _) => const InboxScreen(),
-      ),
-      GoRoute(
-        path: SocialRoutes.friends,
-        builder: (_, _) => const FriendsScreen(),
-      ),
-      GoRoute(
-        path: SocialRoutes.groups,
-        builder: (_, _) => const GroupsScreen(),
-      ),
-      GoRoute(
-        path: '/',
-        builder: (_, _) => const HomeScreen(),
-      ),
-      GoRoute(
-        path: '/profile',
-        builder: (_, _) => const ProfileScreen(),
-      ),
-      GoRoute(
-        path: '/stats',
-        builder: (_, _) => const StatsScreen(),
-      ),
-      GoRoute(
-        path: '/settings',
-        builder: (_, _) => const SettingsScreen(),
-      ),
-      GoRoute(
-        path: '/training/sniper/config',
-        builder: (_, _) => const SniperConfigScreen(),
-      ),
-      GoRoute(
-        path: '/training/sniper/session/:id',
-        builder: (_, state) =>
-            SniperSessionScreen(sessionId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/training/finisseur/config',
-        builder: (_, _) => const FinisseurConfigScreen(),
-      ),
-      GoRoute(
-        path: '/training/finisseur/session/:id',
-        builder: (_, state) =>
-            FinisseurStickScreen(sessionId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/training/summary/:id',
-        builder: (_, state) =>
-            SummaryScreen(sessionId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: MatchRoutes.newMatch,
-        builder: (_, _) => const MatchConfigScreen(),
-      ),
-      GoRoute(
-        path: '${MatchRoutes.lobby}/:id',
-        builder: (_, state) =>
-            MatchLobbyScreen(matchId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '${MatchRoutes.result}/:id',
-        builder: (_, state) =>
-            MatchResultScreen(matchId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '${MatchRoutes.awaitOthers}/:id',
-        builder: (_, state) =>
-            MatchAwaitOthersScreen(matchId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '${MatchRoutes.finished}/:id',
-        builder: (_, state) =>
-            MatchFinishedScreen(matchId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: TournamentRoutes.list,
-        builder: (_, _) => const TournamentListScreen(),
-      ),
-      GoRoute(
-        path: TournamentRoutes.newTournament,
-        builder: (_, _) => const TournamentSetupWizard(),
-      ),
-      GoRoute(
-        path: '${TournamentRoutes.detail}/:id',
-        builder: (_, state) => TournamentDetailScreen(
-          tournamentId: TournamentId(state.pathParameters['id']!),
-        ),
-      ),
-      GoRoute(
-        path: '/tournament/:id/register',
-        builder: (_, state) => TournamentRegistrationScreen(
-          tournamentId: TournamentId(state.pathParameters['id']!),
-        ),
-      ),
-      GoRoute(
-        path: '/tournament/:id/matches',
-        builder: (_, state) => TournamentMatchListScreen(
-          tournamentId: state.pathParameters['id']!,
-        ),
-      ),
-      GoRoute(
-        path: '/tournament/:id/match/:matchId',
-        builder: (_, state) => TournamentMatchDetailScreen(
-          tournamentId: state.pathParameters['id']!,
-          matchId: state.pathParameters['matchId']!,
-        ),
-      ),
-      GoRoute(
-        path: '/tournament/:id/match/:matchId/conflict',
-        builder: (_, state) => TournamentConflictScreen(
-          tournamentId: state.pathParameters['id']!,
-          matchId: state.pathParameters['matchId']!,
-        ),
-      ),
-      GoRoute(
-        path: '/tournament/:id/match/:matchId/override',
-        builder: (_, state) => TournamentOverrideScreen(
-          tournamentId: state.pathParameters['id']!,
-          matchId: state.pathParameters['matchId']!,
-        ),
-      ),
-      GoRoute(
-        path: '/tournament/:id/standings',
-        builder: (_, state) => TournamentStandingsScreen(
-          tournamentId: state.pathParameters['id']!,
-        ),
-      ),
-      GoRoute(
-        path: '/tournament/:id/bracket',
-        builder: (_, state) => TournamentBracketScreen(
-          tournamentId: state.pathParameters['id']!,
-        ),
-      ),
-      GoRoute(
-        path: '/tournament/:id/dashboard',
-        builder: (_, state) => TournamentLiveDashboardScreen(
-          tournamentId: state.pathParameters['id']!,
-        ),
-      ),
-      GoRoute(
-        path: '/teams',
-        builder: (_, _) => const TeamListScreen(),
-      ),
-      GoRoute(
-        path: '/teams/new',
-        builder: (_, _) => const TeamCreateScreen(),
-      ),
-      GoRoute(
-        path: '/teams/invitations',
-        builder: (_, _) => const TeamInvitationScreen(),
-      ),
-      GoRoute(
-        path: '/teams/:id',
-        builder: (_, state) => TeamDetailScreen(
-          teamId: TeamId(state.pathParameters['id']!),
-        ),
-      ),
-      GoRoute(
         path: '/public/tournament/:id',
         builder: (_, state) => PublicRouterShell(
           child: PublicTournamentScreen(
@@ -299,9 +151,234 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           ),
         ),
       ),
+
+      // ── Authenticated shell with persistent BottomNav ──
+      // StatefulShellRoute.indexedStack hosts one Navigator per branch
+      // (R20-A-13). Pushing within a tab keeps the other tabs' stacks
+      // intact, and switching tabs restores them rather than rebuilding.
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            _ShellScaffold(navigationShell: navigationShell),
+        branches: <StatefulShellBranch>[
+          // Branch 0 — Home + alle Top-Level-Aktionen, die sonst kein
+          // eigenes Tab haben (Settings, Inbox, Friends/Groups, Teams,
+          // Match-Flow, Training-Sessions, Profile-Edit).
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/',
+                builder: (_, _) => const HomeScreen(),
+              ),
+              GoRoute(
+                path: '/settings',
+                builder: (_, _) => const SettingsScreen(),
+              ),
+              GoRoute(
+                path: AuthRoutes.inbox,
+                builder: (_, _) => const InboxScreen(),
+              ),
+              GoRoute(
+                path: AuthRoutes.editProfile,
+                builder: (_, _) => const EditProfileScreen(),
+              ),
+              GoRoute(
+                path: SocialRoutes.friends,
+                builder: (_, _) => const FriendsScreen(),
+              ),
+              GoRoute(
+                path: SocialRoutes.groups,
+                builder: (_, _) => const GroupsScreen(),
+              ),
+              GoRoute(
+                path: '/training/sniper/config',
+                builder: (_, _) => const SniperConfigScreen(),
+              ),
+              GoRoute(
+                path: '/training/sniper/session/:id',
+                builder: (_, state) =>
+                    SniperSessionScreen(sessionId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: '/training/finisseur/config',
+                builder: (_, _) => const FinisseurConfigScreen(),
+              ),
+              GoRoute(
+                path: '/training/finisseur/session/:id',
+                builder: (_, state) => FinisseurStickScreen(
+                  sessionId: state.pathParameters['id']!,
+                ),
+              ),
+              GoRoute(
+                path: '/training/summary/:id',
+                builder: (_, state) =>
+                    SummaryScreen(sessionId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: MatchRoutes.newMatch,
+                builder: (_, _) => const MatchConfigScreen(),
+              ),
+              GoRoute(
+                path: '${MatchRoutes.lobby}/:id',
+                builder: (_, state) =>
+                    MatchLobbyScreen(matchId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: '${MatchRoutes.result}/:id',
+                builder: (_, state) =>
+                    MatchResultScreen(matchId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: '${MatchRoutes.awaitOthers}/:id',
+                builder: (_, state) => MatchAwaitOthersScreen(
+                  matchId: state.pathParameters['id']!,
+                ),
+              ),
+              GoRoute(
+                path: '${MatchRoutes.finished}/:id',
+                builder: (_, state) =>
+                    MatchFinishedScreen(matchId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: '/teams',
+                builder: (_, _) => const TeamListScreen(),
+              ),
+              GoRoute(
+                path: '/teams/new',
+                builder: (_, _) => const TeamCreateScreen(),
+              ),
+              GoRoute(
+                path: '/teams/invitations',
+                builder: (_, _) => const TeamInvitationScreen(),
+              ),
+              GoRoute(
+                path: '/teams/:id',
+                builder: (_, state) => TeamDetailScreen(
+                  teamId: TeamId(state.pathParameters['id']!),
+                ),
+              ),
+            ],
+          ),
+          // Branch 1 — Training-Tab. Bis ein dedizierter /training-Hub
+          // existiert nutzt der Tab das Stats-Screen (Training-Historie),
+          // siehe HomeScreen.jsx-Referenz im Mobile-Kit.
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/stats',
+                builder: (_, _) => const StatsScreen(),
+              ),
+            ],
+          ),
+          // Branch 2 — Tournaments.
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: TournamentRoutes.list,
+                builder: (_, _) => const TournamentListScreen(),
+              ),
+              GoRoute(
+                path: TournamentRoutes.newTournament,
+                builder: (_, _) => const TournamentSetupWizard(),
+              ),
+              GoRoute(
+                path: '${TournamentRoutes.detail}/:id',
+                builder: (_, state) => TournamentDetailScreen(
+                  tournamentId: TournamentId(state.pathParameters['id']!),
+                ),
+              ),
+              GoRoute(
+                path: '/tournament/:id/register',
+                builder: (_, state) => TournamentRegistrationScreen(
+                  tournamentId: TournamentId(state.pathParameters['id']!),
+                ),
+              ),
+              GoRoute(
+                path: '/tournament/:id/matches',
+                builder: (_, state) => TournamentMatchListScreen(
+                  tournamentId: state.pathParameters['id']!,
+                ),
+              ),
+              GoRoute(
+                path: '/tournament/:id/match/:matchId',
+                builder: (_, state) => TournamentMatchDetailScreen(
+                  tournamentId: state.pathParameters['id']!,
+                  matchId: state.pathParameters['matchId']!,
+                ),
+              ),
+              GoRoute(
+                path: '/tournament/:id/match/:matchId/conflict',
+                builder: (_, state) => TournamentConflictScreen(
+                  tournamentId: state.pathParameters['id']!,
+                  matchId: state.pathParameters['matchId']!,
+                ),
+              ),
+              GoRoute(
+                path: '/tournament/:id/match/:matchId/override',
+                builder: (_, state) => TournamentOverrideScreen(
+                  tournamentId: state.pathParameters['id']!,
+                  matchId: state.pathParameters['matchId']!,
+                ),
+              ),
+              GoRoute(
+                path: '/tournament/:id/standings',
+                builder: (_, state) => TournamentStandingsScreen(
+                  tournamentId: state.pathParameters['id']!,
+                ),
+              ),
+              GoRoute(
+                path: '/tournament/:id/bracket',
+                builder: (_, state) => TournamentBracketScreen(
+                  tournamentId: state.pathParameters['id']!,
+                ),
+              ),
+              GoRoute(
+                path: '/tournament/:id/dashboard',
+                builder: (_, state) => TournamentLiveDashboardScreen(
+                  tournamentId: state.pathParameters['id']!,
+                ),
+              ),
+            ],
+          ),
+          // Branch 3 — Profile.
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/profile',
+                builder: (_, _) => const ProfileScreen(),
+              ),
+            ],
+          ),
+        ],
+      ),
     ],
   );
 });
+
+/// Root-Scaffold fuer die authenticated Tab-Shell.
+///
+/// Haelt nur eine [StatefulNavigationShell] als Body plus die globale
+/// [KubbBottomNav]. Tab-Wechsel laufen ueber `navigationShell.goBranch`;
+/// ein Tap auf den aktiven Tab fuehrt zurueck auf den Branch-Root
+/// (`initialLocation: true`), analog zum Material-3-Standard.
+class _ShellScaffold extends StatelessWidget {
+  const _ShellScaffold({required this.navigationShell});
+
+  final StatefulNavigationShell navigationShell;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: navigationShell,
+      bottomNavigationBar: KubbBottomNav(
+        currentIndex: navigationShell.currentIndex,
+        onTap: (index) => navigationShell.goBranch(
+          index,
+          initialLocation: index == navigationShell.currentIndex,
+        ),
+      ),
+    );
+  }
+}
 
 class _AuthRefresh extends ChangeNotifier {
   void notify() => notifyListeners();
