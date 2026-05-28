@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Adaptive launcher icon foreground layer: Meadow Badge motif.
+     Three kubb blocks under a tossed baton with a dashed flight arc.
+     108x108 canvas, content fits inside the centered 72x72 safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Three kubb blocks (oak shaft + darker cap) -->
+    <group android:translateX="18" android:translateY="54">
+        <!-- left block -->
+        <path
+            android:fillColor="#C08A33"
+            android:pathData="M0,3 h16 a2,2 0 0 1 2,2 v22 a2,2 0 0 1 -2,2 h-16 a2,2 0 0 1 -2,-2 v-22 a2,2 0 0 1 2,-2 z" />
+        <path
+            android:fillColor="#A16F24"
+            android:pathData="M0,3 h16 a2,2 0 0 1 2,2 v2 h-20 v-2 a2,2 0 0 1 2,-2 z" />
+        <!-- middle block -->
+        <path
+            android:fillColor="#C08A33"
+            android:pathData="M28,3 h16 a2,2 0 0 1 2,2 v22 a2,2 0 0 1 -2,2 h-16 a2,2 0 0 1 -2,-2 v-22 a2,2 0 0 1 2,-2 z" />
+        <path
+            android:fillColor="#A16F24"
+            android:pathData="M28,3 h16 a2,2 0 0 1 2,2 v2 h-20 v-2 a2,2 0 0 1 2,-2 z" />
+        <!-- right block -->
+        <path
+            android:fillColor="#C08A33"
+            android:pathData="M56,3 h16 a2,2 0 0 1 2,2 v22 a2,2 0 0 1 -2,2 h-16 a2,2 0 0 1 -2,-2 v-22 a2,2 0 0 1 2,-2 z" />
+        <path
+            android:fillColor="#A16F24"
+            android:pathData="M56,3 h16 a2,2 0 0 1 2,2 v2 h-20 v-2 a2,2 0 0 1 2,-2 z" />
+    </group>
+
+    <!-- Ground line -->
+    <path
+        android:fillColor="#0C0B07"
+        android:pathData="M18,85 h72 v1.5 h-72 z" />
+
+    <!-- Tossed baton, rotated -->
+    <group android:translateX="54" android:translateY="36" android:rotation="28">
+        <path
+            android:fillColor="#3A7C2E"
+            android:pathData="M-22,-3 h44 a1.5,1.5 0 0 1 1.5,1.5 v3 a1.5,1.5 0 0 1 -1.5,1.5 h-44 a1.5,1.5 0 0 1 -1.5,-1.5 v-3 a1.5,1.5 0 0 1 1.5,-1.5 z" />
+        <path
+            android:fillColor="#2D6324"
+            android:pathData="M-22,-3 h44 a1.5,1.5 0 0 1 1.5,1.5 v0.5 h-47 v-0.5 a1.5,1.5 0 0 1 1.5,-1.5 z" />
+    </group>
+
+    <!-- Flight arc (dashed). Stroke a quadratic-ish bezier with dashes. -->
+    <path
+        android:strokeColor="#3A7C2E"
+        android:strokeWidth="1"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M22,46 Q54,16 86,46" />
+</vector>
