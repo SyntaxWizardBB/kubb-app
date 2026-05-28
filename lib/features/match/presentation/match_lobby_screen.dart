@@ -9,6 +9,7 @@ import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/match/application/match_providers.dart';
 import 'package:kubb_app/features/match/data/match_models.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
+import 'package:kubb_app/features/match/presentation/widgets/match_stage_indicator.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -94,11 +95,19 @@ class MatchLobbyScreen extends ConsumerWidget {
           if (detail == null) {
             return const Center(child: CircularProgressIndicator());
           }
-          return _LobbyBody(
-            detail: detail,
-            myUserId: myUserId,
-            onCancel: () => _runCancel(context, ref),
-            onAccept: () => _runAccept(context, ref),
+          // W5.1-A: stage indicator directly below the AppBar.
+          return Column(
+            children: [
+              MatchStageIndicator(status: detail.match.status),
+              Expanded(
+                child: _LobbyBody(
+                  detail: detail,
+                  myUserId: myUserId,
+                  onCancel: () => _runCancel(context, ref),
+                  onAccept: () => _runAccept(context, ref),
+                ),
+              ),
+            ],
           );
         },
       ),

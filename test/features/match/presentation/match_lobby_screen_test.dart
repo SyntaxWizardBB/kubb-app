@@ -119,8 +119,10 @@ void main() {
       expect(find.byType(KubbAppBar), findsOneWidget);
 
       // Eyebrow text (uppercased by the eyebrow widget) and title visible.
+      // Two "Lobby" labels exist: the AppBar title and the
+      // MatchStageIndicator pill (W5.1-A) — both expected.
       expect(find.text('MATCH · LOBBY'), findsOneWidget);
-      expect(find.text('Lobby'), findsOneWidget);
+      expect(find.text('Lobby'), findsNWidgets(2));
 
       // Mitspieler section header in eyebrow style.
       expect(find.text('MITSPIELER'), findsOneWidget);

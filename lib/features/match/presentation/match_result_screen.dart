@@ -10,6 +10,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_chip.dart';
 import 'package:kubb_app/features/match/application/match_providers.dart';
 import 'package:kubb_app/features/match/data/match_models.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
+import 'package:kubb_app/features/match/presentation/widgets/match_stage_indicator.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 /// Pure validation for a round-result entry. Returns `null` when the
@@ -225,19 +226,24 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
               ? 'Einzelsatz'
               : 'BO${detail.match.format.n} · bis ${detail.match.format.setsToWin} Siege';
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              KubbTokens.space4,
-              KubbTokens.space4,
-              KubbTokens.space4,
-              KubbTokens.space6,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _SectionHeader(
-                  label: 'Aktueller Halbsatz · $formatLabel',
-                ),
+          return Column(
+            children: [
+              // W5.1-A: stage indicator directly below the AppBar.
+              MatchStageIndicator(status: detail.match.status),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    KubbTokens.space4,
+                    KubbTokens.space4,
+                    KubbTokens.space4,
+                    KubbTokens.space6,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _SectionHeader(
+                        label: 'Aktueller Halbsatz · $formatLabel',
+                      ),
                 const SizedBox(height: KubbTokens.space2),
                 _InsetCard(
                   tokens: tokens,
@@ -320,8 +326,11 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
                   isLoading: _submitting,
                   child: const Text('Bekannt geben'),
                 ),
-              ],
-            ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           );
         },
       ),

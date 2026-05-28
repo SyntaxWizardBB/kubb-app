@@ -7,6 +7,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/features/match/application/match_providers.dart';
 import 'package:kubb_app/features/match/data/match_models.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
+import 'package:kubb_app/features/match/presentation/widgets/match_stage_indicator.dart';
 
 /// Terminal screen for `finalized` or `voided` matches. Replaces the
 /// previous redirect into the lobby (which had no branch for either
@@ -48,7 +49,13 @@ class MatchFinishedScreen extends ConsumerWidget {
           if (detail == null) {
             return const Center(child: CircularProgressIndicator());
           }
-          return _FinishedBody(detail: detail);
+          // W5.1-A: stage indicator directly below the AppBar.
+          return Column(
+            children: [
+              MatchStageIndicator(status: detail.match.status),
+              Expanded(child: _FinishedBody(detail: detail)),
+            ],
+          );
         },
       ),
     );

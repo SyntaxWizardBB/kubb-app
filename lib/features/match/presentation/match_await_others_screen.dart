@@ -9,6 +9,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/match/application/match_providers.dart';
 import 'package:kubb_app/features/match/data/match_models.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
+import 'package:kubb_app/features/match/presentation/widgets/match_stage_indicator.dart';
 
 /// "Warten auf andere Spieler" — shown after the caller has submitted
 /// their own round-result proposal but the rest of the in-app
@@ -99,54 +100,75 @@ class _MatchAwaitOthersScreenState
           final inApp = detail.participants
               .where((p) => p.kind == MatchParticipantKind.inApp)
               .toList();
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(
-              KubbTokens.space4,
-              KubbTokens.space4,
-              KubbTokens.space4,
-              KubbTokens.space6,
-            ),
+          // W5.1-A: stage indicator directly below the AppBar.
+          return Column(
             children: [
-              const SizedBox(height: KubbTokens.space4),
-              const Center(
-                child: SizedBox(
-                  width: 48,
-                  height: 48,
-                  child: CircularProgressIndicator(strokeWidth: 3),
-                ),
-              ),
-              const SizedBox(height: KubbTokens.space5),
-              Text(
-                'Warten auf andere Spieler…',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: tokens.fg,
-                ),
-              ),
-              const SizedBox(height: KubbTokens.space2),
-              Text(
-                'Sobald alle bestätigt haben, geht es automatisch weiter.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: tokens.fgMuted),
-              ),
-              const SizedBox(height: KubbTokens.space6),
-              _WaitingListCard(round: detail.match.currentRound, players: inApp),
-              const SizedBox(height: KubbTokens.space5),
-              Center(
-                child: KubbButton(
-                  variant: KubbButtonVariant.ghost,
-                  // TODO(sprintB-followup): wire to actual re-notify mutation
-                  // (W5-T4 polish is presentation-only).
-                  onPressed: () {},
-                  child: const Text('Erneut benachrichtigen'),
-                ),
+              MatchStageIndicator(status: detail.match.status),
+              Expanded(
+                child: _AwaitBody(round: detail.match.currentRound, players: inApp),
               ),
             ],
           );
         },
       ),
+    );
+  }
+}
+
+class _AwaitBody extends StatelessWidget {
+  const _AwaitBody({required this.round, required this.players});
+
+  final int round;
+  final List<MatchParticipant> players;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        KubbTokens.space4,
+        KubbTokens.space4,
+        KubbTokens.space4,
+        KubbTokens.space6,
+      ),
+      children: [
+        const SizedBox(height: KubbTokens.space4),
+        const Center(
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: CircularProgressIndicator(strokeWidth: 3),
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space5),
+        Text(
+          'Warten auf andere Spieler…',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: tokens.fg,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        Text(
+          'Sobald alle bestätigt haben, geht es automatisch weiter.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+        ),
+        const SizedBox(height: KubbTokens.space6),
+        _WaitingListCard(round: round, players: players),
+        const SizedBox(height: KubbTokens.space5),
+        Center(
+          child: KubbButton(
+            variant: KubbButtonVariant.ghost,
+            // TODO(sprintB-followup): wire to actual re-notify mutation
+            // (W5-T4 polish is presentation-only).
+            onPressed: () {},
+            child: const Text('Erneut benachrichtigen'),
+          ),
+        ),
+      ],
     );
   }
 }
