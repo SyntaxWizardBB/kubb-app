@@ -2604,4 +2604,66 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get emptyInboxCta => 'Freunde finden';
+
+  @override
+  String get achievementsScreenTitle => 'Erfolge';
+
+  @override
+  String get achievementsScreenEyebrow => 'Profil';
+
+  @override
+  String get achievementsSectionEarned => 'Erspielt';
+
+  @override
+  String get achievementsSectionOpen => 'Noch offen';
+
+  @override
+  String get achievementsEmptyTitle => 'Noch keine Erfolge';
+
+  @override
+  String get achievementsEmptyBody =>
+      'Spiel ein paar Sniper-Sessions und Matches — Erfolge schalten sich automatisch frei.';
+
+  @override
+  String get achievementsEmptyCta => 'Sniper starten';
+
+  @override
+  String get achievementsBadgeFirstHitTitle => 'Erster Treffer';
+
+  @override
+  String get achievementsBadgeFirstHitDesc =>
+      'Treffe deinen ersten Kubb in einer Session.';
+
+  @override
+  String get achievementsBadgeHundredHitsTitle => '100 Treffer';
+
+  @override
+  String get achievementsBadgeHundredHitsDesc =>
+      'Sammle 100 Treffer ueber alle Sessions.';
+
+  @override
+  String get achievementsBadgeStreakTitle => 'Serien-Schuetze';
+
+  @override
+  String get achievementsBadgeStreakDesc =>
+      'Triff 10 Kubbs in Folge ohne Fehlwurf.';
+
+  @override
+  String get achievementsBadgeHeliTitle => 'Heli-Meister';
+
+  @override
+  String get achievementsBadgeHeliDesc =>
+      'Lande 5 Helikopter-Wuerfe in einer Session.';
+
+  @override
+  String get achievementsBadgeKingTitle => 'Koenigsmacher';
+
+  @override
+  String get achievementsBadgeKingDesc =>
+      'Gewinne ein Match mit dem letzten Wurf auf den Koenig.';
+
+  @override
+  String achievementsLockedChip(String trigger) {
+    return 'Bei $trigger freigeschaltet';
+  }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/app/public_router_shell.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_bottom_nav.dart';
+import 'package:kubb_app/features/achievements/presentation/achievements_screen.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/presentation/account_link_screen.dart';
@@ -340,6 +341,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/profile',
                 builder: (_, _) => const ProfileScreen(),
+              ),
+              GoRoute(
+                path: '/profile/achievements',
+                builder: (_, _) => const AchievementsScreen(),
               ),
             ],
           ),

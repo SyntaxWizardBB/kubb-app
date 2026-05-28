@@ -4797,6 +4797,114 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Freunde finden'**
   String get emptyInboxCta;
+
+  /// AppBar title of the achievements screen
+  ///
+  /// In de, this message translates to:
+  /// **'Erfolge'**
+  String get achievementsScreenTitle;
+
+  /// AppBar eyebrow above the achievements title
+  ///
+  /// In de, this message translates to:
+  /// **'Profil'**
+  String get achievementsScreenEyebrow;
+
+  /// Section header listing badges the player already unlocked
+  ///
+  /// In de, this message translates to:
+  /// **'Erspielt'**
+  String get achievementsSectionEarned;
+
+  /// Section header listing badges that are not yet unlocked
+  ///
+  /// In de, this message translates to:
+  /// **'Noch offen'**
+  String get achievementsSectionOpen;
+
+  /// KubbEmptyState title shown when no badges have been earned yet
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Erfolge'**
+  String get achievementsEmptyTitle;
+
+  /// KubbEmptyState body on the achievements screen
+  ///
+  /// In de, this message translates to:
+  /// **'Spiel ein paar Sniper-Sessions und Matches — Erfolge schalten sich automatisch frei.'**
+  String get achievementsEmptyBody;
+
+  /// KubbEmptyState CTA on the achievements screen — opens the sniper config
+  ///
+  /// In de, this message translates to:
+  /// **'Sniper starten'**
+  String get achievementsEmptyCta;
+
+  /// Placeholder badge — first successful hit
+  ///
+  /// In de, this message translates to:
+  /// **'Erster Treffer'**
+  String get achievementsBadgeFirstHitTitle;
+
+  /// Description of the first-hit placeholder badge
+  ///
+  /// In de, this message translates to:
+  /// **'Treffe deinen ersten Kubb in einer Session.'**
+  String get achievementsBadgeFirstHitDesc;
+
+  /// Placeholder badge — cumulative 100 hits
+  ///
+  /// In de, this message translates to:
+  /// **'100 Treffer'**
+  String get achievementsBadgeHundredHitsTitle;
+
+  /// Description of the 100-hits placeholder badge
+  ///
+  /// In de, this message translates to:
+  /// **'Sammle 100 Treffer ueber alle Sessions.'**
+  String get achievementsBadgeHundredHitsDesc;
+
+  /// Placeholder badge — 10x streak
+  ///
+  /// In de, this message translates to:
+  /// **'Serien-Schuetze'**
+  String get achievementsBadgeStreakTitle;
+
+  /// Description of the streak placeholder badge
+  ///
+  /// In de, this message translates to:
+  /// **'Triff 10 Kubbs in Folge ohne Fehlwurf.'**
+  String get achievementsBadgeStreakDesc;
+
+  /// Placeholder badge — helicopter throws
+  ///
+  /// In de, this message translates to:
+  /// **'Heli-Meister'**
+  String get achievementsBadgeHeliTitle;
+
+  /// Description of the heli placeholder badge
+  ///
+  /// In de, this message translates to:
+  /// **'Lande 5 Helikopter-Wuerfe in einer Session.'**
+  String get achievementsBadgeHeliDesc;
+
+  /// Placeholder badge — finishing king hit
+  ///
+  /// In de, this message translates to:
+  /// **'Koenigsmacher'**
+  String get achievementsBadgeKingTitle;
+
+  /// Description of the king placeholder badge
+  ///
+  /// In de, this message translates to:
+  /// **'Gewinne ein Match mit dem letzten Wurf auf den Koenig.'**
+  String get achievementsBadgeKingDesc;
+
+  /// Status chip on a locked badge — describes the unlock condition
+  ///
+  /// In de, this message translates to:
+  /// **'Bei {trigger} freigeschaltet'**
+  String achievementsLockedChip(String trigger);
 }
 
 class _AppLocalizationsDelegate

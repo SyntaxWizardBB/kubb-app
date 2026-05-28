@@ -86,6 +86,13 @@ class AccountSection extends ConsumerWidget {
                     GoRouter.of(context).push<void>(AuthRoutes.inbox),
               ),
               _NavRow(
+                icon: Icons.emoji_events_outlined,
+                label: l10n.achievementsScreenTitle,
+                sub: l10n.achievementsEmptyBody,
+                onTap: () => GoRouter.of(context)
+                    .push<void>('/profile/achievements'),
+              ),
+              _NavRow(
                 icon: Icons.logout,
                 label: l10n.authAccountSignOutLabel,
                 sub: l10n.authAccountSignOutSub(providerLabel),

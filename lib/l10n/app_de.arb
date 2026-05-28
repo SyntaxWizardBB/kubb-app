@@ -3489,5 +3489,83 @@
   "emptyInboxCta": "Freunde finden",
   "@emptyInboxCta": {
     "description": "KubbEmptyState CTA on Inbox — jumps to friends search"
+  },
+  "achievementsScreenTitle": "Erfolge",
+  "@achievementsScreenTitle": {
+    "description": "AppBar title of the achievements screen"
+  },
+  "achievementsScreenEyebrow": "Profil",
+  "@achievementsScreenEyebrow": {
+    "description": "AppBar eyebrow above the achievements title"
+  },
+  "achievementsSectionEarned": "Erspielt",
+  "@achievementsSectionEarned": {
+    "description": "Section header listing badges the player already unlocked"
+  },
+  "achievementsSectionOpen": "Noch offen",
+  "@achievementsSectionOpen": {
+    "description": "Section header listing badges that are not yet unlocked"
+  },
+  "achievementsEmptyTitle": "Noch keine Erfolge",
+  "@achievementsEmptyTitle": {
+    "description": "KubbEmptyState title shown when no badges have been earned yet"
+  },
+  "achievementsEmptyBody": "Spiel ein paar Sniper-Sessions und Matches — Erfolge schalten sich automatisch frei.",
+  "@achievementsEmptyBody": {
+    "description": "KubbEmptyState body on the achievements screen"
+  },
+  "achievementsEmptyCta": "Sniper starten",
+  "@achievementsEmptyCta": {
+    "description": "KubbEmptyState CTA on the achievements screen — opens the sniper config"
+  },
+  "achievementsBadgeFirstHitTitle": "Erster Treffer",
+  "@achievementsBadgeFirstHitTitle": {
+    "description": "Placeholder badge — first successful hit"
+  },
+  "achievementsBadgeFirstHitDesc": "Treffe deinen ersten Kubb in einer Session.",
+  "@achievementsBadgeFirstHitDesc": {
+    "description": "Description of the first-hit placeholder badge"
+  },
+  "achievementsBadgeHundredHitsTitle": "100 Treffer",
+  "@achievementsBadgeHundredHitsTitle": {
+    "description": "Placeholder badge — cumulative 100 hits"
+  },
+  "achievementsBadgeHundredHitsDesc": "Sammle 100 Treffer ueber alle Sessions.",
+  "@achievementsBadgeHundredHitsDesc": {
+    "description": "Description of the 100-hits placeholder badge"
+  },
+  "achievementsBadgeStreakTitle": "Serien-Schuetze",
+  "@achievementsBadgeStreakTitle": {
+    "description": "Placeholder badge — 10x streak"
+  },
+  "achievementsBadgeStreakDesc": "Triff 10 Kubbs in Folge ohne Fehlwurf.",
+  "@achievementsBadgeStreakDesc": {
+    "description": "Description of the streak placeholder badge"
+  },
+  "achievementsBadgeHeliTitle": "Heli-Meister",
+  "@achievementsBadgeHeliTitle": {
+    "description": "Placeholder badge — helicopter throws"
+  },
+  "achievementsBadgeHeliDesc": "Lande 5 Helikopter-Wuerfe in einer Session.",
+  "@achievementsBadgeHeliDesc": {
+    "description": "Description of the heli placeholder badge"
+  },
+  "achievementsBadgeKingTitle": "Koenigsmacher",
+  "@achievementsBadgeKingTitle": {
+    "description": "Placeholder badge — finishing king hit"
+  },
+  "achievementsBadgeKingDesc": "Gewinne ein Match mit dem letzten Wurf auf den Koenig.",
+  "@achievementsBadgeKingDesc": {
+    "description": "Description of the king placeholder badge"
+  },
+  "achievementsLockedChip": "Bei {trigger} freigeschaltet",
+  "@achievementsLockedChip": {
+    "description": "Status chip on a locked badge — describes the unlock condition",
+    "placeholders": {
+      "trigger": {
+        "type": "String",
+        "example": "100 Treffer"
+      }
+    }
   }
 }
