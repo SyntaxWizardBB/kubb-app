@@ -32,24 +32,30 @@ class TrainingRepository {
     required String playerId,
     required double distance,
     int? throwTarget,
-  }) async {
-    final stale = await _sessions.activeForUser(playerId);
-    if (stale != null) {
-      _log.warning('discarding stale active session ${stale.id}');
-      await _sessions.deleteById(stale.id);
-    }
-    final row = Session(
-      id: _uuid.v7(),
-      playerId: playerId,
-      kind: _kindSniper,
-      mode: _kindSniper,
-      distanceMeters: distance,
-      throwTarget: throwTarget,
-      status: _statusActive,
-      startedAt: DateTime.now().toUtc(),
-    );
-    await _sessions.insert(row.toCompanion(false));
-    return row;
+  }) {
+    // Wrap activeForUser → deleteById → insert in a single transaction so
+    // a failing insert rolls back the stale-delete. Without this, a crash
+    // between the delete and the insert leaves the player with no active
+    // session even though one used to exist.
+    return _sessions.attachedDatabase.transaction(() async {
+      final stale = await _sessions.activeForUser(playerId);
+      if (stale != null) {
+        _log.warning('discarding stale active session ${stale.id}');
+        await _sessions.deleteById(stale.id);
+      }
+      final row = Session(
+        id: _uuid.v7(),
+        playerId: playerId,
+        kind: _kindSniper,
+        mode: _kindSniper,
+        distanceMeters: distance,
+        throwTarget: throwTarget,
+        status: _statusActive,
+        startedAt: DateTime.now().toUtc(),
+      );
+      await _sessions.insert(row.toCompanion(false));
+      return row;
+    });
   }
 
   Future<SessionEvent> appendEvent({

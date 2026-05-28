@@ -33,25 +33,31 @@ class FinisseurRepository {
     required String playerId,
     required int field,
     required int base,
-  }) async {
-    final stale = await _sessions.activeForUserInMode(playerId, _kindFinisseur);
-    if (stale != null) {
-      _log.warning('discarding stale active finisseur session ${stale.id}');
-      await _sessions.deleteById(stale.id);
-    }
-    final row = Session(
-      id: _uuid.v7(),
-      playerId: playerId,
-      kind: _kindFinisseur,
-      mode: _kindFinisseur,
-      distanceMeters: 8,
-      finField: field,
-      finBase: base,
-      status: _statusActive,
-      startedAt: DateTime.now().toUtc(),
-    );
-    await _sessions.insert(row.toCompanion(false));
-    return row;
+  }) {
+    // Wrap activeForUser → deleteById → insert in a single transaction so
+    // a failing insert rolls back the stale-delete and leaves the prior
+    // active row intact.
+    return _sessions.attachedDatabase.transaction(() async {
+      final stale =
+          await _sessions.activeForUserInMode(playerId, _kindFinisseur);
+      if (stale != null) {
+        _log.warning('discarding stale active finisseur session ${stale.id}');
+        await _sessions.deleteById(stale.id);
+      }
+      final row = Session(
+        id: _uuid.v7(),
+        playerId: playerId,
+        kind: _kindFinisseur,
+        mode: _kindFinisseur,
+        distanceMeters: 8,
+        finField: field,
+        finBase: base,
+        status: _statusActive,
+        startedAt: DateTime.now().toUtc(),
+      );
+      await _sessions.insert(row.toCompanion(false));
+      return row;
+    });
   }
 
   Future<void> recordStick({
