@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_seeding_controller.dart';
@@ -35,12 +36,7 @@ class TournamentSeedingScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      // TODO(sprintB-followup): migrate to KubbAppBar
-      appBar: AppBar(
-        backgroundColor: tokens.bg,
-        elevation: 0,
-        title: Text(l.tournamentSeedingTitle),
-      ),
+      appBar: KubbAppBar(title: l.tournamentSeedingTitle),
       body: standingsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(e.toString())),

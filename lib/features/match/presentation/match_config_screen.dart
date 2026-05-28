@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/match/application/match_config_controller.dart';
 import 'package:kubb_app/features/match/application/match_providers.dart';
 import 'package:kubb_app/features/match/data/match_config_draft.dart';
@@ -76,12 +77,9 @@ class _MatchConfigScreenState extends ConsumerState<MatchConfigScreen> {
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      // TODO(sprintB-followup): migrate to KubbAppBar
-      appBar: AppBar(
-        backgroundColor: tokens.bg,
-        elevation: 0,
+      appBar: KubbAppBar(
+        title: 'Neues Match',
         leading: BackButton(onPressed: () => context.go('/')),
-        title: const Text('Neues Match'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(

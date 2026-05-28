@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/tournament/application/public_tournament_providers.dart';
 import 'package:kubb_app/features/tournament/data/public_tournament_models.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -29,12 +30,7 @@ class PublicMatchScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      // TODO(sprintB-followup): migrate to KubbAppBar
-      appBar: AppBar(
-        backgroundColor: tokens.bg,
-        elevation: 0,
-        title: Text(l.tournamentMatchDetailTitle),
-      ),
+      appBar: KubbAppBar(title: l.tournamentMatchDetailTitle),
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(

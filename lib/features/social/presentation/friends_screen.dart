@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
@@ -58,13 +58,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      // TODO(sprintB-followup): migrate to KubbAppBar
-      appBar: AppBar(
-        backgroundColor: tokens.bg,
-        elevation: 0,
-        leading: BackButton(onPressed: () => GoRouter.of(context).pop()),
-        title: const Text('Freunde'),
-      ),
+      appBar: const KubbAppBar(title: 'Freunde'),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space4),
         child: Column(

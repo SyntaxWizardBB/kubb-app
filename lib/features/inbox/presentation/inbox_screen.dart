@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/features/inbox/application/inbox_controller.dart';
@@ -31,13 +32,7 @@ class InboxScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      // TODO(sprintB-followup): migrate to KubbAppBar
-      appBar: AppBar(
-        backgroundColor: tokens.bg,
-        elevation: 0,
-        leading: BackButton(onPressed: () => GoRouter.of(context).pop()),
-        title: const Text('Postfach'),
-      ),
+      appBar: const KubbAppBar(title: 'Postfach'),
       body: async.when(
         data: (msgs) {
           if (msgs.isEmpty) {
