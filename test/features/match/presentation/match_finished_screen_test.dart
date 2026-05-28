@@ -40,6 +40,13 @@ MatchDetail _detail({
 }
 
 Future<void> _pump(WidgetTester tester, MatchDetail detail) async {
+  // W5.1-A added a MatchStageIndicator above the body, shrinking the
+  // available ListView viewport. Lift the surface to keep the secondary
+  // action row (`Zurück zur Übersicht`) in the build tree.
+  tester.view.physicalSize = const Size(800, 2400);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
   final router = GoRouter(
     initialLocation: '/match/finished/m-1',
     routes: [
