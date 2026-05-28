@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/avatar_circle.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
@@ -27,15 +28,33 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      appBar: AppBar(
-        backgroundColor: tokens.bg,
-        foregroundColor: tokens.fg,
-        elevation: 0,
-        title: Text(l.profileTitle),
+      appBar: KubbAppBar.slots(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
+          color: tokens.fg,
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () =>
               context.canPop() ? context.pop() : context.go('/'),
+        ),
+        eyebrow: Text(
+          l.authEditProfileEyebrow.toUpperCase(),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.88,
+                color: tokens.fgMuted,
+              ),
+        ),
+        title: Text(
+          l.profileTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.36,
+                color: tokens.fg,
+              ),
         ),
       ),
       body: SafeArea(

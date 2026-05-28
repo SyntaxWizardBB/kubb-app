@@ -48,6 +48,7 @@ class TournamentDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: tokens.bg,
+      // TODO(sprintB-followup): migrate to KubbAppBar
       appBar: KubbAppBar(
         eyebrow: l.tournamentDetailEyebrow,
         title: detailAsync.maybeWhen(

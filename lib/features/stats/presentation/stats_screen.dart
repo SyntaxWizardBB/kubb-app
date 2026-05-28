@@ -56,9 +56,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      appBar: KubbAppBar(
-        eyebrow: l.statsEyebrow,
-        title: l.statsTitle,
+      appBar: KubbAppBar.slots(
         // Stats can be opened via context.go from home (replace) or context.push
         // from settings/training-sheet — Navigator.canPop is unreliable here, so
         // we wire an explicit leading that always lands back on home.
@@ -69,7 +67,27 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
           onPressed: () =>
               Navigator.of(context).canPop() ? context.pop() : context.go('/'),
         ),
-        actions: showFilter
+        eyebrow: Text(
+          l.statsEyebrow.toUpperCase(),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.88,
+                color: tokens.fgMuted,
+              ),
+        ),
+        title: Text(
+          l.statsTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.36,
+                color: tokens.fg,
+              ),
+        ),
+        trailing: showFilter
             ? IconButton(
                 tooltip: l.statsFilterTitle,
                 icon: const KubbIcon(LucideIcons.sliders),

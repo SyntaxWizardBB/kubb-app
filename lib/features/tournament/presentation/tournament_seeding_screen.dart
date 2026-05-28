@@ -35,6 +35,7 @@ class TournamentSeedingScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: tokens.bg,
+      // TODO(sprintB-followup): migrate to KubbAppBar
       appBar: AppBar(
         backgroundColor: tokens.bg,
         elevation: 0,

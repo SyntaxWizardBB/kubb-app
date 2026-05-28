@@ -41,6 +41,7 @@ class _State extends ConsumerState<RegisterTeamScreen> {
     final teamsAsync = ref.watch(teamListProvider);
     return Scaffold(
       backgroundColor: t.bg,
+      // TODO(sprintB-followup): migrate to KubbAppBar
       appBar: const KubbAppBar(eyebrow: 'Turnier', title: 'Team registrieren'),
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

@@ -42,6 +42,7 @@ class _State extends ConsumerState<TeamListScreen>
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     return Scaffold(
       backgroundColor: tokens.bg,
+      // TODO(sprintB-followup): migrate to KubbAppBar
       appBar: const KubbAppBar(eyebrow: 'Teams', title: 'Übersicht'),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go('/teams/new'),

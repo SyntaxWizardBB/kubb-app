@@ -56,6 +56,7 @@ class SniperSessionScreen extends ConsumerWidget {
       },
       child: Scaffold(
       backgroundColor: tokens.bg,
+      // TODO(sprintB-followup): migrate to KubbAppBar
       appBar: KubbAppBar(
         eyebrow: l.sniperConfigEyebrow,
         title: '${session.distance.toStringAsFixed(1)} m',

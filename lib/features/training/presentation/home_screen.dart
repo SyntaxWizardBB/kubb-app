@@ -59,15 +59,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      appBar: KubbAppBar(
-        title: l.homeAppTitle,
+      appBar: KubbAppBar.slots(
         automaticallyImplyLeading: false,
         leading: IconButton(
           tooltip: l.settingsTitle,
           icon: const KubbIcon(LucideIcons.menu),
           onPressed: () => context.push('/settings'),
         ),
-        actions: IconButton(
+        title: Text(
+          l.homeAppTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.36,
+                color: tokens.fg,
+              ),
+        ),
+        trailing: IconButton(
           tooltip: l.profileTitle,
           icon: const KubbIcon(KubbIcons.players),
           onPressed: () => PlayerHubSheet.show(context),

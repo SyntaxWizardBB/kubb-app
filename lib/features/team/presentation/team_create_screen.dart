@@ -79,6 +79,7 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
     final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: tokens.bg,
+      // TODO(sprintB-followup): migrate to KubbAppBar
       appBar: KubbAppBar(
         eyebrow: l.teamListTitle,
         title: l.teamCreateTitle,

@@ -34,6 +34,7 @@ class _State extends ConsumerState<TournamentRegistrationScreen> {
 
     return Scaffold(
       backgroundColor: tokens.bg,
+      // TODO(sprintB-followup): migrate to KubbAppBar
       appBar: KubbAppBar(
           eyebrow: l.tournamentRegistrationEyebrow,
           title: l.tournamentRegistrationTitle),

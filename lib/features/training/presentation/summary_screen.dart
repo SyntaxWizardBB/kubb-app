@@ -74,6 +74,7 @@ class SummaryScreen extends ConsumerWidget {
     final isFinisseur = async.value?.isFinisseur ?? false;
     return Scaffold(
       backgroundColor: tokens.bg,
+      // TODO(sprintB-followup): migrate to KubbAppBar
       appBar: KubbAppBar(
         eyebrow: isFinisseur ? l.finisseurConfigEyebrow : l.summaryEyebrow,
         title: l.summaryTitle,

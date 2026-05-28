@@ -50,4 +50,64 @@ void main() {
     const bar = KubbAppBar(title: 'X');
     expect(bar.preferredSize.height, greaterThanOrEqualTo(64));
   });
+
+  testWidgets('slot constructor renders leading, eyebrow, title and trailing',
+      (tester) async {
+    await pump(
+      tester,
+      KubbAppBar.slots(
+        automaticallyImplyLeading: false,
+        leading: const Icon(
+          Icons.menu,
+          key: ValueKey('slot-leading'),
+        ),
+        eyebrow: const Text(
+          'STATS',
+          key: ValueKey('slot-eyebrow'),
+        ),
+        title: const Text(
+          'Statistik',
+          key: ValueKey('slot-title'),
+        ),
+        trailing: IconButton(
+          key: const ValueKey('slot-trailing'),
+          icon: const Icon(Icons.filter_alt),
+          onPressed: () {},
+        ),
+      ),
+    );
+
+    expect(find.byKey(const ValueKey('slot-leading')), findsOneWidget);
+    expect(find.byKey(const ValueKey('slot-eyebrow')), findsOneWidget);
+    expect(find.byKey(const ValueKey('slot-title')), findsOneWidget);
+    expect(find.byKey(const ValueKey('slot-trailing')), findsOneWidget);
+  });
+
+  testWidgets('slot constructor without eyebrow only renders title',
+      (tester) async {
+    await pump(
+      tester,
+      const KubbAppBar.slots(
+        automaticallyImplyLeading: false,
+        title: Text('Profil', key: ValueKey('slot-title-only')),
+      ),
+    );
+
+    expect(find.byKey(const ValueKey('slot-title-only')), findsOneWidget);
+    expect(find.text('STATS'), findsNothing);
+  });
+
+  testWidgets('trailing wins over deprecated actions slot', (tester) async {
+    await pump(
+      tester,
+      const KubbAppBar(
+        title: 'X',
+        actions: Icon(Icons.notifications, key: ValueKey('legacy-action')),
+        trailing: Icon(Icons.search, key: ValueKey('new-trailing')),
+      ),
+    );
+
+    expect(find.byKey(const ValueKey('new-trailing')), findsOneWidget);
+    expect(find.byKey(const ValueKey('legacy-action')), findsNothing);
+  });
 }

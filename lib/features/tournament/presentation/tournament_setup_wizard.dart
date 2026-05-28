@@ -152,6 +152,7 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
 
     return Scaffold(
       backgroundColor: tokens.bg,
+      // TODO(sprintB-followup): migrate to KubbAppBar
       appBar: KubbAppBar(
         title: l10n.tournamentWizardTitle,
         eyebrow: stepTitle,

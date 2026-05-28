@@ -27,6 +27,7 @@ class TeamDetailScreen extends ConsumerWidget {
     final myUserId = ref.watch(currentUserIdProvider);
     return Scaffold(
       backgroundColor: tokens.bg,
+      // TODO(sprintB-followup): migrate to KubbAppBar
       appBar: KubbAppBar(
         eyebrow: 'Team',
         title: detailAsync.maybeWhen(
