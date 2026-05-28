@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_chip.dart';
 import 'package:kubb_app/features/match/application/match_providers.dart';
 import 'package:kubb_app/features/match/data/match_models.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
@@ -34,6 +36,45 @@ String? validateMatchResult({required int scoreA, required int scoreB}) {
 String? deriveWinner(int scoreA, int scoreB) {
   if (scoreA == scoreB) return null;
   return scoreA > scoreB ? 'A' : 'B';
+}
+
+/// Set-by-set entry derived from a `proposal_received` audit event.
+/// Used by the Halbsatz-Verlauf inset-card.
+@visibleForTesting
+class HalfsetEntry {
+  const HalfsetEntry({
+    required this.round,
+    required this.scoreA,
+    required this.scoreB,
+  });
+
+  final int round;
+  final int scoreA;
+  final int scoreB;
+}
+
+/// Reduces the audit tail down to one accepted set per round. We pick the
+/// latest `proposal_received` per round — once both sides agree the
+/// values converge anyway, and during disagreement the most recent
+/// proposal is what advanced the round.
+@visibleForTesting
+List<HalfsetEntry> extractHalfsetHistory(List<MatchAuditEvent> auditTail) {
+  final byRound = <int, HalfsetEntry>{};
+  for (final event in auditTail) {
+    if (event.kind != 'proposal_received') continue;
+    final round = event.payload['round'];
+    final scoreA = event.payload['score_a'];
+    final scoreB = event.payload['score_b'];
+    if (round is! num || scoreA is! num || scoreB is! num) continue;
+    byRound[round.toInt()] = HalfsetEntry(
+      round: round.toInt(),
+      scoreA: scoreA.toInt(),
+      scoreB: scoreB.toInt(),
+    );
+  }
+  final entries = byRound.values.toList()
+    ..sort((a, b) => a.round.compareTo(b.round));
+  return entries;
 }
 
 /// Round-result entry. Uses [matchDetailProvider] for the round
@@ -153,7 +194,8 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
     return Scaffold(
       backgroundColor: tokens.bg,
       appBar: const KubbAppBar(
-        title: 'Resultat',
+        eyebrow: 'Resultat',
+        title: 'Halbsatz eintragen',
       ),
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -177,89 +219,360 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
           _prefillFromDetail(detail);
           final validationMsg = _validate();
           final cap = _scoreCapFor(detail);
+          final history = extractHalfsetHistory(detail.auditTail);
+
+          final formatLabel = detail.match.format.n == 1
+              ? 'Einzelsatz'
+              : 'BO${detail.match.format.n} · bis ${detail.match.format.setsToWin} Siege';
+
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(KubbTokens.space4),
+            padding: const EdgeInsets.fromLTRB(
+              KubbTokens.space4,
+              KubbTokens.space4,
+              KubbTokens.space4,
+              KubbTokens.space6,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  detail.match.format.n == 1
-                      ? 'Resultat'
-                      : 'BO${detail.match.format.n} — bis ${detail.match.format.setsToWin} Siege',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: tokens.fg,
+                _SectionHeader(
+                  label: 'Aktueller Halbsatz · $formatLabel',
+                ),
+                const SizedBox(height: KubbTokens.space2),
+                _InsetCard(
+                  tokens: tokens,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: _ScoreColumn(
+                          title: 'Team A',
+                          accent: KubbTokens.meadow600,
+                          value: _scoreA,
+                          onIncrement: _scoreA >= cap
+                              ? null
+                              : () => setState(() => _scoreA += 1),
+                          onDecrement: _scoreA == 0
+                              ? null
+                              : () => setState(() => _scoreA -= 1),
+                        ),
+                      ),
+                      const SizedBox(width: KubbTokens.space3),
+                      Expanded(
+                        child: _ScoreColumn(
+                          title: 'Team B',
+                          accent: KubbTokens.wood400,
+                          value: _scoreB,
+                          onIncrement: _scoreB >= cap
+                              ? null
+                              : () => setState(() => _scoreB += 1),
+                          onDecrement: _scoreB == 0
+                              ? null
+                              : () => setState(() => _scoreB -= 1),
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+                if (validationMsg != null) ...[
+                  const SizedBox(height: KubbTokens.space3),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: KubbChip(
+                      tone: KubbChipTone.miss,
+                      label: validationMsg,
+                      icon: LucideIcons.alertTriangle,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: KubbTokens.space5),
+
+                // Halbsatz-Verlauf — Set-by-Set list as inset-card with
+                // section header. Empty placeholder while the first
+                // round is still being entered.
+                const _SectionHeader(
+                  label: 'Halbsatz-Verlauf',
+                ),
+                const SizedBox(height: KubbTokens.space2),
+                _HalfsetHistoryCard(
+                  history: history,
+                  currentRound: detail.match.currentRound,
                 ),
                 const SizedBox(height: KubbTokens.space5),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _ScoreColumn(
-                        title: 'Team A',
-                        accent: KubbTokens.meadow600,
-                        value: _scoreA,
-                        onIncrement: _scoreA >= cap
-                            ? null
-                            : () => setState(() => _scoreA += 1),
-                        onDecrement: _scoreA == 0
-                            ? null
-                            : () => setState(() => _scoreA -= 1),
-                      ),
-                    ),
-                    const SizedBox(width: KubbTokens.space3),
-                    Expanded(
-                      child: _ScoreColumn(
-                        title: 'Team B',
-                        accent: KubbTokens.wood400,
-                        value: _scoreB,
-                        onIncrement: _scoreB >= cap
-                            ? null
-                            : () => setState(() => _scoreB += 1),
-                        onDecrement: _scoreB == 0
-                            ? null
-                            : () => setState(() => _scoreB -= 1),
-                      ),
-                    ),
-                  ],
+
+                // Liga-Impact-Block — sub-card hinting at the table
+                // impact this match will have once finalised. Sprint B
+                // polish placeholder; real ELO/Tabellen-Delta follows
+                // when the league module wires up.
+                const _SectionHeader(
+                  label: 'Liga-Impact',
                 ),
-                const SizedBox(height: KubbTokens.space8),
-                if (validationMsg != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: KubbTokens.space3),
-                    child: Text(
-                      validationMsg,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: KubbTokens.miss,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                SizedBox(
-                  height: KubbTokens.touchComfortable,
-                  child: FilledButton(
-                    onPressed: _submitting || validationMsg != null
-                        ? null
-                        : () => _submit(detail),
-                    child: _submitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text('Resultat einreichen'),
-                  ),
+                const SizedBox(height: KubbTokens.space2),
+                const _LeagueImpactCard(),
+                const SizedBox(height: KubbTokens.space6),
+
+                KubbButton(
+                  variant: KubbButtonVariant.primary,
+                  size: KubbButtonSize.large,
+                  onPressed: _submitting || validationMsg != null
+                      ? null
+                      : () => _submit(detail),
+                  isLoading: _submitting,
+                  child: const Text('Bekannt geben'),
                 ),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Padding(
+      padding: const EdgeInsets.only(left: KubbTokens.space1),
+      child: Text(
+        label.toUpperCase(),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 1,
+          color: tokens.fgMuted,
+        ),
+      ),
+    );
+  }
+}
+
+/// Mobile-kit "Inset-Card" surface — `bgRaised` with a 1px line and the
+/// standard 14px radius. See `docs/design/quality-gates/mobile-kit-overview.md`.
+class _InsetCard extends StatelessWidget {
+  const _InsetCard({
+    required this.tokens,
+    required this.child,
+    this.padding = const EdgeInsets.all(KubbTokens.space3),
+  });
+
+  final KubbTokens tokens;
+  final Widget child;
+  final EdgeInsets padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: tokens.bgRaised,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+        border: Border.all(color: tokens.line),
+      ),
+      padding: padding,
+      child: child,
+    );
+  }
+}
+
+class _HalfsetHistoryCard extends StatelessWidget {
+  const _HalfsetHistoryCard({
+    required this.history,
+    required this.currentRound,
+  });
+
+  final List<HalfsetEntry> history;
+  final int currentRound;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    if (history.isEmpty) {
+      return _InsetCard(
+        tokens: tokens,
+        padding: const EdgeInsets.symmetric(
+          horizontal: KubbTokens.space4,
+          vertical: KubbTokens.space4,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              LucideIcons.history,
+              size: 16,
+              color: tokens.fgMuted,
+            ),
+            const SizedBox(width: KubbTokens.space2),
+            Expanded(
+              child: Text(
+                'Noch kein Halbsatz erfasst — Runde $currentRound läuft.',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: tokens.fgMuted,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return _InsetCard(
+      tokens: tokens,
+      padding: const EdgeInsets.symmetric(
+        horizontal: KubbTokens.space3,
+        vertical: KubbTokens.space2,
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < history.length; i++) ...[
+            if (i > 0)
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: tokens.line,
+              ),
+            _HalfsetRow(entry: history[i]),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _HalfsetRow extends StatelessWidget {
+  const _HalfsetRow({required this.entry});
+
+  final HalfsetEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final winner = deriveWinner(entry.scoreA, entry.scoreB);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: KubbTokens.space3),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 56,
+            child: Text(
+              'HS ${entry.round}',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.6,
+                color: tokens.fgMuted,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Row(
+              children: [
+                _HalfsetScore(
+                  score: entry.scoreA,
+                  isWinner: winner == 'A',
+                  accent: KubbTokens.meadow600,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: KubbTokens.space2,
+                  ),
+                  child: Text(
+                    ':',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.fgMuted,
+                    ),
+                  ),
+                ),
+                _HalfsetScore(
+                  score: entry.scoreB,
+                  isWinner: winner == 'B',
+                  accent: KubbTokens.wood400,
+                ),
+              ],
+            ),
+          ),
+          KubbChip(
+            tone: winner == null ? KubbChipTone.neutral : KubbChipTone.hit,
+            label: winner == null ? '—' : 'Team $winner',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HalfsetScore extends StatelessWidget {
+  const _HalfsetScore({
+    required this.score,
+    required this.isWinner,
+    required this.accent,
+  });
+
+  final int score;
+  final bool isWinner;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Text(
+      '$score',
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w800,
+        color: isWinner ? accent : tokens.fgMuted,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    );
+  }
+}
+
+class _LeagueImpactCard extends StatelessWidget {
+  const _LeagueImpactCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return _InsetCard(
+      tokens: tokens,
+      padding: const EdgeInsets.all(KubbTokens.space4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const KubbChip(
+                tone: KubbChipTone.info,
+                label: 'Tabellen-Auswirkung',
+                icon: LucideIcons.trendingUp,
+              ),
+              const Spacer(),
+              Icon(
+                LucideIcons.trophy,
+                size: 18,
+                color: tokens.fgMuted,
+              ),
+            ],
+          ),
+          const SizedBox(height: KubbTokens.space3),
+          Text(
+            'Sobald beide Seiten den Halbsatz bestätigen, fliesst das '
+            'Ergebnis in deine Saison-Tabelle und das Head-to-Head ein.',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              height: 1.35,
+              color: tokens.fg,
+            ),
+          ),
+        ],
       ),
     );
   }
