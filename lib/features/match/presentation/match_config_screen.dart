@@ -77,15 +77,19 @@ class _MatchConfigScreenState extends ConsumerState<MatchConfigScreen> {
 
     return Scaffold(
       backgroundColor: tokens.bg,
+      resizeToAvoidBottomInset: true,
       appBar: const KubbAppBar(
         title: 'Neues Match',
       ),
+      // Mängel #2.4 / BH-C-03: bottom-Padding muss die viewInsets der
+      // Soft-Tastatur einschliessen, sonst verschwindet "Match starten"
+      // hinter dem IME, sobald ein Eingabefeld den Fokus zieht.
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
           KubbTokens.space4,
           KubbTokens.space2,
           KubbTokens.space4,
-          KubbTokens.space8,
+          MediaQuery.viewInsetsOf(context).bottom + KubbTokens.space8,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

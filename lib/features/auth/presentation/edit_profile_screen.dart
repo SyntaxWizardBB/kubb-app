@@ -159,9 +159,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     return Scaffold(
       backgroundColor: tokens.bg,
+      resizeToAvoidBottomInset: true,
+      // Mängel #2.4 / BH-C-03: SingleChildScrollView + viewInsets.bottom-
+      // Padding hält den Save-Button sichtbar, wenn das Soft-Keyboard die
+      // Viewport-Höhe reduziert. `Spacer` braucht eine bounded Höhe, daher
+      // hier durch einen SizedBox-Abstand ersetzt.
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space6),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: KubbTokens.space6,
+            right: KubbTokens.space6,
+            bottom:
+                MediaQuery.viewInsetsOf(context).bottom + KubbTokens.space4,
+          ),
           child: Column(
             children: [
               AuthAppBar(
@@ -256,7 +266,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   message: l10n.authEditProfileSuccess,
                 ),
               ],
-              const Spacer(),
+              const SizedBox(height: KubbTokens.space5),
               AuthPrimaryButton(
                 label: _saving
                     ? l10n.authEditProfileSubmitting
