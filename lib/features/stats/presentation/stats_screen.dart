@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/icons.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/stats/application/stats_aggregate_provider.dart';
 import 'package:kubb_app/features/stats/data/stats_aggregate.dart';
@@ -89,12 +90,19 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
         ),
         trailing: showFilter
             ? IconButton(
+        actions: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (showFilter)
+              IconButton(
                 tooltip: l.statsFilterTitle,
                 icon: const KubbIcon(LucideIcons.sliders),
                 onPressed: () =>
                     StatsFilterModal.show(context, finisseur: isFinisseur),
-              )
-            : null,
+              ),
+            const InboxBellAction(),
+          ],
+        ),
       ),
       body: Column(
         children: [

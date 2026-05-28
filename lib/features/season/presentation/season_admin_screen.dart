@@ -20,6 +20,7 @@ class SeasonAdminScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: tokens.bg,
       // TODO(sprintB-followup): migrate to KubbAppBar
+      // TODO(sprintB-followup): add InboxBellAction
       appBar: const KubbAppBar(title: 'Saisonen verwalten'),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreateSheet(context, ref),

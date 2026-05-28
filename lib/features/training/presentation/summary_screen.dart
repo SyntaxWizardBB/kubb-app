@@ -75,6 +75,7 @@ class SummaryScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: tokens.bg,
       // TODO(sprintB-followup): migrate to KubbAppBar
+      // TODO(sprintB-followup): add InboxBellAction
       appBar: KubbAppBar(
         eyebrow: isFinisseur ? l.finisseurConfigEyebrow : l.summaryEyebrow,
         title: l.summaryTitle,

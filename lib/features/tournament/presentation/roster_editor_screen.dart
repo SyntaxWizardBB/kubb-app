@@ -101,6 +101,7 @@ class _RosterEditorScreenState extends ConsumerState<RosterEditorScreen> {
     return Scaffold(
       backgroundColor: tokens.bg,
       // TODO(sprintB-followup): migrate to KubbAppBar
+      // TODO(sprintB-followup): add InboxBellAction
       appBar: const KubbAppBar(eyebrow: 'Team', title: 'Roster bearbeiten'),
       body: rosterAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

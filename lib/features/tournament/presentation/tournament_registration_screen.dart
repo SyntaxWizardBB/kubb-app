@@ -35,6 +35,7 @@ class _State extends ConsumerState<TournamentRegistrationScreen> {
     return Scaffold(
       backgroundColor: tokens.bg,
       // TODO(sprintB-followup): migrate to KubbAppBar
+      // TODO(sprintB-followup): add InboxBellAction
       appBar: KubbAppBar(
           eyebrow: l.tournamentRegistrationEyebrow,
           title: l.tournamentRegistrationTitle),

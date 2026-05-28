@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/icons.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_mode_card.dart';
@@ -79,10 +80,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 color: tokens.fg,
               ),
         ),
-        trailing: IconButton(
-          tooltip: l.profileTitle,
-          icon: const KubbIcon(KubbIcons.players),
-          onPressed: () => PlayerHubSheet.show(context),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const InboxBellAction(),
+            IconButton(
+              tooltip: l.profileTitle,
+              icon: const KubbIcon(KubbIcons.players),
+              onPressed: () => PlayerHubSheet.show(context),
+            ),
+          ],
         ),
       ),
       body: SingleChildScrollView(

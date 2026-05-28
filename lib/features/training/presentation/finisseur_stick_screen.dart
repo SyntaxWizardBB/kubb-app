@@ -92,6 +92,7 @@ class FinisseurStickScreen extends ConsumerWidget {
       child: Scaffold(
       backgroundColor: tokens.bg,
       // TODO(sprintB-followup): migrate to KubbAppBar
+      // TODO(sprintB-followup): add InboxBellAction
       appBar: KubbAppBar(
         eyebrow: l.finisseurStickEyebrow(state.field, state.base),
         title: l.finisseurStickTitle(state.currentIndex + 1),

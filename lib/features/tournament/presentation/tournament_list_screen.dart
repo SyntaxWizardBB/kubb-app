@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
@@ -51,6 +52,7 @@ class _State extends ConsumerState<TournamentListScreen>
       appBar: KubbAppBar(
         eyebrow: l.tournamentListEyebrow,
         title: l.tournamentListTitle,
+        actions: const InboxBellAction(),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(TournamentRoutes.newTournament),

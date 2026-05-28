@@ -24,6 +24,7 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: tokens.bg,
       // TODO(sprintB-followup): migrate to KubbAppBar
+      // TODO(sprintB-followup): add InboxBellAction
       appBar: KubbAppBar(eyebrow: l.settingsScreenEyebrow, title: l.settingsTitle),
       body: ListView(
         padding: const EdgeInsets.only(bottom: KubbTokens.space8),

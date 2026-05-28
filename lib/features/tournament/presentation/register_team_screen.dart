@@ -42,6 +42,7 @@ class _State extends ConsumerState<RegisterTeamScreen> {
     return Scaffold(
       backgroundColor: t.bg,
       // TODO(sprintB-followup): migrate to KubbAppBar
+      // TODO(sprintB-followup): add InboxBellAction
       appBar: const KubbAppBar(eyebrow: 'Turnier', title: 'Team registrieren'),
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

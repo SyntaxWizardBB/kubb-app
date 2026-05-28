@@ -43,6 +43,7 @@ class _State extends ConsumerState<TeamListScreen>
     return Scaffold(
       backgroundColor: tokens.bg,
       // TODO(sprintB-followup): migrate to KubbAppBar
+      // TODO(sprintB-followup): add InboxBellAction
       appBar: const KubbAppBar(eyebrow: 'Teams', title: 'Übersicht'),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go('/teams/new'),

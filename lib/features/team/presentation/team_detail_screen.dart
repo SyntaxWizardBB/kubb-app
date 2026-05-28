@@ -28,6 +28,7 @@ class TeamDetailScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: tokens.bg,
       // TODO(sprintB-followup): migrate to KubbAppBar
+      // TODO(sprintB-followup): add InboxBellAction
       appBar: KubbAppBar(
         eyebrow: 'Team',
         title: detailAsync.maybeWhen(
