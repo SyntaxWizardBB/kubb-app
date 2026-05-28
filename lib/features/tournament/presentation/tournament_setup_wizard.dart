@@ -152,6 +152,11 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
 
     return Scaffold(
       backgroundColor: tokens.bg,
+      // Mängel #2.4 / BH-C-03: resizeToAvoidBottomInset + viewInsets-aware
+      // bottom-Padding pro Step-Scroller, damit der "Weiter"/"Anlegen"-
+      // Button nicht hinter der Software-Tastatur verschwindet (PageView/
+      // Stepper-Variante: jeder Step ist sein eigener Scrollable).
+      resizeToAvoidBottomInset: true,
       // TODO(sprintB-followup): add InboxBellAction
       appBar: KubbAppBar(
         title: l10n.tournamentWizardTitle,
@@ -170,11 +175,12 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
             _ProgressBar(step: stepIndex, total: totalSteps),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
+                padding: EdgeInsets.fromLTRB(
                   KubbTokens.space4,
                   KubbTokens.space4,
                   KubbTokens.space4,
-                  KubbTokens.space8,
+                  MediaQuery.viewInsetsOf(context).bottom +
+                      KubbTokens.space8,
                 ),
                 child: _buildStep(kind, draft, controller),
               ),

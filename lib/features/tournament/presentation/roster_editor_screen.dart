@@ -98,8 +98,16 @@ class _RosterEditorScreenState extends ConsumerState<RosterEditorScreen> {
     final rosterAsync = ref.watch(rosterProvider(widget.participantId));
     final finalized = detailAsync.asData?.value?.tournament.status ==
         TournamentStatus.finalized;
+    // Read viewInsets from the build context (above the Scaffold) so the
+    // value survives `MediaQuery.removeViewInsets` applied internally by
+    // `resizeToAvoidBottomInset: true` further down the tree.
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     return Scaffold(
       backgroundColor: tokens.bg,
+      // Mängel #2.4 / BH-C-03: resizeToAvoidBottomInset hält die "Ersetzen"
+      // Aktion und den Audit-Trail über der Soft-Tastatur, sobald der
+      // Substitutionsdialog das Grund-Feld fokussiert.
+      resizeToAvoidBottomInset: true,
       // TODO(sprintB-followup): add InboxBellAction
       appBar: const KubbAppBar(eyebrow: 'Team', title: 'Roster bearbeiten'),
       body: rosterAsync.when(
@@ -115,6 +123,7 @@ class _RosterEditorScreenState extends ConsumerState<RosterEditorScreen> {
           finalized: finalized,
           submitting: _submitting,
           onReplace: _onReplace,
+          bottomInset: bottomInset,
         ),
       ),
     );
@@ -127,11 +136,13 @@ class _Body extends StatelessWidget {
     required this.finalized,
     required this.submitting,
     required this.onReplace,
+    required this.bottomInset,
   });
   final List<RosterSlot> slots;
   final bool finalized;
   final bool submitting;
   final Future<void> Function(RosterSlot slot) onReplace;
+  final double bottomInset;
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +150,12 @@ class _Body extends StatelessWidget {
     final history = slots.where((s) => s.replacedAt != null).toList()
       ..sort((a, b) => b.replacedAt!.compareTo(a.replacedAt!));
     return ListView(
-      padding: const EdgeInsets.all(KubbTokens.space4),
+      padding: EdgeInsets.fromLTRB(
+        KubbTokens.space4,
+        KubbTokens.space4,
+        KubbTokens.space4,
+        bottomInset + KubbTokens.space4,
+      ),
       children: [
         Text('AKTIVE SLOTS',
             style: TextStyle(
