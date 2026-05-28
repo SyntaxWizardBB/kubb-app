@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_chip.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/match/application/match_providers.dart';
 import 'package:kubb_app/features/match/data/match_models.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 /// "Warten auf andere Spieler" — shown after the caller has submitted
 /// their own round-result proposal but the rest of the in-app
@@ -68,18 +71,17 @@ class _MatchAwaitOthersScreenState
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      // TODO(sprintB-followup): migrate to KubbAppBar
-      appBar: AppBar(
-        backgroundColor: tokens.bg,
-        elevation: 0,
+      appBar: KubbAppBar(
+        eyebrow: 'Match',
+        title: 'Warten auf Bestätigung',
         leading: BackButton(
+          color: tokens.fg,
           onPressed: () =>
               context.go('${MatchRoutes.lobby}/${widget.matchId}'),
         ),
-        title: const Text('Warten auf Bestätigung'),
       ),
       body: detailAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const _AwaitSkeleton(),
         error: (e, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(KubbTokens.space5),
@@ -92,71 +94,102 @@ class _MatchAwaitOthersScreenState
         ),
         data: (detail) {
           if (detail == null) {
-            return const Center(child: CircularProgressIndicator());
+            return const _AwaitSkeleton();
           }
           final inApp = detail.participants
               .where((p) => p.kind == MatchParticipantKind.inApp)
               .toList();
-          return Padding(
-            padding: const EdgeInsets.all(KubbTokens.space4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: KubbTokens.space5),
-                const Center(
-                  child: SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: CircularProgressIndicator(strokeWidth: 3),
-                  ),
-                ),
-                const SizedBox(height: KubbTokens.space5),
-                Text(
-                  'Warten auf andere Spieler…',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: tokens.fg,
-                  ),
-                ),
-                const SizedBox(height: KubbTokens.space2),
-                Text(
-                  'Sobald alle bestätigt haben, geht es automatisch weiter.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: tokens.fgMuted),
-                ),
-                const SizedBox(height: KubbTokens.space6),
-                Container(
-                  padding: const EdgeInsets.all(KubbTokens.space3),
-                  decoration: BoxDecoration(
-                    color: tokens.bgSunken,
-                    borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Spieler in Runde ${detail.match.currentRound}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: tokens.fgMuted,
-                          letterSpacing: 0.6,
-                        ),
-                      ),
-                      const SizedBox(height: KubbTokens.space2),
-                      for (final p in inApp) ...[
-                        _PlayerWaitRow(participant: p),
-                        const SizedBox(height: KubbTokens.space2),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(
+              KubbTokens.space4,
+              KubbTokens.space4,
+              KubbTokens.space4,
+              KubbTokens.space6,
             ),
+            children: [
+              const SizedBox(height: KubbTokens.space4),
+              const Center(
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: CircularProgressIndicator(strokeWidth: 3),
+                ),
+              ),
+              const SizedBox(height: KubbTokens.space5),
+              Text(
+                'Warten auf andere Spieler…',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: tokens.fg,
+                ),
+              ),
+              const SizedBox(height: KubbTokens.space2),
+              Text(
+                'Sobald alle bestätigt haben, geht es automatisch weiter.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+              ),
+              const SizedBox(height: KubbTokens.space6),
+              _WaitingListCard(round: detail.match.currentRound, players: inApp),
+              const SizedBox(height: KubbTokens.space5),
+              Center(
+                child: KubbButton(
+                  variant: KubbButtonVariant.ghost,
+                  // TODO(sprintB-followup): wire to actual re-notify mutation
+                  // (W5-T4 polish is presentation-only).
+                  onPressed: () {},
+                  child: const Text('Erneut benachrichtigen'),
+                ),
+              ),
+            ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _WaitingListCard extends StatelessWidget {
+  const _WaitingListCard({required this.round, required this.players});
+
+  final int round;
+  final List<MatchParticipant> players;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        KubbTokens.space3,
+        KubbTokens.space3,
+        KubbTokens.space3,
+        KubbTokens.space2,
+      ),
+      decoration: BoxDecoration(
+        color: tokens.bgRaised,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg + 2),
+        border: Border.all(color: tokens.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Spieler in Runde $round',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: tokens.fgMuted,
+              letterSpacing: 0.88,
+            ),
+          ),
+          const SizedBox(height: KubbTokens.space3),
+          for (var i = 0; i < players.length; i++) ...[
+            if (i > 0) const SizedBox(height: KubbTokens.space2),
+            _PlayerWaitRow(participant: players[i]),
+          ],
+        ],
       ),
     );
   }
@@ -172,36 +205,42 @@ class _PlayerWaitRow extends StatelessWidget {
     final name = participant.nickname ?? '…';
     return Row(
       children: [
-        const Icon(LucideIcons.clock, size: 16, color: KubbTokens.wood400),
-        const SizedBox(width: KubbTokens.space2),
         Expanded(
           child: Text(
             name,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
               color: tokens.fg,
             ),
           ),
         ),
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: KubbTokens.space2,
-            vertical: 2,
-          ),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFBF2D6),
-            borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-          ),
-          child: const Text(
-            'wartet',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF3D2C00),
-            ),
-          ),
+        const KubbChip(tone: KubbChipTone.heli, label: 'wartet'),
+      ],
+    );
+  }
+}
+
+class _AwaitSkeleton extends StatelessWidget {
+  const _AwaitSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(KubbTokens.space4),
+      children: [
+        const SizedBox(height: KubbTokens.space5),
+        Center(
+          child: KubbSkeleton.bar(width: 180, height: 18),
         ),
+        const SizedBox(height: KubbTokens.space2),
+        Center(
+          child: KubbSkeleton.bar(width: 260),
+        ),
+        const SizedBox(height: KubbTokens.space6),
+        KubbSkeleton.row(columns: 2),
+        const SizedBox(height: KubbTokens.space3),
+        KubbSkeleton.row(columns: 2),
       ],
     );
   }
