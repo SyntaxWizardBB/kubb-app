@@ -4,8 +4,11 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kubb_app/core/data/connectivity/connectivity_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
+import 'package:kubb_app/features/auth/data/supabase_auth_adapter.dart';
 import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/oauth_provider_button.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -20,18 +23,49 @@ class SignInScreen extends ConsumerStatefulWidget {
 
 class _SignInScreenState extends ConsumerState<SignInScreen> {
   _SignInLoading? _loading;
-  final bool _offline = false;
+  bool _showError = false;
 
   bool get _showApple => !kIsWeb && Platform.isIOS;
 
-  void _onPickGoogle() {
-    setState(() => _loading = _SignInLoading.google);
-    // Sign-in dispatches to AuthController in M6 routing; for now the
-    // button state surfaces correctly so the design QA stays accurate.
-  }
+  Future<void> _onPickGoogle() => _dispatchOAuth(AuthProvider.google);
 
-  void _onPickApple() {
-    setState(() => _loading = _SignInLoading.apple);
+  Future<void> _onPickApple() => _dispatchOAuth(AuthProvider.apple);
+
+  Future<void> _dispatchOAuth(AuthProvider provider) async {
+    if (_loading != null) return;
+    final offline = !ref.read(connectivityServiceProvider).isOnline;
+    if (offline) {
+      // The standing offline banner already explains why OAuth is
+      // blocked; no need to also flip the error banner.
+      return;
+    }
+    setState(() {
+      _loading = provider == AuthProvider.google
+          ? _SignInLoading.google
+          : _SignInLoading.apple;
+      _showError = false;
+    });
+    final adapter = ref.read(supabaseAuthAdapterProvider);
+    try {
+      await adapter.signInWithOAuth(
+        provider == AuthProvider.google
+            ? AuthOAuthProvider.google
+            : AuthOAuthProvider.apple,
+      );
+    } on Object {
+      // Stable reason-message — we never surface raw exception text to
+      // the user (R1-F-01). A successful kickoff leaves the loading
+      // spinner on; the actual session arrives later via
+      // onAuthStateChange and the router moves on.
+      if (!mounted) return;
+      setState(() {
+        _loading = null;
+        _showError = true;
+      });
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _loading = null);
   }
 
   Future<void> _onPickAnonymous() async {
@@ -46,6 +80,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l10n = AppLocalizations.of(context);
+    final offline = !ref.watch(connectivityServiceProvider).isOnline;
 
     return Scaffold(
       backgroundColor: tokens.bg,
@@ -67,15 +102,22 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         tagline: l10n.authSigninTagline,
                       ),
                       const Spacer(),
-                      if (_offline) ...[
+                      if (offline) ...[
                         _OfflineBanner(message: l10n.authSigninOffline),
+                        const SizedBox(height: KubbTokens.space3),
+                      ],
+                      if (_showError) ...[
+                        _ErrorBanner(
+                          key: const ValueKey('signInOauthError'),
+                          message: l10n.authSigninOauthError,
+                        ),
                         const SizedBox(height: KubbTokens.space3),
                       ],
                       OAuthProviderButton(
                         provider: AuthProvider.google,
                         label: l10n.authSigninGoogle,
                         loading: _loading == _SignInLoading.google,
-                        onPressed: _onPickGoogle,
+                        onPressed: offline ? null : _onPickGoogle,
                       ),
                       const SizedBox(height: KubbTokens.space3),
                       if (_showApple) ...[
@@ -83,17 +125,15 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           provider: AuthProvider.apple,
                           label: l10n.authSigninApple,
                           loading: _loading == _SignInLoading.apple,
-                          onPressed: _onPickApple,
+                          onPressed: offline ? null : _onPickApple,
                         ),
                         const SizedBox(height: KubbTokens.space3),
                       ],
                       _OrDivider(label: l10n.authSigninOr),
                       const SizedBox(height: KubbTokens.space3),
                       _AnonymousButton(
-                        label: _loading == _SignInLoading.anonymous
-                            ? l10n.authSigninAnonymousLoading
-                            : l10n.authSigninAnonymous,
-                        loading: _loading == _SignInLoading.anonymous,
+                        label: l10n.authSigninAnonymous,
+                        loading: false,
                         onPressed: _onPickAnonymous,
                       ),
                       const SizedBox(height: KubbTokens.space3),
@@ -117,7 +157,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   }
 }
 
-enum _SignInLoading { google, apple, anonymous }
+enum _SignInLoading { google, apple }
 
 class _BrandBlock extends StatelessWidget {
   const _BrandBlock({required this.appName, required this.tagline});
@@ -256,6 +296,37 @@ class _OfflineBanner extends StatelessWidget {
             child: Text(
               message,
               style: TextStyle(fontSize: 13, color: tokens.fg),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorBanner extends StatelessWidget {
+  const _ErrorBanner({required this.message, super.key});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(KubbTokens.space3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFBE4E0),
+        border: Border.all(color: KubbTokens.miss, width: 1.5),
+        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.error_outline, size: 18, color: KubbTokens.miss),
+          const SizedBox(width: KubbTokens.space2),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(fontSize: 13, color: KubbTokens.miss),
             ),
           ),
         ],

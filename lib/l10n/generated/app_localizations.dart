@@ -1678,6 +1678,12 @@ abstract class AppLocalizations {
   /// **'oder'**
   String get authSigninOr;
 
+  /// Stable error banner shown when the OAuth flow fails on SignInScreen
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldung fehlgeschlagen. Versuch es nochmals.'**
+  String get authSigninOauthError;
+
   /// App brand name on SignInScreen
   ///
   /// In de, this message translates to:

@@ -1224,6 +1224,10 @@
   "@authSigninOr": {
     "description": "Divider between OAuth and anonymous CTAs"
   },
+  "authSigninOauthError": "Anmeldung fehlgeschlagen. Versuch es nochmals.",
+  "@authSigninOauthError": {
+    "description": "Stable error banner shown when the OAuth flow fails on SignInScreen"
+  },
   "authAppName": "Brosi's Kubb",
   "@authAppName": {
     "description": "App brand name on SignInScreen"

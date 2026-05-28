@@ -870,6 +870,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get authSigninOr => 'oder';
 
   @override
+  String get authSigninOauthError =>
+      'Anmeldung fehlgeschlagen. Versuch es nochmals.';
+
+  @override
   String get authAppName => 'Brosi\'s Kubb';
 
   @override
