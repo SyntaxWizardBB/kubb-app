@@ -133,10 +133,14 @@ class _TournamentMatchDetailScreenState
         return;
       }
       if (next.status == TournamentMatchStatus.disputed) {
+        // R10-F-13 / MUSS-Fix #2: route the user to the conflict
+        // screen instead of bouncing back to the match list. The
+        // SnackBar stays as a secondary cue.
         messenger.showSnackBar(SnackBar(
             content: Text(l.tournamentMatchDisputedToast),
             backgroundColor: KubbTokens.miss));
-        context.go(TournamentRoutes.matchesFor(widget.tournamentId));
+        context.go(TournamentRoutes.conflict(
+            widget.tournamentId, match.matchId.value));
         return;
       }
       if (next.consensusRound > prevConsensus) {
@@ -184,6 +188,31 @@ class _TournamentMatchDetailScreenState
     if (fallbackActive) {
       ref.watch(tournamentMatchPollingProvider(id));
     }
+    // R10-F-13 / MUSS-Fix #2: when the match flips to `disputed`
+    // (e.g. via the realtime stream while the user is still on this
+    // screen), actively push the conflict screen. The submit-path
+    // routes explicitly above; this listener covers externally-driven
+    // status changes that arrive after submit completed or for the
+    // other team's device.
+    ref.listen<AsyncValue<TournamentMatchRef?>>(
+      tournamentMatchDetailProvider(id),
+      (prev, next) {
+        final prevStatus = prev?.maybeWhen<TournamentMatchStatus?>(
+          data: (m) => m?.status,
+          orElse: () => null,
+        );
+        final nextStatus = next.maybeWhen<TournamentMatchStatus?>(
+          data: (m) => m?.status,
+          orElse: () => null,
+        );
+        if (prevStatus != null &&
+            prevStatus != TournamentMatchStatus.disputed &&
+            nextStatus == TournamentMatchStatus.disputed) {
+          context.go(TournamentRoutes.conflict(
+              widget.tournamentId, widget.matchId));
+        }
+      },
+    );
     final detailAsync = ref.watch(tournamentMatchDetailProvider(id));
 
     return Scaffold(

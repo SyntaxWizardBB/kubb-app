@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,12 +12,23 @@ import 'package:kubb_domain/kubb_domain.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class _FakeRemote implements TournamentRemote {
-  _FakeRemote(this._detail, {TournamentMatchRef? afterPropose})
-      : _afterPropose = afterPropose;
+  _FakeRemote(
+    this._detail, {
+    TournamentMatchRef? afterPropose,
+    Stream<TournamentMatchRef>? matchStream,
+  })  : _afterPropose = afterPropose,
+        _matchStream = matchStream;
 
   TournamentMatchRef _detail;
   final TournamentMatchRef? _afterPropose;
+  final Stream<TournamentMatchRef>? _matchStream;
   ({TournamentMatchId matchId, int round, List<SetScore> scores})? lastCall;
+
+  // Allow the test to mutate the snapshot that the next `getMatch`
+  // call resolves to — used by the realtime-listen test where the
+  // detail-provider gets invalidated by the stream event and re-reads.
+  // ignore: use_setters_to_change_properties
+  void setDetail(TournamentMatchRef next) => _detail = next;
 
   @override
   Future<TournamentMatchRef?> getMatch(TournamentMatchId id) async => _detail;
@@ -32,7 +45,7 @@ class _FakeRemote implements TournamentRemote {
 
   @override
   Stream<TournamentMatchRef> watchMatch(TournamentMatchId id) =>
-      const Stream<TournamentMatchRef>.empty();
+      _matchStream ?? const Stream<TournamentMatchRef>.empty();
 
   // Unused for these tests.
   @override
@@ -59,6 +72,7 @@ Future<_FakeRemote> _pump(
   WidgetTester tester, {
   required TournamentMatchRef match,
   TournamentMatchRef? afterPropose,
+  Stream<TournamentMatchRef>? matchStream,
 }) async {
   // Tall viewport so the bottom of the match-detail ListView (with
   // the submit button) is built without scrolling.
@@ -66,7 +80,11 @@ Future<_FakeRemote> _pump(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  final fake = _FakeRemote(match, afterPropose: afterPropose);
+  final fake = _FakeRemote(
+    match,
+    afterPropose: afterPropose,
+    matchStream: matchStream,
+  );
   final router = GoRouter(
     initialLocation: '/tournament/t-1/match/m-1',
     routes: [
@@ -168,6 +186,36 @@ void main() {
     await tester.tap(find.text('Einreichen'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('conflict-screen'), findsOneWidget);
+  });
+
+  testWidgets(
+      'routes to the conflict screen when realtime flips status to disputed',
+      (tester) async {
+    // R10-F-13 / MUSS-Fix #2: a realtime event flipping the match to
+    // `disputed` while the detail screen is mounted must actively
+    // navigate to the conflict screen instead of leaving the user on
+    // the (now stale) score-entry view.
+    final controller = StreamController<TournamentMatchRef>.broadcast();
+    addTearDown(controller.close);
+    final disputed =
+        _match(status: TournamentMatchStatus.disputed, consensusRound: 2);
+    final fake = await _pump(
+      tester,
+      match: _match(),
+      matchStream: controller.stream,
+    );
+    // Sanity: we start on the detail screen, not the conflict one.
+    expect(find.text('conflict-screen'), findsNothing);
+    expect(find.text('Einreichen'), findsOneWidget);
+    // Flip the snapshot the detail-provider will see on its re-read,
+    // then emit a realtime event so the realtime provider invalidates
+    // the detail provider.
+    fake.setDetail(disputed);
+    controller.add(disputed);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 16));
     expect(find.text('conflict-screen'), findsOneWidget);
   });
 
