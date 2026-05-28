@@ -3,6 +3,7 @@
 - **Status**: Accepted
 - **Date**: 2026-05-27
 - **Depends on**: ADR-0001 (Tech-Stack — Supabase Realtime ist im SDK), ADR-0002 (Bounded Contexts — Realtime ist Cross-Cut, kein neuer Kontext), ADR-0004 (Scaling-Strategie — Tier-Limits 200 / 500 concurrent), ADR-0014 (Tournament-Match-Coexistence), ADR-0015 (Cross-Platform-Sequencing)
+- **Followups**: ADR-0026 (Anon-Spectator-Revision) — Realtime fuer den anon-Pfad ist explizit out-of-scope dieses ADR; siehe `docs/plans/sprint-a-bug-fix/anon-rls-plan.md` §"Followup-Tracking (T6)".
 - **Bezug**: `docs/plans/m4-realtime-dashboard-offline/architecture.md` §3.1, `open-decisions.md` OD-M4-01, OD-M4-02, OD-M4-07
 
 ## Kontext

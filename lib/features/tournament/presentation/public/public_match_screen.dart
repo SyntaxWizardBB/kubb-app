@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
-import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
-import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
-import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
+import 'package:kubb_app/features/tournament/application/public_tournament_providers.dart';
+import 'package:kubb_app/features/tournament/data/public_tournament_models.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
-/// Read-only spectator view of one tournament match (M4.2-T9).
-/// Renders team labels, set tally and a status pill — no inputs, no
-/// action menus. The realtime stream and detail provider drive the
-/// snapshot; polling kicks in automatically when realtime is down.
+/// Read-only spectator view of one tournament match nach ADR-0026
+/// Strategie A.
+///
+/// Liest ueber `publicMatchDetailProvider` (RPC
+/// `public_tournament_match_get`) und loest Teilnehmernamen ueber das
+/// Roster des Eltern-Turniers (RPC `public_tournament_get`) auf —
+/// keine authentifizierten Tournament-RPCs mehr. Liefert eine der RPCs
+/// `null` (Match nicht public, Turnier draft/aborted), zeigt der
+/// Screen einen neutralen Platzhalter.
 class PublicMatchScreen extends ConsumerWidget {
   const PublicMatchScreen({required this.matchId, super.key});
 
@@ -21,8 +25,7 @@ class PublicMatchScreen extends ConsumerWidget {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final id = TournamentMatchId(matchId);
-    ref.watch(tournamentMatchDetailRealtimeProvider(id));
-    final detailAsync = ref.watch(tournamentMatchDetailProvider(id));
+    final detailAsync = ref.watch(publicMatchDetailProvider(id));
 
     return Scaffold(
       backgroundColor: tokens.bg,
@@ -41,26 +44,48 @@ class PublicMatchScreen extends ConsumerWidget {
                 style: const TextStyle(color: KubbTokens.miss)),
           ),
         ),
-        data: (match) => match == null
-            ? const Center(child: CircularProgressIndicator())
-            : _renderMatch(context, ref, match, tokens, l),
+        data: (match) {
+          if (match == null) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(KubbTokens.space5),
+                child: Text(l.tournamentMatchLoadError,
+                    style: TextStyle(color: tokens.fgMuted)),
+              ),
+            );
+          }
+          return _Body(match: match);
+        },
       ),
     );
   }
+}
 
-  Widget _renderMatch(BuildContext context, WidgetRef ref,
-      TournamentMatchRef match, KubbTokens tokens, AppLocalizations l) {
-    final participants = ref
-        .watch(tournamentDetailProvider(match.tournamentId))
-        .asData
-        ?.value
-        ?.participants ??
-        const <TournamentParticipant>[];
-    final nameById = <String, String>{
-      for (final p in participants) p.participantId: p.displayLabel,
-    };
-    String label(TournamentParticipantId? id) =>
-        id == null ? '?' : (nameById[id.value] ?? '?');
+class _Body extends ConsumerWidget {
+  const _Body({required this.match});
+
+  final PublicMatchDetail match;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    // Roster-Lookup ueber den Public-Tournament-Provider — die RPC
+    // liefert nur display_name (kein user_id / nickname-Profil-Leak).
+    final tournamentAsync =
+        ref.watch(publicTournamentDetailProvider(match.tournamentId));
+    final detail = tournamentAsync.asData?.value;
+
+    String label(TournamentParticipantId? id) {
+      if (id == null) return '?';
+      final name = detail?.displayNameFor(id);
+      if (name != null) return name;
+      // Fallback fuer den Augenblick zwischen Match-Detail-Resolve und
+      // Tournament-Detail-Resolve: zeige eine gekuerzte ID.
+      final v = id.value;
+      return v.length <= 6 ? v : v.substring(0, 6);
+    }
+
     final isBye = match.participantB == null;
     final isFinal = match.status == TournamentMatchStatus.finalized ||
         match.status == TournamentMatchStatus.overridden;
@@ -77,38 +102,44 @@ class PublicMatchScreen extends ConsumerWidget {
             color: tokens.bgSunken,
             borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
           ),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(
-              l.tournamentMatchHeaderRound(
-                  match.roundNumber, match.matchNumberInRound),
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: tokens.fgMuted,
-                  letterSpacing: 0.5),
-            ),
-            const SizedBox(height: KubbTokens.space2),
-            Text(
-              isBye
-                  ? l.tournamentMatchByeHeader
-                  : l.tournamentMatchVersusHeader(
-                      label(match.participantA), label(match.participantB)),
-              style: TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.w800, color: tokens.fg),
-            ),
-            const SizedBox(height: KubbTokens.space3),
-            Row(children: [
-              Text(scoreLine,
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.tournamentMatchHeaderRound(
+                      match.roundNumber, match.matchNumberInRound),
                   style: TextStyle(
-                      fontSize: 28,
+                      fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: tokens.fg,
-                      fontFeatures: const [FontFeature.tabularFigures()])),
-              const SizedBox(width: KubbTokens.space3),
-              _StatusPill(status: match.status),
-            ]),
-          ]),
+                      color: tokens.fgMuted,
+                      letterSpacing: 0.5),
+                ),
+                const SizedBox(height: KubbTokens.space2),
+                Text(
+                  isBye
+                      ? l.tournamentMatchByeHeader
+                      : l.tournamentMatchVersusHeader(
+                          label(match.participantA),
+                          label(match.participantB)),
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: tokens.fg),
+                ),
+                const SizedBox(height: KubbTokens.space3),
+                Row(children: [
+                  Text(scoreLine,
+                      style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: tokens.fg,
+                          fontFeatures: const [
+                            FontFeature.tabularFigures(),
+                          ])),
+                  const SizedBox(width: KubbTokens.space3),
+                  _StatusPill(status: match.status),
+                ]),
+              ]),
         ),
       ],
     );

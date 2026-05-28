@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
-import 'package:kubb_app/features/tournament/application/tournament_bracket_provider.dart';
-import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
-import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
-import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
+import 'package:kubb_app/features/tournament/application/public_tournament_providers.dart';
+import 'package:kubb_app/features/tournament/data/public_tournament_models.dart';
 import 'package:kubb_app/features/tournament/presentation/bracket/bracket_canvas.dart';
-import 'package:kubb_app/features/tournament/presentation/widgets/tournament_match_card.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_status_pill.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
-/// Public, read-only tournament view for anon spectators (M4.2-T8).
+/// Public, read-only tournament view for anon spectators.
 ///
-/// Three-tab layout: Spielplan (matches grouped by round), Rangliste
-/// (standings table), Bracket (KO visualizer). When the backend marks
-/// the tournament as non-public — surfaced via `matchFormatConfig['public']
-/// == false`, since M4.2-T1 ships the column but M4.2-T8's dependency
-/// chain does not extend the dart entity — the screen collapses to a
-/// "nicht öffentlich" placeholder. Realtime streams from M4.1-T8 keep
-/// the match list and bracket fresh while the screen is mounted.
+/// Drei-Tab-Layout: Spielplan (Matches gruppiert nach Runde), Rangliste
+/// (clientseitig aus den gelieferten Matches berechnet), Bracket (KO-
+/// Visualizer aus `phase`-getaggten Matches). Liest ausschliesslich
+/// ueber `publicTournamentDetailProvider`, der die `public_tournament_get`-
+/// RPC nach ADR-0026 Strategie A aufruft — kein authentifizierter
+/// Caller, keine `signInAnonymously()`-Round-Trip. Liefert die RPC
+/// `null` (Turnier non-public / draft / aborted), zeigt der Screen den
+/// `_notPublic`-Placeholder.
+///
+/// Realtime-Streams sind in diesem Pfad bewusst NICHT mehr verdrahtet:
+/// die Authenticated-Realtime-Channels brauchen ein JWT, das der anon-
+/// Pfad nicht besitzt. Folge-Task in Wave 4 (anon-rls-plan.md T6).
 class PublicTournamentScreen extends ConsumerStatefulWidget {
   const PublicTournamentScreen({required this.tournamentId, super.key});
 
@@ -42,12 +44,8 @@ class _PublicTournamentScreenState extends ConsumerState<PublicTournamentScreen>
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    // Subscribe to realtime so list/bracket re-fetch on backend events
-    // (M4.1-T8 invalidates the polling providers automatically).
-    ref
-      ..watch(tournamentMatchListRealtimeProvider(widget.tournamentId))
-      ..watch(tournamentBracketRealtimeProvider(widget.tournamentId));
-    final detailAsync = ref.watch(tournamentDetailProvider(widget.tournamentId));
+    final detailAsync =
+        ref.watch(publicTournamentDetailProvider(widget.tournamentId));
 
     return Scaffold(
       backgroundColor: tokens.bg,
@@ -69,20 +67,18 @@ class _PublicTournamentScreenState extends ConsumerState<PublicTournamentScreen>
           ),
         ),
         data: (d) {
+          // Die RPC liefert NULL fuer non-public oder draft/aborted —
+          // der Fallback auf `matchFormatConfig['public']` aus dem
+          // Vorgaenger ist nicht mehr noetig.
           if (d == null) return _notPublic(context, tokens);
-          final isPublic = d.tournament.matchFormatConfig['public'] != false;
-          if (!isPublic) return _notPublic(context, tokens);
           return _body(context, tokens, d);
         },
       ),
     );
   }
 
-  Widget _body(BuildContext context, KubbTokens tokens, TournamentDetail d) {
-    final approved = d.participants
-        .where((p) =>
-            p.registrationStatus == TournamentParticipantStatus.approved)
-        .length;
+  Widget _body(
+      BuildContext context, KubbTokens tokens, PublicTournamentDetail d) {
     final rounds = _roundsCounter(d.matches);
     final h = d.tournament;
     return Column(
@@ -107,7 +103,8 @@ class _PublicTournamentScreenState extends ConsumerState<PublicTournamentScreen>
               ]),
               const SizedBox(height: KubbTokens.space2),
               Text(
-                'Runde ${rounds.$1} von ${rounds.$2}  ·  $approved Teilnehmer',
+                'Runde ${rounds.$1} von ${rounds.$2}  ·  '
+                '${d.participantCount} Teilnehmer',
                 style: TextStyle(fontSize: 13, color: tokens.fgMuted),
               ),
             ],
@@ -128,9 +125,9 @@ class _PublicTournamentScreenState extends ConsumerState<PublicTournamentScreen>
           child: TabBarView(
             controller: _tabs,
             children: [
-              _ScheduleTab(matches: d.matches),
-              _StandingsTab(tournamentId: widget.tournamentId),
-              _BracketTab(tournamentId: widget.tournamentId),
+              _ScheduleTab(detail: d),
+              _StandingsTab(detail: d),
+              _BracketTab(detail: d),
             ],
           ),
         ),
@@ -141,7 +138,7 @@ class _PublicTournamentScreenState extends ConsumerState<PublicTournamentScreen>
   /// Returns `(current, total)` rounds. `current` is the highest round
   /// with at least one non-`scheduled` match (i.e. play has started in
   /// that round); falls back to `1` when nothing is in flight yet.
-  (int, int) _roundsCounter(List<TournamentMatchRef> matches) {
+  (int, int) _roundsCounter(List<PublicMatchDetail> matches) {
     if (matches.isEmpty) return (1, 1);
     var total = 1;
     var current = 1;
@@ -180,13 +177,14 @@ class _PublicTournamentScreenState extends ConsumerState<PublicTournamentScreen>
 }
 
 class _ScheduleTab extends StatelessWidget {
-  const _ScheduleTab({required this.matches});
+  const _ScheduleTab({required this.detail});
 
-  final List<TournamentMatchRef> matches;
+  final PublicTournamentDetail detail;
 
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final matches = detail.matches;
     if (matches.isEmpty) {
       return Center(
         child: Padding(
@@ -196,11 +194,13 @@ class _ScheduleTab extends StatelessWidget {
         ),
       );
     }
-    final byRound = <int, List<TournamentMatchRef>>{};
+    final byRound = <int, List<PublicMatchDetail>>{};
     for (final m in matches) {
-      byRound.putIfAbsent(m.roundNumber, () => <TournamentMatchRef>[]).add(m);
+      byRound.putIfAbsent(m.roundNumber, () => <PublicMatchDetail>[]).add(m);
     }
     final ordered = byRound.keys.toList()..sort();
+    String label(TournamentParticipantId? id) =>
+        detail.displayNameFor(id) ?? (id == null ? 'BYE' : '?');
     return ListView(
       padding: const EdgeInsets.all(KubbTokens.space4),
       children: [
@@ -217,13 +217,7 @@ class _ScheduleTab extends StatelessWidget {
             ),
           ),
           for (final m in byRound[r]!) ...[
-            TournamentMatchCard(
-              match: m,
-              nameFor: (id) => id.value.length <= 6
-                  ? id.value
-                  : id.value.substring(0, 6),
-              onTap: () {},
-            ),
+            _PublicMatchTile(match: m, labelFor: label),
             const SizedBox(height: KubbTokens.space2),
           ],
         ],
@@ -232,117 +226,217 @@ class _ScheduleTab extends StatelessWidget {
   }
 }
 
-class _StandingsTab extends ConsumerWidget {
-  const _StandingsTab({required this.tournamentId});
+class _PublicMatchTile extends StatelessWidget {
+  const _PublicMatchTile({required this.match, required this.labelFor});
 
-  final TournamentId tournamentId;
+  final PublicMatchDetail match;
+  final String Function(TournamentParticipantId?) labelFor;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final async = ref.watch(tournamentStandingsProvider(tournamentId));
-    return async.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, _) => Center(
+    final isBye = match.participantB == null;
+    final isFinal = match.status == TournamentMatchStatus.finalized ||
+        match.status == TournamentMatchStatus.overridden;
+    final score =
+        isFinal && match.finalScoreA != null && match.finalScoreB != null
+            ? '${match.finalScoreA}:${match.finalScoreB}'
+            : '–:–';
+    return Container(
+      padding: const EdgeInsets.all(KubbTokens.space3),
+      decoration: BoxDecoration(
+        color: tokens.bgSunken,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+      ),
+      child: Row(children: [
+        Expanded(
+          child: Text(
+            isBye
+                ? '${labelFor(match.participantA)}  ·  BYE'
+                : '${labelFor(match.participantA)}  vs  '
+                    '${labelFor(match.participantB)}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg),
+          ),
+        ),
+        const SizedBox(width: KubbTokens.space3),
+        Text(score,
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: tokens.fg,
+                fontFeatures: const [FontFeature.tabularFigures()])),
+      ]),
+    );
+  }
+}
+
+class _StandingsTab extends StatelessWidget {
+  const _StandingsTab({required this.detail});
+
+  final PublicTournamentDetail detail;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final finished = detail.matches.where(_isStandingsCounted).toList();
+    if (finished.isEmpty) {
+      return Center(
         child: Padding(
           padding: const EdgeInsets.all(KubbTokens.space5),
           child: Text('Rangliste noch nicht verfügbar',
               style: TextStyle(color: tokens.fgMuted)),
         ),
-      ),
-      data: (rows) {
-        if (rows.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(KubbTokens.space5),
-              child: Text('Rangliste noch nicht verfügbar',
-                  style: TextStyle(color: tokens.fgMuted)),
-            ),
-          );
-        }
-        return ListView.builder(
-          itemCount: rows.length,
-          itemBuilder: (context, i) {
-            final s = rows[i];
-            final diff = s.kubbsScored - s.kubbsConceded;
-            final name = s.participantId.length <= 8
+      );
+    }
+    final participantIds = <String>{
+      for (final m in detail.matches) ...[
+        if (m.participantA != null) m.participantA!.value,
+        if (m.participantB != null) m.participantB!.value,
+      ],
+    }.toList(growable: false);
+    final results = <TournamentMatchResult>[
+      for (final m in finished) _resultFromMatch(m),
+    ];
+    final rows = computeStandings(
+      participantIds: participantIds,
+      results: results,
+      tiebreaker: const TiebreakerChain(<TiebreakerCriterion>[
+        TiebreakerCriterion.totalPoints,
+        TiebreakerCriterion.wins,
+        TiebreakerCriterion.buchholzMinusH2H,
+        TiebreakerCriterion.kubbDifference,
+      ]),
+    );
+    return ListView.builder(
+      itemCount: rows.length,
+      itemBuilder: (context, i) {
+        final s = rows[i];
+        final diff = s.kubbsScored - s.kubbsConceded;
+        final name = detail.displayNameFor(
+                TournamentParticipantId(s.participantId)) ??
+            (s.participantId.length <= 8
                 ? s.participantId
-                : s.participantId.substring(0, 8);
-            return Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: KubbTokens.space4,
-                  vertical: KubbTokens.space3),
-              decoration: BoxDecoration(
-                border: Border(
-                    bottom: BorderSide(color: tokens.line, width: 0.5)),
-              ),
-              child: Row(children: [
-                SizedBox(
-                  width: 32,
-                  child: Text('${i + 1}.',
-                      style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: tokens.fgMuted)),
-                ),
-                Expanded(
-                  child: Text(name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: tokens.fg)),
-                ),
-                Text('${s.totalPoints}  ·  ${s.wins}W  ·  $diff',
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: tokens.fg,
-                        fontFeatures: const [FontFeature.tabularFigures()])),
-              ]),
-            );
-          },
+                : s.participantId.substring(0, 8));
+        return Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: KubbTokens.space4,
+              vertical: KubbTokens.space3),
+          decoration: BoxDecoration(
+            border:
+                Border(bottom: BorderSide(color: tokens.line, width: 0.5)),
+          ),
+          child: Row(children: [
+            SizedBox(
+              width: 32,
+              child: Text('${i + 1}.',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: tokens.fgMuted)),
+            ),
+            Expanded(
+              child: Text(name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.fg)),
+            ),
+            Text('${s.totalPoints}  ·  ${s.wins}W  ·  $diff',
+                style: TextStyle(
+                    fontSize: 13,
+                    color: tokens.fg,
+                    fontFeatures: const [FontFeature.tabularFigures()])),
+          ]),
         );
       },
     );
   }
+
+  bool _isStandingsCounted(PublicMatchDetail m) {
+    return m.status == TournamentMatchStatus.finalized ||
+        m.status == TournamentMatchStatus.overridden;
+  }
+
+  TournamentMatchResult _resultFromMatch(PublicMatchDetail m) {
+    final a = m.participantA!.value;
+    final b = m.participantB?.value;
+    final sA = m.finalScoreA ?? 0;
+    final sB = m.finalScoreB ?? 0;
+    final winner = sA >= sB ? SetWinner.teamA : SetWinner.teamB;
+    return TournamentMatchResult(
+      participantA: a,
+      participantB: b,
+      score: MatchEkcScore(<SetScore>[
+        SetScore(
+          basekubbsKnockedByA: sA,
+          basekubbsKnockedByB: sB,
+          winner: winner,
+        ),
+      ]),
+    );
+  }
 }
 
-class _BracketTab extends ConsumerWidget {
-  const _BracketTab({required this.tournamentId});
+class _BracketTab extends StatelessWidget {
+  const _BracketTab({required this.detail});
 
-  final TournamentId tournamentId;
+  final PublicTournamentDetail detail;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final async = ref.watch(tournamentBracketProvider(tournamentId));
-    return async.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      // Group phase returns no KO rows — collapse error to empty state.
-      error: (_, _) => Center(
+    final koRows = <KoMatchRow>[
+      for (final m in detail.matches)
+        if (_phaseFromWire(m.phase) != null && m.bracketPosition != null)
+          (
+            roundNumber: m.roundNumber,
+            bracketPosition: m.bracketPosition!,
+            phase: _phaseFromWire(m.phase)!,
+            participantA: m.participantA?.value,
+            participantB: m.participantB?.value,
+            winnerParticipantId: m.winnerParticipant?.value,
+            isBye: m.participantA == null || m.participantB == null,
+          ),
+    ];
+    if (koRows.isEmpty) {
+      return Center(
         child: Padding(
           padding: const EdgeInsets.all(KubbTokens.space5),
           child: Text('Bracket noch nicht verfügbar',
               style: TextStyle(color: tokens.fgMuted)),
         ),
-      ),
-      data: (bracket) {
-        if (bracket is SingleEliminationBracket &&
-            (bracket.rounds.isEmpty ||
-                bracket.rounds.every((r) => r.pairings.isEmpty))) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(KubbTokens.space5),
-              child: Text('Bracket noch nicht verfügbar',
-                  style: TextStyle(color: tokens.fgMuted)),
-            ),
-          );
-        }
-        // `tournamentId: null` tells BracketCanvas to swallow taps —
-        // the public view stays purely read-only, no match-detail jumps.
-        return BracketCanvas(bracket: bracket, editable: false);
-      },
-    );
+      );
+    }
+    final bracket = bracketFromMatches(koRows);
+    if (bracket is SingleEliminationBracket &&
+        (bracket.rounds.isEmpty ||
+            bracket.rounds.every((r) => r.pairings.isEmpty))) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(KubbTokens.space5),
+          child: Text('Bracket noch nicht verfügbar',
+              style: TextStyle(color: tokens.fgMuted)),
+        ),
+      );
+    }
+    return BracketCanvas(bracket: bracket, editable: false);
+  }
+
+  BracketPhase? _phaseFromWire(String? raw) {
+    if (raw == null || raw == 'group') return null;
+    switch (raw) {
+      case 'ko':
+        return BracketPhase.winners;
+      case 'third_place':
+        return BracketPhase.thirdPlace;
+      case 'final':
+        return BracketPhase.finals;
+    }
+    return null;
   }
 }

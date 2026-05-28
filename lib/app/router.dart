@@ -61,9 +61,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: notifier,
     redirect: (context, state) {
-      // Public spectator routes (M4.2) bypass the auth gate entirely —
-      // the PublicRouterShell bootstraps an anonymous Supabase session
-      // before the child mounts.
+      // Public spectator routes (M4.2 / ADR-0026) bypass the auth gate
+      // entirely — der anon-`apikey` aus dem Standard-SupabaseClient
+      // reicht fuer die `public_*_get`-RPCs (Strategie A, kein
+      // signInAnonymously()-Round-Trip mehr).
       if (state.matchedLocation.startsWith('/public/')) {
         return null;
       }

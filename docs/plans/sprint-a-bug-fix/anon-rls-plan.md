@@ -150,6 +150,30 @@ T1 und T5 koennen parallel laufen (gleicher Worker, gleiche Migration). T3 block
 - **Bracket-Daten**: `BracketCanvas` braucht die KO-Pairings. T1 nimmt diese aus den `matches[]` im Envelope; falls die Bracket-Berechnung serverseitige Hilfsdaten braucht, ergaenzt T1 das Envelope-Feld `bracket_layout`.
 - **Test-Daten-Setup**: T5 leiht den `_pub_seed_tournament`-Helper aus `public_rls_test.sql`. Falls die beiden Test-Files in einem Run laufen, muss der Helper in einen Shared-Setup-File extrahiert werden.
 
+## Followup-Tracking (T6) — Realtime fuer den anon-Spectator
+
+Wave 3 (W3-T3) hat den Read-Pfad nach ADR-0026 Strategie A implementiert;
+Realtime-Subscriptions fuer den anon-Pfad sind bewusst nicht Teil dieser
+Wave. Bekannte Luecke:
+
+- `tournamentMatchListRealtimeProvider`, `tournamentMatchDetailRealtime-
+  Provider` und `tournamentBracketRealtimeProvider` nutzen die
+  authenticated Realtime-Channels und funktionieren fuer anon-Spectator
+  nicht (kein JWT, kein `auth.uid()`).
+- Im Code haben die Public-Screens (`PublicTournamentScreen`,
+  `PublicMatchScreen`) deshalb keinen Realtime-Watch mehr. Aktualisierung
+  passiert ueber den naechsten User-Refresh oder einen Polling-Tick
+  (TODO: dedizierter Polling-Provider fuer den Public-Pfad — heute kein
+  Polling im Public-Pfad).
+- Vorschlag fuer Wave 4 / Sprint-B: `public_tournament_channel(
+  p_tournament_id uuid)`-Funktion + Realtime-Topic mit `private: false`
+  und einer kuratierten Spalten-Whitelist; alternativ RPC-Polling alle
+  N Sekunden auf `publicTournamentDetailProvider`.
+
+Tracking: `OD-SprintA-01` ("Anon-Realtime-Pfad — Sprint-B oder Wave 4?")
+wird beim Sprint-B-Planning eroeffnet, sobald `docs/open-decisions.md`
+existiert.
+
 ## Decision-Punkt — Owner-Lesepfad
 
 Lese-Reihenfolge fuer den Owner (10-Minuten-Entscheidung A oder B):
