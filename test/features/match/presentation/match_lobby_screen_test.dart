@@ -130,8 +130,74 @@ void main() {
       // Both team panels rendered inside the inset card.
       expect(find.text('Team A'), findsOneWidget);
       expect(find.text('Team B'), findsOneWidget);
-      expect(find.text('Marc'), findsOneWidget);
-      expect(find.text('Vinz'), findsOneWidget);
+      // "Marc" / "Vinz" appear in both the new hero (team title) and
+      // the legacy Mitspieler roster — assert presence, not uniqueness.
+      expect(find.text('Marc'), findsAtLeastNWidgets(1));
+      expect(find.text('Vinz'), findsAtLeastNWidgets(1));
+    },
+  );
+
+  // -------------------------------------------------------------------
+  // Sprint B / W5.1-B (BH-C-02): smoke tests for the three new sections
+  // (`_LobbyHero`, `_H2HList`, `_MatchSetup`) from MatchScreen.jsx L48-87.
+  // -------------------------------------------------------------------
+
+  testWidgets(
+    'lobby hero renders side-vs-vs-side layout with kickoff and vs label',
+    (tester) async {
+      await _pump(tester, detail: _detail());
+
+      // Centre VS column.
+      expect(find.text('vs.'), findsOneWidget);
+
+      // Kickoff time formatted from MatchDetailHeader.startedAt.
+      // The fixture uses UTC 2026-05-24 10:00 which, depending on the
+      // host TZ, displays as a local HH:MM — just assert the format
+      // shape via a regex.
+      final clockFinder = find.byWidgetPredicate(
+        (w) => w is Text &&
+            w.data != null &&
+            RegExp(r'^\d{2}:\d{2}$').hasMatch(w.data!),
+      );
+      expect(clockFinder, findsOneWidget);
+
+      // Court fallback when settings.court is absent. The same label
+      // also appears in the Match-Setup section below, so allow more
+      // than one match.
+      expect(find.text('Court —'), findsAtLeastNWidgets(1));
+
+      // Form-row pills (4 per side × 2 sides = 8 W/L letters total).
+      // We only assert the W-pill class shows up; pill letters duplicate
+      // with the team-name strings so use a permissive finder.
+      expect(find.text('W'), findsWidgets);
+    },
+  );
+
+  testWidgets(
+    'h2h section shows empty state when no entries are available',
+    (tester) async {
+      await _pump(tester, detail: _detail());
+
+      expect(find.text('DIREKTER VERGLEICH'), findsOneWidget);
+      expect(find.text('Noch keine direkten Vergleiche'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'match-setup section lists format / heli / penalty / court rows',
+    (tester) async {
+      await _pump(tester, detail: _detail());
+
+      expect(find.text('MATCH-SETUP'), findsOneWidget);
+      expect(find.text('Format'), findsOneWidget);
+      expect(find.text('Heli-Tracking'), findsOneWidget);
+      expect(find.text('Strafkubb'), findsOneWidget);
+      expect(find.text('Court'), findsOneWidget);
+      // Default values: heli=false → 'nein', penalty defaults to
+      // 'schwedisch', format derived from BO3 fixture.
+      expect(find.text('Best of 3 · 6 Stöcke'), findsOneWidget);
+      expect(find.text('nein'), findsOneWidget);
+      expect(find.text('schwedisch'), findsOneWidget);
     },
   );
 

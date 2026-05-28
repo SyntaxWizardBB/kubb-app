@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_status_chip.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/match/application/match_providers.dart';
@@ -187,6 +188,9 @@ class _LobbyBody extends StatelessWidget {
     final teamA = detail.participants.where((p) => p.teamId == 'A').toList();
     final teamB = detail.participants.where((p) => p.teamId == 'B').toList();
 
+    final teamADisplay = _teamDisplayName(detail, 'A', teamA);
+    final teamBDisplay = _teamDisplayName(detail, 'B', teamB);
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         KubbTokens.space4,
@@ -205,6 +209,32 @@ class _LobbyBody extends StatelessWidget {
             KubbStatusChip.match(status: detail.match.status, l: l),
           ],
         ),
+        const SizedBox(height: KubbTokens.space4),
+        // Sprint B / W5.1-B (BH-C-02): three new sections from the mobile
+        // kit Lobby tab (`MatchScreen.jsx` L48-87): Hero with side-vs-side
+        // panels, H2H history, match setup summary. The existing
+        // "Mitspieler" roster stays underneath as it is the canonical
+        // invitation-status view.
+        _LobbyHero(
+          detail: detail,
+          teamAName: teamADisplay,
+          teamBName: teamBDisplay,
+          myUserId: myUserId,
+        ),
+        const SizedBox(height: KubbTokens.space5),
+        const _SectionHeader(text: 'Direkter Vergleich'),
+        const SizedBox(height: KubbTokens.space2),
+        _H2HList(
+          teamAName: teamADisplay,
+          teamBName: teamBDisplay,
+          // Backend H2H aggregate isn't wired yet — render the empty
+          // state per task spec (W5-T1 match-live-screen-spec.md L192).
+          entries: const <_H2HEntry>[],
+        ),
+        const SizedBox(height: KubbTokens.space5),
+        const _SectionHeader(text: 'Match-Setup'),
+        const SizedBox(height: KubbTokens.space2),
+        _MatchSetup(detail: detail),
         const SizedBox(height: KubbTokens.space5),
         // Section header in the eyebrow style (`docs/design/quality-gates/
         // mobile-kit-overview.md` §Section-Header). Matches the section
@@ -287,6 +317,28 @@ class _LobbyBody extends StatelessWidget {
   }
 
   String _formatLabel(MatchFormat f) => 'BO${f.n}';
+
+  /// Resolve a display name for a team: prefer the team row's
+  /// `displayName`, otherwise concatenate the participants' nicknames,
+  /// otherwise fall back to `Team A` / `Team B`.
+  String _teamDisplayName(
+    MatchDetail detail,
+    String teamId,
+    List<MatchParticipant> roster,
+  ) {
+    for (final t in detail.teams) {
+      if (t.teamId == teamId && t.displayName != null &&
+          t.displayName!.isNotEmpty) {
+        return t.displayName!;
+      }
+    }
+    final names = <String>[
+      for (final p in roster)
+        if (p.nickname != null && p.nickname!.isNotEmpty) p.nickname!,
+    ];
+    if (names.isEmpty) return 'Team $teamId';
+    return names.join(' & ');
+  }
 }
 
 /// Inset card surface (`bgRaised` + hairline border, 14dp radius) —
@@ -455,5 +507,453 @@ class _ParticipantRow extends StatelessWidget {
       case MatchInvitationStatus.left:
         return (LucideIcons.userMinus, KubbTokens.miss);
     }
+  }
+}
+
+// =====================================================================
+// Sprint B / W5.1-B (BH-C-02): three Lobby sections from `MatchScreen.jsx`
+// L48-87. Hero (side-vs-VS-vs-side) → H2H history → match setup summary.
+// All values are mockup-friendly placeholders until the corresponding
+// backend fields (ELO, recent-form, H2H aggregate, court name) land.
+// =====================================================================
+
+/// Side-vs-VS-Col-vs-Side hero block. Mirrors `m.lobbyHero` in the kit:
+/// two `Side`-panels (avatar 48dp + name + ELO + 4-pill W/L form-row)
+/// flanking a center column with a "vs." display, kickoff time and
+/// court meta-line.
+class _LobbyHero extends StatelessWidget {
+  const _LobbyHero({
+    required this.detail,
+    required this.teamAName,
+    required this.teamBName,
+    required this.myUserId,
+  });
+
+  final MatchDetail detail;
+  final String teamAName;
+  final String teamBName;
+  final String? myUserId;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final teamA = detail.participants.where((p) => p.teamId == 'A').toList();
+    final teamB = detail.participants.where((p) => p.teamId == 'B').toList();
+    final iAmInA = myUserId != null &&
+        teamA.any((p) => p.userId == myUserId);
+    final kickoff = _formatTime(detail.match.startedAt);
+
+    return _InsetCard(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: _HeroSide(
+              initials: _initials(teamAName),
+              name: teamAName,
+              elo: _eloFor(teamA),
+              form: const <String>['W', 'W', 'L', 'W'],
+              isMe: iAmInA,
+            ),
+          ),
+          SizedBox(
+            width: 88,
+            child: Column(
+              children: [
+                Text(
+                  'vs.',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: tokens.fg,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  kickoff,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.fgMuted,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _courtLabel(detail),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: tokens.fgSubtle,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _HeroSide(
+              initials: _initials(teamBName),
+              name: teamBName,
+              elo: _eloFor(teamB),
+              form: const <String>['W', 'L', 'W', 'W'],
+              isMe: !iAmInA && myUserId != null &&
+                  teamB.any((p) => p.userId == myUserId),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _initials(String name) {
+    if (name.isEmpty) return '?';
+    final parts = name
+        .split(RegExp(r'[\s&]+'))
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return name.substring(0, 1).toUpperCase();
+    if (parts.length == 1) {
+      return parts.first.substring(0, 1).toUpperCase();
+    }
+    return (parts[0].substring(0, 1) + parts[1].substring(0, 1))
+        .toUpperCase();
+  }
+
+  String _formatTime(DateTime t) {
+    final h = t.hour.toString().padLeft(2, '0');
+    final m = t.minute.toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+
+  String _courtLabel(MatchDetail detail) {
+    final raw = detail.match.settings['court'];
+    if (raw is String && raw.isNotEmpty) return raw;
+    // Mock placeholder per spec L191 (data "—" until match-domain
+    // exposes the field).
+    return 'Court —';
+  }
+
+  /// ELO is not yet on `MatchParticipant`; return a mock for now so the
+  /// design stays truthful instead of showing 0. Spec L191 explicitly
+  /// allows mockup data here.
+  int? _eloFor(List<MatchParticipant> roster) => roster.isEmpty ? null : 1200;
+}
+
+class _HeroSide extends StatelessWidget {
+  const _HeroSide({
+    required this.initials,
+    required this.name,
+    required this.elo,
+    required this.form,
+    required this.isMe,
+  });
+
+  final String initials;
+  final String name;
+  final int? elo;
+  final List<String> form;
+  final bool isMe;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final accent = isMe ? KubbTokens.meadow600 : KubbTokens.stone900;
+    return Column(
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: accent,
+            borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            initials,
+            style: const TextStyle(
+              color: KubbTokens.chalk0,
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+            ),
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        Text(
+          name,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: tokens.fg,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          elo == null ? '— ELO' : '$elo ELO',
+          style: TextStyle(
+            fontSize: 11,
+            color: tokens.fgMuted,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final f in form) ...[
+              _FormPill(label: f),
+              const SizedBox(width: 4),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _FormPill extends StatelessWidget {
+  const _FormPill({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final isWin = label == 'W';
+    final bg = isWin ? KubbTokens.meadow500 : KubbTokens.stone200;
+    final fg = isWin ? KubbTokens.chalk0 : KubbTokens.stone500;
+    return Container(
+      width: 18,
+      height: 18,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: fg,
+        ),
+      ),
+    );
+  }
+}
+
+/// Head-to-head history list. When [entries] is empty, the section
+/// renders a compact empty state (no vignette) per spec L192.
+class _H2HList extends StatelessWidget {
+  const _H2HList({
+    required this.teamAName,
+    required this.teamBName,
+    required this.entries,
+  });
+
+  final String teamAName;
+  final String teamBName;
+  final List<_H2HEntry> entries;
+
+  @override
+  Widget build(BuildContext context) {
+    if (entries.isEmpty) {
+      return const _InsetCard(
+        child: KubbEmptyState(
+          vignette: SizedBox.shrink(),
+          title: 'Noch keine direkten Vergleiche',
+          body: 'Sobald ihr ein Match gespielt habt, erscheint hier '
+              'die Bilanz.',
+        ),
+      );
+    }
+    return _InsetCard(
+      child: Column(
+        children: [
+          for (var i = 0; i < entries.length && i < 3; i++)
+            _H2HRow(
+              entry: entries[i],
+              teamAName: teamAName,
+              teamBName: teamBName,
+              showDivider: i < entries.length - 1 && i < 2,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _H2HEntry {
+  const _H2HEntry({
+    required this.date,
+    required this.score,
+    required this.won,
+  });
+  final String date;
+  final String score;
+  final bool won;
+}
+
+class _H2HRow extends StatelessWidget {
+  const _H2HRow({
+    required this.entry,
+    required this.teamAName,
+    required this.teamBName,
+    required this.showDivider,
+  });
+
+  final _H2HEntry entry;
+  final String teamAName;
+  final String teamBName;
+  final bool showDivider;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final tagBg = entry.won ? KubbTokens.meadow100 : KubbTokens.stone100;
+    final tagFg = entry.won ? KubbTokens.meadow700 : tokens.fgMuted;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: KubbTokens.space2),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 56,
+                child: Text(
+                  entry.date,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.fgMuted,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  '$teamAName vs. $teamBName',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: tokens.fg,
+                  ),
+                ),
+              ),
+              const SizedBox(width: KubbTokens.space2),
+              Text(
+                entry.score,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: tokens.fg,
+                ),
+              ),
+              const SizedBox(width: KubbTokens.space2),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: KubbTokens.space2,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: tagBg,
+                  borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
+                ),
+                child: Text(
+                  entry.won ? 'Sieg' : 'N',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: tagFg,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (showDivider)
+            Padding(
+              padding: const EdgeInsets.only(top: KubbTokens.space2),
+              child: Divider(height: 1, color: tokens.line),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Match-Setup summary card. Each row is `label` (muted, left) → `value`
+/// (fg, right). The `tone="ok"` row uses meadow-700 to mirror the kit.
+class _MatchSetup extends StatelessWidget {
+  const _MatchSetup({required this.detail});
+  final MatchDetail detail;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = detail.match.settings;
+    final heli = s['heli_tracking'] == true || s['heli'] == true;
+    final penalty = s['penalty_variant'] as String? ?? 'schwedisch';
+    final court = s['court'] as String? ?? 'Court —';
+    final format = 'Best of ${detail.match.format.n} · 6 Stöcke';
+    return _InsetCard(
+      child: Column(
+        children: [
+          _SetupRow(label: 'Format', value: format),
+          _SetupRow(
+            label: 'Heli-Tracking',
+            value: heli ? 'ja' : 'nein',
+            okTone: heli,
+          ),
+          _SetupRow(label: 'Strafkubb', value: penalty),
+          _SetupRow(label: 'Court', value: court, isLast: true),
+        ],
+      ),
+    );
+  }
+}
+
+class _SetupRow extends StatelessWidget {
+  const _SetupRow({
+    required this.label,
+    required this.value,
+    this.okTone = false,
+    this.isLast = false,
+  });
+
+  final String label;
+  final String value;
+  final bool okTone;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: KubbTokens.space2),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: tokens.fgMuted,
+                  ),
+                ),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: okTone ? KubbTokens.meadow700 : tokens.fg,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (!isLast) Divider(height: 1, color: tokens.line),
+      ],
+    );
   }
 }
