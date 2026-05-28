@@ -74,10 +74,31 @@ void main() {
     // Verdict is rendered as an uppercased eyebrow inside the meadow
     // hero card — see _ScoreHeroCard in match_finished_screen.dart.
     expect(find.text('SIEGER: TEAM A'), findsOneWidget);
-    expect(find.text('6'), findsOneWidget);
-    expect(find.text('3'), findsOneWidget);
-    expect(find.text('Neues Match'), findsOneWidget);
-    expect(find.text('Zurück zur Übersicht'), findsOneWidget);
+    // Score "6" / "3" also appears inside the half-set mock cards once
+    // W5.1-C added the Halbsatz-Verlauf — match the 80px big-number text
+    // by walking the rich-text size to keep the assertion hero-specific.
+    final bigText = find.byWidgetPredicate(
+      (w) => w is Text && w.style?.fontSize == 80 && w.data == '6',
+    );
+    expect(bigText, findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is Text && w.style?.fontSize == 80 && w.data == '3',
+      ),
+      findsOneWidget,
+    );
+    // ListView lazily builds offstage rows once W5.1-C added stats/sections
+    // — `skipOffstage: false` keeps the secondary Action-Row asserted.
+    expect(find.text('Neues Match', skipOffstage: false), findsOneWidget);
+    expect(find.text('Zurück zur Übersicht', skipOffstage: false), findsOneWidget);
+    // Hero meta line — mock figures for now until backend exposes the
+    // duration / throw count / ELO delta (BH-C-03 follow-up).
+    expect(find.text('9:42 min · 28 Würfe · ELO +18'), findsOneWidget);
+    // W5.1-C sections present (skipOffstage: false for items below fold).
+    expect(find.text('Halbsatz-Verlauf', skipOffstage: false), findsOneWidget);
+    expect(find.text('Statistik · du vs. Gegner', skipOffstage: false), findsOneWidget);
+    expect(find.text('Revanche', skipOffstage: false), findsOneWidget);
+    expect(find.text('Match teilen', skipOffstage: false), findsOneWidget);
   });
 
   testWidgets('voided match shows the abort headline and no winner',
