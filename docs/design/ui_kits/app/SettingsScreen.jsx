@@ -32,7 +32,7 @@ function SettingsScreen({ onBack, onOpen }) {
       </div>
 
       <div style={se.footer}>
-        <div style={se.footerLine}>Brosi's Kubb · v0.1.0</div>
+        <div style={se.footerLine}>Kubb Club · v0.1.0</div>
         <div style={se.footerLine}>Für die Wiese gebaut.</div>
       </div>
     </div>

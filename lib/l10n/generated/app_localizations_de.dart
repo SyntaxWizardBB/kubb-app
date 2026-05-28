@@ -380,10 +380,10 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get homeAppTitle => 'Brosi\'s Kubb';
+  String get homeAppTitle => 'Kubb Club';
 
   @override
-  String get homeEyebrow => 'Brosi\'s Kubb';
+  String get homeEyebrow => 'Kubb Club';
 
   @override
   String homeGreeting(String name) {
@@ -874,7 +874,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Anmeldung fehlgeschlagen. Versuch es nochmals.';
 
   @override
-  String get authAppName => 'Brosi\'s Kubb';
+  String get authAppName => 'Kubb Club';
 
   @override
   String get authCommonContinue => 'Weiter';
@@ -1168,7 +1168,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get authOnboardingWelcomeBody =>
-      'Brosi\'s Kubb hilft dir, deine Würfe systematisch zu verbessern — Sniper, Finisseur, und bald mehr.';
+      'Kubb Club hilft dir, deine Würfe systematisch zu verbessern — Sniper, Finisseur, und bald mehr.';
 
   @override
   String get authOnboardingBadgeAnon => 'Anonymes Konto';

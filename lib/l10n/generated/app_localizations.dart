@@ -769,13 +769,13 @@ abstract class AppLocalizations {
   /// Home screen app bar title
   ///
   /// In de, this message translates to:
-  /// **'Brosi\'s Kubb'**
+  /// **'Kubb Club'**
   String get homeAppTitle;
 
   /// Eyebrow above greeting on home
   ///
   /// In de, this message translates to:
-  /// **'Brosi\'s Kubb'**
+  /// **'Kubb Club'**
   String get homeEyebrow;
 
   /// Greeting on home screen
@@ -1687,7 +1687,7 @@ abstract class AppLocalizations {
   /// App brand name on SignInScreen
   ///
   /// In de, this message translates to:
-  /// **'Brosi\'s Kubb'**
+  /// **'Kubb Club'**
   String get authAppName;
 
   /// Generic Continue button
@@ -2221,7 +2221,7 @@ abstract class AppLocalizations {
   /// Slide 1 body text
   ///
   /// In de, this message translates to:
-  /// **'Brosi\'s Kubb hilft dir, deine Würfe systematisch zu verbessern — Sniper, Finisseur, und bald mehr.'**
+  /// **'Kubb Club hilft dir, deine Würfe systematisch zu verbessern — Sniper, Finisseur, und bald mehr.'**
   String get authOnboardingWelcomeBody;
 
   /// Status badge for anonymous keypair sessions

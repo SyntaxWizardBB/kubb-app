@@ -1,5 +1,5 @@
 /* global React */
-// Shared bits for the Brosi's Kubb mobile UI kit.
+// Shared bits for the Kubb Club mobile UI kit.
 
 const { useState, useEffect, useRef, useCallback } = React;
 

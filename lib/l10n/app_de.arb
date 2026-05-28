@@ -547,11 +547,11 @@
       }
     }
   },
-  "homeAppTitle": "Brosi's Kubb",
+  "homeAppTitle": "Kubb Club",
   "@homeAppTitle": {
     "description": "Home screen app bar title"
   },
-  "homeEyebrow": "Brosi's Kubb",
+  "homeEyebrow": "Kubb Club",
   "@homeEyebrow": {
     "description": "Eyebrow above greeting on home"
   },
@@ -1228,7 +1228,7 @@
   "@authSigninOauthError": {
     "description": "Stable error banner shown when the OAuth flow fails on SignInScreen"
   },
-  "authAppName": "Brosi's Kubb",
+  "authAppName": "Kubb Club",
   "@authAppName": {
     "description": "App brand name on SignInScreen"
   },
@@ -1597,7 +1597,7 @@
   "@authOnboardingWelcomeTitle": {
     "description": "Slide 1 title"
   },
-  "authOnboardingWelcomeBody": "Brosi's Kubb hilft dir, deine Würfe systematisch zu verbessern — Sniper, Finisseur, und bald mehr.",
+  "authOnboardingWelcomeBody": "Kubb Club hilft dir, deine Würfe systematisch zu verbessern — Sniper, Finisseur, und bald mehr.",
   "@authOnboardingWelcomeBody": {
     "description": "Slide 1 body text"
   },

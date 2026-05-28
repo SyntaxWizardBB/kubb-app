@@ -50,7 +50,7 @@ function AppSettingsModal({ onClose, onOpenStats, onOpenAchievements, onOpenExpo
         </div>
 
         <div style={a.footer}>
-          <span>Brosi's Kubb · v0.1.0</span>
+          <span>Kubb Club · v0.1.0</span>
           <span>Für die Wiese gebaut.</span>
         </div>
       </div>
