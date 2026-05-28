@@ -3321,6 +3321,23 @@
   "@realtimeStatusPolling": {
     "description": "Banner shown when the realtime channel has flipped to the polling fallback"
   },
+  "offlineBannerOffline": "Offline",
+  "@offlineBannerOffline": {
+    "description": "AUDIT §4.4 — App-shell pill label shown when the device has no connectivity and no last-sync timestamp is known yet"
+  },
+  "offlineBannerSyncing": "Sync läuft …",
+  "@offlineBannerSyncing": {
+    "description": "AUDIT §4.4 — App-shell pill label shown while the outbox flusher is actively draining queued submissions"
+  },
+  "offlineBannerSyncedAgo": "{minutes, plural, =0{Offline · gerade synchronisiert} one{Offline · letzte Sync vor 1 min} other{Offline · letzte Sync vor {minutes} min}}",
+  "@offlineBannerSyncedAgo": {
+    "description": "AUDIT §4.4 — App-shell pill label shown when offline, with the elapsed minutes since the last successful sync",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "onboardingSlide1Title": "Sniper-Training",
   "@onboardingSlide1Title": {
     "description": "AUDIT §2.4 slide 1 title — 8m distance training"

@@ -4552,6 +4552,24 @@ abstract class AppLocalizations {
   /// **'Live-Updates pausiert, lade automatisch nach.'**
   String get realtimeStatusPolling;
 
+  /// AUDIT §4.4 — App-shell pill label shown when the device has no connectivity and no last-sync timestamp is known yet
+  ///
+  /// In de, this message translates to:
+  /// **'Offline'**
+  String get offlineBannerOffline;
+
+  /// AUDIT §4.4 — App-shell pill label shown while the outbox flusher is actively draining queued submissions
+  ///
+  /// In de, this message translates to:
+  /// **'Sync läuft …'**
+  String get offlineBannerSyncing;
+
+  /// AUDIT §4.4 — App-shell pill label shown when offline, with the elapsed minutes since the last successful sync
+  ///
+  /// In de, this message translates to:
+  /// **'{minutes, plural, =0{Offline · gerade synchronisiert} one{Offline · letzte Sync vor 1 min} other{Offline · letzte Sync vor {minutes} min}}'**
+  String offlineBannerSyncedAgo(int minutes);
+
   /// AUDIT §2.4 slide 1 title — 8m distance training
   ///
   /// In de, this message translates to:

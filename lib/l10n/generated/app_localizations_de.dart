@@ -2465,6 +2465,24 @@ class AppLocalizationsDe extends AppLocalizations {
       'Live-Updates pausiert, lade automatisch nach.';
 
   @override
+  String get offlineBannerOffline => 'Offline';
+
+  @override
+  String get offlineBannerSyncing => 'Sync läuft …';
+
+  @override
+  String offlineBannerSyncedAgo(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'Offline · letzte Sync vor $minutes min',
+      one: 'Offline · letzte Sync vor 1 min',
+      zero: 'Offline · gerade synchronisiert',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get onboardingSlide1Title => 'Sniper-Training';
 
   @override
