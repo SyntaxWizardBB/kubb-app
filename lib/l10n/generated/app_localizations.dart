@@ -4491,6 +4491,24 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Muss vom Plattform-Admin freigegeben werden'**
   String get tournamentPointsCustomHint;
+
+  /// Tri-toggle option in the set-card: king fell, scored by Team A. Sprint A W3-T2 / R11-F-01.
+  ///
+  /// In de, this message translates to:
+  /// **'Team A'**
+  String get setKingOutcomeTeamA;
+
+  /// Tri-toggle option in the set-card: king fell, scored by Team B. Sprint A W3-T2 / R11-F-01.
+  ///
+  /// In de, this message translates to:
+  /// **'Team B'**
+  String get setKingOutcomeTeamB;
+
+  /// Tri-toggle option in the set-card: king was not hit, set timed out, contributes 0:0 to the EKC tally. Sprint A W3-T2 / R11-F-01.
+  ///
+  /// In de, this message translates to:
+  /// **'Keiner'**
+  String get setKingOutcomeNone;
 }
 
 class _AppLocalizationsDelegate

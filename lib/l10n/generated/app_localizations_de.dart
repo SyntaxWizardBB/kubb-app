@@ -2430,4 +2430,13 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get tournamentPointsCustomHint =>
       'Muss vom Plattform-Admin freigegeben werden';
+
+  @override
+  String get setKingOutcomeTeamA => 'Team A';
+
+  @override
+  String get setKingOutcomeTeamB => 'Team B';
+
+  @override
+  String get setKingOutcomeNone => 'Keiner';
 }

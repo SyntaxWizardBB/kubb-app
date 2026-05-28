@@ -91,4 +91,61 @@ void main() {
     expect(captured, isNotNull);
     expect(captured!.king, SetWinner.teamA);
   });
+
+  // Sprint A W3-T2 / R11-F-01: the per-set king-outcome is exposed as a
+  // tri-toggle. The three branches below exercise each position so the
+  // mapping from button label to the emitted [SetWinner?] value stays
+  // pinned. The "Keiner" branch is the new path that lets the parent
+  // screen lift the choice into a [KingTimedOut] outcome and route it
+  // through the EKC pipeline as a 0:0-contribution set.
+  testWidgets('tri-toggle: tapping Team A emits SetWinner.teamA',
+      (tester) async {
+    TournamentSetInputValue? captured;
+    await _pump(
+      tester,
+      basekubbsA: 5,
+      basekubbsB: 3,
+      king: null,
+      onChanged: (v) => captured = v,
+    );
+    await tester.tap(find.text('Team A'));
+    await tester.pumpAndSettle();
+    expect(captured?.king, SetWinner.teamA);
+  });
+
+  testWidgets('tri-toggle: tapping Team B emits SetWinner.teamB',
+      (tester) async {
+    TournamentSetInputValue? captured;
+    await _pump(
+      tester,
+      basekubbsA: 3,
+      basekubbsB: 5,
+      king: SetWinner.teamA,
+      onChanged: (v) => captured = v,
+    );
+    await tester.tap(find.text('Team B'));
+    await tester.pumpAndSettle();
+    expect(captured?.king, SetWinner.teamB);
+  });
+
+  testWidgets('tri-toggle: tapping Keiner emits null (timed-out path)',
+      (tester) async {
+    TournamentSetInputValue? captured;
+    await _pump(
+      tester,
+      basekubbsA: 5,
+      basekubbsB: 0,
+      king: SetWinner.teamA,
+      onChanged: (v) => captured = v,
+    );
+    await tester.tap(find.text('Keiner'));
+    await tester.pumpAndSettle();
+    expect(captured, isNotNull,
+        reason: 'tapping the third toggle position must emit a value');
+    expect(captured!.king, isNull,
+        reason: 'the "Keiner" option encodes a timed-out set '
+            '(parent screen maps null to KingTimedOut)');
+    expect(captured!.basekubbsA, 5);
+    expect(captured!.basekubbsB, 0);
+  });
 }

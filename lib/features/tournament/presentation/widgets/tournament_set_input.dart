@@ -85,10 +85,15 @@ class TournamentSetInput extends StatelessWidget {
               fontSize: 12, fontWeight: FontWeight.w700, color: tokens.fgMuted),
         ),
         const SizedBox(height: KubbTokens.space2),
+        // Sprint A W3-T2: tri-toggle for the per-set king-outcome
+        // (Team A / Team B / Keiner). The "Keiner" option encodes a
+        // `KingTimedOut` set per R11-F-01 and lands on the wire as
+        // `set_king_outcome = 'timed_out'`; the parent screen maps it
+        // into the [KingOutcome] sealed class before submitting.
         Row(children: [
           Expanded(
             child: _ToggleBtn(
-              label: l.tournamentMatchKingByA,
+              label: l.setKingOutcomeTeamA,
               selected: king == SetWinner.teamA,
               accent: KubbTokens.meadow600,
               onPressed: enabled ? () => _emit(k: SetWinner.teamA, setKing: true) : null,
@@ -97,7 +102,7 @@ class TournamentSetInput extends StatelessWidget {
           const SizedBox(width: KubbTokens.space2),
           Expanded(
             child: _ToggleBtn(
-              label: l.tournamentMatchKingByB,
+              label: l.setKingOutcomeTeamB,
               selected: king == SetWinner.teamB,
               accent: KubbTokens.wood400,
               onPressed: enabled ? () => _emit(k: SetWinner.teamB, setKing: true) : null,
@@ -106,7 +111,7 @@ class TournamentSetInput extends StatelessWidget {
           const SizedBox(width: KubbTokens.space2),
           Expanded(
             child: _ToggleBtn(
-              label: l.tournamentMatchKingByNone,
+              label: l.setKingOutcomeNone,
               selected: king == null,
               accent: tokens.fgMuted,
               onPressed: enabled ? () => _emit(setKing: true) : null,

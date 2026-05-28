@@ -70,11 +70,33 @@ class _TournamentMatchDetailScreenState
     unawaited(_draftController.init(m.consensusRound));
   }
 
-  void _update(int i, int consensusRound, TournamentSetInputValue v) {
+  void _update(int i, int consensusRound, TournamentSetInputValue v,
+      TournamentMatchRef match) {
     final next = List<ScoreDraftSet>.of(_drafts);
     next[i] = ScoreDraftSet(
-        basekubbsA: v.basekubbsA, basekubbsB: v.basekubbsB, king: v.king);
+      basekubbsA: v.basekubbsA,
+      basekubbsB: v.basekubbsB,
+      king: v.king,
+      kingOutcome: _kingOutcomeFor(v.king, match),
+    );
     unawaited(_draftController.setSets(consensusRound, next));
+  }
+
+  /// Maps the tri-toggle's [SetWinner?] selection into the domain
+  /// [KingOutcome]. Sprint A W3-T2 / R11-F-01:
+  ///   * Team A / Team B → [KingHitBy] with the matching participant id
+  ///     (the toggle implies the king fell and was scored by that side).
+  ///   * `null` (the "Keiner" option) → [KingTimedOut]; the EKC pipeline
+  ///     then short-circuits the set to a 0:0 contribution.
+  KingOutcome _kingOutcomeFor(SetWinner? king, TournamentMatchRef match) {
+    return switch (king) {
+      SetWinner.teamA when match.participantA != null =>
+        KingHitBy(match.participantA!),
+      SetWinner.teamB when match.participantB != null =>
+        KingHitBy(match.participantB!),
+      null => const KingTimedOut(),
+      _ => const KingMissed(),
+    };
   }
 
   void _addSet(int consensusRound) {
@@ -114,6 +136,11 @@ class _TournamentMatchDetailScreenState
                 (d.basekubbsA >= d.basekubbsB
                     ? SetWinner.teamA
                     : SetWinner.teamB),
+            // R11-F-01: forward the tri-toggle's outcome into the score
+            // payload so the EKC tally and the wire RPC see the
+            // explicit `KingTimedOut` path instead of relying on the
+            // legacy `winner`-only shape.
+            kingOutcome: d.kingOutcome,
           ),
       ];
 
@@ -323,7 +350,7 @@ class _TournamentMatchDetailScreenState
             king: drafts[i].king,
             maxBasekubbs: _maxBasekubbs,
             enabled: !readOnly,
-            onChanged: (v) => _update(i, match.consensusRound, v),
+            onChanged: (v) => _update(i, match.consensusRound, v, match),
           ),
           const SizedBox(height: KubbTokens.space3),
         ],

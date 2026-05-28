@@ -3280,5 +3280,17 @@
   "tournamentPointsCustomHint": "Muss vom Plattform-Admin freigegeben werden",
   "@tournamentPointsCustomHint": {
     "description": "Helper text under the custom-points option explaining that platform-admin approval is required"
+  },
+  "setKingOutcomeTeamA": "Team A",
+  "@setKingOutcomeTeamA": {
+    "description": "Tri-toggle option in the set-card: king fell, scored by Team A. Sprint A W3-T2 / R11-F-01."
+  },
+  "setKingOutcomeTeamB": "Team B",
+  "@setKingOutcomeTeamB": {
+    "description": "Tri-toggle option in the set-card: king fell, scored by Team B. Sprint A W3-T2 / R11-F-01."
+  },
+  "setKingOutcomeNone": "Keiner",
+  "@setKingOutcomeNone": {
+    "description": "Tri-toggle option in the set-card: king was not hit, set timed out, contributes 0:0 to the EKC tally. Sprint A W3-T2 / R11-F-01."
   }
 }

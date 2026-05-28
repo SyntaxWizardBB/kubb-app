@@ -9,13 +9,31 @@ import 'package:kubb_domain/kubb_domain.dart';
 /// team plus the explicit king toggle). Persisted via [SetScore] in the
 /// drift DAO; on rehydration [king] is restored from the resolved
 /// winner because the DAO schema does not encode "no king yet".
+///
+/// Sprint A W3-T2 extends the in-memory draft with an explicit
+/// [kingOutcome] so the submit-pipeline can wire the new tri-state
+/// (Team A / Team B / None) to the server. The legacy [king] field is
+/// kept for the existing rehydration path and basekubb-fallback logic
+/// — the controller derives [kingOutcome] from [king] when the caller
+/// does not pass one explicitly.
 @immutable
 class ScoreDraftSet {
-  const ScoreDraftSet({this.basekubbsA = 0, this.basekubbsB = 0, this.king});
+  const ScoreDraftSet({
+    this.basekubbsA = 0,
+    this.basekubbsB = 0,
+    this.king,
+    this.kingOutcome = const KingMissed(),
+  });
 
   final int basekubbsA;
   final int basekubbsB;
   final SetWinner? king;
+
+  /// R11-F-01: explicit king-outcome for this set. Defaults to
+  /// [KingMissed] so existing callers that only set [king] keep the
+  /// historical implicit behaviour; the match-detail screen upgrades
+  /// this to [KingHitBy] / [KingTimedOut] based on the tri-toggle.
+  final KingOutcome kingOutcome;
 }
 
 /// State of the per-match draft controller. [hydratedForRound] tracks

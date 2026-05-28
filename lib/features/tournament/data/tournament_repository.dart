@@ -949,6 +949,18 @@ class TournamentRepository implements TournamentRemote {
       'basekubbs_a': s.basekubbsKnockedByA,
       'basekubbs_b': s.basekubbsKnockedByB,
       'winner': s.winner == SetWinner.teamA ? 'A' : 'B',
+      // Sprint A W3-T2 / R11-F-01: wire the per-set king-outcome alongside
+      // the legacy fields. Server migration 20260601000002 adds the
+      // matching column; older servers ignore the unknown key. The
+      // `king_hit_by` projection from W2 stays for backward compat with
+      // RPC overloads that have not yet picked up the new token.
+      'king_outcome': switch (s.kingOutcome) {
+        KingHitBy() => 'hit_by',
+        KingMissed() => 'missed',
+        KingTimedOut() => 'timed_out',
+      },
+      if (s.kingOutcome case KingHitBy(:final participantId))
+        'king_hit_by': participantId.value,
     };
   }
 }

@@ -196,9 +196,11 @@ class TournamentSetScoreProposal {
   final KingOutcome kingOutcome;
 
   /// Backward-compat projection of [kingOutcome] into the legacy nullable
-  /// participant shape. UI call sites that have not yet migrated to the
-  /// tri-toggle read this getter; Wave 3 removes it. TODO(W3): migrate
-  /// readers to the [KingOutcome] sealed class and drop this getter.
+  /// participant shape. Sprint A W3-T2 migrated the match-detail UI to
+  /// the [KingOutcome] tri-toggle and the wire payload to the new
+  /// `set_king_outcome` column (migration 20260601000002); this getter
+  /// is kept for downstream call sites — notably the conflict-screen
+  /// summary — that still render the legacy `kingHitBy?` shape.
   TournamentParticipantId? get kingHitBy => kingOutcome.legacyKingHitBy;
 
   @override
