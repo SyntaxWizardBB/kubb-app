@@ -13,6 +13,8 @@ import 'package:kubb_app/core/data/tables/score_submission_outbox.dart';
 import 'package:kubb_app/core/data/tables/session_events.dart';
 import 'package:kubb_app/core/data/tables/sessions.dart';
 import 'package:kubb_app/core/data/tables/tournament_score_drafts.dart';
+import 'package:kubb_app/features/achievements/data/dao/badge_unlocks_dao.dart';
+import 'package:kubb_app/features/achievements/data/tables/badge_unlocks_table.dart';
 import 'package:kubb_app/features/auth/data/dao/cached_auth_session_dao.dart';
 import 'package:kubb_app/features/auth/data/tables/cached_auth_session_table.dart';
 import 'package:kubb_app/features/inbox/data/dao/inbox_messages_dao.dart';
@@ -31,6 +33,7 @@ part 'app_database.g.dart';
     TournamentScoreDrafts,
     ScoreSubmissionOutbox,
     InboxMessages,
+    BadgeUnlocks,
   ],
   daos: [
     PlayerDao,
@@ -42,13 +45,14 @@ part 'app_database.g.dart';
     TournamentScoreDraftDao,
     ScoreSubmissionOutboxDao,
     InboxMessagesDao,
+    BadgeUnlocksDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -92,6 +96,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 7) {
             await m.createTable(inboxMessages);
+          }
+          if (from < 8) {
+            await m.createTable(badgeUnlocks);
           }
         },
       );

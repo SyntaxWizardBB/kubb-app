@@ -1,29 +1,20 @@
 import 'dart:async';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/core/data/app_database.dart';
+import 'package:kubb_app/core/data/app_database_provider.dart';
+import 'package:kubb_app/features/achievements/data/dao/badge_unlocks_dao.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
 /// Read/write surface for badge unlocks.
 ///
-/// The Sprint B Wave 6 foundation ships an in-memory implementation
-/// so the providers and UI can be wired and tested without persistence.
-/// The Drift-backed implementation lands in Sprint C once the designer
-/// has shipped the badge glyphs and the inventory screen is ready.
-///
-// TODO(sprint-c): replace the in-memory stub with a Drift-backed
-// implementation. Suggested schema (matches the [BadgeUnlock] value):
-//
-//   class BadgeUnlocks extends Table {
-//     TextColumn  get userId          => text()();
-//     TextColumn  get badgeId         => text()();
-//     DateTimeColumn get unlockedAt   => dateTime()();
-//     TextColumn  get sourceSessionId => text().nullable()();
-//     @override
-//     Set<Column> get primaryKey      => {userId, badgeId};
-//   }
-//
-// The repository will then expose a `watchUnlocksFor` stream backed by
-// the DAO's `watchAll` query instead of the local broadcast controller.
+/// Sprint B Wave 6 shipped an in-memory implementation so the providers
+/// and UI could be wired and tested without persistence. Sprint C W4-T1
+/// promotes the store to Drift (schema v8) via
+/// [DriftAchievementsRepository]; the [InMemoryAchievementsRepository]
+/// stays around as the test double for callers that do not want to spin
+/// up a real database.
 abstract class AchievementsRepository {
   /// One-shot read of all badges the given user has unlocked.
   Future<List<BadgeUnlock>> listUnlocksFor(UserId user);
@@ -37,8 +28,8 @@ abstract class AchievementsRepository {
   Future<void> recordUnlock(BadgeUnlock unlock);
 }
 
-/// In-memory implementation used until the Drift table lands. Safe to
-/// instantiate in tests and as a placeholder dependency in providers.
+/// In-memory implementation. Used by tests that don't want to stand up a
+/// real database and as a fallback for ephemeral / preview contexts.
 class InMemoryAchievementsRepository implements AchievementsRepository {
   InMemoryAchievementsRepository();
 
@@ -89,10 +80,62 @@ class InMemoryAchievementsRepository implements AchievementsRepository {
   }
 }
 
-/// DI handle. Defaults to the in-memory stub; Sprint C will swap in
-/// the Drift-backed implementation via an override in `app.dart`.
+/// Drift-backed implementation (schema v8 `badge_unlocks` table).
+///
+/// Idempotency is delegated to the DAO's `INSERT OR IGNORE`, which makes
+/// re-recording an existing `(userId, badgeId)` pair a no-op at the
+/// SQLite level — the original `unlockedAt` is preserved without a
+/// read-modify-write round-trip from application code.
+class DriftAchievementsRepository implements AchievementsRepository {
+  DriftAchievementsRepository(this._dao);
+
+  final BadgeUnlocksDao _dao;
+
+  @override
+  Future<List<BadgeUnlock>> listUnlocksFor(UserId user) async {
+    final rows = await _dao.listFor(user.value);
+    return List<BadgeUnlock>.unmodifiable(rows.map(_toDomain));
+  }
+
+  @override
+  Stream<List<BadgeUnlock>> watchUnlocksFor(UserId user) {
+    return _dao.watchFor(user.value).map(
+          (rows) => List<BadgeUnlock>.unmodifiable(rows.map(_toDomain)),
+        );
+  }
+
+  @override
+  Future<void> recordUnlock(BadgeUnlock unlock) {
+    return _dao.recordUnlock(
+      BadgeUnlocksCompanion(
+        userId: Value(unlock.userId),
+        badgeId: Value(unlock.badgeId),
+        unlockedAt: Value(unlock.unlockedAt.toUtc().millisecondsSinceEpoch),
+        sourceSessionId: unlock.sourceSessionId == null
+            ? const Value<String?>.absent()
+            : Value<String?>(unlock.sourceSessionId),
+      ),
+    );
+  }
+
+  static BadgeUnlock _toDomain(CachedBadgeUnlock row) {
+    return BadgeUnlock(
+      userId: row.userId,
+      badgeId: row.badgeId,
+      unlockedAt: DateTime.fromMillisecondsSinceEpoch(
+        row.unlockedAt,
+        isUtc: true,
+      ),
+      sourceSessionId: row.sourceSessionId,
+    );
+  }
+}
+
+/// DI handle. Defaults to the Drift-backed implementation that reads /
+/// writes through the shared [AppDatabase]. Tests that need a pure
+/// in-process repo can override this provider with an
+/// [InMemoryAchievementsRepository] instance.
 final achievementsRepositoryProvider = Provider<AchievementsRepository>((ref) {
-  final repo = InMemoryAchievementsRepository();
-  ref.onDispose(repo.dispose);
-  return repo;
+  final dao = ref.watch(appDatabaseProvider).badgeUnlocksDao;
+  return DriftAchievementsRepository(dao);
 });
