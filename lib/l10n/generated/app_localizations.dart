@@ -1546,13 +1546,13 @@ abstract class AppLocalizations {
   /// **'Sessions als .csv-Datei'**
   String get settingsRowExportSub;
 
-  /// Reset sessions row label
+  /// Reset sessions row label. Scope: deletes Sniper and Finisseur training sessions stored locally. Does NOT touch match drafts or the inbox cache.
   ///
   /// In de, this message translates to:
-  /// **'Sessions zurücksetzen'**
+  /// **'Lokale Trainings-Sessions zurücksetzen'**
   String get settingsRowResetSessions;
 
-  /// Reset sessions row subtitle
+  /// Reset sessions row subtitle. Mirrors the label scope: Sniper + Finisseur sessions only, no match drafts, no inbox cache.
   ///
   /// In de, this message translates to:
   /// **'alle Trainings-Sessions löschen'**

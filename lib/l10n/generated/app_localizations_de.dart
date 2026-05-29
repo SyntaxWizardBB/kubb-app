@@ -799,7 +799,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsRowExportSub => 'Sessions als .csv-Datei';
 
   @override
-  String get settingsRowResetSessions => 'Sessions zurücksetzen';
+  String get settingsRowResetSessions =>
+      'Lokale Trainings-Sessions zurücksetzen';
 
   @override
   String get settingsRowResetSessionsSub => 'alle Trainings-Sessions löschen';

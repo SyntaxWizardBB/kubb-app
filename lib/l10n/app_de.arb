@@ -1139,13 +1139,13 @@
   "@settingsRowExportSub": {
     "description": "Export row subtitle"
   },
-  "settingsRowResetSessions": "Sessions zurücksetzen",
+  "settingsRowResetSessions": "Lokale Trainings-Sessions zurücksetzen",
   "@settingsRowResetSessions": {
-    "description": "Reset sessions row label"
+    "description": "Reset sessions row label. Scope: deletes Sniper and Finisseur training sessions stored locally. Does NOT touch match drafts or the inbox cache."
   },
   "settingsRowResetSessionsSub": "alle Trainings-Sessions löschen",
   "@settingsRowResetSessionsSub": {
-    "description": "Reset sessions row subtitle"
+    "description": "Reset sessions row subtitle. Mirrors the label scope: Sniper + Finisseur sessions only, no match drafts, no inbox cache."
   },
   "settingsRowDeleteProfile": "Profil löschen",
   "@settingsRowDeleteProfile": {

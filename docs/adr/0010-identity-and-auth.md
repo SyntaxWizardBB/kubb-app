@@ -55,6 +55,16 @@ Anonymous users can upgrade to OAuth at any time:
 - Server keeps the same internal user ID; OAuth provider becomes an additional credential, the keypair stays valid as a fallback.
 - This is the preferred path for users who started anonymous and now want a tournament-organizer role.
 
+### Multi-credential users
+
+A user is not limited to one credential. The same `auth.users.id` may have any combination of `oauth_google`, `oauth_apple`, and `keypair` rows in `user_credentials` (the table already encodes multi-row-per-user — see *Data model deltas*).
+
+- **Both Google and Apple linked**: both OAuth identities point to the same internal `user_id`. Either provider can sign the user in; the resulting session is indistinguishable. Stats, tournaments, friends, and roles are the same record regardless of which credential was used at sign-in.
+- **Keypair plus OAuth**: same shape — keypair stays valid as a fallback after an upgrade, and additional OAuth providers can be linked on top.
+- **Account-link screen**: lists every linked credential for the current user, grouped by kind (Google, Apple, keypair). Each row shows the provider, the linked-at timestamp, and the credential's account hint (e.g. masked email for OAuth, nickname for keypair). "Link Google" / "Link Apple" actions are visible whenever the corresponding `user_credentials` row is missing for the active user; this replaces the earlier "only on anonymous accounts" gating.
+- **Sign-in collision rule**: if a user signs in via an OAuth provider whose `oauth_subject` is not yet linked to any internal user, Supabase Auth creates a new `auth.users` row as usual. We do **not** auto-merge by email — merging existing accounts is a destructive operation and must be an explicit, authenticated action.
+- **Detach path (backlog)**: removing a linked credential ("Unlink Google") is intentionally **out of scope for this revision**. It needs a guard rail (don't strand the user without any credential), an audit entry, and a confirmation flow. Tracked as backlog under R18-F-24 follow-ups; until shipped, the account-link screen only adds credentials, it does not remove them.
+
 ### Removed from ADR-0003
 
 - Email magic-link authentication.
