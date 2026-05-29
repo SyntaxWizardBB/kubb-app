@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/tournament/application/public_tournament_providers.dart';
 import 'package:kubb_app/features/tournament/data/public_tournament_models.dart';
+import 'package:kubb_app/features/tournament/data/public_tournament_realtime.dart';
 import 'package:kubb_app/features/tournament/presentation/bracket/bracket_canvas.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_status_pill.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -19,9 +20,15 @@ import 'package:kubb_domain/kubb_domain.dart';
 /// `null` (Turnier non-public / draft / aborted), zeigt der Screen den
 /// `_notPublic`-Placeholder.
 ///
-/// Realtime-Streams sind in diesem Pfad bewusst NICHT mehr verdrahtet:
-/// die Authenticated-Realtime-Channels brauchen ein JWT, das der anon-
-/// Pfad nicht besitzt. Folge-Task in Wave 4 (anon-rls-plan.md T6).
+/// Realtime: seit W3-T5 (Sprint-C, schliesst den Sprint-A T6-Followup)
+/// abonniert der Screen `publicTournamentEventsProvider` und
+/// invalidiert beim Eintreffen eines `match_status`- oder
+/// `proposal_created`-Events den `publicTournamentDetailProvider` —
+/// damit aktualisiert sich die Sicht ohne manuellen Refresh. Der
+/// Adapter nutzt einen non-private Realtime-Topic
+/// (`public_tournament_events:<id>`), kein JWT noetig. Server-Trigger
+/// (Migration 20260601000031) garantieren die Payload-Whitelist —
+/// kein `user_id`, kein `submitter_user_id`, kein `created_by`.
 class PublicTournamentScreen extends ConsumerStatefulWidget {
   const PublicTournamentScreen({required this.tournamentId, super.key});
 
@@ -45,6 +52,20 @@ class _PublicTournamentScreenState extends ConsumerState<PublicTournamentScreen>
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
+    // W3-T5: Realtime-Wire. Jedes Trigger-Event invalidiert den
+    // Detail-Provider, der dann den naechsten RPC-Snapshot zieht —
+    // damit ist der Pull-only-Pfad live. Wir konsumieren das Event-
+    // Objekt nicht direkt; der RPC ist die einzige Quelle der
+    // Wahrheit fuer den projektierten Envelope (insbes. Standings,
+    // Roster, Bracket).
+    ref.listen<AsyncValue<PublicTournamentEvent>>(
+      publicTournamentEventsProvider(widget.tournamentId),
+      (previous, next) {
+        if (next.hasValue) {
+          ref.invalidate(publicTournamentDetailProvider(widget.tournamentId));
+        }
+      },
+    );
     final detailAsync =
         ref.watch(publicTournamentDetailProvider(widget.tournamentId));
 
