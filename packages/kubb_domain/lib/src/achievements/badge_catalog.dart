@@ -129,6 +129,31 @@ class BadgeCatalog {
     return null;
   }
 
+  /// Runs every catalog trigger against [context] and returns the ids
+  /// of badges that should now be unlocked but are not yet present in
+  /// [alreadyUnlocked].
+  ///
+  /// Pure, side-effect-free, and order-stable: the result follows the
+  /// order of [BadgeCatalog.all]. Callers (e.g. the application-layer
+  /// badge listener) persist the returned ids via the achievements
+  /// repository — the engine itself does no I/O.
+  static List<String> evaluate(
+    BadgeTriggerContext context, {
+    required Iterable<String> alreadyUnlocked,
+  }) {
+    final already = alreadyUnlocked.toSet();
+    final out = <String>[];
+    for (final badge in all) {
+      if (already.contains(badge.id)) continue;
+      final trigger = triggerFor(badge.id);
+      if (trigger == null) continue;
+      if (trigger.evaluate(context)) {
+        out.add(badge.id);
+      }
+    }
+    return out;
+  }
+
   /// Returns the trigger predicate paired with the catalog entry.
   /// Returns `null` for unknown ids so callers can defensively skip.
   static BadgeTrigger? triggerFor(String badgeId) {

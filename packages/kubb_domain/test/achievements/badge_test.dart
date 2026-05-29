@@ -43,6 +43,31 @@ void main() {
     test('byId returns null for unknown ids', () {
       expect(BadgeCatalog.byId('does_not_exist'), isNull);
     });
+
+    test('evaluate returns the ids that match the context', () {
+      final ids = BadgeCatalog.evaluate(
+        const BadgeTriggerContext(sniperHits: 1000),
+        alreadyUnlocked: const <String>{},
+      );
+      expect(ids, containsAll(<String>['hits_100', 'hits_1000']));
+    });
+
+    test('evaluate skips ids already in alreadyUnlocked', () {
+      final ids = BadgeCatalog.evaluate(
+        const BadgeTriggerContext(sniperHits: 1000),
+        alreadyUnlocked: const <String>{'hits_100'},
+      );
+      expect(ids, isNot(contains('hits_100')));
+      expect(ids, contains('hits_1000'));
+    });
+
+    test('evaluate returns empty list when no trigger matches', () {
+      final ids = BadgeCatalog.evaluate(
+        const BadgeTriggerContext(),
+        alreadyUnlocked: const <String>{},
+      );
+      expect(ids, isEmpty);
+    });
   });
 
   group('Hits100Trigger', () {

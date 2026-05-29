@@ -7,6 +7,8 @@ library;
 
 export 'src/achievements/badge.dart';
 export 'src/achievements/badge_catalog.dart';
+export 'src/achievements/badge_match_summary.dart';
+export 'src/achievements/badge_session_summary.dart';
 export 'src/achievements/badge_trigger.dart';
 export 'src/match/match_event.dart';
 export 'src/match/match_state.dart';

@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
+import 'package:kubb_app/features/achievements/application/badge_unlock_listener.dart';
 import 'package:kubb_app/features/training/application/active_session_state.dart';
 import 'package:kubb_app/features/training/data/training_repository.dart';
+import 'package:kubb_domain/kubb_domain.dart';
+import 'package:logging/logging.dart';
 
 const _hit = 'hit';
 const _miss = 'miss';
@@ -67,8 +70,50 @@ class ActiveSessionNotifier extends AsyncNotifier<ActiveSessionState?> {
 
   Future<void> complete() => _serialize(() => _withActive((s) async {
         await _repo.markCompleted(sessionId: s.sessionId);
+        await _fireBadgeEvaluation(s);
         state = const AsyncData(null);
       }));
+
+  /// Best-effort post-complete hook: builds the cumulative
+  /// [BadgeSessionSummary] from the persisted store and hands it to
+  /// the badge listener. Failures are logged only — badge persistence
+  /// must never block a successful `markCompleted`.
+  Future<void> _fireBadgeEvaluation(ActiveSessionState s) async {
+    try {
+      final db = ref.read(appDatabaseProvider);
+      // Resolve the owning player via the row we just completed; the
+      // `allCompletedForUser` query keys off `playerId`, not session id.
+      final justCompleted = await db.sessionDao.getById(s.sessionId);
+      if (justCompleted == null) return;
+      final all =
+          await db.sessionDao.allCompletedForUser(justCompleted.playerId);
+      final eventDao = db.sessionEventDao;
+      var totalHits = 0;
+      var totalHelis = 0;
+      final distances = <double>{};
+      for (final session in all) {
+        totalHits += await eventDao.countByKind(session.id, _hit);
+        totalHelis += await eventDao.countByKind(session.id, _heli);
+        distances.add(session.distanceMeters);
+      }
+      final context = BadgeTriggerContext(
+        sniperHits: totalHits,
+        sniperMaxStreak: s.hits,
+        heliHits: totalHelis,
+        distinctDistances: distances.length,
+      );
+      await ref.read(badgeUnlockListenerProvider).evaluateAfterSession(
+            BadgeSessionSummary(
+              sourceSessionId: s.sessionId,
+              context: context,
+            ),
+          );
+    } on Object catch (e, st) {
+      _log.warning('badge evaluation failed after session complete', e, st);
+    }
+  }
+
+  static final Logger _log = Logger('ActiveSessionNotifier');
 
   Future<void> abortAndDelete() => _serialize(() => _withActive((s) async {
         await _repo.discard(sessionId: s.sessionId);

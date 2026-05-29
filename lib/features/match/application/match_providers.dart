@@ -1,10 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/features/achievements/application/badge_unlock_listener.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/match/data/match_config_draft.dart';
 import 'package:kubb_app/features/match/data/match_models.dart';
 import 'package:kubb_app/features/match/data/match_repository.dart';
+import 'package:kubb_domain/kubb_domain.dart';
+import 'package:logging/logging.dart';
 
 /// Caller's match list (any status). Returns empty when the session is
 /// signed out so the UI never blocks on the RPC for that case.
@@ -118,8 +121,47 @@ class MatchActions {
     _ref
       ..invalidate(matchDetailProvider(matchId))
       ..invalidate(activeMatchesProvider);
+    if (response.status == MatchStatus.finalized) {
+      await _fireBadgeEvaluation(matchId);
+    }
     return response;
   }
+
+  /// Best-effort match-finalize hook. The caller's lifetime match
+  /// aggregates are derived from the list-for-caller view that the
+  /// matches screen already keeps fresh; failures are logged only so
+  /// the propose-result RPC never blocks on the badge pipeline.
+  Future<void> _fireBadgeEvaluation(String matchId) async {
+    try {
+      final summaries =
+          await _ref.read(matchRepositoryProvider).listForCaller();
+      final myUserId = _ref.read(currentUserIdProvider);
+      var matchesPlayed = 0;
+      var matchesWon = 0;
+      for (final m in summaries) {
+        if (m.status != MatchStatus.finalized) continue;
+        matchesPlayed++;
+        if (m.callerOutcome == 'won') matchesWon++;
+      }
+      final context = BadgeTriggerContext(
+        matchesPlayed: matchesPlayed,
+        matchesWon: matchesWon,
+      );
+      // No-op when signed out — the listener guards against it too, but
+      // skipping here saves the repository round-trip.
+      if (myUserId == null) return;
+      await _ref.read(badgeUnlockListenerProvider).evaluateAfterMatch(
+            BadgeMatchSummary(
+              sourceMatchId: matchId,
+              context: context,
+            ),
+          );
+    } on Object catch (e, st) {
+      _log.warning('badge evaluation failed after match finalize', e, st);
+    }
+  }
+
+  static final Logger _log = Logger('MatchActions');
 
   Future<void> cancelMatch(String matchId) async {
     await _ref.read(matchRepositoryProvider).cancel(matchId);
