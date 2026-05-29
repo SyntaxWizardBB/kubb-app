@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
@@ -33,7 +32,6 @@ void main() {
 
   setUpAll(() {
     registerLinuxSqliteOverride();
-    GoogleFonts.config.allowRuntimeFetching = false;
     TestWidgetsFlutterBinding.ensureInitialized();
     PackageInfo.setMockInitialValues(
       appName: 'kubb_app',

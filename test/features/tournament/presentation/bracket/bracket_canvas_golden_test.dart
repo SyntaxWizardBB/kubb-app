@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/tournament/presentation/bracket/bracket_canvas.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -15,7 +14,6 @@ import 'package:kubb_domain/kubb_domain.dart';
 /// merged into this branch — see briefing for the expected constructor).
 void main() {
   setUpAll(() async {
-    GoogleFonts.config.allowRuntimeFetching = false;
     await loadAppFonts();
   });
 
