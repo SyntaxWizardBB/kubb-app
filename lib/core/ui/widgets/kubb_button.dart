@@ -114,8 +114,14 @@ class KubbButton extends StatelessWidget {
             constraints: BoxConstraints(minHeight: metrics.minHeight),
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: metrics.horizontalPadding),
+              // Both factors pinned so the button shrink-wraps its content in
+              // either axis. Without heightFactor an Align expands to the
+              // incoming maxHeight whenever it is bounded-but-loose — which is
+              // exactly the Scaffold FAB slot, where the button would otherwise
+              // stretch to fill the whole screen height.
               child: Center(
                 widthFactor: 1,
+                heightFactor: 1,
                 child: content,
               ),
             ),

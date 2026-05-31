@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -143,7 +145,7 @@ class _InvitationCard extends ConsumerWidget {
       );
       if (!context.mounted) return;
       if (accept) {
-        context.go('/teams/${item.team.id}');
+        unawaited(context.push('/teams/${item.team.id}'));
       }
     } on Object catch (e) {
       if (!context.mounted) return;

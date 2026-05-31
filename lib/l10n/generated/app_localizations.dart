@@ -352,6 +352,24 @@ abstract class AppLocalizations {
   /// **'Mehrere Teams · Tabelle'**
   String get homeModeTournamentSubtitle;
 
+  /// Match mode title on the training hub tab
+  ///
+  /// In de, this message translates to:
+  /// **'Match'**
+  String get trainingHubMatchTitle;
+
+  /// Match mode subtitle on the training hub tab
+  ///
+  /// In de, this message translates to:
+  /// **'Mehrspieler · Bo1/3/5'**
+  String get trainingHubMatchSubtitle;
+
+  /// Stats tile subtitle on the training hub tab
+  ///
+  /// In de, this message translates to:
+  /// **'Verlauf & Bestwerte'**
+  String get trainingHubStatsSubtitle;
+
   /// Eyebrow on the finisseur config screen
   ///
   /// In de, this message translates to:
@@ -1504,6 +1522,12 @@ abstract class AppLocalizations {
   /// **'App'**
   String get settingsAppSection;
 
+  /// Legal section header (privacy + imprint)
+  ///
+  /// In de, this message translates to:
+  /// **'Rechtliches'**
+  String get settingsLegalSection;
+
   /// Profile row label
   ///
   /// In de, this message translates to:
@@ -1546,16 +1570,16 @@ abstract class AppLocalizations {
   /// **'Sessions als .csv-Datei'**
   String get settingsRowExportSub;
 
-  /// Reset sessions row label. Scope: deletes Sniper and Finisseur training sessions stored locally. Does NOT touch match drafts or the inbox cache.
+  /// Reset sessions row label. Deletes Sniper and Finisseur training sessions both locally and on the server.
   ///
   /// In de, this message translates to:
-  /// **'Lokale Trainings-Sessions zurücksetzen'**
+  /// **'Trainings-Sessions zurücksetzen'**
   String get settingsRowResetSessions;
 
-  /// Reset sessions row subtitle. Mirrors the label scope: Sniper + Finisseur sessions only, no match drafts, no inbox cache.
+  /// Reset sessions row subtitle. Local drift rows plus the server-stored cloud aggregates.
   ///
   /// In de, this message translates to:
-  /// **'alle Trainings-Sessions löschen'**
+  /// **'lokal und auf dem Server löschen'**
   String get settingsRowResetSessionsSub;
 
   /// Delete profile row label
@@ -1669,7 +1693,7 @@ abstract class AppLocalizations {
   /// Reset sessions confirm body
   ///
   /// In de, this message translates to:
-  /// **'Alle Trainings-Sessions werden unwiderruflich gelöscht. Dein Profil bleibt bestehen.'**
+  /// **'Alle Trainings-Sessions werden unwiderruflich gelöscht — lokal und auf dem Server. Dein Profil bleibt bestehen.'**
   String get confirmResetSessionsBody;
 
   /// Delete profile confirm title
@@ -2608,6 +2632,282 @@ abstract class AppLocalizations {
   /// **'Turniername'**
   String get tournamentWizardDisplayNameLabel;
 
+  /// Venue / town input label on the Stammdaten step
+  ///
+  /// In de, this message translates to:
+  /// **'Ort'**
+  String get tournamentWizardLocationLabel;
+
+  /// Placeholder for the location field
+  ///
+  /// In de, this message translates to:
+  /// **'z.B. Sportplatz Esp, Fislisbach'**
+  String get tournamentWizardLocationHint;
+
+  /// Tournament start date+time field label
+  ///
+  /// In de, this message translates to:
+  /// **'Datum & Startzeit'**
+  String get tournamentWizardEventDateLabel;
+
+  /// In-app registration deadline field label
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldeschluss'**
+  String get tournamentWizardRegistrationDeadlineLabel;
+
+  /// Placeholder shown on a date field before a value is picked
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht gesetzt'**
+  String get tournamentWizardDateNotSet;
+
+  /// Small badge marking an optional setup field
+  ///
+  /// In de, this message translates to:
+  /// **'optional'**
+  String get tournamentWizardOptional;
+
+  /// League categories (A/B/C) multi-select label
+  ///
+  /// In de, this message translates to:
+  /// **'Liga-Kategorien'**
+  String get tournamentWizardLeagueCategoriesLabel;
+
+  /// Helper text under the league categories selector
+  ///
+  /// In de, this message translates to:
+  /// **'Für welche Liga zählt dieses Turnier? Mehrfachauswahl möglich.'**
+  String get tournamentWizardLeagueCategoriesHint;
+
+  /// League tier chip label
+  ///
+  /// In de, this message translates to:
+  /// **'Liga {category}'**
+  String tournamentWizardLeagueCategory(String category);
+
+  /// Scoring system selector label
+  ///
+  /// In de, this message translates to:
+  /// **'Wertung'**
+  String get tournamentWizardScoringLabel;
+
+  /// EKC scoring option title
+  ///
+  /// In de, this message translates to:
+  /// **'EKC'**
+  String get tournamentWizardScoringEkc;
+
+  /// EKC scoring option subtitle
+  ///
+  /// In de, this message translates to:
+  /// **'1 Punkt pro Basekubb + 3 für den Satz'**
+  String get tournamentWizardScoringEkcHint;
+
+  /// Classic scoring option title
+  ///
+  /// In de, this message translates to:
+  /// **'Klassisch'**
+  String get tournamentWizardScoringClassic;
+
+  /// Classic scoring option subtitle
+  ///
+  /// In de, this message translates to:
+  /// **'Nur Satzsieg zählt'**
+  String get tournamentWizardScoringClassicHint;
+
+  /// Section header: fee / payment / contact
+  ///
+  /// In de, this message translates to:
+  /// **'Teilnahme'**
+  String get tournamentWizardSectionParticipation;
+
+  /// Section header: rule variants + PDFs
+  ///
+  /// In de, this message translates to:
+  /// **'Regeln & Dokumente'**
+  String get tournamentWizardSectionRules;
+
+  /// Section header: free-text info blocks
+  ///
+  /// In de, this message translates to:
+  /// **'Infos für Teilnehmer'**
+  String get tournamentWizardSectionInfo;
+
+  /// Venue address field label
+  ///
+  /// In de, this message translates to:
+  /// **'Adresse'**
+  String get tournamentWizardVenueAddressLabel;
+
+  /// Venue address placeholder
+  ///
+  /// In de, this message translates to:
+  /// **'Strasse, PLZ Ort'**
+  String get tournamentWizardVenueAddressHint;
+
+  /// Entry fee field label
+  ///
+  /// In de, this message translates to:
+  /// **'Teilnahmegebühr (CHF)'**
+  String get tournamentWizardEntryFeeLabel;
+
+  /// Entry fee placeholder
+  ///
+  /// In de, this message translates to:
+  /// **'z.B. 10'**
+  String get tournamentWizardEntryFeeHint;
+
+  /// Payment methods multi-select label
+  ///
+  /// In de, this message translates to:
+  /// **'Zahlungsarten'**
+  String get tournamentWizardPaymentMethodsLabel;
+
+  /// Cash payment chip
+  ///
+  /// In de, this message translates to:
+  /// **'Bar'**
+  String get tournamentWizardPaymentCash;
+
+  /// Twint payment chip
+  ///
+  /// In de, this message translates to:
+  /// **'Twint'**
+  String get tournamentWizardPaymentTwint;
+
+  /// Card payment chip
+  ///
+  /// In de, this message translates to:
+  /// **'Karte'**
+  String get tournamentWizardPaymentCard;
+
+  /// Contact person name field label
+  ///
+  /// In de, this message translates to:
+  /// **'Kontaktperson'**
+  String get tournamentWizardContactNameLabel;
+
+  /// Contact phone field label
+  ///
+  /// In de, this message translates to:
+  /// **'Kontakt-Telefon'**
+  String get tournamentWizardContactPhoneLabel;
+
+  /// Contact phone placeholder
+  ///
+  /// In de, this message translates to:
+  /// **'Für kurzfristige Ab-/Ummeldungen'**
+  String get tournamentWizardContactPhoneHint;
+
+  /// Food/catering info field label
+  ///
+  /// In de, this message translates to:
+  /// **'Verpflegung'**
+  String get tournamentWizardInfoFoodLabel;
+
+  /// Travel/arrival info field label
+  ///
+  /// In de, this message translates to:
+  /// **'Anfahrt'**
+  String get tournamentWizardInfoTravelLabel;
+
+  /// Accommodation info field label
+  ///
+  /// In de, this message translates to:
+  /// **'Übernachtung'**
+  String get tournamentWizardInfoAccommodationLabel;
+
+  /// Weather note field label
+  ///
+  /// In de, this message translates to:
+  /// **'Wetter-Hinweis'**
+  String get tournamentWizardWeatherLabel;
+
+  /// Opening rule field label
+  ///
+  /// In de, this message translates to:
+  /// **'Anspielregel'**
+  String get tournamentWizardOpeningRuleLabel;
+
+  /// Sureshot rule toggle title
+  ///
+  /// In de, this message translates to:
+  /// **'Sureshot'**
+  String get tournamentWizardRuleSureshot;
+
+  /// Sureshot rule toggle subtitle
+  ///
+  /// In de, this message translates to:
+  /// **'König muss rückwärts zwischen den Beinen geworfen werden'**
+  String get tournamentWizardRuleSureshotHint;
+
+  /// Diggy rule toggle title
+  ///
+  /// In de, this message translates to:
+  /// **'Diggy-Regel'**
+  String get tournamentWizardRuleDiggy;
+
+  /// Diggy rule toggle subtitle
+  ///
+  /// In de, this message translates to:
+  /// **'Doppel-Chriesi dürfen aufgestellt werden'**
+  String get tournamentWizardRuleDiggyHint;
+
+  /// Penalty kubb rule toggle title
+  ///
+  /// In de, this message translates to:
+  /// **'Strafkubb mit Abstand'**
+  String get tournamentWizardRuleStrafkubb;
+
+  /// Penalty kubb rule toggle subtitle
+  ///
+  /// In de, this message translates to:
+  /// **'Strafkubb mind. eine Stocklänge von der Grundlinie'**
+  String get tournamentWizardRuleStrafkubbHint;
+
+  /// Rules PDF upload field label
+  ///
+  /// In de, this message translates to:
+  /// **'Regelwerk (PDF)'**
+  String get tournamentWizardRulesPdfLabel;
+
+  /// Site map PDF upload field label
+  ///
+  /// In de, this message translates to:
+  /// **'Lageplan (PDF)'**
+  String get tournamentWizardSiteMapPdfLabel;
+
+  /// PDF upload button label
+  ///
+  /// In de, this message translates to:
+  /// **'PDF hochladen'**
+  String get tournamentWizardPdfUpload;
+
+  /// Badge shown once a PDF is uploaded
+  ///
+  /// In de, this message translates to:
+  /// **'Hochgeladen'**
+  String get tournamentWizardPdfUploaded;
+
+  /// Status while a PDF uploads
+  ///
+  /// In de, this message translates to:
+  /// **'Lädt hoch …'**
+  String get tournamentWizardPdfUploading;
+
+  /// Remove uploaded PDF action
+  ///
+  /// In de, this message translates to:
+  /// **'Entfernen'**
+  String get tournamentWizardPdfRemove;
+
+  /// Snackbar message when a PDF upload fails
+  ///
+  /// In de, this message translates to:
+  /// **'Upload fehlgeschlagen'**
+  String get tournamentWizardPdfUploadError;
+
   /// Min participants stepper label
   ///
   /// In de, this message translates to:
@@ -2709,6 +3009,102 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Neues Turnier'**
   String get tournamentListNewButton;
+
+  /// Hub tile: tournaments the user is registered for
+  ///
+  /// In de, this message translates to:
+  /// **'Angemeldete Turniere'**
+  String get tournamentHubRegisteredTitle;
+
+  /// Hub tile subtitle for registered tournaments
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Anmeldungen verwalten'**
+  String get tournamentHubRegisteredSubtitle;
+
+  /// Hub tile subtitle for the public tournament list
+  ///
+  /// In de, this message translates to:
+  /// **'Ausgeschriebene Turniere stöbern'**
+  String get tournamentHubBrowseSubtitle;
+
+  /// Hub tile (organizer only): create/publish a tournament
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier erstellen'**
+  String get tournamentHubCreateTitle;
+
+  /// Hub tile subtitle for create tournament
+  ///
+  /// In de, this message translates to:
+  /// **'Als Veranstalter publizieren'**
+  String get tournamentHubCreateSubtitle;
+
+  /// Hub tile: tournament statistics (placeholder)
+  ///
+  /// In de, this message translates to:
+  /// **'Turnierstatistik'**
+  String get tournamentHubStatsTitle;
+
+  /// Hub tile subtitle for the not-yet-built stats screen
+  ///
+  /// In de, this message translates to:
+  /// **'In Vorbereitung'**
+  String get tournamentHubStatsSubtitle;
+
+  /// Screen title: my tournament registrations
+  ///
+  /// In de, this message translates to:
+  /// **'Angemeldet'**
+  String get tournamentRegistrationsTitle;
+
+  /// Empty state title on the registrations screen
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Anmeldung'**
+  String get tournamentRegistrationsEmptyTitle;
+
+  /// Empty state body on the registrations screen
+  ///
+  /// In de, this message translates to:
+  /// **'Sobald du dich bei einem ausgeschriebenen Turnier anmeldest, erscheint es hier.'**
+  String get tournamentRegistrationsEmptyBody;
+
+  /// Empty state body on the public tournament list
+  ///
+  /// In de, this message translates to:
+  /// **'Sobald Veranstalter Turniere ausschreiben, erscheinen sie hier.'**
+  String get tournamentBrowseEmptyBody;
+
+  /// Button: withdraw from a tournament
+  ///
+  /// In de, this message translates to:
+  /// **'Abmelden'**
+  String get tournamentRegistrationsWithdraw;
+
+  /// Withdraw confirmation dialog title
+  ///
+  /// In de, this message translates to:
+  /// **'Vom Turnier abmelden?'**
+  String get tournamentWithdrawConfirmTitle;
+
+  /// Withdraw confirmation dialog body
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Anmeldung wird zurückgezogen. Solange die Registrierung offen ist, kannst du dich erneut anmelden.'**
+  String get tournamentWithdrawConfirmBody;
+
+  /// Placeholder title on the tournament stats screen
+  ///
+  /// In de, this message translates to:
+  /// **'Turnierstatistik kommt bald'**
+  String get tournamentStatsComingSoonTitle;
+
+  /// Placeholder body on the tournament stats screen
+  ///
+  /// In de, this message translates to:
+  /// **'Hier siehst du künftig deine Turnier-Bilanz, Platzierungen und den Verlauf.'**
+  String get tournamentStatsComingSoonBody;
 
   /// Empty state on Meine Turniere tab
   ///
@@ -3927,6 +4323,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Team konnte nicht erstellt werden — bitte erneut versuchen.'**
   String get teamCreateErrorGeneric;
+
+  /// Snackbar shown when team creation fails because the user has no valid session (permission/auth error)
+  ///
+  /// In de, this message translates to:
+  /// **'Du bist nicht angemeldet — bitte melde dich erneut an und versuche es nochmal.'**
+  String get teamCreateErrorAuth;
 
   /// League line in the team detail header (M3.1-T13)
   ///

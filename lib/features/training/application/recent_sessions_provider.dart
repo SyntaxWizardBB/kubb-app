@@ -2,9 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
+import 'package:kubb_app/features/match/data/match_models.dart';
+import 'package:kubb_app/features/match/data/match_repository.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_state.dart';
 import 'package:kubb_app/features/training/data/training_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 const _kindHit = 'hit';
 const _kindMiss = 'miss';
@@ -20,14 +23,25 @@ class RecentSessionView {
   const RecentSessionView({
     required this.modeTag,
     required this.subtitle,
+    required this.completedAt,
     this.hitRatePercent,
     this.binaryWin,
+    this.isTie = false,
   });
 
   final String modeTag;
   final String subtitle;
+
+  /// When the activity finished (UTC) — used to merge/sort across sources.
+  final DateTime completedAt;
   final int? hitRatePercent;
+
+  /// Win (true → check) / loss (false → cross) for binary outcomes
+  /// (Finisseur, Match, tournament match). Null for rate-based (Sniper) rows.
   final bool? binaryWin;
+
+  /// Match/tournament draw — rendered as a neutral dash instead of check/cross.
+  final bool isTie;
 }
 
 final recentSessionsProvider =
@@ -91,6 +105,7 @@ Future<RecentSessionView> _toSniperView(
   return RecentSessionView(
     modeTag: 'Sniper',
     hitRatePercent: hitRate,
+    completedAt: completedAt,
     subtitle: '${session.distanceMeters.toStringAsFixed(1)} m · '
         '$totalThrows Würfe · ${_relativeTime(completedAt)}',
   );
@@ -123,7 +138,85 @@ Future<RecentSessionView> _toFinisseurView(
   return RecentSessionView(
     modeTag: 'Finisseur',
     binaryWin: success,
+    completedAt: completedAt,
     subtitle: '$field/$base · $used Stöcke · ${_relativeTime(completedAt)}',
+  );
+}
+
+/// Combined "Zuletzt" feed: training sessions (live drift stream) merged with
+/// the caller's finished match-mode games and tournament matches, newest
+/// first. Match/tournament rows render a win/loss check-or-cross (tie → dash).
+/// Remote fetches are best-effort — a failure just omits that source so the
+/// training rows always show.
+final recentActivityProvider =
+    FutureProvider<List<RecentSessionView>>((ref) async {
+  final profile = ref.watch(displayProfileProvider);
+  if (profile == null) return const <RecentSessionView>[];
+
+  final items = <RecentSessionView>[
+    ...?ref.watch(recentSessionsProvider).value,
+  ];
+
+  // Match-mode (finalized) games.
+  try {
+    final matches = await ref
+        .watch(matchRepositoryProvider)
+        .listForCaller(statusFilter: MatchStatus.finalized);
+    items.addAll(matches.map(_matchToView));
+  } on Object {
+    // best-effort
+  }
+
+  // Tournament matches.
+  try {
+    final rows = await Supabase.instance.client
+        .rpc<List<dynamic>>('tournament_my_recent_matches',
+            params: <String, dynamic>{'p_limit': 10});
+    items.addAll(
+      rows.cast<Map<String, dynamic>>().map(_tournamentToView),
+    );
+  } on Object {
+    // best-effort
+  }
+
+  items.sort((a, b) => b.completedAt.compareTo(a.completedAt));
+  return items.take(5).toList(growable: false);
+});
+
+RecentSessionView _matchToView(MatchSummary m) {
+  final ts = (m.completedAt ?? m.startedAt).toUtc();
+  final outcome = m.callerOutcome; // 'won' | 'lost' | 'tie' | null
+  final score = (m.finalScoreA != null && m.finalScoreB != null)
+      ? '${m.finalScoreA}:${m.finalScoreB} · '
+      : '';
+  return RecentSessionView(
+    modeTag: 'Match',
+    completedAt: ts,
+    binaryWin: outcome == 'won'
+        ? true
+        : outcome == 'lost'
+            ? false
+            : null,
+    isTie: outcome == 'tie',
+    subtitle: '${m.opponentTeamSize}er · $score${_relativeTime(ts)}',
+  );
+}
+
+RecentSessionView _tournamentToView(Map<String, dynamic> row) {
+  final ts = DateTime.parse(row['finalized_at'] as String).toUtc();
+  final outcome = row['outcome'] as String?; // 'won' | 'lost' | 'tie'
+  final opponent = row['opponent'] as String? ?? 'Gegner';
+  final tournament = row['tournament'] as String? ?? 'Turnier';
+  return RecentSessionView(
+    modeTag: 'Turnier',
+    completedAt: ts,
+    binaryWin: outcome == 'won'
+        ? true
+        : outcome == 'lost'
+            ? false
+            : null,
+    isTie: outcome == 'tie',
+    subtitle: '$tournament · vs $opponent · ${_relativeTime(ts)}',
   );
 }
 

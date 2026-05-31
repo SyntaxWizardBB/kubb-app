@@ -84,7 +84,7 @@ Future<void> _pump(
 }
 
 void main() {
-  testWidgets('renders public tournaments in the public tab', (tester) async {
+  testWidgets('lists published tournaments and hides drafts', (tester) async {
     await _pump(tester, [
       _ref(
         id: 'a',
@@ -98,45 +98,39 @@ void main() {
       ),
     ]);
 
-    // Public tab is the second tab — switch to it.
-    await tester.tap(find.text('Aktuelle Turniere'));
-    await tester.pumpAndSettle();
-
+    // Flat list of published tournaments — drafts are filtered out.
     expect(find.text('Sommer-Cup'), findsOneWidget);
     expect(find.text('Mein Entwurf'), findsNothing);
   });
 
-  testWidgets('renders own tournaments in the mine tab', (tester) async {
+  testWidgets('also lists live and registration-closed tournaments',
+      (tester) async {
     await _pump(tester, [
-      _ref(
-        id: 'a',
-        name: 'Sommer-Cup',
-        status: TournamentStatus.registrationOpen,
-        createdBy: 'someone-else',
-      ),
+      _ref(id: 'a', name: 'Live-Cup', status: TournamentStatus.live),
       _ref(
         id: 'b',
-        name: 'Mein Entwurf',
-        status: TournamentStatus.draft,
-        createdBy: _testUserId,
+        name: 'Closed-Cup',
+        status: TournamentStatus.registrationClosed,
       ),
+      _ref(id: 'c', name: 'Done-Cup', status: TournamentStatus.finalized),
     ]);
 
-    expect(find.text('Mein Entwurf'), findsOneWidget);
-    expect(find.text('Sommer-Cup'), findsNothing);
+    expect(find.text('Live-Cup'), findsOneWidget);
+    expect(find.text('Closed-Cup'), findsOneWidget);
+    // Finalized tournaments are no longer "current" → hidden.
+    expect(find.text('Done-Cup'), findsNothing);
   });
 
   testWidgets('tapping a card pushes the detail route', (tester) async {
     await _pump(tester, [
       _ref(
-        id: 'b',
-        name: 'Mein Entwurf',
-        status: TournamentStatus.draft,
-        createdBy: _testUserId,
+        id: 'a',
+        name: 'Sommer-Cup',
+        status: TournamentStatus.registrationOpen,
       ),
     ]);
-    await tester.tap(find.text('Mein Entwurf'));
+    await tester.tap(find.text('Sommer-Cup'));
     await tester.pumpAndSettle();
-    expect(find.text('detail-b'), findsOneWidget);
+    expect(find.text('detail-a'), findsOneWidget);
   });
 }

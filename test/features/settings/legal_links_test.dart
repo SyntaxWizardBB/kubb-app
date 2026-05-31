@@ -8,9 +8,9 @@ import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_drawer.dart';
 import 'package:kubb_app/features/legal/presentation/imprint_screen.dart';
 import 'package:kubb_app/features/legal/presentation/privacy_policy_screen.dart';
-import 'package:kubb_app/features/settings/presentation/settings_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -71,15 +71,38 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
+    // Legal links moved out of settings into the drawer (P5 cleanup), so the
+    // host is a Scaffold carrying the KubbDrawer with a hamburger to open it.
     final router = GoRouter(
-      initialLocation: '/settings',
+      initialLocation: '/',
       routes: [
         GoRoute(
-          path: '/settings',
-          builder: (_, _) => const SettingsScreen(),
+          path: '/',
+          builder: (_, _) => Scaffold(
+            drawer: const KubbDrawer(),
+            appBar: AppBar(
+              leading: Builder(
+                builder: (ctx) => IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () => Scaffold.of(ctx).openDrawer(),
+                ),
+              ),
+            ),
+            body: const SizedBox.shrink(),
+          ),
         ),
         GoRoute(path: '/profile', builder: (_, _) => const Placeholder()),
-        GoRoute(path: '/stats', builder: (_, _) => const Placeholder()),
+        GoRoute(
+          path: '/profile/achievements',
+          builder: (_, _) => const Placeholder(),
+        ),
+        GoRoute(
+          path: '/profile/training-sessions',
+          builder: (_, _) => const Placeholder(),
+        ),
+        GoRoute(path: '/inbox', builder: (_, _) => const Placeholder()),
+        GoRoute(path: '/inbox/archive', builder: (_, _) => const Placeholder()),
+        GoRoute(path: '/settings', builder: (_, _) => const Placeholder()),
         GoRoute(
           path: '/legal/privacy',
           builder: (_, _) => const PrivacyPolicyScreen(),
@@ -87,18 +110,6 @@ void main() {
         GoRoute(
           path: '/legal/imprint',
           builder: (_, _) => const ImprintScreen(),
-        ),
-        GoRoute(
-          path: '/sign-in/account-link',
-          builder: (_, _) => const Placeholder(),
-        ),
-        GoRoute(
-          path: '/sign-in/passphrase-change',
-          builder: (_, _) => const Placeholder(),
-        ),
-        GoRoute(
-          path: '/sign-in/delete',
-          builder: (_, _) => const Placeholder(),
         ),
       ],
     );
@@ -125,24 +136,23 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('settings App-Section listet Datenschutz und Impressum',
-      (tester) async {
-    await pump(tester);
+  Future<void> openDrawer(WidgetTester tester) async {
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+  }
 
-    expect(find.text('Datenschutz'), findsWidgets);
+  testWidgets('drawer lists Datenschutz und Impressum', (tester) async {
+    await pump(tester);
+    await openDrawer(tester);
+
+    expect(find.text('Datenschutz'), findsOneWidget);
     expect(find.text('Impressum'), findsOneWidget);
   });
 
   testWidgets('Tap auf Impressum oeffnet Impressum-Screen', (tester) async {
     await pump(tester);
+    await openDrawer(tester);
 
-    // Imprint row sits below the visibility section now — scroll it into view.
-    await tester.scrollUntilVisible(
-      find.text('Impressum'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Impressum'));
     await tester.pumpAndSettle();
 
@@ -155,18 +165,9 @@ void main() {
   testWidgets('Tap auf Datenschutz oeffnet Privacy-Policy-Screen',
       (tester) async {
     await pump(tester);
+    await openDrawer(tester);
 
-    // Mehrere "Datenschutz"-Treffer existieren (Header-Block + neue Row).
-    // Die letzte ist die tappable Row direkt ueber der Version-Zeile.
-    // Erst nach unten scrollen — der Visibility-Section-Header verschiebt
-    // die Legal-Row inzwischen unter den initialen Viewport.
-    await tester.scrollUntilVisible(
-      find.text('Datenschutz').last,
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Datenschutz').last);
+    await tester.tap(find.text('Datenschutz'));
     await tester.pumpAndSettle();
 
     expect(find.text('Datenschutzerklärung'), findsWidgets);

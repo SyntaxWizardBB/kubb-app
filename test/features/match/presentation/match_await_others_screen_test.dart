@@ -82,7 +82,7 @@ Future<void> _pump(WidgetTester tester) async {
           body: Text('lobby ${state.pathParameters['id']}'),
         ),
       ),
-      GoRoute(path: '/', builder: (_, _) => const Scaffold(body: Text('home'))),
+      GoRoute(path: '/training', builder: (_, _) => const Scaffold(body: Text('home'))),
     ],
   );
 

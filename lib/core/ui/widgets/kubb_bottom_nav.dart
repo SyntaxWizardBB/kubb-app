@@ -7,8 +7,10 @@ import 'package:lucide_icons/lucide_icons.dart';
 /// Globale BottomNav-Leiste fuer authentifizierte Top-Level-Sektionen.
 ///
 /// Wird vom `StatefulShellRoute.indexedStack`-Wrapper in `router.dart`
-/// gemountet. Vier feste Tabs: Home, Training, Tournaments, Profil.
-/// Inbox bleibt bewusst draussen — die landet als AppBar-Bell (W2-T7).
+/// gemountet. Drei feste Tabs, Home bewusst mittig: Training, Home,
+/// Tournaments. Profil ist kein Tab mehr — es haengt am AppBar-Avatar des
+/// Home-Screens (`PlayerHubSheet` → `/profile`). Inbox bleibt ebenfalls
+/// draussen und landet als AppBar-Bell (W2-T7).
 class KubbBottomNav extends StatelessWidget {
   const KubbBottomNav({
     required this.currentIndex,
@@ -42,24 +44,19 @@ class KubbBottomNav extends StatelessWidget {
         onTap: onTap,
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: const KubbIcon(LucideIcons.home),
-            activeIcon: KubbIcon(LucideIcons.home, color: tokens.primary),
-            label: l.homeAppTitle,
-          ),
-          BottomNavigationBarItem(
             icon: const KubbIcon(KubbIcons.target),
             activeIcon: KubbIcon(KubbIcons.target, color: tokens.primary),
             label: l.homeFabLabel,
           ),
           BottomNavigationBarItem(
-            icon: const KubbIcon(KubbIcons.trophy),
-            activeIcon: KubbIcon(KubbIcons.trophy, color: tokens.primary),
-            label: l.tournamentListTitle,
+            icon: const KubbIcon(LucideIcons.home),
+            activeIcon: KubbIcon(LucideIcons.home, color: tokens.primary),
+            label: l.homeAppTitle,
           ),
           BottomNavigationBarItem(
-            icon: const KubbIcon(KubbIcons.profile),
-            activeIcon: KubbIcon(KubbIcons.profile, color: tokens.primary),
-            label: l.profileTitle,
+            icon: const KubbIcon(KubbIcons.trophy),
+            activeIcon: KubbIcon(KubbIcons.trophy, color: tokens.primary),
+            label: l.tournamentListEyebrow,
           ),
         ],
       ),

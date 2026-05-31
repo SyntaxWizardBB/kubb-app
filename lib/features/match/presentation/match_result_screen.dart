@@ -203,7 +203,7 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
         title: 'Halbsatz eintragen',
         leading: BackButton(
           color: tokens.fg,
-          onPressed: () => context.go('/'),
+          onPressed: () => context.go('/training'),
         ),
       ),
       body: detailAsync.when(

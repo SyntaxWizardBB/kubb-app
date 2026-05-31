@@ -62,7 +62,7 @@ void main() {
           builder: (_, state) =>
               SummaryScreen(sessionId: state.pathParameters['id']!),
         ),
-        GoRoute(path: '/', builder: (_, _) => const Scaffold(body: Text('home'))),
+        GoRoute(path: '/training', builder: (_, _) => const Scaffold(body: Text('home'))),
       ],
     );
     await tester.pumpWidget(

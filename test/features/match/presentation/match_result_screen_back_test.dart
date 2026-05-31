@@ -50,7 +50,7 @@ Future<void> _pump(WidgetTester tester) async {
         builder: (_, state) =>
             MatchResultScreen(matchId: state.pathParameters['id']!),
       ),
-      GoRoute(path: '/', builder: (_, _) => const Scaffold(body: Text('home'))),
+      GoRoute(path: '/training', builder: (_, _) => const Scaffold(body: Text('home'))),
     ],
   );
 

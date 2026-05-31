@@ -21,7 +21,11 @@ import 'package:kubb_app/l10n/generated/app_localizations.dart';
 /// server — the server only ever sees the derived public key. There is
 /// no recovery: if the user loses the phrase the account is gone.
 class AnonymousSignupFlow extends ConsumerStatefulWidget {
-  const AnonymousSignupFlow({super.key});
+  const AnonymousSignupFlow({required this.earlyAccessCode, super.key});
+
+  /// Validated early-access code carried in from the early-access screen;
+  /// re-validated server-side in keypair_register.
+  final String earlyAccessCode;
 
   @override
   ConsumerState<AnonymousSignupFlow> createState() =>
@@ -79,6 +83,7 @@ class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
     await ref.read(accountSetupControllerProvider.notifier).submitConfirmed(
           nickname: _nickname,
           mnemonic: mnemonic,
+          earlyAccessCode: widget.earlyAccessCode,
         );
     if (!mounted) return;
     final result = ref.read(accountSetupControllerProvider);
@@ -208,7 +213,11 @@ class _NicknameStepState extends State<_NicknameStep> {
     final err = _validate(context, _nick);
 
     final hasName = _nick.trim().isNotEmpty;
-    return Column(
+    // Scrollable so the on-screen keyboard never overflows the step on short
+    // devices (the avatar + field + hints + button can exceed the inset-shrunk
+    // viewport). Replaces the former Spacer-pinned layout.
+    return SingleChildScrollView(
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: KubbTokens.space4),
@@ -268,13 +277,14 @@ class _NicknameStepState extends State<_NicknameStep> {
           ),
         const SizedBox(height: KubbTokens.space4),
         const _RecoveryHint(),
-        const Spacer(),
+        const SizedBox(height: KubbTokens.space8),
         AuthPrimaryButton(
           label: l10n.authCommonContinue,
           onPressed: _isValid() ? () => widget.onContinue(_nick) : null,
         ),
         const SizedBox(height: KubbTokens.space5),
       ],
+      ),
     );
   }
 }

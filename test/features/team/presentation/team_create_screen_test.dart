@@ -80,9 +80,16 @@ void main() {
 
     await _pump(tester, _FailingTeamRepo());
 
-    // Type into the name field so the submit button enables.
+    // Type into the name field.
     await tester.enterText(find.byType(TextField).first, 'Hammer-Crew');
     await tester.pump();
+
+    // League is mandatory now — pick one so the submit button enables.
+    await tester
+        .tap(find.byType(DropdownButtonFormField<LeagueMembership>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('B').last);
+    await tester.pumpAndSettle();
 
     final submitFinder = find.widgetWithText(FilledButton, 'Team anlegen');
     expect(submitFinder, findsOneWidget);
@@ -97,9 +104,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
     await tester.pumpAndSettle();
 
-    // Snackbar surfaces the localized error message.
+    // A permission error (not authenticated) surfaces the auth-specific
+    // message rather than the generic one, so the user knows to re-sign-in.
     expect(
-      find.text('Team konnte nicht erstellt werden — bitte erneut versuchen.'),
+      find.text(
+        'Du bist nicht angemeldet — bitte melde dich erneut an und '
+        'versuche es nochmal.',
+      ),
       findsOneWidget,
     );
 

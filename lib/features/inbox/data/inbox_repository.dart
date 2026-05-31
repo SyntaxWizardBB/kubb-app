@@ -42,6 +42,30 @@ class InboxRepository {
     return rows.map(InboxMessage.fromRow).toList();
   }
 
+  /// All archived messages, newest first. Read straight from Supabase — the
+  /// local drift mirror only caches the active inbox (archiving drops the row
+  /// locally), so the archive view always reflects the server. The owner-read
+  /// RLS policy already scopes this to `user_id = auth.uid()`.
+  Future<List<InboxMessage>> listArchived() async {
+    final rows = await _client
+        .from('user_inbox_messages')
+        .select()
+        .not('archived_at', 'is', null)
+        .order('archived_at', ascending: false);
+    return rows.map(InboxMessage.fromRow).toList();
+  }
+
+  /// Permanently deletes the caller's archived messages. Server-side this is a
+  /// hard delete via the `inbox_purge_archived` SECURITY DEFINER RPC (the table
+  /// has no DELETE RLS policy); it removes only `archived_at IS NOT NULL` rows,
+  /// so still-needed records like tournament registrations (separate tables)
+  /// are untouched. The local drift mirror only holds the active inbox, so
+  /// there is nothing to clear locally — the active inbox stays intact.
+  /// Returns the number of server rows removed.
+  Future<int> purgeArchived() async {
+    return _client.rpc<int>('inbox_purge_archived');
+  }
+
   /// Live view backed by the local drift cache. The first emission
   /// comes from disk (zero network roundtrip), so the inbox screen can
   /// paint immediately after app launch — even when offline. Callers
@@ -106,6 +130,21 @@ class InboxRepository {
         })
         .eq('id', id);
     await _dao.deleteById(id);
+  }
+
+  /// Archives every non-archived message of the caller in one shot. The
+  /// owner-update RLS policy scopes the write to `user_id = auth.uid()`, and
+  /// the `archived_at IS NULL` filter keeps already-archived rows untouched.
+  /// The local mirror (active inbox only) is cleared afterwards so the inbox
+  /// empties immediately without a Supabase roundtrip.
+  Future<void> archiveAll(String userId) async {
+    await _client
+        .from('user_inbox_messages')
+        .update(<String, dynamic>{
+          'archived_at': DateTime.now().toUtc().toIso8601String(),
+        })
+        .filter('archived_at', 'is', null);
+    await _dao.deleteForUser(userId);
   }
 
   /// User's response to a `verification_request` message. The reply
@@ -188,6 +227,12 @@ class InboxRepository {
         return 'team_member_removed';
       case InboxMessageKind.teamDissolved:
         return 'team_dissolved';
+      case InboxMessageKind.clubInvitation:
+        return 'club_invitation';
+      case InboxMessageKind.clubMemberRemoved:
+        return 'club_member_removed';
+      case InboxMessageKind.clubJoinRequest:
+        return 'club_join_request';
     }
   }
 }

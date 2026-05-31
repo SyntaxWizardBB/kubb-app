@@ -72,7 +72,7 @@ class FinisseurStickScreen extends ConsumerWidget {
       if (!hasProgress) {
         await notifier.abortAndDelete();
         if (!context.mounted) return;
-        context.go('/training/finisseur/config');
+        context.go('/training');
         return;
       }
       // First stick with edits: ask before throwing them away.
@@ -80,7 +80,7 @@ class FinisseurStickScreen extends ConsumerWidget {
       if (!discard) return;
       await notifier.abortAndDelete();
       if (!context.mounted) return;
-      context.go('/training/finisseur/config');
+      context.go('/training');
     }
 
     return PopScope(

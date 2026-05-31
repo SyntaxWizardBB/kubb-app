@@ -92,7 +92,7 @@ class _MatchLobbyScreenState extends ConsumerState<MatchLobbyScreen> {
             width: KubbTokens.touchMin,
             height: KubbTokens.touchMin,
           ),
-          onPressed: () => context.go('/'),
+          onPressed: () => context.go('/training'),
         ),
       ),
       body: detailAsync.when(
@@ -137,7 +137,7 @@ class _MatchLobbyScreenState extends ConsumerState<MatchLobbyScreen> {
     try {
       await ref.read(matchActionsProvider).cancelMatch(matchId);
       if (!mounted) return;
-      context.go('/');
+      context.go('/training');
     } on Object catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

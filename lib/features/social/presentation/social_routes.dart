@@ -5,4 +5,8 @@
 /// Datenmigration der `groups`-Tabelle folgt in Sprint C.
 abstract final class SocialRoutes {
   static const friends = '/social/friends';
+
+  /// Read-only profile + training stats of another player. Path param is the
+  /// target user id; the nickname is passed via `extra` for the header.
+  static String friendProfile(String userId) => '/social/friends/$userId';
 }

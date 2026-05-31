@@ -127,7 +127,7 @@ void main() {
     expect(find.text('Konto'), findsOneWidget);
     expect(find.text('Daten'), findsOneWidget);
     expect(find.text('App'), findsOneWidget);
-    expect(find.text('Lokale Trainings-Sessions zurücksetzen'), findsOneWidget);
+    expect(find.text('Trainings-Sessions zurücksetzen'), findsOneWidget);
     expect(find.text('CSV-Export'), findsOneWidget);
   });
 
@@ -146,7 +146,7 @@ void main() {
     );
 
     await pump(tester);
-    await tester.tap(find.text('Lokale Trainings-Sessions zurücksetzen'));
+    await tester.tap(find.text('Trainings-Sessions zurücksetzen'));
     await tester.pump();
     await tester.pump();
 
@@ -175,30 +175,17 @@ void main() {
     expect(find.text('Google'), findsWidgets);
     expect(find.text('Daten'), findsOneWidget);
     expect(find.text('App'), findsOneWidget);
-    expect(find.text('Lokale Trainings-Sessions zurücksetzen'), findsOneWidget);
+    expect(find.text('Trainings-Sessions zurücksetzen'), findsOneWidget);
   });
 
-  testWidgets('privacy section shows synced-data copy and link to /legal/privacy',
+  testWidgets('settings no longer surfaces stats, visibility or legal rows',
       (tester) async {
     await pump(tester);
-
-    await tester.scrollUntilVisible(
-      find.text('Datenschutzerklärung öffnen'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
-
-    expect(
-      find.textContaining('Supabase-Backend in der EU synchronisiert'),
-      findsOneWidget,
-    );
-    expect(find.text('Datenschutzerklärung öffnen'), findsOneWidget);
-
-    await tester.tap(find.text('Datenschutzerklärung öffnen'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Privacy Policy Stub'), findsOneWidget);
+    // These moved out of settings per the P5 cleanup (stats/visibility via the
+    // drawer + own surfaces; legal via the drawer).
+    expect(find.text('Statistik'), findsNothing);
+    expect(find.text('Datenschutzerklärung öffnen'), findsNothing);
+    expect(find.text('Impressum'), findsNothing);
   });
 
   testWidgets('confirm on reset deletes all sessions', (tester) async {
@@ -216,7 +203,7 @@ void main() {
     );
 
     await pump(tester);
-    await tester.tap(find.text('Lokale Trainings-Sessions zurücksetzen'));
+    await tester.tap(find.text('Trainings-Sessions zurücksetzen'));
     await tester.pump();
     await tester.pump();
     await tester.tap(find.text('Löschen'));

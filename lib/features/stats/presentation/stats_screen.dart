@@ -54,7 +54,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
     final l = AppLocalizations.of(context);
     final isFinisseur = _tab.index == 1;
     final isMatch = _tab.index == 2;
-    final showFilter = _tab.index == 0 || _tab.index == 1;
+    // Every tab now carries a filter; the match tab opens its own sheet
+    // (opponent + date range) from the same AppBar slot as sniper/finisseur.
+    const showFilter = true;
 
     return Scaffold(
       backgroundColor: tokens.bg,
@@ -96,8 +98,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
               IconButton(
                 tooltip: l.statsFilterTitle,
                 icon: const KubbIcon(LucideIcons.sliders),
-                onPressed: () =>
-                    StatsFilterModal.show(context, finisseur: isFinisseur),
+                onPressed: () => isMatch
+                    ? showMatchStatsFilter(context)
+                    : StatsFilterModal.show(context, finisseur: isFinisseur),
               ),
             const InboxBellAction(),
           ],

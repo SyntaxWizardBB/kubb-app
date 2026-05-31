@@ -89,6 +89,7 @@ class AccountSetupController extends Notifier<AccountSetupState> {
   Future<void> submitConfirmed({
     required String nickname,
     required String mnemonic,
+    required String earlyAccessCode,
     String? avatarColor,
   }) async {
     state = const AccountSetupState.submitting();
@@ -105,6 +106,7 @@ class AccountSetupController extends Notifier<AccountSetupState> {
       await adapter.attachKeypair(
         nickname: nickname,
         publicKey: keypair.publicKey,
+        earlyAccessCode: earlyAccessCode,
         avatarColor: avatarColor,
       );
       await keypairStorage.save(keypair.privateKey);

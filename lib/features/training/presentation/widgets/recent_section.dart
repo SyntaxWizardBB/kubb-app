@@ -101,6 +101,9 @@ class _Verdict extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (item.isTie) {
+      return Icon(LucideIcons.minus, size: 22, color: tokens.fgMuted);
+    }
     final win = item.binaryWin;
     if (win != null) {
       return Icon(

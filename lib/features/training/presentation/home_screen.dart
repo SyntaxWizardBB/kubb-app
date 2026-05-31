@@ -8,11 +8,11 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_drawer.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_mode_card.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
-import 'package:kubb_app/features/player/presentation/player_hub_sheet.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
@@ -21,7 +21,6 @@ import 'package:kubb_app/features/training/presentation/widgets/home_greeting.da
 import 'package:kubb_app/features/training/presentation/widgets/news_card.dart';
 import 'package:kubb_app/features/training/presentation/widgets/recent_section.dart';
 import 'package:kubb_app/features/training/presentation/widgets/tournier_card.dart';
-import 'package:kubb_app/features/training/presentation/widgets/training_sheet.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -41,7 +40,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final profile = ref.watch(displayProfileProvider);
-    final recentAsync = ref.watch(recentSessionsProvider);
+    final recentAsync = ref.watch(recentActivityProvider);
     final recent = recentAsync.maybeWhen(
       data: (items) => items,
       orElse: () => const <RecentSessionView>[],
@@ -67,12 +66,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       backgroundColor: tokens.bg,
+      drawer: const KubbDrawer(),
       appBar: KubbAppBar.slots(
         automaticallyImplyLeading: false,
-        leading: IconButton(
-          tooltip: l.settingsTitle,
-          icon: const KubbIcon(LucideIcons.menu),
-          onPressed: () => context.push('/settings'),
+        leading: Builder(
+          builder: (context) => IconButton(
+            tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+            icon: const KubbIcon(LucideIcons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
         ),
         title: Text(
           l.homeAppTitle,
@@ -85,17 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 color: tokens.fg,
               ),
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const InboxBellAction(),
-            IconButton(
-              tooltip: l.profileTitle,
-              icon: const KubbIcon(KubbIcons.players),
-              onPressed: () => PlayerHubSheet.show(context),
-            ),
-          ],
-        ),
+        trailing: const InboxBellAction(),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
@@ -110,7 +102,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               eyebrow: l.homeTournierEyebrow,
               title: l.homeTournierTitle,
               subtitle: l.homeTournierComingSoon,
-              onTap: () => context.push(TournamentRoutes.list),
+              onTap: () => context.push(TournamentRoutes.hub),
             ),
             const SizedBox(height: KubbTokens.space3),
             KubbModeCard(
@@ -119,6 +111,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               icon: KubbIcons.players,
               accentTone: KubbChipTone.sniperMeadow,
               onTap: () => unawaited(context.push('/teams')),
+            ),
+            const SizedBox(height: KubbTokens.space3),
+            KubbModeCard(
+              title: 'Meine Vereine',
+              subtitle: 'Vereine gründen und beitreten',
+              icon: LucideIcons.shield,
+              accentTone: KubbChipTone.tournamentWood,
+              onTap: () => unawaited(context.push('/clubs')),
             ),
             const SizedBox(height: KubbTokens.space3),
             NewsCard(
@@ -143,26 +143,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 body: l.emptySessionsBody,
                 cta: KubbButton(
                   variant: KubbButtonVariant.primary,
-                  onPressed: () => TrainingSheet.show(context),
+                  // FAB + TrainingSheet wurden entfernt (P7); der Trainings-
+                  // einstieg lebt jetzt im Training-Tab. Der CTA wechselt
+                  // dorthin statt das alte Bottom-Sheet zu öffnen.
+                  onPressed: () => context.go('/training'),
                   child: Text(l.emptySessionsCta),
                 ),
               ),
             ],
-          ],
-        ),
-      ),
-      // Smoke-Migration auf KubbButton (W2-T4 Sprint B). Andere Konsumenten
-      // werden im Sweep-Follow-up migriert.
-      floatingActionButton: KubbButton(
-        variant: KubbButtonVariant.primary,
-        size: KubbButtonSize.large,
-        onPressed: () => TrainingSheet.show(context),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const KubbIcon(LucideIcons.plus),
-            const SizedBox(width: KubbTokens.space2),
-            Text(l.homeFabLabel),
           ],
         ),
       ),

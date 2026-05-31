@@ -110,6 +110,77 @@ class TeamMembershipController extends Notifier<AsyncValue<void>> {
     );
   }
 
+  /// Sends an invitation to a player identified by their unique nickname.
+  Future<TeamActionResult<TeamInvitationId>> inviteByNickname(
+    TeamId teamId,
+    String nickname,
+  ) {
+    return _runReturning<TeamInvitationId>(
+      rpc: 'team_invite_by_nickname',
+      action: () async {
+        final id = await _repo.inviteByNickname(teamId, nickname);
+        ref.invalidate(teamDetailProvider(teamId));
+        return id;
+      },
+    );
+  }
+
+  /// Renames the team / sets country (admin-only).
+  Future<TeamActionResult<bool>> updateTeam(
+    TeamId teamId, {
+    required String displayName,
+    String? country,
+  }) {
+    return _runReturning<bool>(
+      rpc: 'team_update',
+      action: () async {
+        await _repo.updateTeam(teamId,
+            displayName: displayName, country: country);
+        ref
+          ..invalidate(teamDetailProvider(teamId))
+          ..invalidate(teamListProvider);
+        return true;
+      },
+    );
+  }
+
+  /// Changes the team's league (admin-only, Oct–Feb window enforced server-side).
+  Future<TeamActionResult<bool>> setLeague(
+    TeamId teamId,
+    LeagueMembership league,
+  ) {
+    return _runReturning<bool>(
+      rpc: 'team_set_league',
+      action: () async {
+        await _repo.setLeague(teamId, league);
+        ref
+          ..invalidate(teamDetailProvider(teamId))
+          ..invalidate(teamListProvider);
+        return true;
+      },
+    );
+  }
+
+  /// Adds a DB-resolved player to the pool directly as a guest-role member.
+  Future<TeamActionResult<bool>> addGuestMember(TeamId teamId, UserId userId) {
+    return _runReturning<bool>(
+      rpc: 'team_add_guest_member',
+      action: () async {
+        await _repo.addGuestMember(teamId, userId);
+        ref.invalidate(teamDetailProvider(teamId));
+        return true;
+      },
+    );
+  }
+
+  /// Sets a pool member's role (admin/guest). Admin-only server-side.
+  Future<void> setMemberRole(TeamId teamId, UserId memberUserId, String role) {
+    return _run(() async {
+      await _repo.setMemberRole(teamId, memberUserId, role);
+      ref.invalidate(teamDetailProvider(teamId));
+    });
+  }
+
   /// Accepts or declines an inbox invitation. When accepted the new
   /// team shows up in "Meine Teams" after the list refetches.
   ///

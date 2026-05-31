@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/team/data/team_models.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -57,17 +58,32 @@ class TeamOperationException implements Exception {
 /// a `TeamRemote` port — the repository hits Supabase directly and the
 /// Riverpod providers (TASK-M3.1-T10) consume it.
 class TeamRepository {
-  TeamRepository({required SupabaseClient client}) : _client = client;
+  TeamRepository({
+    required SupabaseClient client,
+    Future<WireSessionOutcome> Function()? reSignWireSession,
+  })  : _client = client,
+        _reSignWireSession = reSignWireSession;
 
   final SupabaseClient _client;
 
-  Future<TeamId> createTeam({
+  /// Re-mints the keypair/OAuth wire session on demand. Injected from
+  /// the provider so [_guard] can self-heal an expired access token
+  /// (PGRST303) by re-signing once and retrying the RPC. Null in the
+  /// rare construction paths that have no auth context (defensive: the
+  /// guard then simply rethrows the mapped exception).
+  final Future<WireSessionOutcome> Function()? _reSignWireSession;
+
+  Future<TeamId?> createTeam({
     required String displayName,
     required LeagueMembership leagueMembership,
     String? logoUrl,
     String? country,
   }) async {
-    final id = await _guard(() => _client.rpc<String>(
+    // Type the RPC as nullable: a server crash mid-transaction (or a future
+    // RPC change that stops RETURNING the id) deserialises to null. We surface
+    // that as a null TeamId instead of `TeamId(null)`, so the controller's
+    // null-return path produces a clean failure rather than a runtime crash.
+    final id = await _guard(() => _client.rpc<String?>(
           'team_create',
           params: <String, dynamic>{
             'p_display_name': displayName,
@@ -76,17 +92,55 @@ class TeamRepository {
             'p_country': country,
           },
         ));
-    return TeamId(id);
+    return id == null ? null : TeamId(id);
+  }
+
+  /// Renames the team / sets its country. Admin-only.
+  Future<void> updateTeam(
+    TeamId teamId, {
+    required String displayName,
+    String? country,
+  }) {
+    return _guard(() => _client.rpc<void>(
+          'team_update',
+          params: <String, dynamic>{
+            'p_team_id': teamId.value,
+            'p_display_name': displayName,
+            'p_country': country,
+          },
+        ));
+  }
+
+  /// Changes the team's league. Admin-only and only inside the Oct–Feb window
+  /// (server-checked); raises `LEAGUE_LOCKED` otherwise.
+  Future<void> setLeague(TeamId teamId, LeagueMembership league) {
+    return _guard(() => _client.rpc<void>(
+          'team_set_league',
+          params: <String, dynamic>{
+            'p_team_id': teamId.value,
+            'p_league': league.wire,
+          },
+        ));
+  }
+
+  /// Whether the league transfer window is open right now (server clock).
+  Future<bool> leagueWindowOpen() {
+    return _guard(() => _client.rpc<bool>('team_league_window_open'));
   }
 
   Future<List<TeamWire>> listMyTeams() async {
     final rows = await _guard(() => _client.rpc<List<dynamic>>(
           'team_list_for_caller',
         ));
-    return rows
-        .cast<Map<String, dynamic>>()
-        .map(TeamWire.fromJson)
-        .toList(growable: false);
+    return rows.cast<Map<String, dynamic>>().map((row) {
+      // `team_list_for_caller` returns raw `teams` rows keyed by `id`, but
+      // the wire model expects `team_id` (@JsonKey). Without this remap the
+      // required `id` field resolves to null and the whole "Meine Teams"
+      // list fails to parse — which looked like "created teams never show up".
+      final json = Map<String, dynamic>.of(row)
+        ..putIfAbsent('team_id', () => row['id']);
+      return TeamWire.fromJson(json);
+    }).toList(growable: false);
   }
 
   Future<Map<String, dynamic>> getTeam(TeamId id) async {
@@ -105,6 +159,50 @@ class TeamRepository {
           },
         ));
     return TeamInvitationId(id);
+  }
+
+  /// Invites a player by their unique nickname (case-insensitive). The server
+  /// resolves the name to a user id and applies the same guards as [invite].
+  /// Raises [TeamOperationException] with code `USER_NOT_FOUND` when no player
+  /// carries that name.
+  Future<TeamInvitationId> inviteByNickname(
+    TeamId teamId,
+    String nickname,
+  ) async {
+    final id = await _guard(() => _client.rpc<String>(
+          'team_invite_by_nickname',
+          params: <String, dynamic>{
+            'p_team_id': teamId.value,
+            'p_nickname': nickname,
+          },
+        ));
+    return TeamInvitationId(id);
+  }
+
+  /// Adds a DB-resolved player directly to the pool as a guest-role member
+  /// (no invitation). Admin-only. Raises `ALREADY_MEMBER` if the target is
+  /// already in the active pool.
+  Future<void> addGuestMember(TeamId teamId, UserId memberUserId) {
+    return _guard(() => _client.rpc<void>(
+          'team_add_guest_member',
+          params: <String, dynamic>{
+            'p_team_id': teamId.value,
+            'p_member_user_id': memberUserId.value,
+          },
+        ));
+  }
+
+  /// Sets a pool member's role (`'admin'` or `'guest'`). Admin-only; the
+  /// server refuses to demote the last admin (`LAST_ADMIN`).
+  Future<void> setMemberRole(TeamId teamId, UserId memberUserId, String role) {
+    return _guard(() => _client.rpc<void>(
+          'team_set_member_role',
+          params: <String, dynamic>{
+            'p_team_id': teamId.value,
+            'p_member_user_id': memberUserId.value,
+            'p_role': role,
+          },
+        ));
   }
 
   Future<void> respondInvitation(
@@ -173,8 +271,33 @@ class TeamRepository {
     try {
       return await run();
     } on PostgrestException catch (e) {
+      // The Phase-1 keypair JWT has a fixed lifetime and no refresh
+      // token (ADR-0010). Once it expires PostgREST rejects the call
+      // with PGRST303 ("JWT expired"). Re-sign the wire session once
+      // and retry so a just-expired token self-heals instead of
+      // surfacing as a raw error on the Teams screen.
+      if (_isExpiredJwt(e) && _reSignWireSession != null) {
+        final outcome = await _reSignWireSession();
+        if (outcome == WireSessionOutcome.keypairResigned ||
+            outcome == WireSessionOutcome.oauthRefreshed ||
+            outcome == WireSessionOutcome.alreadyLive) {
+          try {
+            return await run();
+          } on PostgrestException catch (retryError) {
+            throw _mapException(retryError);
+          }
+        }
+      }
       throw _mapException(e);
     }
+  }
+
+  /// True when PostgREST rejected the call because the bearer JWT has
+  /// expired. Supabase tags these with code `PGRST303`; we also match
+  /// the message defensively in case the code is absent on some
+  /// transports.
+  static bool _isExpiredJwt(PostgrestException e) {
+    return e.code == 'PGRST303' || e.message.contains('JWT expired');
   }
 
   Exception _mapException(PostgrestException e) {
@@ -194,6 +317,14 @@ class TeamRepository {
       'TEAM_DISSOLVED',
       'NOT_POOL_MEMBER',
       'NOT_AUTHENTICATED',
+      'USER_NOT_FOUND',
+      'LAST_ADMIN',
+      'INVALID_ROLE',
+      'ALREADY_MEMBER',
+      'LEAGUE_LOCKED',
+      'INVALID_LEAGUE',
+      'INVALID_NAME',
+      'INVALID_COUNTRY',
     ]) {
       if (message.startsWith(token)) {
         return TeamOperationException(token, message);
@@ -204,5 +335,12 @@ class TeamRepository {
 }
 
 final teamRepositoryProvider = Provider<TeamRepository>((ref) {
-  return TeamRepository(client: Supabase.instance.client);
+  return TeamRepository(
+    client: Supabase.instance.client,
+    // Self-healing for expired Phase-1 keypair JWTs: on PGRST303 the
+    // guard re-runs the keypair wire re-sign (or OAuth refresh) and
+    // retries the RPC once. Reuses the bootstrap-time mechanism rather
+    // than inventing a parallel refresh path.
+    reSignWireSession: () => ensureWireSession(ref, force: true),
+  );
 });

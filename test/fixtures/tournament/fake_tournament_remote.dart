@@ -238,6 +238,10 @@ class FakeTournamentRemote implements TournamentRemote {
     }
   }
 
+  /// Captures the `setup` map handed to the last [createTournament] call
+  /// so tests can assert the P6 setup payload is wired through.
+  Map<String, Object?> lastCreateSetup = const <String, Object?>{};
+
   @override
   Future<TournamentId> createTournament({
     required String displayName,
@@ -247,7 +251,9 @@ class FakeTournamentRemote implements TournamentRemote {
     required TournamentFormat format,
     required Map<String, Object?> matchFormatConfig,
     required List<String> tiebreakerOrder,
+    Map<String, Object?> setup = const <String, Object?>{},
   }) async {
+    lastCreateSetup = setup;
     final id = TournamentId(_nextId('t'));
     _tournaments[id] = _Tournament(
       id: id,
@@ -325,6 +331,30 @@ class FakeTournamentRemote implements TournamentRemote {
   @override
   Future<void> withdrawRegistration(TournamentParticipantId pid) async =>
       _participants[pid]!.status = _PStatus.withdrawn;
+
+  @override
+  Future<List<MyTournamentRegistration>> listMyRegistrations() async {
+    final result = <MyTournamentRegistration>[];
+    for (final t in _tournaments.values) {
+      for (final pid in t.participantIds) {
+        final p = _participants[pid];
+        if (p == null || p.userId != currentUser) continue;
+        final status = _toParticipantStatus(p.status);
+        if (status == TournamentParticipantStatus.withdrawn ||
+            status == TournamentParticipantStatus.rejected) {
+          continue;
+        }
+        result.add(
+          MyTournamentRegistration(
+            tournament: t.toSummary(),
+            participantId: pid,
+            status: status,
+          ),
+        );
+      }
+    }
+    return result;
+  }
 
   @override
   Future<void> confirmRegistration(TournamentParticipantId pid) async =>

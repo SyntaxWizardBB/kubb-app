@@ -155,11 +155,12 @@ class FinisseurToggleGrid extends StatelessWidget {
     final toggles = <Widget>[];
 
     if (longDubbiePossible) {
-      // A "long dubbie" knocks down a field kubb plus a base kubb in one
-      // throw. The toggle commits both increments at once; tapping again
-      // rolls them back. We clamp field hits to maxFieldHits so we never
-      // exceed the remaining field-kubbs on this stick.
-      final on = stick.eightMHit && stick.fieldHits > 0 && !stick.heli;
+      // A "long dubbie" is one throw that knocks down ALL remaining field
+      // kubbs plus a single base kubb. Toggling it on therefore marks every
+      // field kubb on this stick as down (fieldHits == maxFieldHits) and sets
+      // the base hit; toggling it off rolls both back to zero.
+      final on =
+          stick.eightMHit && stick.fieldHits == maxFieldHits && !stick.heli;
       toggles.add(_Toggle(
         label: l.finisseurStickLongDubbieLabel,
         sub: l.finisseurStickLongDubbieSub,
@@ -167,13 +168,9 @@ class FinisseurToggleGrid extends StatelessWidget {
         disabled: stick.heli,
         onTap: () {
           if (on) {
-            onUpdate(stick.copyWith(
-              eightMHit: false,
-              fieldHits: (stick.fieldHits - 1).clamp(0, maxFieldHits),
-            ));
+            onUpdate(stick.copyWith(eightMHit: false, fieldHits: 0));
           } else {
-            final next = (stick.fieldHits + 1).clamp(0, maxFieldHits);
-            onUpdate(stick.copyWith(eightMHit: true, fieldHits: next));
+            onUpdate(stick.copyWith(eightMHit: true, fieldHits: maxFieldHits));
           }
         },
       ));

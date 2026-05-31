@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/team/application/team_membership_controller.dart';
+import 'package:kubb_app/features/team/data/team_repository.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -19,26 +20,31 @@ class TeamCreateScreen extends ConsumerStatefulWidget {
 
 class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
   final _nameController = TextEditingController();
-  final _logoController = TextEditingController();
   final _countryController = TextEditingController();
-  LeagueMembership _league = LeagueMembership.b;
+  // League is mandatory now — no pre-selected default; the user must pick one.
+  LeagueMembership? _league;
   bool _busy = false;
 
   @override
   void initState() {
     super.initState();
-    _nameController.addListener(() => setState(() {}));
+    // Guard with `mounted`: a trailing text/IME change can fire this listener
+    // during teardown (e.g. cancelling via back while typing), and an
+    // unguarded setState after dispose throws.
+    _nameController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _logoController.dispose();
     _countryController.dispose();
     super.dispose();
   }
 
-  bool get _canSubmit => _nameController.text.trim().isNotEmpty && !_busy;
+  bool get _canSubmit =>
+      _nameController.text.trim().isNotEmpty && _league != null && !_busy;
 
   Future<void> _submit() async {
     final l = AppLocalizations.of(context);
@@ -48,10 +54,7 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
       final result =
           await ref.read(teamMembershipControllerProvider.notifier).create(
                 displayName: _nameController.text.trim(),
-                leagueMembership: _league,
-                logoUrl: _logoController.text.trim().isEmpty
-                    ? null
-                    : _logoController.text.trim(),
+                leagueMembership: _league!,
                 country: _countryController.text.trim().isEmpty
                     ? null
                     : _countryController.text.trim(),
@@ -59,10 +62,21 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
       if (!mounted) return;
       switch (result) {
         case TeamActionSuccess<TeamId>(:final value):
-          context.go('/teams/${value.value}');
-        case TeamActionFailure<TeamId>():
+          // Replace the create form with the new team's detail so the back
+          // stack stays home → /teams → /teams/:id and the user can return
+          // to the main screen.
+          context.pushReplacement('/teams/${value.value}');
+        case TeamActionFailure<TeamId>(:final error):
+          // A permission error (SQLSTATE 42501) means the RPC ran without a
+          // valid session — almost always "not signed in" rather than a true
+          // server failure. Surface that distinctly so the user knows to
+          // re-authenticate instead of blindly retrying.
+          final isAuth = error is TeamActionExceptionError &&
+              error.error is TeamPermissionException;
           messenger.showSnackBar(SnackBar(
-            content: Text(l.teamCreateErrorGeneric),
+            content: Text(
+              isAuth ? l.teamCreateErrorAuth : l.teamCreateErrorGeneric,
+            ),
             backgroundColor: KubbTokens.miss,
           ));
       }
@@ -111,15 +125,14 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
               initialValue: _league,
               decoration: InputDecoration(
                 labelText: l.teamCreateLeagueLabel,
+                hintText: 'Liga wählen',
               ),
               items: const [
                 DropdownMenuItem(value: LeagueMembership.a, child: Text('A')),
                 DropdownMenuItem(value: LeagueMembership.b, child: Text('B')),
                 DropdownMenuItem(value: LeagueMembership.c, child: Text('C')),
               ],
-              onChanged: (v) {
-                if (v != null) setState(() => _league = v);
-              },
+              onChanged: (v) => setState(() => _league = v),
             ),
             Padding(
               padding: const EdgeInsets.only(
@@ -130,12 +143,6 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
                 l.teamCreateLeagueHelper,
                 style: TextStyle(fontSize: 12, color: tokens.fgMuted),
               ),
-            ),
-            const SizedBox(height: KubbTokens.space3),
-            TextField(
-              controller: _logoController,
-              decoration: InputDecoration(labelText: l.teamCreateLogoUrlLabel),
-              keyboardType: TextInputType.url,
             ),
             const SizedBox(height: KubbTokens.space3),
             TextField(

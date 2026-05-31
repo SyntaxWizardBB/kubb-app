@@ -45,7 +45,7 @@ class SniperSessionScreen extends ConsumerWidget {
       }
       await ref.read(activeSessionProvider.notifier).abortAndDelete();
       if (!context.mounted) return;
-      context.go('/training/sniper/config');
+      context.go('/training');
     }
 
     return PopScope(
@@ -129,7 +129,7 @@ class SniperSessionScreen extends ConsumerWidget {
     } else {
       await notifier.abortAndDelete();
       if (!context.mounted) return;
-      context.go('/');
+      context.go('/training');
     }
   }
 }

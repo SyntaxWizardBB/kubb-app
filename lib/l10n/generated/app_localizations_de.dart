@@ -143,6 +143,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get homeModeTournamentSubtitle => 'Mehrere Teams · Tabelle';
 
   @override
+  String get trainingHubMatchTitle => 'Match';
+
+  @override
+  String get trainingHubMatchSubtitle => 'Mehrspieler · Bo1/3/5';
+
+  @override
+  String get trainingHubStatsSubtitle => 'Verlauf & Bestwerte';
+
+  @override
   String get finisseurConfigEyebrow => 'Finisseur';
 
   @override
@@ -778,6 +787,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsAppSection => 'App';
 
   @override
+  String get settingsLegalSection => 'Rechtliches';
+
+  @override
   String get settingsRowProfile => 'Profil';
 
   @override
@@ -799,11 +811,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsRowExportSub => 'Sessions als .csv-Datei';
 
   @override
-  String get settingsRowResetSessions =>
-      'Lokale Trainings-Sessions zurücksetzen';
+  String get settingsRowResetSessions => 'Trainings-Sessions zurücksetzen';
 
   @override
-  String get settingsRowResetSessionsSub => 'alle Trainings-Sessions löschen';
+  String get settingsRowResetSessionsSub => 'lokal und auf dem Server löschen';
 
   @override
   String get settingsRowDeleteProfile => 'Profil löschen';
@@ -864,7 +875,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get confirmResetSessionsBody =>
-      'Alle Trainings-Sessions werden unwiderruflich gelöscht. Dein Profil bleibt bestehen.';
+      'Alle Trainings-Sessions werden unwiderruflich gelöscht — lokal und auf dem Server. Dein Profil bleibt bestehen.';
 
   @override
   String get confirmDeleteProfileTitle => 'Profil löschen?';
@@ -1380,6 +1391,152 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardDisplayNameLabel => 'Turniername';
 
   @override
+  String get tournamentWizardLocationLabel => 'Ort';
+
+  @override
+  String get tournamentWizardLocationHint => 'z.B. Sportplatz Esp, Fislisbach';
+
+  @override
+  String get tournamentWizardEventDateLabel => 'Datum & Startzeit';
+
+  @override
+  String get tournamentWizardRegistrationDeadlineLabel => 'Anmeldeschluss';
+
+  @override
+  String get tournamentWizardDateNotSet => 'Nicht gesetzt';
+
+  @override
+  String get tournamentWizardOptional => 'optional';
+
+  @override
+  String get tournamentWizardLeagueCategoriesLabel => 'Liga-Kategorien';
+
+  @override
+  String get tournamentWizardLeagueCategoriesHint =>
+      'Für welche Liga zählt dieses Turnier? Mehrfachauswahl möglich.';
+
+  @override
+  String tournamentWizardLeagueCategory(String category) {
+    return 'Liga $category';
+  }
+
+  @override
+  String get tournamentWizardScoringLabel => 'Wertung';
+
+  @override
+  String get tournamentWizardScoringEkc => 'EKC';
+
+  @override
+  String get tournamentWizardScoringEkcHint =>
+      '1 Punkt pro Basekubb + 3 für den Satz';
+
+  @override
+  String get tournamentWizardScoringClassic => 'Klassisch';
+
+  @override
+  String get tournamentWizardScoringClassicHint => 'Nur Satzsieg zählt';
+
+  @override
+  String get tournamentWizardSectionParticipation => 'Teilnahme';
+
+  @override
+  String get tournamentWizardSectionRules => 'Regeln & Dokumente';
+
+  @override
+  String get tournamentWizardSectionInfo => 'Infos für Teilnehmer';
+
+  @override
+  String get tournamentWizardVenueAddressLabel => 'Adresse';
+
+  @override
+  String get tournamentWizardVenueAddressHint => 'Strasse, PLZ Ort';
+
+  @override
+  String get tournamentWizardEntryFeeLabel => 'Teilnahmegebühr (CHF)';
+
+  @override
+  String get tournamentWizardEntryFeeHint => 'z.B. 10';
+
+  @override
+  String get tournamentWizardPaymentMethodsLabel => 'Zahlungsarten';
+
+  @override
+  String get tournamentWizardPaymentCash => 'Bar';
+
+  @override
+  String get tournamentWizardPaymentTwint => 'Twint';
+
+  @override
+  String get tournamentWizardPaymentCard => 'Karte';
+
+  @override
+  String get tournamentWizardContactNameLabel => 'Kontaktperson';
+
+  @override
+  String get tournamentWizardContactPhoneLabel => 'Kontakt-Telefon';
+
+  @override
+  String get tournamentWizardContactPhoneHint =>
+      'Für kurzfristige Ab-/Ummeldungen';
+
+  @override
+  String get tournamentWizardInfoFoodLabel => 'Verpflegung';
+
+  @override
+  String get tournamentWizardInfoTravelLabel => 'Anfahrt';
+
+  @override
+  String get tournamentWizardInfoAccommodationLabel => 'Übernachtung';
+
+  @override
+  String get tournamentWizardWeatherLabel => 'Wetter-Hinweis';
+
+  @override
+  String get tournamentWizardOpeningRuleLabel => 'Anspielregel';
+
+  @override
+  String get tournamentWizardRuleSureshot => 'Sureshot';
+
+  @override
+  String get tournamentWizardRuleSureshotHint =>
+      'König muss rückwärts zwischen den Beinen geworfen werden';
+
+  @override
+  String get tournamentWizardRuleDiggy => 'Diggy-Regel';
+
+  @override
+  String get tournamentWizardRuleDiggyHint =>
+      'Doppel-Chriesi dürfen aufgestellt werden';
+
+  @override
+  String get tournamentWizardRuleStrafkubb => 'Strafkubb mit Abstand';
+
+  @override
+  String get tournamentWizardRuleStrafkubbHint =>
+      'Strafkubb mind. eine Stocklänge von der Grundlinie';
+
+  @override
+  String get tournamentWizardRulesPdfLabel => 'Regelwerk (PDF)';
+
+  @override
+  String get tournamentWizardSiteMapPdfLabel => 'Lageplan (PDF)';
+
+  @override
+  String get tournamentWizardPdfUpload => 'PDF hochladen';
+
+  @override
+  String get tournamentWizardPdfUploaded => 'Hochgeladen';
+
+  @override
+  String get tournamentWizardPdfUploading => 'Lädt hoch …';
+
+  @override
+  String get tournamentWizardPdfRemove => 'Entfernen';
+
+  @override
+  String get tournamentWizardPdfUploadError => 'Upload fehlgeschlagen';
+
+  @override
   String get tournamentWizardMinParticipantsLabel => 'Min. Teilnehmer';
 
   @override
@@ -1431,6 +1588,58 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentListNewButton => 'Neues Turnier';
+
+  @override
+  String get tournamentHubRegisteredTitle => 'Angemeldete Turniere';
+
+  @override
+  String get tournamentHubRegisteredSubtitle => 'Deine Anmeldungen verwalten';
+
+  @override
+  String get tournamentHubBrowseSubtitle => 'Ausgeschriebene Turniere stöbern';
+
+  @override
+  String get tournamentHubCreateTitle => 'Turnier erstellen';
+
+  @override
+  String get tournamentHubCreateSubtitle => 'Als Veranstalter publizieren';
+
+  @override
+  String get tournamentHubStatsTitle => 'Turnierstatistik';
+
+  @override
+  String get tournamentHubStatsSubtitle => 'In Vorbereitung';
+
+  @override
+  String get tournamentRegistrationsTitle => 'Angemeldet';
+
+  @override
+  String get tournamentRegistrationsEmptyTitle => 'Noch keine Anmeldung';
+
+  @override
+  String get tournamentRegistrationsEmptyBody =>
+      'Sobald du dich bei einem ausgeschriebenen Turnier anmeldest, erscheint es hier.';
+
+  @override
+  String get tournamentBrowseEmptyBody =>
+      'Sobald Veranstalter Turniere ausschreiben, erscheinen sie hier.';
+
+  @override
+  String get tournamentRegistrationsWithdraw => 'Abmelden';
+
+  @override
+  String get tournamentWithdrawConfirmTitle => 'Vom Turnier abmelden?';
+
+  @override
+  String get tournamentWithdrawConfirmBody =>
+      'Deine Anmeldung wird zurückgezogen. Solange die Registrierung offen ist, kannst du dich erneut anmelden.';
+
+  @override
+  String get tournamentStatsComingSoonTitle => 'Turnierstatistik kommt bald';
+
+  @override
+  String get tournamentStatsComingSoonBody =>
+      'Hier siehst du künftig deine Turnier-Bilanz, Platzierungen und den Verlauf.';
 
   @override
   String get tournamentListEmptyMine => 'Du hast noch keine Turniere erstellt.';
@@ -2118,6 +2327,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get teamCreateErrorGeneric =>
       'Team konnte nicht erstellt werden — bitte erneut versuchen.';
+
+  @override
+  String get teamCreateErrorAuth =>
+      'Du bist nicht angemeldet — bitte melde dich erneut an und versuche es nochmal.';
 
   @override
   String teamDetailHeaderLeague(String league) {

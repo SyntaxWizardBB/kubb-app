@@ -18,7 +18,14 @@ enum InboxMessageKind {
   /// `verification_request` fallback.
   teamInvitation,
   teamMemberRemoved,
-  teamDissolved;
+  teamDissolved,
+
+  /// Club-flow notifications (P5): an invitation to join a Verein (routed to
+  /// an accept/decline dialog), a removal notice, and a join request that
+  /// managers act on from the club detail screen.
+  clubInvitation,
+  clubMemberRemoved,
+  clubJoinRequest;
 
   static InboxMessageKind fromWire(String raw) {
     switch (raw) {
@@ -34,6 +41,12 @@ enum InboxMessageKind {
         return InboxMessageKind.teamMemberRemoved;
       case 'team_dissolved':
         return InboxMessageKind.teamDissolved;
+      case 'club_invitation':
+        return InboxMessageKind.clubInvitation;
+      case 'club_member_removed':
+        return InboxMessageKind.clubMemberRemoved;
+      case 'club_join_request':
+        return InboxMessageKind.clubJoinRequest;
       default:
         return InboxMessageKind.notice;
     }

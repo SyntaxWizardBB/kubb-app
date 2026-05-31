@@ -23,16 +23,22 @@ final statsAggregateProvider = FutureProvider<StatsAggregate>((ref) async {
 });
 
 /// Finisseur-only aggregate. Recomputes when the active filter, current
-/// profile or the underlying repository changes. The filter modal feeds
-/// finisseur-specific ranges (field, base) plus the shared date range.
+/// profile, the tracking settings or the underlying repository changes. The
+/// filter modal feeds finisseur-specific ranges (field, base) plus the shared
+/// date range; the tracking toggles drop disabled metrics from the aggregate.
 final finisseurStatsAggregateProvider =
     FutureProvider<FinisseurStatsAggregate>((ref) async {
   final profile = ref.watch(displayProfileProvider);
   if (profile == null) return FinisseurStatsAggregate.empty();
   final filter = ref.watch(statsFilterProvider);
+  final settings = ref.watch(appSettingsProvider).value;
   final repo = ref.watch(statsRepositoryProvider);
   return repo.computeFinisseurAggregate(
     playerId: profile.userId,
     filter: filter,
+    heliTracking: settings?.heliTracking ?? true,
+    penaltyKubbTracking: settings?.penaltyKubbTracking ?? true,
+    kingThrowTracking: settings?.kingThrowTracking ?? true,
+    longDubbieTracking: settings?.longDubbieTracking ?? true,
   );
 });

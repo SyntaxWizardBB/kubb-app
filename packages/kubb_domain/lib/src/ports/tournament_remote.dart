@@ -97,6 +97,35 @@ class TournamentSummaryRef {
       );
 }
 
+/// One entry of "tournaments the caller is registered for" — a
+/// [TournamentSummaryRef] paired with the caller's own participant id and
+/// registration status. Lets the hub's registrations list render the row
+/// and offer a self-withdraw without a second round-trip. Backed by the
+/// `tournament_list_my_registrations` RPC (P1 Tournament-Hub).
+@immutable
+class MyTournamentRegistration {
+  const MyTournamentRegistration({
+    required this.tournament,
+    required this.participantId,
+    required this.status,
+  });
+
+  final TournamentSummaryRef tournament;
+  final TournamentParticipantId participantId;
+  final TournamentParticipantStatus status;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MyTournamentRegistration &&
+          other.tournament == tournament &&
+          other.participantId == participantId &&
+          other.status == status;
+
+  @override
+  int get hashCode => Object.hash(tournament, participantId, status);
+}
+
 /// Read-side snapshot of one tournament match. `participantB` is `null` for
 /// a BYE slot. `consensusRound` is the 1..3 retry counter from the
 /// consensus-retry flow; it stays at the last value after `finalized`.
@@ -419,7 +448,21 @@ abstract interface class TournamentRemote {
   /// Returns `null` when the caller has no read access on the row.
   Future<TournamentDetail?> getTournamentDetail(TournamentId id);
 
+  /// Tournaments the caller is actively registered for (P1 Tournament-Hub).
+  /// Backed by `tournament_list_my_registrations`; each entry carries the
+  /// caller's own participant id + status so the UI can drive
+  /// [withdrawRegistration] without a second lookup. "Active" excludes
+  /// rejected/withdrawn rows.
+  Future<List<MyTournamentRegistration>> listMyRegistrations();
+
   // Lifecycle (organizer)
+
+  /// Creates a draft tournament. [setup] carries the P6 header fields
+  /// (meta, league, rule variants, KO match format, pitch plan, quali /
+  /// consolation config) as the snake_case wire map produced by
+  /// `TournamentConfigDraft.toSetupConfig()`. Optional so older callers /
+  /// fakes keep compiling; defaults to an empty map (server applies its
+  /// column defaults).
   Future<TournamentId> createTournament({
     required String displayName,
     required int teamSize,
@@ -428,6 +471,7 @@ abstract interface class TournamentRemote {
     required TournamentFormat format,
     required Map<String, Object?> matchFormatConfig,
     required List<String> tiebreakerOrder,
+    Map<String, Object?> setup,
   });
 
   Future<void> publish(TournamentId id);

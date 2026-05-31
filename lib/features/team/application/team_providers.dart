@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/team/application/team_detail_provider.dart';
@@ -6,6 +8,33 @@ import 'package:kubb_app/features/team/data/team_models.dart';
 import 'package:kubb_app/features/team/data/team_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+/// Polling sentinel for the team detail screen. A screen that
+/// `ref.watch`es this keeps a Timer alive that invalidates
+/// [teamDetailProvider] for that team every few seconds, so a change made
+/// on another device (e.g. an invitee accepting) appears without a manual
+/// refresh. Auto-disposes when the screen unmounts. Mirrors
+/// `friendsPollingProvider` / `inboxPollingProvider`.
+// ignore: specify_nonobvious_property_types
+final teamDetailPollingProvider =
+    Provider.autoDispose.family<void, TeamId>((ref, teamId) {
+  final timer = Timer.periodic(
+    const Duration(seconds: 4),
+    (_) => ref.invalidate(teamDetailProvider(teamId)),
+  );
+  ref.onDispose(timer.cancel);
+});
+
+/// Polling sentinel for the "Meine Teams" list — invalidates
+/// [teamListProvider] every few seconds while the list screen is mounted.
+// ignore: specify_nonobvious_property_types
+final teamListPollingProvider = Provider.autoDispose<void>((ref) {
+  final timer = Timer.periodic(
+    const Duration(seconds: 4),
+    (_) => ref.invalidate(teamListProvider),
+  );
+  ref.onDispose(timer.cancel);
+});
 
 /// One pending team invitation joined with its team header, as needed by
 /// the invitation screen. The repository's `team_invitations` rows do
@@ -30,10 +59,14 @@ class PendingTeamInvitation {
 /// the thin shim it always intended to be.
 final pendingInvitationsProvider =
     FutureProvider<List<PendingTeamInvitation>>((ref) async {
-  final isAuthed = ref.watch(isAuthenticatedProvider);
-  if (!isAuthed) return const <PendingTeamInvitation>[];
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return const <PendingTeamInvitation>[];
 
   final client = Supabase.instance.client;
+  // Scope to invitations addressed TO the caller. The RLS read policy also
+  // lets pool members (e.g. the inviter) read a team's pending invitations, so
+  // without this filter an inviter would see the invites they sent and tapping
+  // "accept" would fail with `caller is not the invitee`.
   final rows = await client
       .from('team_invitations')
       .select(
@@ -42,6 +75,7 @@ final pendingInvitationsProvider =
         'logo_url, country, dissolved_at)',
       )
       .eq('state', 'pending')
+      .eq('invitee_user_id', userId)
       .order('created_at', ascending: false);
 
   return rows.map<PendingTeamInvitation>((row) {
@@ -62,6 +96,13 @@ final pendingInvitationsProvider =
       createdAt: DateTime.parse(row['created_at'] as String),
     );
   }).toList(growable: false);
+});
+
+/// Whether the league transfer window (Oct–Feb) is currently open, decided by
+/// the server clock — so the edit UI can enable/disable the league control
+/// without trusting the device time.
+final leagueWindowOpenProvider = FutureProvider<bool>((ref) async {
+  return ref.read(teamRepositoryProvider).leagueWindowOpen();
 });
 
 /// Imperative action surface for the invitation screen. Routes through

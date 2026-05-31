@@ -36,7 +36,11 @@ interface VerifyRequest {
 }
 
 const CHALLENGE_TTL_SECONDS = 60;
-const ACCESS_TOKEN_TTL_SECONDS = 3600;
+// 12h lifetime: low-risk mitigation that widens the window before a
+// Phase-1 keypair JWT expires. The durable fix is client-side — the
+// app re-signs on resume and auto-retries on PGRST303 — but a longer
+// TTL means most sessions never hit the expiry path at all.
+const ACCESS_TOKEN_TTL_SECONDS = 43200;
 
 function jsonResponse(status: number, body: Record<string, unknown>): Response {
   return new Response(JSON.stringify(body), {
@@ -76,6 +80,15 @@ function resolveJwtSecret(): Uint8Array | null {
   const direct = Deno.env.get("SUPABASE_JWT_SECRET");
   if (direct && direct.length > 0) {
     return new TextEncoder().encode(direct);
+  }
+  // 1b. SUPABASE_INTERNAL_JWT_SECRET — some local CLI builds pass the raw
+  //     symmetric secret through under this name instead of stripping it.
+  //     Same value as SUPABASE_JWT_SECRET, so use it as a local-dev
+  //     fallback. Prod (Hetzner) sets the direct var above and never hits
+  //     this branch.
+  const internal = Deno.env.get("SUPABASE_INTERNAL_JWT_SECRET");
+  if (internal && internal.length > 0) {
+    return new TextEncoder().encode(internal);
   }
   const jwksRaw = Deno.env.get("SUPABASE_JWKS");
   if (!jwksRaw) return null;

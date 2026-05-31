@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/stats/application/stats_aggregate_provider.dart';
 import 'package:kubb_app/features/stats/data/stats_aggregate.dart';
@@ -64,7 +65,7 @@ class _Body extends StatelessWidget {
       );
 }
 
-class _MetricBlock extends StatelessWidget {
+class _MetricBlock extends ConsumerWidget {
   const _MetricBlock({
     required this.aggregate,
     required this.tokens,
@@ -76,77 +77,52 @@ class _MetricBlock extends StatelessWidget {
   final AppLocalizations l;
 
   @override
-  Widget build(BuildContext context) => Container(
-        decoration: BoxDecoration(
-          color: tokens.bgRaised,
-          borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(appSettingsProvider).value;
+    // A disabled tracking toggle drops its metric row entirely so it no longer
+    // appears in the stats (mirrors its removal from the aggregate / quota).
+    final showLongDubbie = settings?.longDubbieTracking ?? true;
+    final showHeli = settings?.heliTracking ?? true;
+    final showPenalty = settings?.penaltyKubbTracking ?? true;
+    final showKing = settings?.kingThrowTracking ?? true;
+
+    final entries = <(String, String)>[
+      (l.statsFinisseurSuccessRate, '${aggregate.successRatePercent} %'),
+      (l.statsTotalSessionsLabel, '${aggregate.totalSessions}'),
+      (l.statsFinisseurTotalSticks, '${aggregate.totalSticks}'),
+      (l.statsFinisseurAvgSticks, aggregate.averageSticks.toStringAsFixed(1)),
+      (l.statsFinisseurStickRate, '${aggregate.stickHitRatePercent} %'),
+      (l.statsFinisseurMisses, '${aggregate.missSticks}'),
+      if (showLongDubbie)
+        (
+          l.statsFinisseurLongDubbies,
+          aggregate.longDubbiesPerSession.toStringAsFixed(2),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space3),
-        child: Column(
-          children: [
+      if (showHeli) (l.statsFinisseurHeli, '${aggregate.heliCount}'),
+      if (showPenalty) (l.statsFinisseurPenalty, '${aggregate.penaltyCount}'),
+      if (showKing)
+        (l.statsFinisseurKingRate, '${aggregate.kingHitRatePercent} %'),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: tokens.bgRaised,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space3),
+      child: Column(
+        children: [
+          for (var i = 0; i < entries.length; i++)
             _MetricRow(
-              label: l.statsFinisseurSuccessRate,
-              value: '${aggregate.successRatePercent} %',
-              divider: true,
+              label: entries[i].$1,
+              value: entries[i].$2,
+              divider: i < entries.length - 1,
               tokens: tokens,
             ),
-            _MetricRow(
-              label: l.statsTotalSessionsLabel,
-              value: '${aggregate.totalSessions}',
-              divider: true,
-              tokens: tokens,
-            ),
-            _MetricRow(
-              label: l.statsFinisseurTotalSticks,
-              value: '${aggregate.totalSticks}',
-              divider: true,
-              tokens: tokens,
-            ),
-            _MetricRow(
-              label: l.statsFinisseurAvgSticks,
-              value: aggregate.averageSticks.toStringAsFixed(1),
-              divider: true,
-              tokens: tokens,
-            ),
-            _MetricRow(
-              label: l.statsFinisseurStickRate,
-              value: '${aggregate.stickHitRatePercent} %',
-              divider: true,
-              tokens: tokens,
-            ),
-            _MetricRow(
-              label: l.statsFinisseurMisses,
-              value: '${aggregate.missSticks}',
-              divider: true,
-              tokens: tokens,
-            ),
-            _MetricRow(
-              label: l.statsFinisseurLongDubbies,
-              value: aggregate.longDubbiesPerSession.toStringAsFixed(2),
-              divider: true,
-              tokens: tokens,
-            ),
-            _MetricRow(
-              label: l.statsFinisseurHeli,
-              value: '${aggregate.heliCount}',
-              divider: true,
-              tokens: tokens,
-            ),
-            _MetricRow(
-              label: l.statsFinisseurPenalty,
-              value: '${aggregate.penaltyCount}',
-              divider: true,
-              tokens: tokens,
-            ),
-            _MetricRow(
-              label: l.statsFinisseurKingRate,
-              value: '${aggregate.kingHitRatePercent} %',
-              divider: false,
-              tokens: tokens,
-            ),
-          ],
-        ),
-      );
+        ],
+      ),
+    );
+  }
 }
 
 class _MetricRow extends StatelessWidget {

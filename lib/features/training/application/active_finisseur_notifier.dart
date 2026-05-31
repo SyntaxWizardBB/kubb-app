@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/data/app_settings.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/features/training/application/active_finisseur_state.dart';
+import 'package:kubb_app/features/training/application/cloud_training_provider.dart';
 import 'package:kubb_app/features/training/data/finisseur_repository.dart';
 
 /// Outcome of [ActiveFinisseurNotifier.advance].
@@ -162,6 +163,10 @@ class ActiveFinisseurNotifier
       final s = state.value;
       if (s == null) return;
       await _repo.markCompleted(sessionId: s.sessionId);
+      // Best-effort cloud mirror (P2); fire-and-forget.
+      unawaited(
+        ref.read(cloudSessionUploaderProvider).uploadCompleted(s.sessionId),
+      );
       state = const AsyncData(null);
     });
   }
@@ -210,6 +215,10 @@ class ActiveFinisseurNotifier
       final s = state.value;
       if (s == null) return;
       await _repo.markCompleted(sessionId: s.sessionId);
+      // Best-effort cloud mirror (P2); fire-and-forget.
+      unawaited(
+        ref.read(cloudSessionUploaderProvider).uploadCompleted(s.sessionId),
+      );
       state = const AsyncData(null);
     });
   }

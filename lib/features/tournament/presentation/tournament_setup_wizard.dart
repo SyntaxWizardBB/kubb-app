@@ -1,3 +1,4 @@
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
+import 'package:kubb_app/features/tournament/data/tournament_pdf_uploader.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_league_step.dart';
@@ -122,7 +124,7 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
       final id =
           await ref.read(tournamentActionsProvider).createTournament(draft);
       if (!mounted) return;
-      context.go('${TournamentRoutes.list}/${id.value}');
+      context.go('${TournamentRoutes.detail}/${id.value}');
     } on Object catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -231,10 +233,7 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
   ) {
     switch (kind) {
       case _StepKind.name:
-        return _StepName(
-          draft: draft,
-          onChanged: controller.setDisplayName,
-        );
+        return _StepStammdaten(draft: draft, controller: controller);
       case _StepKind.participants:
         return _StepParticipants(
           draft: draft,
@@ -400,65 +399,799 @@ class _BottomBar extends StatelessWidget {
   }
 }
 
-class _StepName extends StatefulWidget {
-  const _StepName({required this.draft, required this.onChanged});
+/// First wizard step — the tournament Stammdaten (master data). Holds the
+/// name plus the P6 meta fields (league categories, location, start
+/// date, registration deadline, scoring system). Free-text info blocks,
+/// rule-variant toggles and PDF upload land in the next 1b iteration.
+class _StepStammdaten extends StatefulWidget {
+  const _StepStammdaten({required this.draft, required this.controller});
 
   final TournamentConfigDraft draft;
-  final ValueChanged<String> onChanged;
+  final TournamentConfigController controller;
 
   @override
-  State<_StepName> createState() => _StepNameState();
+  State<_StepStammdaten> createState() => _StepStammdatenState();
 }
 
-class _StepNameState extends State<_StepName> {
-  late final TextEditingController _ctrl;
+class _StepStammdatenState extends State<_StepStammdaten> {
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _locationCtrl;
+  late final TextEditingController _addressCtrl;
+  late final TextEditingController _feeCtrl;
+  late final TextEditingController _contactNameCtrl;
+  late final TextEditingController _contactPhoneCtrl;
+  late final TextEditingController _foodCtrl;
+  late final TextEditingController _travelCtrl;
+  late final TextEditingController _accommodationCtrl;
+  late final TextEditingController _weatherCtrl;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = TextEditingController(text: widget.draft.displayName ?? '');
+    final d = widget.draft;
+    _nameCtrl = TextEditingController(text: d.displayName ?? '');
+    _locationCtrl = TextEditingController(text: d.location ?? '');
+    _addressCtrl = TextEditingController(text: d.venueAddress ?? '');
+    _feeCtrl = TextEditingController(text: _feeText(d.entryFeeCents));
+    _contactNameCtrl = TextEditingController(text: d.contactName ?? '');
+    _contactPhoneCtrl = TextEditingController(text: d.contactPhone ?? '');
+    _foodCtrl = TextEditingController(text: d.infoFood ?? '');
+    _travelCtrl = TextEditingController(text: d.infoTravel ?? '');
+    _accommodationCtrl =
+        TextEditingController(text: d.infoAccommodation ?? '');
+    _weatherCtrl = TextEditingController(text: d.weatherNote ?? '');
   }
 
   @override
   void dispose() {
-    _ctrl.dispose();
+    _nameCtrl.dispose();
+    _locationCtrl.dispose();
+    _addressCtrl.dispose();
+    _feeCtrl.dispose();
+    _contactNameCtrl.dispose();
+    _contactPhoneCtrl.dispose();
+    _foodCtrl.dispose();
+    _travelCtrl.dispose();
+    _accommodationCtrl.dispose();
+    _weatherCtrl.dispose();
     super.dispose();
+  }
+
+  /// Cents → editable franc string ('' for null, '10' for whole francs).
+  static String _feeText(int? cents) {
+    if (cents == null) return '';
+    if (cents % 100 == 0) return '${cents ~/ 100}';
+    return (cents / 100).toStringAsFixed(2);
+  }
+
+  /// Editable franc string → cents (null when blank/invalid).
+  static int? _feeCents(String text) {
+    final trimmed = text.trim().replaceAll(',', '.');
+    if (trimmed.isEmpty) return null;
+    final francs = double.tryParse(trimmed);
+    if (francs == null || francs < 0) return null;
+    return (francs * 100).round();
+  }
+
+  Future<void> _pickDateTime({
+    required DateTime? initial,
+    required ValueChanged<DateTime> onPicked,
+  }) async {
+    final now = DateTime.now();
+    final base = initial ?? now;
+    final date = await showDatePicker(
+      context: context,
+      initialDate: base,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 5),
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(base),
+    );
+    if (!mounted) return;
+    final t = time ?? TimeOfDay.fromDateTime(base);
+    onPicked(DateTime(date.year, date.month, date.day, t.hour, t.minute));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final draft = widget.draft;
+    final controller = widget.controller;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _FieldLabel(l10n.tournamentWizardDisplayNameLabel),
+        const SizedBox(height: KubbTokens.space2),
+        _PlainTextField(
+          key: const Key('wizardNameField'),
+          controller: _nameCtrl,
+          maxLength: TournamentConfigDraft.displayNameMaxChars,
+          onChanged: controller.setDisplayName,
+        ),
+        const SizedBox(height: KubbTokens.space5),
+        _FieldLabel(
+          l10n.tournamentWizardLeagueCategoriesLabel,
+          optional: true,
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        Wrap(
+          spacing: KubbTokens.space2,
+          runSpacing: KubbTokens.space2,
+          children: [
+            for (final c in LeagueCategory.values)
+              _SelectChip(
+                label: l10n.tournamentWizardLeagueCategory(c.wire),
+                selected: draft.leagueCategories.contains(c),
+                onTap: () => controller.toggleLeagueCategory(c),
+              ),
+          ],
+        ),
+        const SizedBox(height: KubbTokens.space1half),
+        _HelperText(l10n.tournamentWizardLeagueCategoriesHint),
+        const SizedBox(height: KubbTokens.space5),
+        _FieldLabel(l10n.tournamentWizardLocationLabel, optional: true),
+        const SizedBox(height: KubbTokens.space2),
+        _PlainTextField(
+          controller: _locationCtrl,
+          hintText: l10n.tournamentWizardLocationHint,
+          onChanged: controller.setLocation,
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        _FieldLabel(l10n.tournamentWizardVenueAddressLabel, optional: true),
+        const SizedBox(height: KubbTokens.space2),
+        _PlainTextField(
+          controller: _addressCtrl,
+          hintText: l10n.tournamentWizardVenueAddressHint,
+          onChanged: controller.setVenueAddress,
+        ),
+        const SizedBox(height: KubbTokens.space5),
+        _FieldLabel(l10n.tournamentWizardEventDateLabel, optional: true),
+        const SizedBox(height: KubbTokens.space2),
+        _DateField(
+          value: draft.eventStartsAt,
+          onTap: () => _pickDateTime(
+            initial: draft.eventStartsAt,
+            onPicked: controller.setEventStartsAt,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space5),
+        _FieldLabel(
+          l10n.tournamentWizardRegistrationDeadlineLabel,
+          optional: true,
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        _DateField(
+          value: draft.registrationClosesAt,
+          onTap: () => _pickDateTime(
+            initial: draft.registrationClosesAt,
+            onPicked: controller.setRegistrationClosesAt,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space5),
+        _FieldLabel(l10n.tournamentWizardScoringLabel),
+        const SizedBox(height: KubbTokens.space2),
+        _ScoringOption(
+          title: l10n.tournamentWizardScoringEkc,
+          subtitle: l10n.tournamentWizardScoringEkcHint,
+          selected: draft.scoring == 'ekc',
+          onTap: () => controller.setScoring('ekc'),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        _ScoringOption(
+          title: l10n.tournamentWizardScoringClassic,
+          subtitle: l10n.tournamentWizardScoringClassicHint,
+          selected: draft.scoring == 'classic',
+          onTap: () => controller.setScoring('classic'),
+        ),
+
+        // ---- Regeln & Dokumente ----
+        _SectionHeaderText(l10n.tournamentWizardSectionRules),
+        const SizedBox(height: KubbTokens.space3),
+        _ToggleRow(
+          title: l10n.tournamentWizardRuleSureshot,
+          subtitle: l10n.tournamentWizardRuleSureshotHint,
+          value: draft.ruleVariants.sureshot,
+          onChanged: (v) => controller
+              .setRuleVariants(draft.ruleVariants.copyWith(sureshot: v)),
+        ),
+        _ToggleRow(
+          title: l10n.tournamentWizardRuleDiggy,
+          subtitle: l10n.tournamentWizardRuleDiggyHint,
+          value: draft.ruleVariants.diggy,
+          onChanged: (v) => controller
+              .setRuleVariants(draft.ruleVariants.copyWith(diggy: v)),
+        ),
+        _ToggleRow(
+          title: l10n.tournamentWizardRuleStrafkubb,
+          subtitle: l10n.tournamentWizardRuleStrafkubbHint,
+          value: draft.ruleVariants.strafkubbOffBaseline,
+          onChanged: (v) => controller.setRuleVariants(
+            draft.ruleVariants.copyWith(strafkubbOffBaseline: v),
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        _FieldLabel(l10n.tournamentWizardRulesPdfLabel, optional: true),
+        const SizedBox(height: KubbTokens.space2),
+        _PdfUploadField(
+          kind: TournamentPdfKind.rules,
+          url: draft.rulesPdfUrl,
+          onChanged: controller.setRulesPdfUrl,
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        _FieldLabel(l10n.tournamentWizardSiteMapPdfLabel, optional: true),
+        const SizedBox(height: KubbTokens.space2),
+        _PdfUploadField(
+          kind: TournamentPdfKind.siteMap,
+          url: draft.siteMapPdfUrl,
+          onChanged: controller.setSiteMapPdfUrl,
+        ),
+
+        // ---- Teilnahme ----
+        _SectionHeaderText(l10n.tournamentWizardSectionParticipation),
+        const SizedBox(height: KubbTokens.space3),
+        _FieldLabel(l10n.tournamentWizardEntryFeeLabel, optional: true),
+        const SizedBox(height: KubbTokens.space2),
+        _PlainTextField(
+          controller: _feeCtrl,
+          hintText: l10n.tournamentWizardEntryFeeHint,
+          keyboardType:
+              const TextInputType.numberWithOptions(decimal: true),
+          onChanged: (text) => controller.setEntryFeeCents(_feeCents(text)),
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        _FieldLabel(l10n.tournamentWizardPaymentMethodsLabel, optional: true),
+        const SizedBox(height: KubbTokens.space2),
+        Wrap(
+          spacing: KubbTokens.space2,
+          runSpacing: KubbTokens.space2,
+          children: [
+            for (final m in _paymentMethods(l10n))
+              _SelectChip(
+                label: m.label,
+                selected: draft.paymentMethods.contains(m.wire),
+                onTap: () => controller.togglePaymentMethod(m.wire),
+              ),
+          ],
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        _FieldLabel(l10n.tournamentWizardContactNameLabel, optional: true),
+        const SizedBox(height: KubbTokens.space2),
+        _PlainTextField(
+          controller: _contactNameCtrl,
+          onChanged: controller.setContactName,
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        _FieldLabel(l10n.tournamentWizardContactPhoneLabel, optional: true),
+        const SizedBox(height: KubbTokens.space2),
+        _PlainTextField(
+          controller: _contactPhoneCtrl,
+          hintText: l10n.tournamentWizardContactPhoneHint,
+          keyboardType: TextInputType.phone,
+          onChanged: controller.setContactPhone,
+        ),
+
+        // ---- Infos für Teilnehmer ----
+        _SectionHeaderText(l10n.tournamentWizardSectionInfo),
+        const SizedBox(height: KubbTokens.space3),
+        _FieldLabel(l10n.tournamentWizardInfoFoodLabel, optional: true),
+        const SizedBox(height: KubbTokens.space2),
+        _PlainTextField(
+          controller: _foodCtrl,
+          maxLines: 2,
+          onChanged: controller.setInfoFood,
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        _FieldLabel(l10n.tournamentWizardInfoTravelLabel, optional: true),
+        const SizedBox(height: KubbTokens.space2),
+        _PlainTextField(
+          controller: _travelCtrl,
+          maxLines: 2,
+          onChanged: controller.setInfoTravel,
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        _FieldLabel(l10n.tournamentWizardInfoAccommodationLabel,
+            optional: true),
+        const SizedBox(height: KubbTokens.space2),
+        _PlainTextField(
+          controller: _accommodationCtrl,
+          maxLines: 2,
+          onChanged: controller.setInfoAccommodation,
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        _FieldLabel(l10n.tournamentWizardWeatherLabel, optional: true),
+        const SizedBox(height: KubbTokens.space2),
+        _PlainTextField(
+          controller: _weatherCtrl,
+          maxLines: 2,
+          onChanged: controller.setWeatherNote,
+        ),
+      ],
+    );
+  }
+}
+
+/// (label, wire-value) pair for a payment-method chip.
+class _PaymentMethod {
+  const _PaymentMethod(this.wire, this.label);
+  final String wire;
+  final String label;
+}
+
+List<_PaymentMethod> _paymentMethods(AppLocalizations l10n) => <_PaymentMethod>[
+      _PaymentMethod('cash', l10n.tournamentWizardPaymentCash),
+      _PaymentMethod('twint', l10n.tournamentWizardPaymentTwint),
+      _PaymentMethod('card', l10n.tournamentWizardPaymentCard),
+    ];
+
+/// Section heading with top spacing, used to group the long Stammdaten
+/// step into Eckdaten / Regeln / Teilnahme / Infos.
+class _SectionHeaderText extends StatelessWidget {
+  const _SectionHeaderText(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Padding(
+      padding: const EdgeInsets.only(top: KubbTokens.space6),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.4,
+          color: tokens.fg,
+        ),
+      ),
+    );
+  }
+}
+
+/// Title + subtitle row with a trailing [Switch], used for the rule
+/// variants.
+class _ToggleRow extends StatelessWidget {
+  const _ToggleRow({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: KubbTokens.space2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.fg,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 11, color: tokens.fgMuted),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: KubbTokens.space3),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeTrackColor: tokens.primary,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Upload control for a tournament PDF. Picks a PDF via [openFile],
+/// uploads it through [tournamentPdfUploaderProvider], and reports the
+/// resulting public URL via [onChanged]. Shows uploaded / uploading
+/// states and an error snackbar on failure.
+class _PdfUploadField extends ConsumerStatefulWidget {
+  const _PdfUploadField({
+    required this.kind,
+    required this.url,
+    required this.onChanged,
+  });
+
+  final TournamentPdfKind kind;
+  final String? url;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  ConsumerState<_PdfUploadField> createState() => _PdfUploadFieldState();
+}
+
+class _PdfUploadFieldState extends ConsumerState<_PdfUploadField> {
+  bool _uploading = false;
+
+  Future<void> _pick() async {
+    const group = XTypeGroup(
+      label: 'PDF',
+      extensions: <String>['pdf'],
+      mimeTypes: <String>['application/pdf'],
+    );
+    final file = await openFile(acceptedTypeGroups: const <XTypeGroup>[group]);
+    if (file == null || !mounted) return;
+    final bytes = await file.readAsBytes();
+    if (!mounted) return;
+    setState(() => _uploading = true);
+    final l10n = AppLocalizations.of(context);
+    try {
+      final url = await ref
+          .read(tournamentPdfUploaderProvider)
+          .uploadPdf(kind: widget.kind, bytes: bytes);
+      widget.onChanged(url);
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.tournamentWizardPdfUploadError),
+            backgroundColor: KubbTokens.miss,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l10n = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+
+    if (_uploading) {
+      return Row(
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: KubbTokens.space3),
+          Text(
+            l10n.tournamentWizardPdfUploading,
+            style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+          ),
+        ],
+      );
+    }
+
+    if (widget.url != null) {
+      return Container(
+        padding: const EdgeInsets.all(KubbTokens.space3),
+        decoration: BoxDecoration(
+          color: tokens.bgRaised,
+          borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+          border: Border.all(color: tokens.line, width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.check_circle, size: 20, color: tokens.primary),
+            const SizedBox(width: KubbTokens.space3),
+            Expanded(
+              child: Text(
+                l10n.tournamentWizardPdfUploaded,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: tokens.fg,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => widget.onChanged(null),
+              child: Text(l10n.tournamentWizardPdfRemove),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: KubbTokens.touchMin,
+      child: OutlinedButton.icon(
+        onPressed: _pick,
+        icon: const Icon(Icons.upload_file, size: 20),
+        label: Text(l10n.tournamentWizardPdfUpload),
+      ),
+    );
+  }
+}
+
+/// Small all-caps field label used across the Stammdaten step, with an
+/// optional "optional" badge.
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text, {this.optional = false});
+
+  final String text;
+  final bool optional;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    return Row(
       children: [
-        Text(
-          l10n.tournamentWizardDisplayNameLabel,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.4,
-            color: tokens.fgMuted,
-          ),
-        ),
-        const SizedBox(height: KubbTokens.space2),
-        TextField(
-          controller: _ctrl,
-          maxLength: TournamentConfigDraft.displayNameMaxChars,
-          onChanged: widget.onChanged,
-          decoration: InputDecoration(
-            counterText: '',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-              borderSide: BorderSide(color: tokens.lineStrong, width: 1.5),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-              borderSide: BorderSide(color: tokens.lineStrong, width: 1.5),
+        Flexible(
+          child: Text(
+            text,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.4,
+              color: tokens.fgMuted,
             ),
           ),
         ),
+        if (optional) ...[
+          const SizedBox(width: KubbTokens.space2),
+          Text(
+            l10n.tournamentWizardOptional,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.4,
+              color: tokens.fgSubtle,
+            ),
+          ),
+        ],
       ],
+    );
+  }
+}
+
+class _HelperText extends StatelessWidget {
+  const _HelperText(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 11,
+        height: 1.35,
+        color: tokens.fgSubtle,
+      ),
+    );
+  }
+}
+
+/// Outline-bordered text field matching the wizard's design tokens.
+class _PlainTextField extends StatelessWidget {
+  const _PlainTextField({
+    required this.controller,
+    required this.onChanged,
+    this.hintText,
+    this.maxLength,
+    this.maxLines = 1,
+    this.keyboardType,
+    super.key,
+  });
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  final String? hintText;
+  final int? maxLength;
+  final int maxLines;
+  final TextInputType? keyboardType;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+      borderSide: BorderSide(color: tokens.lineStrong, width: 1.5),
+    );
+    return TextField(
+      controller: controller,
+      maxLength: maxLength,
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        counterText: '',
+        hintText: hintText,
+        border: border,
+        enabledBorder: border,
+      ),
+    );
+  }
+}
+
+/// Tappable date(+time) field; shows the selected value or a placeholder.
+class _DateField extends StatelessWidget {
+  const _DateField({required this.value, required this.onTap});
+
+  final DateTime? value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    final materialL10n = MaterialLocalizations.of(context);
+    final v = value;
+    final label = v == null
+        ? l10n.tournamentWizardDateNotSet
+        : '${materialL10n.formatMediumDate(v)} · '
+            '${TimeOfDay.fromDateTime(v).format(context)}';
+    return InkWell(
+      borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+      onTap: onTap,
+      child: Container(
+        height: 56,
+        padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space3),
+        decoration: BoxDecoration(
+          color: tokens.bgRaised,
+          border: Border.all(color: tokens.lineStrong, width: 1.5),
+          borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.event, size: 20, color: tokens.fgMuted),
+            const SizedBox(width: KubbTokens.space3),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: v == null ? FontWeight.w500 : FontWeight.w700,
+                  color: v == null ? tokens.fgSubtle : tokens.fg,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectChip extends StatelessWidget {
+  const _SelectChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return InkWell(
+      borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: KubbTokens.touchMin),
+        padding: const EdgeInsets.symmetric(
+          horizontal: KubbTokens.space4,
+          vertical: KubbTokens.space2,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? tokens.primary : tokens.bgRaised,
+          borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
+          border: Border.all(
+            color: selected ? tokens.primary : tokens.line,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              selected ? Icons.check_circle : Icons.circle_outlined,
+              size: 18,
+              color: selected ? Colors.white : tokens.fgMuted,
+            ),
+            const SizedBox(width: KubbTokens.space2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: selected ? Colors.white : tokens.fg,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ScoringOption extends StatelessWidget {
+  const _ScoringOption({
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return InkWell(
+      borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(KubbTokens.space3),
+        decoration: BoxDecoration(
+          color: selected ? tokens.bgSunken : tokens.bgRaised,
+          borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+          border: Border.all(
+            color: selected ? tokens.primary : tokens.line,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              size: 20,
+              color: tokens.fg,
+            ),
+            const SizedBox(width: KubbTokens.space3),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.fg,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 11, color: tokens.fgMuted),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

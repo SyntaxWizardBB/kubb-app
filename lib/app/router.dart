@@ -10,10 +10,16 @@ import 'package:kubb_app/features/auth/presentation/account_link_screen.dart';
 import 'package:kubb_app/features/auth/presentation/anonymous_signup_flow.dart';
 import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/features/auth/presentation/delete_account_screen.dart';
+import 'package:kubb_app/features/auth/presentation/early_access_entry_screen.dart';
 import 'package:kubb_app/features/auth/presentation/edit_profile_screen.dart';
 import 'package:kubb_app/features/auth/presentation/onboarding_tour.dart';
 import 'package:kubb_app/features/auth/presentation/restore_flow.dart';
 import 'package:kubb_app/features/auth/presentation/sign_in_screen.dart';
+import 'package:kubb_app/features/club/presentation/club_add_member_screen.dart';
+import 'package:kubb_app/features/club/presentation/club_create_screen.dart';
+import 'package:kubb_app/features/club/presentation/club_detail_screen.dart';
+import 'package:kubb_app/features/club/presentation/clubs_screen.dart';
+import 'package:kubb_app/features/inbox/presentation/archive_screen.dart';
 import 'package:kubb_app/features/inbox/presentation/inbox_screen.dart';
 import 'package:kubb_app/features/legal/presentation/imprint_screen.dart';
 import 'package:kubb_app/features/legal/presentation/privacy_policy_screen.dart';
@@ -25,11 +31,14 @@ import 'package:kubb_app/features/match/presentation/match_result_screen.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
 import 'package:kubb_app/features/player/presentation/profile_screen.dart';
 import 'package:kubb_app/features/settings/presentation/settings_screen.dart';
+import 'package:kubb_app/features/social/presentation/friend_profile_screen.dart';
 import 'package:kubb_app/features/social/presentation/friends_screen.dart';
 import 'package:kubb_app/features/social/presentation/social_routes.dart';
 import 'package:kubb_app/features/stats/presentation/stats_screen.dart';
+import 'package:kubb_app/features/team/presentation/team_add_player_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_create_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_detail_screen.dart';
+import 'package:kubb_app/features/team/presentation/team_edit_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_invitation_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_list_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/public/public_match_screen.dart';
@@ -37,33 +46,39 @@ import 'package:kubb_app/features/tournament/presentation/public/public_tourname
 import 'package:kubb_app/features/tournament/presentation/tournament_bracket_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_conflict_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_detail_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_hub_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_list_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_live_dashboard_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_match_detail_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_match_list_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_override_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_registration_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_registrations_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_setup_wizard.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_standings_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_stats_screen.dart';
 import 'package:kubb_app/features/training/presentation/finisseur_config_screen.dart';
 import 'package:kubb_app/features/training/presentation/finisseur_stick_screen.dart';
 import 'package:kubb_app/features/training/presentation/home_screen.dart';
+import 'package:kubb_app/features/training/presentation/my_training_sessions_screen.dart';
 import 'package:kubb_app/features/training/presentation/sniper_config_screen.dart';
 import 'package:kubb_app/features/training/presentation/sniper_session_screen.dart';
 import 'package:kubb_app/features/training/presentation/summary_screen.dart';
+import 'package:kubb_app/features/training/presentation/training_hub_screen.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
 /// Branch-Indizes des [StatefulShellRoute.indexedStack].
 ///
-/// Wird sowohl vom Shell-Builder als auch von der [KubbBottomNav]
-/// referenziert. Aenderungen hier muessen mit den Branches in
-/// [goRouterProvider] synchron bleiben.
+/// Spiegelt die Tab-Reihenfolge der [KubbBottomNav] (Home bewusst mittig).
+/// Aenderungen hier muessen mit den Branches in [goRouterProvider] und den
+/// Items der [KubbBottomNav] synchron bleiben. Profil ist kein Tab mehr —
+/// `/profile` lebt jetzt im Home-Branch und wird ueber den AppBar-Avatar
+/// erreicht.
 abstract final class ShellTab {
-  static const home = 0;
-  static const training = 1;
+  static const training = 0;
+  static const home = 1;
   static const tournaments = 2;
-  static const profile = 3;
 }
 
 /// Whitelist exact-match routes reachable without an authenticated
@@ -76,9 +91,13 @@ abstract final class ShellTab {
 /// waren damit auch fuer signedOut-User erreichbar — beide Screens
 /// sind aber nur fuer eine bestehende Session sinnvoll und konnten
 /// crashen oder Account-Operationen auf einer Anon-Session ausloesen.
+// P7: '/' is no longer public — app use without a login/profile is not
+// possible. Unauthenticated users are sent to the early-access gate; the
+// sign-in / restore / signup routes stay reachable so accounts can be created
+// or recovered.
 const _publicRoutes = <String>{
-  '/',
   '/sign-in',
+  '/sign-in/early-access',
   '/sign-in/anonymous',
   '/sign-in/restore',
   '/onboarding-tour',
@@ -137,9 +156,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         // Session passieren (R20-F-04). Alles andere — inklusive
         // `/sign-in/account-link` und `/sign-in/delete` — wird auf
         // den Sign-In-Screen umgeleitet.
-        return _publicRoutes.contains(loc) ? null : AuthRoutes.signIn;
+        // Unauthenticated → land on the early-access gate (the entry point
+        // for creating a profile); restore + sign-in stay reachable from there.
+        return _publicRoutes.contains(loc) ? null : AuthRoutes.earlyAccess;
       }
       if (loc == AuthRoutes.signIn ||
+          loc == AuthRoutes.earlyAccess ||
           loc == AuthRoutes.anonymousSignup ||
           loc == AuthRoutes.restore) {
         return '/';
@@ -153,8 +175,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const SignInScreen(),
       ),
       GoRoute(
+        path: AuthRoutes.earlyAccess,
+        builder: (_, _) => const EarlyAccessEntryScreen(),
+      ),
+      GoRoute(
         path: AuthRoutes.anonymousSignup,
-        builder: (_, _) => const AnonymousSignupFlow(),
+        // The validated early-access code arrives via `extra`. Reaching this
+        // route without it (e.g. a deep link) lands on an empty code, which
+        // keypair_register rejects — the proper entry is the early-access gate.
+        builder: (_, state) =>
+            AnonymousSignupFlow(earlyAccessCode: (state.extra as String?) ?? ''),
       ),
       GoRoute(
         path: AuthRoutes.restore,
@@ -205,30 +235,35 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state, navigationShell) =>
             _ShellScaffold(navigationShell: navigationShell),
         branches: <StatefulShellBranch>[
-          // Branch 0 — Home + alle Top-Level-Aktionen, die sonst kein
-          // eigenes Tab haben (Settings, Inbox, Friends/Groups, Teams,
-          // Match-Flow, Training-Sessions, Profile-Edit).
+          // Branch 0 — Training-Tab. Der /training-Hub ist der Tab-Root; die
+          // Solo-/Match-Flows und das Stats-Screen leben im selben Branch,
+          // damit ein Hub-Tap (context.push) auf dem Training-Stack bleibt
+          // und der BottomNav-Index nicht wegspringt.
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
-                path: '/',
-                builder: (_, _) => const HomeScreen(),
+                path: '/training',
+                builder: (_, _) => const TrainingHubScreen(),
               ),
               GoRoute(
-                path: '/settings',
-                builder: (_, _) => const SettingsScreen(),
+                path: '/stats',
+                builder: (_, _) => const StatsScreen(),
               ),
-              GoRoute(
-                path: AuthRoutes.inbox,
-                builder: (_, _) => const InboxScreen(),
-              ),
-              GoRoute(
-                path: AuthRoutes.editProfile,
-                builder: (_, _) => const EditProfileScreen(),
-              ),
+              // Freunde lebt seit P7 als Kachel im Training-Hub; die Route
+              // liegt deshalb in diesem Branch, damit ein Hub-Tap auf dem
+              // Training-Stack bleibt.
               GoRoute(
                 path: SocialRoutes.friends,
                 builder: (_, _) => const FriendsScreen(),
+              ),
+              GoRoute(
+                // Freundesprofil + Trainings-Statistik (P2). nickname kommt
+                // über `extra` für den Header.
+                path: '/social/friends/:userId',
+                builder: (_, state) => FriendProfileScreen(
+                  userId: state.pathParameters['userId']!,
+                  nickname: state.extra as String?,
+                ),
               ),
               GoRoute(
                 path: '/training/sniper/config',
@@ -279,6 +314,54 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 builder: (_, state) =>
                     MatchFinishedScreen(matchId: state.pathParameters['id']!),
               ),
+            ],
+          ),
+          // Branch 1 — Home (mittiges Tab) + alle Top-Level-Aktionen, die
+          // sonst kein eigenes Tab haben (Settings, Inbox, Friends/Groups,
+          // Teams, Match-Flow, Training-Sessions, Profil + Profile-Edit).
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/',
+                builder: (_, _) => const HomeScreen(),
+              ),
+              GoRoute(
+                path: '/settings',
+                builder: (_, _) => const SettingsScreen(),
+              ),
+              GoRoute(
+                path: AuthRoutes.inbox,
+                builder: (_, _) => const InboxScreen(),
+              ),
+              GoRoute(
+                path: AuthRoutes.editProfile,
+                builder: (_, _) => const EditProfileScreen(),
+              ),
+              GoRoute(
+                // Archiv der Nachrichten (über den Drawer erreichbar).
+                path: '/inbox/archive',
+                builder: (_, _) => const ArchiveScreen(),
+              ),
+              GoRoute(
+                // Meine Vereine (P5): Liste, Gründen (Code-gated) und Detail.
+                path: '/clubs',
+                builder: (_, _) => const ClubsScreen(),
+              ),
+              GoRoute(
+                path: '/clubs/create',
+                builder: (_, _) => const ClubCreateScreen(),
+              ),
+              GoRoute(
+                path: '/clubs/:id',
+                builder: (_, state) =>
+                    ClubDetailScreen(clubId: ClubId(state.pathParameters['id']!)),
+              ),
+              GoRoute(
+                path: '/clubs/:id/add',
+                builder: (_, state) => ClubAddMemberScreen(
+                  clubId: ClubId(state.pathParameters['id']!),
+                ),
+              ),
               GoRoute(
                 path: '/teams',
                 builder: (_, _) => const TeamListScreen(),
@@ -297,25 +380,63 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   teamId: TeamId(state.pathParameters['id']!),
                 ),
               ),
-            ],
-          ),
-          // Branch 1 — Training-Tab. Bis ein dedizierter /training-Hub
-          // existiert nutzt der Tab das Stats-Screen (Training-Historie),
-          // siehe HomeScreen.jsx-Referenz im Mobile-Kit.
-          StatefulShellBranch(
-            routes: <RouteBase>[
               GoRoute(
-                path: '/stats',
-                builder: (_, _) => const StatsScreen(),
+                // Search-based add of a member (admin) or guest. Role via extra.
+                path: '/teams/:id/add',
+                builder: (_, state) => TeamAddPlayerScreen(
+                  teamId: TeamId(state.pathParameters['id']!),
+                  role: state.extra is TeamAddRole
+                      ? state.extra! as TeamAddRole
+                      : TeamAddRole.member,
+                ),
+              ),
+              GoRoute(
+                path: '/teams/:id/edit',
+                builder: (_, state) => TeamEditScreen(
+                  teamId: TeamId(state.pathParameters['id']!),
+                ),
+              ),
+              // Profil ist kein eigenes Tab mehr (BottomNav-Redesign): die
+              // Screens leben im Home-Branch und werden ueber den AppBar-
+              // Avatar (`PlayerHubSheet` → `/profile`) bzw. die Account-
+              // Section (`/profile/achievements`) erreicht.
+              GoRoute(
+                path: '/profile',
+                builder: (_, _) => const ProfileScreen(),
+              ),
+              GoRoute(
+                path: '/profile/achievements',
+                builder: (_, _) => const AchievementsScreen(),
+              ),
+              GoRoute(
+                // Eigene online gespeicherte Trainings ansehen + löschen (P2).
+                path: '/profile/training-sessions',
+                builder: (_, _) => const MyTrainingSessionsScreen(),
               ),
             ],
           ),
-          // Branch 2 — Tournaments.
+          // Branch 2 — Tournaments. Der /tournament-Hub ist der Tab-Root;
+          // Discovery-Liste, eigene Anmeldungen, Setup-Wizard und der
+          // Statistik-Platzhalter leben im selben Branch, damit ein Hub-Tap
+          // (context.push) auf dem Tournaments-Stack bleibt und der
+          // BottomNav-Index nicht wegspringt.
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
+                path: TournamentRoutes.hub,
+                builder: (_, _) => const TournamentHubScreen(),
+              ),
+              GoRoute(
                 path: TournamentRoutes.list,
                 builder: (_, _) => const TournamentListScreen(),
+              ),
+              GoRoute(
+                path: TournamentRoutes.registrations,
+                builder: (_, _) => const TournamentRegistrationsScreen(),
+              ),
+              GoRoute(
+                path: TournamentRoutes.stats,
+                builder: (_, _) => const TournamentStatsScreen(),
               ),
               GoRoute(
                 path: TournamentRoutes.newTournament,
@@ -377,19 +498,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 builder: (_, state) => TournamentLiveDashboardScreen(
                   tournamentId: state.pathParameters['id']!,
                 ),
-              ),
-            ],
-          ),
-          // Branch 3 — Profile.
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: '/profile',
-                builder: (_, _) => const ProfileScreen(),
-              ),
-              GoRoute(
-                path: '/profile/achievements',
-                builder: (_, _) => const AchievementsScreen(),
               ),
             ],
           ),

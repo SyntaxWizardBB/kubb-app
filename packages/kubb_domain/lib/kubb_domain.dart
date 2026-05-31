@@ -35,6 +35,7 @@ export 'src/tournament/seeding.dart';
 export 'src/tournament/standings.dart';
 export 'src/tournament/tiebreaker.dart';
 export 'src/tournament/tournament_points_award.dart';
+export 'src/tournament/tournament_setup.dart';
 export 'src/values/ids.dart';
 export 'src/values/lamport_clock.dart';
 export 'src/values/league_membership.dart';

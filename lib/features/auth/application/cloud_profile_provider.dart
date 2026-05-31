@@ -20,3 +20,16 @@ final cloudProfileProvider = FutureProvider<CloudProfile?>((ref) async {
   final repo = ref.watch(cloudProfileRepositoryProvider);
   return repo.getProfile(userId: display.userId);
 });
+
+/// Whether the current user may create/publish tournaments (coarse
+/// organizer role, P1 Tournament-Hub). Derived from the cloud profile's
+/// `is_organizer` flag; resolves to `false` while the profile is loading
+/// or absent so the "create tournament" tile only appears once the role is
+/// confirmed. The server-side default is `true`, so in practice every
+/// signed-in user with a profile resolves to `true` today.
+final isOrganizerProvider = Provider<bool>((ref) {
+  return ref.watch(cloudProfileProvider).maybeWhen(
+        data: (profile) => profile?.isOrganizer ?? false,
+        orElse: () => false,
+      );
+});

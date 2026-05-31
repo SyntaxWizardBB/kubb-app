@@ -15,7 +15,6 @@ import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/application/cloud_profile_provider.dart';
-import 'package:kubb_app/features/settings/presentation/settings_screen.dart';
 import 'package:kubb_app/features/settings/presentation/widgets/profile_visibility_section.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -85,8 +84,13 @@ void main() {
       initialLocation: '/settings',
       routes: [
         GoRoute(
+          // The section moved out of the settings screen (P5), so the test
+          // hosts the widget directly — it still works, just isn't surfaced
+          // from settings anymore.
           path: '/settings',
-          builder: (_, _) => const SettingsScreen(),
+          builder: (_, _) => const Scaffold(
+            body: SingleChildScrollView(child: ProfileVisibilitySection()),
+          ),
         ),
         GoRoute(path: '/onboarding', builder: (_, _) => const Placeholder()),
         GoRoute(path: '/profile', builder: (_, _) => const Placeholder()),

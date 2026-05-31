@@ -19,8 +19,11 @@
 
 -- ---- 1. Public flag column on tournaments ----------------------------
 
+-- IF NOT EXISTS: the column is created earlier by
+-- 20260601000031_public_tournament_realtime (ordering fix), so on a clean
+-- `supabase db reset` it already exists by the time this migration runs.
 ALTER TABLE public.tournaments
-  ADD COLUMN public boolean NOT NULL DEFAULT true;
+  ADD COLUMN IF NOT EXISTS public boolean NOT NULL DEFAULT true;
 
 
 -- ---- 2. Anon-only SELECT policies ------------------------------------

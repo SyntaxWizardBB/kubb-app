@@ -80,6 +80,102 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     state = state.copyWith(leagueEligible: value);
   }
 
+  // --- P6 Stammdaten setters (Phase 1b) ---
+
+  void setLocation(String value) {
+    state = state.copyWith(location: value);
+  }
+
+  void setVenueAddress(String value) {
+    state = state.copyWith(venueAddress: value);
+  }
+
+  void setEventStartsAt(DateTime value) {
+    state = state.copyWith(eventStartsAt: value);
+  }
+
+  void setRegistrationClosesAt(DateTime value) {
+    state = state.copyWith(registrationClosesAt: value);
+  }
+
+  /// `ekc` or `classic`.
+  void setScoring(String value) {
+    state = state.copyWith(scoring: value);
+  }
+
+  /// Toggles one league tier on/off, keeping the list in A,B,C order.
+  void toggleLeagueCategory(LeagueCategory category) {
+    final next = List<LeagueCategory>.of(state.leagueCategories);
+    if (next.contains(category)) {
+      next.remove(category);
+    } else {
+      next
+        ..add(category)
+        ..sort((a, b) => a.index.compareTo(b.index));
+    }
+    state = state.copyWith(
+      leagueCategories: List<LeagueCategory>.unmodifiable(next),
+    );
+  }
+
+  /// Participation fee in cents. Pass `null` to mark the tournament free.
+  void setEntryFeeCents(int? cents) {
+    state = state.copyWith(
+      entryFeeCents: cents,
+      clearEntryFeeCents: cents == null,
+    );
+  }
+
+  /// Toggles one payment method (`cash` / `twint` / `card`).
+  void togglePaymentMethod(String method) {
+    final next = List<String>.of(state.paymentMethods);
+    if (next.contains(method)) {
+      next.remove(method);
+    } else {
+      next.add(method);
+    }
+    state = state.copyWith(paymentMethods: List<String>.unmodifiable(next));
+  }
+
+  void setContactName(String value) {
+    state = state.copyWith(contactName: value);
+  }
+
+  void setContactPhone(String value) {
+    state = state.copyWith(contactPhone: value);
+  }
+
+  void setInfoFood(String value) {
+    state = state.copyWith(infoFood: value);
+  }
+
+  void setInfoTravel(String value) {
+    state = state.copyWith(infoTravel: value);
+  }
+
+  void setInfoAccommodation(String value) {
+    state = state.copyWith(infoAccommodation: value);
+  }
+
+  void setWeatherNote(String value) {
+    state = state.copyWith(weatherNote: value);
+  }
+
+  void setRuleVariants(RuleVariants variants) {
+    state = state.copyWith(ruleVariants: variants);
+  }
+
+  void setRulesPdfUrl(String? url) {
+    state = state.copyWith(rulesPdfUrl: url, clearRulesPdfUrl: url == null);
+  }
+
+  void setSiteMapPdfUrl(String? url) {
+    state = state.copyWith(
+      siteMapPdfUrl: url,
+      clearSiteMapPdfUrl: url == null,
+    );
+  }
+
   /// Replaces the in-progress [PoolPhaseConfig] (T9). Pass `null` to clear
   /// it — the [TournamentConfigDraft.copyWith] sentinel `clearPoolPhaseConfig`
   /// makes the field nullable across edits, which is what the pool-toggle

@@ -7,6 +7,9 @@ import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
+import 'package:kubb_app/features/club/application/club_providers.dart';
+import 'package:kubb_app/features/club/data/club_models.dart';
+import 'package:kubb_app/features/club/presentation/club_routes.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/player/presentation/avatar_color.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -115,6 +118,7 @@ class _Body extends StatelessWidget {
           const SizedBox(height: KubbTokens.space3),
           Center(child: _ProviderBadge(label: providerLabel)),
           const SizedBox(height: KubbTokens.space8),
+          const _ClubsSection(),
           SizedBox(
             height: KubbTokens.touchComfortable,
             child: OutlinedButton(
@@ -125,6 +129,50 @@ class _Body extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Shows the player's club memberships (P5). Tapping a club opens its detail.
+/// Renders nothing while loading/empty so the profile stays clean for players
+/// who are not in a club.
+class _ClubsSection extends ConsumerWidget {
+  const _ClubsSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final clubs = ref.watch(clubListProvider).maybeWhen(
+          data: (c) => c,
+          orElse: () => const <ClubWire>[],
+        );
+    if (clubs.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'MEINE VEREINE',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.88,
+            color: tokens.fgMuted,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        Wrap(
+          spacing: KubbTokens.space2,
+          runSpacing: KubbTokens.space2,
+          children: [
+            for (final club in clubs)
+              ActionChip(
+                label: Text(club.displayName),
+                onPressed: () => context.push(ClubRoutes.detailFor(club.id)),
+              ),
+          ],
+        ),
+        const SizedBox(height: KubbTokens.space8),
+      ],
     );
   }
 }

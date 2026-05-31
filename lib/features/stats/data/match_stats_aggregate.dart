@@ -12,6 +12,7 @@ class MatchStatsAggregate {
     required this.losses,
     required this.ties,
     required this.recentMatches,
+    this.winRateTrendPercent = const <int>[],
   });
 
   /// Folds a list of finalized [MatchSummary] rows into counts plus a
@@ -34,6 +35,27 @@ class MatchStatsAggregate {
       }
     }
 
+    // Cumulative win-rate trend in chronological order (oldest → newest). One
+    // point per match; each point is the running win-rate over decided matches
+    // so far (ties excluded from the denominator, mirroring winRatePercent).
+    // Matches the finisseur tab's successTrendPercent so the same
+    // StatsTrendChart can render it.
+    final trend = <int>[];
+    var runWins = 0;
+    var runDecided = 0;
+    for (final match in finalizedMatches.reversed) {
+      switch (match.callerOutcome) {
+        case 'won':
+          runWins++;
+          runDecided++;
+        case 'lost':
+          runDecided++;
+        default:
+          break;
+      }
+      trend.add(runDecided == 0 ? 0 : ((runWins * 100) / runDecided).round());
+    }
+
     final recent = finalizedMatches.length <= _recentLimit
         ? List<MatchSummary>.unmodifiable(finalizedMatches)
         : List<MatchSummary>.unmodifiable(
@@ -46,6 +68,7 @@ class MatchStatsAggregate {
       losses: losses,
       ties: ties,
       recentMatches: recent,
+      winRateTrendPercent: List<int>.unmodifiable(trend),
     );
   }
 
@@ -64,6 +87,10 @@ class MatchStatsAggregate {
   final int losses;
   final int ties;
   final List<MatchSummary> recentMatches;
+
+  /// Running win-rate (0..100) per match, oldest → newest. Drives the trend
+  /// chart on the match stats tab.
+  final List<int> winRateTrendPercent;
 
   bool get isEmpty => totalMatches == 0;
 

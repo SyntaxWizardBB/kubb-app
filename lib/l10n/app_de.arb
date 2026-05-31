@@ -180,6 +180,18 @@
   "@homeModeTournamentSubtitle": {
     "description": "Tournament mode subtitle in the training sheet"
   },
+  "trainingHubMatchTitle": "Match",
+  "@trainingHubMatchTitle": {
+    "description": "Match mode title on the training hub tab"
+  },
+  "trainingHubMatchSubtitle": "Mehrspieler · Bo1/3/5",
+  "@trainingHubMatchSubtitle": {
+    "description": "Match mode subtitle on the training hub tab"
+  },
+  "trainingHubStatsSubtitle": "Verlauf & Bestwerte",
+  "@trainingHubStatsSubtitle": {
+    "description": "Stats tile subtitle on the training hub tab"
+  },
   "finisseurConfigEyebrow": "Finisseur",
   "@finisseurConfigEyebrow": {
     "description": "Eyebrow on the finisseur config screen"
@@ -1111,6 +1123,10 @@
   "@settingsAppSection": {
     "description": "App section header"
   },
+  "settingsLegalSection": "Rechtliches",
+  "@settingsLegalSection": {
+    "description": "Legal section header (privacy + imprint)"
+  },
   "settingsRowProfile": "Profil",
   "@settingsRowProfile": {
     "description": "Profile row label"
@@ -1139,13 +1155,13 @@
   "@settingsRowExportSub": {
     "description": "Export row subtitle"
   },
-  "settingsRowResetSessions": "Lokale Trainings-Sessions zurücksetzen",
+  "settingsRowResetSessions": "Trainings-Sessions zurücksetzen",
   "@settingsRowResetSessions": {
-    "description": "Reset sessions row label. Scope: deletes Sniper and Finisseur training sessions stored locally. Does NOT touch match drafts or the inbox cache."
+    "description": "Reset sessions row label. Deletes Sniper and Finisseur training sessions both locally and on the server."
   },
-  "settingsRowResetSessionsSub": "alle Trainings-Sessions löschen",
+  "settingsRowResetSessionsSub": "lokal und auf dem Server löschen",
   "@settingsRowResetSessionsSub": {
-    "description": "Reset sessions row subtitle. Mirrors the label scope: Sniper + Finisseur sessions only, no match drafts, no inbox cache."
+    "description": "Reset sessions row subtitle. Local drift rows plus the server-stored cloud aggregates."
   },
   "settingsRowDeleteProfile": "Profil löschen",
   "@settingsRowDeleteProfile": {
@@ -1219,7 +1235,7 @@
   "@confirmResetSessionsTitle": {
     "description": "Reset sessions confirm title"
   },
-  "confirmResetSessionsBody": "Alle Trainings-Sessions werden unwiderruflich gelöscht. Dein Profil bleibt bestehen.",
+  "confirmResetSessionsBody": "Alle Trainings-Sessions werden unwiderruflich gelöscht — lokal und auf dem Server. Dein Profil bleibt bestehen.",
   "@confirmResetSessionsBody": {
     "description": "Reset sessions confirm body"
   },
@@ -1881,6 +1897,195 @@
   "@tournamentWizardDisplayNameLabel": {
     "description": "Display-name input label"
   },
+  "tournamentWizardLocationLabel": "Ort",
+  "@tournamentWizardLocationLabel": {
+    "description": "Venue / town input label on the Stammdaten step"
+  },
+  "tournamentWizardLocationHint": "z.B. Sportplatz Esp, Fislisbach",
+  "@tournamentWizardLocationHint": {
+    "description": "Placeholder for the location field"
+  },
+  "tournamentWizardEventDateLabel": "Datum & Startzeit",
+  "@tournamentWizardEventDateLabel": {
+    "description": "Tournament start date+time field label"
+  },
+  "tournamentWizardRegistrationDeadlineLabel": "Anmeldeschluss",
+  "@tournamentWizardRegistrationDeadlineLabel": {
+    "description": "In-app registration deadline field label"
+  },
+  "tournamentWizardDateNotSet": "Nicht gesetzt",
+  "@tournamentWizardDateNotSet": {
+    "description": "Placeholder shown on a date field before a value is picked"
+  },
+  "tournamentWizardOptional": "optional",
+  "@tournamentWizardOptional": {
+    "description": "Small badge marking an optional setup field"
+  },
+  "tournamentWizardLeagueCategoriesLabel": "Liga-Kategorien",
+  "@tournamentWizardLeagueCategoriesLabel": {
+    "description": "League categories (A/B/C) multi-select label"
+  },
+  "tournamentWizardLeagueCategoriesHint": "Für welche Liga zählt dieses Turnier? Mehrfachauswahl möglich.",
+  "@tournamentWizardLeagueCategoriesHint": {
+    "description": "Helper text under the league categories selector"
+  },
+  "tournamentWizardLeagueCategory": "Liga {category}",
+  "@tournamentWizardLeagueCategory": {
+    "description": "League tier chip label",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "tournamentWizardScoringLabel": "Wertung",
+  "@tournamentWizardScoringLabel": {
+    "description": "Scoring system selector label"
+  },
+  "tournamentWizardScoringEkc": "EKC",
+  "@tournamentWizardScoringEkc": {
+    "description": "EKC scoring option title"
+  },
+  "tournamentWizardScoringEkcHint": "1 Punkt pro Basekubb + 3 für den Satz",
+  "@tournamentWizardScoringEkcHint": {
+    "description": "EKC scoring option subtitle"
+  },
+  "tournamentWizardScoringClassic": "Klassisch",
+  "@tournamentWizardScoringClassic": {
+    "description": "Classic scoring option title"
+  },
+  "tournamentWizardScoringClassicHint": "Nur Satzsieg zählt",
+  "@tournamentWizardScoringClassicHint": {
+    "description": "Classic scoring option subtitle"
+  },
+  "tournamentWizardSectionParticipation": "Teilnahme",
+  "@tournamentWizardSectionParticipation": {
+    "description": "Section header: fee / payment / contact"
+  },
+  "tournamentWizardSectionRules": "Regeln & Dokumente",
+  "@tournamentWizardSectionRules": {
+    "description": "Section header: rule variants + PDFs"
+  },
+  "tournamentWizardSectionInfo": "Infos für Teilnehmer",
+  "@tournamentWizardSectionInfo": {
+    "description": "Section header: free-text info blocks"
+  },
+  "tournamentWizardVenueAddressLabel": "Adresse",
+  "@tournamentWizardVenueAddressLabel": {
+    "description": "Venue address field label"
+  },
+  "tournamentWizardVenueAddressHint": "Strasse, PLZ Ort",
+  "@tournamentWizardVenueAddressHint": {
+    "description": "Venue address placeholder"
+  },
+  "tournamentWizardEntryFeeLabel": "Teilnahmegebühr (CHF)",
+  "@tournamentWizardEntryFeeLabel": {
+    "description": "Entry fee field label"
+  },
+  "tournamentWizardEntryFeeHint": "z.B. 10",
+  "@tournamentWizardEntryFeeHint": {
+    "description": "Entry fee placeholder"
+  },
+  "tournamentWizardPaymentMethodsLabel": "Zahlungsarten",
+  "@tournamentWizardPaymentMethodsLabel": {
+    "description": "Payment methods multi-select label"
+  },
+  "tournamentWizardPaymentCash": "Bar",
+  "@tournamentWizardPaymentCash": {
+    "description": "Cash payment chip"
+  },
+  "tournamentWizardPaymentTwint": "Twint",
+  "@tournamentWizardPaymentTwint": {
+    "description": "Twint payment chip"
+  },
+  "tournamentWizardPaymentCard": "Karte",
+  "@tournamentWizardPaymentCard": {
+    "description": "Card payment chip"
+  },
+  "tournamentWizardContactNameLabel": "Kontaktperson",
+  "@tournamentWizardContactNameLabel": {
+    "description": "Contact person name field label"
+  },
+  "tournamentWizardContactPhoneLabel": "Kontakt-Telefon",
+  "@tournamentWizardContactPhoneLabel": {
+    "description": "Contact phone field label"
+  },
+  "tournamentWizardContactPhoneHint": "Für kurzfristige Ab-/Ummeldungen",
+  "@tournamentWizardContactPhoneHint": {
+    "description": "Contact phone placeholder"
+  },
+  "tournamentWizardInfoFoodLabel": "Verpflegung",
+  "@tournamentWizardInfoFoodLabel": {
+    "description": "Food/catering info field label"
+  },
+  "tournamentWizardInfoTravelLabel": "Anfahrt",
+  "@tournamentWizardInfoTravelLabel": {
+    "description": "Travel/arrival info field label"
+  },
+  "tournamentWizardInfoAccommodationLabel": "Übernachtung",
+  "@tournamentWizardInfoAccommodationLabel": {
+    "description": "Accommodation info field label"
+  },
+  "tournamentWizardWeatherLabel": "Wetter-Hinweis",
+  "@tournamentWizardWeatherLabel": {
+    "description": "Weather note field label"
+  },
+  "tournamentWizardOpeningRuleLabel": "Anspielregel",
+  "@tournamentWizardOpeningRuleLabel": {
+    "description": "Opening rule field label"
+  },
+  "tournamentWizardRuleSureshot": "Sureshot",
+  "@tournamentWizardRuleSureshot": {
+    "description": "Sureshot rule toggle title"
+  },
+  "tournamentWizardRuleSureshotHint": "König muss rückwärts zwischen den Beinen geworfen werden",
+  "@tournamentWizardRuleSureshotHint": {
+    "description": "Sureshot rule toggle subtitle"
+  },
+  "tournamentWizardRuleDiggy": "Diggy-Regel",
+  "@tournamentWizardRuleDiggy": {
+    "description": "Diggy rule toggle title"
+  },
+  "tournamentWizardRuleDiggyHint": "Doppel-Chriesi dürfen aufgestellt werden",
+  "@tournamentWizardRuleDiggyHint": {
+    "description": "Diggy rule toggle subtitle"
+  },
+  "tournamentWizardRuleStrafkubb": "Strafkubb mit Abstand",
+  "@tournamentWizardRuleStrafkubb": {
+    "description": "Penalty kubb rule toggle title"
+  },
+  "tournamentWizardRuleStrafkubbHint": "Strafkubb mind. eine Stocklänge von der Grundlinie",
+  "@tournamentWizardRuleStrafkubbHint": {
+    "description": "Penalty kubb rule toggle subtitle"
+  },
+  "tournamentWizardRulesPdfLabel": "Regelwerk (PDF)",
+  "@tournamentWizardRulesPdfLabel": {
+    "description": "Rules PDF upload field label"
+  },
+  "tournamentWizardSiteMapPdfLabel": "Lageplan (PDF)",
+  "@tournamentWizardSiteMapPdfLabel": {
+    "description": "Site map PDF upload field label"
+  },
+  "tournamentWizardPdfUpload": "PDF hochladen",
+  "@tournamentWizardPdfUpload": {
+    "description": "PDF upload button label"
+  },
+  "tournamentWizardPdfUploaded": "Hochgeladen",
+  "@tournamentWizardPdfUploaded": {
+    "description": "Badge shown once a PDF is uploaded"
+  },
+  "tournamentWizardPdfUploading": "Lädt hoch …",
+  "@tournamentWizardPdfUploading": {
+    "description": "Status while a PDF uploads"
+  },
+  "tournamentWizardPdfRemove": "Entfernen",
+  "@tournamentWizardPdfRemove": {
+    "description": "Remove uploaded PDF action"
+  },
+  "tournamentWizardPdfUploadError": "Upload fehlgeschlagen",
+  "@tournamentWizardPdfUploadError": {
+    "description": "Snackbar message when a PDF upload fails"
+  },
   "tournamentWizardMinParticipantsLabel": "Min. Teilnehmer",
   "@tournamentWizardMinParticipantsLabel": {
     "description": "Min participants stepper label"
@@ -1953,6 +2158,70 @@
   "tournamentListNewButton": "Neues Turnier",
   "@tournamentListNewButton": {
     "description": "FAB label opening the setup wizard"
+  },
+  "tournamentHubRegisteredTitle": "Angemeldete Turniere",
+  "@tournamentHubRegisteredTitle": {
+    "description": "Hub tile: tournaments the user is registered for"
+  },
+  "tournamentHubRegisteredSubtitle": "Deine Anmeldungen verwalten",
+  "@tournamentHubRegisteredSubtitle": {
+    "description": "Hub tile subtitle for registered tournaments"
+  },
+  "tournamentHubBrowseSubtitle": "Ausgeschriebene Turniere stöbern",
+  "@tournamentHubBrowseSubtitle": {
+    "description": "Hub tile subtitle for the public tournament list"
+  },
+  "tournamentHubCreateTitle": "Turnier erstellen",
+  "@tournamentHubCreateTitle": {
+    "description": "Hub tile (organizer only): create/publish a tournament"
+  },
+  "tournamentHubCreateSubtitle": "Als Veranstalter publizieren",
+  "@tournamentHubCreateSubtitle": {
+    "description": "Hub tile subtitle for create tournament"
+  },
+  "tournamentHubStatsTitle": "Turnierstatistik",
+  "@tournamentHubStatsTitle": {
+    "description": "Hub tile: tournament statistics (placeholder)"
+  },
+  "tournamentHubStatsSubtitle": "In Vorbereitung",
+  "@tournamentHubStatsSubtitle": {
+    "description": "Hub tile subtitle for the not-yet-built stats screen"
+  },
+  "tournamentRegistrationsTitle": "Angemeldet",
+  "@tournamentRegistrationsTitle": {
+    "description": "Screen title: my tournament registrations"
+  },
+  "tournamentRegistrationsEmptyTitle": "Noch keine Anmeldung",
+  "@tournamentRegistrationsEmptyTitle": {
+    "description": "Empty state title on the registrations screen"
+  },
+  "tournamentRegistrationsEmptyBody": "Sobald du dich bei einem ausgeschriebenen Turnier anmeldest, erscheint es hier.",
+  "@tournamentRegistrationsEmptyBody": {
+    "description": "Empty state body on the registrations screen"
+  },
+  "tournamentBrowseEmptyBody": "Sobald Veranstalter Turniere ausschreiben, erscheinen sie hier.",
+  "@tournamentBrowseEmptyBody": {
+    "description": "Empty state body on the public tournament list"
+  },
+  "tournamentRegistrationsWithdraw": "Abmelden",
+  "@tournamentRegistrationsWithdraw": {
+    "description": "Button: withdraw from a tournament"
+  },
+  "tournamentWithdrawConfirmTitle": "Vom Turnier abmelden?",
+  "@tournamentWithdrawConfirmTitle": {
+    "description": "Withdraw confirmation dialog title"
+  },
+  "tournamentWithdrawConfirmBody": "Deine Anmeldung wird zurückgezogen. Solange die Registrierung offen ist, kannst du dich erneut anmelden.",
+  "@tournamentWithdrawConfirmBody": {
+    "description": "Withdraw confirmation dialog body"
+  },
+  "tournamentStatsComingSoonTitle": "Turnierstatistik kommt bald",
+  "@tournamentStatsComingSoonTitle": {
+    "description": "Placeholder title on the tournament stats screen"
+  },
+  "tournamentStatsComingSoonBody": "Hier siehst du künftig deine Turnier-Bilanz, Platzierungen und den Verlauf.",
+  "@tournamentStatsComingSoonBody": {
+    "description": "Placeholder body on the tournament stats screen"
   },
   "tournamentListEmptyMine": "Du hast noch keine Turniere erstellt.",
   "@tournamentListEmptyMine": {
@@ -2866,6 +3135,10 @@
   "teamCreateErrorGeneric": "Team konnte nicht erstellt werden — bitte erneut versuchen.",
   "@teamCreateErrorGeneric": {
     "description": "Snackbar shown when team creation fails"
+  },
+  "teamCreateErrorAuth": "Du bist nicht angemeldet — bitte melde dich erneut an und versuche es nochmal.",
+  "@teamCreateErrorAuth": {
+    "description": "Snackbar shown when team creation fails because the user has no valid session (permission/auth error)"
   },
   "teamDetailHeaderLeague": "Liga: {league}",
   "@teamDetailHeaderLeague": {

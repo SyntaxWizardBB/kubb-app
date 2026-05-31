@@ -163,6 +163,21 @@ enum MatchRole {
   }
 }
 
+/// A single opponent (opposing-team participant) of a match, used by the
+/// match-stats "filter by dueled player" control. Sourced from the
+/// `opponents` array of `match_list_for_caller`.
+class MatchOpponent {
+  const MatchOpponent({required this.userId, required this.displayName});
+
+  factory MatchOpponent.fromJson(Map<String, dynamic> json) => MatchOpponent(
+        userId: json['user_id'] as String,
+        displayName: (json['display_name'] as String?) ?? 'Spieler',
+      );
+
+  final String userId;
+  final String displayName;
+}
+
 /// One row from `match_list_for_caller`. The lightweight, list-view shape.
 class MatchSummary {
   const MatchSummary({
@@ -175,6 +190,7 @@ class MatchSummary {
     required this.myTeamId,
     required this.opponentTeamSize,
     required this.myRole,
+    this.opponents = const <MatchOpponent>[],
     this.winnerTeamId,
     this.finalScoreA,
     this.finalScoreB,
@@ -201,6 +217,9 @@ class MatchSummary {
       myTeamId: row['my_team_id'] as String?,
       opponentTeamSize: opponentSize,
       myRole: MatchRole.fromWire(row['my_role'] as String),
+      opponents: (row['opponents'] as List<dynamic>? ?? const <dynamic>[])
+          .map((e) => MatchOpponent.fromJson(e as Map<String, dynamic>))
+          .toList(growable: false),
       winnerTeamId: row['winner_team_id'] as String?,
       finalScoreA: scoreARaw == null
           ? null
@@ -222,6 +241,10 @@ class MatchSummary {
   final String? myTeamId;
   final int opponentTeamSize;
   final MatchRole myRole;
+
+  /// Opposing-team participants (with nicknames). Empty for observers or
+  /// solo formats. Drives the match-stats opponent filter.
+  final List<MatchOpponent> opponents;
 
   /// 'A', 'B', or null. Populated once the match status is `finalized`.
   /// Null for ongoing matches and for ties (points scoring with equal

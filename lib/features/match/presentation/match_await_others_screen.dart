@@ -100,7 +100,7 @@ class _MatchAwaitOthersScreenState
         // gesture actually leaves the await-others screen.
         leading: BackButton(
           color: tokens.fg,
-          onPressed: () => context.go('/'),
+          onPressed: () => context.go('/training'),
         ),
       ),
       body: detailAsync.when(

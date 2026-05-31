@@ -68,7 +68,7 @@ class _SniperConfigScreenState extends ConsumerState<SniperConfigScreen> {
           icon: const Icon(LucideIcons.arrowLeft),
           color: tokens.fg,
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          onPressed: () => context.go('/'),
+          onPressed: () => context.go('/training'),
         ),
       ),
       body: SingleChildScrollView(

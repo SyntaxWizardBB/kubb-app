@@ -31,17 +31,19 @@ void main() {
     return tapped;
   }
 
-  testWidgets('renders all four tab labels', (tester) async {
-    await pumpNav(tester, currentIndex: 0);
+  testWidgets('renders three tab labels and no profile tab', (tester) async {
+    await pumpNav(tester, currentIndex: 1);
     final ctx = tester.element(find.byType(KubbBottomNav));
     final l = AppLocalizations.of(ctx);
-    expect(find.text(l.homeAppTitle), findsOneWidget);
     expect(find.text(l.homeFabLabel), findsOneWidget);
-    expect(find.text(l.tournamentListTitle), findsOneWidget);
-    expect(find.text(l.profileTitle), findsOneWidget);
+    expect(find.text(l.homeAppTitle), findsOneWidget);
+    expect(find.text(l.tournamentListEyebrow), findsOneWidget);
+    // Profile is no longer a tab — it hangs off the home AppBar avatar.
+    expect(find.text(l.profileTitle), findsNothing);
   });
 
-  testWidgets('tapping a tab fires onTap with its index', (tester) async {
+  testWidgets('tabs fire their index, home sits in the middle (1)',
+      (tester) async {
     int? captured;
     await tester.pumpWidget(
       ProviderScope(
@@ -52,7 +54,7 @@ void main() {
           home: Scaffold(
             body: const SizedBox.shrink(),
             bottomNavigationBar: KubbBottomNav(
-              currentIndex: 0,
+              currentIndex: 1,
               onTap: (i) => captured = i,
             ),
           ),
@@ -62,7 +64,19 @@ void main() {
     await tester.pumpAndSettle();
 
     final l = AppLocalizations.of(tester.element(find.byType(KubbBottomNav)));
-    await tester.tap(find.text(l.tournamentListTitle));
+
+    // Training on the left (index 0).
+    await tester.tap(find.text(l.homeFabLabel));
+    await tester.pumpAndSettle();
+    expect(captured, 0);
+
+    // Home in the middle (index 1).
+    await tester.tap(find.text(l.homeAppTitle));
+    await tester.pumpAndSettle();
+    expect(captured, 1);
+
+    // Tournaments on the right (index 2).
+    await tester.tap(find.text(l.tournamentListEyebrow));
     await tester.pumpAndSettle();
     expect(captured, 2);
   });

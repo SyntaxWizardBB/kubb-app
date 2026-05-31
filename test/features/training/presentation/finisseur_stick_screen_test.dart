@@ -139,14 +139,15 @@ void main() {
     expect(find.text('Session abschliessen'), findsOneWidget);
   });
 
-  testWidgets('long-dubbie tap sets eightM and increments fieldHits',
+  testWidgets('long-dubbie tap sets eightM and knocks down all field kubbs',
       (tester) async {
+    // seed() has field: 7, so all seven remaining field kubbs go down.
     final notifier = await pump(tester);
     await tester.ensureVisible(find.text('Long Dubbie'));
     await tester.tap(find.widgetWithText(InkWell, 'Long Dubbie'));
     await tester.pumpAndSettle();
     expect(notifier.lastPatch?.eightMHit, isTrue);
-    expect(notifier.lastPatch?.fieldHits, 1);
+    expect(notifier.lastPatch?.fieldHits, 7);
   });
 
   testWidgets('long-dubbie hidden when long-dubbie tracking is off',

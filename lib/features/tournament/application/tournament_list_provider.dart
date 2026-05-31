@@ -17,6 +17,15 @@ final tournamentListProvider =
   },
 );
 
+/// Tournaments the caller is actively registered for (P1 Tournament-Hub).
+/// Backed by `tournament_list_my_registrations`; the hub's "Angemeldete
+/// Turniere" list watches this, and the withdraw action invalidates it to
+/// refresh after a self-withdraw.
+final myTournamentRegistrationsProvider =
+    FutureProvider<List<MyTournamentRegistration>>((ref) async {
+  return ref.read(tournamentRemoteProvider).listMyRegistrations();
+});
+
 /// Full detail payload for one tournament. Null when the caller has no
 /// read access on the row (RLS / RPC returns no record).
 // ignore: specify_nonobvious_property_types

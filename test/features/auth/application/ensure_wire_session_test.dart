@@ -71,6 +71,23 @@ void main() {
     expect(result, WireSessionOutcome.alreadyLive);
   });
 
+  test(
+    'force re-sign ignores a (stale) live wire token and re-signs keypair',
+    () async {
+      // Expired-JWT scenario: gotrue still reports an access token, but
+      // PostgREST already rejects it with PGRST303. The plain path would
+      // short-circuit on `alreadyLive`; force must re-mint instead.
+      adapter.wireAccessTokenOverride = 'stale-but-present-token';
+      await seedCache(kind: 'keypair');
+      await seedPrivateKey();
+
+      final result =
+          await container.read(forceReSignWireSessionProvider)();
+
+      expect(result, WireSessionOutcome.keypairResigned);
+    },
+  );
+
   test('returns noCachedSession when drift cache is empty', () async {
     adapter.wireAccessTokenOverride = null;
 

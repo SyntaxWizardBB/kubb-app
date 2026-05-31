@@ -58,12 +58,12 @@ class StatsRepository {
     }
 
     final totalThrows = stats.fold<int>(0, (a, x) => a + x.totalThrows);
-    // Heli counts as a miss for the rate denominator, regardless of whether
-    // the heli setting is on (the setting only controls whether helis show
-    // up in the throw count).
+    // When heli tracking is on, helis count as a miss in the rate denominator.
+    // When it is off, helis are excluded entirely — they leave both the throw
+    // count and the quota, so the rate is computed over hits + misses only.
     final divisor = stats.fold<int>(
       0,
-      (a, x) => a + x.hits + x.misses + x.helis,
+      (a, x) => a + x.hits + x.misses + (heliTracking ? x.helis : 0),
     );
     final hitsTotal = stats.fold<int>(0, (a, x) => a + x.hits);
     final hitRate = divisor == 0 ? 0 : ((hitsTotal / divisor) * 100).round();
@@ -83,7 +83,7 @@ class StatsRepository {
     var runDiv = 0;
     for (final s in stats) {
       runHits += s.hits;
-      runDiv += s.hits + s.misses + s.helis;
+      runDiv += s.hits + s.misses + (heliTracking ? s.helis : 0);
       trend.add(runDiv == 0 ? 0 : ((runHits / runDiv) * 100).round());
     }
     final rows = stats.reversed.take(_maxSessionRows).map((s) {
@@ -134,7 +134,7 @@ class StatsRepository {
           streak = 0;
       }
     }
-    final divisor = hits + misses + helis;
+    final divisor = hits + misses + (heliTracking ? helis : 0);
     final rate = divisor == 0 ? 0 : ((hits / divisor) * 100).round();
     final total = hits + misses + (heliTracking ? helis : 0);
     return _PerSession(
@@ -156,6 +156,10 @@ class StatsRepository {
   Future<FinisseurStatsAggregate> computeFinisseurAggregate({
     required String playerId,
     StatsFilter filter = const StatsFilter(),
+    bool heliTracking = true,
+    bool penaltyKubbTracking = true,
+    bool kingThrowTracking = true,
+    bool longDubbieTracking = true,
     DateTime? now,
   }) async {
     final dao = _finisseur;
@@ -200,10 +204,14 @@ class StatsRepository {
         sticksTouched++;
         fieldDown += e.fieldKubbsHit;
         if (e.eightMHit) baseDown++;
-        if (e.heliThrow) heli++;
-        if (e.fieldKubbsHit > 0 && e.eightMHit) longDubbies++;
-        penalty += e.penaltyHits1 + e.penaltyHits2;
-        final kingHit = e.kingHit;
+        // Each tracking toggle gates its metric: when disabled the element
+        // leaves the stats entirely (and, for the king, the success quota).
+        if (heliTracking && e.heliThrow) heli++;
+        if (longDubbieTracking && e.fieldKubbsHit > 0 && e.eightMHit) {
+          longDubbies++;
+        }
+        if (penaltyKubbTracking) penalty += e.penaltyHits1 + e.penaltyHits2;
+        final kingHit = kingThrowTracking ? e.kingHit : null;
         if (kingHit != null) {
           sessionKingAttempts++;
           if (kingHit) sessionKingHits++;

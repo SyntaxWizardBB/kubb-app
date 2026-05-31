@@ -104,3 +104,19 @@ final class TeamInvitationId extends TypedId {
   @override
   String get _typeTag => 'TeamInvitationId';
 }
+
+final class ClubId extends TypedId {
+  const ClubId(super.value);
+  @override
+  String get _typeTag => 'ClubId';
+}
+
+final class ClubInvitationId extends TypedId {
+  ClubInvitationId(super.value) {
+    if (value.isEmpty) {
+      throw ArgumentError.value(value, 'value', 'must not be empty');
+    }
+  }
+  @override
+  String get _typeTag => 'ClubInvitationId';
+}

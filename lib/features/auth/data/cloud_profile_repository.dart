@@ -8,6 +8,7 @@ class CloudProfile {
     this.avatarColor,
     this.onboardingCompleted = false,
     this.visibility = ProfileVisibility.friendsOnly,
+    this.isOrganizer = true,
   });
 
   final String userId;
@@ -21,12 +22,20 @@ class CloudProfile {
   /// Art. 25).
   final ProfileVisibility visibility;
 
+  /// Whether the user may create/publish tournaments (coarse organizer
+  /// role, P1 Tournament-Hub). Defaults to `true` so every account is an
+  /// organizer for now; a later verification flow (Roadmap B10) can flip
+  /// the server-side default. Drives the "create tournament" tile on the
+  /// tournament hub and is enforced server-side in `tournament_create`.
+  final bool isOrganizer;
+
   CloudProfile copyWith({
     String? userId,
     String? nickname,
     String? avatarColor,
     bool? onboardingCompleted,
     ProfileVisibility? visibility,
+    bool? isOrganizer,
   }) {
     return CloudProfile(
       userId: userId ?? this.userId,
@@ -34,6 +43,7 @@ class CloudProfile {
       avatarColor: avatarColor ?? this.avatarColor,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
       visibility: visibility ?? this.visibility,
+      isOrganizer: isOrganizer ?? this.isOrganizer,
     );
   }
 }

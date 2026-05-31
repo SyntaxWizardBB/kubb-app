@@ -18,7 +18,7 @@ void main() {
       ProviderScope(
         overrides: [
           displayProfileProvider.overrideWithValue(profile),
-          recentSessionsProvider.overrideWith((ref) => Stream.value(recent)),
+          recentActivityProvider.overrideWith((ref) async => recent),
           crashRecoveryProvider.overrideWith((ref) async => null),
         ],
         child: MaterialApp(
@@ -54,10 +54,11 @@ void main() {
     await pump(
       tester,
       profile: profileNamed('Lukas'),
-      recent: const [
+      recent: [
         RecentSessionView(
           modeTag: 'Sniper',
           hitRatePercent: 64,
+          completedAt: DateTime.utc(2026, 5, 2),
           subtitle: '8.0 m · 36 Würfe · gestern',
         ),
       ],
@@ -69,15 +70,13 @@ void main() {
     expect(find.text('64 %'), findsOneWidget);
   });
 
-  testWidgets('FAB opens training sheet', (tester) async {
+  // P7: the home FAB + TrainingSheet were removed — training now starts from
+  // the Training tab. The home screen shows the "Meine Vereine" tile instead.
+  testWidgets('shows the Meine Vereine tile', (tester) async {
     await pump(tester, profile: profileNamed('Lukas'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Training'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Welcher Modus?'), findsOneWidget);
-    expect(find.text('Sniper-Training'), findsOneWidget);
+    expect(find.text('Meine Vereine'), findsOneWidget);
   });
 
   testWidgets('falls back to greeting without name when no profile',
@@ -95,6 +94,6 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byType(HomeScreen), findsOneWidget);
-    expect(find.text('Training'), findsOneWidget);
+    expect(find.text('Meine Vereine'), findsOneWidget);
   });
 }

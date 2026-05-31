@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
@@ -9,6 +10,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/social/application/social_providers.dart';
 import 'package:kubb_app/features/social/data/friend_models.dart';
+import 'package:kubb_app/features/social/presentation/social_routes.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -354,11 +356,20 @@ class _FriendTile extends StatelessWidget {
       );
     }
 
+    // Accepted friends open their profile + training stats on tap; pending
+    // rows have no profile to show yet.
+    final canOpen = !entry.isPending;
     return _UserTile(
       nickname: entry.nickname,
       subtitle: subtitle,
       trailing: trailing,
       highlight: isIncomingPending,
+      onTap: canOpen
+          ? () => context.push<void>(
+                SocialRoutes.friendProfile(entry.userId),
+                extra: entry.nickname,
+              )
+          : null,
     );
   }
 }
@@ -369,6 +380,7 @@ class _UserTile extends StatelessWidget {
     required this.subtitle,
     required this.trailing,
     this.highlight = false,
+    this.onTap,
   });
 
   final String nickname;
@@ -376,11 +388,15 @@ class _UserTile extends StatelessWidget {
   final Widget trailing;
   final bool highlight;
 
+  /// Tapping the tile opens the player's profile. Null for rows that have no
+  /// profile to open yet (e.g. non-friends in the search list).
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final initial = nickname.isEmpty ? '?' : nickname[0].toUpperCase();
-    return Container(
+    final content = Container(
       padding: const EdgeInsets.symmetric(
         horizontal: KubbTokens.space3,
         vertical: KubbTokens.space2,
@@ -434,6 +450,15 @@ class _UserTile extends StatelessWidget {
           ),
           trailing,
         ],
+      ),
+    );
+    if (onTap == null) return content;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+        child: content,
       ),
     );
   }

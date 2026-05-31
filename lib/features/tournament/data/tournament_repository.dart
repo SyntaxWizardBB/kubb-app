@@ -206,6 +206,44 @@ class TournamentRepository implements TournamentRemote {
   }
 
   @override
+  Future<List<MyTournamentRegistration>> listMyRegistrations() async {
+    final rows = await _client.rpc<List<dynamic>>(
+      'tournament_list_my_registrations',
+      params: const <String, dynamic>{'p_limit': 50},
+    );
+    return rows.cast<Map<String, dynamic>>().map((row) {
+      return MyTournamentRegistration(
+        tournament: tournamentSummaryRefFromRow(row),
+        participantId:
+            TournamentParticipantId(row['participant_id']! as String),
+        status: _registrationStatusFromWire(
+          row['registration_status']! as String,
+        ),
+      );
+    }).toList(growable: false);
+  }
+
+  /// Maps the raw `tournament_participants.registration_status` wire value
+  /// onto the domain enum. The DB stores `confirmed` where the domain enum
+  /// says `approved`, so a plain `.name` lookup would throw — hence the
+  /// explicit switch.
+  TournamentParticipantStatus _registrationStatusFromWire(String raw) {
+    switch (raw) {
+      case 'confirmed':
+        return TournamentParticipantStatus.approved;
+      case 'waitlist':
+        return TournamentParticipantStatus.waitlist;
+      case 'withdrawn':
+        return TournamentParticipantStatus.withdrawn;
+      case 'rejected':
+        return TournamentParticipantStatus.rejected;
+      case 'pending':
+      default:
+        return TournamentParticipantStatus.pending;
+    }
+  }
+
+  @override
   Future<TournamentId> createTournament({
     required String displayName,
     required int teamSize,
@@ -214,6 +252,7 @@ class TournamentRepository implements TournamentRemote {
     required TournamentFormat format,
     required Map<String, Object?> matchFormatConfig,
     required List<String> tiebreakerOrder,
+    Map<String, Object?> setup = const <String, Object?>{},
   }) async {
     final response = await _client.rpc<Map<String, dynamic>>(
       'tournament_create',
@@ -225,6 +264,7 @@ class TournamentRepository implements TournamentRemote {
         'p_format': format.toWire(),
         'p_match_format_config': matchFormatConfig,
         'p_tiebreaker_order': tiebreakerOrder,
+        'p_setup': setup,
       },
     );
     return TournamentId(response['tournament_id']! as String);

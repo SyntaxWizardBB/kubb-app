@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/auth/presentation/account_section.dart';
@@ -8,7 +7,6 @@ import 'package:kubb_app/features/settings/application/danger_actions_notifier.d
 import 'package:kubb_app/features/settings/presentation/confirm_dialog.dart';
 import 'package:kubb_app/features/settings/presentation/csv_export_modal.dart';
 import 'package:kubb_app/features/settings/presentation/widgets/app_section.dart';
-import 'package:kubb_app/features/settings/presentation/widgets/profile_visibility_section.dart';
 import 'package:kubb_app/features/settings/presentation/widgets/settings_row.dart';
 import 'package:kubb_app/features/settings/presentation/widgets/settings_section.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -30,16 +28,9 @@ class SettingsScreen extends ConsumerWidget {
         padding: const EdgeInsets.only(bottom: KubbTokens.space8),
         children: [
           const AccountSection(),
-          const ProfileVisibilitySection(),
           SettingsSection(
             title: l.settingsDataSection,
             children: [
-              SettingsRow(
-                icon: LucideIcons.barChart3,
-                label: l.settingsRowStats,
-                subtitle: l.settingsRowStatsSub,
-                onTap: () => context.push('/stats'),
-              ),
               SettingsRow(
                 icon: LucideIcons.download,
                 label: l.settingsRowExport,
@@ -57,7 +48,11 @@ class SettingsScreen extends ConsumerWidget {
           ),
           SettingsSection(
             title: l.settingsAppSection,
-            children: const [SettingsAppBlock()],
+            children: const [AppOptionsBlock()],
+          ),
+          SettingsSection(
+            title: l.settingsFinisseurSection,
+            children: const [FinisseurOptionsBlock()],
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -66,11 +61,15 @@ class SettingsScreen extends ConsumerWidget {
               KubbTokens.space4,
               0,
             ),
-            child: Center(
-              child: Text(
-                l.settingsFooterTagline,
-                style: TextStyle(color: tokens.fgMuted, fontSize: 12),
-              ),
+            child: Column(
+              children: [
+                const SettingsVersionRow(),
+                const SizedBox(height: KubbTokens.space1),
+                Text(
+                  l.settingsFooterTagline,
+                  style: TextStyle(color: tokens.fgMuted, fontSize: 12),
+                ),
+              ],
             ),
           ),
         ],

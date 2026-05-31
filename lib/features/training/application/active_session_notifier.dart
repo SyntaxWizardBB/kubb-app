@@ -5,6 +5,7 @@ import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/features/achievements/application/badge_unlock_listener.dart';
 import 'package:kubb_app/features/training/application/active_session_state.dart';
+import 'package:kubb_app/features/training/application/cloud_training_provider.dart';
 import 'package:kubb_app/features/training/data/training_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:logging/logging.dart';
@@ -71,6 +72,11 @@ class ActiveSessionNotifier extends AsyncNotifier<ActiveSessionState?> {
   Future<void> complete() => _serialize(() => _withActive((s) async {
         await _repo.markCompleted(sessionId: s.sessionId);
         await _fireBadgeEvaluation(s);
+        // Best-effort cloud mirror (P2). Fire-and-forget so an offline
+        // upload never blocks completing the local session.
+        unawaited(
+          ref.read(cloudSessionUploaderProvider).uploadCompleted(s.sessionId),
+        );
         state = const AsyncData(null);
       }));
 

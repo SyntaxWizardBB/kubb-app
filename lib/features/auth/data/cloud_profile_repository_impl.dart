@@ -35,7 +35,7 @@ class CloudProfileRepositoryImpl implements CloudProfileRepository {
         .from('user_profiles')
         .select(
           'user_id, nickname, avatar_color, onboarding_completed, '
-          'profile_visibility',
+          'profile_visibility, is_organizer',
         )
         .eq('user_id', userId)
         .limit(1);
@@ -97,6 +97,9 @@ class CloudProfileRepositoryImpl implements CloudProfileRepository {
           (row['onboarding_completed'] as bool?) ?? false,
       visibility:
           ProfileVisibility.fromWire(row['profile_visibility'] as String?),
+      // Defaults to true so a row that predates the is_organizer column
+      // (or an update-RPC envelope that omits it) keeps create access.
+      isOrganizer: (row['is_organizer'] as bool?) ?? true,
     );
   }
 }

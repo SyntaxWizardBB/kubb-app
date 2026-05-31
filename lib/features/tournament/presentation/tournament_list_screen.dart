@@ -4,151 +4,88 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
-import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
-import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_card.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
-/// Two-tab discovery screen. Tab 1 surfaces caller-owned drafts; tab 2
-/// shows public non-draft tournaments. Both tabs read the same list
-/// provider — RLS hides foreign drafts on the server.
-class TournamentListScreen extends ConsumerStatefulWidget {
+/// Discovery list reached from the hub's "Aktuelle Turniere" tile.
+///
+/// Shows every published (non-draft, not-yet-finished) tournament as a
+/// flat list — the per-caller "mine" view now lives behind the hub's
+/// "Angemeldete Turniere" tile, and creating is the organizer-gated hub
+/// tile, so this screen no longer needs tabs or a FAB.
+class TournamentListScreen extends ConsumerWidget {
   const TournamentListScreen({super.key});
 
-  @override
-  ConsumerState<TournamentListScreen> createState() => _State();
-}
-
-class _State extends ConsumerState<TournamentListScreen>
-    with TickerProviderStateMixin {
-  late final TabController _tab;
-
-  @override
-  void initState() {
-    super.initState();
-    _tab = TabController(length: 2, vsync: this);
-  }
+  /// Lifecycle states that count as "published / currently listed".
+  static const _published = <TournamentStatus>{
+    TournamentStatus.published,
+    TournamentStatus.registrationOpen,
+    TournamentStatus.registrationClosed,
+    TournamentStatus.live,
+  };
 
   @override
-  void dispose() {
-    _tab.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     ref.watch(tournamentListPollingProvider(null));
-
-    final myUserId = ref.watch(currentUserIdProvider);
+    final async = ref.watch(tournamentListProvider(null));
 
     return Scaffold(
       backgroundColor: tokens.bg,
       appBar: KubbAppBar(
         eyebrow: l.tournamentListEyebrow,
-        title: l.tournamentListTitle,
+        title: l.tournamentListTabPublic,
         actions: const [InboxBellAction()],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(TournamentRoutes.newTournament),
-        icon: const Icon(LucideIcons.plus),
-        label: Text(l.tournamentListNewButton),
-      ),
-      body: Column(
-        children: [
-          TabBar(
-            controller: _tab,
-            labelColor: tokens.fg,
-            unselectedLabelColor: tokens.fgMuted,
-            indicatorColor: tokens.primary,
-            tabs: [
-              Tab(text: l.tournamentListTabMine),
-              Tab(text: l.tournamentListTabPublic),
-            ],
-          ),
-          Expanded(
-            child: TabBarView(
-              controller: _tab,
-              children: [
-                _Tab(
-                  filter: (s) =>
-                      myUserId != null && s.createdBy?.value == myUserId,
-                ),
-                _Tab(
-                  filter: (s) =>
-                      s.status == TournamentStatus.registrationOpen ||
-                      s.status == TournamentStatus.registrationClosed ||
-                      s.status == TournamentStatus.live,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Tab extends ConsumerWidget {
-  const _Tab({required this.filter});
-
-  final bool Function(TournamentSummaryRef) filter;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Watched so the tab rebuilds on auth changes; the actual filter
-    // for "mine" is enforced via RLS on the server side.
-    ref.watch(currentUserIdProvider);
-    final async = ref.watch(tournamentListProvider(null));
-    return async.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(KubbTokens.space5),
-          child: Text(e.toString(),
+      body: async.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(KubbTokens.space5),
+            child: Text(
+              e.toString(),
               textAlign: TextAlign.center,
-              style: const TextStyle(color: KubbTokens.miss)),
-        ),
-      ),
-      data: (rows) {
-        final filtered = rows.where(filter).toList(growable: false);
-        if (filtered.isEmpty) {
-          final l = AppLocalizations.of(context);
-          // Erst-Nutzer-Pfad fuer beide Tabs (Mine / Public): einheitlicher
-          // Empty-State, CTA fuehrt in den Setup-Wizard. Adressiert
-          // AUDIT §4.2 und R18-F-14 (Mängel #1).
-          return KubbEmptyState(
-            title: l.emptyTournamentsTitle,
-            body: l.emptyTournamentsBody,
-            cta: KubbButton(
-              variant: KubbButtonVariant.primary,
-              onPressed: () => context.push(TournamentRoutes.newTournament),
-              child: Text(l.emptyTournamentsCta),
+              style: const TextStyle(color: KubbTokens.miss),
             ),
-          );
-        }
-        return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(KubbTokens.space4,
-              KubbTokens.space4, KubbTokens.space4, KubbTokens.space12),
-          itemCount: filtered.length,
-          separatorBuilder: (_, _) =>
-              const SizedBox(height: KubbTokens.space3),
-          itemBuilder: (context, i) {
-            final t = filtered[i];
-            return TournamentCard(
-              summary: t,
-              onTap: () => context.push(
-                  '${TournamentRoutes.detail}/${t.tournamentId.value}'),
+          ),
+        ),
+        data: (rows) {
+          final published = rows
+              .where((t) => _published.contains(t.status))
+              .toList(growable: false);
+          if (published.isEmpty) {
+            return KubbEmptyState(
+              title: l.emptyTournamentsTitle,
+              body: l.tournamentBrowseEmptyBody,
             );
-          },
-        );
-      },
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(
+              KubbTokens.space4,
+              KubbTokens.space4,
+              KubbTokens.space4,
+              KubbTokens.space12,
+            ),
+            itemCount: published.length,
+            separatorBuilder: (_, _) =>
+                const SizedBox(height: KubbTokens.space3),
+            itemBuilder: (context, i) {
+              final t = published[i];
+              return TournamentCard(
+                summary: t,
+                onTap: () => context.push(
+                  '${TournamentRoutes.detail}/${t.tournamentId.value}',
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

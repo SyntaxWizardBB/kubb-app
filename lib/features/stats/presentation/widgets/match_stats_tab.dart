@@ -4,13 +4,26 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/match/data/match_models.dart';
+import 'package:kubb_app/features/stats/application/match_stats_filter_notifier.dart';
 import 'package:kubb_app/features/stats/application/match_stats_provider.dart';
 import 'package:kubb_app/features/stats/data/match_stats_aggregate.dart';
+import 'package:kubb_app/features/stats/presentation/widgets/stats_trend_chart.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
-/// Match tab body. Watches the match-stats aggregate and renders a wins /
-/// losses / ties block plus the recent finished-match list. Tapping a row
-/// opens the finished-match detail screen.
+/// Opens the match-stats filter sheet (opponent + date range). Triggered from
+/// the stats AppBar's filter icon — the same slot the sniper/finisseur tabs
+/// use — so the match filter sits next to the inbox bell, not inline.
+Future<void> showMatchStatsFilter(BuildContext context) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (_) => const _MatchFilterSheet(),
+  );
+}
+
+/// Match tab body: active-filter chips (when set) above the wins / losses /
+/// ties block and the recent finished-match list. The filter trigger lives in
+/// the AppBar (see [showMatchStatsFilter]).
 class MatchStatsTab extends ConsumerWidget {
   const MatchStatsTab({super.key});
 
@@ -20,17 +33,227 @@ class MatchStatsTab extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final asyncAgg = ref.watch(matchStatsProvider);
 
-    return asyncAgg.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(KubbTokens.space6),
-          child: Text(e.toString(), textAlign: TextAlign.center),
+    return Column(
+      children: [
+        const _MatchActiveFilters(),
+        Expanded(
+          child: asyncAgg.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(KubbTokens.space6),
+                child: Text(e.toString(), textAlign: TextAlign.center),
+              ),
+            ),
+            data: (agg) => agg.isEmpty
+                ? _EmptyState(tokens: tokens, l: l)
+                : _Body(aggregate: agg, tokens: tokens, l: l),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Active match-filter chips (opponent / date range) with a reset action.
+/// Renders nothing when no filter is set — mirrors ActiveFilterTags on the
+/// sniper/finisseur tabs.
+class _MatchActiveFilters extends ConsumerWidget {
+  const _MatchActiveFilters();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filter = ref.watch(matchStatsFilterProvider);
+    if (!filter.isActive) return const SizedBox.shrink();
+    final opponents = ref.watch(matchOpponentsProvider).maybeWhen(
+          data: (o) => o,
+          orElse: () => const <MatchOpponent>[],
+        );
+    final fmt = DateFormat('dd.MM.yy');
+
+    String? opponentName() {
+      if (filter.opponentUserId == null) return null;
+      for (final o in opponents) {
+        if (o.userId == filter.opponentUserId) return o.displayName;
+      }
+      return 'Gegner';
+    }
+
+    final chips = <Widget>[];
+    final oppName = opponentName();
+    if (oppName != null) {
+      chips.add(InputChip(
+        label: Text(oppName),
+        onDeleted: () =>
+            ref.read(matchStatsFilterProvider.notifier).setOpponent(null),
+      ));
+    }
+    if (filter.dateFrom != null || filter.dateTo != null) {
+      final from = filter.dateFrom == null ? '…' : fmt.format(filter.dateFrom!);
+      final to = filter.dateTo == null ? '…' : fmt.format(filter.dateTo!);
+      chips.add(InputChip(
+        label: Text('$from – $to'),
+        onDeleted: () =>
+            ref.read(matchStatsFilterProvider.notifier).setRange(),
+      ));
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        KubbTokens.space4,
+        KubbTokens.space3,
+        KubbTokens.space4,
+        0,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Wrap(
+              spacing: KubbTokens.space2,
+              runSpacing: KubbTokens.space1,
+              children: chips,
+            ),
+          ),
+          TextButton(
+            onPressed: () =>
+                ref.read(matchStatsFilterProvider.notifier).clear(),
+            child: const Text('Zurücksetzen'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bottom sheet to pick a dueled opponent and a date range. Writes straight to
+/// [matchStatsFilterProvider]; the tab rebuilds reactively.
+class _MatchFilterSheet extends ConsumerWidget {
+  const _MatchFilterSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final filter = ref.watch(matchStatsFilterProvider);
+    final notifier = ref.read(matchStatsFilterProvider.notifier);
+    final opponents = ref.watch(matchOpponentsProvider).maybeWhen(
+          data: (o) => o,
+          orElse: () => const <MatchOpponent>[],
+        );
+    final fmt = DateFormat('dd.MM.yyyy');
+
+    Future<void> pick({required bool isFrom}) async {
+      final now = DateTime.now();
+      final initial = (isFrom ? filter.dateFrom : filter.dateTo) ?? now;
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: initial,
+        firstDate: DateTime(2024),
+        lastDate: DateTime(now.year + 1, 12, 31),
+      );
+      if (picked == null) return;
+      notifier.setRange(
+        from: isFrom ? picked : filter.dateFrom,
+        to: isFrom ? filter.dateTo : picked,
+      );
+    }
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(KubbTokens.space4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Match-Filter',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: tokens.fg,
+              ),
+            ),
+            const SizedBox(height: KubbTokens.space4),
+            Text('GEGNER',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.88,
+                  color: tokens.fgMuted,
+                )),
+            const SizedBox(height: KubbTokens.space2),
+            DropdownButtonFormField<String?>(
+              initialValue: filter.opponentUserId,
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+              items: [
+                const DropdownMenuItem<String?>(
+                  child: Text('Alle Gegner'),
+                ),
+                for (final o in opponents)
+                  DropdownMenuItem<String?>(
+                    value: o.userId,
+                    child: Text(o.displayName),
+                  ),
+              ],
+              onChanged: notifier.setOpponent,
+            ),
+            const SizedBox(height: KubbTokens.space4),
+            Text('ZEITRAUM',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.88,
+                  color: tokens.fgMuted,
+                )),
+            const SizedBox(height: KubbTokens.space2),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => pick(isFrom: true),
+                    child: Text(
+                      filter.dateFrom == null
+                          ? 'Von'
+                          : fmt.format(filter.dateFrom!),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: KubbTokens.space2),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => pick(isFrom: false),
+                    child: Text(
+                      filter.dateTo == null
+                          ? 'Bis'
+                          : fmt.format(filter.dateTo!),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: KubbTokens.space5),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      notifier.clear();
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Zurücksetzen'),
+                  ),
+                ),
+                const SizedBox(width: KubbTokens.space2),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Fertig'),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
-      data: (agg) => agg.isEmpty
-          ? _EmptyState(tokens: tokens, l: l)
-          : _Body(aggregate: agg, tokens: tokens, l: l),
     );
   }
 }
@@ -53,6 +276,8 @@ class _Body extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            StatsTrendChart(points: aggregate.winRateTrendPercent),
+            const SizedBox(height: KubbTokens.space5),
             _MetricBlock(aggregate: aggregate, tokens: tokens, l: l),
             const SizedBox(height: KubbTokens.space5),
             _SectionHead(text: l.statsMatchRecentTitle, tokens: tokens),

@@ -5,13 +5,18 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
+import 'package:kubb_app/features/club/application/club_membership_controller.dart';
+import 'package:kubb_app/features/club/application/club_providers.dart';
 import 'package:kubb_app/features/inbox/application/inbox_controller.dart';
 import 'package:kubb_app/features/inbox/data/inbox_message.dart';
 import 'package:kubb_app/features/match/application/match_providers.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
 import 'package:kubb_app/features/social/application/social_providers.dart';
 import 'package:kubb_app/features/social/presentation/social_routes.dart';
+import 'package:kubb_app/features/team/application/team_list_provider.dart';
+import 'package:kubb_app/features/team/application/team_membership_controller.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
+import 'package:kubb_domain/kubb_domain.dart';
 
 /// Minimal inbox screen: lists the user's non-archived messages,
 /// renders each as a tappable tile that opens a body view, and lets
@@ -29,10 +34,25 @@ class InboxScreen extends ConsumerWidget {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     ref.watch(inboxPollingProvider);
     final async = ref.watch(inboxMessagesProvider);
+    final messageCount = async.maybeWhen(
+      data: (m) => m.length,
+      orElse: () => 0,
+    );
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      appBar: const KubbAppBar(title: 'Postfach'),
+      appBar: KubbAppBar(
+        title: 'Postfach',
+        actions: messageCount == 0
+            ? null
+            : [
+                IconButton(
+                  tooltip: 'Alle archivieren',
+                  icon: const Icon(Icons.archive_outlined),
+                  onPressed: () => _confirmArchiveAll(context, ref),
+                ),
+              ],
+      ),
       body: async.when(
         data: (msgs) {
           if (msgs.isEmpty) {
@@ -76,6 +96,45 @@ class InboxScreen extends ConsumerWidget {
       ),
     );
   }
+
+  Future<void> _confirmArchiveAll(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Alle archivieren?'),
+        content: const Text(
+          'Alle Nachrichten werden ins Archiv verschoben. Du findest sie '
+          'weiterhin unter „Archiv" im Menü.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Abbrechen'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Archivieren'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    try {
+      await ref.read(inboxActionsProvider).archiveAll();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Alle Nachrichten archiviert')),
+      );
+    } on Object catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Fehler: $e'),
+          backgroundColor: KubbTokens.miss,
+        ),
+      );
+    }
+  }
 }
 
 class _MessageTile extends ConsumerWidget {
@@ -96,6 +155,9 @@ class _MessageTile extends ConsumerWidget {
       case InboxMessageKind.teamInvitation:
       case InboxMessageKind.teamMemberRemoved:
       case InboxMessageKind.teamDissolved:
+      case InboxMessageKind.clubInvitation:
+      case InboxMessageKind.clubMemberRemoved:
+      case InboxMessageKind.clubJoinRequest:
         return const Color(0xFFFBF2D6);
     }
   }
@@ -116,6 +178,12 @@ class _MessageTile extends ConsumerWidget {
         return 'Team-Änderung';
       case InboxMessageKind.teamDissolved:
         return 'Team aufgelöst';
+      case InboxMessageKind.clubInvitation:
+        return 'Vereins-Einladung';
+      case InboxMessageKind.clubMemberRemoved:
+        return 'Vereins-Änderung';
+      case InboxMessageKind.clubJoinRequest:
+        return 'Beitrittsanfrage';
     }
   }
 
@@ -133,13 +201,9 @@ class _MessageTile extends ConsumerWidget {
             await actions.markRead(message.id);
           }
           if (!context.mounted) return;
-          // M3.1-T14: team-invitation items short-circuit the generic
-          // bottom-sheet path and jump straight to the dedicated
-          // invitation screen where accept/decline live.
-          if (message.kind == InboxMessageKind.teamInvitation) {
-            context.go('/teams/invitations');
-            return;
-          }
+          // P7: every message — including team/club invitations and join
+          // requests — opens the same bottom sheet, where requests are
+          // accepted/declined inline (unified with friend requests).
           await showModalBottomSheet<void>(
             context: context,
             isScrollControlled: true,
@@ -269,6 +333,11 @@ class _MessageDetail extends ConsumerWidget {
     final actionKind = message.actionPayload?['kind'] as String?;
     final matchId = message.actionPayload?['match_id'] as String?;
     final friendUserId = message.actionPayload?['from_user_id'] as String?;
+    // Team + club invitations both carry 'invitation_id'; join requests carry
+    // 'request_id'. message.kind disambiguates which controller responds.
+    final invitationId = message.actionPayload?['invitation_id'] as String?;
+    final joinRequestId = message.actionPayload?['request_id'] as String?;
+    final clubId = message.actionPayload?['club_id'] as String?;
 
     return SafeArea(
       child: Padding(
@@ -369,6 +438,34 @@ class _MessageDetail extends ConsumerWidget {
                   ),
                   child: const Text('Resultat eintragen'),
                 ),
+              ),
+            ] else if (message.kind == InboxMessageKind.teamInvitation &&
+                invitationId != null) ...[
+              const SizedBox(height: KubbTokens.space5),
+              _AcceptDeclineRow(
+                onAccept: () => _handleTeamInvitation(context, ref,
+                    invitationId: invitationId, accept: true),
+                onDecline: () => _handleTeamInvitation(context, ref,
+                    invitationId: invitationId, accept: false),
+              ),
+            ] else if (message.kind == InboxMessageKind.clubInvitation &&
+                invitationId != null) ...[
+              const SizedBox(height: KubbTokens.space5),
+              _AcceptDeclineRow(
+                onAccept: () => _handleClubInvitation(context, ref,
+                    invitationId: invitationId, accept: true),
+                onDecline: () => _handleClubInvitation(context, ref,
+                    invitationId: invitationId, accept: false),
+              ),
+            ] else if (message.kind == InboxMessageKind.clubJoinRequest &&
+                joinRequestId != null &&
+                clubId != null) ...[
+              const SizedBox(height: KubbTokens.space5),
+              _AcceptDeclineRow(
+                onAccept: () => _handleClubJoinRequest(context, ref,
+                    clubId: clubId, requestId: joinRequestId, accept: true),
+                onDecline: () => _handleClubJoinRequest(context, ref,
+                    clubId: clubId, requestId: joinRequestId, accept: false),
               ),
             ] else if (message.awaitsReply) ...[
               // -- Generic confirm / deny fallback ---------------------
@@ -517,5 +614,124 @@ class _MessageDetail extends ConsumerWidget {
         ),
       );
     }
+  }
+
+  Future<void> _handleTeamInvitation(
+    BuildContext context,
+    WidgetRef ref, {
+    required String invitationId,
+    required bool accept,
+  }) async {
+    await _respondRequest(
+      context,
+      ref,
+      accept: accept,
+      acceptedLabel: 'Team-Einladung angenommen',
+      run: () => ref
+          .read(teamMembershipControllerProvider.notifier)
+          .respondInvitation(TeamInvitationId(invitationId), accept: accept),
+      invalidate: () => ref.invalidate(teamListProvider),
+    );
+  }
+
+  Future<void> _handleClubInvitation(
+    BuildContext context,
+    WidgetRef ref, {
+    required String invitationId,
+    required bool accept,
+  }) async {
+    await _respondRequest(
+      context,
+      ref,
+      accept: accept,
+      acceptedLabel: 'Vereins-Einladung angenommen',
+      run: () => ref
+          .read(clubMembershipControllerProvider.notifier)
+          .respondInvitation(ClubInvitationId(invitationId), accept: accept),
+      invalidate: () => ref.invalidate(clubListProvider),
+    );
+  }
+
+  Future<void> _handleClubJoinRequest(
+    BuildContext context,
+    WidgetRef ref, {
+    required String clubId,
+    required String requestId,
+    required bool accept,
+  }) async {
+    await _respondRequest(
+      context,
+      ref,
+      accept: accept,
+      acceptedLabel: 'Beitritt aufgenommen',
+      run: () => ref
+          .read(clubMembershipControllerProvider.notifier)
+          .respondJoinRequest(ClubId(clubId), requestId, accept: accept),
+      invalidate: () =>
+          ref.invalidate(clubJoinRequestsProvider(ClubId(clubId))),
+    );
+  }
+
+  /// Shared accept/decline plumbing: run the controller action, resolve the
+  /// inbox message, invalidate the inbox + the affected list (so devices
+  /// refetch), then close the sheet with a snackbar.
+  Future<void> _respondRequest(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool accept,
+    required String acceptedLabel,
+    required Future<void> Function() run,
+    required void Function() invalidate,
+  }) async {
+    final inboxActions = ref.read(inboxActionsProvider);
+    try {
+      await run();
+      await inboxActions.reply(
+        message.id,
+        {'answer': accept ? 'accept' : 'decline'},
+      );
+      ref.invalidate(inboxMessagesProvider);
+      invalidate();
+      if (!context.mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(accept ? acceptedLabel : 'Anfrage abgelehnt')),
+      );
+    } on Object catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler: $e'), backgroundColor: KubbTokens.miss),
+      );
+    }
+  }
+}
+
+/// Inline accept / decline button pair shared by every request kind in the
+/// inbox detail sheet (friend, team, club, join) — unified per P7.
+class _AcceptDeclineRow extends StatelessWidget {
+  const _AcceptDeclineRow({required this.onAccept, required this.onDecline});
+
+  final VoidCallback onAccept;
+  final VoidCallback onDecline;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: FilledButton(
+            onPressed: onAccept,
+            child: const Text('Annehmen'),
+          ),
+        ),
+        const SizedBox(width: KubbTokens.space3),
+        Expanded(
+          child: OutlinedButton(
+            onPressed: onDecline,
+            child: const Text('Ablehnen'),
+          ),
+        ),
+      ],
+    );
   }
 }

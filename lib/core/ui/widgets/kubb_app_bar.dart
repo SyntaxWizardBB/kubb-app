@@ -5,10 +5,14 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 /// Central AppBar for Kubb screens.
 ///
-/// Mirrors the `BK.AppBar` block from `docs/design/ui_kits/app/shared.jsx`:
-/// padding `54 / 12 / 6` (top includes safe-area), eyebrow (11px upper) above
-/// the title (18px bold), back/leading slot 48dp left, optional 48dp slot
-/// right. Background is `KubbTokens.bg`.
+/// Follows the M3 top-app-bar layout: the real status-bar inset followed by a
+/// fixed content band ([_toolbarHeight]) that vertically centres the eyebrow
+/// (11px upper) above the title (18px bold), with a 48dp leading slot left and
+/// an optional 48dp slot right. Background is `KubbTokens.bg`.
+///
+/// Replaces the old fixed 54dp top padding lifted verbatim from the React
+/// mock-up (`shared.jsx` `padding: 54px 12px 6px`), which ignored the device
+/// status-bar height and left an oversized gap below it on most phones.
 ///
 /// Two construction forms are supported:
 ///
@@ -80,17 +84,25 @@ class KubbAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? _actions;
   final Widget? _trailing;
 
-  /// Spec target for the top padding (incl. status-bar inset) from
-  /// `shared.jsx` BK.AppBar (`padding: 54px 12px 6px`). On notch devices the
-  /// 44dp inset eats most of it, leaving ~10dp visual gap below the cutout;
-  /// on inset-free surfaces the full 54dp keeps the eyebrow off the edge.
-  static const double _specTop = 54;
+  /// M3 content band below the status bar. The 48dp leading/trailing slots and
+  /// the eyebrow+title column are vertically centred inside it. The status-bar
+  /// inset is added on top (see [preferredSize] / [build]).
+  static const double _toolbarHeight = 64;
 
-  /// Fixed height claimed in the Scaffold layout: spec-top (54) + 48dp
-  /// leading/trailing slot (matches the centered eyebrow+title column) +
-  /// spec-bottom (6) = 108.
+  /// Raw status-bar inset resolved without a [BuildContext] so [preferredSize]
+  /// agrees with the `MediaQuery.paddingOf(context).top` used in [build].
+  /// Falls back to 0 when no view is attached (e.g. some test harnesses).
+  static double get _statusBarInset {
+    final views = WidgetsBinding.instance.platformDispatcher.views;
+    if (views.isEmpty) return 0;
+    final view = views.first;
+    return view.padding.top / view.devicePixelRatio;
+  }
+
+  /// Status-bar inset + the fixed content band, so the bar hugs the status bar
+  /// (M3) instead of claiming a hard-coded 108dp regardless of the device.
   @override
-  Size get preferredSize => const Size.fromHeight(108);
+  Size get preferredSize => Size.fromHeight(_statusBarInset + _toolbarHeight);
 
   @override
   Widget build(BuildContext context) {
@@ -125,32 +137,52 @@ class KubbAppBar extends StatelessWidget implements PreferredSizeWidget {
     return Material(
       color: tokens.bg,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          KubbTokens.space3,
-          _specTop,
-          KubbTokens.space3,
-          KubbTokens.space1half,
-        ),
-        child: Row(
-          children: [
-            leadingWidget,
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ?eyebrowWidget,
-                  titleWidget,
-                ],
-              ),
+        // Push content below the real status bar (M3), then host it in a
+        // fixed-height band so the 48dp slots and the eyebrow+title column sit
+        // vertically centred — no oversized fixed top gap on short status bars.
+        padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
+        child: SizedBox(
+          height: _toolbarHeight,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space3),
+            // Stack instead of a Row so the eyebrow+title stay centred on the
+            // *screen*, not merely within the space left over by the side
+            // slots. A Row(Expanded) recentres the title whenever the leading
+            // and trailing slots differ in width (e.g. a 48dp back-button on
+            // the left vs. a filter+inbox action row on the right), which made
+            // titles drift off-centre. The symmetric horizontal padding below
+            // reserves room for the side slots so a centred title clears them.
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: KubbTokens.touchMin + KubbTokens.space2,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ?eyebrowWidget,
+                      titleWidget,
+                    ],
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: leadingWidget,
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ConstrainedBox(
+                    constraints:
+                        const BoxConstraints(minWidth: KubbTokens.touchMin),
+                    child: trailingWidget ?? const SizedBox.shrink(),
+                  ),
+                ),
+              ],
             ),
-            ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: KubbTokens.touchMin),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: trailingWidget ?? const SizedBox.shrink(),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -161,6 +193,7 @@ class KubbAppBar extends StatelessWidget implements PreferredSizeWidget {
     if (text == null || text.isEmpty) return null;
     return Text(
       text.toUpperCase(),
+      textAlign: TextAlign.center,
       style: textTheme.labelSmall?.copyWith(
         fontSize: 11,
         fontWeight: FontWeight.w600,
@@ -175,6 +208,7 @@ class KubbAppBar extends StatelessWidget implements PreferredSizeWidget {
       _titleText ?? '',
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
+      textAlign: TextAlign.center,
       style: textTheme.titleMedium?.copyWith(
         fontSize: 18,
         fontWeight: FontWeight.w700,

@@ -3,11 +3,24 @@
 /// Mirrors the pattern used by `MatchRoutes`. Each "section" route is
 /// the base path; concrete URLs append ids.
 abstract final class TournamentRoutes {
+  /// Tournament hub — the BottomNav tab root (P1). Its tiles route to the
+  /// browse list, the caller's registrations, the setup wizard and the
+  /// stats placeholder.
+  static const hub = '/tournament';
+
   /// Setup wizard for creating a new tournament.
   static const newTournament = '/tournament/new';
 
-  /// Tournament list / discovery. Append nothing.
-  static const list = '/tournament';
+  /// Tournament discovery list (P1: moved off the hub root). Static prefix
+  /// so it wins over the dynamic `/tournament/:id` detail route.
+  static const list = '/tournament/browse';
+
+  /// Caller's own active registrations (P1 Tournament-Hub).
+  static const registrations = '/tournament/registrations';
+
+  /// Tournament statistics — placeholder screen for now (P1; full screen
+  /// is a later task).
+  static const stats = '/tournament/stats';
 
   /// Single tournament overview. Append `/:id`.
   static const detail = '/tournament';

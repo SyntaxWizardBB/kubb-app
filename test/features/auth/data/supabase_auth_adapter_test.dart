@@ -64,6 +64,7 @@ void main() {
       adapter.attachKeypair(
         nickname: 'lukas',
         publicKey: const [1, 2, 3],
+        earlyAccessCode: 'MH2K-WKDE',
       ),
       throwsA(isA<StateError>()),
     );
@@ -74,6 +75,7 @@ void main() {
     final after = await adapter.attachKeypair(
       nickname: 'lukas',
       publicKey: const [1, 2, 3],
+      earlyAccessCode: 'MH2K-WKDE',
     );
 
     expect(after.userId, anon.userId);
@@ -130,6 +132,7 @@ void main() {
         await adapter.signInAnonymously().then((_) => adapter.attachKeypair(
               nickname: 'lukas',
               publicKey: const [1, 2, 3],
+              earlyAccessCode: 'MH2K-WKDE',
             ));
 
     final after = await adapter

@@ -5,6 +5,11 @@ import 'dart:typed_data';
 import 'package:kubb_app/features/auth/data/supabase_auth_adapter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Same anon key bootstrap passes to `Supabase.initialize` (via
+/// `--dart-define`). Used to authorize the pre-auth `keypair_challenge`
+/// RPC with the anon role instead of a possibly-expired session bearer.
+const _anonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
 /// Production [SupabaseAuthAdapter] backed by the `supabase_flutter`
 /// SDK.
 ///
@@ -69,6 +74,7 @@ class SupabaseAuthAdapterImpl implements SupabaseAuthAdapter {
   Future<AuthAdapterState> attachKeypair({
     required String nickname,
     required List<int> publicKey,
+    required String earlyAccessCode,
     String? avatarColor,
   }) async {
     await _client.rpc<Map<String, dynamic>>(
@@ -76,6 +82,7 @@ class SupabaseAuthAdapterImpl implements SupabaseAuthAdapter {
       params: <String, dynamic>{
         'p_nickname': nickname,
         'p_public_key': base64Encode(publicKey),
+        'p_early_access_code': earlyAccessCode,
         'p_avatar_color': avatarColor,
       },
     );
@@ -93,12 +100,23 @@ class SupabaseAuthAdapterImpl implements SupabaseAuthAdapter {
 
   @override
   Future<Uint8List> requestKeypairChallenge(List<int> publicKey) async {
-    final response = await _client.rpc<Map<String, dynamic>>(
+    final builder = _client.rpc<Map<String, dynamic>>(
       'keypair_challenge',
       params: <String, dynamic>{
         'p_public_key': base64Encode(publicKey),
       },
     );
+    // The keypair re-sign runs precisely when the wire token has expired.
+    // supabase_flutter still attaches that stale (expired) bearer to this
+    // anon-callable RPC, so PostgREST rejects it with PGRST303 ("JWT
+    // expired") before the function runs — which permanently blocks
+    // re-minting (the recovery can never fetch a challenge). Pin the anon
+    // key for this single call so a challenge is always obtainable.
+    // keypair_challenge is GRANTed to anon; keypair-verify has
+    // verify_jwt = false, so the verify step is unaffected by the stale token.
+    final response = _anonKey.isEmpty
+        ? await builder
+        : await builder.setHeader('Authorization', 'Bearer $_anonKey');
     final encoded = response['challenge'] as String;
     return Uint8List.fromList(base64Decode(encoded));
   }

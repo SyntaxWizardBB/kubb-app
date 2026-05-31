@@ -50,6 +50,7 @@ void main() {
     await adapter.attachKeypair(
       nickname: 'foo',
       publicKey: List<int>.filled(32, 1),
+      earlyAccessCode: 'MH2K-WKDE',
     );
     expect(adapter.currentState.kind, AuthAdapterKind.keypair);
 

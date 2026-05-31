@@ -115,7 +115,7 @@ Future<void> _pump(
         builder: (_, state) =>
             MatchLobbyScreen(matchId: state.pathParameters['id']!),
       ),
-      GoRoute(path: '/', builder: (_, _) => const Scaffold(body: Text('home'))),
+      GoRoute(path: '/training', builder: (_, _) => const Scaffold(body: Text('home'))),
     ],
   );
 

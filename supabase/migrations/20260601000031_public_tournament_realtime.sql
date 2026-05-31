@@ -40,6 +40,17 @@
 --          docs/plans/sprint-a-bug-fix/anon-rls-plan.md T6 Followup.
 
 
+-- ---- 0. tournaments.public column (ordering fix) --------------------
+--
+-- The `public` flag is otherwise added by 20260701000002_tournaments_public_flag
+-- (July), but this June migration already reads it in
+-- public_tournament_is_visible below. On a clean `supabase db reset` the
+-- migrations run in filename order, so the column must exist here first.
+-- IF NOT EXISTS keeps both this migration and the later one idempotent.
+ALTER TABLE public.tournaments
+  ADD COLUMN IF NOT EXISTS public boolean NOT NULL DEFAULT true;
+
+
 -- ---- 1. Topic-Name-Helper --------------------------------------------
 --
 -- Eine zentrale Funktion liefert den Topic-Namen pro Turnier-ID, sodass

@@ -334,7 +334,7 @@ class _Actions extends ConsumerWidget {
         SizedBox(
           height: KubbTokens.touchComfortable,
           child: FilledButton(
-            onPressed: () => context.go('/'),
+            onPressed: () => context.go('/training'),
             child: Text(l.summarySave),
           ),
         ),
@@ -367,7 +367,7 @@ class _Actions extends ConsumerWidget {
           .discard(sessionId: session.id);
     }
     if (!context.mounted) return;
-    context.go('/');
+    context.go('/training');
   }
 }
 
@@ -520,7 +520,7 @@ class _ErrorView extends StatelessWidget {
               Text(message, textAlign: TextAlign.center),
               const SizedBox(height: KubbTokens.space4),
               FilledButton(
-                onPressed: () => context.go('/'),
+                onPressed: () => context.go('/training'),
                 child: const Text('OK'),
               ),
             ],

@@ -117,7 +117,7 @@ class _FinishedBody extends StatelessWidget {
         const SizedBox(height: KubbTokens.space3),
         KubbButton(
           variant: KubbButtonVariant.ghost,
-          onPressed: () => context.go('/'),
+          onPressed: () => context.go('/training'),
           child: const Text('Zurück zur Übersicht'),
         ),
       ],

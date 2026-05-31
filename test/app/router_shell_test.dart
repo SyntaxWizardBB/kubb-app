@@ -82,20 +82,26 @@ void main() {
       c.read(goRouterProvider).routerDelegate.currentConfiguration.uri.path;
 
   group('StatefulShellRoute — configuration', () {
-    test('exposes a StatefulShellRoute at top-level with 4 branches', () {
+    test('exposes a StatefulShellRoute at top-level with 3 branches', () {
       final container = makeContainer(_AuthedAuthController.new);
       addTearDown(container.dispose);
       final router = container.read(goRouterProvider);
       final shells = router.configuration.routes.whereType<StatefulShellRoute>();
       expect(shells, hasLength(1));
-      expect(shells.first.branches, hasLength(4));
+      expect(shells.first.branches, hasLength(3));
     });
 
     test('each tab root path is reachable through a registered branch', () {
       final container = makeContainer(_AuthedAuthController.new);
       addTearDown(container.dispose);
       final router = container.read(goRouterProvider);
-      for (final path in const ['/', '/stats', '/tournament', '/profile']) {
+      for (final path in const [
+        '/',
+        '/training',
+        '/stats',
+        '/tournament',
+        '/profile',
+      ]) {
         final matches = router.configuration.findMatch(Uri.parse(path));
         expect(
           matches.routes.whereType<GoRoute>().any((r) => r.builder != null),
@@ -114,7 +120,10 @@ void main() {
       final rootPaths = shell.branches
           .map((b) => b.routes.whereType<GoRoute>().first.path)
           .toList();
-      expect(rootPaths, containsAll(<String>['/', '/stats', '/tournament', '/profile']));
+      // Order matters: the training hub is the left tab root, home is the
+      // middle tab, tournaments the right. Profile and stats are no longer
+      // branch roots — they live inside the home / training branches.
+      expect(rootPaths, <String>['/training', '/', '/tournament']);
     });
   });
 
@@ -122,8 +131,8 @@ void main() {
     // Uses a hand-rolled StatefulShellRoute with dummy screens so the
     // test exercises only the shell wiring + KubbBottomNav, not the
     // production feature providers. Mirrors the production setup
-    // closely: 4 branches, indexedStack, KubbBottomNav in the
-    // scaffold.
+    // closely: 3 branches with home in the middle (training, home,
+    // tournaments), indexedStack, KubbBottomNav in the scaffold.
     GoRouter buildShellRouter() {
       return GoRouter(
         initialLocation: '/',
@@ -143,16 +152,16 @@ void main() {
               StatefulShellBranch(
                 routes: [
                   GoRoute(
-                    path: '/',
-                    builder: (_, _) => const _CounterScreen(label: 'home'),
+                    path: '/stats',
+                    builder: (_, _) => const _CounterScreen(label: 'training'),
                   ),
                 ],
               ),
               StatefulShellBranch(
                 routes: [
                   GoRoute(
-                    path: '/stats',
-                    builder: (_, _) => const _CounterScreen(label: 'training'),
+                    path: '/',
+                    builder: (_, _) => const _CounterScreen(label: 'home'),
                   ),
                 ],
               ),
@@ -162,14 +171,6 @@ void main() {
                     path: '/tournament',
                     builder: (_, _) =>
                         const _CounterScreen(label: 'tournaments'),
-                  ),
-                ],
-              ),
-              StatefulShellBranch(
-                routes: [
-                  GoRoute(
-                    path: '/profile',
-                    builder: (_, _) => const _CounterScreen(label: 'profile'),
                   ),
                 ],
               ),
@@ -203,7 +204,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(router.routerDelegate.currentConfiguration.uri.path, '/tournament');
 
-      nav.onTap(0);
+      // Home is the middle tab now (index 1).
+      nav.onTap(1);
       await tester.pumpAndSettle();
       expect(router.routerDelegate.currentConfiguration.uri.path, '/');
     });
@@ -217,15 +219,15 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('home:1'), findsOneWidget);
 
-      // Switch to training tab.
+      // Switch to the training tab (now index 0).
       final nav = tester.widget<KubbBottomNav>(find.byType(KubbBottomNav));
-      nav.onTap(1);
+      nav.onTap(0);
       await tester.pumpAndSettle();
       expect(find.text('training:0'), findsOneWidget);
 
-      // Switch back to home — counter must still read 1
+      // Switch back to home (middle tab, index 1) — counter must still read 1
       // (R20-A-13 acceptance: tab state survives switches).
-      nav.onTap(0);
+      nav.onTap(1);
       await tester.pumpAndSettle();
       expect(find.text('home:1'), findsOneWidget);
     });
@@ -246,6 +248,14 @@ void main() {
               StatefulShellBranch(
                 routes: [
                   GoRoute(
+                    path: '/stats',
+                    builder: (_, _) => const _CounterScreen(label: 'stats'),
+                  ),
+                ],
+              ),
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
                     path: '/',
                     builder: (_, _) => const _CounterScreen(label: 'home'),
                     routes: [
@@ -261,25 +271,9 @@ void main() {
               StatefulShellBranch(
                 routes: [
                   GoRoute(
-                    path: '/stats',
-                    builder: (_, _) => const _CounterScreen(label: 'stats'),
-                  ),
-                ],
-              ),
-              StatefulShellBranch(
-                routes: [
-                  GoRoute(
                     path: '/tournament',
                     builder: (_, _) =>
                         const _CounterScreen(label: 'tournament'),
-                  ),
-                ],
-              ),
-              StatefulShellBranch(
-                routes: [
-                  GoRoute(
-                    path: '/profile',
-                    builder: (_, _) => const _CounterScreen(label: 'profile'),
                   ),
                 ],
               ),

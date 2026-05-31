@@ -46,6 +46,7 @@ class TournamentActions {
           format: draft.format,
           matchFormatConfig: draft.toMatchFormatConfig(),
           tiebreakerOrder: draft.tiebreakerOrder,
+          setup: draft.toSetupConfig(),
         );
     _ref.invalidate(tournamentListProvider);
     return id;

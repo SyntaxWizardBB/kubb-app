@@ -70,7 +70,7 @@ class TrainingSheet extends StatelessWidget {
             trailing: 'T',
             onTap: () {
               Navigator.of(context).pop();
-              context.go(TournamentRoutes.list);
+              context.go(TournamentRoutes.hub);
             },
           ),
           const SizedBox(height: KubbTokens.space3),

@@ -89,9 +89,14 @@ enum WireSessionOutcome {
 /// wired into every RPC call-site — that backlog lands in W2-T1.
 /// Bootstrap calls it once after the drift cache is read; future
 /// per-RPC guards can layer on top.
-Future<WireSessionOutcome> ensureWireSession(Ref ref) async {
+Future<WireSessionOutcome> ensureWireSession(Ref ref, {bool force = false}) async {
   final adapter = ref.read(supabaseAuthAdapterProvider);
-  if (adapter.wireAccessToken != null) {
+  // When [force] is set we always re-sign, even if gotrue still reports
+  // a (stale) access token. This is the expired-JWT path: after the
+  // Phase-1 keypair token passes its `exp`, `currentSession.accessToken`
+  // is still non-null but PostgREST rejects it with PGRST303, so the
+  // plain `wireAccessToken != null` short-circuit would never re-mint.
+  if (!force && adapter.wireAccessToken != null) {
     return WireSessionOutcome.alreadyLive;
   }
 
@@ -149,6 +154,16 @@ Future<WireSessionOutcome> ensureWireSession(Ref ref) async {
 final ensureWireSessionProvider =
     Provider<Future<WireSessionOutcome> Function()>((ref) {
   return () => ensureWireSession(ref);
+});
+
+/// Forced variant of [ensureWireSessionProvider]: always re-signs the
+/// wire session, even when gotrue still reports a (stale) access token.
+/// Used on app-resume and by the per-RPC retry path to recover from an
+/// expired Phase-1 keypair JWT, where `wireAccessToken` is non-null but
+/// PostgREST already rejects it with PGRST303.
+final forceReSignWireSessionProvider =
+    Provider<Future<WireSessionOutcome> Function()>((ref) {
+  return () => ensureWireSession(ref, force: true);
 });
 
 /// Riverpod-side AsyncNotifier for the active [AuthSession].

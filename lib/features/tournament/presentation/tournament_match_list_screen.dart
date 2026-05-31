@@ -42,7 +42,7 @@ class TournamentMatchListScreen extends ConsumerWidget {
         backgroundColor: tokens.bg,
         elevation: 0,
         title: Text(l.tournamentMatchListTitle),
-        leading: BackButton(onPressed: () => context.go(TournamentRoutes.list)),
+        leading: BackButton(onPressed: () => context.go(TournamentRoutes.hub)),
         actions: [
           IconButton(
             tooltip: l.tournamentStandingsTitle,

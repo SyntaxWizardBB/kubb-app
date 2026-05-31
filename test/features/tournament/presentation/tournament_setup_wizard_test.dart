@@ -16,6 +16,7 @@ class _FakeTournamentRemote implements TournamentRemote {
   String? createdDisplayName;
   int? createdSetsToWin;
   TournamentFormat? createdFormat;
+  Map<String, Object?>? createdSetup;
   int callCount = 0;
   bool failNext = false;
 
@@ -28,6 +29,7 @@ class _FakeTournamentRemote implements TournamentRemote {
     required TournamentFormat format,
     required Map<String, Object?> matchFormatConfig,
     required List<String> tiebreakerOrder,
+    Map<String, Object?> setup = const <String, Object?>{},
   }) async {
     callCount += 1;
     if (failNext) {
@@ -37,6 +39,7 @@ class _FakeTournamentRemote implements TournamentRemote {
     createdDisplayName = displayName;
     createdSetsToWin = matchFormatConfig['sets_to_win'] as int?;
     createdFormat = format;
+    createdSetup = setup;
     return const TournamentId('t-fake-1');
   }
 
@@ -52,6 +55,10 @@ class _FakeTournamentRemote implements TournamentRemote {
 
   @override
   Future<TournamentDetail?> getTournamentDetail(TournamentId id) async => null;
+
+  @override
+  Future<List<MyTournamentRegistration>> listMyRegistrations() async =>
+      const <MyTournamentRegistration>[];
 
   @override
   Future<void> publish(TournamentId id) async {}
@@ -240,7 +247,7 @@ Future<_FakeTournamentRemote> _pumpWizard(
         builder: (_, _) => const TournamentSetupWizard(),
       ),
       GoRoute(
-        path: '${TournamentRoutes.list}/:id',
+        path: '${TournamentRoutes.detail}/:id',
         builder: (_, state) => Scaffold(
           body: Text('detail:${state.pathParameters['id']}'),
         ),
@@ -268,7 +275,7 @@ Future<_FakeTournamentRemote> _pumpWizard(
 }
 
 Future<void> _typeName(WidgetTester tester, String name) async {
-  await tester.enterText(find.byType(TextField), name);
+  await tester.enterText(find.byKey(const Key('wizardNameField')), name);
   await tester.pumpAndSettle();
 }
 
@@ -367,5 +374,25 @@ void main() {
     expect(fake.createdSetsToWin, 2);
     expect(fake.createdFormat, TournamentFormat.roundRobin);
     expect(find.text('detail:t-fake-1'), findsOneWidget);
+  });
+
+  testWidgets('Stammdaten league + scoring choices flow into the setup payload',
+      (tester) async {
+    final fake = await _pumpWizard(tester);
+    await _typeName(tester, 'Bâton dOr');
+    await tester.tap(find.text('Liga A'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Klassisch'));
+    await tester.pumpAndSettle();
+
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> format
+    await _tapNext(tester); // -> summary
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
+    await tester.pumpAndSettle();
+
+    expect(fake.createdSetup?['scoring'], 'classic');
+    expect(fake.createdSetup?['league_categories'], contains('A'));
   });
 }

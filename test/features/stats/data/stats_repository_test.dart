@@ -252,7 +252,8 @@ void main() {
     expect(agg.hitRatePercent, 50);
   });
 
-  test('totalThrows ignores helis when heliTracking is off', () async {
+  test('helis leave both throw count and rate when heliTracking is off',
+      () async {
     await insertSession('s1', hits: 5, misses: 5, helis: 3);
 
     final on = await repo.computeAggregate(
@@ -268,10 +269,10 @@ void main() {
 
     expect(on.totalThrows, 13);
     expect(off.totalThrows, 10);
-    // hit-rate counts heli as a miss in the denominator regardless of the
-    // setting, so both readings agree.
-    expect(on.hitRatePercent, off.hitRatePercent);
+    // With heli tracking on, helis count as a miss in the rate denominator.
+    // With it off, helis leave the quota too, so the rate climbs.
     expect(on.hitRatePercent, 38); // 5 / (5 + 5 + 3) ≈ 38.46%
+    expect(off.hitRatePercent, 50); // 5 / (5 + 5)
   });
 
   test('heli reduces hit-rate even with helis = 0 keeping the old result',

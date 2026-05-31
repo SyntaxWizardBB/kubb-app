@@ -49,6 +49,15 @@ final inboxPollingProvider = Provider.autoDispose<void>((ref) {
   ref.onDispose(timer.cancel);
 });
 
+/// The caller's archived messages, newest first. Read straight from the
+/// server (the drift mirror only caches the active inbox), so the archive
+/// view always reflects the canonical state. Invalidated after a purge.
+final archivedInboxProvider = FutureProvider<List<InboxMessage>>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return const <InboxMessage>[];
+  return ref.read(inboxRepositoryProvider).listArchived();
+});
+
 /// Count of unread (non-archived) messages. Cheap derivation off
 /// [inboxMessagesProvider] so a badge in the app shell doesn't need
 /// its own query.
@@ -81,5 +90,22 @@ class InboxActions {
 
   Future<void> archive(String id) async {
     await _ref.read(inboxRepositoryProvider).archive(id);
+  }
+
+  /// Archives every message in the active inbox at once. No-op when signed
+  /// out. Refreshes the archive view so the moved messages show up there.
+  Future<void> archiveAll() async {
+    final userId = _ref.read(currentUserIdProvider);
+    if (userId == null) return;
+    await _ref.read(inboxRepositoryProvider).archiveAll(userId);
+    _ref.invalidate(archivedInboxProvider);
+  }
+
+  /// Permanently deletes all archived messages (server hard-delete; local
+  /// active inbox untouched). Refreshes the archive view afterwards.
+  Future<int> purgeArchived() async {
+    final deleted = await _ref.read(inboxRepositoryProvider).purgeArchived();
+    _ref.invalidate(archivedInboxProvider);
+    return deleted;
   }
 }

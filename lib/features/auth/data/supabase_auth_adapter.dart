@@ -111,9 +111,12 @@ abstract class SupabaseAuthAdapter {
   /// Per ADR-0011 the public key is derived deterministically from a
   /// BIP-39 mnemonic on the client; the mnemonic itself never leaves
   /// the device, so there is no ciphertext or KDF parameters to ship.
+  /// [earlyAccessCode] (XXXX-XXXX) is validated server-side; the organizer
+  /// code additionally grants the club-founding capability (P7).
   Future<AuthAdapterState> attachKeypair({
     required String nickname,
     required List<int> publicKey,
+    required String earlyAccessCode,
     String? avatarColor,
   });
 

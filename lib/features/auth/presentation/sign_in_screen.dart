@@ -69,7 +69,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   }
 
   Future<void> _onPickAnonymous() async {
-    await GoRouter.of(context).push<void>(AuthRoutes.anonymousSignup);
+    // P7: creating an account first requires a valid early-access code.
+    await GoRouter.of(context).push<void>(AuthRoutes.earlyAccess);
   }
 
   Future<void> _onPickRestore() async {
