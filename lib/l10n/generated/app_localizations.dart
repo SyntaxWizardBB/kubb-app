@@ -3952,6 +3952,48 @@ abstract class AppLocalizations {
   /// **'Dieses Spiel ist bereits abgeschlossen.'**
   String get tournamentMatchReadOnlyNotice;
 
+  /// Label above the live match countdown clock
+  ///
+  /// In de, this message translates to:
+  /// **'Restzeit'**
+  String get tournamentMatchTimerLabel;
+
+  /// Call-to-action shown when the pool-play match timer runs out
+  ///
+  /// In de, this message translates to:
+  /// **'Zeit abgelaufen — Resultat eintragen'**
+  String get tournamentMatchTimerExpiredCta;
+
+  /// Call-to-action shown when a KO match with tiebreak runs out
+  ///
+  /// In de, this message translates to:
+  /// **'Zeit abgelaufen — Tiebreak / Mighty-Finisher melden'**
+  String get tournamentMatchTimerTiebreakCta;
+
+  /// Inline badge shown once the tiebreak window has opened
+  ///
+  /// In de, this message translates to:
+  /// **'Tiebreak läuft'**
+  String get tournamentMatchTimerTiebreakActive;
+
+  /// Prominent call-to-play banner pointing the participant to their pitch
+  ///
+  /// In de, this message translates to:
+  /// **'Dein Platz: Pitch {pitch} — leg los!'**
+  String tournamentMatchPitchCallTitle(String pitch);
+
+  /// Opponent line under the pitch-call banner
+  ///
+  /// In de, this message translates to:
+  /// **'Gegen {opponent}'**
+  String tournamentMatchPitchCallVersus(String opponent);
+
+  /// Button on the pitch-call banner that opens the match detail
+  ///
+  /// In de, this message translates to:
+  /// **'Spiel öffnen'**
+  String get tournamentMatchPitchCallAction;
+
   /// Action button label that opens the forfeit declaration sheet (DSCORE-63)
   ///
   /// In de, this message translates to:

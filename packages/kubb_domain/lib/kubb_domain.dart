@@ -27,6 +27,7 @@ export 'src/tournament/elo_seeding.dart';
 export 'src/tournament/king_outcome.dart';
 export 'src/tournament/ko_phase.dart';
 export 'src/tournament/league_points_engine.dart';
+export 'src/tournament/match_timer.dart';
 export 'src/tournament/pairing.dart';
 export 'src/tournament/pitch_assignment.dart';
 export 'src/tournament/pool.dart';

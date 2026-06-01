@@ -2108,6 +2108,33 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dieses Spiel ist bereits abgeschlossen.';
 
   @override
+  String get tournamentMatchTimerLabel => 'Restzeit';
+
+  @override
+  String get tournamentMatchTimerExpiredCta =>
+      'Zeit abgelaufen — Resultat eintragen';
+
+  @override
+  String get tournamentMatchTimerTiebreakCta =>
+      'Zeit abgelaufen — Tiebreak / Mighty-Finisher melden';
+
+  @override
+  String get tournamentMatchTimerTiebreakActive => 'Tiebreak läuft';
+
+  @override
+  String tournamentMatchPitchCallTitle(String pitch) {
+    return 'Dein Platz: Pitch $pitch — leg los!';
+  }
+
+  @override
+  String tournamentMatchPitchCallVersus(String opponent) {
+    return 'Gegen $opponent';
+  }
+
+  @override
+  String get tournamentMatchPitchCallAction => 'Spiel öffnen';
+
+  @override
   String get tournamentForfeitAction => 'Forfeit erklären';
 
   @override

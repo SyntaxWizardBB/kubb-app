@@ -2849,6 +2849,40 @@
   "@tournamentMatchReadOnlyNotice": {
     "description": "Hint shown when match status is terminal"
   },
+  "tournamentMatchTimerLabel": "Restzeit",
+  "@tournamentMatchTimerLabel": {
+    "description": "Label above the live match countdown clock"
+  },
+  "tournamentMatchTimerExpiredCta": "Zeit abgelaufen — Resultat eintragen",
+  "@tournamentMatchTimerExpiredCta": {
+    "description": "Call-to-action shown when the pool-play match timer runs out"
+  },
+  "tournamentMatchTimerTiebreakCta": "Zeit abgelaufen — Tiebreak / Mighty-Finisher melden",
+  "@tournamentMatchTimerTiebreakCta": {
+    "description": "Call-to-action shown when a KO match with tiebreak runs out"
+  },
+  "tournamentMatchTimerTiebreakActive": "Tiebreak läuft",
+  "@tournamentMatchTimerTiebreakActive": {
+    "description": "Inline badge shown once the tiebreak window has opened"
+  },
+  "tournamentMatchPitchCallTitle": "Dein Platz: Pitch {pitch} — leg los!",
+  "@tournamentMatchPitchCallTitle": {
+    "description": "Prominent call-to-play banner pointing the participant to their pitch",
+    "placeholders": {
+      "pitch": { "type": "String" }
+    }
+  },
+  "tournamentMatchPitchCallVersus": "Gegen {opponent}",
+  "@tournamentMatchPitchCallVersus": {
+    "description": "Opponent line under the pitch-call banner",
+    "placeholders": {
+      "opponent": { "type": "String" }
+    }
+  },
+  "tournamentMatchPitchCallAction": "Spiel öffnen",
+  "@tournamentMatchPitchCallAction": {
+    "description": "Button on the pitch-call banner that opens the match detail"
+  },
   "tournamentForfeitAction": "Forfeit erklären",
   "@tournamentForfeitAction": {
     "description": "Action button label that opens the forfeit declaration sheet (DSCORE-63)"

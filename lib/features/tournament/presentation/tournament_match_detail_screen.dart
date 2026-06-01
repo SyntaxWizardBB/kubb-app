@@ -15,6 +15,8 @@ import 'package:kubb_app/features/tournament/application/tournament_providers.da
 import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_score_draft_controller.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/match_countdown.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/pitch_call_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_status_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/score_consensus_banner.dart';
@@ -269,6 +271,9 @@ class _TournamentMatchDetailScreenState
         children: [
           RealtimeStateBanner(tournamentId: tid),
           RealtimeStatusBanner(tournamentId: tid),
+          // Player-facing "TournierStart" surface: when the caller has an
+          // open match in this tournament, point them at their pitch.
+          PitchCallBanner(tournamentId: tid),
           Expanded(
             child: detailAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -340,6 +345,27 @@ class _TournamentMatchDetailScreenState
           showPending: hasPending,
         ),
         const SizedBox(height: KubbTokens.space3),
+        // Live match clock (spec "TournierStart"): only while the match is
+        // running (it carries a started_at and is not in a terminal state)
+        // and the tournament exposes a round time limit. Crossing expiry
+        // vibrates once and flips to the result-entry CTA.
+        if (!readOnly && match.startedAt != null)
+          Builder(builder: (context) {
+            final cfg = detailAsync.maybeWhen<Map<String, Object?>>(
+              data: (d) => d?.tournament.matchFormatConfig ?? const {},
+              orElse: () => const {},
+            );
+            final duration = _roundTimeSeconds(cfg);
+            if (duration <= 0) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(bottom: KubbTokens.space3),
+              child: MatchCountdown(
+                startedAt: match.startedAt!,
+                durationSeconds: duration,
+                tiebreakAfterSeconds: _tiebreakAfterSeconds(cfg),
+              ),
+            );
+          }),
         if (hasStaleConflict && !readOnly)
           ScoreConflictBanner(onReenter: () {
             unawaited(_draftController.clear(
@@ -445,6 +471,24 @@ class _TournamentMatchDetailScreenState
       context.go(TournamentRoutes.matchesFor(widget.tournamentId));
     }
   }
+}
+
+/// Pulls the match round time limit (seconds) out of the tournament's
+/// `matchFormatConfig`. Accepts both `round_time_seconds` (the create-RPC
+/// shape, see `tournament_config_draft.toMatchFormatConfig`) and the
+/// `time_limit_seconds` alias used by `MatchFormatSpec`. Returns 0 when
+/// neither key is present or positive.
+int _roundTimeSeconds(Map<String, Object?> cfg) {
+  final raw = cfg['round_time_seconds'] ?? cfg['time_limit_seconds'];
+  final value = (raw as num?)?.toInt() ?? 0;
+  return value > 0 ? value : 0;
+}
+
+/// Pulls the tiebreak trigger offset (seconds) from `matchFormatConfig`,
+/// or null when tiebreak is disabled / absent.
+int? _tiebreakAfterSeconds(Map<String, Object?> cfg) {
+  if (cfg['tiebreak_enabled'] == false) return null;
+  return (cfg['tiebreak_after_seconds'] as num?)?.toInt();
 }
 
 class _ErrorBody extends StatelessWidget {
