@@ -3712,6 +3712,30 @@ abstract class AppLocalizations {
   /// **'ausstehend'**
   String get tournamentDetailPending;
 
+  /// Inline marker / badge for a confirmed registration (auto-confirmed model)
+  ///
+  /// In de, this message translates to:
+  /// **'Angemeldet'**
+  String get tournamentDetailStatusConfirmed;
+
+  /// Inline marker / badge for a waitlisted registration
+  ///
+  /// In de, this message translates to:
+  /// **'Auf Warteliste'**
+  String get tournamentDetailStatusWaitlist;
+
+  /// Sub-heading for the waitlist section in the participants/registrations overview
+  ///
+  /// In de, this message translates to:
+  /// **'Warteliste'**
+  String get tournamentDetailWaitlistHeading;
+
+  /// Optional organizer moderation action: remove a participant (not a required step)
+  ///
+  /// In de, this message translates to:
+  /// **'Entfernen'**
+  String get tournamentDetailActionRemove;
+
   /// Organizer button: approve registration
   ///
   /// In de, this message translates to:
@@ -3808,22 +3832,22 @@ abstract class AppLocalizations {
   /// **'Bearbeiten'**
   String get tournamentDetailActionEdit;
 
-  /// Lifecycle hint shown to the organizer while the tournament is still a draft
+  /// Lifecycle hint shown to the organizer while the tournament is still a draft (publishing opens registration immediately)
   ///
   /// In de, this message translates to:
-  /// **'Veröffentlichen und Anmeldung öffnen, damit sich Spieler anmelden können. Gestartet wird erst nach Anmeldeschluss.'**
+  /// **'Veröffentlichen — die Anmeldung ist danach sofort offen und Spieler können sich anmelden. Starten kannst du, sobald genug Teilnehmer dabei sind.'**
   String get tournamentDetailHintDraft;
 
-  /// Lifecycle hint shown to the organizer while the tournament is published but registration is not open
+  /// Lifecycle hint shown to the organizer while the tournament is published (legacy status; registration is open)
   ///
   /// In de, this message translates to:
-  /// **'Anmeldung öffnen, damit sich Spieler anmelden können. Gestartet wird erst nach Anmeldeschluss.'**
+  /// **'Die Anmeldung ist offen. Spieler können sich anmelden, bis du das Turnier startest.'**
   String get tournamentDetailHintPublished;
 
-  /// Lifecycle hint shown to the organizer while registration is open
+  /// Lifecycle hint shown to the organizer while registration is open (publishing already opened it)
   ///
   /// In de, this message translates to:
-  /// **'Anmeldung schliessen, sobald genug Teams angemeldet sind. Danach kann das Turnier gestartet werden.'**
+  /// **'Die Anmeldung ist offen. Starte das Turnier, sobald genug Teilnehmer dabei sind — der Start schliesst die Anmeldung automatisch.'**
   String get tournamentDetailHintRegistrationOpen;
 
   /// Lifecycle hint shown to the organizer after registration closed, before start

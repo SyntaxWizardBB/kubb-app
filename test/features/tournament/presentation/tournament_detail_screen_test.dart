@@ -180,7 +180,7 @@ void main() {
   testWidgets('P7: lifecycle hint shows for creator in draft', (tester) async {
     await _pump(tester, _detail(), callerUserId: _creator);
     expect(
-      find.textContaining('Veröffentlichen und Anmeldung öffnen'),
+      find.textContaining('die Anmeldung ist danach sofort offen'),
       findsOneWidget,
     );
   });
@@ -193,7 +193,7 @@ void main() {
       callerUserId: _creator,
     );
     expect(
-      find.textContaining('Anmeldung öffnen, damit sich Spieler'),
+      find.textContaining('Die Anmeldung ist offen'),
       findsOneWidget,
     );
   });
@@ -205,7 +205,7 @@ void main() {
       callerUserId: 'u-other',
     );
     expect(
-      find.textContaining('Anmeldung öffnen, damit sich Spieler'),
+      find.textContaining('Die Anmeldung ist offen'),
       findsNothing,
     );
   });
@@ -224,7 +224,7 @@ void main() {
     expect(find.text('Veröffentlichen'), findsOneWidget);
     expect(find.text('Bearbeiten'), findsOneWidget);
     expect(
-      find.textContaining('Veröffentlichen und Anmeldung öffnen'),
+      find.textContaining('die Anmeldung ist danach sofort offen'),
       findsOneWidget,
     );
   });
@@ -283,5 +283,103 @@ void main() {
     );
     expect(find.text('Veröffentlichen'), findsNothing);
     expect(find.text('Bearbeiten'), findsNothing);
+  });
+
+  // --- New open-registration model (Stage B) -------------------------------
+
+  TournamentParticipant participant({
+    required String id,
+    required TournamentParticipantStatus status,
+    String? userId,
+    String label = 'Anna',
+    DateTime? registeredAt,
+  }) =>
+      TournamentParticipant(
+        participantId: id,
+        userId: userId,
+        nickname: label,
+        displayName: label,
+        registrationStatus: status,
+        seed: null,
+        registeredAt: registeredAt ?? DateTime(2026, 6),
+        respondedAt: null,
+      );
+
+  testWidgets(
+      'open-reg model: organizer sees Start (no "Anmeldung öffnen") once '
+      'registration is open', (tester) async {
+    await _pump(
+      tester,
+      _detail(status: TournamentStatus.registrationOpen),
+      callerUserId: 'u-organizer',
+      canManage: true,
+    );
+    expect(find.text('Turnier starten'), findsOneWidget);
+    expect(find.text('Anmeldung öffnen'), findsNothing);
+  });
+
+  testWidgets('open-reg model: confirmed registrant sees "Angemeldet"',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(
+        status: TournamentStatus.registrationOpen,
+        participants: [
+          participant(
+            id: 'p-1',
+            userId: 'u-other',
+            status: TournamentParticipantStatus.approved,
+          ),
+        ],
+      ),
+      callerUserId: 'u-other',
+    );
+    // No pending/awaiting-confirmation framing; the standing badge plus the
+    // withdraw action are shown, the register action is gone.
+    expect(find.text('Angemeldet'), findsWidgets);
+    expect(find.text('Abmelden'), findsOneWidget);
+    expect(find.text('Anmelden'), findsNothing);
+  });
+
+  testWidgets('open-reg model: waitlisted registrant sees "Auf Warteliste"',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(
+        status: TournamentStatus.registrationOpen,
+        participants: [
+          participant(
+            id: 'p-1',
+            userId: 'u-other',
+            status: TournamentParticipantStatus.waitlist,
+          ),
+        ],
+      ),
+      callerUserId: 'u-other',
+    );
+    expect(find.text('Auf Warteliste'), findsWidgets);
+    expect(find.text('Abmelden'), findsOneWidget);
+    expect(find.text('Anmelden'), findsNothing);
+  });
+
+  testWidgets(
+      'open-reg model: non-registrant still sees the register action',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(
+        status: TournamentStatus.registrationOpen,
+        participants: [
+          participant(
+            id: 'p-1',
+            userId: 'u-someone-else',
+            status: TournamentParticipantStatus.approved,
+          ),
+        ],
+      ),
+      callerUserId: 'u-fresh',
+    );
+    expect(find.text('Anmelden'), findsOneWidget);
+    expect(find.text('Abmelden'), findsNothing);
   });
 }

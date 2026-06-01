@@ -112,13 +112,21 @@ class _Body extends ConsumerWidget {
     }
     final h = detail.tournament;
     final cfg = h.matchFormatConfig;
-    final visibleParts = detail.participants.where((p) {
-      if (isCreator) {
-        return p.registrationStatus == TournamentParticipantStatus.pending ||
-            p.registrationStatus == TournamentParticipantStatus.approved;
-      }
-      return p.registrationStatus == TournamentParticipantStatus.approved;
-    }).toList(growable: false);
+    // New open-registration model: confirmed participants form the pool;
+    // waitlisted ones are shown in a separate, ordered section. Legacy
+    // `pending` rows (no longer produced) still count as confirmed-pool
+    // for display so old data renders sensibly. `withdrawn`/`rejected`
+    // never surface.
+    final confirmedParts = detail.participants
+        .where((p) =>
+            p.registrationStatus == TournamentParticipantStatus.approved ||
+            p.registrationStatus == TournamentParticipantStatus.pending)
+        .toList(growable: false);
+    final waitlistParts = detail.participants
+        .where((p) =>
+            p.registrationStatus == TournamentParticipantStatus.waitlist)
+        .toList(growable: false)
+      ..sort((a, b) => a.registeredAt.compareTo(b.registeredAt));
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(KubbTokens.space4, KubbTokens.space2,
@@ -154,11 +162,26 @@ class _Body extends ConsumerWidget {
         ]),
         const SizedBox(height: KubbTokens.space5),
         _card(context, l.tournamentDetailParticipants, [
-          if (visibleParts.isEmpty)
+          if (confirmedParts.isEmpty)
             Text(l.tournamentDetailParticipantsEmpty,
                 style: TextStyle(fontSize: 13, color: tokens.fgMuted)),
-          for (final p in visibleParts)
+          for (final p in confirmedParts)
             _participantRow(context, ref, p, isCreator, l, tokens),
+          // Waitlist overview (in registration order). Visible to everyone
+          // so registrants understand the queue; the organizer additionally
+          // gets the optional (non-required) moderation remove on each row.
+          if (waitlistParts.isNotEmpty) ...[
+            const SizedBox(height: KubbTokens.space3),
+            Text(l.tournamentDetailWaitlistHeading.toUpperCase(),
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.88,
+                    color: tokens.fgMuted)),
+            const SizedBox(height: KubbTokens.space1),
+            for (final p in waitlistParts)
+              _participantRow(context, ref, p, isCreator, l, tokens),
+          ],
         ]),
         // T17: Roster tab visibility. The caller's participant carries a
         // team_id exactly when the tournament is configured for teams
@@ -247,8 +270,12 @@ Widget _participantRow(
   AppLocalizations l,
   KubbTokens tokens,
 ) {
-  final pending =
-      p.registrationStatus == TournamentParticipantStatus.pending;
+  // New model: registrations are auto-confirmed; the only non-confirmed
+  // pool state shown here is `waitlist`. Approve/reject is gone (no row is
+  // ever `pending` anymore); the organizer keeps an OPTIONAL moderation
+  // remove that maps to the legacy reject RPC — it is not a required step.
+  final isWaitlist =
+      p.registrationStatus == TournamentParticipantStatus.waitlist;
   final pid = TournamentParticipantId(p.participantId);
   final actions = ref.read(tournamentActionsProvider);
   return Padding(
@@ -261,22 +288,19 @@ Widget _participantRow(
             style: TextStyle(
                 fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg)),
       ),
-      if (pending)
-        Padding(
-          padding: const EdgeInsets.only(right: KubbTokens.space2),
-          child: Text(l.tournamentDetailPending,
-              style: TextStyle(fontSize: 11, color: tokens.fgMuted)),
-        ),
-      if (isOrganizer && pending) ...[
-        TextButton(
-            onPressed: () =>
-                _safe(context, () => actions.confirmRegistration(pid)),
-            child: Text(l.tournamentDetailApprove)),
+      Padding(
+        padding: const EdgeInsets.only(right: KubbTokens.space2),
+        child: Text(
+            isWaitlist
+                ? l.tournamentDetailStatusWaitlist
+                : l.tournamentDetailStatusConfirmed,
+            style: TextStyle(fontSize: 11, color: tokens.fgMuted)),
+      ),
+      if (isOrganizer)
         TextButton(
             onPressed: () =>
                 _safe(context, () => actions.rejectRegistration(pid)),
-            child: Text(l.tournamentDetailReject)),
-      ],
+            child: Text(l.tournamentDetailActionRemove)),
     ]),
   );
 }
@@ -347,25 +371,33 @@ class _Actions extends ConsumerWidget {
       nav(l.tournamentDetailActionEdit, TournamentRoutes.edit(id.value));
     }
 
+    // New open-registration model: publishing goes straight to
+    // `registration_open` (no separate "Anmeldung öffnen" step). The
+    // organizer can start directly from `registration_open` (the start
+    // implicitly closes registration); an explicit "Anmeldung schliessen"
+    // remains available but optional. `published` is no longer reachable
+    // from publish, but is handled defensively for any legacy row.
     if (status == TournamentStatus.draft && canManage) {
       op(l.tournamentDetailActionPublish, () => actions.publish(id));
-    } else if (status == TournamentStatus.published && canManage) {
-      op(l.tournamentDetailActionOpenReg, () => actions.openRegistration(id));
-    } else if (status == TournamentStatus.registrationOpen) {
+    } else if (status == TournamentStatus.registrationOpen ||
+        status == TournamentStatus.published) {
       if (canManage) {
+        op(l.tournamentDetailActionStart, () => actions.startTournament(id));
         op(l.tournamentDetailActionCloseReg,
             () => actions.closeRegistration(id));
-      } else if (me == null) {
+      } else if (me == null ||
+          me!.registrationStatus == TournamentParticipantStatus.withdrawn ||
+          me!.registrationStatus == TournamentParticipantStatus.rejected) {
         nav(l.tournamentDetailActionRegister, '$pathBase/register');
       } else {
         final m = me!;
-        if (m.registrationStatus != TournamentParticipantStatus.withdrawn) {
-          op(
-              l.tournamentDetailActionWithdraw,
-              () => actions.withdrawRegistration(
-                  TournamentParticipantId(m.participantId)),
-              color: KubbTokens.miss);
-        }
+        // Confirmed or waitlisted: show the standing, then offer withdraw.
+        buttons.add(_RegistrationStatusBadge(status: m.registrationStatus));
+        op(
+            l.tournamentDetailActionWithdraw,
+            () => actions.withdrawRegistration(
+                TournamentParticipantId(m.participantId)),
+            color: KubbTokens.miss);
       }
     } else if (status == TournamentStatus.registrationClosed && canManage) {
       op(l.tournamentDetailActionStart, () => actions.startTournament(id));
@@ -480,6 +512,46 @@ class _LifecycleHint extends StatelessWidget {
                 color: tokens.fgMuted,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Standing badge shown to a registered caller while registration is open:
+/// "Angemeldet" for a confirmed (auto-confirmed) registration, "Auf
+/// Warteliste" once capacity is reached. Replaces the old
+/// "Bestätigung ausstehend" framing — registrations are no longer pending.
+class _RegistrationStatusBadge extends StatelessWidget {
+  const _RegistrationStatusBadge({required this.status});
+
+  final TournamentParticipantStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    final isWaitlist = status == TournamentParticipantStatus.waitlist;
+    final label = isWaitlist
+        ? l.tournamentDetailStatusWaitlist
+        : l.tournamentDetailStatusConfirmed;
+    final icon = isWaitlist ? Icons.hourglass_empty : Icons.check_circle;
+    return Container(
+      padding: const EdgeInsets.all(KubbTokens.space3),
+      decoration: BoxDecoration(
+        color: tokens.bgRaised,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+        border: Border.all(color: tokens.line, width: 1.5),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: tokens.fgMuted),
+          const SizedBox(width: KubbTokens.space2),
+          Text(
+            label,
+            style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg),
           ),
         ],
       ),

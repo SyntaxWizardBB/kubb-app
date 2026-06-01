@@ -1975,6 +1975,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentDetailPending => 'ausstehend';
 
   @override
+  String get tournamentDetailStatusConfirmed => 'Angemeldet';
+
+  @override
+  String get tournamentDetailStatusWaitlist => 'Auf Warteliste';
+
+  @override
+  String get tournamentDetailWaitlistHeading => 'Warteliste';
+
+  @override
+  String get tournamentDetailActionRemove => 'Entfernen';
+
+  @override
   String get tournamentDetailApprove => 'Bestätigen';
 
   @override
@@ -2024,15 +2036,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentDetailHintDraft =>
-      'Veröffentlichen und Anmeldung öffnen, damit sich Spieler anmelden können. Gestartet wird erst nach Anmeldeschluss.';
+      'Veröffentlichen — die Anmeldung ist danach sofort offen und Spieler können sich anmelden. Starten kannst du, sobald genug Teilnehmer dabei sind.';
 
   @override
   String get tournamentDetailHintPublished =>
-      'Anmeldung öffnen, damit sich Spieler anmelden können. Gestartet wird erst nach Anmeldeschluss.';
+      'Die Anmeldung ist offen. Spieler können sich anmelden, bis du das Turnier startest.';
 
   @override
   String get tournamentDetailHintRegistrationOpen =>
-      'Anmeldung schliessen, sobald genug Teams angemeldet sind. Danach kann das Turnier gestartet werden.';
+      'Die Anmeldung ist offen. Starte das Turnier, sobald genug Teilnehmer dabei sind — der Start schliesst die Anmeldung automatisch.';
 
   @override
   String get tournamentDetailHintRegistrationClosed =>

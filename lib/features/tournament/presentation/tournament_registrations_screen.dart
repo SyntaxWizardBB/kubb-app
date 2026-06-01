@@ -75,14 +75,27 @@ class TournamentRegistrationsScreen extends ConsumerWidget {
                       '${TournamentRoutes.detail}/${reg.tournament.tournamentId.value}',
                     ),
                   ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton.icon(
-                      icon: const Icon(Icons.logout, size: 18),
-                      label: Text(l.tournamentRegistrationsWithdraw),
-                      style: TextButton.styleFrom(foregroundColor: KubbTokens.miss),
-                      onPressed: () => unawaited(_withdraw(context, ref, reg, l)),
-                    ),
+                  Row(
+                    children: [
+                      // Auto-confirmed model: surface the caller's standing
+                      // ("Angemeldet" vs "Auf Warteliste") instead of any
+                      // pending/awaiting-confirmation framing.
+                      Text(
+                        reg.status == TournamentParticipantStatus.waitlist
+                            ? l.tournamentDetailStatusWaitlist
+                            : l.tournamentDetailStatusConfirmed,
+                        style: TextStyle(fontSize: 12, color: tokens.fgMuted),
+                      ),
+                      const Spacer(),
+                      TextButton.icon(
+                        icon: const Icon(Icons.logout, size: 18),
+                        label: Text(l.tournamentRegistrationsWithdraw),
+                        style: TextButton.styleFrom(
+                            foregroundColor: KubbTokens.miss),
+                        onPressed: () =>
+                            unawaited(_withdraw(context, ref, reg, l)),
+                      ),
+                    ],
                   ),
                 ],
               );

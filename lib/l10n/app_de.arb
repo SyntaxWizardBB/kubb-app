@@ -2607,6 +2607,22 @@
   "@tournamentDetailPending": {
     "description": "Inline marker for pending registration"
   },
+  "tournamentDetailStatusConfirmed": "Angemeldet",
+  "@tournamentDetailStatusConfirmed": {
+    "description": "Inline marker / badge for a confirmed registration (auto-confirmed model)"
+  },
+  "tournamentDetailStatusWaitlist": "Auf Warteliste",
+  "@tournamentDetailStatusWaitlist": {
+    "description": "Inline marker / badge for a waitlisted registration"
+  },
+  "tournamentDetailWaitlistHeading": "Warteliste",
+  "@tournamentDetailWaitlistHeading": {
+    "description": "Sub-heading for the waitlist section in the participants/registrations overview"
+  },
+  "tournamentDetailActionRemove": "Entfernen",
+  "@tournamentDetailActionRemove": {
+    "description": "Optional organizer moderation action: remove a participant (not a required step)"
+  },
   "tournamentDetailApprove": "Bestätigen",
   "@tournamentDetailApprove": {
     "description": "Organizer button: approve registration"
@@ -2671,17 +2687,17 @@
   "@tournamentDetailActionEdit": {
     "description": "Action: organizer edits the tournament details (pre-start)"
   },
-  "tournamentDetailHintDraft": "Veröffentlichen und Anmeldung öffnen, damit sich Spieler anmelden können. Gestartet wird erst nach Anmeldeschluss.",
+  "tournamentDetailHintDraft": "Veröffentlichen — die Anmeldung ist danach sofort offen und Spieler können sich anmelden. Starten kannst du, sobald genug Teilnehmer dabei sind.",
   "@tournamentDetailHintDraft": {
-    "description": "Lifecycle hint shown to the organizer while the tournament is still a draft"
+    "description": "Lifecycle hint shown to the organizer while the tournament is still a draft (publishing opens registration immediately)"
   },
-  "tournamentDetailHintPublished": "Anmeldung öffnen, damit sich Spieler anmelden können. Gestartet wird erst nach Anmeldeschluss.",
+  "tournamentDetailHintPublished": "Die Anmeldung ist offen. Spieler können sich anmelden, bis du das Turnier startest.",
   "@tournamentDetailHintPublished": {
-    "description": "Lifecycle hint shown to the organizer while the tournament is published but registration is not open"
+    "description": "Lifecycle hint shown to the organizer while the tournament is published (legacy status; registration is open)"
   },
-  "tournamentDetailHintRegistrationOpen": "Anmeldung schliessen, sobald genug Teams angemeldet sind. Danach kann das Turnier gestartet werden.",
+  "tournamentDetailHintRegistrationOpen": "Die Anmeldung ist offen. Starte das Turnier, sobald genug Teilnehmer dabei sind — der Start schliesst die Anmeldung automatisch.",
   "@tournamentDetailHintRegistrationOpen": {
-    "description": "Lifecycle hint shown to the organizer while registration is open"
+    "description": "Lifecycle hint shown to the organizer while registration is open (publishing already opened it)"
   },
   "tournamentDetailHintRegistrationClosed": "Anmeldung ist geschlossen. Jetzt kann das Turnier gestartet werden.",
   "@tournamentDetailHintRegistrationClosed": {
