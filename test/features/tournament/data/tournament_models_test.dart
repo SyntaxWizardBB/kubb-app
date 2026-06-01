@@ -154,6 +154,25 @@ void main() {
       expect(p.respondedAt, isNotNull);
     });
 
+    test('maps the DB wire value "confirmed" onto approved (auto-confirm)',
+        () {
+      // Regression: the open-registration model stores `confirmed`, but the
+      // domain enum has no `confirmed` member — a `.name` lookup threw
+      // "Invalid argument: confirmed" on every confirmed participant once
+      // self-registration auto-confirmed, crashing the detail screen.
+      final p = tournamentParticipantFromRow(_participantRow(
+        status: 'confirmed',
+      ));
+      expect(p.registrationStatus, TournamentParticipantStatus.approved);
+    });
+
+    test('maps the DB wire value "waitlist" onto waitlist', () {
+      final p = tournamentParticipantFromRow(_participantRow(
+        status: 'waitlist',
+      ));
+      expect(p.registrationStatus, TournamentParticipantStatus.waitlist);
+    });
+
     test('W3-T4: falls back to nickname when display_name absent on wire',
         () {
       final p = tournamentParticipantFromRow(_participantRow(displayName: null));

@@ -224,24 +224,12 @@ class TournamentRepository implements TournamentRemote {
   }
 
   /// Maps the raw `tournament_participants.registration_status` wire value
-  /// onto the domain enum. The DB stores `confirmed` where the domain enum
-  /// says `approved`, so a plain `.name` lookup would throw — hence the
-  /// explicit switch.
-  TournamentParticipantStatus _registrationStatusFromWire(String raw) {
-    switch (raw) {
-      case 'confirmed':
-        return TournamentParticipantStatus.approved;
-      case 'waitlist':
-        return TournamentParticipantStatus.waitlist;
-      case 'withdrawn':
-        return TournamentParticipantStatus.withdrawn;
-      case 'rejected':
-        return TournamentParticipantStatus.rejected;
-      case 'pending':
-      default:
-        return TournamentParticipantStatus.pending;
-    }
-  }
+  /// onto the domain enum. Delegates to [TournamentParticipantStatusWire.
+  /// fromWire] so this layer and the detail-payload parser share ONE
+  /// mapping — they drifted apart once and a `confirmed` row then crashed
+  /// only the path that hadn't been updated.
+  TournamentParticipantStatus _registrationStatusFromWire(String raw) =>
+      TournamentParticipantStatusWire.fromWire(raw);
 
   @override
   Future<TournamentId> createTournament({

@@ -15,12 +15,30 @@ extension TournamentScoringWire on TournamentScoring {
 
 /// Wire <-> enum helpers for [TournamentParticipantStatus].
 extension TournamentParticipantStatusWire on TournamentParticipantStatus {
-  static TournamentParticipantStatus fromWire(String raw) =>
-      TournamentParticipantStatus.values.firstWhere(
-        (v) => v.name == raw,
-        orElse: () => throw ArgumentError.value(
-            raw, 'raw', 'Unknown TournamentParticipantStatus'),
-      );
+  /// Maps the DB `registration_status` vocabulary
+  /// (`pending|confirmed|rejected|withdrawn|waitlist`) onto the domain
+  /// enum. The DB says `confirmed` where the domain says `approved`, so a
+  /// `.name`-based lookup would throw on every confirmed participant —
+  /// which is exactly what broke participant parsing once registration
+  /// auto-confirms. This is the single canonical wire→enum mapping.
+  static TournamentParticipantStatus fromWire(String raw) {
+    switch (raw) {
+      case 'pending':
+        return TournamentParticipantStatus.pending;
+      case 'confirmed':
+      case 'approved':
+        return TournamentParticipantStatus.approved;
+      case 'waitlist':
+        return TournamentParticipantStatus.waitlist;
+      case 'withdrawn':
+        return TournamentParticipantStatus.withdrawn;
+      case 'rejected':
+        return TournamentParticipantStatus.rejected;
+      default:
+        throw ArgumentError.value(
+            raw, 'raw', 'Unknown TournamentParticipantStatus');
+    }
+  }
 }
 
 /// Snake_case wire mapping for the [TournamentFormat] domain enum.
