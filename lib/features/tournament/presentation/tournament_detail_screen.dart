@@ -61,6 +61,12 @@ class TournamentDetailScreen extends ConsumerWidget {
           RealtimeStatusBanner(tournamentId: tournamentId),
           Expanded(
             child: detailAsync.when(
+              // The detail is invalidated every ~5s by the realtime-fallback
+              // polling provider; without this the whole body would flash a
+              // full-screen spinner on each poll ("spinning" detail screen).
+              // Keep the last data during background reloads — only show the
+              // spinner on the very first load (no value yet).
+              skipLoadingOnReload: true,
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(
                 child: Padding(
