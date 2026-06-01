@@ -44,6 +44,7 @@ TournamentDetail _detail(List<TournamentParticipant> participants) {
       displayName: 'Sommer-Cup',
       createdByUserId: 'u-creator',
       teamSize: 1,
+      maxTeamSize: 1,
       minParticipants: 2,
       maxParticipants: 8,
       format: TournamentFormat.roundRobin,

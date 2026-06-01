@@ -62,6 +62,12 @@ class TournamentSeedingController extends Notifier<SeedingState> {
 
   final TournamentId _tournamentId;
 
+  /// Set once an explicit seed source (e.g. ELO auto-seed) has replaced the
+  /// standings-derived baseline. While set, the screen's post-frame [seed]
+  /// call only refreshes [SeedingState.config] and never overwrites the
+  /// adopted order — otherwise a list re-fetch would clobber it.
+  bool _explicitSeedTaken = false;
+
   @override
   SeedingState build() => const SeedingState.empty();
 
@@ -73,6 +79,14 @@ class TournamentSeedingController extends Notifier<SeedingState> {
     required List<TournamentParticipantId> auto,
     required KoPhaseConfig config,
   }) {
+    // An explicit seed source (ELO auto-seed) owns the order; only keep the
+    // config in sync so the standings re-fetch can't clobber it.
+    if (_explicitSeedTaken) {
+      if (state.config != config) {
+        state = state.copyWith(config: config);
+      }
+      return;
+    }
     final same = state.autoOrder.length == auto.length &&
         () {
           for (var i = 0; i < auto.length; i++) {
@@ -126,6 +140,36 @@ class TournamentSeedingController extends Notifier<SeedingState> {
             );
       }),
     );
+  }
+
+  /// Derives the seed order from each participant's ELO via the
+  /// `tournament_autoseed_from_elo` RPC and adopts the authoritative
+  /// server-side result as the new working + baseline order. The organizer
+  /// can still reorder afterwards (the result is not auto-committed beyond
+  /// the overrides the RPC already persisted; saving again is harmless).
+  Future<void> autoseedFromElo() async {
+    if (state.action.isLoading) return;
+    state = state.copyWith(action: const AsyncValue<void>.loading());
+    final result = await AsyncValue.guard(() async {
+      return ref
+          .read(tournamentRemoteProvider)
+          .autoseedFromElo(_tournamentId);
+    });
+    switch (result) {
+      case AsyncData<List<TournamentParticipantId>>(:final value):
+        _explicitSeedTaken = true;
+        state = state.copyWith(
+          order: List<TournamentParticipantId>.unmodifiable(value),
+          autoOrder: List<TournamentParticipantId>.unmodifiable(value),
+          action: const AsyncValue<void>.data(null),
+        );
+      case AsyncError<List<TournamentParticipantId>>(:final error, :final stackTrace):
+        state = state.copyWith(
+          action: AsyncValue<void>.error(error, stackTrace),
+        );
+      case _:
+        state = state.copyWith(action: const AsyncValue<void>.data(null));
+    }
   }
 
   /// Saves the current order (if dirty) and then triggers

@@ -94,6 +94,10 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     state = state.copyWith(eventStartsAt: value);
   }
 
+  void setCheckinUntil(DateTime value) {
+    state = state.copyWith(checkinUntil: value);
+  }
+
   void setRegistrationClosesAt(DateTime value) {
     state = state.copyWith(registrationClosesAt: value);
   }
@@ -173,6 +177,76 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     state = state.copyWith(
       siteMapPdfUrl: url,
       clearSiteMapPdfUrl: url == null,
+    );
+  }
+
+  // --- P6 Phase 2: Vorrunde + Pitches ---
+
+  /// Minimum players per team (1 = singles). Clamped to 1..6; pulls the
+  /// maximum up so it never falls below the minimum.
+  void setTeamSize(int value) {
+    final min = value.clamp(1, 6);
+    final max = state.maxTeamSize < min ? min : state.maxTeamSize;
+    state = state.copyWith(teamSize: min, maxTeamSize: max);
+  }
+
+  /// Maximum players per team. Clamped to the current minimum..6.
+  void setMaxTeamSize(int value) {
+    state = state.copyWith(maxTeamSize: value.clamp(state.teamSize, 6));
+  }
+
+  /// Replaces the pitch plan. Pass `null` to clear it (pitches can be
+  /// configured later, before the tournament starts).
+  void setPitchPlan(PitchPlan? plan) {
+    state = state.copyWith(pitchPlan: plan, clearPitchPlan: plan == null);
+  }
+
+  /// Prelim tiebreak trigger in seconds; `null` = no prelim tiebreak.
+  void setPrelimTiebreakAfterSeconds(int? seconds) {
+    state = state.copyWith(
+      prelimTiebreakAfterSeconds: seconds,
+      clearPrelimTiebreak: seconds == null,
+    );
+  }
+
+  void setBreakBetweenMatchesSeconds(int seconds) {
+    state = state.copyWith(
+      breakBetweenMatchesSeconds: seconds < 0 ? 0 : seconds,
+    );
+  }
+
+  // --- P6 Phase 3: Bracket / KO ---
+
+  void setBracketType(BracketType type) {
+    state = state.copyWith(bracketType: type);
+  }
+
+  void setKoMatchup(KoMatchup matchup) {
+    state = state.copyWith(koMatchup: matchup);
+  }
+
+  void setKoTiebreakMethod(KoTiebreakMethod method) {
+    state = state.copyWith(koTiebreakMethod: method);
+  }
+
+  void setKoMatchFormat(MatchFormatSpec? format) {
+    state = state.copyWith(
+      koMatchFormat: format,
+      clearKoMatchFormat: format == null,
+    );
+  }
+
+  void setMightyFinisherQuali(MightyFinisherQuali? quali) {
+    state = state.copyWith(
+      mightyFinisherQuali: quali,
+      clearMightyFinisherQuali: quali == null,
+    );
+  }
+
+  void setConsolationBracket(ConsolationConfig? config) {
+    state = state.copyWith(
+      consolationBracket: config,
+      clearConsolationBracket: config == null,
     );
   }
 

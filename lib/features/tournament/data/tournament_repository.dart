@@ -559,6 +559,33 @@ class TournamentRepository implements TournamentRemote {
     }
   }
 
+  /// P6 "TournierStart" auto-seeding. Calls `tournament_autoseed_from_elo`,
+  /// which persists the ELO-derived order into `tournament_seeding_overrides`
+  /// (the same store [setSeeding] writes and the KO generator reads), then
+  /// reads that store back so the caller renders the authoritative
+  /// server-side order rather than a local prediction. Returned best-first
+  /// (seed 1 .. N).
+  @override
+  Future<List<TournamentParticipantId>> autoseedFromElo(
+    TournamentId tournamentId,
+  ) async {
+    await _client.rpc<void>(
+      'tournament_autoseed_from_elo',
+      params: <String, dynamic>{
+        'p_tournament_id': tournamentId.value,
+      },
+    );
+    final rows = await _client
+        .from('tournament_seeding_overrides')
+        .select('participant_id, seed_override')
+        .eq('tournament_id', tournamentId.value)
+        .order('seed_override');
+    return <TournamentParticipantId>[
+      for (final row in rows.cast<Map<String, dynamic>>())
+        TournamentParticipantId(row['participant_id'] as String),
+    ];
+  }
+
   /// Calls `tournament_organizer_override_pairing`. Maps the
   /// token-prefixed server messages to an [OverrideKoPairingException]
   /// so the UI layer can render a localized error without parsing
@@ -601,7 +628,15 @@ class TournamentRepository implements TournamentRemote {
           'participant_a, participant_b, winner_participant, status',
         )
         .eq('tournament_id', tournamentId.value)
-        .inFilter('phase', const <String>['ko', 'third_place', 'final'])
+        .inFilter('phase', const <String>[
+          'ko',
+          'third_place',
+          'final',
+          'wb',
+          'lb',
+          'grand_final',
+          'grand_final_reset',
+        ])
         .order('round_number')
         .order('bracket_position');
     final koRows = <KoMatchRow>[
@@ -804,7 +839,7 @@ class TournamentRepository implements TournamentRemote {
         'tournament_start_pool_phase',
         params: <String, dynamic>{
           'p_tournament_id': tournamentId.value,
-          'p_pool_config': _poolPhaseConfigToWire(config),
+          'p_pool_config': config.toWire(),
         },
       );
     } on PostgrestException catch (e) {
@@ -859,15 +894,6 @@ class TournamentRepository implements TournamentRemote {
         ],
       },
     );
-  }
-
-  Map<String, dynamic> _poolPhaseConfigToWire(PoolPhaseConfig c) {
-    return <String, dynamic>{
-      'group_count': c.groupCount,
-      'qualifiers_per_group': c.qualifiersPerGroup,
-      'strategy': c.strategy.name,
-      if (c.randomSeed != null) 'random_seed': c.randomSeed,
-    };
   }
 
   ParticipantStats _participantStatsFromRow(Map<String, dynamic> row) {

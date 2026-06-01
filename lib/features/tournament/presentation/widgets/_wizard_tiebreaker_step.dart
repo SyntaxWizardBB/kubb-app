@@ -4,7 +4,7 @@ import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
 /// Wire-format tiebreaker keys consumed by the `tournament_create` RPC.
-/// Mirrors `TiebreakerCriterion` snake_case identifiers (7 entries).
+/// Mirrors `TiebreakerCriterion` snake_case identifiers (8 entries).
 const List<String> _kAllCriteria = <String>[
   'total_points',
   'buchholz_minus_h2h',
@@ -12,17 +12,19 @@ const List<String> _kAllCriteria = <String>[
   'kubb_difference',
   'direct_comparison',
   'wins',
+  'mighty_finisher_shootout',
   'random',
 ];
 
 /// Preset chains (OD-M2-03 Empfehlung C). "Standard" mirrors the M1 default
-/// in [TournamentConfigDraft]; "Schweizer-konform" follows the canonical
-/// Swiss chain (Buchholz family + Median + Direct, then Wins/Diff).
+/// in [TournamentConfigDraft] and the canonical §H Swiss chain (total points
+/// → Buchholz → direct encounter → Mighty-Finisher shootout);
+/// "Schweizer-konform" adds the Median + Diff criteria.
 const List<String> _kPresetStandard = <String>[
   'total_points',
   'buchholz_minus_h2h',
   'direct_comparison',
-  'wins',
+  'mighty_finisher_shootout',
 ];
 const List<String> _kPresetSwiss = <String>[
   'total_points',
@@ -42,6 +44,7 @@ const Map<String, String> _kCriterionLabelsDe = <String, String>{
   'kubb_difference': 'Kubb-Differenz',
   'direct_comparison': 'Direkter Vergleich',
   'wins': 'Anzahl Siege',
+  'mighty_finisher_shootout': 'Mighty-Finisher-Shootout',
   'random': 'Zufall',
 };
 

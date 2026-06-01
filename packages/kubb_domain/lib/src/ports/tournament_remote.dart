@@ -332,6 +332,7 @@ class TournamentDetailHeader {
     required this.displayName,
     required this.createdByUserId,
     required this.teamSize,
+    required this.maxTeamSize,
     required this.minParticipants,
     required this.maxParticipants,
     required this.format,
@@ -349,7 +350,18 @@ class TournamentDetailHeader {
   final String tournamentId;
   final String displayName;
   final String? createdByUserId;
+
+  /// Minimum players per team registration (`tournaments.team_size`).
+  /// For solo tournaments this is `1`.
   final int teamSize;
+
+  /// Maximum players per team registration
+  /// (`tournaments.max_team_size`). When the server projects no explicit
+  /// max — older `tournament_get` versions, or a fixed-size tournament —
+  /// the wire parser falls back to [teamSize], so a registration roster
+  /// must always satisfy `teamSize <= n <= maxTeamSize`.
+  final int maxTeamSize;
+
   final int minParticipants;
   final int maxParticipants;
   final TournamentFormat format;
@@ -591,6 +603,23 @@ abstract interface class TournamentRemote {
   /// round-trip. Architecture doc should be updated to match (handled by
   /// the architect-domain follow-up edit).
   Future<void> startKoPhase(TournamentId tournamentId, KoPhaseConfig config);
+
+  /// P6 "TournierStart" auto-seeding. Derives a full seed order from each
+  /// confirmed participant's ELO (per P6_RULES_DECISIONS §I: team rating =
+  /// SUM of members' ELO, missing ratings default to 1200) and persists it
+  /// into the SAME `tournament_seeding_overrides` store the manual
+  /// [setSeeding] writes — the KO generator already reads that store.
+  ///
+  /// Returns the resulting seed order best-first (seed 1 .. N) so the
+  /// caller can reflect the authoritative server result. The organizer can
+  /// still manually reorder afterwards via [setSeeding].
+  ///
+  /// Out of scope (Phase 6): the match->ELO writer is not implemented yet,
+  /// so `player_ratings` is empty and every participant currently resolves
+  /// to 1200 — the order is decided entirely by a deterministic tie-break.
+  Future<List<TournamentParticipantId>> autoseedFromElo(
+    TournamentId tournamentId,
+  );
 
   /// FR-PAIR-7. Swaps the participants of a not-yet-started KO pairing.
   /// `reason` is mandatory and lands in the audit trail. Targeting a

@@ -19,6 +19,20 @@ const _gamma = TournamentParticipantId('gamma3');
 class _FakeRemote implements TournamentRemote {
   ({TournamentId id, Map<TournamentParticipantId, int> seeds})? setSeedingCall;
   ({TournamentId id, KoPhaseConfig config})? startKoCall;
+  TournamentId? autoseedCall;
+
+  /// Order [autoseedFromElo] returns — defaults to the reversed standings
+  /// so a test can assert the screen reflects the server-side result.
+  List<TournamentParticipantId> autoseedResult =
+      const <TournamentParticipantId>[_gamma, _beta, _alpha];
+
+  @override
+  Future<List<TournamentParticipantId>> autoseedFromElo(
+    TournamentId tournamentId,
+  ) async {
+    autoseedCall = tournamentId;
+    return autoseedResult;
+  }
 
   @override
   Future<void> setSeeding({
@@ -80,6 +94,7 @@ TournamentDetail _detail() {
       displayName: 'Sommer-Cup',
       createdByUserId: 'u-creator',
       teamSize: 1,
+      maxTeamSize: 1,
       minParticipants: 2,
       maxParticipants: 8,
       format: TournamentFormat.roundRobinThenKo,
@@ -222,6 +237,39 @@ void main() {
       '/tournament/t-1/bracket',
     );
     expect(find.text('bracket-screen'), findsOneWidget);
+  });
+
+  testWidgets(
+      'auto-seed button calls autoseedFromElo and reflects the returned order',
+      (tester) async {
+    final (fake, _) = await _pump(tester);
+
+    // Baseline: standings order alpha, beta, gamma (top → bottom).
+    expect(
+      tester.getCenter(find.text('alpha1')).dy <
+          tester.getCenter(find.text('gamma3')).dy,
+      isTrue,
+    );
+
+    await tester.tap(find.text('Auto-Seed aus ELO'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 16));
+
+    // The RPC was invoked for this tournament.
+    expect(fake.autoseedCall, _tournamentId);
+
+    // The screen now reflects the returned order: gamma, beta, alpha
+    // (top → bottom) — the reverse of the standings baseline.
+    expect(
+      tester.getCenter(find.text('gamma3')).dy <
+          tester.getCenter(find.text('beta22')).dy,
+      isTrue,
+    );
+    expect(
+      tester.getCenter(find.text('beta22')).dy <
+          tester.getCenter(find.text('alpha1')).dy,
+      isTrue,
+    );
   });
 
   testWidgets('empty standings surface the empty placeholder',

@@ -91,7 +91,9 @@ BEGIN
       info_accommodation, contact_name, contact_phone, entry_fee_cents,
       currency, payment_methods, rules_pdf_url, site_map_pdf_url,
       league_categories, rule_variants, ko_match_format, pitch_plan,
-      mighty_finisher_quali, consolation_bracket)
+      mighty_finisher_quali, consolation_bracket, max_team_size,
+      bracket_type, ko_matchup, ko_tiebreak_method,
+      pool_phase_config, ko_config)
     VALUES (
       v_caller, p_display_name, p_team_size::smallint,
       p_min_participants::smallint, p_max_participants::smallint,
@@ -123,7 +125,13 @@ BEGIN
       v_setup->'ko_match_format',
       v_setup->'pitch_plan',
       v_setup->'mighty_finisher_quali',
-      v_setup->'consolation_bracket')
+      v_setup->'consolation_bracket',
+      (v_setup->>'max_team_size')::smallint,
+      coalesce(v_setup->>'bracket_type', 'single_elimination'),
+      coalesce(v_setup->>'ko_matchup', 'seed_high_vs_low'),
+      coalesce(v_setup->>'ko_tiebreak_method', 'classic_kingtoss_removal'),
+      v_setup->'pool_phase_config',
+      v_setup->'ko_config')
     RETURNING id INTO v_tournament_id;
 
   INSERT INTO public.tournament_audit_events(tournament_id, kind, actor_user_id, payload)

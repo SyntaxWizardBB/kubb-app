@@ -239,6 +239,8 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
           draft: draft,
           onMin: controller.setMinParticipants,
           onMax: controller.setMaxParticipants,
+          onTeamSize: controller.setTeamSize,
+          onMaxTeamSize: controller.setMaxTeamSize,
         );
       case _StepKind.format:
         return _StepFormat(
@@ -249,6 +251,10 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
           swissRounds: _swissRounds ??
               SwissConfigSection.defaultRounds(draft.maxParticipants),
           onSwissRoundsChanged: (v) => setState(() => _swissRounds = v),
+          onPitchPlanChanged: controller.setPitchPlan,
+          onRoundTime: controller.setRoundTime,
+          onPrelimTiebreakAfter: controller.setPrelimTiebreakAfterSeconds,
+          onBreakBetween: controller.setBreakBetweenMatchesSeconds,
         );
       case _StepKind.league:
         return WizardLeagueStep(
@@ -271,6 +277,7 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
                 key: ValueKey<int>(draft.maxParticipants),
                 draft: draft,
                 onConfigChanged: controller.setPoolPhaseConfig,
+                onPitchPlanChanged: controller.setPitchPlan,
               ),
           ],
         );
@@ -278,6 +285,7 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
         return WizardKoConfigStep(
           key: ValueKey<int>(draft.maxParticipants),
           draft: draft,
+          controller: controller,
           onConfigChanged: controller.setKoConfig,
           onSeedingModeChanged: controller.setBracketSeedingMode,
         );
@@ -568,6 +576,19 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           onTap: () => _pickDateTime(
             initial: draft.registrationClosesAt,
             onPicked: controller.setRegistrationClosesAt,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space5),
+        _FieldLabel(
+          l10n.tournamentWizardCheckinUntilLabel,
+          optional: true,
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        _DateField(
+          value: draft.checkinUntil,
+          onTap: () => _pickDateTime(
+            initial: draft.checkinUntil,
+            onPicked: controller.setCheckinUntil,
           ),
         ),
         const SizedBox(height: KubbTokens.space5),
@@ -1201,11 +1222,15 @@ class _StepParticipants extends StatelessWidget {
     required this.draft,
     required this.onMin,
     required this.onMax,
+    required this.onTeamSize,
+    required this.onMaxTeamSize,
   });
 
   final TournamentConfigDraft draft;
   final ValueChanged<int> onMin;
   final ValueChanged<int> onMax;
+  final ValueChanged<int> onTeamSize;
+  final ValueChanged<int> onMaxTeamSize;
 
   @override
   Widget build(BuildContext context) {
@@ -1213,6 +1238,24 @@ class _StepParticipants extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        _NumberStepper(
+          label: l10n.tournamentWizardMinTeamSizeLabel,
+          value: draft.teamSize,
+          min: 1,
+          max: 6,
+          onChanged: onTeamSize,
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        _NumberStepper(
+          label: l10n.tournamentWizardMaxTeamSizeLabel,
+          value: draft.maxTeamSize,
+          min: draft.teamSize,
+          max: 6,
+          onChanged: onMaxTeamSize,
+        ),
+        const SizedBox(height: KubbTokens.space1half),
+        _HelperText(l10n.tournamentWizardTeamSizeHint),
+        const SizedBox(height: KubbTokens.space5),
         _NumberStepper(
           label: l10n.tournamentWizardMinParticipantsLabel,
           value: draft.minParticipants,
@@ -1241,6 +1284,10 @@ class _StepFormat extends StatelessWidget {
     required this.onMaxSets,
     required this.swissRounds,
     required this.onSwissRoundsChanged,
+    required this.onPitchPlanChanged,
+    required this.onRoundTime,
+    required this.onPrelimTiebreakAfter,
+    required this.onBreakBetween,
   });
 
   final TournamentConfigDraft draft;
@@ -1251,6 +1298,10 @@ class _StepFormat extends StatelessWidget {
   // `draft.format == TournamentFormat.swiss`. State lives in the wizard.
   final int swissRounds;
   final ValueChanged<int> onSwissRoundsChanged;
+  final ValueChanged<PitchPlan?> onPitchPlanChanged;
+  final ValueChanged<int> onRoundTime;
+  final ValueChanged<int?> onPrelimTiebreakAfter;
+  final ValueChanged<int> onBreakBetween;
 
   @override
   Widget build(BuildContext context) {
@@ -1273,19 +1324,21 @@ class _StepFormat extends StatelessWidget {
           _FormatRow(
             format: f,
             selected: draft.format == f,
-            // T10: Swiss-System unlocked alongside round-robin
-            // (PairingStrategyKind.swissSystem). Hybrid + KO-only formats
-            // stay gated until their respective tasks land.
-            enabled: f == TournamentFormat.roundRobin ||
-                f == TournamentFormat.swiss,
+            // All domain+server-supported formats are selectable: the pure
+            // round-robin / Schoch / Swiss group formats, the single-
+            // elimination KO bracket and the three hybrid group→KO formats.
+            enabled: _formatEnabled(f),
             label: f == TournamentFormat.roundRobin
                 ? l10n.tournamentWizardFormatRoundRobin
                 : _humanFormatLabel(f),
+            description: _formatDescription(f),
             comingSoonLabel: l10n.tournamentWizardFormatComingSoon,
             onTap: () => onFormat(f),
           ),
-          if (f == TournamentFormat.swiss &&
-              draft.format == TournamentFormat.swiss)
+          // T10: the Schoch-rounds slider drives both the Swiss-System and
+          // the Schoch format (their pairing engine shares the round count).
+          if ((f == TournamentFormat.swiss || f == TournamentFormat.schoch) &&
+              draft.format == f)
             SwissConfigSection(
               participantCount: draft.maxParticipants,
               rounds: swissRounds,
@@ -1308,11 +1361,57 @@ class _StepFormat extends StatelessWidget {
           max: 9,
           onChanged: onMaxSets,
         ),
+        const SizedBox(height: KubbTokens.space4),
+        _NumberStepper(
+          label: l10n.tournamentWizardMatchTimeLabel,
+          value: (draft.roundTimeSeconds / 60).round(),
+          min: 5,
+          max: 120,
+          onChanged: (minutes) => onRoundTime(minutes * 60),
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        _ToggleRow(
+          title: l10n.tournamentWizardTiebreakLabel,
+          subtitle: l10n.tournamentWizardTiebreakHint,
+          value: draft.prelimTiebreakAfterSeconds != null,
+          onChanged: (on) => onPrelimTiebreakAfter(
+            on
+                ? (draft.roundTimeSeconds - 300)
+                    .clamp(60, draft.roundTimeSeconds)
+                : null,
+          ),
+        ),
+        if (draft.prelimTiebreakAfterSeconds != null) ...[
+          const SizedBox(height: KubbTokens.space2),
+          _NumberStepper(
+            label: l10n.tournamentWizardTiebreakAfterLabel,
+            value: (draft.prelimTiebreakAfterSeconds! / 60).round(),
+            min: 1,
+            max: (draft.roundTimeSeconds / 60).round(),
+            onChanged: (minutes) => onPrelimTiebreakAfter(minutes * 60),
+          ),
+        ],
+        const SizedBox(height: KubbTokens.space4),
+        _NumberStepper(
+          label: l10n.tournamentWizardBreakBetweenLabel,
+          value: (draft.breakBetweenMatchesSeconds / 60).round(),
+          min: 0,
+          max: 60,
+          onChanged: (minutes) => onBreakBetween(minutes * 60),
+        ),
+        _SectionHeaderText(l10n.tournamentWizardSectionPitches),
+        const SizedBox(height: KubbTokens.space2),
+        _HelperText(l10n.tournamentWizardPitchHint),
+        const SizedBox(height: KubbTokens.space3),
+        _PitchPlanSection(
+          plan: draft.pitchPlan,
+          onChanged: onPitchPlanChanged,
+        ),
       ],
     );
   }
 
-  String _humanFormatLabel(TournamentFormat f) {
+  static String _humanFormatLabel(TournamentFormat f) {
     switch (f) {
       case TournamentFormat.roundRobin:
         return 'Round Robin';
@@ -1330,6 +1429,33 @@ class _StepFormat extends StatelessWidget {
         return 'Schweizer + KO';
     }
   }
+
+  /// One-line German explanation of each format's flow (group phase vs
+  /// Schoch vs hybrid + KO), shown beneath the format label.
+  String _formatDescription(TournamentFormat f) {
+    switch (f) {
+      case TournamentFormat.roundRobin:
+        return 'Gruppenphase: jeder gegen jeden, Rangliste entscheidet.';
+      case TournamentFormat.singleElimination:
+        return 'Reines KO: Verlierer scheiden direkt aus.';
+      case TournamentFormat.schoch:
+        return 'Schoch-Paarung über mehrere Runden, dann Rangliste.';
+      case TournamentFormat.swiss:
+        return 'Schweizer System: Gleichstarke treffen aufeinander.';
+      case TournamentFormat.roundRobinThenKo:
+        return 'Gruppenphase, danach KO-Bracket der Besten.';
+      case TournamentFormat.schochThenKo:
+        return 'Schoch-Vorrunde, danach KO-Bracket der Besten.';
+      case TournamentFormat.swissThenKo:
+        return 'Schweizer Vorrunde, danach KO-Bracket der Besten.';
+    }
+  }
+
+  /// All formats with domain + server pairing/phase support are selectable.
+  /// `round_robin` / `schoch` / `swiss` run a single group/pairing stage,
+  /// `singleElimination` is a pure KO bracket, and the three `*_then_ko`
+  /// hybrids run a group/pairing stage followed by a KO bracket.
+  bool _formatEnabled(TournamentFormat f) => true;
 }
 
 class _FormatRow extends StatelessWidget {
@@ -1338,6 +1464,7 @@ class _FormatRow extends StatelessWidget {
     required this.selected,
     required this.enabled,
     required this.label,
+    required this.description,
     required this.comingSoonLabel,
     required this.onTap,
   });
@@ -1346,6 +1473,7 @@ class _FormatRow extends StatelessWidget {
   final bool selected;
   final bool enabled;
   final String label;
+  final String description;
   final String comingSoonLabel;
   final VoidCallback onTap;
 
@@ -1378,13 +1506,26 @@ class _FormatRow extends StatelessWidget {
               ),
               const SizedBox(width: KubbTokens.space3),
               Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: enabled ? tokens.fg : tokens.fgSubtle,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: enabled ? tokens.fg : tokens.fgSubtle,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: enabled ? tokens.fgMuted : tokens.fgSubtle,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               if (!enabled)
@@ -1452,7 +1593,7 @@ class _StepSummary extends StatelessWidget {
           _summaryRow(
             tokens,
             l10n.tournamentWizardFormatLabel,
-            l10n.tournamentWizardFormatRoundRobin,
+            _StepFormat._humanFormatLabel(draft.format),
           ),
           _summaryRow(
             tokens,
@@ -1614,6 +1755,195 @@ class _StepButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Pitch configuration: a number range (von–bis) or a manual list, plus
+/// a sort strategy. Emits a [PitchPlan] (or null when empty) via
+/// [onChanged]. Group→pitch assignment is a later slice.
+class _PitchPlanSection extends StatefulWidget {
+  const _PitchPlanSection({required this.plan, required this.onChanged});
+
+  final PitchPlan? plan;
+  final ValueChanged<PitchPlan?> onChanged;
+
+  @override
+  State<_PitchPlanSection> createState() => _PitchPlanSectionState();
+}
+
+class _PitchPlanSectionState extends State<_PitchPlanSection> {
+  late PitchMode _mode;
+  late PitchSortStrategy _sort;
+  late final TextEditingController _fromCtrl;
+  late final TextEditingController _toCtrl;
+  late final TextEditingController _numbersCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    final p = widget.plan;
+    _mode = p?.mode ?? PitchMode.range;
+    _sort = p?.sortStrategy ?? PitchSortStrategy.topSeedsLowNumbers;
+    _fromCtrl = TextEditingController(text: p?.rangeFrom?.toString() ?? '');
+    _toCtrl = TextEditingController(text: p?.rangeTo?.toString() ?? '');
+    _numbersCtrl = TextEditingController(
+      text: (p?.numbers ?? const <int>[]).join(', '),
+    );
+  }
+
+  @override
+  void dispose() {
+    _fromCtrl.dispose();
+    _toCtrl.dispose();
+    _numbersCtrl.dispose();
+    super.dispose();
+  }
+
+  static int? _parseInt(String s) {
+    final t = s.trim();
+    return t.isEmpty ? null : int.tryParse(t);
+  }
+
+  static List<int> _parseNumbers(String s) => s
+      .split(RegExp(r'[,\s]+'))
+      .where((x) => x.isNotEmpty)
+      .map(int.tryParse)
+      .whereType<int>()
+      .where((n) => n > 0)
+      .toList();
+
+  /// Builds the plan from the current inputs (null when effectively empty).
+  PitchPlan? _currentPlan() {
+    if (_mode == PitchMode.range) {
+      final from = _parseInt(_fromCtrl.text);
+      final to = _parseInt(_toCtrl.text);
+      if (from == null && to == null) return null;
+      return PitchPlan(
+        mode: PitchMode.range,
+        rangeFrom: from,
+        rangeTo: to,
+        sortStrategy: _sort,
+      );
+    }
+    final nums = _parseNumbers(_numbersCtrl.text);
+    if (nums.isEmpty) return null;
+    return PitchPlan(
+      mode: PitchMode.manual,
+      numbers: nums,
+      sortStrategy: _sort,
+    );
+  }
+
+  void _emit() => widget.onChanged(_currentPlan());
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final plan = _currentPlan();
+    final count = plan?.availablePitches().length ?? 0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Wrap(
+          spacing: KubbTokens.space2,
+          runSpacing: KubbTokens.space2,
+          children: [
+            _SelectChip(
+              label: l10n.tournamentWizardPitchModeRange,
+              selected: _mode == PitchMode.range,
+              onTap: () {
+                setState(() => _mode = PitchMode.range);
+                _emit();
+              },
+            ),
+            _SelectChip(
+              label: l10n.tournamentWizardPitchModeManual,
+              selected: _mode == PitchMode.manual,
+              onTap: () {
+                setState(() => _mode = PitchMode.manual);
+                _emit();
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        if (_mode == PitchMode.range)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _FieldLabel(l10n.tournamentWizardPitchRangeFrom),
+                    const SizedBox(height: KubbTokens.space2),
+                    _PlainTextField(
+                      controller: _fromCtrl,
+                      keyboardType: TextInputType.number,
+                      onChanged: (_) => _emit(),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: KubbTokens.space3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _FieldLabel(l10n.tournamentWizardPitchRangeTo),
+                    const SizedBox(height: KubbTokens.space2),
+                    _PlainTextField(
+                      controller: _toCtrl,
+                      keyboardType: TextInputType.number,
+                      onChanged: (_) => _emit(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          )
+        else ...[
+          _FieldLabel(l10n.tournamentWizardPitchNumbersLabel),
+          const SizedBox(height: KubbTokens.space2),
+          _PlainTextField(
+            controller: _numbersCtrl,
+            hintText: l10n.tournamentWizardPitchNumbersHint,
+            keyboardType: TextInputType.number,
+            onChanged: (_) => _emit(),
+          ),
+        ],
+        const SizedBox(height: KubbTokens.space4),
+        _FieldLabel(l10n.tournamentWizardPitchSortLabel),
+        const SizedBox(height: KubbTokens.space2),
+        Wrap(
+          spacing: KubbTokens.space2,
+          runSpacing: KubbTokens.space2,
+          children: [
+            _SelectChip(
+              label: l10n.tournamentWizardPitchSortTopSeeds,
+              selected: _sort == PitchSortStrategy.topSeedsLowNumbers,
+              onTap: () {
+                setState(
+                    () => _sort = PitchSortStrategy.topSeedsLowNumbers);
+                _emit();
+              },
+            ),
+            _SelectChip(
+              label: l10n.tournamentWizardPitchSortManual,
+              selected: _sort == PitchSortStrategy.manual,
+              onTap: () {
+                setState(() => _sort = PitchSortStrategy.manual);
+                _emit();
+              },
+            ),
+          ],
+        ),
+        if (count > 0) ...[
+          const SizedBox(height: KubbTokens.space2),
+          _HelperText(l10n.tournamentWizardPitchSummary(count)),
+        ],
+      ],
     );
   }
 }

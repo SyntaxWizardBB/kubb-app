@@ -191,6 +191,16 @@ class _Editor extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: KubbTokens.space3),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed:
+                  busy ? null : () => unawaited(notifier.autoseedFromElo()),
+              icon: const Icon(Icons.auto_awesome, size: 18),
+              label: Text(l.tournamentSeedingAutoSeedButton),
+            ),
+          ),
+          const SizedBox(height: KubbTokens.space2),
           Row(children: [
             Expanded(
               child: OutlinedButton(

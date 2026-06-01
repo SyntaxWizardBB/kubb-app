@@ -32,6 +32,60 @@ enum LeagueCategory {
       );
 }
 
+// ---- KO bracket setup choices (P6 Phase 3) ----------------------------
+
+/// Single vs double elimination bracket (P6_RULES_DECISIONS §D).
+enum BracketType {
+  singleElimination('single_elimination'),
+  doubleElimination('double_elimination');
+
+  const BracketType(this.wire);
+  final String wire;
+
+  static BracketType fromWire(String value) => BracketType.values.firstWhere(
+        (b) => b.wire == value,
+        orElse: () =>
+            throw ArgumentError.value(value, 'value', 'unknown bracket type'),
+      );
+}
+
+/// How qualified participants are paired into the bracket (decision §C).
+enum KoMatchup {
+  /// Standard recursive seeding: 1 vs n, 2 vs n-1, …
+  seedHighVsLow('seed_high_vs_low'),
+
+  /// Adjacent placements meet (1 vs 2, 3 vs 4, …).
+  oneVsTwo('one_vs_two');
+
+  const KoMatchup(this.wire);
+  final String wire;
+
+  static KoMatchup fromWire(String value) => KoMatchup.values.firstWhere(
+        (m) => m.wire == value,
+        orElse: () =>
+            throw ArgumentError.value(value, 'value', 'unknown ko matchup'),
+      );
+}
+
+/// How a tied KO match is decided (decision §B).
+enum KoTiebreakMethod {
+  /// Second king toss, then one kubb removed per round.
+  classicKingtossRemoval('classic_kingtoss_removal'),
+
+  /// Mighty-Finisher shootout used as the match decider.
+  mightyFinisherShootout('mighty_finisher_shootout');
+
+  const KoTiebreakMethod(this.wire);
+  final String wire;
+
+  static KoTiebreakMethod fromWire(String value) =>
+      KoTiebreakMethod.values.firstWhere(
+        (m) => m.wire == value,
+        orElse: () => throw ArgumentError.value(
+            value, 'value', 'unknown ko tiebreak method'),
+      );
+}
+
 // ---- Match format spec (per phase) ------------------------------------
 
 /// Match rules for one phase (prelim or KO). Decision "Vorrunde + KO
@@ -373,6 +427,25 @@ final class PitchPlan {
         ),
       };
 
+  PitchPlan copyWith({
+    PitchMode? mode,
+    int? rangeFrom,
+    int? rangeTo,
+    List<int>? numbers,
+    List<int>? order,
+    PitchSortStrategy? sortStrategy,
+    Map<String, List<int>>? groupAssignment,
+  }) =>
+      PitchPlan(
+        mode: mode ?? this.mode,
+        rangeFrom: rangeFrom ?? this.rangeFrom,
+        rangeTo: rangeTo ?? this.rangeTo,
+        numbers: numbers ?? this.numbers,
+        order: order ?? this.order,
+        sortStrategy: sortStrategy ?? this.sortStrategy,
+        groupAssignment: groupAssignment ?? this.groupAssignment,
+      );
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -402,30 +475,60 @@ final class PitchPlan {
 
 // ---- Mighty-Finisher qualification ------------------------------------
 
+/// Pool the Mighty-Finisher wildcard quali draws its participants from
+/// (decision §F).
+enum MightyFinisherPool {
+  /// All group runners-up (Wasserschloss default).
+  groupRunnersUp('group_runners_up'),
+
+  /// A configurable placement band from the prelim standings.
+  rankBand('rank_band');
+
+  const MightyFinisherPool(this.wire);
+  final String wire;
+
+  static MightyFinisherPool fromWire(String value) =>
+      MightyFinisherPool.values.firstWhere(
+        (p) => p.wire == value,
+        orElse: () => throw ArgumentError.value(
+            value, 'value', 'unknown mighty finisher pool'),
+      );
+}
+
 /// Shootout used as a QUALIFICATION stage between the group phase and the
-/// KO (Wasserschloss model). Distinct from the KO tiebreak method.
+/// KO (Wasserschloss model, decision §F). Distinct from the KO tiebreak
+/// method. The qualifier method is fixed to `mighty_finisher_shootout`
+/// and ties on KO-relevant places are broken by an 8m sudden death.
 @immutable
 final class MightyFinisherQuali {
   const MightyFinisherQuali({
     this.enabled = false,
-    this.slots = 0,
-    this.source = 'group_runner_ups',
+    this.slots = 6,
+    this.pool = MightyFinisherPool.groupRunnersUp,
   });
 
   factory MightyFinisherQuali.fromJson(Map<String, Object?> json) =>
       MightyFinisherQuali(
         enabled: json['enabled'] as bool? ?? false,
-        slots: (json['slots'] as num?)?.toInt() ?? 0,
-        source: json['source'] as String? ?? 'group_runner_ups',
+        slots: (json['slots'] as num?)?.toInt() ?? 6,
+        pool: json['pool'] == null
+            ? MightyFinisherPool.groupRunnersUp
+            : MightyFinisherPool.fromWire(json['pool']! as String),
       );
+
+  /// Fixed qualifier method (decision §F).
+  static const String method = 'mighty_finisher_shootout';
+
+  /// Fixed tie-break on KO-relevant places (decision §F).
+  static const String tiebreak = 'eight_meter_sudden_death';
 
   final bool enabled;
 
-  /// Number of remaining KO slots the shootout fills.
+  /// Number of remaining KO slots the shootout fills (default 6).
   final int slots;
 
   /// Where the shootout participants come from.
-  final String source;
+  final MightyFinisherPool pool;
 
   List<String> issues() {
     final out = <String>[];
@@ -437,8 +540,10 @@ final class MightyFinisherQuali {
 
   Map<String, Object?> toJson() => <String, Object?>{
         'enabled': enabled,
+        'method': method,
+        'pool': pool.wire,
         'slots': slots,
-        'source': source,
+        'tiebreak': tiebreak,
       };
 
   @override
@@ -447,21 +552,46 @@ final class MightyFinisherQuali {
       other is MightyFinisherQuali &&
           other.enabled == enabled &&
           other.slots == slots &&
-          other.source == source;
+          other.pool == pool;
 
   @override
-  int get hashCode => Object.hash(enabled, slots, source);
+  int get hashCode => Object.hash(enabled, slots, pool);
 }
 
 // ---- Consolation bracket ----------------------------------------------
 
+/// Where the consolation-bracket participants are drawn from (decision §E).
+enum ConsolationSource {
+  /// Losers from the first KO rounds (Bâton Rouille model). Default.
+  earlyKoLosers('early_ko_losers'),
+
+  /// A placement band of non-qualifiers from the prelim (Pärkli model).
+  prelimRankBand('prelim_rank_band');
+
+  const ConsolationSource(this.wire);
+  final String wire;
+
+  static ConsolationSource fromWire(String value) =>
+      ConsolationSource.values.firstWhere(
+        (s) => s.wire == value,
+        orElse: () => throw ArgumentError.value(
+            value, 'value', 'unknown consolation source'),
+      );
+}
+
 /// A second KO bracket for players knocked out early (Bâton Rouille /
-/// "Best of the Rest").
+/// "Best of the Rest", decision §E). The participant feed is selected via
+/// [source]: [ConsolationSource.earlyKoLosers] uses [sourceRounds]
+/// (default `{1, 2}`); [ConsolationSource.prelimRankBand] uses
+/// [rankFrom]/[rankTo].
 @immutable
 final class ConsolationConfig {
   const ConsolationConfig({
     this.enabled = false,
+    this.source = ConsolationSource.earlyKoLosers,
     this.sourceRounds = const <int>[],
+    this.rankFrom,
+    this.rankTo,
     this.matchFormat,
   });
 
@@ -470,7 +600,12 @@ final class ConsolationConfig {
     final rawFormat = json['match_format'];
     return ConsolationConfig(
       enabled: json['enabled'] as bool? ?? false,
+      source: json['source'] == null
+          ? ConsolationSource.earlyKoLosers
+          : ConsolationSource.fromWire(json['source']! as String),
       sourceRounds: rawRounds.map((e) => (e! as num).toInt()).toList(),
+      rankFrom: (json['rank_from'] as num?)?.toInt(),
+      rankTo: (json['rank_to'] as num?)?.toInt(),
       matchFormat: rawFormat == null
           ? null
           : MatchFormatSpec.fromJson((rawFormat as Map).cast<String, Object?>()),
@@ -479,9 +614,21 @@ final class ConsolationConfig {
 
   final bool enabled;
 
-  /// KO rounds whose losers drop into the consolation bracket
+  /// Which feed populates the consolation bracket.
+  final ConsolationSource source;
+
+  /// KO rounds whose losers drop into the consolation bracket when
+  /// [source] is [ConsolationSource.earlyKoLosers]
   /// (e.g. `[1, 2]` = round of 128 + round of 64).
   final List<int> sourceRounds;
+
+  /// Inclusive lower bound of the prelim placement band when [source] is
+  /// [ConsolationSource.prelimRankBand].
+  final int? rankFrom;
+
+  /// Inclusive upper bound of the prelim placement band when [source] is
+  /// [ConsolationSource.prelimRankBand].
+  final int? rankTo;
 
   /// Own match rules for the consolation bracket. Null => reuse the KO
   /// match format.
@@ -489,8 +636,21 @@ final class ConsolationConfig {
 
   List<String> issues() {
     final out = <String>[];
-    if (enabled && sourceRounds.isEmpty) {
-      out.add('Trostturnier braucht mindestens eine Quell-Runde.');
+    if (enabled) {
+      switch (source) {
+        case ConsolationSource.earlyKoLosers:
+          if (sourceRounds.isEmpty) {
+            out.add('Trostturnier braucht mindestens eine Quell-Runde.');
+          }
+        case ConsolationSource.prelimRankBand:
+          final from = rankFrom;
+          final to = rankTo;
+          if (from == null || to == null) {
+            out.add('Trostturnier-Rangband (von/bis) fehlt.');
+          } else if (from < 1 || to < from) {
+            out.add('Trostturnier-Rangband ist ungültig.');
+          }
+      }
     }
     final fmt = matchFormat;
     if (fmt != null) out.addAll(fmt.issues());
@@ -499,7 +659,10 @@ final class ConsolationConfig {
 
   Map<String, Object?> toJson() => <String, Object?>{
         'enabled': enabled,
+        'source': source.wire,
         'source_rounds': sourceRounds,
+        'rank_from': rankFrom,
+        'rank_to': rankTo,
         'match_format': matchFormat?.toJson(),
       };
 
@@ -508,12 +671,21 @@ final class ConsolationConfig {
       identical(this, other) ||
       other is ConsolationConfig &&
           other.enabled == enabled &&
+          other.source == source &&
           _listEq(other.sourceRounds, sourceRounds) &&
+          other.rankFrom == rankFrom &&
+          other.rankTo == rankTo &&
           other.matchFormat == matchFormat;
 
   @override
-  int get hashCode =>
-      Object.hash(enabled, Object.hashAll(sourceRounds), matchFormat);
+  int get hashCode => Object.hash(
+        enabled,
+        source,
+        Object.hashAll(sourceRounds),
+        rankFrom,
+        rankTo,
+        matchFormat,
+      );
 }
 
 // ---- small helpers ----------------------------------------------------

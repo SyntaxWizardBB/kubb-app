@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -15,12 +16,14 @@ import 'package:kubb_domain/kubb_domain.dart';
 class WizardKoConfigStep extends StatefulWidget {
   const WizardKoConfigStep({
     required this.draft,
+    required this.controller,
     required this.onConfigChanged,
     required this.onSeedingModeChanged,
     super.key,
   });
 
   final TournamentConfigDraft draft;
+  final TournamentConfigController controller;
   final ValueChanged<KoPhaseConfig?> onConfigChanged;
   final ValueChanged<SeedingMode> onSeedingModeChanged;
 
@@ -181,7 +184,212 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
           value: _seedingMode,
           onChanged: _onSeedingChanged,
         ),
+        const SizedBox(height: KubbTokens.space6),
+        ..._phase3Sections(context),
       ],
+    );
+  }
+
+  static const MatchFormatSpec _defaultKoFmt = MatchFormatSpec(
+    setsToWin: 3,
+    maxSets: 5,
+    timeLimitSeconds: 3600,
+    tiebreakAfterSeconds: 2400,
+    finalNoTiebreak: true,
+  );
+
+  List<Widget> _phase3Sections(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    final d = widget.draft;
+    final c = widget.controller;
+    final ko = d.koMatchFormat ?? _defaultKoFmt;
+    final quali = d.mightyFinisherQuali;
+    final consol = d.consolationBracket;
+
+    Widget label(String text) => Padding(
+          padding: const EdgeInsets.only(bottom: KubbTokens.space2),
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.4,
+              color: tokens.fgMuted,
+            ),
+          ),
+        );
+
+    return [
+      label(l10n.tournamentWizardBracketTypeLabel),
+      SegmentedButton<BracketType>(
+        segments: [
+          ButtonSegment(
+            value: BracketType.singleElimination,
+            label: Text(l10n.tournamentWizardBracketSingle),
+          ),
+          ButtonSegment(
+            value: BracketType.doubleElimination,
+            label: Text(l10n.tournamentWizardBracketDouble),
+          ),
+        ],
+        selected: {d.bracketType},
+        onSelectionChanged: (s) => c.setBracketType(s.first),
+        showSelectedIcon: false,
+      ),
+      const SizedBox(height: KubbTokens.space5),
+      label(l10n.tournamentWizardKoMatchupLabel),
+      SegmentedButton<KoMatchup>(
+        segments: [
+          ButtonSegment(
+            value: KoMatchup.seedHighVsLow,
+            label: Text(l10n.tournamentWizardKoMatchupHighLow),
+          ),
+          ButtonSegment(
+            value: KoMatchup.oneVsTwo,
+            label: Text(l10n.tournamentWizardKoMatchupOneTwo),
+          ),
+        ],
+        selected: {d.koMatchup},
+        onSelectionChanged: (s) => c.setKoMatchup(s.first),
+        showSelectedIcon: false,
+      ),
+      const SizedBox(height: KubbTokens.space5),
+      label(l10n.tournamentWizardKoTiebreakMethodLabel),
+      SegmentedButton<KoTiebreakMethod>(
+        segments: [
+          ButtonSegment(
+            value: KoTiebreakMethod.classicKingtossRemoval,
+            label: Text(l10n.tournamentWizardKoTiebreakClassic),
+          ),
+          ButtonSegment(
+            value: KoTiebreakMethod.mightyFinisherShootout,
+            label: Text(l10n.tournamentWizardKoTiebreakMighty),
+          ),
+        ],
+        selected: {d.koTiebreakMethod},
+        onSelectionChanged: (s) => c.setKoTiebreakMethod(s.first),
+        showSelectedIcon: false,
+      ),
+      const SizedBox(height: KubbTokens.space5),
+      label(l10n.tournamentWizardKoRulesLabel),
+      _MiniStepper(
+        label: l10n.tournamentWizardSetsToWinLabel,
+        value: ko.setsToWin,
+        min: 1,
+        max: 4,
+        onChanged: (v) => c.setKoMatchFormat(
+          ko.copyWith(setsToWin: v, maxSets: 2 * v - 1 > ko.maxSets ? 2 * v - 1 : ko.maxSets),
+        ),
+      ),
+      _MiniStepper(
+        label: l10n.tournamentWizardMatchTimeLabel,
+        value: (ko.timeLimitSeconds / 60).round(),
+        min: 5,
+        max: 120,
+        onChanged: (v) => c.setKoMatchFormat(
+          ko.copyWith(timeLimitSeconds: v * 60),
+        ),
+      ),
+      SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(l10n.tournamentWizardKoFinalNoTiebreak),
+        value: ko.finalNoTiebreak,
+        onChanged: (v) =>
+            c.setKoMatchFormat(ko.copyWith(finalNoTiebreak: v)),
+      ),
+      const SizedBox(height: KubbTokens.space5),
+      SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(l10n.tournamentWizardMightyQualiLabel),
+        subtitle: Text(l10n.tournamentWizardMightyQualiHint),
+        value: quali?.enabled ?? false,
+        onChanged: (v) => c.setMightyFinisherQuali(
+          MightyFinisherQuali(enabled: v, slots: quali?.slots ?? 6),
+        ),
+      ),
+      if (quali?.enabled ?? false)
+        _MiniStepper(
+          label: l10n.tournamentWizardMightyQualiSlots,
+          value: quali?.slots ?? 6,
+          min: 1,
+          max: 32,
+          onChanged: (v) => c.setMightyFinisherQuali(
+            MightyFinisherQuali(enabled: true, slots: v),
+          ),
+        ),
+      const SizedBox(height: KubbTokens.space5),
+      SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(l10n.tournamentWizardConsolationLabel),
+        subtitle: Text(l10n.tournamentWizardConsolationHint),
+        value: consol?.enabled ?? false,
+        onChanged: (v) => c.setConsolationBracket(
+          ConsolationConfig(
+            enabled: v,
+            sourceRounds: v ? const <int>[1, 2] : const <int>[],
+          ),
+        ),
+      ),
+    ];
+  }
+}
+
+/// Compact label + −/value/+ stepper used by the KO config sections.
+class _MiniStepper extends StatelessWidget {
+  const _MiniStepper({
+    required this.label,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.onChanged,
+  });
+
+  final String label;
+  final int value;
+  final int min;
+  final int max;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: KubbTokens.space1half),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: tokens.fg,
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: value > min ? () => onChanged(value - 1) : null,
+            icon: const Icon(Icons.remove_circle_outline),
+          ),
+          SizedBox(
+            width: 28,
+            child: Text(
+              '$value',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: tokens.fg,
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: value < max ? () => onChanged(value + 1) : null,
+            icon: const Icon(Icons.add_circle_outline),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +8,8 @@ import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
+import 'package:kubb_app/features/tournament/application/tournament_providers.dart'
+    show tournamentActionsProvider;
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_card.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -34,6 +38,16 @@ class TournamentListScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     ref.watch(tournamentListPollingProvider(null));
     final async = ref.watch(tournamentListProvider(null));
+    // P6 L123: each registration-open tile carries a self-register /
+    // self-withdraw toggle. Map the caller's registrations by tournament
+    // id so the tile knows its current state and the participant id to
+    // withdraw without a second round-trip.
+    final myRegs = ref.watch(myTournamentRegistrationsProvider).maybeWhen(
+          data: (rows) => <String, MyTournamentRegistration>{
+            for (final r in rows) r.tournament.tournamentId.value: r,
+          },
+          orElse: () => const <String, MyTournamentRegistration>{},
+        );
 
     return Scaffold(
       backgroundColor: tokens.bg,
@@ -76,16 +90,69 @@ class TournamentListScreen extends ConsumerWidget {
                 const SizedBox(height: KubbTokens.space3),
             itemBuilder: (context, i) {
               final t = published[i];
+              final detailPath =
+                  '${TournamentRoutes.detail}/${t.tournamentId.value}';
+              final reg = myRegs[t.tournamentId.value];
+              final registered = reg != null &&
+                  reg.status != TournamentParticipantStatus.withdrawn;
+              // Register/withdraw only makes sense while registration is
+              // open; for every other published state the tile still
+              // offers the explicit "Details" button.
+              final canToggle =
+                  t.status == TournamentStatus.registrationOpen;
               return TournamentCard(
                 summary: t,
-                onTap: () => context.push(
-                  '${TournamentRoutes.detail}/${t.tournamentId.value}',
-                ),
+                onTap: () => context.push(detailPath),
+                onDetails: () => context.push(detailPath),
+                isRegistered: registered,
+                onRegister: canToggle && !registered
+                    ? () => context.push('$detailPath/register')
+                    : null,
+                onWithdraw: canToggle && registered
+                    ? () =>
+                        unawaited(_withdraw(context, ref, reg.participantId, l))
+                    : null,
               );
             },
           );
         },
       ),
     );
+  }
+
+  /// Self-withdraw from a registration-open tournament straight off the
+  /// tile. Mirrors the confirm dialog used on the "Angemeldete Turniere"
+  /// list; on success it invalidates the registrations provider so the
+  /// tile flips back to "Anmelden".
+  Future<void> _withdraw(
+    BuildContext context,
+    WidgetRef ref,
+    TournamentParticipantId participantId,
+    AppLocalizations l,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l.tournamentWithdrawConfirmTitle),
+        content: Text(l.tournamentWithdrawConfirmBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child:
+                Text(MaterialLocalizations.of(dialogContext).cancelButtonLabel),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: KubbTokens.miss),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l.tournamentRegistrationsWithdraw),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await ref
+        .read(tournamentActionsProvider)
+        .withdrawRegistration(participantId);
+    ref.invalidate(myTournamentRegistrationsProvider);
   }
 }

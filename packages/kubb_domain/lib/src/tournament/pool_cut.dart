@@ -115,6 +115,10 @@ int _criterionCompare(
     case TiebreakerCriterion.directComparison:
       final h = a.headToHeadLookup[b.participantId] ?? 0;
       return -h.sign;
+    case TiebreakerCriterion.mightyFinisherShootout:
+      // Physical decider; not resolvable from stats (decision §H). No-op so
+      // the chain continues to the next criterion / the ID fallback.
+      return 0;
     case TiebreakerCriterion.buchholzMinusH2H:
       return _buchholzMinusH2H(b, a).compareTo(_buchholzMinusH2H(a, b));
     case TiebreakerCriterion.medianBuchholz:

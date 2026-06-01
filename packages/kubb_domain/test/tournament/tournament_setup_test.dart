@@ -126,22 +126,113 @@ void main() {
       );
       expect(badRange.issues(), isNotEmpty);
     });
+
+    test('copyWith overrides only the given fields, == stays consistent', () {
+      const base = PitchPlan(
+        mode: PitchMode.range,
+        rangeFrom: 1,
+        rangeTo: 4,
+      );
+
+      // No overrides => equal value (and equal hashCode).
+      final clone = base.copyWith();
+      expect(clone, base);
+      expect(clone.hashCode, base.hashCode);
+
+      // Override the group assignment only; other fields untouched.
+      final assigned = base.copyWith(
+        groupAssignment: <String, List<int>>{
+          'A': <int>[1, 2],
+          'B': <int>[3, 4],
+        },
+      );
+      expect(assigned.mode, base.mode);
+      expect(assigned.rangeFrom, base.rangeFrom);
+      expect(assigned.rangeTo, base.rangeTo);
+      expect(assigned.sortStrategy, base.sortStrategy);
+      expect(assigned.groupAssignment, <String, List<int>>{
+        'A': <int>[1, 2],
+        'B': <int>[3, 4],
+      });
+      expect(assigned == base, isFalse);
+
+      // Override the remaining fields and round-trip through ==.
+      final full = base.copyWith(
+        mode: PitchMode.manual,
+        numbers: <int>[5, 6],
+        order: <int>[6, 5],
+        sortStrategy: PitchSortStrategy.manual,
+      );
+      const expected = PitchPlan(
+        mode: PitchMode.manual,
+        rangeFrom: 1,
+        rangeTo: 4,
+        numbers: <int>[5, 6],
+        order: <int>[6, 5],
+        sortStrategy: PitchSortStrategy.manual,
+      );
+      expect(full, expected);
+      expect(full.hashCode, expected.hashCode);
+    });
   });
 
   group('MightyFinisherQuali', () {
+    test('defaults match decision §F (slots 6, group runners-up)', () {
+      const q = MightyFinisherQuali();
+      expect(q.enabled, false);
+      expect(q.slots, 6);
+      expect(q.pool, MightyFinisherPool.groupRunnersUp);
+    });
+
     test('JSON round-trips', () {
-      const q = MightyFinisherQuali(enabled: true, slots: 6);
+      const q = MightyFinisherQuali(
+        enabled: true,
+        slots: 8,
+        pool: MightyFinisherPool.rankBand,
+      );
       expect(MightyFinisherQuali.fromJson(q.toJson()), q);
     });
 
-    test('issues flags enabled with zero slots', () {
+    test('toJson uses the §F wire shape (method/pool/slots/tiebreak)', () {
       const q = MightyFinisherQuali(enabled: true);
+      final json = q.toJson();
+      expect(json['method'], 'mighty_finisher_shootout');
+      expect(json['pool'], 'group_runners_up');
+      expect(json['slots'], 6);
+      expect(json['tiebreak'], 'eight_meter_sudden_death');
+      // The legacy free-text `source` key must be gone.
+      expect(json.containsKey('source'), isFalse);
+    });
+
+    test('fromJson defaults pool when absent and rejects unknown pool', () {
+      final parsed = MightyFinisherQuali.fromJson(const <String, Object?>{
+        'enabled': true,
+        'slots': 4,
+      });
+      expect(parsed.pool, MightyFinisherPool.groupRunnersUp);
+      expect(parsed.slots, 4);
+      expect(
+        () => MightyFinisherQuali.fromJson(
+          const <String, Object?>{'pool': 'group_runner_ups'},
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('issues flags enabled with zero slots', () {
+      const q = MightyFinisherQuali(enabled: true, slots: 0);
       expect(q.issues(), isNotEmpty);
     });
   });
 
   group('ConsolationConfig', () {
-    test('JSON round-trips with a nested match format', () {
+    test('defaults match decision §E (early KO losers source)', () {
+      const c = ConsolationConfig();
+      expect(c.enabled, false);
+      expect(c.source, ConsolationSource.earlyKoLosers);
+    });
+
+    test('JSON round-trips early-ko-losers with a nested match format', () {
       const c = ConsolationConfig(
         enabled: true,
         sourceRounds: <int>[1, 2],
@@ -151,12 +242,54 @@ void main() {
           timeLimitSeconds: 1800,
         ),
       );
-      expect(ConsolationConfig.fromJson(c.toJson()), c);
+      final json = c.toJson();
+      expect(json['source'], 'early_ko_losers');
+      expect(json['source_rounds'], <int>[1, 2]);
+      expect(ConsolationConfig.fromJson(json), c);
     });
 
-    test('issues flags enabled without source rounds', () {
+    test('JSON round-trips prelim-rank-band with rank_from/rank_to', () {
+      const c = ConsolationConfig(
+        enabled: true,
+        source: ConsolationSource.prelimRankBand,
+        rankFrom: 17,
+        rankTo: 24,
+      );
+      final json = c.toJson();
+      expect(json['source'], 'prelim_rank_band');
+      expect(json['rank_from'], 17);
+      expect(json['rank_to'], 24);
+      expect(ConsolationConfig.fromJson(json), c);
+    });
+
+    test('issues flags early-ko-losers without source rounds', () {
       const c = ConsolationConfig(enabled: true);
       expect(c.issues(), isNotEmpty);
+    });
+
+    test('issues flags prelim-rank-band without a valid band', () {
+      const missing = ConsolationConfig(
+        enabled: true,
+        source: ConsolationSource.prelimRankBand,
+      );
+      expect(missing.issues(), isNotEmpty);
+
+      const bad = ConsolationConfig(
+        enabled: true,
+        source: ConsolationSource.prelimRankBand,
+        rankFrom: 24,
+        rankTo: 17,
+      );
+      expect(bad.issues(), isNotEmpty);
+    });
+
+    test('fromJson rejects an unknown source token', () {
+      expect(
+        () => ConsolationConfig.fromJson(
+          const <String, Object?>{'source': 'bogus'},
+        ),
+        throwsArgumentError,
+      );
     });
   });
 }

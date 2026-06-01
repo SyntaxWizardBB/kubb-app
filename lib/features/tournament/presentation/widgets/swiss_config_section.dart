@@ -22,15 +22,16 @@ class SwissConfigSection extends StatelessWidget {
   final int rounds;
   final ValueChanged<int> onRoundsChanged;
 
-  static const int roundsMin = 3;
+  static const int roundsMin = 5;
   static const int roundsMax = 9;
   static const int participantSweetSpot = 64;
 
-  /// `ceil(log2(n))`, clamped to [roundsMin, roundsMax]. Falls back to
-  /// [roundsMin] for tiny rosters where the formula yields ≤ 2.
+  /// `clamp(ceil(log2(n)) + 3, 5, 9)` per decision §G — yields the empirical
+  /// default of 8 rounds for typical fields (n ≈ 32–128) and never drops
+  /// below the lower bound of [roundsMin] for tiny rosters.
   static int defaultRounds(int participantCount) {
     if (participantCount < 2) return roundsMin;
-    final raw = (math.log(participantCount) / math.ln2).ceil();
+    final raw = (math.log(participantCount) / math.ln2).ceil() + 3;
     return raw.clamp(roundsMin, roundsMax);
   }
 

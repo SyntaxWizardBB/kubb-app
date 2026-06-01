@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -22,11 +24,19 @@ class _HostState extends State<_Host> {
   KoPhaseConfig? lastConfig;
   SeedingMode? lastSeeding;
   late TournamentConfigDraft _draft;
+  late final ProviderContainer _container;
 
   @override
   void initState() {
     super.initState();
     _draft = widget.draft;
+    _container = ProviderContainer();
+  }
+
+  @override
+  void dispose() {
+    _container.dispose();
+    super.dispose();
   }
 
   @override
@@ -35,6 +45,8 @@ class _HostState extends State<_Host> {
       body: SingleChildScrollView(
         child: WizardKoConfigStep(
           draft: _draft,
+          controller:
+              _container.read(tournamentConfigControllerProvider.notifier),
           onConfigChanged: (cfg) {
             setState(() {
               lastConfig = cfg;

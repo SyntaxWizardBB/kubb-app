@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show immutable, listEquals;
+import 'package:kubb_app/features/tournament/data/tournament_models.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
 /// Outcome of [TournamentConfigDraft.validate]. Mirrors the record-style
@@ -28,6 +29,7 @@ class TournamentConfigDraft {
   const TournamentConfigDraft({
     this.displayName,
     this.teamSize = 1,
+    this.maxTeamSize = 1,
     this.minParticipants = 2,
     this.maxParticipants = 8,
     this.format = TournamentFormat.roundRobin,
@@ -35,11 +37,13 @@ class TournamentConfigDraft {
     this.maxSets = 3,
     this.roundTimeSeconds = 1800,
     this.basekubbsPerSide = 5,
+    this.prelimTiebreakAfterSeconds,
+    this.breakBetweenMatchesSeconds = 0,
     this.tiebreakerOrder = const <String>[
       'total_points',
       'buchholz_minus_h2h',
       'direct_comparison',
-      'wins',
+      'mighty_finisher_shootout',
     ],
     this.koConfig,
     this.bracketSeedingMode,
@@ -69,12 +73,21 @@ class TournamentConfigDraft {
     this.pitchPlan,
     this.mightyFinisherQuali,
     this.consolationBracket,
+    this.bracketType = BracketType.singleElimination,
+    this.koMatchup = KoMatchup.seedHighVsLow,
+    this.koTiebreakMethod = KoTiebreakMethod.classicKingtossRemoval,
   });
 
   /// Visible name of the tournament. Null while the organizer hasn't
   /// typed anything yet; validate() flags both null and empty input.
   final String? displayName;
+
+  /// Minimum players per team (1 = singles). The M1 `team_size` column.
   final int teamSize;
+
+  /// Maximum players per team. Equals [teamSize] for a fixed-size team.
+  final int maxTeamSize;
+
   final int minParticipants;
   final int maxParticipants;
   final TournamentFormat format;
@@ -82,6 +95,14 @@ class TournamentConfigDraft {
   final int maxSets;
   final int roundTimeSeconds;
   final int basekubbsPerSide;
+
+  /// Prelim tiebreak trigger in seconds; null = prelim played without a
+  /// tiebreak (common in group phases). Must be < [roundTimeSeconds].
+  final int? prelimTiebreakAfterSeconds;
+
+  /// Configured break between prelim matches, in seconds.
+  final int breakBetweenMatchesSeconds;
+
   final List<String> tiebreakerOrder;
 
   /// KO-phase configuration. Required when [format] is
@@ -163,6 +184,15 @@ class TournamentConfigDraft {
   /// Consolation bracket ("Best of the Rest" / Bâton Rouille).
   final ConsolationConfig? consolationBracket;
 
+  /// Single vs double elimination (P6_RULES_DECISIONS §D).
+  final BracketType bracketType;
+
+  /// Seeding/matchup pattern for the KO bracket (§C).
+  final KoMatchup koMatchup;
+
+  /// How a tied KO match is decided (§B).
+  final KoTiebreakMethod koTiebreakMethod;
+
   static const int displayNameMinChars = 3;
   static const int displayNameMaxChars = 60;
   static const int participantsHardMin = 2;
@@ -180,6 +210,7 @@ class TournamentConfigDraft {
   TournamentConfigDraft copyWith({
     String? displayName,
     int? teamSize,
+    int? maxTeamSize,
     int? minParticipants,
     int? maxParticipants,
     TournamentFormat? format,
@@ -187,6 +218,9 @@ class TournamentConfigDraft {
     int? maxSets,
     int? roundTimeSeconds,
     int? basekubbsPerSide,
+    int? prelimTiebreakAfterSeconds,
+    bool clearPrelimTiebreak = false,
+    int? breakBetweenMatchesSeconds,
     List<String>? tiebreakerOrder,
     KoPhaseConfig? koConfig,
     SeedingMode? bracketSeedingMode,
@@ -223,10 +257,14 @@ class TournamentConfigDraft {
     bool clearMightyFinisherQuali = false,
     ConsolationConfig? consolationBracket,
     bool clearConsolationBracket = false,
+    BracketType? bracketType,
+    KoMatchup? koMatchup,
+    KoTiebreakMethod? koTiebreakMethod,
   }) {
     return TournamentConfigDraft(
       displayName: displayName ?? this.displayName,
       teamSize: teamSize ?? this.teamSize,
+      maxTeamSize: maxTeamSize ?? this.maxTeamSize,
       minParticipants: minParticipants ?? this.minParticipants,
       maxParticipants: maxParticipants ?? this.maxParticipants,
       format: format ?? this.format,
@@ -234,6 +272,11 @@ class TournamentConfigDraft {
       maxSets: maxSets ?? this.maxSets,
       roundTimeSeconds: roundTimeSeconds ?? this.roundTimeSeconds,
       basekubbsPerSide: basekubbsPerSide ?? this.basekubbsPerSide,
+      prelimTiebreakAfterSeconds: clearPrelimTiebreak
+          ? null
+          : (prelimTiebreakAfterSeconds ?? this.prelimTiebreakAfterSeconds),
+      breakBetweenMatchesSeconds:
+          breakBetweenMatchesSeconds ?? this.breakBetweenMatchesSeconds,
       tiebreakerOrder: tiebreakerOrder ?? this.tiebreakerOrder,
       koConfig: koConfig ?? this.koConfig,
       bracketSeedingMode: bracketSeedingMode ?? this.bracketSeedingMode,
@@ -272,6 +315,9 @@ class TournamentConfigDraft {
       consolationBracket: clearConsolationBracket
           ? null
           : (consolationBracket ?? this.consolationBracket),
+      bracketType: bracketType ?? this.bracketType,
+      koMatchup: koMatchup ?? this.koMatchup,
+      koTiebreakMethod: koTiebreakMethod ?? this.koTiebreakMethod,
     );
   }
 
@@ -284,9 +330,13 @@ class TournamentConfigDraft {
       format == TournamentFormat.swissThenKo;
 
   /// Whether a KO phase has to be configured for the selected [format].
+  /// Covers the pure single-elimination format plus every hybrid
+  /// (group/Schoch/Swiss → KO) variant.
   bool get requiresKoConfig =>
       format == TournamentFormat.singleElimination ||
-      format == TournamentFormat.roundRobinThenKo;
+      format == TournamentFormat.roundRobinThenKo ||
+      format == TournamentFormat.schochThenKo ||
+      format == TournamentFormat.swissThenKo;
 
   /// Wizard pre-fill value for the `withThirdPlacePlayoff` toggle
   /// (ADR-0017 §4). The wizard may still let the organizer override it.
@@ -301,6 +351,13 @@ class TournamentConfigDraft {
       issues.add('Turniername muss mindestens $displayNameMinChars Zeichen haben.');
     } else if (name.length > displayNameMaxChars) {
       issues.add('Turniername darf höchstens $displayNameMaxChars Zeichen haben.');
+    }
+
+    if (teamSize < 1 || teamSize > 6) {
+      issues.add('Min. Spieler pro Team muss zwischen 1 und 6 liegen.');
+    }
+    if (maxTeamSize < teamSize || maxTeamSize > 6) {
+      issues.add('Max. Spieler pro Team darf nicht kleiner als Min. sein.');
     }
 
     if (minParticipants < participantsHardMin) {
@@ -323,6 +380,15 @@ class TournamentConfigDraft {
 
     if (roundTimeSeconds < 60) {
       issues.add('Rundenzeit muss mindestens eine Minute sein.');
+    }
+
+    final tbAfter = prelimTiebreakAfterSeconds;
+    if (tbAfter != null && (tbAfter < 60 || tbAfter > roundTimeSeconds)) {
+      issues.add(
+          'Tiebreak-Zeit muss zwischen 1 Minute und dem Zeitlimit liegen.');
+    }
+    if (breakBetweenMatchesSeconds < 0) {
+      issues.add('Pause zwischen Matches darf nicht negativ sein.');
     }
 
     if (basekubbsPerSide < 1) {
@@ -373,6 +439,9 @@ class TournamentConfigDraft {
       'max_sets': maxSets,
       'round_time_seconds': roundTimeSeconds,
       'basekubbs_per_side': basekubbsPerSide,
+      'tiebreak_enabled': prelimTiebreakAfterSeconds != null,
+      'tiebreak_after_seconds': prelimTiebreakAfterSeconds,
+      'break_between_matches_seconds': breakBetweenMatchesSeconds,
     };
   }
 
@@ -397,6 +466,7 @@ class TournamentConfigDraft {
       'contact_phone': _blankToNull(contactPhone),
       'entry_fee_cents': entryFeeCents,
       'currency': currency,
+      'max_team_size': maxTeamSize,
       'payment_methods': paymentMethods,
       'league_categories': <String>[
         for (final c in leagueCategories) c.wire,
@@ -407,6 +477,11 @@ class TournamentConfigDraft {
       'pitch_plan': pitchPlan?.toJson(),
       'mighty_finisher_quali': mightyFinisherQuali?.toJson(),
       'consolation_bracket': consolationBracket?.toJson(),
+      'pool_phase_config': poolPhaseConfig?.toWire(),
+      'ko_config': koConfig?.toWire(),
+      'bracket_type': bracketType.wire,
+      'ko_matchup': koMatchup.wire,
+      'ko_tiebreak_method': koTiebreakMethod.wire,
       'rules_pdf_url': rulesPdfUrl,
       'site_map_pdf_url': siteMapPdfUrl,
     };
@@ -418,6 +493,7 @@ class TournamentConfigDraft {
       other is TournamentConfigDraft &&
           other.displayName == displayName &&
           other.teamSize == teamSize &&
+          other.maxTeamSize == maxTeamSize &&
           other.minParticipants == minParticipants &&
           other.maxParticipants == maxParticipants &&
           other.format == format &&
@@ -425,6 +501,8 @@ class TournamentConfigDraft {
           other.maxSets == maxSets &&
           other.roundTimeSeconds == roundTimeSeconds &&
           other.basekubbsPerSide == basekubbsPerSide &&
+          other.prelimTiebreakAfterSeconds == prelimTiebreakAfterSeconds &&
+          other.breakBetweenMatchesSeconds == breakBetweenMatchesSeconds &&
           listEquals(other.tiebreakerOrder, tiebreakerOrder) &&
           other.koConfig == koConfig &&
           other.bracketSeedingMode == bracketSeedingMode &&
@@ -452,12 +530,16 @@ class TournamentConfigDraft {
           other.koMatchFormat == koMatchFormat &&
           other.pitchPlan == pitchPlan &&
           other.mightyFinisherQuali == mightyFinisherQuali &&
-          other.consolationBracket == consolationBracket;
+          other.consolationBracket == consolationBracket &&
+          other.bracketType == bracketType &&
+          other.koMatchup == koMatchup &&
+          other.koTiebreakMethod == koTiebreakMethod;
 
   @override
   int get hashCode => Object.hashAll(<Object?>[
         displayName,
         teamSize,
+        maxTeamSize,
         minParticipants,
         maxParticipants,
         format,
@@ -465,6 +547,8 @@ class TournamentConfigDraft {
         maxSets,
         roundTimeSeconds,
         basekubbsPerSide,
+        prelimTiebreakAfterSeconds,
+        breakBetweenMatchesSeconds,
         Object.hashAll(tiebreakerOrder),
         koConfig,
         bracketSeedingMode,
@@ -493,5 +577,8 @@ class TournamentConfigDraft {
         pitchPlan,
         mightyFinisherQuali,
         consolationBracket,
+        bracketType,
+        koMatchup,
+        koTiebreakMethod,
       ]);
 }

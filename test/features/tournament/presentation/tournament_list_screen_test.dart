@@ -35,6 +35,7 @@ Future<void> _pump(
   WidgetTester tester,
   List<TournamentSummaryRef> rows, {
   String? landingPath,
+  List<MyTournamentRegistration> myRegistrations = const [],
 }) async {
   String? lastPushed;
   final router = GoRouter(
@@ -49,6 +50,15 @@ Future<void> _pump(
         builder: (_, _) {
           lastPushed = '/tournament/new';
           return const Scaffold(body: Text('new-route'));
+        },
+      ),
+      GoRoute(
+        path: '/tournament/:id/register',
+        builder: (_, state) {
+          lastPushed = '/tournament/${state.pathParameters['id']}/register';
+          return Scaffold(
+            body: Text('register-${state.pathParameters['id']}'),
+          );
         },
       ),
       GoRoute(
@@ -67,6 +77,8 @@ Future<void> _pump(
     ProviderScope(
       overrides: [
         tournamentListProvider(null).overrideWith((_) async => rows),
+        myTournamentRegistrationsProvider
+            .overrideWith((_) async => myRegistrations),
         currentUserIdProvider.overrideWith((_) => _testUserId),
       ],
       child: MaterialApp.router(
@@ -132,5 +144,79 @@ void main() {
     await tester.tap(find.text('Sommer-Cup'));
     await tester.pumpAndSettle();
     expect(find.text('detail-a'), findsOneWidget);
+  });
+
+  testWidgets(
+      'registration-open tile shows a Details and an Anmelden button '
+      'when the caller is not registered', (tester) async {
+    await _pump(tester, [
+      _ref(
+        id: 'a',
+        name: 'Sommer-Cup',
+        status: TournamentStatus.registrationOpen,
+      ),
+    ]);
+
+    // P6 L123: both per-tile actions are present.
+    expect(find.widgetWithText(OutlinedButton, 'Details'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Anmelden'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Abmelden'), findsNothing);
+  });
+
+  testWidgets('Details button pushes the detail route', (tester) async {
+    await _pump(tester, [
+      _ref(
+        id: 'a',
+        name: 'Sommer-Cup',
+        status: TournamentStatus.registrationOpen,
+      ),
+    ]);
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Details'));
+    await tester.pumpAndSettle();
+    expect(find.text('detail-a'), findsOneWidget);
+  });
+
+  testWidgets('Anmelden button pushes the register route', (tester) async {
+    await _pump(tester, [
+      _ref(
+        id: 'a',
+        name: 'Sommer-Cup',
+        status: TournamentStatus.registrationOpen,
+      ),
+    ]);
+    await tester.tap(find.widgetWithText(FilledButton, 'Anmelden'));
+    await tester.pumpAndSettle();
+    expect(find.text('register-a'), findsOneWidget);
+  });
+
+  testWidgets(
+      'tile flips to Abmelden when the caller already holds a registration',
+      (tester) async {
+    await _pump(
+      tester,
+      [
+        _ref(
+          id: 'a',
+          name: 'Sommer-Cup',
+          status: TournamentStatus.registrationOpen,
+        ),
+      ],
+      myRegistrations: [
+        MyTournamentRegistration(
+          tournament: _ref(
+            id: 'a',
+            name: 'Sommer-Cup',
+            status: TournamentStatus.registrationOpen,
+          ),
+          participantId: const TournamentParticipantId('p-1'),
+          status: TournamentParticipantStatus.pending,
+        ),
+      ],
+    );
+
+    expect(find.widgetWithText(FilledButton, 'Abmelden'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Anmelden'), findsNothing);
+    // Details stays available regardless of registration state.
+    expect(find.widgetWithText(OutlinedButton, 'Details'), findsOneWidget);
   });
 }

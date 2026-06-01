@@ -205,6 +205,7 @@ class FakeTournamentRemote implements TournamentRemote {
         displayName: t.displayName,
         createdByUserId: t.createdByUserId.value,
         teamSize: 1,
+        maxTeamSize: 1,
         minParticipants: 2,
         maxParticipants: t.participantIds.length,
         format: t.format,
@@ -654,6 +655,47 @@ class FakeTournamentRemote implements TournamentRemote {
     }
     _seedingOverrides[tournamentId] =
         Map<TournamentParticipantId, int>.from(seeds);
+  }
+
+  /// Test hook — when set, [autoseedFromElo] returns this exact order
+  /// (and persists it as overrides) instead of deriving one from the
+  /// standings. Lets widget tests assert a known ELO-derived ordering.
+  final Map<TournamentId, List<TournamentParticipantId>> _autoseedFromEloOrder =
+      <TournamentId, List<TournamentParticipantId>>{};
+
+  /// Installs the order [autoseedFromElo] should return for [id].
+  void setAutoseedFromEloOrder(
+    TournamentId id,
+    List<TournamentParticipantId> order,
+  ) {
+    _autoseedFromEloOrder[id] =
+        List<TournamentParticipantId>.unmodifiable(order);
+  }
+
+  /// Mirrors `tournament_autoseed_from_elo`: derives a seed order, persists
+  /// it into [_seedingOverrides] (the same store [setSeeding] writes), and
+  /// returns it best-first. Tests may pin the order via
+  /// [setAutoseedFromEloOrder]; otherwise it falls back to the standings
+  /// order over confirmed participants (ELO is hardcoded 1200 until Phase 6).
+  @override
+  Future<List<TournamentParticipantId>> autoseedFromElo(
+    TournamentId tournamentId,
+  ) async {
+    final t = _tournaments[tournamentId];
+    if (t == null) {
+      throw StateError('unknown tournament: ${tournamentId.value}');
+    }
+    final order = _autoseedFromEloOrder[tournamentId] ??
+        _autoSeedOrder(
+          t,
+          t.participantIds
+              .where((p) => _participants[p]!.status == _PStatus.approved)
+              .toList(growable: false),
+        );
+    _seedingOverrides[tournamentId] = <TournamentParticipantId, int>{
+      for (var i = 0; i < order.length; i++) order[i]: i + 1,
+    };
+    return List<TournamentParticipantId>.unmodifiable(order);
   }
 
   /// Insert KO-match rows from current standings + seeding overrides.

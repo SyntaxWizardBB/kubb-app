@@ -61,6 +61,11 @@ const Map<BracketPhase, String> _bracketPhaseWire = {
   BracketPhase.winners: 'ko',
   BracketPhase.thirdPlace: 'third_place',
   BracketPhase.finals: 'final',
+  // Double-Elimination (ADR-0027 §1.1 / §4.1).
+  BracketPhase.wb: 'wb',
+  BracketPhase.lb: 'lb',
+  BracketPhase.grandFinal: 'grand_final',
+  BracketPhase.grandFinalReset: 'grand_final_reset',
 };
 
 /// Wire helper for [BracketPhase]. Returns `null` for the sentinel
@@ -96,6 +101,20 @@ extension KoPhaseConfigWire on KoPhaseConfig {
         'qualifier_count': qualifierCount,
         'with_third_place_playoff': withThirdPlacePlayoff,
         'seeding_mode': seedingMode.toWire(),
+      };
+}
+
+/// Encodes a [PoolPhaseConfig] into the jsonb payload the pool-phase
+/// generator (`_tournament_compute_pools`) reads as `p_config`, and that
+/// `tournament_create` persists as `tournaments.pool_phase_config`. The
+/// server reads `group_count`, `qualifiers_per_group`, `strategy` and the
+/// optional `random_seed`.
+extension PoolPhaseConfigWire on PoolPhaseConfig {
+  Map<String, dynamic> toWire() => <String, dynamic>{
+        'group_count': groupCount,
+        'qualifiers_per_group': qualifiersPerGroup,
+        'strategy': strategy.name,
+        if (randomSeed != null) 'random_seed': randomSeed,
       };
 }
 
@@ -186,11 +205,18 @@ TournamentDetailHeader tournamentDetailHeaderFromRow(
     Map<String, dynamic> row) {
   final cfg = row['match_format_config'];
   final tb = row['tiebreaker_order'];
+  final teamSize = _asInt(row['team_size']);
+  // `max_team_size` is optional on the wire: older `tournament_get`
+  // versions (and fixed-size tournaments) omit it. Fall back to the min
+  // so the range collapses to a single fixed size and existing callers
+  // keep working.
+  final maxTeamSize = _asIntOrNull(row['max_team_size']) ?? teamSize;
   return TournamentDetailHeader(
     tournamentId: row['tournament_id'] as String,
     displayName: row['display_name'] as String,
     createdByUserId: row['created_by'] as String?,
-    teamSize: _asInt(row['team_size']),
+    teamSize: teamSize,
+    maxTeamSize: maxTeamSize < teamSize ? teamSize : maxTeamSize,
     minParticipants: _asInt(row['min_participants']),
     maxParticipants: _asInt(row['max_participants']),
     format: TournamentFormatWire.fromWire(row['format'] as String),

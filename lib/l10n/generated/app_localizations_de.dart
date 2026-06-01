@@ -1403,6 +1403,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardRegistrationDeadlineLabel => 'Anmeldeschluss';
 
   @override
+  String get tournamentWizardCheckinUntilLabel => 'Vor-Ort-Check-in bis';
+
+  @override
   String get tournamentWizardDateNotSet => 'Nicht gesetzt';
 
   @override
@@ -1535,6 +1538,135 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentWizardPdfUploadError => 'Upload fehlgeschlagen';
+
+  @override
+  String get tournamentWizardMinTeamSizeLabel => 'Min. Spieler / Team';
+
+  @override
+  String get tournamentWizardMaxTeamSizeLabel => 'Max. Spieler / Team';
+
+  @override
+  String get tournamentWizardTeamSizeHint =>
+      'Spieler pro Team — Min. = Max. = feste Grösse, 1 = Einzelturnier';
+
+  @override
+  String get tournamentWizardSectionPitches => 'Pitches / Spielfelder';
+
+  @override
+  String get tournamentWizardPitchHint =>
+      'Auf welchen Feldern wird gespielt? Kann auch später gesetzt werden.';
+
+  @override
+  String get tournamentWizardPitchModeRange => 'Nummernbereich';
+
+  @override
+  String get tournamentWizardPitchModeManual => 'Manuelle Liste';
+
+  @override
+  String get tournamentWizardPitchRangeFrom => 'Von';
+
+  @override
+  String get tournamentWizardPitchRangeTo => 'Bis';
+
+  @override
+  String get tournamentWizardPitchNumbersLabel => 'Pitch-Nummern';
+
+  @override
+  String get tournamentWizardPitchNumbersHint => 'z.B. 1, 2, 5, 8';
+
+  @override
+  String get tournamentWizardPitchSortLabel => 'Sortierung';
+
+  @override
+  String get tournamentWizardPitchSortTopSeeds => 'Beste auf tiefsten Nummern';
+
+  @override
+  String get tournamentWizardPitchSortManual => 'Manuelle Reihenfolge';
+
+  @override
+  String tournamentWizardPitchSummary(int count) {
+    return '$count Pitches';
+  }
+
+  @override
+  String get tournamentWizardPoolPitchAssignmentLabel =>
+      'Pitch-Zuteilung pro Gruppe';
+
+  @override
+  String get tournamentWizardPoolPitchAssignmentHint =>
+      'Wähle pro Gruppe die Pitch-Nummern. Die höchstgerankten Spieler werden auf die zuerst gelisteten Pitches gesetzt (Sortierung folgt der Pitch-Strategie).';
+
+  @override
+  String tournamentWizardPoolGroupLabel(String label) {
+    return 'Gruppe $label';
+  }
+
+  @override
+  String get tournamentWizardMatchTimeLabel => 'Zeit pro Match (Min.)';
+
+  @override
+  String get tournamentWizardTiebreakLabel => 'Tiebreak';
+
+  @override
+  String get tournamentWizardTiebreakHint =>
+      'Bei Zeitablauf wird ein Tiebreak gespielt';
+
+  @override
+  String get tournamentWizardTiebreakAfterLabel => 'Tiebreak nach (Min.)';
+
+  @override
+  String get tournamentWizardBreakBetweenLabel =>
+      'Pause zwischen Matches (Min.)';
+
+  @override
+  String get tournamentWizardBracketTypeLabel => 'Bracket-Typ';
+
+  @override
+  String get tournamentWizardBracketSingle => 'Single-KO';
+
+  @override
+  String get tournamentWizardBracketDouble => 'Double-KO';
+
+  @override
+  String get tournamentWizardKoMatchupLabel => 'Begegnungen';
+
+  @override
+  String get tournamentWizardKoMatchupHighLow => 'Beste vs Schlechteste';
+
+  @override
+  String get tournamentWizardKoMatchupOneTwo => '1. vs 2.';
+
+  @override
+  String get tournamentWizardKoTiebreakMethodLabel => 'KO-Tiebreak-Methode';
+
+  @override
+  String get tournamentWizardKoTiebreakClassic => 'Klassisch';
+
+  @override
+  String get tournamentWizardKoTiebreakMighty => 'Mighty-Finisher';
+
+  @override
+  String get tournamentWizardKoRulesLabel => 'KO-Regelsatz';
+
+  @override
+  String get tournamentWizardKoFinalNoTiebreak => 'Ab Halbfinale ohne Tiebreak';
+
+  @override
+  String get tournamentWizardMightyQualiLabel => 'Mighty-Finisher-Quali';
+
+  @override
+  String get tournamentWizardMightyQualiHint =>
+      'Gruppenzweite spielen um Restplätze';
+
+  @override
+  String get tournamentWizardMightyQualiSlots => 'Plätze';
+
+  @override
+  String get tournamentWizardConsolationLabel => 'Trostturnier';
+
+  @override
+  String get tournamentWizardConsolationHint =>
+      'Früh ausgeschiedene spielen ein zweites Bracket (Best of the Rest)';
 
   @override
   String get tournamentWizardMinParticipantsLabel => 'Min. Teilnehmer';
@@ -1834,6 +1966,37 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentRegistrationSuccess => 'Anmeldung gesendet.';
+
+  @override
+  String get tournamentCardDetails => 'Details';
+
+  @override
+  String tournamentTeamRosterRangeFixed(int count) {
+    return 'Wähle $count Spieler für dein Team aus.';
+  }
+
+  @override
+  String tournamentTeamRosterRange(int min, int max) {
+    return 'Wähle zwischen $min und $max Spielern für dein Team aus.';
+  }
+
+  @override
+  String tournamentTeamRosterSelected(int count) {
+    return '$count ausgewählt';
+  }
+
+  @override
+  String get tournamentTeamRegistered => 'Team angemeldet.';
+
+  @override
+  String get tournamentTeamRegisteredMembers =>
+      'Folgende Mitglieder sind angemeldet:';
+
+  @override
+  String get tournamentTeamRegisterDone => 'Fertig';
+
+  @override
+  String get tournamentTeamMemberRegistered => 'angemeldet';
 
   @override
   String get tournamentMatchListTitle => 'Spiele';
@@ -2203,6 +2366,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentSeedingStartKoButton => 'KO starten';
+
+  @override
+  String get tournamentSeedingAutoSeedButton => 'Auto-Seed aus ELO';
 
   @override
   String get tournamentSeedingErrorTitle => 'Aktion fehlgeschlagen';

@@ -214,4 +214,84 @@ void main() {
       expect(orphan.isCallerCreator('user-a'), isFalse);
     });
   });
+
+  group('koMatchRowFromRow (read-path phase mapping, ADR-0027 §4)', () {
+    Map<String, dynamic> koRow({
+      required String phase,
+      int round = 1,
+      Object? position = 1,
+      String? a = 'p-1',
+      String? b = 'p-2',
+      String? winner,
+      String status = 'scheduled',
+    }) =>
+        <String, dynamic>{
+          'round_number': round,
+          'bracket_position': position,
+          'phase': phase,
+          'participant_a': a,
+          'participant_b': b,
+          'winner_participant': winner,
+          'status': status,
+        };
+
+    test('maps single-elim phases', () {
+      expect(
+        koMatchRowFromRow(koRow(phase: 'ko'))!.phase,
+        BracketPhase.winners,
+      );
+      expect(
+        koMatchRowFromRow(koRow(phase: 'final'))!.phase,
+        BracketPhase.finals,
+      );
+      expect(
+        koMatchRowFromRow(koRow(phase: 'third_place'))!.phase,
+        BracketPhase.thirdPlace,
+      );
+    });
+
+    test('maps the four double-elim phases', () {
+      expect(koMatchRowFromRow(koRow(phase: 'wb'))!.phase, BracketPhase.wb);
+      expect(koMatchRowFromRow(koRow(phase: 'lb'))!.phase, BracketPhase.lb);
+      expect(
+        koMatchRowFromRow(koRow(phase: 'grand_final'))!.phase,
+        BracketPhase.grandFinal,
+      );
+      expect(
+        koMatchRowFromRow(koRow(phase: 'grand_final_reset'))!.phase,
+        BracketPhase.grandFinalReset,
+      );
+    });
+
+    test('drops group rows by returning null', () {
+      expect(koMatchRowFromRow(koRow(phase: 'group')), isNull);
+    });
+
+    test('drops rows without a bracket_position', () {
+      expect(koMatchRowFromRow(koRow(phase: 'wb', position: null)), isNull);
+    });
+
+    test('bracketFromMatches builds a DoubleEliminationBracket from de rows',
+        () {
+      // Minimal N=2 double-elim shape: one WB-R1 pairing + an empty GF.
+      final rows = <KoMatchRow>[
+        koMatchRowFromRow(koRow(phase: 'wb'))!,
+        koMatchRowFromRow(
+          koRow(phase: 'grand_final', a: null, b: null),
+        )!,
+      ];
+      final bracket = bracketFromMatches(rows);
+      expect(bracket, isA<DoubleEliminationBracket>());
+      final de = bracket as DoubleEliminationBracket;
+      expect(de.wbRounds, hasLength(1));
+      expect(de.grandFinal.phase, BracketPhase.grandFinal);
+    });
+
+    test('bracketFromMatches still builds single-elim when no de phases', () {
+      final rows = <KoMatchRow>[
+        koMatchRowFromRow(koRow(phase: 'final'))!,
+      ];
+      expect(bracketFromMatches(rows), isA<SingleEliminationBracket>());
+    });
+  });
 }

@@ -295,6 +295,7 @@ class _Actions extends ConsumerWidget {
     final hasBracket = ref.watch(tournamentBracketProvider(id)).maybeWhen(
           data: (b) => switch (b) {
             SingleEliminationBracket(:final rounds) => rounds.isNotEmpty,
+            DoubleEliminationBracket(:final wbRounds) => wbRounds.isNotEmpty,
           },
           orElse: () => false,
         );

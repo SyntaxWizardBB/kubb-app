@@ -2656,6 +2656,12 @@ abstract class AppLocalizations {
   /// **'Anmeldeschluss'**
   String get tournamentWizardRegistrationDeadlineLabel;
 
+  /// On-site check-in deadline (Speakerpult) field label
+  ///
+  /// In de, this message translates to:
+  /// **'Vor-Ort-Check-in bis'**
+  String get tournamentWizardCheckinUntilLabel;
+
   /// Placeholder shown on a date field before a value is picked
   ///
   /// In de, this message translates to:
@@ -2907,6 +2913,240 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Upload fehlgeschlagen'**
   String get tournamentWizardPdfUploadError;
+
+  /// Minimum players per team stepper label
+  ///
+  /// In de, this message translates to:
+  /// **'Min. Spieler / Team'**
+  String get tournamentWizardMinTeamSizeLabel;
+
+  /// Maximum players per team stepper label
+  ///
+  /// In de, this message translates to:
+  /// **'Max. Spieler / Team'**
+  String get tournamentWizardMaxTeamSizeLabel;
+
+  /// Helper text under the team size steppers
+  ///
+  /// In de, this message translates to:
+  /// **'Spieler pro Team — Min. = Max. = feste Grösse, 1 = Einzelturnier'**
+  String get tournamentWizardTeamSizeHint;
+
+  /// Section header for pitch configuration
+  ///
+  /// In de, this message translates to:
+  /// **'Pitches / Spielfelder'**
+  String get tournamentWizardSectionPitches;
+
+  /// Helper text under the pitch section
+  ///
+  /// In de, this message translates to:
+  /// **'Auf welchen Feldern wird gespielt? Kann auch später gesetzt werden.'**
+  String get tournamentWizardPitchHint;
+
+  /// Pitch mode: contiguous number range
+  ///
+  /// In de, this message translates to:
+  /// **'Nummernbereich'**
+  String get tournamentWizardPitchModeRange;
+
+  /// Pitch mode: manual list of numbers
+  ///
+  /// In de, this message translates to:
+  /// **'Manuelle Liste'**
+  String get tournamentWizardPitchModeManual;
+
+  /// Pitch range lower bound label
+  ///
+  /// In de, this message translates to:
+  /// **'Von'**
+  String get tournamentWizardPitchRangeFrom;
+
+  /// Pitch range upper bound label
+  ///
+  /// In de, this message translates to:
+  /// **'Bis'**
+  String get tournamentWizardPitchRangeTo;
+
+  /// Manual pitch numbers field label
+  ///
+  /// In de, this message translates to:
+  /// **'Pitch-Nummern'**
+  String get tournamentWizardPitchNumbersLabel;
+
+  /// Manual pitch numbers placeholder
+  ///
+  /// In de, this message translates to:
+  /// **'z.B. 1, 2, 5, 8'**
+  String get tournamentWizardPitchNumbersHint;
+
+  /// Pitch sort strategy label
+  ///
+  /// In de, this message translates to:
+  /// **'Sortierung'**
+  String get tournamentWizardPitchSortLabel;
+
+  /// Pitch sort: top seeds on lowest pitch numbers
+  ///
+  /// In de, this message translates to:
+  /// **'Beste auf tiefsten Nummern'**
+  String get tournamentWizardPitchSortTopSeeds;
+
+  /// Pitch sort: manual order
+  ///
+  /// In de, this message translates to:
+  /// **'Manuelle Reihenfolge'**
+  String get tournamentWizardPitchSortManual;
+
+  /// Count of configured pitches
+  ///
+  /// In de, this message translates to:
+  /// **'{count} Pitches'**
+  String tournamentWizardPitchSummary(int count);
+
+  /// Section title for assigning pitch numbers to pool groups
+  ///
+  /// In de, this message translates to:
+  /// **'Pitch-Zuteilung pro Gruppe'**
+  String get tournamentWizardPoolPitchAssignmentLabel;
+
+  /// Helper text explaining per-group pitch assignment and seeding placement
+  ///
+  /// In de, this message translates to:
+  /// **'Wähle pro Gruppe die Pitch-Nummern. Die höchstgerankten Spieler werden auf die zuerst gelisteten Pitches gesetzt (Sortierung folgt der Pitch-Strategie).'**
+  String get tournamentWizardPoolPitchAssignmentHint;
+
+  /// Label for a single pool group in the pitch-assignment section
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppe {label}'**
+  String tournamentWizardPoolGroupLabel(String label);
+
+  /// Prelim time limit per match stepper label
+  ///
+  /// In de, this message translates to:
+  /// **'Zeit pro Match (Min.)'**
+  String get tournamentWizardMatchTimeLabel;
+
+  /// Prelim tiebreak toggle title
+  ///
+  /// In de, this message translates to:
+  /// **'Tiebreak'**
+  String get tournamentWizardTiebreakLabel;
+
+  /// Prelim tiebreak toggle subtitle
+  ///
+  /// In de, this message translates to:
+  /// **'Bei Zeitablauf wird ein Tiebreak gespielt'**
+  String get tournamentWizardTiebreakHint;
+
+  /// Prelim tiebreak trigger time stepper label
+  ///
+  /// In de, this message translates to:
+  /// **'Tiebreak nach (Min.)'**
+  String get tournamentWizardTiebreakAfterLabel;
+
+  /// Break between matches stepper label
+  ///
+  /// In de, this message translates to:
+  /// **'Pause zwischen Matches (Min.)'**
+  String get tournamentWizardBreakBetweenLabel;
+
+  /// Bracket type label
+  ///
+  /// In de, this message translates to:
+  /// **'Bracket-Typ'**
+  String get tournamentWizardBracketTypeLabel;
+
+  /// Single elimination
+  ///
+  /// In de, this message translates to:
+  /// **'Single-KO'**
+  String get tournamentWizardBracketSingle;
+
+  /// Double elimination
+  ///
+  /// In de, this message translates to:
+  /// **'Double-KO'**
+  String get tournamentWizardBracketDouble;
+
+  /// KO matchup label
+  ///
+  /// In de, this message translates to:
+  /// **'Begegnungen'**
+  String get tournamentWizardKoMatchupLabel;
+
+  /// Seed high vs low
+  ///
+  /// In de, this message translates to:
+  /// **'Beste vs Schlechteste'**
+  String get tournamentWizardKoMatchupHighLow;
+
+  /// Adjacent placements
+  ///
+  /// In de, this message translates to:
+  /// **'1. vs 2.'**
+  String get tournamentWizardKoMatchupOneTwo;
+
+  /// KO tiebreak method
+  ///
+  /// In de, this message translates to:
+  /// **'KO-Tiebreak-Methode'**
+  String get tournamentWizardKoTiebreakMethodLabel;
+
+  /// Classic tiebreak
+  ///
+  /// In de, this message translates to:
+  /// **'Klassisch'**
+  String get tournamentWizardKoTiebreakClassic;
+
+  /// Mighty finisher shootout
+  ///
+  /// In de, this message translates to:
+  /// **'Mighty-Finisher'**
+  String get tournamentWizardKoTiebreakMighty;
+
+  /// KO match rules section
+  ///
+  /// In de, this message translates to:
+  /// **'KO-Regelsatz'**
+  String get tournamentWizardKoRulesLabel;
+
+  /// Final/semifinal without tiebreak toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Ab Halbfinale ohne Tiebreak'**
+  String get tournamentWizardKoFinalNoTiebreak;
+
+  /// Mighty finisher qualification toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Mighty-Finisher-Quali'**
+  String get tournamentWizardMightyQualiLabel;
+
+  /// Quali helper text
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppenzweite spielen um Restplätze'**
+  String get tournamentWizardMightyQualiHint;
+
+  /// Quali slots stepper label
+  ///
+  /// In de, this message translates to:
+  /// **'Plätze'**
+  String get tournamentWizardMightyQualiSlots;
+
+  /// Consolation bracket toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Trostturnier'**
+  String get tournamentWizardConsolationLabel;
+
+  /// Consolation helper text
+  ///
+  /// In de, this message translates to:
+  /// **'Früh ausgeschiedene spielen ein zweites Bracket (Best of the Rest)'**
+  String get tournamentWizardConsolationHint;
 
   /// Min participants stepper label
   ///
@@ -3471,6 +3711,54 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Anmeldung gesendet.'**
   String get tournamentRegistrationSuccess;
+
+  /// Tile action: open the tournament detail screen
+  ///
+  /// In de, this message translates to:
+  /// **'Details'**
+  String get tournamentCardDetails;
+
+  /// Roster hint for a fixed team size
+  ///
+  /// In de, this message translates to:
+  /// **'Wähle {count} Spieler für dein Team aus.'**
+  String tournamentTeamRosterRangeFixed(int count);
+
+  /// Roster hint for a team size range
+  ///
+  /// In de, this message translates to:
+  /// **'Wähle zwischen {min} und {max} Spielern für dein Team aus.'**
+  String tournamentTeamRosterRange(int min, int max);
+
+  /// Shows how many roster members are currently selected
+  ///
+  /// In de, this message translates to:
+  /// **'{count} ausgewählt'**
+  String tournamentTeamRosterSelected(int count);
+
+  /// Success message after a team registration
+  ///
+  /// In de, this message translates to:
+  /// **'Team angemeldet.'**
+  String get tournamentTeamRegistered;
+
+  /// Heading above the list of registered roster members after a team registration
+  ///
+  /// In de, this message translates to:
+  /// **'Folgende Mitglieder sind angemeldet:'**
+  String get tournamentTeamRegisteredMembers;
+
+  /// Button that closes the team-registration confirmation
+  ///
+  /// In de, this message translates to:
+  /// **'Fertig'**
+  String get tournamentTeamRegisterDone;
+
+  /// Per-member badge in the team-registration confirmation
+  ///
+  /// In de, this message translates to:
+  /// **'angemeldet'**
+  String get tournamentTeamMemberRegistered;
 
   /// Tournament match list screen title
   ///
@@ -4107,6 +4395,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'KO starten'**
   String get tournamentSeedingStartKoButton;
+
+  /// Action that derives the seed order from each participant's ELO via the tournament_autoseed_from_elo RPC
+  ///
+  /// In de, this message translates to:
+  /// **'Auto-Seed aus ELO'**
+  String get tournamentSeedingAutoSeedButton;
 
   /// Inline banner title shown when the save or start RPC fails
   ///

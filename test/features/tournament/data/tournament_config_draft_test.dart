@@ -19,7 +19,7 @@ void main() {
         'total_points',
         'buchholz_minus_h2h',
         'direct_comparison',
-        'wins',
+        'mighty_finisher_shootout',
       ]);
       expect(d.koConfig, isNull);
       expect(d.bracketSeedingMode, isNull);
@@ -211,7 +211,36 @@ void main() {
         'max_sets': 5,
         'round_time_seconds': 1200,
         'basekubbs_per_side': 6,
+        'tiebreak_enabled': false,
+        'tiebreak_after_seconds': null,
+        'break_between_matches_seconds': 0,
       });
+    });
+
+    test('toMatchFormatConfig carries prelim tiebreak + break when set', () {
+      const d = TournamentConfigDraft(
+        roundTimeSeconds: 1500,
+        prelimTiebreakAfterSeconds: 1200,
+        breakBetweenMatchesSeconds: 300,
+      );
+      final cfg = d.toMatchFormatConfig();
+      expect(cfg['tiebreak_enabled'], true);
+      expect(cfg['tiebreak_after_seconds'], 1200);
+      expect(cfg['break_between_matches_seconds'], 300);
+    });
+
+    test('validate flags a prelim tiebreak time above the limit', () {
+      const d = TournamentConfigDraft(
+        displayName: 'Cup',
+        roundTimeSeconds: 1500,
+        prelimTiebreakAfterSeconds: 2000,
+      );
+      final result = d.validate();
+      expect(result.isValid, isFalse);
+      expect(
+        result.issues.any((i) => i.contains('Tiebreak-Zeit')),
+        isTrue,
+      );
     });
   });
 
@@ -310,6 +339,25 @@ void main() {
       final setup = d.toSetupConfig();
       expect(setup['location'], isNull);
       expect(setup['contact_name'], isNull);
+    });
+
+    test('serialises the team size range (min via param, max via setup)', () {
+      const d = TournamentConfigDraft(teamSize: 2, maxTeamSize: 3);
+      expect(d.toSetupConfig()['max_team_size'], 3);
+    });
+
+    test('validate flags a max team size below the minimum', () {
+      const d = TournamentConfigDraft(
+        displayName: 'Cup',
+        teamSize: 3,
+        maxTeamSize: 2,
+      );
+      final result = d.validate();
+      expect(result.isValid, isFalse);
+      expect(
+        result.issues.any((i) => i.contains('Max. Spieler pro Team')),
+        isTrue,
+      );
     });
   });
 }

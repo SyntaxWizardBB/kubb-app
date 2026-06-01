@@ -20,13 +20,14 @@ import 'package:kubb_domain/kubb_domain.dart';
 const _tournamentId = TournamentId('t-1');
 const _teamId = TeamId('team-1');
 
-TournamentDetail _detail({int teamSize = 3}) {
+TournamentDetail _detail({int teamSize = 3, int? maxTeamSize}) {
   return TournamentDetail(
     tournament: TournamentDetailHeader(
       tournamentId: _tournamentId.value,
       displayName: 'Sommer-Cup',
       createdByUserId: 'u-creator',
       teamSize: teamSize,
+      maxTeamSize: maxTeamSize ?? teamSize,
       minParticipants: 2,
       maxParticipants: 8,
       format: TournamentFormat.roundRobin,
@@ -69,6 +70,8 @@ Map<String, dynamic> _teamPayload(List<Map<String, dynamic>> pool) {
 Future<void> _pump(
   WidgetTester tester, {
   required List<Map<String, dynamic>> pool,
+  int teamSize = 3,
+  int? maxTeamSize,
 }) async {
   final router = GoRouter(
     initialLocation: '/tournament/${_tournamentId.value}/register',
@@ -84,8 +87,8 @@ Future<void> _pump(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        tournamentDetailProvider(_tournamentId)
-            .overrideWith((_) async => _detail()),
+        tournamentDetailProvider(_tournamentId).overrideWith(
+            (_) async => _detail(teamSize: teamSize, maxTeamSize: maxTeamSize)),
         teamListProvider.overrideWith((_) async => <TeamWire>[_team()]),
         teamDetailProvider(_teamId)
             .overrideWith((_) async => _teamPayload(pool)),
@@ -101,7 +104,68 @@ Future<void> _pump(
   await tester.pumpAndSettle();
 }
 
+Map<String, dynamic> _member(String userId) => <String, dynamic>{
+      'membership_id': 'mem-$userId',
+      'user_id': userId,
+      'joined_at': '2026-01-01T00:00:00Z',
+    };
+
+/// Assigns one pool member to the given slot via the tap-select dialogs.
+Future<void> _assign(
+    WidgetTester tester, String memberName, int slotIndex) async {
+  final poolEntry = find.text(memberName).first;
+  await tester.ensureVisible(poolEntry);
+  await tester.pumpAndSettle();
+  await tester.tap(poolEntry);
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Slot $slotIndex'));
+  await tester.pumpAndSettle();
+}
+
 void main() {
+  testWidgets(
+    'team-registration blocks submit until the member count is within the '
+    '[team_size, max_team_size] range',
+    (tester) async {
+      await _pump(
+        tester,
+        teamSize: 3,
+        maxTeamSize: 4,
+        pool: [
+          _member('alice'),
+          _member('bob'),
+          _member('carol'),
+          _member('dave'),
+        ],
+      );
+
+      await tester.tap(find.text('Team'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Team Eins').last);
+      await tester.pumpAndSettle();
+
+      FilledButton submitButton() => tester.widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Team registrieren'),
+          );
+
+      // 0 selected → below the minimum → disabled.
+      expect(submitButton().onPressed, isNull);
+
+      // 2 selected → still below the minimum (3) → disabled.
+      await _assign(tester, 'alice', 1);
+      await _assign(tester, 'bob', 2);
+      expect(submitButton().onPressed, isNull);
+
+      // 3 selected → at the minimum → enabled.
+      await _assign(tester, 'carol', 3);
+      expect(submitButton().onPressed, isNotNull);
+
+      // 4 selected → at the maximum → still enabled.
+      await _assign(tester, 'dave', 4);
+      expect(submitButton().onPressed, isNotNull);
+    },
+  );
+
   testWidgets(
     'pool members are rendered in the roster picker once a team is selected',
     (tester) async {

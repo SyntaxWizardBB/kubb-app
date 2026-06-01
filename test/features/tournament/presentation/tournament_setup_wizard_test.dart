@@ -16,6 +16,7 @@ class _FakeTournamentRemote implements TournamentRemote {
   String? createdDisplayName;
   int? createdSetsToWin;
   TournamentFormat? createdFormat;
+  int? createdTeamSize;
   Map<String, Object?>? createdSetup;
   int callCount = 0;
   bool failNext = false;
@@ -39,6 +40,7 @@ class _FakeTournamentRemote implements TournamentRemote {
     createdDisplayName = displayName;
     createdSetsToWin = matchFormatConfig['sets_to_win'] as int?;
     createdFormat = format;
+    createdTeamSize = teamSize;
     createdSetup = setup;
     return const TournamentId('t-fake-1');
   }
@@ -155,6 +157,13 @@ class _FakeTournamentRemote implements TournamentRemote {
 
   @override
   Future<void> startKoPhase(TournamentId tournamentId, KoPhaseConfig config) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<TournamentParticipantId>> autoseedFromElo(
+    TournamentId tournamentId,
+  ) {
     throw UnimplementedError();
   }
 
@@ -358,6 +367,60 @@ void main() {
     expect(find.textContaining('Bracket-Grösse'), findsOneWidget);
   });
 
+  testWidgets(
+      'selecting Schoch keeps the 4-step group flow and shows the rounds slider',
+      (tester) async {
+    final fake = await _pumpWizard(tester);
+    await _typeName(tester, 'Schoch Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> format
+
+    await tester.tap(find.text('Schoch'));
+    await tester.pumpAndSettle();
+
+    // Pure Schoch is a single-stage group format: no league/pool/ko steps.
+    expect(find.text('Schritt 3 von 4'), findsOneWidget);
+    // The shared Schoch/Swiss rounds slider surfaces for Schoch too.
+    expect(find.byType(Slider), findsOneWidget);
+
+    await _tapNext(tester); // -> summary
+    expect(find.text('Schritt 4 von 4'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
+    await tester.pumpAndSettle();
+    expect(fake.createdFormat, TournamentFormat.schoch);
+  });
+
+  testWidgets(
+      'selecting Schweizer + KO reaches league + pool + ko + summary steps',
+      (tester) async {
+    final fake = await _pumpWizard(tester);
+    await _typeName(tester, 'Hybrid Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> format
+
+    await tester.tap(find.text('Schweizer + KO'));
+    await tester.pumpAndSettle();
+
+    // Hybrid format unlocks league + pool + ko -> 7 total steps.
+    expect(find.text('Schritt 3 von 7'), findsOneWidget);
+    await _tapNext(tester); // -> league
+    expect(find.text('Schritt 4 von 7'), findsOneWidget);
+    expect(find.text('LIGA-WERTUNG'), findsOneWidget);
+    await _tapNext(tester); // -> pool config
+    expect(find.text('Schritt 5 von 7'), findsOneWidget);
+    await _tapNext(tester); // -> ko config
+    expect(find.text('Schritt 6 von 7'), findsOneWidget);
+    expect(find.text('KO-KONFIGURATION'), findsOneWidget);
+    await _tapNext(tester); // -> summary
+    expect(find.text('Schritt 7 von 7'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
+    await tester.pumpAndSettle();
+    expect(fake.callCount, 1);
+    expect(fake.createdFormat, TournamentFormat.swissThenKo);
+  });
+
   testWidgets('submit calls createTournament with the configured draft',
       (tester) async {
     final fake = await _pumpWizard(tester);
@@ -394,5 +457,35 @@ void main() {
 
     expect(fake.createdSetup?['scoring'], 'classic');
     expect(fake.createdSetup?['league_categories'], contains('A'));
+  });
+
+  testWidgets('team size and pitch range flow into the create call',
+      (tester) async {
+    final fake = await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+
+    // Team size stepper is the first stepper on the participants step.
+    await tester.tap(find.byIcon(Icons.add).first);
+    await tester.pumpAndSettle();
+
+    await _tapNext(tester); // -> format
+
+    // Range mode is the default; the first two text fields are von/bis.
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), '10');
+    await tester.enterText(fields.at(1), '20');
+    await tester.pumpAndSettle();
+
+    await _tapNext(tester); // -> summary
+    await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
+    await tester.pumpAndSettle();
+
+    expect(fake.createdTeamSize, 2);
+    final pitch = fake.createdSetup?['pitch_plan'] as Map<String, Object?>?;
+    expect(pitch, isNotNull);
+    expect(pitch!['mode'], 'range');
+    expect(pitch['range_from'], 10);
+    expect(pitch['range_to'], 20);
   });
 }

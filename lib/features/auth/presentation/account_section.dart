@@ -78,20 +78,7 @@ class AccountSection extends ConsumerWidget {
                     AuthRoutes.accountLink,
                   ),
                 ),
-              _NavRow(
-                icon: Icons.inbox_outlined,
-                label: 'Postfach',
-                sub: 'Nachrichten und Bestätigungs-Anfragen',
-                onTap: () =>
-                    GoRouter.of(context).push<void>(AuthRoutes.inbox),
-              ),
-              _NavRow(
-                icon: Icons.emoji_events_outlined,
-                label: l10n.achievementsScreenTitle,
-                sub: l10n.achievementsEmptyBody,
-                onTap: () => GoRouter.of(context)
-                    .push<void>('/profile/achievements'),
-              ),
+              // Postfach + Erfolge live in the drawer, not in settings (P7).
               _NavRow(
                 icon: Icons.logout,
                 label: l10n.authAccountSignOutLabel,

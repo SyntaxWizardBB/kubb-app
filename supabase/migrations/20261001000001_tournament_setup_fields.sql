@@ -50,6 +50,14 @@ ALTER TABLE public.tournaments
   ADD COLUMN league_categories   text[] NOT NULL DEFAULT '{}'::text[]
     CHECK (league_categories <@ ARRAY['A','B','C']::text[]);
 
+-- ---- 2b. Team size range ----------------------------------------------
+-- The M1 `team_size` column is the MINIMUM players per team; this adds
+-- the MAXIMUM. NULL = fixed-size team (max equals team_size). A solo
+-- tournament is team_size = max_team_size = 1.
+ALTER TABLE public.tournaments
+  ADD COLUMN max_team_size smallint NULL
+    CHECK (max_team_size IS NULL OR max_team_size BETWEEN 1 AND 6);
+
 -- ---- 3. Rule variants + separate KO match format ----------------------
 --
 -- `rule_variants` mirrors the toggles every organiser mail states:
@@ -105,6 +113,31 @@ ALTER TABLE public.tournaments
 ALTER TABLE public.tournaments
   ADD COLUMN mighty_finisher_quali jsonb NULL,
   ADD COLUMN consolation_bracket   jsonb NULL;
+
+-- ---- 5c. Pool-phase config (hybrid formats) ---------------------------
+--
+-- pool_phase_config — the organiser's chosen pool grouping for hybrid
+-- formats (round_robin/schoch/swiss → KO). Stored at create so the
+-- pool-generation RPC (`_tournament_compute_pools`) can read the same
+-- shape it already accepts as `p_config`. NULL for pure formats. Shape:
+--   { "group_count": int, "qualifiers_per_group": int,
+--     "strategy": "snake"|"random"|"seeded", "random_seed": int? }
+-- (ko_config already exists from 20260601000010_tournament_ko_phase.)
+ALTER TABLE public.tournaments
+  ADD COLUMN pool_phase_config jsonb NULL;
+
+-- ---- 5b. KO bracket setup choices (P6 Phase 3) ------------------------
+-- bracket_type        — single vs double elimination (per P6_RULES_DECISIONS D)
+-- ko_matchup          — seeding pattern for the bracket (decision C)
+-- ko_tiebreak_method  — how a tied KO match is decided (decision B)
+ALTER TABLE public.tournaments
+  ADD COLUMN bracket_type       text NOT NULL DEFAULT 'single_elimination'
+    CHECK (bracket_type IN ('single_elimination','double_elimination')),
+  ADD COLUMN ko_matchup         text NOT NULL DEFAULT 'seed_high_vs_low'
+    CHECK (ko_matchup IN ('seed_high_vs_low','one_vs_two')),
+  ADD COLUMN ko_tiebreak_method text NOT NULL DEFAULT 'classic_kingtoss_removal'
+    CHECK (ko_tiebreak_method IN (
+      'classic_kingtoss_removal','mighty_finisher_shootout'));
 
 -- ---- 6. Notes ---------------------------------------------------------
 --

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
+import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
 /// Wizard step (M3.3-T9): pool-phase configuration for hybrid formats.
@@ -20,11 +21,17 @@ class WizardPoolConfigStep extends StatefulWidget {
   const WizardPoolConfigStep({
     required this.draft,
     required this.onConfigChanged,
+    required this.onPitchPlanChanged,
     super.key,
   });
 
   final TournamentConfigDraft draft;
   final ValueChanged<PoolPhaseConfig?> onConfigChanged;
+
+  /// Pushes the (possibly group-assigned) pitch plan back up. Only invoked
+  /// when a plan already exists; the per-group assignment section reuses
+  /// the existing plan and overrides `groupAssignment`.
+  final ValueChanged<PitchPlan> onPitchPlanChanged;
 
   @override
   State<WizardPoolConfigStep> createState() => _WizardPoolConfigStepState();
@@ -116,6 +123,30 @@ class _WizardPoolConfigStepState extends State<WizardPoolConfigStep> {
     _pushIfValid();
   }
 
+  /// Group label for index 0..n: 'A', 'B', 'C', …
+  static String _groupLabel(int index) =>
+      String.fromCharCode('A'.codeUnitAt(0) + index);
+
+  /// Toggles [pitch] in the assignment list of [label] and pushes the
+  /// updated pitch plan. A pitch may belong to several groups (the
+  /// organiser can share fields), so this only flips the one group.
+  void _togglePitchForGroup(PitchPlan plan, String label, int pitch) {
+    final next = <String, List<int>>{
+      for (final entry in plan.groupAssignment.entries)
+        entry.key: List<int>.of(entry.value),
+    };
+    final current = next.putIfAbsent(label, () => <int>[]);
+    if (current.contains(pitch)) {
+      current.remove(pitch);
+    } else {
+      current
+        ..add(pitch)
+        ..sort();
+    }
+    if (current.isEmpty) next.remove(label);
+    widget.onPitchPlanChanged(plan.copyWith(groupAssignment: next));
+  }
+
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
@@ -176,8 +207,66 @@ class _WizardPoolConfigStepState extends State<WizardPoolConfigStep> {
             allowEmpty: true,
           ),
         ],
+        ..._pitchAssignmentSection(tokens),
       ],
     );
+  }
+
+  /// "Pitch-Zuteilung pro Gruppe" — only rendered when a pitch plan with
+  /// available pitches exists and the group count is valid. For each group
+  /// label (A, B, …) the organiser multi-selects which pitch numbers serve
+  /// that group.
+  List<Widget> _pitchAssignmentSection(KubbTokens tokens) {
+    final plan = widget.draft.pitchPlan;
+    if (plan == null || !_groupCountValid) return const <Widget>[];
+    final pitches = plan.availablePitches();
+    if (pitches.isEmpty) return const <Widget>[];
+    final l10n = AppLocalizations.of(context);
+    return <Widget>[
+      const SizedBox(height: KubbTokens.space6),
+      _fieldLabel(tokens, l10n.tournamentWizardPoolPitchAssignmentLabel),
+      const SizedBox(height: KubbTokens.space2),
+      Text(
+        l10n.tournamentWizardPoolPitchAssignmentHint,
+        style: TextStyle(fontSize: 11, height: 1.35, color: tokens.fgSubtle),
+      ),
+      const SizedBox(height: KubbTokens.space3),
+      for (var g = 0; g < _groupCount; g++) ...[
+        if (g > 0) const SizedBox(height: KubbTokens.space4),
+        Builder(
+          builder: (context) {
+            final label = _groupLabel(g);
+            final assigned = plan.groupAssignment[label] ?? const <int>[];
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.tournamentWizardPoolGroupLabel(label),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.fg,
+                  ),
+                ),
+                const SizedBox(height: KubbTokens.space2),
+                Wrap(
+                  spacing: KubbTokens.space2,
+                  runSpacing: KubbTokens.space2,
+                  children: [
+                    for (final pitch in pitches)
+                      _PitchAssignChip(
+                        label: '$pitch',
+                        selected: assigned.contains(pitch),
+                        onTap: () => _togglePitchForGroup(plan, label, pitch),
+                      ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    ];
   }
 
   Widget _fieldLabel(KubbTokens tokens, String text) {
@@ -249,6 +338,56 @@ class WizardPoolToggle extends StatelessWidget {
           ),
           Switch(value: value, onChanged: onChanged),
         ],
+      ),
+    );
+  }
+}
+
+/// Compact multi-select chip for a single pitch number in the per-group
+/// pitch-assignment grid. Mirrors the wizard's `_SelectChip` pattern but
+/// stays local to this step (numeric, denser layout).
+class _PitchAssignChip extends StatelessWidget {
+  const _PitchAssignChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return InkWell(
+      borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: KubbTokens.touchMin),
+        padding: const EdgeInsets.symmetric(
+          horizontal: KubbTokens.space4,
+          vertical: KubbTokens.space2,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? tokens.primary : tokens.bgRaised,
+          borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
+          border: Border.all(
+            color: selected ? tokens.primary : tokens.line,
+            width: 1.5,
+          ),
+        ),
+        child: Center(
+          widthFactor: 1,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: selected ? Colors.white : tokens.fg,
+            ),
+          ),
+        ),
       ),
     );
   }

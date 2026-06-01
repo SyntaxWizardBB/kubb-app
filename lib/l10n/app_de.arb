@@ -1913,6 +1913,10 @@
   "@tournamentWizardRegistrationDeadlineLabel": {
     "description": "In-app registration deadline field label"
   },
+  "tournamentWizardCheckinUntilLabel": "Vor-Ort-Check-in bis",
+  "@tournamentWizardCheckinUntilLabel": {
+    "description": "On-site check-in deadline (Speakerpult) field label"
+  },
   "tournamentWizardDateNotSet": "Nicht gesetzt",
   "@tournamentWizardDateNotSet": {
     "description": "Placeholder shown on a date field before a value is picked"
@@ -2086,6 +2090,140 @@
   "@tournamentWizardPdfUploadError": {
     "description": "Snackbar message when a PDF upload fails"
   },
+  "tournamentWizardMinTeamSizeLabel": "Min. Spieler / Team",
+  "@tournamentWizardMinTeamSizeLabel": {
+    "description": "Minimum players per team stepper label"
+  },
+  "tournamentWizardMaxTeamSizeLabel": "Max. Spieler / Team",
+  "@tournamentWizardMaxTeamSizeLabel": {
+    "description": "Maximum players per team stepper label"
+  },
+  "tournamentWizardTeamSizeHint": "Spieler pro Team — Min. = Max. = feste Grösse, 1 = Einzelturnier",
+  "@tournamentWizardTeamSizeHint": {
+    "description": "Helper text under the team size steppers"
+  },
+  "tournamentWizardSectionPitches": "Pitches / Spielfelder",
+  "@tournamentWizardSectionPitches": {
+    "description": "Section header for pitch configuration"
+  },
+  "tournamentWizardPitchHint": "Auf welchen Feldern wird gespielt? Kann auch später gesetzt werden.",
+  "@tournamentWizardPitchHint": {
+    "description": "Helper text under the pitch section"
+  },
+  "tournamentWizardPitchModeRange": "Nummernbereich",
+  "@tournamentWizardPitchModeRange": {
+    "description": "Pitch mode: contiguous number range"
+  },
+  "tournamentWizardPitchModeManual": "Manuelle Liste",
+  "@tournamentWizardPitchModeManual": {
+    "description": "Pitch mode: manual list of numbers"
+  },
+  "tournamentWizardPitchRangeFrom": "Von",
+  "@tournamentWizardPitchRangeFrom": {
+    "description": "Pitch range lower bound label"
+  },
+  "tournamentWizardPitchRangeTo": "Bis",
+  "@tournamentWizardPitchRangeTo": {
+    "description": "Pitch range upper bound label"
+  },
+  "tournamentWizardPitchNumbersLabel": "Pitch-Nummern",
+  "@tournamentWizardPitchNumbersLabel": {
+    "description": "Manual pitch numbers field label"
+  },
+  "tournamentWizardPitchNumbersHint": "z.B. 1, 2, 5, 8",
+  "@tournamentWizardPitchNumbersHint": {
+    "description": "Manual pitch numbers placeholder"
+  },
+  "tournamentWizardPitchSortLabel": "Sortierung",
+  "@tournamentWizardPitchSortLabel": {
+    "description": "Pitch sort strategy label"
+  },
+  "tournamentWizardPitchSortTopSeeds": "Beste auf tiefsten Nummern",
+  "@tournamentWizardPitchSortTopSeeds": {
+    "description": "Pitch sort: top seeds on lowest pitch numbers"
+  },
+  "tournamentWizardPitchSortManual": "Manuelle Reihenfolge",
+  "@tournamentWizardPitchSortManual": {
+    "description": "Pitch sort: manual order"
+  },
+  "tournamentWizardPitchSummary": "{count} Pitches",
+  "@tournamentWizardPitchSummary": {
+    "description": "Count of configured pitches",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tournamentWizardPoolPitchAssignmentLabel": "Pitch-Zuteilung pro Gruppe",
+  "@tournamentWizardPoolPitchAssignmentLabel": {
+    "description": "Section title for assigning pitch numbers to pool groups"
+  },
+  "tournamentWizardPoolPitchAssignmentHint": "Wähle pro Gruppe die Pitch-Nummern. Die höchstgerankten Spieler werden auf die zuerst gelisteten Pitches gesetzt (Sortierung folgt der Pitch-Strategie).",
+  "@tournamentWizardPoolPitchAssignmentHint": {
+    "description": "Helper text explaining per-group pitch assignment and seeding placement"
+  },
+  "tournamentWizardPoolGroupLabel": "Gruppe {label}",
+  "@tournamentWizardPoolGroupLabel": {
+    "description": "Label for a single pool group in the pitch-assignment section",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "tournamentWizardMatchTimeLabel": "Zeit pro Match (Min.)",
+  "@tournamentWizardMatchTimeLabel": {
+    "description": "Prelim time limit per match stepper label"
+  },
+  "tournamentWizardTiebreakLabel": "Tiebreak",
+  "@tournamentWizardTiebreakLabel": {
+    "description": "Prelim tiebreak toggle title"
+  },
+  "tournamentWizardTiebreakHint": "Bei Zeitablauf wird ein Tiebreak gespielt",
+  "@tournamentWizardTiebreakHint": {
+    "description": "Prelim tiebreak toggle subtitle"
+  },
+  "tournamentWizardTiebreakAfterLabel": "Tiebreak nach (Min.)",
+  "@tournamentWizardTiebreakAfterLabel": {
+    "description": "Prelim tiebreak trigger time stepper label"
+  },
+  "tournamentWizardBreakBetweenLabel": "Pause zwischen Matches (Min.)",
+  "@tournamentWizardBreakBetweenLabel": {
+    "description": "Break between matches stepper label"
+  },
+  "tournamentWizardBracketTypeLabel": "Bracket-Typ",
+  "@tournamentWizardBracketTypeLabel": { "description": "Bracket type label" },
+  "tournamentWizardBracketSingle": "Single-KO",
+  "@tournamentWizardBracketSingle": { "description": "Single elimination" },
+  "tournamentWizardBracketDouble": "Double-KO",
+  "@tournamentWizardBracketDouble": { "description": "Double elimination" },
+  "tournamentWizardKoMatchupLabel": "Begegnungen",
+  "@tournamentWizardKoMatchupLabel": { "description": "KO matchup label" },
+  "tournamentWizardKoMatchupHighLow": "Beste vs Schlechteste",
+  "@tournamentWizardKoMatchupHighLow": { "description": "Seed high vs low" },
+  "tournamentWizardKoMatchupOneTwo": "1. vs 2.",
+  "@tournamentWizardKoMatchupOneTwo": { "description": "Adjacent placements" },
+  "tournamentWizardKoTiebreakMethodLabel": "KO-Tiebreak-Methode",
+  "@tournamentWizardKoTiebreakMethodLabel": { "description": "KO tiebreak method" },
+  "tournamentWizardKoTiebreakClassic": "Klassisch",
+  "@tournamentWizardKoTiebreakClassic": { "description": "Classic tiebreak" },
+  "tournamentWizardKoTiebreakMighty": "Mighty-Finisher",
+  "@tournamentWizardKoTiebreakMighty": { "description": "Mighty finisher shootout" },
+  "tournamentWizardKoRulesLabel": "KO-Regelsatz",
+  "@tournamentWizardKoRulesLabel": { "description": "KO match rules section" },
+  "tournamentWizardKoFinalNoTiebreak": "Ab Halbfinale ohne Tiebreak",
+  "@tournamentWizardKoFinalNoTiebreak": { "description": "Final/semifinal without tiebreak toggle" },
+  "tournamentWizardMightyQualiLabel": "Mighty-Finisher-Quali",
+  "@tournamentWizardMightyQualiLabel": { "description": "Mighty finisher qualification toggle" },
+  "tournamentWizardMightyQualiHint": "Gruppenzweite spielen um Restplätze",
+  "@tournamentWizardMightyQualiHint": { "description": "Quali helper text" },
+  "tournamentWizardMightyQualiSlots": "Plätze",
+  "@tournamentWizardMightyQualiSlots": { "description": "Quali slots stepper label" },
+  "tournamentWizardConsolationLabel": "Trostturnier",
+  "@tournamentWizardConsolationLabel": { "description": "Consolation bracket toggle" },
+  "tournamentWizardConsolationHint": "Früh ausgeschiedene spielen ein zweites Bracket (Best of the Rest)",
+  "@tournamentWizardConsolationHint": { "description": "Consolation helper text" },
   "tournamentWizardMinParticipantsLabel": "Min. Teilnehmer",
   "@tournamentWizardMinParticipantsLabel": {
     "description": "Min participants stepper label"
@@ -2488,6 +2626,48 @@
   "tournamentRegistrationSuccess": "Anmeldung gesendet.",
   "@tournamentRegistrationSuccess": {
     "description": "Success snackbar after registration"
+  },
+  "tournamentCardDetails": "Details",
+  "@tournamentCardDetails": {
+    "description": "Tile action: open the tournament detail screen"
+  },
+  "tournamentTeamRosterRangeFixed": "Wähle {count} Spieler für dein Team aus.",
+  "@tournamentTeamRosterRangeFixed": {
+    "description": "Roster hint for a fixed team size",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "tournamentTeamRosterRange": "Wähle zwischen {min} und {max} Spielern für dein Team aus.",
+  "@tournamentTeamRosterRange": {
+    "description": "Roster hint for a team size range",
+    "placeholders": {
+      "min": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "tournamentTeamRosterSelected": "{count} ausgewählt",
+  "@tournamentTeamRosterSelected": {
+    "description": "Shows how many roster members are currently selected",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "tournamentTeamRegistered": "Team angemeldet.",
+  "@tournamentTeamRegistered": {
+    "description": "Success message after a team registration"
+  },
+  "tournamentTeamRegisteredMembers": "Folgende Mitglieder sind angemeldet:",
+  "@tournamentTeamRegisteredMembers": {
+    "description": "Heading above the list of registered roster members after a team registration"
+  },
+  "tournamentTeamRegisterDone": "Fertig",
+  "@tournamentTeamRegisterDone": {
+    "description": "Button that closes the team-registration confirmation"
+  },
+  "tournamentTeamMemberRegistered": "angemeldet",
+  "@tournamentTeamMemberRegistered": {
+    "description": "Per-member badge in the team-registration confirmation"
   },
   "tournamentMatchListTitle": "Spiele",
   "@tournamentMatchListTitle": {
@@ -2976,6 +3156,10 @@
   "tournamentSeedingStartKoButton": "KO starten",
   "@tournamentSeedingStartKoButton": {
     "description": "Action that commits the seeding and triggers the start_ko_phase RPC"
+  },
+  "tournamentSeedingAutoSeedButton": "Auto-Seed aus ELO",
+  "@tournamentSeedingAutoSeedButton": {
+    "description": "Action that derives the seed order from each participant's ELO via the tournament_autoseed_from_elo RPC"
   },
   "tournamentSeedingErrorTitle": "Aktion fehlgeschlagen",
   "@tournamentSeedingErrorTitle": {

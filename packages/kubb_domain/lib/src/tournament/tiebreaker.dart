@@ -10,6 +10,12 @@ enum TiebreakerCriterion {
   kubbDifference,
   directComparison,
   wins,
+
+  /// Physical on-site decider (Mighty-Finisher shootout, decision §H). It
+  /// cannot be resolved from precomputed stats, so the comparator treats it
+  /// as a no-op (falls through to the next criterion / the ID fallback);
+  /// the organiser feeds the shootout result back at runtime.
+  mightyFinisherShootout,
   random,
 }
 
@@ -90,6 +96,10 @@ class TiebreakerChain {
       case TiebreakerCriterion.directComparison:
         final h = a.headToHeadLookup[b.participantId] ?? 0;
         return -h.sign;
+      case TiebreakerCriterion.mightyFinisherShootout:
+        // Physical decider; not resolvable from stats. Fall through so the
+        // chain continues (ultimately to the deterministic ID fallback).
+        return 0;
       case TiebreakerCriterion.random:
         final ids = [a.participantId, b.participantId]..sort();
         final seed = randomSeed ^ ids[0].hashCode ^ (ids[1].hashCode << 1);

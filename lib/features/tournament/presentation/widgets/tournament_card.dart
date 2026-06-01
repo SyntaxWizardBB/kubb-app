@@ -10,11 +10,39 @@ class TournamentCard extends StatelessWidget {
   const TournamentCard({
     required this.summary,
     required this.onTap,
+    this.onDetails,
+    this.onRegister,
+    this.onWithdraw,
+    this.isRegistered = false,
     super.key,
   });
 
   final TournamentSummaryRef summary;
   final VoidCallback onTap;
+
+  /// Optional per-tile "Details" action. When provided, an explicit
+  /// "Details" button is rendered in the tile footer alongside the
+  /// register/withdraw toggle (P6 spec L123). The whole-card [onTap]
+  /// keeps working as a redundant tap-target.
+  final VoidCallback? onDetails;
+
+  /// Per-tile "Anmelden" action — invoked when the caller is not yet
+  /// registered ([isRegistered] is false).
+  final VoidCallback? onRegister;
+
+  /// Per-tile "Abmelden" action — invoked when the caller is already
+  /// registered ([isRegistered] is true).
+  final VoidCallback? onWithdraw;
+
+  /// Whether the caller already holds a registration for this
+  /// tournament. Drives the register/withdraw toggle label and action.
+  final bool isRegistered;
+
+  /// True when this tile should render its action footer. The footer is
+  /// opt-in: callers that pass no actions (e.g. the registrations list)
+  /// keep the bare card.
+  bool get _hasActions =>
+      onDetails != null || onRegister != null || onWithdraw != null;
 
   @override
   Widget build(BuildContext context) {
@@ -59,10 +87,56 @@ class TournamentCard extends StatelessWidget {
                           summary.participantCount)),
                 ],
               ),
+              if (_hasActions) ...[
+                const SizedBox(height: KubbTokens.space3),
+                _actions(context, tokens, l),
+              ],
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _actions(
+      BuildContext context, KubbTokens tokens, AppLocalizations l) {
+    return Row(
+      children: [
+        if (onDetails != null)
+          Expanded(
+            child: SizedBox(
+              height: KubbTokens.touchMin,
+              child: OutlinedButton(
+                onPressed: onDetails,
+                child: Text(l.tournamentCardDetails),
+              ),
+            ),
+          ),
+        if (onDetails != null && (onRegister != null || onWithdraw != null))
+          const SizedBox(width: KubbTokens.space2),
+        if (isRegistered && onWithdraw != null)
+          Expanded(
+            child: SizedBox(
+              height: KubbTokens.touchMin,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                    backgroundColor: KubbTokens.miss),
+                onPressed: onWithdraw,
+                child: Text(l.tournamentDetailActionWithdraw),
+              ),
+            ),
+          )
+        else if (!isRegistered && onRegister != null)
+          Expanded(
+            child: SizedBox(
+              height: KubbTokens.touchMin,
+              child: FilledButton(
+                onPressed: onRegister,
+                child: Text(l.tournamentDetailActionRegister),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
