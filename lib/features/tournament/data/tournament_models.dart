@@ -215,6 +215,7 @@ TournamentDetailHeader tournamentDetailHeaderFromRow(
     tournamentId: row['tournament_id'] as String,
     displayName: row['display_name'] as String,
     createdByUserId: row['created_by'] as String?,
+    clubId: row['club_id'] as String?,
     teamSize: teamSize,
     maxTeamSize: maxTeamSize < teamSize ? teamSize : maxTeamSize,
     minParticipants: _asInt(row['min_participants']),
@@ -233,7 +234,55 @@ TournamentDetailHeader tournamentDetailHeaderFromRow(
     publishedAt: _asDateOrNull(row['published_at']),
     startedAt: _asDateOrNull(row['started_at']),
     completedAt: _asDateOrNull(row['completed_at']),
+    setup: _setupFromHeaderRow(row),
   );
+}
+
+/// Collects the P6 setup fields from a `tournament` block into the opaque
+/// `setup` map carried by [TournamentDetailHeader.setup]. The keys mirror
+/// the snake_case shape `TournamentConfigDraft.toSetupConfig()` emits, so
+/// `TournamentConfigDraft.fromDetail(...)` can invert them for the edit
+/// wizard. Projected by `tournament_get` from migration 20261201000021;
+/// keys absent on older RPC revisions / the test fake simply stay out of
+/// the map, leaving the draft on its defaults.
+Map<String, Object?> _setupFromHeaderRow(Map<String, dynamic> row) {
+  const keys = <String>[
+    'location',
+    'venue_address',
+    'event_starts_at',
+    'checkin_until',
+    'registration_closes_at',
+    'weather_note',
+    'info_food',
+    'info_travel',
+    'info_accommodation',
+    'contact_name',
+    'contact_phone',
+    'entry_fee_cents',
+    'currency',
+    'max_team_size',
+    'payment_methods',
+    'league_categories',
+    'scoring',
+    'rule_variants',
+    'ko_match_format',
+    'ko_round_formats',
+    'pitch_plan',
+    'mighty_finisher_quali',
+    'consolation_bracket',
+    'bracket_type',
+    'ko_matchup',
+    'ko_tiebreak_method',
+    'pool_phase_config',
+    'ko_config',
+    'rules_pdf_url',
+    'site_map_pdf_url',
+  ];
+  final out = <String, Object?>{};
+  for (final key in keys) {
+    if (row.containsKey(key)) out[key] = row[key];
+  }
+  return out;
 }
 
 /// Decodes one entry of the `audit_tail` array.

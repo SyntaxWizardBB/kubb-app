@@ -6,11 +6,28 @@ import 'package:kubb_domain/kubb_domain.dart';
 /// `MatchConfigController`: every setter just mutates [state] and
 /// downstream rebuilds happen automatically.
 class TournamentConfigController extends Notifier<TournamentConfigDraft> {
+  /// Optional seed for EDIT mode (P7): when non-null the controller starts
+  /// from this draft (rebuilt from the tournament via
+  /// [TournamentConfigDraft.fromDetail]) instead of the create-defaults.
+  /// Injected through a `ProviderScope` override on the edit route so the
+  /// step widgets initialise their TextEditingControllers from the prefill.
+  TournamentConfigController([this._initial]);
+
+  final TournamentConfigDraft? _initial;
+
   @override
-  TournamentConfigDraft build() => const TournamentConfigDraft();
+  TournamentConfigDraft build() => _initial ?? const TournamentConfigDraft();
 
   void setDisplayName(String value) {
     state = state.copyWith(displayName: value);
+  }
+
+  /// Sets (or clears, when [clubId] is null) the optional organizing club.
+  /// A null club makes the tournament personal (creator-only manage).
+  void setClubId(String? clubId) {
+    state = clubId == null
+        ? state.copyWith(clearClubId: true)
+        : state.copyWith(clubId: clubId);
   }
 
   void setMinParticipants(int value) {
@@ -28,7 +45,68 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
   }
 
   void setFormat(TournamentFormat format) {
-    state = state.copyWith(format: format);
+    // Keep the two-axis selection (vorrundeType/koType) in sync with the
+    // legacy enum so either entry point stays consistent. Bracket-type
+    // (single/double) is preserved when the raw enum can't express it.
+    final (vorrunde, ko) = _axesFor(format, state.bracketType);
+    state = state.copyWith(
+      format: format,
+      vorrundeType: vorrunde,
+      koType: ko,
+    );
+  }
+
+  /// Reverse of [TournamentConfigDraft.formatFor]: maps a legacy enum (plus
+  /// the current bracket type for the KO single/double distinction) back to
+  /// the (vorrunde, ko) axes.
+  (VorrundeType, KoType) _axesFor(
+    TournamentFormat format,
+    BracketType bracketType,
+  ) {
+    final ko = bracketType == BracketType.doubleElimination
+        ? KoType.doubleOut
+        : KoType.singleOut;
+    return switch (format) {
+      TournamentFormat.roundRobin => (VorrundeType.groupPhase, KoType.none),
+      TournamentFormat.swiss ||
+      TournamentFormat.schoch =>
+        (VorrundeType.schoch, KoType.none),
+      TournamentFormat.roundRobinThenKo => (VorrundeType.groupPhase, ko),
+      TournamentFormat.singleElimination ||
+      TournamentFormat.swissThenKo ||
+      TournamentFormat.schochThenKo =>
+        (VorrundeType.schoch, ko),
+    };
+  }
+
+  /// Sets the preliminary stage axis and re-derives the legacy format.
+  void setVorrundeType(VorrundeType type) {
+    state = state.copyWith(
+      vorrundeType: type,
+      format: TournamentConfigDraft.formatFor(type, state.koType),
+    );
+  }
+
+  /// Sets the KO stage axis and re-derives the legacy format + bracket
+  /// type, then resizes the per-KO-round format list (none => empty).
+  void setKoType(KoType type) {
+    state = state
+        .copyWith(
+          koType: type,
+          format: TournamentConfigDraft.formatFor(state.vorrundeType, type),
+          bracketType: TournamentConfigDraft.bracketTypeFor(type),
+        )
+        .withResizedKoRoundFormats();
+  }
+
+  /// Replaces the per-KO-round ruleset at [index] (0 = first KO round …
+  /// last = final). Out-of-range indices are ignored.
+  void setKoRoundFormat(int index, MatchFormatSpec spec) {
+    if (index < 0 || index >= state.koRoundFormats.length) return;
+    final next = List<MatchFormatSpec>.of(state.koRoundFormats)..[index] = spec;
+    state = state.copyWith(
+      koRoundFormats: List<MatchFormatSpec>.unmodifiable(next),
+    );
   }
 
   /// Sets `setsToWin` and auto-clamps `maxSets` to at least
@@ -66,7 +144,9 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
   /// step (T13) to commit `qualifierCount`, `withThirdPlacePlayoff` and
   /// `seedingMode` once the inputs are valid (`2 <= n <= participantCount`).
   void setKoConfig(KoPhaseConfig? config) {
-    state = state.copyWith(koConfig: config);
+    // Re-derive the per-KO-round format list whenever the qualifier count
+    // (and thus the KO round count) changes.
+    state = state.copyWith(koConfig: config).withResizedKoRoundFormats();
   }
 
   /// Persists the seeding source choice independent of the KO-config

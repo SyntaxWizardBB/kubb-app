@@ -32,6 +32,47 @@ enum LeagueCategory {
       );
 }
 
+// ---- Two-axis format selection (Vorrunde × KO) ------------------------
+
+/// Preliminary (group) stage type. The user-facing format choice is split
+/// into two orthogonal axes — the prelim type and the [KoType] — instead of
+/// exposing the raw `TournamentFormat` enum. `groupPhase` maps to the
+/// round-robin family, `schoch` to the Swiss/Schoch family (the server
+/// routes `swiss` and `schoch` identically, so Schoch reuses the Swiss
+/// path).
+enum VorrundeType {
+  groupPhase('group_phase'),
+  schoch('schoch');
+
+  const VorrundeType(this.wire);
+  final String wire;
+
+  static VorrundeType fromWire(String value) =>
+      VorrundeType.values.firstWhere(
+        (v) => v.wire == value,
+        orElse: () => throw ArgumentError.value(
+            value, 'value', 'unknown vorrunde type'),
+      );
+}
+
+/// KO-stage type, the second format axis. `none` = no KO bracket (the
+/// prelim alone decides the tournament); `singleOut`/`doubleOut` add a
+/// single- resp. double-elimination KO bracket after the prelim.
+enum KoType {
+  none('none'),
+  singleOut('single_out'),
+  doubleOut('double_out');
+
+  const KoType(this.wire);
+  final String wire;
+
+  static KoType fromWire(String value) => KoType.values.firstWhere(
+        (k) => k.wire == value,
+        orElse: () =>
+            throw ArgumentError.value(value, 'value', 'unknown ko type'),
+      );
+}
+
 // ---- KO bracket setup choices (P6 Phase 3) ----------------------------
 
 /// Single vs double elimination bracket (P6_RULES_DECISIONS §D).

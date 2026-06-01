@@ -90,8 +90,8 @@ BEGIN
       registration_closes_at, weather_note, info_food, info_travel,
       info_accommodation, contact_name, contact_phone, entry_fee_cents,
       currency, payment_methods, rules_pdf_url, site_map_pdf_url,
-      league_categories, rule_variants, ko_match_format, pitch_plan,
-      mighty_finisher_quali, consolation_bracket, max_team_size,
+      league_categories, rule_variants, ko_match_format, ko_round_formats,
+      pitch_plan, mighty_finisher_quali, consolation_bracket, max_team_size,
       bracket_type, ko_matchup, ko_tiebreak_method,
       pool_phase_config, ko_config)
     VALUES (
@@ -123,6 +123,7 @@ BEGIN
         'sureshot', false, 'diggy', false,
         'opening_rule', '2-4-6', 'strafkubb_off_baseline', true)),
       v_setup->'ko_match_format',
+      coalesce(v_setup->'ko_round_formats', '[]'::jsonb),
       v_setup->'pitch_plan',
       v_setup->'mighty_finisher_quali',
       v_setup->'consolation_bracket',

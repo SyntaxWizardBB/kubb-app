@@ -14,6 +14,30 @@ void main() {
     });
   });
 
+  group('VorrundeType', () {
+    test('round-trips through its wire value', () {
+      for (final v in VorrundeType.values) {
+        expect(VorrundeType.fromWire(v.wire), v);
+      }
+    });
+
+    test('rejects an unknown wire value', () {
+      expect(() => VorrundeType.fromWire('bogus'), throwsArgumentError);
+    });
+  });
+
+  group('KoType', () {
+    test('round-trips through its wire value', () {
+      for (final k in KoType.values) {
+        expect(KoType.fromWire(k.wire), k);
+      }
+    });
+
+    test('rejects an unknown wire value', () {
+      expect(() => KoType.fromWire('bogus'), throwsArgumentError);
+    });
+  });
+
   group('MatchFormatSpec', () {
     const spec = MatchFormatSpec(
       setsToWin: 3,

@@ -25,6 +25,12 @@ abstract final class TournamentRoutes {
   /// Single tournament overview. Append `/:id`.
   static const detail = '/tournament';
 
+  /// Edit an existing tournament (P7). Compose via [edit].
+  static const editBase = '/tournament';
+
+  /// Setup-wizard EDIT entry-point for [tournamentId].
+  static String edit(String tournamentId) => '$editBase/$tournamentId/edit';
+
   /// Match list for a tournament. Append `/:id/matches`.
   static const matches = '/tournament';
 

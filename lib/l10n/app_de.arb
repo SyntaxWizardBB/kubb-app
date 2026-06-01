@@ -1897,6 +1897,18 @@
   "@tournamentWizardDisplayNameLabel": {
     "description": "Display-name input label"
   },
+  "tournamentWizardClubLabel": "Ausrichtender Verein",
+  "@tournamentWizardClubLabel": {
+    "description": "Optional organizing-club picker label on the Stammdaten step"
+  },
+  "tournamentWizardClubHint": "Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten.",
+  "@tournamentWizardClubHint": {
+    "description": "Helper text under the organizing-club picker"
+  },
+  "tournamentWizardClubNone": "Kein Verein (persönlich)",
+  "@tournamentWizardClubNone": {
+    "description": "Dropdown option for no organizing club (personal tournament)"
+  },
   "tournamentWizardLocationLabel": "Ort",
   "@tournamentWizardLocationLabel": {
     "description": "Venue / town input label on the Stammdaten step"
@@ -2212,6 +2224,29 @@
   "@tournamentWizardKoTiebreakMighty": { "description": "Mighty finisher shootout" },
   "tournamentWizardKoRulesLabel": "KO-Regelsatz",
   "@tournamentWizardKoRulesLabel": { "description": "KO match rules section" },
+  "tournamentWizardKoRoundRulesLabel": "Regeln pro KO-Runde",
+  "@tournamentWizardKoRoundRulesLabel": { "description": "Per-KO-round rules section header" },
+  "tournamentWizardKoRoundRulesHint": "Sätze, Zeit und Pause können pro Runde gewählt werden.",
+  "@tournamentWizardKoRoundRulesHint": { "description": "Per-KO-round rules section helper" },
+  "tournamentWizardKoRoundFinal": "Final",
+  "@tournamentWizardKoRoundFinal": { "description": "KO round label: final" },
+  "tournamentWizardKoRoundSemi": "Halbfinale",
+  "@tournamentWizardKoRoundSemi": { "description": "KO round label: semifinal" },
+  "tournamentWizardKoRoundQuarter": "Viertelfinale",
+  "@tournamentWizardKoRoundQuarter": { "description": "KO round label: quarterfinal" },
+  "tournamentWizardKoRoundEighth": "Achtelfinale",
+  "@tournamentWizardKoRoundEighth": { "description": "KO round label: round of 16" },
+  "tournamentWizardKoRoundOf": "1/{size}-Final",
+  "@tournamentWizardKoRoundOf": {
+    "description": "Generic KO round label for large brackets, e.g. 1/16-Final",
+    "placeholders": { "size": { "type": "int" } }
+  },
+  "tournamentWizardKoRoundPauseLabel": "Pause danach (Min.)",
+  "@tournamentWizardKoRoundPauseLabel": { "description": "Per-round break-after label" },
+  "tournamentWizardKoRoundTiebreakLabel": "Tiebreak",
+  "@tournamentWizardKoRoundTiebreakLabel": { "description": "Per-round tiebreak toggle" },
+  "tournamentWizardKoRoundTiebreakAfterLabel": "Tiebreak nach (Min.)",
+  "@tournamentWizardKoRoundTiebreakAfterLabel": { "description": "Per-round tiebreak-after label" },
   "tournamentWizardKoFinalNoTiebreak": "Ab Halbfinale ohne Tiebreak",
   "@tournamentWizardKoFinalNoTiebreak": { "description": "Final/semifinal without tiebreak toggle" },
   "tournamentWizardMightyQualiLabel": "Mighty-Finisher-Quali",
@@ -2244,6 +2279,54 @@
   "@tournamentWizardFormatComingSoon": {
     "description": "Pill on disabled formats"
   },
+  "tournamentWizardVorrundeLabel": "Vorrunde",
+  "@tournamentWizardVorrundeLabel": {
+    "description": "Preliminary stage selector label"
+  },
+  "tournamentWizardVorrundeGroupPhase": "Gruppenphase",
+  "@tournamentWizardVorrundeGroupPhase": {
+    "description": "Group-phase preliminary option"
+  },
+  "tournamentWizardVorrundeGroupPhaseHint": "Jeder gegen jeden, Rangliste entscheidet.",
+  "@tournamentWizardVorrundeGroupPhaseHint": {
+    "description": "Group-phase preliminary description"
+  },
+  "tournamentWizardVorrundeSchoch": "Schoch",
+  "@tournamentWizardVorrundeSchoch": {
+    "description": "Schoch preliminary option"
+  },
+  "tournamentWizardVorrundeSchochHint": "Schoch-Paarung über mehrere Runden, dann Rangliste.",
+  "@tournamentWizardVorrundeSchochHint": {
+    "description": "Schoch preliminary description"
+  },
+  "tournamentWizardKoSystemLabel": "K.-o.-System",
+  "@tournamentWizardKoSystemLabel": {
+    "description": "KO stage selector label"
+  },
+  "tournamentWizardKoSystemNone": "Kein K.-o.",
+  "@tournamentWizardKoSystemNone": {
+    "description": "No KO stage option"
+  },
+  "tournamentWizardKoSystemNoneHint": "Nur Vorrunde, Rangliste entscheidet.",
+  "@tournamentWizardKoSystemNoneHint": {
+    "description": "No KO stage description"
+  },
+  "tournamentWizardKoSystemSingle": "Single-Out",
+  "@tournamentWizardKoSystemSingle": {
+    "description": "Single elimination KO option"
+  },
+  "tournamentWizardKoSystemSingleHint": "Eine Niederlage und du bist raus.",
+  "@tournamentWizardKoSystemSingleHint": {
+    "description": "Single-out KO description"
+  },
+  "tournamentWizardKoSystemDouble": "Double-Out",
+  "@tournamentWizardKoSystemDouble": {
+    "description": "Double elimination KO option"
+  },
+  "tournamentWizardKoSystemDoubleHint": "Erst nach zwei Niederlagen ausgeschieden.",
+  "@tournamentWizardKoSystemDoubleHint": {
+    "description": "Double-out KO description"
+  },
   "tournamentWizardSetsToWinLabel": "Sätze zum Sieg",
   "@tournamentWizardSetsToWinLabel": {
     "description": "Sets-to-win stepper label"
@@ -2267,6 +2350,14 @@
   "tournamentWizardCreateButton": "Turnier anlegen",
   "@tournamentWizardCreateButton": {
     "description": "Wizard final submit button"
+  },
+  "tournamentWizardSaveButton": "Änderungen speichern",
+  "@tournamentWizardSaveButton": {
+    "description": "Wizard final submit button in EDIT mode (P7)"
+  },
+  "tournamentWizardEditTitle": "Turnier bearbeiten",
+  "@tournamentWizardEditTitle": {
+    "description": "Wizard app-bar title in EDIT mode (P7)"
   },
   "tournamentWizardSubmitError": "Turnier konnte nicht erstellt werden: {error}",
   "@tournamentWizardSubmitError": {
@@ -2575,6 +2666,26 @@
   "tournamentDetailAborted": "Turnier abgebrochen.",
   "@tournamentDetailAborted": {
     "description": "Headline when status is aborted"
+  },
+  "tournamentDetailActionEdit": "Bearbeiten",
+  "@tournamentDetailActionEdit": {
+    "description": "Action: organizer edits the tournament details (pre-start)"
+  },
+  "tournamentDetailHintDraft": "Veröffentlichen und Anmeldung öffnen, damit sich Spieler anmelden können. Gestartet wird erst nach Anmeldeschluss.",
+  "@tournamentDetailHintDraft": {
+    "description": "Lifecycle hint shown to the organizer while the tournament is still a draft"
+  },
+  "tournamentDetailHintPublished": "Anmeldung öffnen, damit sich Spieler anmelden können. Gestartet wird erst nach Anmeldeschluss.",
+  "@tournamentDetailHintPublished": {
+    "description": "Lifecycle hint shown to the organizer while the tournament is published but registration is not open"
+  },
+  "tournamentDetailHintRegistrationOpen": "Anmeldung schliessen, sobald genug Teams angemeldet sind. Danach kann das Turnier gestartet werden.",
+  "@tournamentDetailHintRegistrationOpen": {
+    "description": "Lifecycle hint shown to the organizer while registration is open"
+  },
+  "tournamentDetailHintRegistrationClosed": "Anmeldung ist geschlossen. Jetzt kann das Turnier gestartet werden.",
+  "@tournamentDetailHintRegistrationClosed": {
+    "description": "Lifecycle hint shown to the organizer after registration closed, before start"
   },
   "tournamentDetailPools": "Gruppen",
   "@tournamentDetailPools": {

@@ -13,6 +13,7 @@ import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_con
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_league_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_pool_config_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/swiss_config_section.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -33,8 +34,20 @@ enum _StepKind {
 /// [tournamentConfigControllerProvider] and hands the final draft to
 /// [TournamentActions.createTournament] on submit. The detail screen
 /// (W3-B) takes over after navigation.
+///
+/// P7 EDIT mode: when [editId] is non-null the wizard submits through
+/// [TournamentActions.updateTournament] instead of `createTournament` and
+/// navigates back to the detail screen on success. The prefill is supplied
+/// by the caller seeding `tournamentConfigControllerProvider` (the edit
+/// route overrides it with a `TournamentConfigController` built from
+/// `TournamentConfigDraft.fromDetail`).
 class TournamentSetupWizard extends ConsumerStatefulWidget {
-  const TournamentSetupWizard({super.key});
+  const TournamentSetupWizard({super.key, this.editId});
+
+  /// Non-null when the wizard runs in EDIT mode for an existing
+  /// tournament. Drives the submit path (update vs create) and the
+  /// primary-button label.
+  final TournamentId? editId;
 
   @override
   ConsumerState<TournamentSetupWizard> createState() =>
@@ -120,11 +133,20 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
     setState(() => _submitting = true);
     final draft = ref.read(tournamentConfigControllerProvider);
     final l10n = AppLocalizations.of(context);
+    final editId = widget.editId;
     try {
-      final id =
-          await ref.read(tournamentActionsProvider).createTournament(draft);
+      final TournamentId targetId;
+      if (editId != null) {
+        await ref
+            .read(tournamentActionsProvider)
+            .updateTournament(editId, draft);
+        targetId = editId;
+      } else {
+        targetId =
+            await ref.read(tournamentActionsProvider).createTournament(draft);
+      }
       if (!mounted) return;
-      context.go('${TournamentRoutes.detail}/${id.value}');
+      context.go('${TournamentRoutes.detail}/${targetId.value}');
     } on Object catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -161,7 +183,9 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
       resizeToAvoidBottomInset: true,
       // TODO(sprintB-followup): add InboxBellAction
       appBar: KubbAppBar(
-        title: l10n.tournamentWizardTitle,
+        title: widget.editId != null
+            ? l10n.tournamentWizardEditTitle
+            : l10n.tournamentWizardTitle,
         eyebrow: stepTitle,
         leading: stepIndex == 0
             ? null
@@ -193,7 +217,9 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
                   ? null
                   : () => setState(() => _step -= 1),
               primaryLabel: stepIndex == totalSteps - 1
-                  ? l10n.tournamentWizardCreateButton
+                  ? (widget.editId != null
+                      ? l10n.tournamentWizardSaveButton
+                      : l10n.tournamentWizardCreateButton)
                   : l10n.tournamentWizardNextButton,
               backLabel: l10n.tournamentWizardBackButton,
               submitting: _submitting,
@@ -245,7 +271,8 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
       case _StepKind.format:
         return _StepFormat(
           draft: draft,
-          onFormat: controller.setFormat,
+          onVorrundeType: controller.setVorrundeType,
+          onKoType: controller.setKoType,
           onSetsToWin: controller.setSetsToWin,
           onMaxSets: controller.setMaxSets,
           swissRounds: _swissRounds ??
@@ -519,6 +546,15 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           maxLength: TournamentConfigDraft.displayNameMaxChars,
           onChanged: controller.setDisplayName,
         ),
+        const SizedBox(height: KubbTokens.space5),
+        _FieldLabel(l10n.tournamentWizardClubLabel, optional: true),
+        const SizedBox(height: KubbTokens.space2),
+        _ClubPickerField(
+          selectedClubId: draft.clubId,
+          onChanged: controller.setClubId,
+        ),
+        const SizedBox(height: KubbTokens.space1half),
+        _HelperText(l10n.tournamentWizardClubHint),
         const SizedBox(height: KubbTokens.space5),
         _FieldLabel(
           l10n.tournamentWizardLeagueCategoriesLabel,
@@ -1047,6 +1083,62 @@ class _PlainTextField extends StatelessWidget {
   }
 }
 
+/// Optional organizing-club picker (Stammdaten step). Lists only the clubs
+/// the caller may run a tournament under — owner/admin/organizer of the
+/// club — from [manageableClubsProvider]; the first entry clears the club
+/// (personal tournament). The selection persists to the draft's `club_id`
+/// and, together with the per-tournament server gate, decides who may later
+/// manage the tournament. While the club list loads or errors the picker is
+/// disabled so the wizard never offers an unverified club.
+class _ClubPickerField extends ConsumerWidget {
+  const _ClubPickerField({
+    required this.selectedClubId,
+    required this.onChanged,
+  });
+
+  final String? selectedClubId;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    final clubs = ref.watch(manageableClubsProvider);
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+      borderSide: BorderSide(color: tokens.lineStrong, width: 1.5),
+    );
+    final items = clubs.maybeWhen(
+      data: (list) => list,
+      orElse: () => const <ManageableClub>[],
+    );
+    // Drop a stale selection (e.g. a club the caller no longer manages) so
+    // the dropdown never holds a value absent from its item list.
+    final value =
+        items.any((c) => c.id == selectedClubId) ? selectedClubId : null;
+    return DropdownButtonFormField<String?>(
+      key: const Key('wizardClubPicker'),
+      initialValue: value,
+      isExpanded: true,
+      decoration: InputDecoration(
+        border: border,
+        enabledBorder: border,
+      ),
+      items: <DropdownMenuItem<String?>>[
+        DropdownMenuItem<String?>(
+          child: Text(l10n.tournamentWizardClubNone),
+        ),
+        for (final c in items)
+          DropdownMenuItem<String?>(
+            value: c.id,
+            child: Text(c.name, overflow: TextOverflow.ellipsis),
+          ),
+      ],
+      onChanged: clubs.isLoading ? null : onChanged,
+    );
+  }
+}
+
 /// Tappable date(+time) field; shows the selected value or a placeholder.
 class _DateField extends StatelessWidget {
   const _DateField({required this.value, required this.onTap});
@@ -1238,7 +1330,7 @@ class _StepParticipants extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _NumberStepper(
+        WizardNumberField(
           label: l10n.tournamentWizardMinTeamSizeLabel,
           value: draft.teamSize,
           min: 1,
@@ -1246,7 +1338,7 @@ class _StepParticipants extends StatelessWidget {
           onChanged: onTeamSize,
         ),
         const SizedBox(height: KubbTokens.space4),
-        _NumberStepper(
+        WizardNumberField(
           label: l10n.tournamentWizardMaxTeamSizeLabel,
           value: draft.maxTeamSize,
           min: draft.teamSize,
@@ -1256,7 +1348,7 @@ class _StepParticipants extends StatelessWidget {
         const SizedBox(height: KubbTokens.space1half),
         _HelperText(l10n.tournamentWizardTeamSizeHint),
         const SizedBox(height: KubbTokens.space5),
-        _NumberStepper(
+        WizardNumberField(
           label: l10n.tournamentWizardMinParticipantsLabel,
           value: draft.minParticipants,
           min: TournamentConfigDraft.participantsHardMin,
@@ -1264,7 +1356,7 @@ class _StepParticipants extends StatelessWidget {
           onChanged: onMin,
         ),
         const SizedBox(height: KubbTokens.space4),
-        _NumberStepper(
+        WizardNumberField(
           label: l10n.tournamentWizardMaxParticipantsLabel,
           value: draft.maxParticipants,
           min: draft.minParticipants,
@@ -1279,7 +1371,8 @@ class _StepParticipants extends StatelessWidget {
 class _StepFormat extends StatelessWidget {
   const _StepFormat({
     required this.draft,
-    required this.onFormat,
+    required this.onVorrundeType,
+    required this.onKoType,
     required this.onSetsToWin,
     required this.onMaxSets,
     required this.swissRounds,
@@ -1291,11 +1384,15 @@ class _StepFormat extends StatelessWidget {
   });
 
   final TournamentConfigDraft draft;
-  final ValueChanged<TournamentFormat> onFormat;
+  // Two-axis format selection: Vorrunde (group phase vs Schoch) and KO
+  // system (none / single-out / double-out). The controller derives the
+  // legacy `TournamentFormat` + `BracketType` from these axes.
+  final ValueChanged<VorrundeType> onVorrundeType;
+  final ValueChanged<KoType> onKoType;
   final ValueChanged<int> onSetsToWin;
   final ValueChanged<int> onMaxSets;
-  // T10: Swiss-System round count — surfaced inline when
-  // `draft.format == TournamentFormat.swiss`. State lives in the wizard.
+  // T10: Swiss-System round count — surfaced inline when the Vorrunde is
+  // Schoch. State lives in the wizard.
   final int swissRounds;
   final ValueChanged<int> onSwissRoundsChanged;
   final ValueChanged<PitchPlan?> onPitchPlanChanged;
@@ -1310,8 +1407,9 @@ class _StepFormat extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // ---- Vorrunde axis (Gruppenphase | Schoch) ----
         Text(
-          l10n.tournamentWizardFormatLabel,
+          l10n.tournamentWizardVorrundeLabel,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
@@ -1320,33 +1418,58 @@ class _StepFormat extends StatelessWidget {
           ),
         ),
         const SizedBox(height: KubbTokens.space2),
-        for (final f in TournamentFormat.values) ...[
-          _FormatRow(
-            format: f,
-            selected: draft.format == f,
-            // All domain+server-supported formats are selectable: the pure
-            // round-robin / Schoch / Swiss group formats, the single-
-            // elimination KO bracket and the three hybrid group→KO formats.
-            enabled: _formatEnabled(f),
-            label: f == TournamentFormat.roundRobin
-                ? l10n.tournamentWizardFormatRoundRobin
-                : _humanFormatLabel(f),
-            description: _formatDescription(f),
-            comingSoonLabel: l10n.tournamentWizardFormatComingSoon,
-            onTap: () => onFormat(f),
+        _OptionRow(
+          selected: draft.vorrundeType == VorrundeType.groupPhase,
+          label: l10n.tournamentWizardVorrundeGroupPhase,
+          description: l10n.tournamentWizardVorrundeGroupPhaseHint,
+          onTap: () => onVorrundeType(VorrundeType.groupPhase),
+        ),
+        _OptionRow(
+          selected: draft.vorrundeType == VorrundeType.schoch,
+          label: l10n.tournamentWizardVorrundeSchoch,
+          description: l10n.tournamentWizardVorrundeSchochHint,
+          onTap: () => onVorrundeType(VorrundeType.schoch),
+        ),
+        // T10: the Schoch-rounds slider surfaces when the Vorrunde is Schoch
+        // (the pairing engine shares the round count with the Swiss system).
+        if (draft.vorrundeType == VorrundeType.schoch)
+          SwissConfigSection(
+            participantCount: draft.maxParticipants,
+            rounds: swissRounds,
+            onRoundsChanged: onSwissRoundsChanged,
           ),
-          // T10: the Schoch-rounds slider drives both the Swiss-System and
-          // the Schoch format (their pairing engine shares the round count).
-          if ((f == TournamentFormat.swiss || f == TournamentFormat.schoch) &&
-              draft.format == f)
-            SwissConfigSection(
-              participantCount: draft.maxParticipants,
-              rounds: swissRounds,
-              onRoundsChanged: onSwissRoundsChanged,
-            ),
-        ],
         const SizedBox(height: KubbTokens.space5),
-        _NumberStepper(
+        // ---- KO axis (Kein KO | Single-Out | Double-Out) ----
+        Text(
+          l10n.tournamentWizardKoSystemLabel,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.4,
+            color: tokens.fgMuted,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        _OptionRow(
+          selected: draft.koType == KoType.none,
+          label: l10n.tournamentWizardKoSystemNone,
+          description: l10n.tournamentWizardKoSystemNoneHint,
+          onTap: () => onKoType(KoType.none),
+        ),
+        _OptionRow(
+          selected: draft.koType == KoType.singleOut,
+          label: l10n.tournamentWizardKoSystemSingle,
+          description: l10n.tournamentWizardKoSystemSingleHint,
+          onTap: () => onKoType(KoType.singleOut),
+        ),
+        _OptionRow(
+          selected: draft.koType == KoType.doubleOut,
+          label: l10n.tournamentWizardKoSystemDouble,
+          description: l10n.tournamentWizardKoSystemDoubleHint,
+          onTap: () => onKoType(KoType.doubleOut),
+        ),
+        const SizedBox(height: KubbTokens.space5),
+        WizardNumberField(
           label: l10n.tournamentWizardSetsToWinLabel,
           value: draft.setsToWin,
           min: TournamentConfigDraft.setsToWinMin,
@@ -1354,7 +1477,7 @@ class _StepFormat extends StatelessWidget {
           onChanged: onSetsToWin,
         ),
         const SizedBox(height: KubbTokens.space4),
-        _NumberStepper(
+        WizardNumberField(
           label: l10n.tournamentWizardMaxSetsLabel,
           value: draft.maxSets,
           min: 2 * draft.setsToWin - 1,
@@ -1362,7 +1485,7 @@ class _StepFormat extends StatelessWidget {
           onChanged: onMaxSets,
         ),
         const SizedBox(height: KubbTokens.space4),
-        _NumberStepper(
+        WizardNumberField(
           label: l10n.tournamentWizardMatchTimeLabel,
           value: (draft.roundTimeSeconds / 60).round(),
           min: 5,
@@ -1383,7 +1506,7 @@ class _StepFormat extends StatelessWidget {
         ),
         if (draft.prelimTiebreakAfterSeconds != null) ...[
           const SizedBox(height: KubbTokens.space2),
-          _NumberStepper(
+          WizardNumberField(
             label: l10n.tournamentWizardTiebreakAfterLabel,
             value: (draft.prelimTiebreakAfterSeconds! / 60).round(),
             min: 1,
@@ -1392,7 +1515,7 @@ class _StepFormat extends StatelessWidget {
           ),
         ],
         const SizedBox(height: KubbTokens.space4),
-        _NumberStepper(
+        WizardNumberField(
           label: l10n.tournamentWizardBreakBetweenLabel,
           value: (draft.breakBetweenMatchesSeconds / 60).round(),
           min: 0,
@@ -1411,70 +1534,36 @@ class _StepFormat extends StatelessWidget {
     );
   }
 
-  static String _humanFormatLabel(TournamentFormat f) {
-    switch (f) {
-      case TournamentFormat.roundRobin:
-        return 'Round Robin';
-      case TournamentFormat.singleElimination:
-        return 'Single Elimination';
-      case TournamentFormat.schoch:
-        return 'Schoch';
-      case TournamentFormat.swiss:
-        return 'Schweizer System';
-      case TournamentFormat.roundRobinThenKo:
-        return 'Round Robin + KO';
-      case TournamentFormat.schochThenKo:
-        return 'Schoch + KO';
-      case TournamentFormat.swissThenKo:
-        return 'Schweizer + KO';
-    }
-  }
-
-  /// One-line German explanation of each format's flow (group phase vs
-  /// Schoch vs hybrid + KO), shown beneath the format label.
-  String _formatDescription(TournamentFormat f) {
-    switch (f) {
-      case TournamentFormat.roundRobin:
-        return 'Gruppenphase: jeder gegen jeden, Rangliste entscheidet.';
-      case TournamentFormat.singleElimination:
-        return 'Reines KO: Verlierer scheiden direkt aus.';
-      case TournamentFormat.schoch:
-        return 'Schoch-Paarung über mehrere Runden, dann Rangliste.';
-      case TournamentFormat.swiss:
-        return 'Schweizer System: Gleichstarke treffen aufeinander.';
-      case TournamentFormat.roundRobinThenKo:
-        return 'Gruppenphase, danach KO-Bracket der Besten.';
-      case TournamentFormat.schochThenKo:
-        return 'Schoch-Vorrunde, danach KO-Bracket der Besten.';
-      case TournamentFormat.swissThenKo:
-        return 'Schweizer Vorrunde, danach KO-Bracket der Besten.';
-    }
-  }
-
-  /// All formats with domain + server pairing/phase support are selectable.
-  /// `round_robin` / `schoch` / `swiss` run a single group/pairing stage,
-  /// `singleElimination` is a pure KO bracket, and the three `*_then_ko`
-  /// hybrids run a group/pairing stage followed by a KO bracket.
-  bool _formatEnabled(TournamentFormat f) => true;
 }
 
-class _FormatRow extends StatelessWidget {
-  const _FormatRow({
-    required this.format,
+/// Human-friendly German label for the selected format, derived from the
+/// two-axis (Vorrunde × KO) selection rather than the legacy enum. Used by
+/// the summary step.
+String _humanFormatLabel(VorrundeType vorrunde, KoType ko) {
+  final base = switch (vorrunde) {
+    VorrundeType.groupPhase => 'Gruppenphase',
+    VorrundeType.schoch => 'Schoch',
+  };
+  return switch (ko) {
+    KoType.none => base,
+    KoType.singleOut => '$base + Single-Out-K.-o.',
+    KoType.doubleOut => '$base + Double-Out-K.-o.',
+  };
+}
+
+/// Radio-style selectable card with a label + one-line description. Used by
+/// the two-axis format selector (Vorrunde / KO system).
+class _OptionRow extends StatelessWidget {
+  const _OptionRow({
     required this.selected,
-    required this.enabled,
     required this.label,
     required this.description,
-    required this.comingSoonLabel,
     required this.onTap,
   });
 
-  final TournamentFormat format;
   final bool selected;
-  final bool enabled;
   final String label;
   final String description;
-  final String comingSoonLabel;
   final VoidCallback onTap;
 
   @override
@@ -1484,7 +1573,7 @@ class _FormatRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: KubbTokens.space2),
       child: InkWell(
         borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-        onTap: enabled ? onTap : null,
+        onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(KubbTokens.space3),
           decoration: BoxDecoration(
@@ -1502,7 +1591,7 @@ class _FormatRow extends StatelessWidget {
                     ? Icons.radio_button_checked
                     : Icons.radio_button_unchecked,
                 size: 20,
-                color: enabled ? tokens.fg : tokens.fgSubtle,
+                color: tokens.fg,
               ),
               const SizedBox(width: KubbTokens.space3),
               Expanded(
@@ -1514,7 +1603,7 @@ class _FormatRow extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: enabled ? tokens.fg : tokens.fgSubtle,
+                        color: tokens.fg,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -1522,32 +1611,12 @@ class _FormatRow extends StatelessWidget {
                       description,
                       style: TextStyle(
                         fontSize: 11,
-                        color: enabled ? tokens.fgMuted : tokens.fgSubtle,
+                        color: tokens.fgMuted,
                       ),
                     ),
                   ],
                 ),
               ),
-              if (!enabled)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: KubbTokens.space2,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: tokens.line,
-                    borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-                  ),
-                  child: Text(
-                    comingSoonLabel,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: tokens.fgMuted,
-                      letterSpacing: 0.4,
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
@@ -1593,7 +1662,7 @@ class _StepSummary extends StatelessWidget {
           _summaryRow(
             tokens,
             l10n.tournamentWizardFormatLabel,
-            _StepFormat._humanFormatLabel(draft.format),
+            _humanFormatLabel(draft.vorrundeType, draft.koType),
           ),
           _summaryRow(
             tokens,
@@ -1649,111 +1718,6 @@ class _StepSummary extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _NumberStepper extends StatelessWidget {
-  const _NumberStepper({
-    required this.label,
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.onChanged,
-  });
-
-  final String label;
-  final int value;
-  final int min;
-  final int max;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final canDec = value > min;
-    final canInc = value < max;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: tokens.fgMuted,
-            letterSpacing: 0.4,
-          ),
-        ),
-        const SizedBox(height: KubbTokens.space2),
-        Row(
-          children: [
-            _StepButton(
-              icon: Icons.remove,
-              onPressed: canDec ? () => onChanged(value - 1) : null,
-            ),
-            const SizedBox(width: KubbTokens.space2),
-            Expanded(
-              child: Container(
-                height: 56,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: tokens.bgRaised,
-                  border: Border.all(color: tokens.lineStrong, width: 1.5),
-                  borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-                ),
-                child: Text(
-                  '$value',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: tokens.fg,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: KubbTokens.space2),
-            _StepButton(
-              icon: Icons.add,
-              onPressed: canInc ? () => onChanged(value + 1) : null,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _StepButton extends StatelessWidget {
-  const _StepButton({required this.icon, required this.onPressed});
-
-  final IconData icon;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return SizedBox(
-      width: 56,
-      height: 56,
-      child: Material(
-        color: tokens.bgRaised,
-        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-          onTap: onPressed,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-              border: Border.all(color: tokens.line, width: 1.5),
-            ),
-            child: Icon(
-              icon,
-              color: onPressed == null ? tokens.fgSubtle : tokens.fg,
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -1879,6 +1843,7 @@ class _PitchPlanSectionState extends State<_PitchPlanSection> {
                     _FieldLabel(l10n.tournamentWizardPitchRangeFrom),
                     const SizedBox(height: KubbTokens.space2),
                     _PlainTextField(
+                      key: const Key('wizardPitchRangeFromField'),
                       controller: _fromCtrl,
                       keyboardType: TextInputType.number,
                       onChanged: (_) => _emit(),
@@ -1894,6 +1859,7 @@ class _PitchPlanSectionState extends State<_PitchPlanSection> {
                     _FieldLabel(l10n.tournamentWizardPitchRangeTo),
                     const SizedBox(height: KubbTokens.space2),
                     _PlainTextField(
+                      key: const Key('wizardPitchRangeToField'),
                       controller: _toCtrl,
                       keyboardType: TextInputType.number,
                       onChanged: (_) => _emit(),

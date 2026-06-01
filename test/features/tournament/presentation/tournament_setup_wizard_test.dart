@@ -21,6 +21,12 @@ class _FakeTournamentRemote implements TournamentRemote {
   int callCount = 0;
   bool failNext = false;
 
+  // P7 edit-after-publish capture.
+  TournamentId? updatedId;
+  String? updatedDisplayName;
+  Map<String, Object?>? updatedSetup;
+  int updateCallCount = 0;
+
   @override
   Future<TournamentId> createTournament({
     required String displayName,
@@ -43,6 +49,28 @@ class _FakeTournamentRemote implements TournamentRemote {
     createdTeamSize = teamSize;
     createdSetup = setup;
     return const TournamentId('t-fake-1');
+  }
+
+  @override
+  Future<void> updateTournament({
+    required TournamentId id,
+    required String displayName,
+    required int teamSize,
+    required int minParticipants,
+    required int maxParticipants,
+    required TournamentFormat format,
+    required Map<String, Object?> matchFormatConfig,
+    required List<String> tiebreakerOrder,
+    Map<String, Object?> setup = const <String, Object?>{},
+  }) async {
+    updateCallCount += 1;
+    if (failNext) {
+      failNext = false;
+      throw StateError('boom');
+    }
+    updatedId = id;
+    updatedDisplayName = displayName;
+    updatedSetup = setup;
   }
 
   @override
@@ -235,6 +263,7 @@ class _KoSeededController extends TournamentConfigController {
   @override
   TournamentConfigDraft build() => const TournamentConfigDraft(
         format: TournamentFormat.roundRobinThenKo,
+        koType: KoType.singleOut,
       );
 }
 
@@ -269,6 +298,57 @@ Future<_FakeTournamentRemote> _pumpWizard(
       overrides: <Object>[
         tournamentRemoteProvider.overrideWithValue(fake),
         ...extraOverrides,
+      ].cast(),
+      child: MaterialApp.router(
+        theme: KubbTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('de'),
+        routerConfig: router,
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  return fake;
+}
+
+/// Pumps the wizard in EDIT mode for [editId], pre-seeded from
+/// [initialDraft]. Mirrors [_pumpWizard] but constructs the wizard with
+/// the P7 edit parameters so submit routes through `updateTournament`.
+Future<_FakeTournamentRemote> _pumpEditWizard(
+  WidgetTester tester, {
+  required TournamentId editId,
+  required TournamentConfigDraft initialDraft,
+}) async {
+  tester.view.physicalSize = const Size(800, 1600);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+
+  final fake = _FakeTournamentRemote();
+  final router = GoRouter(
+    initialLocation: TournamentRoutes.edit(editId.value),
+    routes: [
+      GoRoute(
+        path: '/tournament/:id/edit',
+        builder: (_, _) => TournamentSetupWizard(editId: editId),
+      ),
+      GoRoute(
+        path: '${TournamentRoutes.detail}/:id',
+        builder: (_, state) => Scaffold(
+          body: Text('detail:${state.pathParameters['id']}'),
+        ),
+      ),
+    ],
+  );
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: <Object>[
+        tournamentRemoteProvider.overrideWithValue(fake),
+        tournamentConfigControllerProvider.overrideWith(
+          () => TournamentConfigController(initialDraft),
+        ),
       ].cast(),
       child: MaterialApp.router(
         theme: KubbTheme.light(),
@@ -368,19 +448,22 @@ void main() {
   });
 
   testWidgets(
-      'selecting Schoch keeps the 4-step group flow and shows the rounds slider',
+      'selecting Schoch Vorrunde without KO keeps the 4-step group flow '
+      'and shows the rounds slider',
       (tester) async {
     final fake = await _pumpWizard(tester);
     await _typeName(tester, 'Schoch Cup');
     await _tapNext(tester); // -> participants
     await _tapNext(tester); // -> format
 
+    // Pick the Schoch Vorrunde axis (KO stays at "Kein K.-o.").
     await tester.tap(find.text('Schoch'));
     await tester.pumpAndSettle();
 
-    // Pure Schoch is a single-stage group format: no league/pool/ko steps.
+    // Schoch Vorrunde without a KO stage is a single-stage group format:
+    // no league/pool/ko steps.
     expect(find.text('Schritt 3 von 4'), findsOneWidget);
-    // The shared Schoch/Swiss rounds slider surfaces for Schoch too.
+    // The shared Schoch/Swiss rounds slider surfaces for the Schoch axis.
     expect(find.byType(Slider), findsOneWidget);
 
     await _tapNext(tester); // -> summary
@@ -388,21 +471,27 @@ void main() {
 
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
     await tester.pumpAndSettle();
-    expect(fake.createdFormat, TournamentFormat.schoch);
+    // Schoch + none derives to the Swiss-System legacy format (the server
+    // routes swiss == schoch pairing).
+    expect(fake.createdFormat, TournamentFormat.swiss);
   });
 
   testWidgets(
-      'selecting Schweizer + KO reaches league + pool + ko + summary steps',
+      'selecting Schoch Vorrunde + Single-Out KO reaches league + pool + ko '
+      '+ summary steps',
       (tester) async {
     final fake = await _pumpWizard(tester);
     await _typeName(tester, 'Hybrid Cup');
     await _tapNext(tester); // -> participants
     await _tapNext(tester); // -> format
 
-    await tester.tap(find.text('Schweizer + KO'));
+    // Two-axis selection: Schoch Vorrunde + Single-Out KO.
+    await tester.tap(find.text('Schoch'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Single-Out'));
     await tester.pumpAndSettle();
 
-    // Hybrid format unlocks league + pool + ko -> 7 total steps.
+    // A KO stage unlocks league + pool + ko -> 7 total steps.
     expect(find.text('Schritt 3 von 7'), findsOneWidget);
     await _tapNext(tester); // -> league
     expect(find.text('Schritt 4 von 7'), findsOneWidget);
@@ -459,22 +548,82 @@ void main() {
     expect(fake.createdSetup?['league_categories'], contains('A'));
   });
 
+  testWidgets(
+      'club picker lists only the clubs the caller may manage, plus the '
+      'no-club option', (tester) async {
+    await _pumpWizard(
+      tester,
+      extraOverrides: <Object>[
+        manageableClubsProvider.overrideWith(
+          (_) async => const <ManageableClub>[
+            (id: 'c-1', name: 'Kubb Club Aarau'),
+            (id: 'c-2', name: 'Kubb Club Bern'),
+          ],
+        ),
+      ],
+    );
+
+    // Open the dropdown; both manageable clubs and the no-club option show.
+    await tester.tap(find.byKey(const Key('wizardClubPicker')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Kubb Club Aarau'), findsWidgets);
+    expect(find.text('Kubb Club Bern'), findsWidgets);
+    expect(find.text('Kein Verein (persönlich)'), findsWidgets);
+    // A club the caller does NOT manage is never offered.
+    expect(find.text('Kubb Club Zürich'), findsNothing);
+  });
+
+  testWidgets('selecting an organizing club flows club_id into the create call',
+      (tester) async {
+    final fake = await _pumpWizard(
+      tester,
+      extraOverrides: <Object>[
+        manageableClubsProvider.overrideWith(
+          (_) async => const <ManageableClub>[
+            (id: 'c-1', name: 'Kubb Club Aarau'),
+          ],
+        ),
+      ],
+    );
+    await _typeName(tester, 'Vereins-Cup');
+
+    await tester.tap(find.byKey(const Key('wizardClubPicker')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Kubb Club Aarau').last);
+    await tester.pumpAndSettle();
+
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> format
+    await _tapNext(tester); // -> summary
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
+    await tester.pumpAndSettle();
+
+    expect(fake.createdSetup?['club_id'], 'c-1');
+  });
+
   testWidgets('team size and pitch range flow into the create call',
       (tester) async {
     final fake = await _pumpWizard(tester);
     await _typeName(tester, 'Cup');
     await _tapNext(tester); // -> participants
 
-    // Team size stepper is the first stepper on the participants step.
-    await tester.tap(find.byIcon(Icons.add).first);
+    // Team-size is the first numeric field on the participants step; type 2.
+    await tester.enterText(find.byType(TextField).first, '2');
     await tester.pumpAndSettle();
 
     await _tapNext(tester); // -> format
 
-    // Range mode is the default; the first two text fields are von/bis.
-    final fields = find.byType(TextField);
-    await tester.enterText(fields.at(0), '10');
-    await tester.enterText(fields.at(1), '20');
+    // Range mode is the default; target the pitch von/bis fields by key.
+    await tester.enterText(
+      find.byKey(const Key('wizardPitchRangeFromField')),
+      '10',
+    );
+    await tester.enterText(
+      find.byKey(const Key('wizardPitchRangeToField')),
+      '20',
+    );
     await tester.pumpAndSettle();
 
     await _tapNext(tester); // -> summary
@@ -487,5 +636,40 @@ void main() {
     expect(pitch!['mode'], 'range');
     expect(pitch['range_from'], 10);
     expect(pitch['range_to'], 20);
+  });
+
+  testWidgets('edit mode pre-fills the name and submits via updateTournament',
+      (tester) async {
+    const editId = TournamentId('t-edit-1');
+    const initial = TournamentConfigDraft(displayName: 'Alt-Name');
+    final fake = await _pumpEditWizard(
+      tester,
+      editId: editId,
+      initialDraft: initial,
+    );
+
+    // EDIT mode: app-bar title + save button reflect editing, and the
+    // name field is pre-filled from the initial draft.
+    expect(find.text('Turnier bearbeiten'), findsOneWidget);
+    expect(find.text('Alt-Name'), findsOneWidget);
+
+    // Change the name, then walk to the summary and save.
+    await _typeName(tester, 'Neuer-Name');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> format
+    await _tapNext(tester); // -> summary
+
+    await tester.tap(
+      find.widgetWithText(FilledButton, 'Änderungen speichern'),
+    );
+    await tester.pumpAndSettle();
+
+    // create must NOT be called; update must carry the changed name + id.
+    expect(fake.callCount, 0);
+    expect(fake.updateCallCount, 1);
+    expect(fake.updatedId, editId);
+    expect(fake.updatedDisplayName, 'Neuer-Name');
+    expect(fake.updatedSetup, isNotNull);
+    expect(find.text('detail:t-edit-1'), findsOneWidget);
   });
 }

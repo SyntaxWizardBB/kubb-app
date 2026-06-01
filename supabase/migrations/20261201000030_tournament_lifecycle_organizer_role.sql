@@ -1,175 +1,517 @@
--- Tournament feature — P6 "TournierStart": in-app go-live notifications.
+-- Tournament feature — extend lifecycle/edit authority beyond the creator.
 --
--- When a tournament goes live (tournament_start /
--- tournament_start_pool_phase / tournament_start_ko_phase) and when a new
--- Swiss/Schoch round is materialised (tournament_pair_round), every
--- participant receives an in-app inbox message so the players know their
--- pitch is ready and they may start. This follows the existing in-app
--- inbox pattern (NO push provider, NO Firebase, NO new dependency) used
--- by the team flows (20260901000011_team_edit_and_notify.sql §3) and the
--- admin inbox (20260504000011_mnemonic_admin_inbox.sql §3).
+-- USER SPEC: the organizer role and the club owner/admin must be able to
+-- edit a tournament after publishing AND drive its lifecycle (publish,
+-- open/close registration, start, finalize), not just the creator.
 --
--- ====================== AUTHORITATIVE-BODY NOTE =======================
--- The four hooked RPCs each have a LONG chain of CREATE OR REPLACE
--- migrations. This file re-states their CURRENT (latest) bodies VERBATIM
--- and adds ONLY the participant-notify call, marked GO-LIVE-NOTIFY.
--- Latest bodies cross-checked against the on-disk migrations:
---   * tournament_start(uuid)
---       — 20261201000003_tournament_assign_pitches.sql §3
---         (round_robin / swiss-round-1 / hybrid-delegate + PITCH-PLAN).
---   * tournament_start_pool_phase(uuid, jsonb)
---       — 20261201000003 §4 (+ PITCH-PLAN).
---   * tournament_pair_round(uuid, text, jsonb)
---       — 20261201000005_pair_round_progression_gate.sql
---         (PROGRESSION-GATE + PITCH-PLAN, superseding 20261201000003 §5).
---   * tournament_start_ko_phase(uuid, jsonb)
---       — 20261201000003 §6 (single- + double-elimination, per-round
---         PITCH-PLAN loop, superseding 20261101000002 / 20260615000010 /
---         20260601000015).
--- This migration's timestamp (20261201000010) sorts AFTER all of the
--- above, so its definitions win at apply-time. If ANY of those four RPCs
--- is replaced again before this lands, re-base this file onto the newer
--- body (see RISKS).
+-- Until now every lifecycle/update RPC hard-gated on `created_by = v_caller`.
+-- This migration introduces a single SECURITY-DEFINER helper
+-- `public.tournament_caller_is_organizer()` that captures the same two role
+-- signals the client ORs together (lib/.../tournament_providers.dart
+-- `canManageTournamentsProvider`):
+--   1. the profile organizer flag (`user_profiles.is_organizer`, NOT false), and
+--   2. owner/admin/organizer of ANY active club (mirrors
+--      `club_caller_can_publish()`, 20260901000016 §9).
+-- and re-creates the lifecycle/update RPCs so each authorises
+--   created_by = v_caller  OR  tournament_caller_is_organizer()
+-- while keeping the creator's behaviour byte-for-byte identical.
+--
+-- ============================ RISK / SCOPE ============================
+-- There is NO `tournaments.club_id` link in the schema, so authority is a
+-- GLOBAL capability ("may this person manage tournaments at all"), not a
+-- per-tournament club-ownership check. Consequences, by design and matching
+-- the client gate the task requested:
+--   * `user_profiles.is_organizer` DEFAULTs true, so in practice almost any
+--     authenticated user with a profile passes the helper today. This is the
+--     same coarse capability the create/publish flows already rely on. When a
+--     real verification flow tightens the default (Roadmap B10) and/or a
+--     `tournaments.club_id` FK + a per-tournament `tournament_caller_can_manage`
+--     helper are added, ONLY the body of `tournament_caller_is_organizer()`
+--     (or the single auth predicate) needs to change — call sites stay put.
+--   * A role holder who is NOT the creator can now publish/open/close/start/
+--     finalize/abort/edit ANY tournament. This is the explicit ask; revisit
+--     once the per-tournament club link exists.
+--
+-- ===================== AUTHORITATIVE-BODY NOTE ========================
+-- The four start/round RPCs (tournament_start, tournament_start_pool_phase,
+-- tournament_pair_round, tournament_start_ko_phase) carry long CREATE OR
+-- REPLACE chains. Their bodies below are copied VERBATIM from their latest
+-- on-disk definition — 20261201000010_tournament_golive_inbox.sql (which
+-- itself re-based onto 20261201000003 / 20261201000005) — with the SINGLE
+-- change marked `-- ORGANIZER-ROLE` per function: the `created_by`-only
+-- authorisation is widened to `created_by OR tournament_caller_is_organizer`.
+-- This file's timestamp (20261201000030) sorts AFTER all of those, so these
+-- definitions win at apply-time. If ANY of these RPCs is replaced again
+-- before this lands, re-base this file onto the newer body.
+--
+-- tournament_publish / open_registration / close_registration / finalize /
+-- abort are still on their M1 bodies (20260525000002); tournament_update is
+-- from 20261201000020. All re-stated here with the same single gate change.
 --
 -- ============================ DEPENDENCIES ============================
--- Tables read:
---   * public.tournaments(id, display_name, created_by, status, format,
---                        pool_phase_config, started_at, pitch_plan,
---                        ko_config, bracket_type)
---       — 20260525000001_tournament_schema.sql,
---         20261001000001_tournament_setup_fields.sql (pool_phase_config,
---         pitch_plan), 20260601000010_tournament_ko_phase.sql (ko_config),
---         20261101000001_double_elim_phase.sql (bracket_type).
---   * public.tournament_participants(id, tournament_id, user_id, team_id,
---                        registration_status, registered_at, seed,
---                        group_label)
---       — 20260525000001, 20260615000005 (team_id), 20260615000009
---         (group_label).
---   * public.tournament_roster_slots(participant_id, member_user_id,
---                        replaced_at)
---       — 20260615000005_tournament_team_roster.sql §2.
---   * public.tournament_matches(...) — round / phase / pitch lookups;
---       20260525000001 + KO/pool/DE extensions.
---   * public.tournament_seeding_overrides — 20260601000011.
--- Tables written:
---   * public.user_inbox_messages(user_id, kind, subject, body,
---                        action_payload)
---       — 20260504000011_mnemonic_admin_inbox.sql §3; kind CHECK extended
---         here (§0).
--- Functions called (UNCHANGED, must already exist):
---   * public._tournament_compute_pools(jsonb, jsonb)           — 20260615000009
---   * public._tournament_compute_pool_cut(uuid, text, int)     — 20260615000009
---   * public._tournament_compute_ko_bracket(jsonb, boolean)    — 20260601000014
---   * public._tournament_compute_de_bracket(jsonb, boolean)    — 20261101000002
---   * public._tournament_assign_pitches(uuid, smallint)        — 20261201000003
---   * public.validate_swiss_pairing(uuid, jsonb)               — 20260801000001
--- Function NEW: public._tournament_notify_participants(uuid, text, text,
---   text, jsonb) RETURNS int.
+-- Reads: public.user_profiles(is_organizer) (20260901000003),
+--        public.club_memberships(user_id, roles, removed_at) (20260901000012).
+-- Helpers called UNCHANGED (must already exist):
+--   public.tournament_start_pool_phase, public._tournament_compute_pools,
+--   public._tournament_compute_pool_cut, public._tournament_compute_ko_bracket,
+--   public._tournament_compute_de_bracket, public._tournament_assign_pitches,
+--   public.validate_swiss_pairing, public._tournament_notify_participants.
 -- =====================================================================
 
 
--- ---- 0. Extend the inbox kind CHECK ----------------------------------
--- Mirrors 20260615000004_team_inbox_types.sql: drop + re-add with the two
--- new tournament kinds appended to the full vocabulary.
+-- ---- 0. tournament_caller_is_organizer -------------------------------
+-- True when the caller holds a global organizer capability: profile
+-- is_organizer (NOT explicitly false) OR owner/admin/organizer of any
+-- active club. SECURITY DEFINER + STABLE; reads only role tables.
 
-ALTER TABLE public.user_inbox_messages
-  DROP CONSTRAINT IF EXISTS user_inbox_messages_kind_check;
+CREATE OR REPLACE FUNCTION public.tournament_caller_is_organizer()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public, auth
+AS $$
+  SELECT
+    -- Profile organizer flag: default true, blocks only an explicit false.
+    NOT EXISTS (
+      SELECT 1 FROM public.user_profiles up
+       WHERE up.user_id = auth.uid()
+         AND up.is_organizer = false
+    )
+    OR
+    -- Club owner/admin/organizer of any active membership.
+    EXISTS (
+      SELECT 1 FROM public.club_memberships cm
+       WHERE cm.user_id = auth.uid()
+         AND cm.removed_at IS NULL
+         AND (cm.roles && ARRAY['owner','admin','organizer']::text[])
+    );
+$$;
 
-ALTER TABLE public.user_inbox_messages
-  ADD CONSTRAINT user_inbox_messages_kind_check
-    CHECK (kind IN (
-      'notice',
-      'verification_request',
-      'system',
-      'team_invitation',
-      'team_member_removed',
-      'team_dissolved',
-      -- Club kinds (P7, 20260901000013/016) — must stay in the vocabulary so
-      -- this re-add doesn't strip them and break existing club inbox rows.
-      'club_invitation',
-      'club_member_removed',
-      'club_join_request',
-      'tournament_started',
-      'tournament_round'
-    ));
+GRANT EXECUTE ON FUNCTION public.tournament_caller_is_organizer()
+  TO authenticated;
+
+COMMENT ON FUNCTION public.tournament_caller_is_organizer() IS
+  'Global organizer capability: profile is_organizer (not false) OR '
+  'owner/admin/organizer of any active club. Used by the tournament '
+  'lifecycle/update RPCs to widen authority beyond created_by. See '
+  '20261201000030_tournament_lifecycle_organizer_role.sql.';
 
 
--- ---- 1. _tournament_notify_participants ------------------------------
--- Fan-out one inbox row per DISTINCT app-user behind the tournament's
--- confirmed participants. Resolution unions solo participant.user_id with
--- every OPEN team roster slot's member_user_id (guests have no app user
--- and drop out). Returns the number of rows inserted. SECURITY DEFINER so
--- the direct INSERT bypasses the (intentionally absent) INSERT policy on
--- user_inbox_messages — same trust path as team_invitation_respond, which
--- already inserts inbox rows directly (20260901000011 §3).
+-- ---- 1. tournament_publish -------------------------------------------
 
-CREATE OR REPLACE FUNCTION public._tournament_notify_participants(
-  p_tournament_id uuid,
-  p_kind          text,
-  p_subject       text,
-  p_body          text,
-  p_payload       jsonb DEFAULT NULL
-)
-RETURNS int
+CREATE OR REPLACE FUNCTION public.tournament_publish(p_tournament_id uuid)
+RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, auth
 AS $$
 DECLARE
-  v_inserted int := 0;
+  v_caller     uuid;
+  v_status     text;
+  v_created_by uuid;
 BEGIN
-  IF p_kind NOT IN ('tournament_started', 'tournament_round') THEN
-    RAISE EXCEPTION 'invalid tournament inbox kind: %', p_kind
-      USING ERRCODE = '22023';
+  v_caller := auth.uid();
+  IF v_caller IS NULL THEN
+    RAISE EXCEPTION 'authentication required' USING ERRCODE = '42501';
   END IF;
 
-  WITH recipients AS (
-    -- Solo participants: the participant row itself carries the user.
-    SELECT p.user_id AS user_id
-      FROM public.tournament_participants p
-     WHERE p.tournament_id = p_tournament_id
-       AND p.registration_status = 'confirmed'
-       AND p.user_id IS NOT NULL
-    UNION
-    -- Team participants: every open roster slot's member. Guest slots
-    -- (member_user_id NULL) carry no app user and drop out naturally.
-    SELECT s.member_user_id AS user_id
-      FROM public.tournament_participants p
-      JOIN public.tournament_roster_slots s
-        ON s.participant_id = p.id
-     WHERE p.tournament_id = p_tournament_id
-       AND p.registration_status = 'confirmed'
-       AND p.team_id IS NOT NULL
-       AND s.replaced_at IS NULL
-       AND s.member_user_id IS NOT NULL
-  ),
-  ins AS (
-    INSERT INTO public.user_inbox_messages(
-        user_id, kind, subject, body, action_payload)
-    SELECT DISTINCT r.user_id, p_kind, p_subject, p_body, p_payload
-      FROM recipients r
-      WHERE r.user_id IS NOT NULL
-    RETURNING 1
-  )
-  SELECT count(*) INTO v_inserted FROM ins;
+  SELECT status, created_by INTO v_status, v_created_by
+    FROM public.tournaments
+    WHERE id = p_tournament_id
+    FOR UPDATE;
 
-  RETURN v_inserted;
+  -- ORGANIZER-ROLE: creator OR global organizer capability.
+  IF v_created_by IS NULL
+     OR (v_created_by <> v_caller
+         AND NOT public.tournament_caller_is_organizer()) THEN
+    RAISE EXCEPTION 'tournament not found or not authorised' USING ERRCODE = '42501';
+  END IF;
+  IF v_status <> 'draft' THEN
+    RAISE EXCEPTION 'tournament must be in status draft' USING ERRCODE = '22023';
+  END IF;
+
+  UPDATE public.tournaments
+    SET status = 'published', published_at = now()
+    WHERE id = p_tournament_id;
+
+  INSERT INTO public.tournament_audit_events(tournament_id, kind, actor_user_id, payload)
+    VALUES (p_tournament_id, 'published', v_caller, '{}'::jsonb);
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public._tournament_notify_participants(uuid, text, text, text, jsonb) FROM public;
--- No role needs direct EXECUTE: the wrapping RPCs are SECURITY DEFINER and
--- call it internally (mirrors admin_inbox_send being service-role only).
 
-COMMENT ON FUNCTION public._tournament_notify_participants(uuid, text, text, text, jsonb) IS
-  'Fan-out one user_inbox_messages row per distinct confirmed-participant '
-  'user (solo user_id + open team roster member_user_id; guests skipped). '
-  'SECURITY DEFINER. Used by tournament go-live / round-publish RPCs. '
-  'See 20261201000010_tournament_golive_inbox.sql.';
+-- ---- 2. tournament_open_registration ---------------------------------
+
+CREATE OR REPLACE FUNCTION public.tournament_open_registration(p_tournament_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_caller         uuid;
+  v_status         text;
+  v_created_by     uuid;
+  v_existing_opens timestamptz;
+BEGIN
+  v_caller := auth.uid();
+  IF v_caller IS NULL THEN
+    RAISE EXCEPTION 'authentication required' USING ERRCODE = '42501';
+  END IF;
+
+  SELECT status, created_by, registration_opens_at
+    INTO v_status, v_created_by, v_existing_opens
+    FROM public.tournaments
+    WHERE id = p_tournament_id
+    FOR UPDATE;
+
+  -- ORGANIZER-ROLE: creator OR global organizer capability.
+  IF v_created_by IS NULL
+     OR (v_created_by <> v_caller
+         AND NOT public.tournament_caller_is_organizer()) THEN
+    RAISE EXCEPTION 'tournament not found or not authorised' USING ERRCODE = '42501';
+  END IF;
+  IF v_status NOT IN ('published', 'registration_closed') THEN
+    RAISE EXCEPTION 'tournament must be in status published or registration_closed'
+      USING ERRCODE = '22023';
+  END IF;
+
+  UPDATE public.tournaments
+    SET status                = 'registration_open',
+        registration_opens_at = coalesce(v_existing_opens, now())
+    WHERE id = p_tournament_id;
+
+  INSERT INTO public.tournament_audit_events(tournament_id, kind, actor_user_id, payload)
+    VALUES (p_tournament_id, 'registration_opened', v_caller, '{}'::jsonb);
+END;
+$$;
+
+
+-- ---- 3. tournament_close_registration --------------------------------
+
+CREATE OR REPLACE FUNCTION public.tournament_close_registration(p_tournament_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_caller     uuid;
+  v_status     text;
+  v_created_by uuid;
+BEGIN
+  v_caller := auth.uid();
+  IF v_caller IS NULL THEN
+    RAISE EXCEPTION 'authentication required' USING ERRCODE = '42501';
+  END IF;
+
+  SELECT status, created_by INTO v_status, v_created_by
+    FROM public.tournaments
+    WHERE id = p_tournament_id
+    FOR UPDATE;
+
+  -- ORGANIZER-ROLE: creator OR global organizer capability.
+  IF v_created_by IS NULL
+     OR (v_created_by <> v_caller
+         AND NOT public.tournament_caller_is_organizer()) THEN
+    RAISE EXCEPTION 'tournament not found or not authorised' USING ERRCODE = '42501';
+  END IF;
+  IF v_status <> 'registration_open' THEN
+    RAISE EXCEPTION 'tournament must be in status registration_open'
+      USING ERRCODE = '22023';
+  END IF;
+
+  UPDATE public.tournaments
+    SET status                 = 'registration_closed',
+        registration_closes_at = now()
+    WHERE id = p_tournament_id;
+
+  INSERT INTO public.tournament_audit_events(tournament_id, kind, actor_user_id, payload)
+    VALUES (p_tournament_id, 'registration_closed', v_caller, '{}'::jsonb);
+END;
+$$;
+
+
+-- ---- 4. tournament_finalize ------------------------------------------
+
+CREATE OR REPLACE FUNCTION public.tournament_finalize(p_tournament_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_caller     uuid;
+  v_status     text;
+  v_created_by uuid;
+  v_total      int;
+  v_terminal   int;
+BEGIN
+  v_caller := auth.uid();
+  IF v_caller IS NULL THEN
+    RAISE EXCEPTION 'authentication required' USING ERRCODE = '42501';
+  END IF;
+
+  SELECT status, created_by INTO v_status, v_created_by
+    FROM public.tournaments
+    WHERE id = p_tournament_id
+    FOR UPDATE;
+
+  -- ORGANIZER-ROLE: creator OR global organizer capability.
+  IF v_created_by IS NULL
+     OR (v_created_by <> v_caller
+         AND NOT public.tournament_caller_is_organizer()) THEN
+    RAISE EXCEPTION 'tournament not found or not authorised' USING ERRCODE = '42501';
+  END IF;
+  IF v_status <> 'live' THEN
+    RAISE EXCEPTION 'tournament must be in status live' USING ERRCODE = '22023';
+  END IF;
+
+  SELECT count(*) INTO v_total
+    FROM public.tournament_matches WHERE tournament_id = p_tournament_id;
+
+  SELECT count(*) INTO v_terminal
+    FROM public.tournament_matches
+    WHERE tournament_id = p_tournament_id
+      AND status IN ('finalized', 'overridden', 'voided');
+
+  IF v_total = 0 THEN
+    RAISE EXCEPTION 'tournament has no matches to finalize' USING ERRCODE = '22023';
+  END IF;
+  IF v_terminal < v_total THEN
+    RAISE EXCEPTION 'cannot finalize: % of % matches are not yet terminal',
+      v_total - v_terminal, v_total USING ERRCODE = '22023';
+  END IF;
+
+  UPDATE public.tournaments
+    SET status = 'finalized', completed_at = now()
+    WHERE id = p_tournament_id;
+
+  INSERT INTO public.tournament_audit_events(tournament_id, kind, actor_user_id, payload)
+    VALUES (
+      p_tournament_id,
+      'finalized',
+      v_caller,
+      jsonb_build_object('match_count', v_total)
+    );
+END;
+$$;
+
+
+-- ---- 5. tournament_abort ---------------------------------------------
+
+CREATE OR REPLACE FUNCTION public.tournament_abort(p_tournament_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_caller     uuid;
+  v_status     text;
+  v_created_by uuid;
+BEGIN
+  v_caller := auth.uid();
+  IF v_caller IS NULL THEN
+    RAISE EXCEPTION 'authentication required' USING ERRCODE = '42501';
+  END IF;
+
+  SELECT status, created_by INTO v_status, v_created_by
+    FROM public.tournaments
+    WHERE id = p_tournament_id
+    FOR UPDATE;
+
+  -- ORGANIZER-ROLE: creator OR global organizer capability.
+  IF v_created_by IS NULL
+     OR (v_created_by <> v_caller
+         AND NOT public.tournament_caller_is_organizer()) THEN
+    RAISE EXCEPTION 'tournament not found or not authorised' USING ERRCODE = '42501';
+  END IF;
+  IF v_status NOT IN (
+       'draft','published','registration_open','registration_closed','live') THEN
+    RAISE EXCEPTION 'tournament cannot be aborted in its current state'
+      USING ERRCODE = '22023';
+  END IF;
+
+  UPDATE public.tournaments
+    SET status = 'aborted', completed_at = now()
+    WHERE id = p_tournament_id;
+
+  INSERT INTO public.tournament_audit_events(tournament_id, kind, actor_user_id, payload)
+    VALUES (p_tournament_id, 'aborted', v_caller, '{}'::jsonb);
+END;
+$$;
+
+
+-- ---- 6. tournament_update --------------------------------------------
+-- Body copied from 20261201000020_tournament_update.sql with the single
+-- ORGANIZER-ROLE gate change.
+
+CREATE OR REPLACE FUNCTION public.tournament_update(
+  p_tournament_id       uuid,
+  p_display_name        text,
+  p_team_size           int,
+  p_min_participants    int,
+  p_max_participants    int,
+  p_format              text,
+  p_match_format_config jsonb,
+  p_tiebreaker_order    text[],
+  p_setup               jsonb DEFAULT '{}'::jsonb
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_caller     uuid;
+  v_status     text;
+  v_created_by uuid;
+  v_scoring    text;
+  v_setup      jsonb;
+BEGIN
+  v_caller := auth.uid();
+  IF v_caller IS NULL THEN
+    RAISE EXCEPTION 'authentication required' USING ERRCODE = '42501';
+  END IF;
+
+  SELECT status, created_by INTO v_status, v_created_by
+    FROM public.tournaments
+    WHERE id = p_tournament_id
+    FOR UPDATE;
+
+  -- ORGANIZER-ROLE: creator OR global organizer capability.
+  IF v_created_by IS NULL
+     OR (v_created_by <> v_caller
+         AND NOT public.tournament_caller_is_organizer()) THEN
+    RAISE EXCEPTION 'tournament not found or not authorised'
+      USING ERRCODE = '42501';
+  END IF;
+
+  -- Status gate: only pre-start tournaments may be edited.
+  IF v_status NOT IN (
+       'draft','published','registration_open','registration_closed') THEN
+    RAISE EXCEPTION 'tournament can only be edited before it goes live'
+      USING ERRCODE = '22023', HINT = 'TOURNAMENT_LOCKED';
+  END IF;
+
+  v_setup := coalesce(p_setup, '{}'::jsonb);
+  IF jsonb_typeof(v_setup) <> 'object' THEN
+    RAISE EXCEPTION 'setup must be a JSON object' USING ERRCODE = '22023';
+  END IF;
+
+  IF p_display_name IS NULL OR length(p_display_name) < 1
+     OR length(p_display_name) > 60 THEN
+    RAISE EXCEPTION 'display_name length must be 1..60' USING ERRCODE = '22023';
+  END IF;
+  IF p_team_size IS NULL OR p_team_size < 1 OR p_team_size > 6 THEN
+    RAISE EXCEPTION 'team_size must be 1..6' USING ERRCODE = '22023';
+  END IF;
+  IF p_min_participants IS NULL OR p_min_participants < 2 THEN
+    RAISE EXCEPTION 'min_participants must be >= 2' USING ERRCODE = '22023';
+  END IF;
+  IF p_max_participants IS NULL
+     OR p_max_participants < p_min_participants
+     OR p_max_participants > 200 THEN
+    RAISE EXCEPTION 'max_participants must be in [min_participants, 200]'
+      USING ERRCODE = '22023';
+  END IF;
+  IF p_format IS NULL OR p_format NOT IN (
+       'round_robin','single_elimination','round_robin_then_ko',
+       'schoch','swiss','schoch_then_ko','swiss_then_ko') THEN
+    RAISE EXCEPTION 'invalid format' USING ERRCODE = '22023';
+  END IF;
+  IF p_match_format_config IS NULL
+     OR jsonb_typeof(p_match_format_config) <> 'object' THEN
+    RAISE EXCEPTION 'match_format_config must be a JSON object'
+      USING ERRCODE = '22023';
+  END IF;
+  IF p_tiebreaker_order IS NULL
+     OR array_length(p_tiebreaker_order, 1) IS NULL THEN
+    RAISE EXCEPTION 'tiebreaker_order must be a non-empty array'
+      USING ERRCODE = '22023';
+  END IF;
+
+  v_scoring := coalesce(v_setup->>'scoring', 'ekc');
+  IF v_scoring NOT IN ('ekc','classic') THEN
+    RAISE EXCEPTION 'scoring must be ekc or classic' USING ERRCODE = '22023';
+  END IF;
+
+  UPDATE public.tournaments SET
+      display_name           = p_display_name,
+      team_size              = p_team_size::smallint,
+      min_participants       = p_min_participants::smallint,
+      max_participants       = p_max_participants::smallint,
+      format                 = p_format,
+      scoring                = v_scoring,
+      match_format           = p_match_format_config,
+      tiebreaker_order       = p_tiebreaker_order,
+      location               = v_setup->>'location',
+      venue_address          = v_setup->>'venue_address',
+      event_starts_at        = (v_setup->>'event_starts_at')::timestamptz,
+      checkin_until          = (v_setup->>'checkin_until')::timestamptz,
+      registration_closes_at = (v_setup->>'registration_closes_at')::timestamptz,
+      weather_note           = v_setup->>'weather_note',
+      info_food              = v_setup->>'info_food',
+      info_travel            = v_setup->>'info_travel',
+      info_accommodation     = v_setup->>'info_accommodation',
+      contact_name           = v_setup->>'contact_name',
+      contact_phone          = v_setup->>'contact_phone',
+      entry_fee_cents        = (v_setup->>'entry_fee_cents')::int,
+      currency               = coalesce(v_setup->>'currency', 'CHF'),
+      payment_methods        = coalesce(
+        array(SELECT jsonb_array_elements_text(v_setup->'payment_methods')),
+        '{}'::text[]),
+      rules_pdf_url          = v_setup->>'rules_pdf_url',
+      site_map_pdf_url       = v_setup->>'site_map_pdf_url',
+      league_categories      = coalesce(
+        array(SELECT jsonb_array_elements_text(v_setup->'league_categories')),
+        '{}'::text[]),
+      rule_variants          = coalesce(v_setup->'rule_variants', jsonb_build_object(
+        'sureshot', false, 'diggy', false,
+        'opening_rule', '2-4-6', 'strafkubb_off_baseline', true)),
+      ko_match_format        = v_setup->'ko_match_format',
+      ko_round_formats       = coalesce(v_setup->'ko_round_formats', '[]'::jsonb),
+      pitch_plan             = v_setup->'pitch_plan',
+      mighty_finisher_quali  = v_setup->'mighty_finisher_quali',
+      consolation_bracket    = v_setup->'consolation_bracket',
+      max_team_size          = (v_setup->>'max_team_size')::smallint,
+      bracket_type           = coalesce(v_setup->>'bracket_type', 'single_elimination'),
+      ko_matchup             = coalesce(v_setup->>'ko_matchup', 'seed_high_vs_low'),
+      ko_tiebreak_method     = coalesce(
+        v_setup->>'ko_tiebreak_method', 'classic_kingtoss_removal'),
+      pool_phase_config      = v_setup->'pool_phase_config',
+      ko_config              = v_setup->'ko_config'
+    WHERE id = p_tournament_id;
+
+  INSERT INTO public.tournament_audit_events(
+      tournament_id, kind, actor_user_id, payload)
+    VALUES (
+      p_tournament_id,
+      'updated',
+      v_caller,
+      jsonb_build_object(
+        'display_name',     p_display_name,
+        'team_size',        p_team_size,
+        'min_participants', p_min_participants,
+        'max_participants', p_max_participants,
+        'format',           p_format,
+        'scoring',          v_scoring,
+        'league_categories', coalesce(v_setup->'league_categories', '[]'::jsonb)
+      )
+    );
+
+  RETURN jsonb_build_object('tournament_id', p_tournament_id);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.tournament_update(
+  uuid, text, int, int, int, text, jsonb, text[], jsonb) TO authenticated;
 
 
 -- ====================================================================
--- 2. tournament_start — latest body (20261201000003 §3) + GO-LIVE-NOTIFY.
+-- 7. tournament_start — latest body (20261201000010 §2) + ORGANIZER-ROLE.
 -- ====================================================================
 
 CREATE OR REPLACE FUNCTION public.tournament_start(p_tournament_id uuid)
@@ -193,20 +535,24 @@ DECLARE
   v_b_idx          int;
   v_a_pid          uuid;
   v_b_pid          uuid;
-  v_name           text;   -- GO-LIVE-NOTIFY
+  v_name           text;
+  v_created_by     uuid;   -- ORGANIZER-ROLE
 BEGIN
   v_caller := auth.uid();
   IF v_caller IS NULL THEN
     RAISE EXCEPTION 'authentication required' USING ERRCODE = '42501';
   END IF;
 
-  SELECT status, format, pool_phase_config, display_name
-    INTO v_status, v_format, v_pool_config, v_name
+  SELECT status, format, pool_phase_config, display_name, created_by
+    INTO v_status, v_format, v_pool_config, v_name, v_created_by
     FROM public.tournaments
-    WHERE id = p_tournament_id AND created_by = v_caller
+    WHERE id = p_tournament_id
     FOR UPDATE;
 
-  IF v_status IS NULL THEN
+  -- ORGANIZER-ROLE: creator OR global organizer capability.
+  IF v_created_by IS NULL
+     OR (v_created_by <> v_caller
+         AND NOT public.tournament_caller_is_organizer()) THEN
     RAISE EXCEPTION 'tournament not found or not authorised' USING ERRCODE = '42501';
   END IF;
   IF v_status <> 'registration_closed' THEN
@@ -226,8 +572,6 @@ BEGIN
         USING ERRCODE = '22023';
     END IF;
 
-    -- tournament_start_pool_phase assigns pitches AND fires the participant
-    -- notification itself (see §3), so we do NOT notify again here.
     PERFORM public.tournament_start_pool_phase(p_tournament_id, v_pool_config);
 
     INSERT INTO public.tournament_audit_events(tournament_id, kind, actor_user_id, payload)
@@ -288,7 +632,6 @@ BEGIN
 
     DROP TABLE _tstart_slots;
 
-    -- PITCH-PLAN: assign pitch_number for round 1 (no-op if plan NULL).
     PERFORM public._tournament_assign_pitches(p_tournament_id, 1::smallint);
 
     UPDATE public.tournaments
@@ -305,7 +648,6 @@ BEGIN
           'round_count', 1,
           'match_count', v_match_count));
 
-    -- GO-LIVE-NOTIFY: tournament is live, fan-out to every participant.
     PERFORM public._tournament_notify_participants(
       p_tournament_id,
       'tournament_started',
@@ -359,8 +701,6 @@ BEGIN
       v_match_count := v_match_count + 1;
     END LOOP;
 
-    -- PITCH-PLAN: assign pitch_number for this round's matches once the
-    -- round is fully inserted (no-op if plan NULL).
     PERFORM public._tournament_assign_pitches(p_tournament_id, v_round::smallint);
 
     UPDATE _tstart_ring
@@ -388,7 +728,6 @@ BEGIN
         'round_count', v_round_count,
         'match_count', v_match_count));
 
-  -- GO-LIVE-NOTIFY: tournament is live, fan-out to every participant.
   PERFORM public._tournament_notify_participants(
     p_tournament_id,
     'tournament_started',
@@ -402,8 +741,9 @@ GRANT EXECUTE ON FUNCTION public.tournament_start(uuid) TO authenticated;
 
 
 -- ====================================================================
--- 3. tournament_start_pool_phase — latest body (20261201000003 §4)
---    + GO-LIVE-NOTIFY.
+-- 8. tournament_start_pool_phase — latest body (20261201000010 §3)
+--    + ORGANIZER-ROLE. tournament_start delegates here for hybrid
+--    formats, so the gate must match or organizer-started hybrids fail.
 -- ====================================================================
 
 CREATE OR REPLACE FUNCTION public.tournament_start_pool_phase(
@@ -424,7 +764,7 @@ DECLARE
   v_match_count   int := 0;
   v_existing      int;
   v_labels        text[];
-  v_name          text;   -- GO-LIVE-NOTIFY
+  v_name          text;
 BEGIN
   v_caller := auth.uid();
   IF v_caller IS NULL THEN
@@ -436,7 +776,10 @@ BEGIN
     WHERE id = p_tournament_id
     FOR UPDATE;
 
-  IF v_creator IS NULL OR v_creator IS DISTINCT FROM v_caller THEN
+  -- ORGANIZER-ROLE: creator OR global organizer capability.
+  IF v_creator IS NULL
+     OR (v_creator IS DISTINCT FROM v_caller
+         AND NOT public.tournament_caller_is_organizer()) THEN
     RAISE EXCEPTION 'NOT_ORGANIZER: tournament not found or not authorised'
       USING ERRCODE = '42501';
   END IF;
@@ -513,8 +856,6 @@ BEGIN
 
   GET DIAGNOSTICS v_match_count = ROW_COUNT;
 
-  -- PITCH-PLAN: pool round-robin uses round_number = 1 for all groups;
-  -- the helper partitions by group_label (no-op if plan NULL).
   PERFORM public._tournament_assign_pitches(p_tournament_id, 1::smallint);
 
   UPDATE public.tournaments
@@ -534,7 +875,6 @@ BEGIN
         'match_count',           v_match_count,
         'config',                p_config));
 
-  -- GO-LIVE-NOTIFY: pool phase live, fan-out to every participant.
   PERFORM public._tournament_notify_participants(
     p_tournament_id,
     'tournament_started',
@@ -555,8 +895,8 @@ GRANT EXECUTE ON FUNCTION public.tournament_start_pool_phase(uuid, jsonb)
 
 
 -- ====================================================================
--- 4. tournament_pair_round — latest body (20261201000005, with
---    PROGRESSION-GATE + PITCH-PLAN) + GO-LIVE-NOTIFY (per-round).
+-- 9. tournament_pair_round — latest body (20261201000010 §4)
+--    + ORGANIZER-ROLE.
 -- ====================================================================
 
 CREATE OR REPLACE FUNCTION public.tournament_pair_round(
@@ -575,9 +915,9 @@ DECLARE
   v_status        text;
   v_next_round    int;
   v_inserted      int := 0;
-  v_current_round int;      -- PROGRESSION-GATE
-  v_open_count    int;      -- PROGRESSION-GATE
-  v_name          text;     -- GO-LIVE-NOTIFY
+  v_current_round int;
+  v_open_count    int;
+  v_name          text;
 BEGIN
   v_caller := auth.uid();
   IF v_caller IS NULL THEN
@@ -592,22 +932,19 @@ BEGIN
   IF v_creator IS NULL THEN
     RAISE EXCEPTION 'tournament not found' USING ERRCODE = 'P0002';
   END IF;
-  IF v_creator <> v_caller THEN
+  -- ORGANIZER-ROLE: creator OR global organizer capability.
+  IF v_creator <> v_caller
+     AND NOT public.tournament_caller_is_organizer() THEN
     RAISE EXCEPTION 'not authorised' USING ERRCODE = '42501';
   END IF;
   IF v_status <> 'live' THEN
     RAISE EXCEPTION 'tournament must be in status live' USING ERRCODE = '22023';
   END IF;
 
-  -- Backward-compat: non-swiss strategies (or swiss_system without a
-  -- pairing payload) keep the original no-op behaviour.
   IF p_strategy IS DISTINCT FROM 'swiss_system' OR p_pairings IS NULL THEN
     RETURN;
   END IF;
 
-  -- ---- PROGRESSION-GATE ------------------------------------------------
-  -- Refuse to pair the next round while the CURRENT (latest) round still
-  -- has open matches. Terminal = finalized/overridden/voided.
   SELECT max(round_number) INTO v_current_round
     FROM public.tournament_matches
     WHERE tournament_id = p_tournament_id;
@@ -626,9 +963,7 @@ BEGIN
         USING ERRCODE = '22023';
     END IF;
   END IF;
-  -- ---- end PROGRESSION-GATE -------------------------------------------
 
-  -- Trust-boundary: validate the client-supplied pairing before any INSERT.
   PERFORM public.validate_swiss_pairing(p_tournament_id, p_pairings);
 
   SELECT coalesce(max(round_number), 0) + 1
@@ -653,8 +988,6 @@ BEGIN
   )
   SELECT count(*) INTO v_inserted FROM ins;
 
-  -- PITCH-PLAN: assign pitch_number for the freshly paired round (no-op
-  -- if plan NULL).
   PERFORM public._tournament_assign_pitches(p_tournament_id, v_next_round::smallint);
 
   INSERT INTO public.tournament_audit_events(
@@ -670,7 +1003,6 @@ BEGIN
       )
     );
 
-  -- GO-LIVE-NOTIFY: new round published — notify every participant.
   PERFORM public._tournament_notify_participants(
     p_tournament_id,
     'tournament_round',
@@ -686,19 +1018,10 @@ $$;
 REVOKE ALL ON FUNCTION public.tournament_pair_round(uuid, text, jsonb) FROM public;
 GRANT EXECUTE ON FUNCTION public.tournament_pair_round(uuid, text, jsonb) TO authenticated;
 
-COMMENT ON FUNCTION public.tournament_pair_round(uuid, text, jsonb) IS
-  'Swiss/Schoch next-round generator. Organizer-only, status=live. Gate: '
-  'refuses to pair the next round (ERRCODE 22023, MESSAGE round_not_complete) '
-  'while the latest round has any non-terminal match. Validates the '
-  'client-supplied pairing, inserts the round, assigns pitches and notifies '
-  'every participant via the in-app inbox. No-op for non-swiss strategies.';
-
 
 -- ====================================================================
--- 5. tournament_start_ko_phase — latest body (20261201000003 §6,
---    single- + double-elimination, per-round PITCH-PLAN) + GO-LIVE-NOTIFY.
---    KO go-live is a NEW round being published, so it uses the
---    'tournament_round' kind ('Neue Runde').
+-- 10. tournament_start_ko_phase — latest body (20261201000010 §5)
+--     + ORGANIZER-ROLE.
 -- ====================================================================
 
 CREATE OR REPLACE FUNCTION public.tournament_start_ko_phase(
@@ -729,8 +1052,8 @@ DECLARE
   v_pool_count        int;
   v_bracket_type      text;
   v_with_reset        boolean;
-  v_round             smallint;   -- PITCH-PLAN loop variable
-  v_name              text;       -- GO-LIVE-NOTIFY
+  v_round             smallint;
+  v_name              text;
 BEGIN
   v_caller := auth.uid();
   IF v_caller IS NULL THEN
@@ -745,7 +1068,10 @@ BEGIN
     WHERE id = p_tournament_id
     FOR UPDATE;
 
-  IF v_creator IS NULL OR v_creator IS DISTINCT FROM v_caller THEN
+  -- ORGANIZER-ROLE: creator OR global organizer capability.
+  IF v_creator IS NULL
+     OR (v_creator IS DISTINCT FROM v_caller
+         AND NOT public.tournament_caller_is_organizer()) THEN
     RAISE EXCEPTION 'NOT_ORGANIZER: tournament not found or not authorised'
       USING ERRCODE = '42501';
   END IF;
@@ -991,7 +1317,6 @@ BEGIN
 
   GET DIAGNOSTICS v_match_count = ROW_COUNT;
 
-  -- PITCH-PLAN: assign pitch_number for every round just inserted.
   FOR v_round IN
     SELECT DISTINCT round_number
       FROM public.tournament_matches
@@ -1025,7 +1350,6 @@ BEGIN
         'pool_phase_present',       v_has_pool_phase,
         'seeds',                    v_seeds_jsonb));
 
-  -- GO-LIVE-NOTIFY: KO bracket published — new round for everyone.
   PERFORM public._tournament_notify_participants(
     p_tournament_id,
     'tournament_round',

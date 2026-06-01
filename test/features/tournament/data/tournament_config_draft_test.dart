@@ -244,6 +244,125 @@ void main() {
     });
   });
 
+  group('TournamentConfigDraft two-axis format mapping', () {
+    test('formatFor maps every Vorrunde × KO combo correctly', () {
+      expect(
+        TournamentConfigDraft.formatFor(VorrundeType.groupPhase, KoType.none),
+        TournamentFormat.roundRobin,
+      );
+      expect(
+        TournamentConfigDraft.formatFor(
+            VorrundeType.groupPhase, KoType.singleOut),
+        TournamentFormat.roundRobinThenKo,
+      );
+      expect(
+        TournamentConfigDraft.formatFor(
+            VorrundeType.groupPhase, KoType.doubleOut),
+        TournamentFormat.roundRobinThenKo,
+      );
+      expect(
+        TournamentConfigDraft.formatFor(VorrundeType.schoch, KoType.none),
+        TournamentFormat.swiss,
+      );
+      expect(
+        TournamentConfigDraft.formatFor(VorrundeType.schoch, KoType.singleOut),
+        TournamentFormat.swissThenKo,
+      );
+      expect(
+        TournamentConfigDraft.formatFor(VorrundeType.schoch, KoType.doubleOut),
+        TournamentFormat.swissThenKo,
+      );
+    });
+
+    test('bracketTypeFor reflects the KO single/double choice', () {
+      expect(TournamentConfigDraft.bracketTypeFor(KoType.none),
+          BracketType.singleElimination);
+      expect(TournamentConfigDraft.bracketTypeFor(KoType.singleOut),
+          BracketType.singleElimination);
+      expect(TournamentConfigDraft.bracketTypeFor(KoType.doubleOut),
+          BracketType.doubleElimination);
+    });
+
+    test('derived getters expose format + bracketType from the axes', () {
+      const d = TournamentConfigDraft(
+        vorrundeType: VorrundeType.schoch,
+        koType: KoType.doubleOut,
+      );
+      expect(d.derivedFormat, TournamentFormat.swissThenKo);
+      expect(d.derivedBracketType, BracketType.doubleElimination);
+    });
+
+    test('koRoundCountFor is ceil(log2(n))', () {
+      expect(TournamentConfigDraft.koRoundCountFor(1), 0);
+      expect(TournamentConfigDraft.koRoundCountFor(2), 1);
+      expect(TournamentConfigDraft.koRoundCountFor(4), 2);
+      expect(TournamentConfigDraft.koRoundCountFor(6), 3);
+      expect(TournamentConfigDraft.koRoundCountFor(8), 3);
+      expect(TournamentConfigDraft.koRoundCountFor(16), 4);
+    });
+
+    test('defaultKoRoundFormatFor follows the §A profile from the back', () {
+      // 3-round bracket (Viertelfinale, Halbfinale, Final).
+      final quarter = TournamentConfigDraft.defaultKoRoundFormatFor(0, 3);
+      final semi = TournamentConfigDraft.defaultKoRoundFormatFor(1, 3);
+      final fin = TournamentConfigDraft.defaultKoRoundFormatFor(2, 3);
+      // Quarter: Bo5 with a 40-min tiebreak.
+      expect(quarter.setsToWin, 3);
+      expect(quarter.tiebreakEnabled, isTrue);
+      expect(quarter.tiebreakAfterSeconds, 2400);
+      // Semifinal: Bo5, no tiebreak.
+      expect(semi.setsToWin, 3);
+      expect(semi.tiebreakEnabled, isFalse);
+      // Final: Bo5, no tiebreak, finalNoTiebreak.
+      expect(fin.tiebreakEnabled, isFalse);
+      expect(fin.finalNoTiebreak, isTrue);
+      // Early round in a large bracket → Bo3 with a 25-min tiebreak.
+      final early = TournamentConfigDraft.defaultKoRoundFormatFor(0, 5);
+      expect(early.setsToWin, 2);
+      expect(early.maxSets, 3);
+      expect(early.tiebreakAfterSeconds, 1500);
+    });
+
+    test('withResizedKoRoundFormats grows, seeds and trims', () {
+      final ko = KoPhaseConfig(qualifierCount: 8, participantCount: 16);
+      const seed = MatchFormatSpec(
+        setsToWin: 3,
+        maxSets: 5,
+        timeLimitSeconds: 3600,
+      );
+      final grown = TournamentConfigDraft(
+        koConfig: ko,
+        koMatchFormat: seed,
+        koType: KoType.singleOut,
+      ).withResizedKoRoundFormats();
+      // 8 qualifiers => 3 KO rounds, all seeded from koMatchFormat.
+      expect(grown.koRoundFormats, hasLength(3));
+      expect(grown.koRoundFormats.every((f) => f == seed), isTrue);
+
+      // Shrink to 2 qualifiers => 1 round, preserving the first entry.
+      final shrunk = grown
+          .copyWith(
+            koConfig: KoPhaseConfig(qualifierCount: 2, participantCount: 16),
+          )
+          .withResizedKoRoundFormats();
+      expect(shrunk.koRoundFormats, hasLength(1));
+      expect(shrunk.koRoundFormats.first, seed);
+    });
+
+    test('withResizedKoRoundFormats falls back to the default seed', () {
+      final ko = KoPhaseConfig(qualifierCount: 4, participantCount: 8);
+      final d = TournamentConfigDraft(koConfig: ko, koType: KoType.singleOut)
+          .withResizedKoRoundFormats();
+      expect(d.koRoundFormats, hasLength(2));
+      expect(
+        d.koRoundFormats.every(
+          (f) => f == TournamentConfigDraft.defaultKoRoundFormat,
+        ),
+        isTrue,
+      );
+    });
+  });
+
   group('TournamentConfigDraft.toSetupConfig', () {
     test('emits defaults: CHF currency, ekc scoring, empty lists', () {
       const d = TournamentConfigDraft();
@@ -256,6 +375,48 @@ void main() {
       expect(setup['ko_match_format'], isNull);
       expect(setup['pitch_plan'], isNull);
       expect(setup['rule_variants'], isA<Map<String, Object?>>());
+      // Two-axis defaults: group phase, no KO, empty per-round list.
+      expect(setup['vorrunde_type'], 'group_phase');
+      expect(setup['ko_type'], 'none');
+      expect(setup['ko_round_formats'], isEmpty);
+    });
+
+    test('club_id is null by default and round-trips when set', () {
+      const none = TournamentConfigDraft();
+      expect(none.toSetupConfig()['club_id'], isNull);
+
+      const linked = TournamentConfigDraft(clubId: 'club-1');
+      expect(linked.toSetupConfig()['club_id'], 'club-1');
+
+      // copyWith carries it; clearClubId resets to a personal tournament.
+      expect(none.copyWith(clubId: 'club-2').clubId, 'club-2');
+      expect(linked.copyWith(clearClubId: true).clubId, isNull);
+    });
+
+    test('carries vorrunde/ko selection + ko_round_formats', () {
+      const d = TournamentConfigDraft(
+        vorrundeType: VorrundeType.schoch,
+        koType: KoType.doubleOut,
+        koRoundFormats: <MatchFormatSpec>[
+          MatchFormatSpec(setsToWin: 2, maxSets: 3, timeLimitSeconds: 1800),
+          MatchFormatSpec(
+            setsToWin: 3,
+            maxSets: 5,
+            timeLimitSeconds: 3600,
+            finalNoTiebreak: true,
+          ),
+        ],
+      );
+      final setup = d.toSetupConfig();
+      expect(setup['vorrunde_type'], 'schoch');
+      expect(setup['ko_type'], 'double_out');
+      final rounds = setup['ko_round_formats']! as List<Object?>;
+      expect(rounds, hasLength(2));
+      expect(
+        (rounds.last! as Map<String, Object?>)['final_no_tiebreak'],
+        true,
+      );
+      expect((rounds.first! as Map<String, Object?>)['sets_to_win'], 2);
     });
 
     test('serialises P6 fields into the snake_case wire shape', () {
@@ -358,6 +519,164 @@ void main() {
         result.issues.any((i) => i.contains('Max. Spieler pro Team')),
         isTrue,
       );
+    });
+  });
+
+  group('TournamentConfigDraft.fromDetail (P7 edit prefill)', () {
+    // Builds a header whose wire `setup` / `matchFormatConfig` are the exact
+    // serialization of [draft] — i.e. what tournament_get returns after
+    // tournament_create persisted [draft]. fromDetail must invert it.
+    TournamentDetailHeader headerFor(TournamentConfigDraft draft) {
+      return TournamentDetailHeader(
+        tournamentId: 't-1',
+        displayName: draft.displayName ?? '',
+        createdByUserId: 'u-1',
+        clubId: null,
+        teamSize: draft.teamSize,
+        maxTeamSize: draft.maxTeamSize,
+        minParticipants: draft.minParticipants,
+        maxParticipants: draft.maxParticipants,
+        format: draft.format,
+        scoring: draft.scoring == 'classic'
+            ? TournamentScoring.classic
+            : TournamentScoring.ekc,
+        matchFormatConfig: draft.toMatchFormatConfig(),
+        tiebreakerOrder: draft.tiebreakerOrder,
+        byePoints: null,
+        forfeitPoints: null,
+        status: TournamentStatus.published,
+        publishedAt: null,
+        startedAt: null,
+        completedAt: null,
+        setup: draft.toSetupConfig(),
+      );
+    }
+
+    test('round-trips the prelim match format + meta fields', () {
+      final original = TournamentConfigDraft(
+        displayName: 'Sommer-Cup',
+        minParticipants: 4,
+        maxParticipants: 16,
+        setsToWin: 3,
+        maxSets: 5,
+        roundTimeSeconds: 2400,
+        prelimTiebreakAfterSeconds: 1500,
+        location: 'Bern',
+        venueAddress: 'Wankdorf',
+        entryFeeCents: 1500,
+        paymentMethods: const <String>['cash', 'twint'],
+        leagueCategories: const <LeagueCategory>[LeagueCategory.a],
+        scoring: 'classic',
+        contactName: 'Lukas',
+        eventStartsAt: DateTime.utc(2026, 7, 1, 9),
+        registrationClosesAt: DateTime.utc(2026, 6, 28, 23),
+      );
+
+      final back = TournamentConfigDraft.fromDetail(headerFor(original));
+
+      expect(back.displayName, 'Sommer-Cup');
+      expect(back.minParticipants, 4);
+      expect(back.maxParticipants, 16);
+      expect(back.setsToWin, 3);
+      expect(back.maxSets, 5);
+      expect(back.roundTimeSeconds, 2400);
+      expect(back.prelimTiebreakAfterSeconds, 1500);
+      expect(back.location, 'Bern');
+      expect(back.venueAddress, 'Wankdorf');
+      expect(back.entryFeeCents, 1500);
+      expect(back.paymentMethods, const <String>['cash', 'twint']);
+      expect(back.leagueCategories, const <LeagueCategory>[LeagueCategory.a]);
+      expect(back.scoring, 'classic');
+      expect(back.contactName, 'Lukas');
+      expect(back.eventStartsAt?.toUtc(), DateTime.utc(2026, 7, 1, 9));
+      expect(
+        back.registrationClosesAt?.toUtc(),
+        DateTime.utc(2026, 6, 28, 23),
+      );
+    });
+
+    test('preserves the organizing club id from the header', () {
+      // Edit mode must keep the existing club so the organizer does not
+      // accidentally detach the tournament when re-saving.
+      final header = headerFor(const TournamentConfigDraft(displayName: 'Cup'));
+      final withClub = TournamentDetailHeader(
+        tournamentId: header.tournamentId,
+        displayName: header.displayName,
+        createdByUserId: header.createdByUserId,
+        clubId: 'club-9',
+        teamSize: header.teamSize,
+        maxTeamSize: header.maxTeamSize,
+        minParticipants: header.minParticipants,
+        maxParticipants: header.maxParticipants,
+        format: header.format,
+        scoring: header.scoring,
+        matchFormatConfig: header.matchFormatConfig,
+        tiebreakerOrder: header.tiebreakerOrder,
+        byePoints: header.byePoints,
+        forfeitPoints: header.forfeitPoints,
+        status: header.status,
+        publishedAt: header.publishedAt,
+        startedAt: header.startedAt,
+        completedAt: header.completedAt,
+        setup: header.setup,
+      );
+
+      expect(TournamentConfigDraft.fromDetail(withClub).clubId, 'club-9');
+      expect(TournamentConfigDraft.fromDetail(header).clubId, isNull);
+    });
+
+    test('recovers the two-axis selection + bracket for a hybrid format', () {
+      final ko = KoPhaseConfig(qualifierCount: 4, participantCount: 16);
+      final original = TournamentConfigDraft(
+        displayName: 'Hybrid-Cup',
+        format: TournamentFormat.roundRobinThenKo,
+        koType: KoType.doubleOut,
+        bracketType: BracketType.doubleElimination,
+        koConfig: ko,
+        ruleVariants: const RuleVariants(sureshot: true, diggy: true),
+      );
+
+      final back = TournamentConfigDraft.fromDetail(headerFor(original));
+
+      expect(back.format, TournamentFormat.roundRobinThenKo);
+      expect(back.vorrundeType, VorrundeType.groupPhase);
+      expect(back.koType, KoType.doubleOut);
+      expect(back.bracketType, BracketType.doubleElimination);
+      expect(back.koConfig?.qualifierCount, 4);
+      expect(back.ruleVariants.sureshot, isTrue);
+      expect(back.ruleVariants.diggy, isTrue);
+    });
+
+    test('falls back to defaults when the setup map is empty', () {
+      const header = TournamentDetailHeader(
+        tournamentId: 't-2',
+        displayName: 'Bare',
+        createdByUserId: 'u-1',
+        clubId: null,
+        teamSize: 1,
+        maxTeamSize: 1,
+        minParticipants: 2,
+        maxParticipants: 8,
+        format: TournamentFormat.roundRobin,
+        scoring: TournamentScoring.ekc,
+        matchFormatConfig: <String, Object?>{},
+        tiebreakerOrder: <String>[],
+        byePoints: null,
+        forfeitPoints: null,
+        status: TournamentStatus.draft,
+        publishedAt: null,
+        startedAt: null,
+        completedAt: null,
+      );
+
+      final back = TournamentConfigDraft.fromDetail(header);
+
+      expect(back.displayName, 'Bare');
+      expect(back.vorrundeType, VorrundeType.groupPhase);
+      expect(back.koType, KoType.none);
+      expect(back.scoring, 'ekc');
+      expect(back.currency, 'CHF');
+      expect(back.koConfig, isNull);
     });
   });
 }

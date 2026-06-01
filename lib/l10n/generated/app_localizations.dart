@@ -2632,6 +2632,24 @@ abstract class AppLocalizations {
   /// **'Turniername'**
   String get tournamentWizardDisplayNameLabel;
 
+  /// Optional organizing-club picker label on the Stammdaten step
+  ///
+  /// In de, this message translates to:
+  /// **'Ausrichtender Verein'**
+  String get tournamentWizardClubLabel;
+
+  /// Helper text under the organizing-club picker
+  ///
+  /// In de, this message translates to:
+  /// **'Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten.'**
+  String get tournamentWizardClubHint;
+
+  /// Dropdown option for no organizing club (personal tournament)
+  ///
+  /// In de, this message translates to:
+  /// **'Kein Verein (persönlich)'**
+  String get tournamentWizardClubNone;
+
   /// Venue / town input label on the Stammdaten step
   ///
   /// In de, this message translates to:
@@ -3112,6 +3130,66 @@ abstract class AppLocalizations {
   /// **'KO-Regelsatz'**
   String get tournamentWizardKoRulesLabel;
 
+  /// Per-KO-round rules section header
+  ///
+  /// In de, this message translates to:
+  /// **'Regeln pro KO-Runde'**
+  String get tournamentWizardKoRoundRulesLabel;
+
+  /// Per-KO-round rules section helper
+  ///
+  /// In de, this message translates to:
+  /// **'Sätze, Zeit und Pause können pro Runde gewählt werden.'**
+  String get tournamentWizardKoRoundRulesHint;
+
+  /// KO round label: final
+  ///
+  /// In de, this message translates to:
+  /// **'Final'**
+  String get tournamentWizardKoRoundFinal;
+
+  /// KO round label: semifinal
+  ///
+  /// In de, this message translates to:
+  /// **'Halbfinale'**
+  String get tournamentWizardKoRoundSemi;
+
+  /// KO round label: quarterfinal
+  ///
+  /// In de, this message translates to:
+  /// **'Viertelfinale'**
+  String get tournamentWizardKoRoundQuarter;
+
+  /// KO round label: round of 16
+  ///
+  /// In de, this message translates to:
+  /// **'Achtelfinale'**
+  String get tournamentWizardKoRoundEighth;
+
+  /// Generic KO round label for large brackets, e.g. 1/16-Final
+  ///
+  /// In de, this message translates to:
+  /// **'1/{size}-Final'**
+  String tournamentWizardKoRoundOf(int size);
+
+  /// Per-round break-after label
+  ///
+  /// In de, this message translates to:
+  /// **'Pause danach (Min.)'**
+  String get tournamentWizardKoRoundPauseLabel;
+
+  /// Per-round tiebreak toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Tiebreak'**
+  String get tournamentWizardKoRoundTiebreakLabel;
+
+  /// Per-round tiebreak-after label
+  ///
+  /// In de, this message translates to:
+  /// **'Tiebreak nach (Min.)'**
+  String get tournamentWizardKoRoundTiebreakAfterLabel;
+
   /// Final/semifinal without tiebreak toggle
   ///
   /// In de, this message translates to:
@@ -3178,6 +3256,78 @@ abstract class AppLocalizations {
   /// **'Folgt in M2+'**
   String get tournamentWizardFormatComingSoon;
 
+  /// Preliminary stage selector label
+  ///
+  /// In de, this message translates to:
+  /// **'Vorrunde'**
+  String get tournamentWizardVorrundeLabel;
+
+  /// Group-phase preliminary option
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppenphase'**
+  String get tournamentWizardVorrundeGroupPhase;
+
+  /// Group-phase preliminary description
+  ///
+  /// In de, this message translates to:
+  /// **'Jeder gegen jeden, Rangliste entscheidet.'**
+  String get tournamentWizardVorrundeGroupPhaseHint;
+
+  /// Schoch preliminary option
+  ///
+  /// In de, this message translates to:
+  /// **'Schoch'**
+  String get tournamentWizardVorrundeSchoch;
+
+  /// Schoch preliminary description
+  ///
+  /// In de, this message translates to:
+  /// **'Schoch-Paarung über mehrere Runden, dann Rangliste.'**
+  String get tournamentWizardVorrundeSchochHint;
+
+  /// KO stage selector label
+  ///
+  /// In de, this message translates to:
+  /// **'K.-o.-System'**
+  String get tournamentWizardKoSystemLabel;
+
+  /// No KO stage option
+  ///
+  /// In de, this message translates to:
+  /// **'Kein K.-o.'**
+  String get tournamentWizardKoSystemNone;
+
+  /// No KO stage description
+  ///
+  /// In de, this message translates to:
+  /// **'Nur Vorrunde, Rangliste entscheidet.'**
+  String get tournamentWizardKoSystemNoneHint;
+
+  /// Single elimination KO option
+  ///
+  /// In de, this message translates to:
+  /// **'Single-Out'**
+  String get tournamentWizardKoSystemSingle;
+
+  /// Single-out KO description
+  ///
+  /// In de, this message translates to:
+  /// **'Eine Niederlage und du bist raus.'**
+  String get tournamentWizardKoSystemSingleHint;
+
+  /// Double elimination KO option
+  ///
+  /// In de, this message translates to:
+  /// **'Double-Out'**
+  String get tournamentWizardKoSystemDouble;
+
+  /// Double-out KO description
+  ///
+  /// In de, this message translates to:
+  /// **'Erst nach zwei Niederlagen ausgeschieden.'**
+  String get tournamentWizardKoSystemDoubleHint;
+
   /// Sets-to-win stepper label
   ///
   /// In de, this message translates to:
@@ -3213,6 +3363,18 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Turnier anlegen'**
   String get tournamentWizardCreateButton;
+
+  /// Wizard final submit button in EDIT mode (P7)
+  ///
+  /// In de, this message translates to:
+  /// **'Änderungen speichern'**
+  String get tournamentWizardSaveButton;
+
+  /// Wizard app-bar title in EDIT mode (P7)
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier bearbeiten'**
+  String get tournamentWizardEditTitle;
 
   /// Snackbar on submit failure
   ///
@@ -3639,6 +3801,36 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Turnier abgebrochen.'**
   String get tournamentDetailAborted;
+
+  /// Action: organizer edits the tournament details (pre-start)
+  ///
+  /// In de, this message translates to:
+  /// **'Bearbeiten'**
+  String get tournamentDetailActionEdit;
+
+  /// Lifecycle hint shown to the organizer while the tournament is still a draft
+  ///
+  /// In de, this message translates to:
+  /// **'Veröffentlichen und Anmeldung öffnen, damit sich Spieler anmelden können. Gestartet wird erst nach Anmeldeschluss.'**
+  String get tournamentDetailHintDraft;
+
+  /// Lifecycle hint shown to the organizer while the tournament is published but registration is not open
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldung öffnen, damit sich Spieler anmelden können. Gestartet wird erst nach Anmeldeschluss.'**
+  String get tournamentDetailHintPublished;
+
+  /// Lifecycle hint shown to the organizer while registration is open
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldung schliessen, sobald genug Teams angemeldet sind. Danach kann das Turnier gestartet werden.'**
+  String get tournamentDetailHintRegistrationOpen;
+
+  /// Lifecycle hint shown to the organizer after registration closed, before start
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldung ist geschlossen. Jetzt kann das Turnier gestartet werden.'**
+  String get tournamentDetailHintRegistrationClosed;
 
   /// Section heading for the pool-phase group standings on the detail screen
   ///

@@ -82,7 +82,13 @@ ALTER TABLE public.tournaments
   --     "tiebreak_enabled", "tiebreak_after_seconds",
   --     "break_between_matches_seconds", "basekubbs_per_side",
   --     "final_no_tiebreak" }
-  ADD COLUMN ko_match_format jsonb NULL;
+  ADD COLUMN ko_match_format jsonb NULL,
+  -- Per-KO-round match rulesets (decision "Sätze zum Sieg pro KO-Runde
+  -- frei wählbar"). A JSON array, index 0 = first KO round … last = final.
+  -- Each element has the same shape as `ko_match_format`. Empty array /
+  -- NULL => fall back to `ko_match_format` (then `match_format`). Length is
+  -- derived from the KO bracket size (ceil(log2(qualifier_count))).
+  ADD COLUMN ko_round_formats jsonb NOT NULL DEFAULT '[]'::jsonb;
 
 -- ---- 4. Pitch plan ----------------------------------------------------
 --

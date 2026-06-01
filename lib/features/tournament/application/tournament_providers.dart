@@ -1,9 +1,90 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/features/auth/application/auth_providers.dart';
+import 'package:kubb_app/features/club/application/club_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
+import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
+
+/// True when the caller may manage a tournament on the strength of its
+/// *organizing club* rather than per-tournament ownership.
+///
+/// PER-TOURNAMENT (USER DECISION): authority is the tournament's CREATOR OR
+/// an active owner/admin/organizer of THAT tournament's `club_id`. The old
+/// global organizer capability (profile `is_organizer` OR owner/admin/
+/// organizer of ANY club) is no longer used here — it gated almost
+/// everyone, because `user_profiles.is_organizer` defaults true.
+///
+/// The family key is the tournament's `club_id` (null when the tournament
+/// has no club). The detail screen ORs the result with the per-tournament
+/// creator check, so a tournament with no club is manageable by the creator
+/// only. The server is the security boundary — every lifecycle/update RPC
+/// re-checks `tournament_caller_can_manage(p_tournament_id)` — so this
+/// provider only governs which buttons render, never authority.
+///
+/// Implementation: for a non-null club the caller's roles come from
+/// [clubDetailProvider] (RLS only exposes membership rows to members, so a
+/// non-member organizer correctly resolves to `false`). Resolves to `false`
+/// while the async club read is loading or errors, so role-gated actions
+/// only appear once the role is confirmed.
+// ignore: specify_nonobvious_property_types
+final canManageTournamentClubProvider =
+    Provider.family<bool, String?>((ref, clubId) {
+  if (clubId == null) return false;
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return false;
+  return ref.watch(clubDetailProvider(ClubId(clubId))).maybeWhen(
+        data: (detail) => detail.members.any(
+          (m) =>
+              m.userId == userId &&
+              (m.roles.contains('owner') ||
+                  m.roles.contains('admin') ||
+                  m.roles.contains('organizer')),
+        ),
+        orElse: () => false,
+      );
+});
+
+/// One club the caller may pick as the organizing club in the setup
+/// wizard: `id` is the `club_id` persisted on the tournament, `name` the
+/// display label.
+typedef ManageableClub = ({String id, String name});
+
+/// The caller's clubs filtered to those they may run a tournament under,
+/// i.e. where they hold an active owner/admin/organizer role. Backs the
+/// optional "Ausrichtender Verein" picker in the setup wizard.
+///
+/// Built from [clubListProvider] (the caller's own clubs) cross-referenced
+/// with each club's membership roles via [clubDetailProvider]; a club where
+/// the caller is only a plain member is excluded. Empty (not an error) when
+/// signed out or when the caller manages no club, so the picker simply
+/// offers no clubs and the tournament stays personal. Mirrors the
+/// owner/admin/organizer predicate the server's `tournament_create` enforces
+/// when a `club_id` is supplied, so the picker never offers a club the RPC
+/// would reject.
+final manageableClubsProvider =
+    FutureProvider<List<ManageableClub>>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return const <ManageableClub>[];
+  final clubs = await ref.watch(clubListProvider.future);
+  final result = <ManageableClub>[];
+  for (final club in clubs) {
+    final detail = await ref.watch(clubDetailProvider(ClubId(club.id)).future);
+    final manages = detail.members.any(
+      (m) =>
+          m.userId == userId &&
+          (m.roles.contains('owner') ||
+              m.roles.contains('admin') ||
+              m.roles.contains('organizer')),
+    );
+    if (manages) {
+      result.add((id: club.id, name: club.displayName));
+    }
+  }
+  return result;
+});
 
 /// Wizard-side config notifier. Auto-disposes so a freshly opened wizard
 /// always starts from defaults — even after a cancelled previous run.
@@ -50,6 +131,34 @@ class TournamentActions {
         );
     _ref.invalidate(tournamentListProvider);
     return id;
+  }
+
+  /// P7 edit-after-publish: persists the edited [draft] for an existing
+  /// tournament via `tournament_update`, then invalidates the list + the
+  /// detail so the screen reflects the new values. The server gates on the
+  /// creator and the pre-start status.
+  Future<void> updateTournament(
+    TournamentId id,
+    TournamentConfigDraft draft,
+  ) async {
+    final validation = draft.validate();
+    if (!validation.isValid) {
+      throw StateError(validation.issues.first);
+    }
+    await _ref.read(tournamentRemoteProvider).updateTournament(
+          id: id,
+          displayName: draft.displayName!.trim(),
+          teamSize: draft.teamSize,
+          minParticipants: draft.minParticipants,
+          maxParticipants: draft.maxParticipants,
+          format: draft.format,
+          matchFormatConfig: draft.toMatchFormatConfig(),
+          tiebreakerOrder: draft.tiebreakerOrder,
+          setup: draft.toSetupConfig(),
+        );
+    _ref
+      ..invalidate(tournamentListProvider)
+      ..invalidate(tournamentDetailProvider(id));
   }
 
   Future<void> publish(TournamentId id) async {

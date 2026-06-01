@@ -43,6 +43,7 @@ TournamentDetail _detail(List<TournamentParticipant> participants) {
       tournamentId: 't-1',
       displayName: 'Sommer-Cup',
       createdByUserId: 'u-creator',
+      clubId: null,
       teamSize: 1,
       maxTeamSize: 1,
       minParticipants: 2,

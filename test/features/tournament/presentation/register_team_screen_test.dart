@@ -26,6 +26,7 @@ TournamentDetail _detail({int teamSize = 3, int? maxTeamSize}) {
       tournamentId: _tournamentId.value,
       displayName: 'Sommer-Cup',
       createdByUserId: 'u-creator',
+      clubId: null,
       teamSize: teamSize,
       maxTeamSize: maxTeamSize ?? teamSize,
       minParticipants: 2,

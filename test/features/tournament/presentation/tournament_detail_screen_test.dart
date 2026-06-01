@@ -6,6 +6,7 @@ import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_bracket_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
+import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_detail_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -16,12 +17,14 @@ const _creator = 'u-creator';
 TournamentDetail _detail({
   TournamentStatus status = TournamentStatus.draft,
   List<TournamentParticipant> participants = const [],
+  String? clubId,
 }) {
   return TournamentDetail(
     tournament: TournamentDetailHeader(
       tournamentId: 't-1',
       displayName: 'Sommer-Cup',
       createdByUserId: _creator,
+      clubId: clubId,
       teamSize: 1,
       maxTeamSize: 1,
       minParticipants: 2,
@@ -51,6 +54,9 @@ Future<void> _pump(
   TournamentDetail detail, {
   String? callerUserId,
   Bracket? bracket,
+  bool canManage = false,
+  String? manageableClubId,
+  String? unmanageableClubId,
 }) async {
   final router = GoRouter(
     initialLocation: '/tournament/t-1',
@@ -68,6 +74,13 @@ Future<void> _pump(
       overrides: [
         tournamentDetailProvider(_id).overrideWith((_) async => detail),
         currentUserIdProvider.overrideWithValue(callerUserId),
+        canManageTournamentClubProvider(null).overrideWithValue(canManage),
+        if (manageableClubId != null)
+          canManageTournamentClubProvider(manageableClubId)
+              .overrideWithValue(true),
+        if (unmanageableClubId != null)
+          canManageTournamentClubProvider(unmanageableClubId)
+              .overrideWithValue(false),
         tournamentBracketProvider(_id).overrideWith(
           (_) async => bracket ?? (throw ArgumentError('no ko matches')),
         ),
@@ -133,5 +146,142 @@ void main() {
       bracket: bracket,
     );
     expect(find.text('Bracket anzeigen'), findsOneWidget);
+  });
+
+  testWidgets('P7: creator sees Bearbeiten while pre-start (published)',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(status: TournamentStatus.published),
+      callerUserId: _creator,
+    );
+    expect(find.text('Bearbeiten'), findsOneWidget);
+  });
+
+  testWidgets('P7: outsider never sees Bearbeiten', (tester) async {
+    await _pump(
+      tester,
+      _detail(status: TournamentStatus.published),
+      callerUserId: 'u-other',
+    );
+    expect(find.text('Bearbeiten'), findsNothing);
+  });
+
+  testWidgets('P7: Bearbeiten hidden once the tournament is live',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(status: TournamentStatus.live),
+      callerUserId: _creator,
+    );
+    expect(find.text('Bearbeiten'), findsNothing);
+  });
+
+  testWidgets('P7: lifecycle hint shows for creator in draft', (tester) async {
+    await _pump(tester, _detail(), callerUserId: _creator);
+    expect(
+      find.textContaining('Veröffentlichen und Anmeldung öffnen'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('P7: lifecycle hint shows for creator in published',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(status: TournamentStatus.published),
+      callerUserId: _creator,
+    );
+    expect(
+      find.textContaining('Anmeldung öffnen, damit sich Spieler'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('P7: outsider does not see the lifecycle hint', (tester) async {
+    await _pump(
+      tester,
+      _detail(status: TournamentStatus.published),
+      callerUserId: 'u-other',
+    );
+    expect(
+      find.textContaining('Anmeldung öffnen, damit sich Spieler'),
+      findsNothing,
+    );
+  });
+
+  testWidgets(
+      'organizer (non-creator) sees the lifecycle actions: publish in draft',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(),
+      callerUserId: 'u-organizer',
+      canManage: true,
+    );
+    // Despite not being the creator, the organizer role surfaces the
+    // publish action, the edit entry-point and the lifecycle hint.
+    expect(find.text('Veröffentlichen'), findsOneWidget);
+    expect(find.text('Bearbeiten'), findsOneWidget);
+    expect(
+      find.textContaining('Veröffentlichen und Anmeldung öffnen'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('organizer (non-creator) sees start in registration_closed',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(status: TournamentStatus.registrationClosed),
+      callerUserId: 'u-organizer',
+      canManage: true,
+    );
+    expect(find.text('Turnier starten'), findsOneWidget);
+  });
+
+  testWidgets(
+      'organizer (non-creator) sees finalize while live, not register',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(status: TournamentStatus.live),
+      callerUserId: 'u-organizer',
+      canManage: true,
+    );
+    expect(find.text('Turnier abschliessen'), findsOneWidget);
+    expect(find.text('Anmelden'), findsNothing);
+  });
+
+  testWidgets(
+      'per-tournament club: non-creator owner/admin/organizer of THE '
+      "tournament's club sees the lifecycle actions", (tester) async {
+    // The tournament is linked to club c-1; the caller is not the creator
+    // but manages that very club, so the per-tournament gate resolves true
+    // and the lifecycle/edit actions surface.
+    await _pump(
+      tester,
+      _detail(clubId: 'c-1'),
+      callerUserId: 'u-club-admin',
+      manageableClubId: 'c-1',
+    );
+    expect(find.text('Veröffentlichen'), findsOneWidget);
+    expect(find.text('Bearbeiten'), findsOneWidget);
+  });
+
+  testWidgets(
+      'per-tournament club: random non-creator WITHOUT the club role does '
+      'not see the lifecycle actions', (tester) async {
+    // Same club-linked tournament, but the caller neither created it nor
+    // holds an owner/admin/organizer role in club c-1 (canManage stays
+    // false for the c-1 family key), so no lifecycle/edit actions render.
+    await _pump(
+      tester,
+      _detail(clubId: 'c-1'),
+      callerUserId: 'u-stranger',
+      unmanageableClubId: 'c-1',
+    );
+    expect(find.text('Veröffentlichen'), findsNothing);
+    expect(find.text('Bearbeiten'), findsNothing);
   });
 }

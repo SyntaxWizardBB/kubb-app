@@ -28,6 +28,7 @@ String? _blankToNull(String? value) {
 class TournamentConfigDraft {
   const TournamentConfigDraft({
     this.displayName,
+    this.clubId,
     this.teamSize = 1,
     this.maxTeamSize = 1,
     this.minParticipants = 2,
@@ -76,11 +77,302 @@ class TournamentConfigDraft {
     this.bracketType = BracketType.singleElimination,
     this.koMatchup = KoMatchup.seedHighVsLow,
     this.koTiebreakMethod = KoTiebreakMethod.classicKingtossRemoval,
+    this.vorrundeType = VorrundeType.groupPhase,
+    this.koType = KoType.none,
+    this.koRoundFormats = const <MatchFormatSpec>[],
   });
+
+  /// Rebuilds a draft from a [TournamentDetailHeader] so the setup wizard
+  /// can open in EDIT mode pre-filled with the tournament's current values
+  /// (P7 edit-after-publish). Inverts [toMatchFormatConfig] (prelim format,
+  /// read from [TournamentDetailHeader.matchFormatConfig]) and
+  /// [toSetupConfig] (P6 fields, read from the opaque
+  /// [TournamentDetailHeader.setup] wire map). The two-axis selection
+  /// ([vorrundeType] / [koType]) is recovered from the wire keys when
+  /// present, falling back to deriving it from the legacy [format] +
+  /// [bracketType] so older rows without the explicit axes still prefill.
+  /// Keys missing from the wire map leave the corresponding field on its
+  /// constructor default.
+  factory TournamentConfigDraft.fromDetail(TournamentDetailHeader header) {
+    final cfg = header.matchFormatConfig;
+    final setup = header.setup;
+
+    int? intOf(Object? v) =>
+        v == null ? null : (v is int ? v : (v as num).toInt());
+    DateTime? dateOf(Object? v) =>
+        v == null ? null : DateTime.parse(v as String).toLocal();
+    Map<String, Object?>? mapOf(Object? v) =>
+        v is Map ? v.cast<String, Object?>() : null;
+    List<String> stringList(Object? v) => v is List
+        ? v.map((e) => e.toString()).toList(growable: false)
+        : const <String>[];
+
+    // ---- Prelim match format (inverts toMatchFormatConfig) ----
+    final tbAfter = intOf(cfg['tiebreak_after_seconds']);
+    final tbEnabled = cfg['tiebreak_enabled'] == true;
+
+    // ---- Two-axis selection ----
+    final vorrundeWire = setup['vorrunde_type'] as String?;
+    final koWire = setup['ko_type'] as String?;
+    final format = header.format;
+    final bracketType = setup['bracket_type'] is String
+        ? BracketType.fromWire(setup['bracket_type']! as String)
+        : BracketType.singleElimination;
+    final vorrundeType = vorrundeWire != null
+        ? VorrundeType.fromWire(vorrundeWire)
+        : _vorrundeFromFormat(format);
+    final koType = koWire != null
+        ? KoType.fromWire(koWire)
+        : _koFromFormat(format, bracketType);
+
+    // ---- Nested value objects ----
+    final ruleVariantsJson = mapOf(setup['rule_variants']);
+    final koMatchFormatJson = mapOf(setup['ko_match_format']);
+    final pitchPlanJson = mapOf(setup['pitch_plan']);
+    final mightyJson = mapOf(setup['mighty_finisher_quali']);
+    final consolationJson = mapOf(setup['consolation_bracket']);
+    final koConfigJson = mapOf(setup['ko_config']);
+    final poolConfigJson = mapOf(setup['pool_phase_config']);
+    final koRoundFormatsRaw = setup['ko_round_formats'];
+
+    final maxTeamSize = intOf(setup['max_team_size']) ?? header.maxTeamSize;
+
+    return TournamentConfigDraft(
+      displayName: header.displayName,
+      clubId: header.clubId,
+      teamSize: header.teamSize,
+      maxTeamSize: maxTeamSize < header.teamSize ? header.teamSize : maxTeamSize,
+      minParticipants: header.minParticipants,
+      maxParticipants: header.maxParticipants,
+      format: format,
+      setsToWin: intOf(cfg['sets_to_win']) ?? 2,
+      maxSets: intOf(cfg['max_sets']) ?? 3,
+      roundTimeSeconds: intOf(cfg['round_time_seconds']) ?? 1800,
+      basekubbsPerSide: intOf(cfg['basekubbs_per_side']) ?? 5,
+      prelimTiebreakAfterSeconds: tbEnabled ? tbAfter : null,
+      breakBetweenMatchesSeconds:
+          intOf(cfg['break_between_matches_seconds']) ?? 0,
+      tiebreakerOrder: header.tiebreakerOrder.isEmpty
+          ? const <String>[
+              'total_points',
+              'buchholz_minus_h2h',
+              'direct_comparison',
+              'mighty_finisher_shootout',
+            ]
+          : header.tiebreakerOrder,
+      koConfig: koConfigJson == null ? null : _koConfigFromWire(koConfigJson),
+      poolPhaseConfig:
+          poolConfigJson == null ? null : _poolConfigFromWire(poolConfigJson),
+      location: setup['location'] as String?,
+      venueAddress: setup['venue_address'] as String?,
+      eventStartsAt: dateOf(setup['event_starts_at']),
+      checkinUntil: dateOf(setup['checkin_until']),
+      registrationClosesAt: dateOf(setup['registration_closes_at']),
+      weatherNote: setup['weather_note'] as String?,
+      infoFood: setup['info_food'] as String?,
+      infoTravel: setup['info_travel'] as String?,
+      infoAccommodation: setup['info_accommodation'] as String?,
+      contactName: setup['contact_name'] as String?,
+      contactPhone: setup['contact_phone'] as String?,
+      entryFeeCents: intOf(setup['entry_fee_cents']),
+      currency: setup['currency'] as String? ?? 'CHF',
+      paymentMethods: stringList(setup['payment_methods']),
+      rulesPdfUrl: setup['rules_pdf_url'] as String?,
+      siteMapPdfUrl: setup['site_map_pdf_url'] as String?,
+      leagueCategories: <LeagueCategory>[
+        for (final c in stringList(setup['league_categories']))
+          LeagueCategory.fromWire(c),
+      ],
+      scoring: setup['scoring'] as String? ?? header.scoring.name,
+      ruleVariants: ruleVariantsJson == null
+          ? const RuleVariants()
+          : RuleVariants.fromJson(ruleVariantsJson),
+      koMatchFormat: koMatchFormatJson == null
+          ? null
+          : MatchFormatSpec.fromJson(koMatchFormatJson),
+      pitchPlan:
+          pitchPlanJson == null ? null : PitchPlan.fromJson(pitchPlanJson),
+      mightyFinisherQuali: mightyJson == null
+          ? null
+          : MightyFinisherQuali.fromJson(mightyJson),
+      consolationBracket: consolationJson == null
+          ? null
+          : ConsolationConfig.fromJson(consolationJson),
+      bracketType: bracketType,
+      koMatchup: setup['ko_matchup'] is String
+          ? KoMatchup.fromWire(setup['ko_matchup']! as String)
+          : KoMatchup.seedHighVsLow,
+      koTiebreakMethod: setup['ko_tiebreak_method'] is String
+          ? KoTiebreakMethod.fromWire(setup['ko_tiebreak_method']! as String)
+          : KoTiebreakMethod.classicKingtossRemoval,
+      vorrundeType: vorrundeType,
+      koType: koType,
+      koRoundFormats: koRoundFormatsRaw is List
+          ? <MatchFormatSpec>[
+              for (final f in koRoundFormatsRaw)
+                MatchFormatSpec.fromJson((f as Map).cast<String, Object?>()),
+            ]
+          : const <MatchFormatSpec>[],
+    );
+  }
+
+  /// Maps the legacy [TournamentFormat] back to the prelim axis (inverse
+  /// of [formatFor]). Used by `fromDetail` when the explicit
+  /// `vorrunde_type` wire key is absent.
+  static VorrundeType _vorrundeFromFormat(TournamentFormat format) =>
+      switch (format) {
+        TournamentFormat.roundRobin ||
+        TournamentFormat.singleElimination ||
+        TournamentFormat.roundRobinThenKo =>
+          VorrundeType.groupPhase,
+        TournamentFormat.schoch ||
+        TournamentFormat.swiss ||
+        TournamentFormat.schochThenKo ||
+        TournamentFormat.swissThenKo =>
+          VorrundeType.schoch,
+      };
+
+  /// Maps the legacy [TournamentFormat] (+ bracket type for the
+  /// single/double distinction) back to the KO axis. Used by `fromDetail`
+  /// when the explicit `ko_type` wire key is absent.
+  static KoType _koFromFormat(TournamentFormat format, BracketType bracket) {
+    final hasKo = switch (format) {
+      TournamentFormat.singleElimination ||
+      TournamentFormat.roundRobinThenKo ||
+      TournamentFormat.schochThenKo ||
+      TournamentFormat.swissThenKo =>
+        true,
+      TournamentFormat.roundRobin ||
+      TournamentFormat.schoch ||
+      TournamentFormat.swiss =>
+        false,
+    };
+    if (!hasKo) return KoType.none;
+    return bracket == BracketType.doubleElimination
+        ? KoType.doubleOut
+        : KoType.singleOut;
+  }
+
+  /// Inverts `KoPhaseConfigWire.toWire`. The participant count is not
+  /// available on the stored wire shape, so the stored qualifier count
+  /// doubles as the participant-count floor; the validator only requires
+  /// `2 <= qualifier <= participant`.
+  static KoPhaseConfig _koConfigFromWire(Map<String, Object?> json) {
+    final qualifier = (json['qualifier_count'] as num?)?.toInt() ?? 2;
+    return KoPhaseConfig(
+      qualifierCount: qualifier,
+      participantCount: qualifier,
+      withThirdPlacePlayoff: json['with_third_place_playoff'] as bool? ?? false,
+      seedingMode: json['seeding_mode'] == 'manual'
+          ? SeedingMode.manual
+          : SeedingMode.auto,
+    );
+  }
+
+  /// Inverts `PoolPhaseConfigWire.toWire`.
+  static PoolPhaseConfig _poolConfigFromWire(Map<String, Object?> json) {
+    return PoolPhaseConfig(
+      groupCount: (json['group_count'] as num?)?.toInt() ?? 1,
+      qualifiersPerGroup: (json['qualifiers_per_group'] as num?)?.toInt() ?? 1,
+      strategy: PoolGroupingStrategy.values.firstWhere(
+        (s) => s.name == json['strategy'],
+        orElse: () => PoolGroupingStrategy.snake,
+      ),
+      randomSeed: (json['random_seed'] as num?)?.toInt(),
+    );
+  }
+
+  /// Default seed for a per-KO-round format when neither [koMatchFormat]
+  /// nor an existing entry is available. Mirrors the flat prelim defaults.
+  static const MatchFormatSpec defaultKoRoundFormat = MatchFormatSpec(
+    setsToWin: 2,
+    maxSets: 3,
+    timeLimitSeconds: 1800,
+    tiebreakEnabled: false,
+  );
+
+  /// Deterministic per-round default ruleset per P6_RULES_DECISIONS §A,
+  /// counted from the back ([totalRounds] = number of KO rounds, [roundIndex]
+  /// 0-based with 0 = first round … `totalRounds - 1` = final):
+  ///   * final (last round)           → Bo5, 60 min, no tiebreak, finalNoTiebreak
+  ///   * semifinal (R-1)              → Bo5, 60 min, no tiebreak
+  ///   * quarter/eighth (R-3 .. R-2)  → Bo5, 60 min, tiebreak after 40 min
+  ///   * earlier rounds (< R-3)       → Bo3, 40 min, tiebreak after 25 min
+  /// Used to seed new entries in [withResizedKoRoundFormats].
+  static MatchFormatSpec defaultKoRoundFormatFor(
+    int roundIndex,
+    int totalRounds,
+  ) {
+    // Rounds remaining until (and including) the final; final == 1.
+    final fromBack = totalRounds - roundIndex;
+    if (fromBack <= 1) {
+      // Final.
+      return const MatchFormatSpec(
+        setsToWin: 3,
+        maxSets: 5,
+        timeLimitSeconds: 3600,
+        tiebreakEnabled: false,
+        finalNoTiebreak: true,
+      );
+    }
+    if (fromBack == 2) {
+      // Semifinal.
+      return const MatchFormatSpec(
+        setsToWin: 3,
+        maxSets: 5,
+        timeLimitSeconds: 3600,
+        tiebreakEnabled: false,
+      );
+    }
+    if (fromBack <= 4) {
+      // Quarter / eighth: Bo5 with a 40-minute tiebreak.
+      return const MatchFormatSpec(
+        setsToWin: 3,
+        maxSets: 5,
+        timeLimitSeconds: 3600,
+        tiebreakAfterSeconds: 2400,
+      );
+    }
+    // Earlier rounds: Bo3 with a 25-minute tiebreak.
+    return const MatchFormatSpec(
+      setsToWin: 2,
+      maxSets: 3,
+      timeLimitSeconds: 2400,
+      tiebreakAfterSeconds: 1500,
+    );
+  }
+
+  // ---- Two-axis format selection (Vorrunde × KO) ----------------------
+
+  /// Preliminary stage type (group phase vs Schoch). Together with
+  /// [koType] this is the user-facing format choice; [derivedFormat] and
+  /// [derivedBracketType] translate the pair to the legacy enum + bracket
+  /// the RPC/server still consume. The controller keeps [format] and
+  /// [bracketType] in sync with these axes.
+  final VorrundeType vorrundeType;
+
+  /// KO stage type (none / single-out / double-out), the second format
+  /// axis. See [vorrundeType].
+  final KoType koType;
+
+  /// Per-KO-round match rulesets, index 0 = first KO round … last = final.
+  /// Length is derived from the KO bracket size via
+  /// [koRoundCountFor]; [withResizedKoRoundFormats] keeps it in step with
+  /// the qualifier count. Empty when no KO phase is configured. The flat
+  /// prelim ruleset stays separate; the single [koMatchFormat] seeds the
+  /// per-round list as a fallback default.
+  final List<MatchFormatSpec> koRoundFormats;
 
   /// Visible name of the tournament. Null while the organizer hasn't
   /// typed anything yet; validate() flags both null and empty input.
   final String? displayName;
+
+  /// Optional organizing club id (`tournaments.club_id`). Null = personal
+  /// tournament with no club; then only the creator may manage it. When
+  /// set, owner/admin/organizer members of that club may also manage it.
+  /// Mirrors the per-tournament authority decision; round-trips through
+  /// the `club_id` setup key.
+  final String? clubId;
 
   /// Minimum players per team (1 = singles). The M1 `team_size` column.
   final int teamSize;
@@ -209,6 +501,8 @@ class TournamentConfigDraft {
 
   TournamentConfigDraft copyWith({
     String? displayName,
+    String? clubId,
+    bool clearClubId = false,
     int? teamSize,
     int? maxTeamSize,
     int? minParticipants,
@@ -260,9 +554,13 @@ class TournamentConfigDraft {
     BracketType? bracketType,
     KoMatchup? koMatchup,
     KoTiebreakMethod? koTiebreakMethod,
+    VorrundeType? vorrundeType,
+    KoType? koType,
+    List<MatchFormatSpec>? koRoundFormats,
   }) {
     return TournamentConfigDraft(
       displayName: displayName ?? this.displayName,
+      clubId: clearClubId ? null : (clubId ?? this.clubId),
       teamSize: teamSize ?? this.teamSize,
       maxTeamSize: maxTeamSize ?? this.maxTeamSize,
       minParticipants: minParticipants ?? this.minParticipants,
@@ -318,7 +616,76 @@ class TournamentConfigDraft {
       bracketType: bracketType ?? this.bracketType,
       koMatchup: koMatchup ?? this.koMatchup,
       koTiebreakMethod: koTiebreakMethod ?? this.koTiebreakMethod,
+      vorrundeType: vorrundeType ?? this.vorrundeType,
+      koType: koType ?? this.koType,
+      koRoundFormats: koRoundFormats ?? this.koRoundFormats,
     );
+  }
+
+  // ---- Two-axis ⇄ legacy enum mapping ---------------------------------
+
+  /// Derives the legacy [TournamentFormat] from the ([vorrundeType],
+  /// [koType]) pair so the RPC/server keep working unchanged:
+  ///   groupPhase + none          → roundRobin
+  ///   groupPhase + single/double → roundRobinThenKo
+  ///   schoch     + none          → swiss   (server routes swiss == schoch)
+  ///   schoch     + single/double → swissThenKo
+  static TournamentFormat formatFor(VorrundeType vorrunde, KoType ko) {
+    final hasKo = ko != KoType.none;
+    return switch (vorrunde) {
+      VorrundeType.groupPhase =>
+        hasKo ? TournamentFormat.roundRobinThenKo : TournamentFormat.roundRobin,
+      VorrundeType.schoch =>
+        hasKo ? TournamentFormat.swissThenKo : TournamentFormat.swiss,
+    };
+  }
+
+  /// Derives the [BracketType] from a [KoType] (only meaningful when a KO
+  /// stage is present; defaults to single elimination otherwise).
+  static BracketType bracketTypeFor(KoType ko) => switch (ko) {
+        KoType.doubleOut => BracketType.doubleElimination,
+        KoType.none || KoType.singleOut => BracketType.singleElimination,
+      };
+
+  /// Number of KO rounds for a given qualifier count: `ceil(log2(n))`
+  /// (e.g. 8 → 3, 6 → 3, 4 → 2, 2 → 1). Returns 0 for < 2 qualifiers.
+  static int koRoundCountFor(int qualifierCount) {
+    if (qualifierCount < 2) return 0;
+    var rounds = 0;
+    var capacity = 1;
+    while (capacity < qualifierCount) {
+      capacity *= 2;
+      rounds++;
+    }
+    return rounds;
+  }
+
+  /// [TournamentFormat] derived from the two-axis selection.
+  TournamentFormat get derivedFormat => formatFor(vorrundeType, koType);
+
+  /// [BracketType] derived from the two-axis selection.
+  BracketType get derivedBracketType => bracketTypeFor(koType);
+
+  /// Number of KO rounds implied by the current [koConfig] qualifier count.
+  /// 0 when no KO phase is configured ([koType] none) or no qualifier count
+  /// is set.
+  int get koRoundCount => koType == KoType.none
+      ? 0
+      : koRoundCountFor(koConfig?.qualifierCount ?? 0);
+
+  /// Returns a copy whose [koRoundFormats] has exactly [koRoundCount]
+  /// entries. Existing entries are preserved; new tail entries are seeded
+  /// from [koMatchFormat] (falling back to [defaultKoRoundFormat]); excess
+  /// entries are trimmed. Call after the qualifier count changes.
+  TournamentConfigDraft withResizedKoRoundFormats() {
+    final target = koRoundCount;
+    if (koRoundFormats.length == target) return this;
+    final seed = koMatchFormat ?? defaultKoRoundFormat;
+    final next = <MatchFormatSpec>[
+      for (var i = 0; i < target; i++)
+        i < koRoundFormats.length ? koRoundFormats[i] : seed,
+    ];
+    return copyWith(koRoundFormats: List<MatchFormatSpec>.unmodifiable(next));
   }
 
   /// Whether the wizard should surface the pool-phase configuration step.
@@ -452,6 +819,7 @@ class TournamentConfigDraft {
   /// RPC casts to `timestamptz`.
   Map<String, Object?> toSetupConfig() {
     return <String, Object?>{
+      'club_id': _blankToNull(clubId),
       'location': _blankToNull(location),
       'venue_address': _blankToNull(venueAddress),
       'event_starts_at': eventStartsAt?.toUtc().toIso8601String(),
@@ -474,6 +842,11 @@ class TournamentConfigDraft {
       'scoring': scoring,
       'rule_variants': ruleVariants.toJson(),
       'ko_match_format': koMatchFormat?.toJson(),
+      'vorrunde_type': vorrundeType.wire,
+      'ko_type': koType.wire,
+      'ko_round_formats': <Map<String, Object?>>[
+        for (final f in koRoundFormats) f.toJson(),
+      ],
       'pitch_plan': pitchPlan?.toJson(),
       'mighty_finisher_quali': mightyFinisherQuali?.toJson(),
       'consolation_bracket': consolationBracket?.toJson(),
@@ -492,6 +865,7 @@ class TournamentConfigDraft {
       identical(this, other) ||
       other is TournamentConfigDraft &&
           other.displayName == displayName &&
+          other.clubId == clubId &&
           other.teamSize == teamSize &&
           other.maxTeamSize == maxTeamSize &&
           other.minParticipants == minParticipants &&
@@ -533,11 +907,15 @@ class TournamentConfigDraft {
           other.consolationBracket == consolationBracket &&
           other.bracketType == bracketType &&
           other.koMatchup == koMatchup &&
-          other.koTiebreakMethod == koTiebreakMethod;
+          other.koTiebreakMethod == koTiebreakMethod &&
+          other.vorrundeType == vorrundeType &&
+          other.koType == koType &&
+          listEquals(other.koRoundFormats, koRoundFormats);
 
   @override
   int get hashCode => Object.hashAll(<Object?>[
         displayName,
+        clubId,
         teamSize,
         maxTeamSize,
         minParticipants,
@@ -580,5 +958,8 @@ class TournamentConfigDraft {
         bracketType,
         koMatchup,
         koTiebreakMethod,
+        vorrundeType,
+        koType,
+        Object.hashAll(koRoundFormats),
       ]);
 }

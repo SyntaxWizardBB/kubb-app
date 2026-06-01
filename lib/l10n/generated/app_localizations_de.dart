@@ -1391,6 +1391,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardDisplayNameLabel => 'Turniername';
 
   @override
+  String get tournamentWizardClubLabel => 'Ausrichtender Verein';
+
+  @override
+  String get tournamentWizardClubHint =>
+      'Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten.';
+
+  @override
+  String get tournamentWizardClubNone => 'Kein Verein (persönlich)';
+
+  @override
   String get tournamentWizardLocationLabel => 'Ort';
 
   @override
@@ -1649,6 +1659,40 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardKoRulesLabel => 'KO-Regelsatz';
 
   @override
+  String get tournamentWizardKoRoundRulesLabel => 'Regeln pro KO-Runde';
+
+  @override
+  String get tournamentWizardKoRoundRulesHint =>
+      'Sätze, Zeit und Pause können pro Runde gewählt werden.';
+
+  @override
+  String get tournamentWizardKoRoundFinal => 'Final';
+
+  @override
+  String get tournamentWizardKoRoundSemi => 'Halbfinale';
+
+  @override
+  String get tournamentWizardKoRoundQuarter => 'Viertelfinale';
+
+  @override
+  String get tournamentWizardKoRoundEighth => 'Achtelfinale';
+
+  @override
+  String tournamentWizardKoRoundOf(int size) {
+    return '1/$size-Final';
+  }
+
+  @override
+  String get tournamentWizardKoRoundPauseLabel => 'Pause danach (Min.)';
+
+  @override
+  String get tournamentWizardKoRoundTiebreakLabel => 'Tiebreak';
+
+  @override
+  String get tournamentWizardKoRoundTiebreakAfterLabel =>
+      'Tiebreak nach (Min.)';
+
+  @override
   String get tournamentWizardKoFinalNoTiebreak => 'Ab Halbfinale ohne Tiebreak';
 
   @override
@@ -1684,6 +1728,47 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardFormatComingSoon => 'Folgt in M2+';
 
   @override
+  String get tournamentWizardVorrundeLabel => 'Vorrunde';
+
+  @override
+  String get tournamentWizardVorrundeGroupPhase => 'Gruppenphase';
+
+  @override
+  String get tournamentWizardVorrundeGroupPhaseHint =>
+      'Jeder gegen jeden, Rangliste entscheidet.';
+
+  @override
+  String get tournamentWizardVorrundeSchoch => 'Schoch';
+
+  @override
+  String get tournamentWizardVorrundeSchochHint =>
+      'Schoch-Paarung über mehrere Runden, dann Rangliste.';
+
+  @override
+  String get tournamentWizardKoSystemLabel => 'K.-o.-System';
+
+  @override
+  String get tournamentWizardKoSystemNone => 'Kein K.-o.';
+
+  @override
+  String get tournamentWizardKoSystemNoneHint =>
+      'Nur Vorrunde, Rangliste entscheidet.';
+
+  @override
+  String get tournamentWizardKoSystemSingle => 'Single-Out';
+
+  @override
+  String get tournamentWizardKoSystemSingleHint =>
+      'Eine Niederlage und du bist raus.';
+
+  @override
+  String get tournamentWizardKoSystemDouble => 'Double-Out';
+
+  @override
+  String get tournamentWizardKoSystemDoubleHint =>
+      'Erst nach zwei Niederlagen ausgeschieden.';
+
+  @override
   String get tournamentWizardSetsToWinLabel => 'Sätze zum Sieg';
 
   @override
@@ -1700,6 +1785,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentWizardCreateButton => 'Turnier anlegen';
+
+  @override
+  String get tournamentWizardSaveButton => 'Änderungen speichern';
+
+  @override
+  String get tournamentWizardEditTitle => 'Turnier bearbeiten';
 
   @override
   String tournamentWizardSubmitError(String error) {
@@ -1927,6 +2018,25 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentDetailAborted => 'Turnier abgebrochen.';
+
+  @override
+  String get tournamentDetailActionEdit => 'Bearbeiten';
+
+  @override
+  String get tournamentDetailHintDraft =>
+      'Veröffentlichen und Anmeldung öffnen, damit sich Spieler anmelden können. Gestartet wird erst nach Anmeldeschluss.';
+
+  @override
+  String get tournamentDetailHintPublished =>
+      'Anmeldung öffnen, damit sich Spieler anmelden können. Gestartet wird erst nach Anmeldeschluss.';
+
+  @override
+  String get tournamentDetailHintRegistrationOpen =>
+      'Anmeldung schliessen, sobald genug Teams angemeldet sind. Danach kann das Turnier gestartet werden.';
+
+  @override
+  String get tournamentDetailHintRegistrationClosed =>
+      'Anmeldung ist geschlossen. Jetzt kann das Turnier gestartet werden.';
 
   @override
   String get tournamentDetailPools => 'Gruppen';

@@ -271,6 +271,34 @@ class TournamentRepository implements TournamentRemote {
   }
 
   @override
+  Future<void> updateTournament({
+    required TournamentId id,
+    required String displayName,
+    required int teamSize,
+    required int minParticipants,
+    required int maxParticipants,
+    required TournamentFormat format,
+    required Map<String, Object?> matchFormatConfig,
+    required List<String> tiebreakerOrder,
+    Map<String, Object?> setup = const <String, Object?>{},
+  }) async {
+    await _client.rpc<Map<String, dynamic>>(
+      'tournament_update',
+      params: <String, dynamic>{
+        'p_tournament_id': id.value,
+        'p_display_name': displayName,
+        'p_team_size': teamSize,
+        'p_min_participants': minParticipants,
+        'p_max_participants': maxParticipants,
+        'p_format': format.toWire(),
+        'p_match_format_config': matchFormatConfig,
+        'p_tiebreaker_order': tiebreakerOrder,
+        'p_setup': setup,
+      },
+    );
+  }
+
+  @override
   Future<void> publish(TournamentId id) =>
       _voidRpc('tournament_publish', id);
 

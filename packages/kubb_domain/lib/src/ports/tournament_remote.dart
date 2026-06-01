@@ -331,6 +331,7 @@ class TournamentDetailHeader {
     required this.tournamentId,
     required this.displayName,
     required this.createdByUserId,
+    required this.clubId,
     required this.teamSize,
     required this.maxTeamSize,
     required this.minParticipants,
@@ -345,11 +346,28 @@ class TournamentDetailHeader {
     required this.publishedAt,
     required this.startedAt,
     required this.completedAt,
+    this.setup = const <String, Object?>{},
   });
 
   final String tournamentId;
   final String displayName;
   final String? createdByUserId;
+
+  /// Optional organizing club (`tournaments.club_id`). When set, an active
+  /// owner/admin/organizer of this club may manage the tournament alongside
+  /// the creator (server: `tournament_caller_can_manage`). NULL means the
+  /// tournament has no club and only the creator may manage it.
+  final String? clubId;
+
+  /// Raw P6 setup wire map as projected by `tournament_get`
+  /// (20261201000021). Carries the snake_case keys produced by
+  /// `TournamentConfigDraft.toSetupConfig()` — location, dates, fees,
+  /// rule_variants, ko_config, pitch_plan, etc. Kept as an opaque map (the
+  /// same pattern as [matchFormatConfig]) so the edit screen can rebuild a
+  /// draft via `TournamentConfigDraft.fromDetail(...)` without the domain
+  /// header growing ~24 typed fields. Empty when the server omits them
+  /// (older RPC revisions / the test fake).
+  final Map<String, Object?> setup;
 
   /// Minimum players per team registration (`tournaments.team_size`).
   /// For solo tournaments this is `1`.
@@ -476,6 +494,26 @@ abstract interface class TournamentRemote {
   /// fakes keep compiling; defaults to an empty map (server applies its
   /// column defaults).
   Future<TournamentId> createTournament({
+    required String displayName,
+    required int teamSize,
+    required int minParticipants,
+    required int maxParticipants,
+    required TournamentFormat format,
+    required Map<String, Object?> matchFormatConfig,
+    required List<String> tiebreakerOrder,
+    Map<String, Object?> setup,
+  });
+
+  /// Edits an existing tournament's header + P6 setup fields after it has
+  /// been created (P7 / USER SPEC: organiser may edit details after
+  /// publish). Mirrors [createTournament]'s parameter shape; [setup]
+  /// carries the same snake_case wire map from
+  /// `TournamentConfigDraft.toSetupConfig()`. The server
+  /// (`tournament_update`) gates on the creator and refuses edits once the
+  /// tournament has gone live (status must be pre-start: draft /
+  /// published / registration_open / registration_closed).
+  Future<void> updateTournament({
+    required TournamentId id,
     required String displayName,
     required int teamSize,
     required int minParticipants,

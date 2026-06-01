@@ -167,4 +167,104 @@ void main() {
     );
     expect(host.lastConfig?.withThirdPlacePlayoff, isTrue);
   });
+
+  testWidgets(
+      'renders one per-round rules block per KO round (tracks qualifier count)',
+      (tester) async {
+    // 8 qualifiers => 3 KO rounds (Achtel/Viertel… no — bracket 8 = 3 rounds:
+    // Viertelfinale, Halbfinale, Final). Seeded list has length 3.
+    await _pump(
+      tester,
+      draft: TournamentConfigDraft(
+        displayName: 'Cup',
+        format: TournamentFormat.roundRobinThenKo,
+        koType: KoType.singleOut,
+        koConfig: KoPhaseConfig(qualifierCount: 8, participantCount: 8),
+        koRoundFormats: const <MatchFormatSpec>[
+          MatchFormatSpec(setsToWin: 2, maxSets: 3, timeLimitSeconds: 1800),
+          MatchFormatSpec(setsToWin: 3, maxSets: 5, timeLimitSeconds: 3600),
+          MatchFormatSpec(
+            setsToWin: 3,
+            maxSets: 5,
+            timeLimitSeconds: 3600,
+            tiebreakEnabled: false,
+            finalNoTiebreak: true,
+          ),
+        ],
+      ),
+    );
+    // One block per round → the round labels surface (bracket size 8).
+    expect(find.text('Viertelfinale'), findsOneWidget);
+    expect(find.text('Halbfinale'), findsOneWidget);
+    expect(find.text('Final'), findsOneWidget);
+  });
+
+  testWidgets('editing a per-round Sätze field updates that round via the '
+      'controller', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    // Keep the notifier alive for the whole test (otherwise it auto-disposes
+    // once the synchronous reads return and `setKoRoundFormat` throws).
+    container.listen(
+      tournamentConfigControllerProvider,
+      (_, _) {},
+      fireImmediately: true,
+    );
+    final controller =
+        container.read(tournamentConfigControllerProvider.notifier);
+
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final draft = TournamentConfigDraft(
+      displayName: 'Cup',
+      format: TournamentFormat.roundRobinThenKo,
+      koType: KoType.singleOut,
+      koConfig: KoPhaseConfig(qualifierCount: 4, participantCount: 4),
+      koRoundFormats: const <MatchFormatSpec>[
+        MatchFormatSpec(setsToWin: 2, maxSets: 3, timeLimitSeconds: 1800),
+        MatchFormatSpec(setsToWin: 2, maxSets: 3, timeLimitSeconds: 1800),
+      ],
+    );
+    // Seed the controller so setKoRoundFormat has a list to write into.
+    controller
+      ..setKoType(KoType.singleOut)
+      ..setKoConfig(
+        KoPhaseConfig(qualifierCount: 4, participantCount: 4),
+      );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: KubbTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('de'),
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: WizardKoConfigStep(
+              draft: draft,
+              controller: controller,
+              onConfigChanged: (_) {},
+              onSeedingModeChanged: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The first per-round "Sätze zum Sieg" field belongs to round index 0.
+    final saetze = find.widgetWithText(Row, 'Sätze zum Sieg');
+    expect(saetze, findsWidgets);
+    final field = find
+        .descendant(of: saetze.first, matching: find.byType(TextField))
+        .first;
+    await tester.enterText(field, '3');
+    await tester.pumpAndSettle();
+
+    expect(container.read(tournamentConfigControllerProvider)
+        .koRoundFormats.first.setsToWin, 3);
+  });
 }

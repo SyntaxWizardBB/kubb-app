@@ -93,6 +93,14 @@ class _Body extends ConsumerWidget {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final isCreator = detail.isCallerCreator(myUserId);
+    // Lifecycle/edit authority (PER-TOURNAMENT). The creator is always
+    // allowed; an active owner/admin/organizer of the tournament's
+    // organizing club (detail.tournament.clubId) also gets the lifecycle and
+    // edit actions. A tournament with no club is manageable by the creator
+    // only. The server re-checks `tournament_caller_can_manage` in every
+    // lifecycle/update RPC, so this only governs button visibility.
+    final canManage = isCreator ||
+        ref.watch(canManageTournamentClubProvider(detail.tournament.clubId));
     TournamentParticipant? me;
     if (myUserId != null) {
       for (final p in detail.participants) {
@@ -173,7 +181,12 @@ class _Body extends ConsumerWidget {
           _PoolStandingsCard(id: id),
         ],
         const SizedBox(height: KubbTokens.space5),
-        _Actions(detail: detail, isCreator: isCreator, me: me, id: id),
+        _Actions(
+            detail: detail,
+            isCreator: isCreator,
+            canManage: canManage,
+            me: me,
+            id: id),
         const SizedBox(height: KubbTokens.space5),
         _AuditTail(events: detail.auditTail),
       ],
@@ -272,10 +285,16 @@ class _Actions extends ConsumerWidget {
   const _Actions(
       {required this.detail,
       required this.isCreator,
+      required this.canManage,
       required this.me,
       required this.id});
   final TournamentDetail detail;
   final bool isCreator;
+
+  /// Creator OR a role holder (profile organizer / club admin). Gates the
+  /// lifecycle + edit actions and the lifecycle hint; participant moderation
+  /// stays creator-only via [isCreator].
+  final bool canManage;
   final TournamentParticipant? me;
   final TournamentId id;
 
@@ -315,12 +334,25 @@ class _Actions extends ConsumerWidget {
     void nav(String label, String path) =>
         buttons.add(mk(label, () => context.push(path)));
 
-    if (status == TournamentStatus.draft && isCreator) {
+    // P7 edit-after-publish: the organizer (creator) may edit the details
+    // while the tournament is still pre-start. The server re-checks both
+    // the creator and the status; once live/finalized/aborted the structure
+    // is frozen and the edit entry-point disappears.
+    final canEdit = canManage &&
+        (status == TournamentStatus.draft ||
+            status == TournamentStatus.published ||
+            status == TournamentStatus.registrationOpen ||
+            status == TournamentStatus.registrationClosed);
+    if (canEdit) {
+      nav(l.tournamentDetailActionEdit, TournamentRoutes.edit(id.value));
+    }
+
+    if (status == TournamentStatus.draft && canManage) {
       op(l.tournamentDetailActionPublish, () => actions.publish(id));
-    } else if (status == TournamentStatus.published && isCreator) {
+    } else if (status == TournamentStatus.published && canManage) {
       op(l.tournamentDetailActionOpenReg, () => actions.openRegistration(id));
     } else if (status == TournamentStatus.registrationOpen) {
-      if (isCreator) {
+      if (canManage) {
         op(l.tournamentDetailActionCloseReg,
             () => actions.closeRegistration(id));
       } else if (me == null) {
@@ -335,10 +367,10 @@ class _Actions extends ConsumerWidget {
               color: KubbTokens.miss);
         }
       }
-    } else if (status == TournamentStatus.registrationClosed && isCreator) {
+    } else if (status == TournamentStatus.registrationClosed && canManage) {
       op(l.tournamentDetailActionStart, () => actions.startTournament(id));
     } else if (status == TournamentStatus.live) {
-      if (isCreator) {
+      if (canManage) {
         op(l.tournamentDetailActionFinalize,
             () => actions.finalizeTournament(id));
       }
@@ -366,25 +398,91 @@ class _Actions extends ConsumerWidget {
     // itself ignores stale status (M4.2-T5 renders an empty grid when no
     // pitches exist), so gating on `isCreator` alone keeps the surface
     // discoverable from draft through finalized.
-    if (isCreator) {
+    if (canManage) {
       nav(l.tournamentDetailActionLiveDashboard,
           TournamentRoutes.liveDashboard(id.value));
     }
-    if (isCreator &&
+    if (canManage &&
         status != TournamentStatus.finalized &&
         status != TournamentStatus.aborted) {
       op(l.tournamentDetailActionAbort, () => actions.abortTournament(id),
           color: KubbTokens.miss);
     }
-    if (buttons.isEmpty) return const SizedBox.shrink();
+    // Lifecycle hint: only a manager (creator or organizer/club admin) sees
+    // it, and only while the tournament is pre-start. It spells out the
+    // publish→open→close→start sequence so the registration flow stops being
+    // invisible (USER SPEC).
+    final hint = canManage ? _lifecycleHint(status, l) : null;
+
+    if (buttons.isEmpty && hint == null) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (hint != null) ...[
+          _LifecycleHint(text: hint),
+          const SizedBox(height: KubbTokens.space3),
+        ],
         for (var i = 0; i < buttons.length; i++) ...[
           if (i > 0) const SizedBox(height: KubbTokens.space2),
           buttons[i],
         ],
       ],
+    );
+  }
+
+  /// Organizer-facing copy for the current lifecycle stage; null when the
+  /// stage carries no guidance (live / finalized / aborted).
+  String? _lifecycleHint(TournamentStatus status, AppLocalizations l) {
+    return switch (status) {
+      TournamentStatus.draft => l.tournamentDetailHintDraft,
+      TournamentStatus.published => l.tournamentDetailHintPublished,
+      TournamentStatus.registrationOpen =>
+        l.tournamentDetailHintRegistrationOpen,
+      TournamentStatus.registrationClosed =>
+        l.tournamentDetailHintRegistrationClosed,
+      TournamentStatus.live ||
+      TournamentStatus.finalized ||
+      TournamentStatus.aborted =>
+        null,
+    };
+  }
+}
+
+/// Small info banner that guides the organizer through the lifecycle
+/// (publish → open registration → close → start). Uses the raised-surface
+/// chrome so it reads as helper copy, not an error.
+class _LifecycleHint extends StatelessWidget {
+  const _LifecycleHint({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Container(
+      padding: const EdgeInsets.all(KubbTokens.space3),
+      decoration: BoxDecoration(
+        color: tokens.bgRaised,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+        border: Border.all(color: tokens.line, width: 1.5),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, size: 18, color: tokens.fgMuted),
+          const SizedBox(width: KubbTokens.space2),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.35,
+                color: tokens.fgMuted,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

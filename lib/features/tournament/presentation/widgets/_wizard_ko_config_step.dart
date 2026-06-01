@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -50,8 +51,43 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
         SeedingMode.auto;
     _qualifierCtrl = TextEditingController(text: '$_qualifierCount');
     // Commit the smart default upfront so the wizard's `_stepValid` can
-    // verify the KO config without waiting for user input.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _pushIfValid());
+    // verify the KO config without waiting for user input, then seed the
+    // per-round §A default profiles for rounds still at the bare default.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pushIfValid();
+      _seedRoundDefaults();
+    });
+  }
+
+  @override
+  void didUpdateWidget(WizardKoConfigStep oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // When the qualifier count changes the per-round list is resized by the
+    // controller; reseed the §A profiles for the freshly-added bare-default
+    // rounds (existing organiser edits are left untouched).
+    if (widget.draft.koRoundFormats.length !=
+        oldWidget.draft.koRoundFormats.length) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _seedRoundDefaults();
+      });
+    }
+  }
+
+  /// Replaces any per-round entry still equal to the bare fallback default
+  /// with its deterministic P6_RULES_DECISIONS §A profile (Bo3 early,
+  /// Bo5 from quarter, no tiebreak from the semifinal). Organiser edits are
+  /// preserved because only untouched (bare-default) rounds are reseeded.
+  void _seedRoundDefaults() {
+    final rounds = widget.draft.koRoundFormats;
+    final total = rounds.length;
+    for (var i = 0; i < total; i++) {
+      if (rounds[i] == TournamentConfigDraft.defaultKoRoundFormat) {
+        widget.controller.setKoRoundFormat(
+          i,
+          TournamentConfigDraft.defaultKoRoundFormatFor(i, total),
+        );
+      }
+    }
   }
 
   @override
@@ -190,20 +226,61 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
     );
   }
 
-  static const MatchFormatSpec _defaultKoFmt = MatchFormatSpec(
-    setsToWin: 3,
-    maxSets: 5,
-    timeLimitSeconds: 3600,
-    tiebreakAfterSeconds: 2400,
-    finalNoTiebreak: true,
-  );
+  /// Human label for KO round [index] (0-based, 0 = first round) of
+  /// [totalRounds] total, counted from the back: last = Final, then
+  /// Halbfinale / Viertelfinale / Achtelfinale, and `1/{n}-Final` beyond.
+  String _koRoundLabel(AppLocalizations l10n, int index, int totalRounds) {
+    final fromBack = totalRounds - index; // 1 = final, 2 = semi, …
+    final remaining = 1 << fromBack; // teams entering this round
+    return switch (remaining) {
+      2 => l10n.tournamentWizardKoRoundFinal,
+      4 => l10n.tournamentWizardKoRoundSemi,
+      8 => l10n.tournamentWizardKoRoundQuarter,
+      16 => l10n.tournamentWizardKoRoundEighth,
+      _ => l10n.tournamentWizardKoRoundOf(remaining ~/ 2),
+    };
+  }
+
+  /// Per-KO-round rule blocks, one per entry in [TournamentConfigDraft.
+  /// koRoundFormats]. Seeds any round still at the bare default with the
+  /// deterministic §A profile (postframe, so it doesn't mutate during build).
+  List<Widget> _koRoundSections(
+    BuildContext context,
+    Widget Function(String) label,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final d = widget.draft;
+    final c = widget.controller;
+    final rounds = d.koRoundFormats;
+    if (rounds.isEmpty) return const <Widget>[];
+    final total = rounds.length;
+    return <Widget>[
+      label(l10n.tournamentWizardKoRoundRulesLabel),
+      Padding(
+        padding: const EdgeInsets.only(bottom: KubbTokens.space3),
+        child: Text(
+          l10n.tournamentWizardKoRoundRulesHint,
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).extension<KubbTokens>()!.fgMuted,
+          ),
+        ),
+      ),
+      for (var i = 0; i < total; i++)
+        _KoRoundBlock(
+          key: ValueKey<int>(i),
+          title: _koRoundLabel(l10n, i, total),
+          spec: rounds[i],
+          onChanged: (spec) => c.setKoRoundFormat(i, spec),
+        ),
+    ];
+  }
 
   List<Widget> _phase3Sections(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l10n = AppLocalizations.of(context);
     final d = widget.draft;
     final c = widget.controller;
-    final ko = d.koMatchFormat ?? _defaultKoFmt;
     final quali = d.mightyFinisherQuali;
     final consol = d.consolationBracket;
 
@@ -221,23 +298,9 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
         );
 
     return [
-      label(l10n.tournamentWizardBracketTypeLabel),
-      SegmentedButton<BracketType>(
-        segments: [
-          ButtonSegment(
-            value: BracketType.singleElimination,
-            label: Text(l10n.tournamentWizardBracketSingle),
-          ),
-          ButtonSegment(
-            value: BracketType.doubleElimination,
-            label: Text(l10n.tournamentWizardBracketDouble),
-          ),
-        ],
-        selected: {d.bracketType},
-        onSelectionChanged: (s) => c.setBracketType(s.first),
-        showSelectedIcon: false,
-      ),
-      const SizedBox(height: KubbTokens.space5),
+      // The single/double-out distinction is chosen on the format step via
+      // the KO-system axis (KoType) — `bracketType` derives from it, so we
+      // do NOT ask it again here to avoid a conflicting second source.
       label(l10n.tournamentWizardKoMatchupLabel),
       SegmentedButton<KoMatchup>(
         segments: [
@@ -272,32 +335,10 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
         showSelectedIcon: false,
       ),
       const SizedBox(height: KubbTokens.space5),
-      label(l10n.tournamentWizardKoRulesLabel),
-      _MiniStepper(
-        label: l10n.tournamentWizardSetsToWinLabel,
-        value: ko.setsToWin,
-        min: 1,
-        max: 4,
-        onChanged: (v) => c.setKoMatchFormat(
-          ko.copyWith(setsToWin: v, maxSets: 2 * v - 1 > ko.maxSets ? 2 * v - 1 : ko.maxSets),
-        ),
-      ),
-      _MiniStepper(
-        label: l10n.tournamentWizardMatchTimeLabel,
-        value: (ko.timeLimitSeconds / 60).round(),
-        min: 5,
-        max: 120,
-        onChanged: (v) => c.setKoMatchFormat(
-          ko.copyWith(timeLimitSeconds: v * 60),
-        ),
-      ),
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(l10n.tournamentWizardKoFinalNoTiebreak),
-        value: ko.finalNoTiebreak,
-        onChanged: (v) =>
-            c.setKoMatchFormat(ko.copyWith(finalNoTiebreak: v)),
-      ),
+      // Per-KO-round rule blocks. The list length is derived from the
+      // qualifier count (bracket size) and kept in sync by the controller;
+      // each block edits one round's MatchFormatSpec via setKoRoundFormat.
+      ..._koRoundSections(context, label),
       const SizedBox(height: KubbTokens.space5),
       SwitchListTile(
         contentPadding: EdgeInsets.zero,
@@ -309,11 +350,12 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
         ),
       ),
       if (quali?.enabled ?? false)
-        _MiniStepper(
+        WizardNumberField(
           label: l10n.tournamentWizardMightyQualiSlots,
           value: quali?.slots ?? 6,
           min: 1,
           max: 32,
+          compact: true,
           onChanged: (v) => c.setMightyFinisherQuali(
             MightyFinisherQuali(enabled: true, slots: v),
           ),
@@ -335,59 +377,108 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
   }
 }
 
-/// Compact label + −/value/+ stepper used by the KO config sections.
-class _MiniStepper extends StatelessWidget {
-  const _MiniStepper({
-    required this.label,
-    required this.value,
-    required this.min,
-    required this.max,
+/// One per-KO-round rules card: numeric Sätze-zum-Sieg, Match-Zeit and
+/// Pause inputs plus a Tiebreak on/off switch with its own after-time. Edits
+/// emit a new [MatchFormatSpec] via [onChanged]; `max_sets` is auto-clamped
+/// to `2*setsToWin - 1` so a series can always be decided.
+class _KoRoundBlock extends StatelessWidget {
+  const _KoRoundBlock({
+    required this.title,
+    required this.spec,
     required this.onChanged,
+    super.key,
   });
 
-  final String label;
-  final int value;
-  final int min;
-  final int max;
-  final ValueChanged<int> onChanged;
+  final String title;
+  final MatchFormatSpec spec;
+  final ValueChanged<MatchFormatSpec> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: KubbTokens.space1half),
-      child: Row(
+    final l10n = AppLocalizations.of(context);
+    final timeMin = (spec.timeLimitSeconds / 60).round();
+    return Container(
+      margin: const EdgeInsets.only(bottom: KubbTokens.space3),
+      padding: const EdgeInsets.all(KubbTokens.space4),
+      decoration: BoxDecoration(
+        color: tokens.bgRaised,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+        border: Border.all(color: tokens.line, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: tokens.fg,
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: tokens.fg,
+            ),
+          ),
+          const SizedBox(height: KubbTokens.space1half),
+          WizardNumberField(
+            label: l10n.tournamentWizardSetsToWinLabel,
+            value: spec.setsToWin,
+            min: 1,
+            max: 4,
+            compact: true,
+            onChanged: (v) {
+              final floor = 2 * v - 1;
+              onChanged(
+                spec.copyWith(
+                  setsToWin: v,
+                  maxSets: spec.maxSets < floor ? floor : spec.maxSets,
+                ),
+              );
+            },
+          ),
+          WizardNumberField(
+            label: l10n.tournamentWizardMatchTimeLabel,
+            value: timeMin,
+            min: 5,
+            max: 120,
+            compact: true,
+            onChanged: (v) => onChanged(spec.copyWith(timeLimitSeconds: v * 60)),
+          ),
+          WizardNumberField(
+            label: l10n.tournamentWizardKoRoundPauseLabel,
+            value: (spec.breakBetweenMatchesSeconds / 60).round(),
+            min: 0,
+            max: 60,
+            compact: true,
+            onChanged: (v) =>
+                onChanged(spec.copyWith(breakBetweenMatchesSeconds: v * 60)),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            title: Text(l10n.tournamentWizardKoRoundTiebreakLabel),
+            value: spec.tiebreakEnabled,
+            onChanged: (on) => onChanged(
+              spec.copyWith(
+                tiebreakEnabled: on,
+                // Seed a sane after-time when enabling without one set.
+                tiebreakAfterSeconds: on
+                    ? (spec.tiebreakAfterSeconds ??
+                        (spec.timeLimitSeconds - 600)
+                            .clamp(60, spec.timeLimitSeconds))
+                    : spec.tiebreakAfterSeconds,
               ),
             ),
           ),
-          IconButton(
-            onPressed: value > min ? () => onChanged(value - 1) : null,
-            icon: const Icon(Icons.remove_circle_outline),
-          ),
-          SizedBox(
-            width: 28,
-            child: Text(
-              '$value',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: tokens.fg,
-              ),
+          if (spec.tiebreakEnabled)
+            WizardNumberField(
+              label: l10n.tournamentWizardKoRoundTiebreakAfterLabel,
+              value: ((spec.tiebreakAfterSeconds ?? spec.timeLimitSeconds) / 60)
+                  .round(),
+              min: 1,
+              max: timeMin,
+              compact: true,
+              onChanged: (v) =>
+                  onChanged(spec.copyWith(tiebreakAfterSeconds: v * 60)),
             ),
-          ),
-          IconButton(
-            onPressed: value < max ? () => onChanged(value + 1) : null,
-            icon: const Icon(Icons.add_circle_outline),
-          ),
         ],
       ),
     );

@@ -204,6 +204,7 @@ class FakeTournamentRemote implements TournamentRemote {
         tournamentId: t.id.value,
         displayName: t.displayName,
         createdByUserId: t.createdByUserId.value,
+        clubId: null,
         teamSize: 1,
         maxTeamSize: 1,
         minParticipants: 2,
@@ -263,6 +264,49 @@ class FakeTournamentRemote implements TournamentRemote {
       createdByUserId: currentUser,
     );
     return id;
+  }
+
+  /// Captures the arguments handed to the last [updateTournament] call so
+  /// widget tests can assert the edit payload (changed display name,
+  /// setup map, etc.) reached the port.
+  ({
+    TournamentId id,
+    String displayName,
+    TournamentFormat format,
+    Map<String, Object?> setup,
+  })? lastUpdate;
+
+  @override
+  Future<void> updateTournament({
+    required TournamentId id,
+    required String displayName,
+    required int teamSize,
+    required int minParticipants,
+    required int maxParticipants,
+    required TournamentFormat format,
+    required Map<String, Object?> matchFormatConfig,
+    required List<String> tiebreakerOrder,
+    Map<String, Object?> setup = const <String, Object?>{},
+  }) async {
+    final t = _tournaments[id];
+    if (t == null) {
+      throw StateError('unknown tournament: ${id.value}');
+    }
+    if (t.status != TournamentStatus.draft &&
+        t.status != TournamentStatus.published &&
+        t.status != TournamentStatus.registrationOpen &&
+        t.status != TournamentStatus.registrationClosed) {
+      throw StateError('TOURNAMENT_LOCKED: ${t.status.name}');
+    }
+    t
+      ..displayName = displayName
+      ..format = format;
+    lastUpdate = (
+      id: id,
+      displayName: displayName,
+      format: format,
+      setup: setup,
+    );
   }
 
   @override
@@ -1366,8 +1410,8 @@ class _Tournament {
   });
 
   final TournamentId id;
-  final String displayName;
-  final TournamentFormat format;
+  String displayName;
+  TournamentFormat format;
   final UserId createdByUserId;
   TournamentStatus status = TournamentStatus.draft;
   DateTime? startedAt;
