@@ -43,6 +43,7 @@ import 'package:kubb_app/features/team/presentation/team_invitation_screen.dart'
 import 'package:kubb_app/features/team/presentation/team_list_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/public/public_match_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/public/public_tournament_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/register_team_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_bracket_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_conflict_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_detail_screen.dart';
@@ -122,6 +123,31 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     refreshListenable: notifier,
+    // Safety net: an unknown/misconfigured route renders a visible error
+    // page with a way home, instead of a silent blank screen (which is how
+    // the missing team-registration route used to fail).
+    errorBuilder: (context, state) => Scaffold(
+      appBar: AppBar(title: const Text('Seite nicht gefunden')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                state.error?.toString() ?? 'Unbekannte Route: ${state.uri}',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => context.go('/'),
+                child: const Text('Zur Startseite'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
     redirect: (context, state) {
       final loc = state.matchedLocation;
       // Public spectator routes (M4.2 / ADR-0026) bypass the auth gate
@@ -458,6 +484,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/tournament/:id/register',
                 builder: (_, state) => TournamentRegistrationScreen(
+                  tournamentId: TournamentId(state.pathParameters['id']!),
+                ),
+              ),
+              GoRoute(
+                // Team-registration hand-off target from
+                // TournamentRegistrationScreen for team tournaments. Was
+                // missing → pushing it hit a routeless blank screen (no
+                // errorBuilder existed), so team registration dead-ended.
+                path: '/tournament/:id/register/team',
+                builder: (_, state) => RegisterTeamScreen(
                   tournamentId: TournamentId(state.pathParameters['id']!),
                 ),
               ),
