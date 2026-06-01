@@ -318,6 +318,21 @@ void main() {
     expect(find.text('Anmeldung öffnen'), findsNothing);
   });
 
+  testWidgets(
+      'open-reg model: organizer can also register themselves — sees Anmelden '
+      'alongside Start', (tester) async {
+    await _pump(
+      tester,
+      _detail(status: TournamentStatus.registrationOpen),
+      callerUserId: 'u-organizer',
+      canManage: true,
+    );
+    // The organizer keeps the lifecycle control AND gets a personal register
+    // action (an organizer may play in their own tournament).
+    expect(find.text('Turnier starten'), findsOneWidget);
+    expect(find.text('Anmelden'), findsOneWidget);
+  });
+
   testWidgets('open-reg model: confirmed registrant sees "Angemeldet"',
       (tester) async {
     await _pump(

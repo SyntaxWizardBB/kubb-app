@@ -387,16 +387,22 @@ class _Actions extends ConsumerWidget {
       op(l.tournamentDetailActionPublish, () => actions.publish(id));
     } else if (status == TournamentStatus.registrationOpen ||
         status == TournamentStatus.published) {
+      // Organizer lifecycle controls.
       if (canManage) {
         op(l.tournamentDetailActionStart, () => actions.startTournament(id));
         op(l.tournamentDetailActionCloseReg,
             () => actions.closeRegistration(id));
-      } else if (me == null ||
-          me!.registrationStatus == TournamentParticipantStatus.withdrawn ||
-          me!.registrationStatus == TournamentParticipantStatus.rejected) {
+      }
+      // Personal registration — available to EVERYONE while registration is
+      // open, INCLUDING the organizer/creator (they may play in their own
+      // tournament). Shown alongside the manage controls above, so an admin
+      // is no longer stuck with only Start/Close and can register + withdraw.
+      final m = me;
+      if (m == null ||
+          m.registrationStatus == TournamentParticipantStatus.withdrawn ||
+          m.registrationStatus == TournamentParticipantStatus.rejected) {
         nav(l.tournamentDetailActionRegister, '$pathBase/register');
       } else {
-        final m = me!;
         // Confirmed or waitlisted: show the standing, then offer withdraw.
         buttons.add(_RegistrationStatusBadge(status: m.registrationStatus));
         op(
