@@ -163,39 +163,51 @@ class TournamentActions {
 
   Future<void> publish(TournamentId id) async {
     await _ref.read(tournamentRemoteProvider).publish(id);
-    _ref.invalidate(tournamentListProvider);
+    _invalidateListAndDetail(id);
   }
 
   Future<void> openRegistration(TournamentId id) async {
     await _ref.read(tournamentRemoteProvider).openRegistration(id);
-    _ref.invalidate(tournamentListProvider);
+    _invalidateListAndDetail(id);
   }
 
   Future<void> closeRegistration(TournamentId id) async {
     await _ref.read(tournamentRemoteProvider).closeRegistration(id);
-    _ref.invalidate(tournamentListProvider);
+    _invalidateListAndDetail(id);
   }
 
   Future<void> startTournament(TournamentId id) async {
     await _ref.read(tournamentRemoteProvider).startTournament(id);
-    _ref.invalidate(tournamentListProvider);
+    _invalidateListAndDetail(id);
   }
 
   Future<void> finalizeTournament(TournamentId id) async {
     await _ref.read(tournamentRemoteProvider).finalizeTournament(id);
-    _ref.invalidate(tournamentListProvider);
+    _invalidateListAndDetail(id);
   }
 
   Future<void> abortTournament(TournamentId id) async {
     await _ref.read(tournamentRemoteProvider).abortTournament(id);
-    _ref.invalidate(tournamentListProvider);
+    _invalidateListAndDetail(id);
   }
 
   Future<TournamentParticipantId> registerSingle(TournamentId id) async {
     final pid =
         await _ref.read(tournamentRemoteProvider).registerSingle(id);
-    _ref.invalidate(tournamentListProvider);
+    _invalidateListAndDetail(id);
     return pid;
+  }
+
+  /// Refresh BOTH the discovery list AND the detail of [id]. Lifecycle
+  /// mutations change the tournament's status, which gates the detail
+  /// screen's action buttons — without invalidating the detail provider
+  /// the organizer's screen stays on the old status (e.g. stuck showing
+  /// "Veröffentlichen" after publishing, never revealing "Anmeldung
+  /// öffnen"). See the test-feedback fix for the publish→open-reg dead end.
+  void _invalidateListAndDetail(TournamentId id) {
+    _ref
+      ..invalidate(tournamentListProvider)
+      ..invalidate(tournamentDetailProvider(id));
   }
 
   Future<void> withdrawRegistration(TournamentParticipantId id) async {
