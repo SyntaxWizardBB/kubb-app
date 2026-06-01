@@ -195,6 +195,7 @@ class TournamentActions {
     final pid =
         await _ref.read(tournamentRemoteProvider).registerSingle(id);
     _invalidateListAndDetail(id);
+    _ref.invalidate(myTournamentRegistrationsProvider);
     return pid;
   }
 
@@ -210,9 +211,22 @@ class TournamentActions {
       ..invalidate(tournamentDetailProvider(id));
   }
 
-  Future<void> withdrawRegistration(TournamentParticipantId id) async {
+  /// Self-withdraw. Refreshes the discovery list AND the "Angemeldete
+  /// Turniere" list ([myTournamentRegistrationsProvider]) so the tournament
+  /// drops out of the caller's registrations and the tile flips back to
+  /// "Anmelden". Pass [tournamentId] (the participant's tournament) so the
+  /// detail screen flips "Abmelden" → "Anmelden" immediately too.
+  Future<void> withdrawRegistration(
+    TournamentParticipantId id, {
+    TournamentId? tournamentId,
+  }) async {
     await _ref.read(tournamentRemoteProvider).withdrawRegistration(id);
-    _ref.invalidate(tournamentListProvider);
+    _ref
+      ..invalidate(tournamentListProvider)
+      ..invalidate(myTournamentRegistrationsProvider);
+    if (tournamentId != null) {
+      _ref.invalidate(tournamentDetailProvider(tournamentId));
+    }
   }
 
   Future<void> confirmRegistration(TournamentParticipantId id) async {

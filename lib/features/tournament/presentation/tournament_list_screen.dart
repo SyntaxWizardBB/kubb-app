@@ -109,8 +109,8 @@ class TournamentListScreen extends ConsumerWidget {
                     ? () => context.push('$detailPath/register')
                     : null,
                 onWithdraw: canToggle && registered
-                    ? () =>
-                        unawaited(_withdraw(context, ref, reg.participantId, l))
+                    ? () => unawaited(_withdraw(context, ref,
+                        reg.participantId, reg.tournament.tournamentId, l))
                     : null,
               );
             },
@@ -128,6 +128,7 @@ class TournamentListScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     TournamentParticipantId participantId,
+    TournamentId tournamentId,
     AppLocalizations l,
   ) async {
     final confirmed = await showDialog<bool>(
@@ -152,7 +153,6 @@ class TournamentListScreen extends ConsumerWidget {
     if (confirmed != true) return;
     await ref
         .read(tournamentActionsProvider)
-        .withdrawRegistration(participantId);
-    ref.invalidate(myTournamentRegistrationsProvider);
+        .withdrawRegistration(participantId, tournamentId: tournamentId);
   }
 }

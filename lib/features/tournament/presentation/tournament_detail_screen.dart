@@ -396,7 +396,8 @@ class _Actions extends ConsumerWidget {
         op(
             l.tournamentDetailActionWithdraw,
             () => actions.withdrawRegistration(
-                TournamentParticipantId(m.participantId)),
+                TournamentParticipantId(m.participantId),
+                tournamentId: id),
             color: KubbTokens.miss);
       }
     } else if (status == TournamentStatus.registrationClosed && canManage) {
