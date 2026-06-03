@@ -2533,6 +2533,16 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bracket konnte nicht geladen werden';
 
   @override
+  String get tournamentBracketSectionMain => 'Hauptbaum';
+
+  @override
+  String get tournamentBracketConsolationLabel => 'Trostturnier';
+
+  @override
+  String get tournamentBracketMainTreeUnavailable =>
+      'Der Hauptbaum ist hier nicht verfügbar. Endplatzierungen 1–4 siehe Turnier-Detail.';
+
+  @override
   String get tournamentSeedingTitle => 'Seeding';
 
   @override

@@ -4678,6 +4678,24 @@ abstract class AppLocalizations {
   /// **'Bracket konnte nicht geladen werden'**
   String get tournamentBracketLoadError;
 
+  /// Segmented-button label for the main single-elim tree section of a consolation bracket (ADR-0028, Modell B)
+  ///
+  /// In de, this message translates to:
+  /// **'Hauptbaum'**
+  String get tournamentBracketSectionMain;
+
+  /// Fallback display name / segmented-button label for the consolation (Trostturnier) tree when no consolation_name is available (ADR-0028 §UI, DoD-06)
+  ///
+  /// In de, this message translates to:
+  /// **'Trostturnier'**
+  String get tournamentBracketConsolationLabel;
+
+  /// Hint shown in the Hauptbaum section of a consolation bracket when the single-elim main tree is not carried by the consolation domain object (ADR-0028 §1.1)
+  ///
+  /// In de, this message translates to:
+  /// **'Der Hauptbaum ist hier nicht verfügbar. Endplatzierungen 1–4 siehe Turnier-Detail.'**
+  String get tournamentBracketMainTreeUnavailable;
+
   /// Title of the seeding editor screen
   ///
   /// In de, this message translates to:

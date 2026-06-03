@@ -80,11 +80,20 @@ class TournamentBracketScreen extends ConsumerWidget {
 
   /// A bracket counts as empty when the server returned no KO rounds
   /// (tournament still in group phase) or every round is pairing-less.
+  ///
+  /// Exhaustive over all three sealed [Bracket] subtypes — the inverse of the
+  /// `hasBracket` switch in `tournament_detail_screen.dart`: a
+  /// [ConsolationBracket] (Modell B, ADR-0028) counts as non-empty once any
+  /// consolation round has been materialised, and a [DoubleEliminationBracket]
+  /// once its WB has rounds.
   bool _isEmpty(Bracket bracket) {
-    if (bracket is SingleEliminationBracket) {
-      if (bracket.rounds.isEmpty) return true;
-      return bracket.rounds.every((r) => r.pairings.isEmpty);
-    }
-    return true;
+    return switch (bracket) {
+      SingleEliminationBracket(:final rounds) =>
+        rounds.isEmpty || rounds.every((r) => r.pairings.isEmpty),
+      DoubleEliminationBracket(:final wbRounds) =>
+        wbRounds.isEmpty || wbRounds.every((r) => r.pairings.isEmpty),
+      ConsolationBracket(:final rounds) =>
+        rounds.isEmpty || rounds.every((r) => r.pairings.isEmpty),
+    };
   }
 }

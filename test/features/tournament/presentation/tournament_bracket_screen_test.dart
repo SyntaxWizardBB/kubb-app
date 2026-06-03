@@ -88,4 +88,31 @@ void main() {
     );
     expect(find.text('KO-Bracket'), findsOneWidget);
   });
+
+  testWidgets('empty ConsolationBracket shows the empty-state (DoD-10)',
+      (tester) async {
+    await _pump(
+      tester,
+      bracket: const ConsolationBracket(rounds: <BracketRound>[], thirdPlace: null),
+    );
+    expect(find.text('KO noch nicht gestartet'), findsOneWidget);
+    expect(find.byType(BracketCanvas), findsNothing);
+  });
+
+  testWidgets('materialised ConsolationBracket shows the canvas (DoD-10)',
+      (tester) async {
+    final bracket = ConsolationBracket(
+      rounds: <BracketRound>[
+        BracketRound(
+          number: 1,
+          phase: BracketPhase.consolation,
+          pairings: <BracketPairing>[_pair('cE', 'cF')],
+        ),
+      ],
+      thirdPlace: null,
+    );
+    await _pump(tester, bracket: bracket);
+    expect(find.byType(BracketCanvas), findsOneWidget);
+    expect(find.text('KO noch nicht gestartet'), findsNothing);
+  });
 }
