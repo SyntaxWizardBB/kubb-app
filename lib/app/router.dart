@@ -58,6 +58,7 @@ import 'package:kubb_app/features/tournament/presentation/tournament_registratio
 import 'package:kubb_app/features/tournament/presentation/tournament_registrations_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_setup_wizard.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_shootout_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_standings_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_stats_screen.dart';
 import 'package:kubb_app/features/training/presentation/finisseur_config_screen.dart';
@@ -540,6 +541,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 path: '/tournament/:id/dashboard',
                 builder: (_, state) => TournamentLiveDashboardScreen(
                   tournamentId: state.pathParameters['id']!,
+                ),
+              ),
+              GoRoute(
+                // P6 shoot-out report/confirm — entry point is the shoot-out
+                // inbox message; the tie group is addressed by its zero-based
+                // start rank.
+                path: '/tournament/:id/shootout/:startRank',
+                builder: (_, state) => TournamentShootoutScreen(
+                  tournamentId: state.pathParameters['id']!,
+                  startRank:
+                      int.tryParse(state.pathParameters['startRank'] ?? '') ?? 0,
                 ),
               ),
             ],

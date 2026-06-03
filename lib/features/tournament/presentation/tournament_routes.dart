@@ -70,4 +70,12 @@ abstract final class TournamentRoutes {
   /// Organizer live dashboard for a running tournament (M4.2-T6).
   static String liveDashboard(String tournamentId) =>
       '$liveDashboardBase/$tournamentId/dashboard';
+
+  /// P6 shoot-out report/confirm screen for one tie group. The group is
+  /// addressed by its zero-based start rank (carried in the shoot-out inbox
+  /// payload). Compose as `'/tournament/$tournamentId/shootout/$startRank'`.
+  static const shootoutBase = '/tournament';
+
+  static String shootout(String tournamentId, int startRank) =>
+      '$shootoutBase/$tournamentId/shootout/$startRank';
 }

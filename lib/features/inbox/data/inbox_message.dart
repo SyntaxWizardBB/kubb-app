@@ -25,9 +25,34 @@ enum InboxMessageKind {
   /// managers act on from the club detail screen.
   clubInvitation,
   clubMemberRemoved,
-  clubJoinRequest;
+  clubJoinRequest,
 
-  static InboxMessageKind fromWire(String raw) {
+  /// P6 shoot-out tiebreak task: the involved teams must report and confirm
+  /// the shoot-out winner ordering. The D2a server (migration
+  /// `20261202000000_tournament_shootout_server.sql`) ships this on the
+  /// generic `tournament_round` wire kind but tags the row with
+  /// `action_payload['kind'] == 'shootout'`; [fromWire] disambiguates on that
+  /// so it routes to the dedicated report/confirm screen instead of the
+  /// generic notice rendering.
+  tournamentShootout;
+
+  /// Maps the wire `kind` plus the row's [actionPayload] onto a typed kind.
+  ///
+  /// Most kinds map 1:1 from [raw]. The shoot-out task is the exception: the
+  /// server emits it as `tournament_round` (already in the inbox kind CHECK)
+  /// and only distinguishes it via `action_payload['kind'] == 'shootout'`, so
+  /// the disambiguation has to look at [actionPayload] too.
+  static InboxMessageKind fromWire(
+    String raw, {
+    Map<String, dynamic>? actionPayload,
+  }) {
+    // Shoot-out disambiguation: raw == 'tournament_round' carries the generic
+    // round notification AND the shoot-out task; only the action_payload kind
+    // separates them.
+    if (raw == 'tournament_round' &&
+        actionPayload?['kind'] == 'shootout') {
+      return InboxMessageKind.tournamentShootout;
+    }
     switch (raw) {
       case 'notice':
         return InboxMessageKind.notice;
@@ -73,16 +98,20 @@ class InboxMessage {
     DateTime? parseTs(Object? raw) =>
         raw is String ? DateTime.parse(raw) : null;
 
+    final actionPayload = row['action_payload'] as Map<String, dynamic>?;
     return InboxMessage(
       id: row['id'] as String,
-      kind: InboxMessageKind.fromWire(row['kind'] as String),
+      kind: InboxMessageKind.fromWire(
+        row['kind'] as String,
+        actionPayload: actionPayload,
+      ),
       subject: row['subject'] as String,
       body: row['body'] as String,
       sentAt: DateTime.parse(row['sent_at'] as String),
       readAt: parseTs(row['read_at']),
       repliedAt: parseTs(row['replied_at']),
       archivedAt: parseTs(row['archived_at']),
-      actionPayload: row['action_payload'] as Map<String, dynamic>?,
+      actionPayload: actionPayload,
       replyPayload: row['reply_payload'] as Map<String, dynamic>?,
     );
   }

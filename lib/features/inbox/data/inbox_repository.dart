@@ -233,6 +233,11 @@ class InboxRepository {
         return 'club_member_removed';
       case InboxMessageKind.clubJoinRequest:
         return 'club_join_request';
+      case InboxMessageKind.tournamentShootout:
+        // Server-side wire kind for the shoot-out task is the generic
+        // 'tournament_round'; the shoot-out is disambiguated by the
+        // action_payload, not a distinct wire kind (P6 D2a).
+        return 'tournament_round';
     }
   }
 }

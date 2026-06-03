@@ -6015,6 +6015,156 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Impressum'**
   String get settingsRowImprint;
+
+  /// P6 shoot-out report/confirm screen — app bar title
+  ///
+  /// In de, this message translates to:
+  /// **'Shoot-Out'**
+  String get shootoutTitle;
+
+  /// P6 shoot-out screen — app bar eyebrow
+  ///
+  /// In de, this message translates to:
+  /// **'Quali-Entscheidung'**
+  String get shootoutEyebrow;
+
+  /// P6 shoot-out screen — explanatory intro text
+  ///
+  /// In de, this message translates to:
+  /// **'Gleichstand an der Qualifikations-Grenze. Legt gemeinsam fest, in welcher Reihenfolge die beteiligten Teams den Shoot-Out gewonnen haben — bestes Team zuerst.'**
+  String get shootoutIntro;
+
+  /// P6 shoot-out screen — section header above the ordered list of tied teams
+  ///
+  /// In de, this message translates to:
+  /// **'Beteiligte Teams'**
+  String get shootoutParticipantsHeader;
+
+  /// P6 shoot-out screen — hint how to reorder the tied teams
+  ///
+  /// In de, this message translates to:
+  /// **'Reihenfolge per Pfeile anpassen — oben = Sieger.'**
+  String get shootoutOrderHint;
+
+  /// P6 shoot-out screen — 1-based rank prefix for an ordered team row
+  ///
+  /// In de, this message translates to:
+  /// **'{rank}.'**
+  String shootoutRankLabel(int rank);
+
+  /// P6 shoot-out screen — tooltip/label to move a team up in the order
+  ///
+  /// In de, this message translates to:
+  /// **'Nach oben'**
+  String get shootoutMoveUp;
+
+  /// P6 shoot-out screen — tooltip/label to move a team down in the order
+  ///
+  /// In de, this message translates to:
+  /// **'Nach unten'**
+  String get shootoutMoveDown;
+
+  /// P6 shoot-out screen — primary action that reports the chosen winner ordering
+  ///
+  /// In de, this message translates to:
+  /// **'Sieger melden'**
+  String get shootoutReportAction;
+
+  /// P6 shoot-out screen — action that confirms the reported winner ordering
+  ///
+  /// In de, this message translates to:
+  /// **'Bestätigen'**
+  String get shootoutConfirmAction;
+
+  /// P6 shoot-out screen — banner shown once an ordering was reported and is awaiting confirmation
+  ///
+  /// In de, this message translates to:
+  /// **'Eine Reihenfolge wurde gemeldet. Die andere Seite muss sie bestätigen.'**
+  String get shootoutReportedBanner;
+
+  /// P6 shoot-out screen — snackbar after a successful report
+  ///
+  /// In de, this message translates to:
+  /// **'Sieger-Reihenfolge gemeldet'**
+  String get shootoutReportedSnack;
+
+  /// P6 shoot-out screen — snackbar after a successful confirmation
+  ///
+  /// In de, this message translates to:
+  /// **'Shoot-Out bestätigt'**
+  String get shootoutConfirmedSnack;
+
+  /// P6 shoot-out screen — error message when report/confirm fails
+  ///
+  /// In de, this message translates to:
+  /// **'Shoot-Out konnte nicht aktualisiert werden: {error}'**
+  String shootoutError(String error);
+
+  /// P6 shoot-out screen — empty state title when no open shoot-out remains
+  ///
+  /// In de, this message translates to:
+  /// **'Kein offener Shoot-Out'**
+  String get shootoutEmptyTitle;
+
+  /// P6 shoot-out screen — empty state body
+  ///
+  /// In de, this message translates to:
+  /// **'Für dieses Turnier ist aktuell kein Shoot-Out für dich offen.'**
+  String get shootoutEmptyBody;
+
+  /// P6 shoot-out screen — load error message
+  ///
+  /// In de, this message translates to:
+  /// **'Shoot-Out konnte nicht geladen werden:\n{error}'**
+  String shootoutLoadError(String error);
+
+  /// Inbox detail — button that opens the shoot-out report/confirm screen
+  ///
+  /// In de, this message translates to:
+  /// **'Shoot-Out öffnen'**
+  String get shootoutInboxOpenAction;
+
+  /// P6 shoot-out screen — friendly message for server INVALID_ORDER
+  ///
+  /// In de, this message translates to:
+  /// **'Die Reihenfolge muss alle beteiligten Teams genau einmal enthalten.'**
+  String get shootoutErrorInvalidOrder;
+
+  /// P6 shoot-out screen — friendly message for server ORDER_MISMATCH
+  ///
+  /// In de, this message translates to:
+  /// **'Die Reihenfolge weicht von der gemeldeten ab. Bitte bestätige die gemeldete Reihenfolge unverändert.'**
+  String get shootoutErrorOrderMismatch;
+
+  /// P6 shoot-out screen — friendly message for server NOT_AUTHORISED
+  ///
+  /// In de, this message translates to:
+  /// **'Du gehörst nicht zu diesem Shoot-Out und kannst ihn nicht bearbeiten.'**
+  String get shootoutErrorNotAuthorised;
+
+  /// P6 shoot-out screen — friendly message for server ALREADY_RESOLVED
+  ///
+  /// In de, this message translates to:
+  /// **'Dieser Shoot-Out wurde bereits entschieden.'**
+  String get shootoutErrorAlreadyResolved;
+
+  /// P6 shoot-out screen — friendly message for server NOT_REPORTED
+  ///
+  /// In de, this message translates to:
+  /// **'Es wurde noch keine Reihenfolge gemeldet, die du bestätigen könntest.'**
+  String get shootoutErrorNotReported;
+
+  /// P6 shoot-out screen — friendly message when the reporter tries to self-confirm
+  ///
+  /// In de, this message translates to:
+  /// **'Die gemeldete Reihenfolge muss von der anderen Seite bestätigt werden.'**
+  String get shootoutErrorSelfConfirm;
+
+  /// P6 shoot-out screen — read-only hint shown to the confirming side (order is locked)
+  ///
+  /// In de, this message translates to:
+  /// **'Die gemeldete Reihenfolge bestätigen — bestes Team zuerst.'**
+  String get shootoutOrderHintReadonly;
 }
 
 class _AppLocalizationsDelegate

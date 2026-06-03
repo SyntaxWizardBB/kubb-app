@@ -3277,4 +3277,96 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsRowImprint => 'Impressum';
+
+  @override
+  String get shootoutTitle => 'Shoot-Out';
+
+  @override
+  String get shootoutEyebrow => 'Quali-Entscheidung';
+
+  @override
+  String get shootoutIntro =>
+      'Gleichstand an der Qualifikations-Grenze. Legt gemeinsam fest, in welcher Reihenfolge die beteiligten Teams den Shoot-Out gewonnen haben — bestes Team zuerst.';
+
+  @override
+  String get shootoutParticipantsHeader => 'Beteiligte Teams';
+
+  @override
+  String get shootoutOrderHint =>
+      'Reihenfolge per Pfeile anpassen — oben = Sieger.';
+
+  @override
+  String shootoutRankLabel(int rank) {
+    return '$rank.';
+  }
+
+  @override
+  String get shootoutMoveUp => 'Nach oben';
+
+  @override
+  String get shootoutMoveDown => 'Nach unten';
+
+  @override
+  String get shootoutReportAction => 'Sieger melden';
+
+  @override
+  String get shootoutConfirmAction => 'Bestätigen';
+
+  @override
+  String get shootoutReportedBanner =>
+      'Eine Reihenfolge wurde gemeldet. Die andere Seite muss sie bestätigen.';
+
+  @override
+  String get shootoutReportedSnack => 'Sieger-Reihenfolge gemeldet';
+
+  @override
+  String get shootoutConfirmedSnack => 'Shoot-Out bestätigt';
+
+  @override
+  String shootoutError(String error) {
+    return 'Shoot-Out konnte nicht aktualisiert werden: $error';
+  }
+
+  @override
+  String get shootoutEmptyTitle => 'Kein offener Shoot-Out';
+
+  @override
+  String get shootoutEmptyBody =>
+      'Für dieses Turnier ist aktuell kein Shoot-Out für dich offen.';
+
+  @override
+  String shootoutLoadError(String error) {
+    return 'Shoot-Out konnte nicht geladen werden:\n$error';
+  }
+
+  @override
+  String get shootoutInboxOpenAction => 'Shoot-Out öffnen';
+
+  @override
+  String get shootoutErrorInvalidOrder =>
+      'Die Reihenfolge muss alle beteiligten Teams genau einmal enthalten.';
+
+  @override
+  String get shootoutErrorOrderMismatch =>
+      'Die Reihenfolge weicht von der gemeldeten ab. Bitte bestätige die gemeldete Reihenfolge unverändert.';
+
+  @override
+  String get shootoutErrorNotAuthorised =>
+      'Du gehörst nicht zu diesem Shoot-Out und kannst ihn nicht bearbeiten.';
+
+  @override
+  String get shootoutErrorAlreadyResolved =>
+      'Dieser Shoot-Out wurde bereits entschieden.';
+
+  @override
+  String get shootoutErrorNotReported =>
+      'Es wurde noch keine Reihenfolge gemeldet, die du bestätigen könntest.';
+
+  @override
+  String get shootoutErrorSelfConfirm =>
+      'Die gemeldete Reihenfolge muss von der anderen Seite bestätigt werden.';
+
+  @override
+  String get shootoutOrderHintReadonly =>
+      'Die gemeldete Reihenfolge bestätigen — bestes Team zuerst.';
 }

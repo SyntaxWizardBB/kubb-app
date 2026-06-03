@@ -6,6 +6,7 @@ import 'package:kubb_domain/src/tournament/ko_phase.dart';
 import 'package:kubb_domain/src/tournament/pool_group_standings.dart';
 import 'package:kubb_domain/src/tournament/pool_phase.dart';
 import 'package:kubb_domain/src/tournament/roster_slot.dart';
+import 'package:kubb_domain/src/tournament/shootout.dart';
 import 'package:kubb_domain/src/values/ids.dart';
 import 'package:meta/meta.dart';
 
@@ -459,6 +460,130 @@ enum ForfeitAbsentSide {
   String toWire() => this == ForfeitAbsentSide.a ? 'A' : 'B';
 }
 
+/// Consensus state of one shoot-out tie group, mirroring the
+/// `tournament_shootouts.status` column (P6 D2a migration
+/// `20261202000000_tournament_shootout_server.sql`).
+///
+///  * [pending]  — detected, no winner ordering reported yet.
+///  * [reported] — one involved side submitted an ordering; awaiting the
+///    other side's matching confirmation.
+///  * [resolved] — both sides agreed; [PendingShootout.orderedWinners] is
+///    frozen and the group is no longer open.
+enum ShootoutStatus {
+  pending,
+  reported,
+  resolved;
+
+  static ShootoutStatus fromWire(String raw) {
+    switch (raw) {
+      case 'pending':
+        return ShootoutStatus.pending;
+      case 'reported':
+        return ShootoutStatus.reported;
+      case 'resolved':
+        return ShootoutStatus.resolved;
+      default:
+        throw ArgumentError.value(raw, 'raw', 'Unknown ShootoutStatus');
+    }
+  }
+}
+
+/// Read-side snapshot of one `tournament_shootouts` row plus the
+/// display-names of the tied participants — enough for the report/confirm
+/// UI without a second round-trip.
+///
+/// [tiedParticipants] are the involved participants in their pre-shoot-out
+/// chain order (the order the server stored in `tied_participant_ids`).
+/// [orderedWinners] is the resolved best-first permutation once a side has
+/// reported it; empty while [status] is [ShootoutStatus.pending]. The
+/// invariant from [ShootoutResult] applies: when non-empty, it is a full
+/// permutation of the tied participant ids.
+@immutable
+class PendingShootout {
+  PendingShootout({
+    required this.shootoutId,
+    required this.tournamentId,
+    required this.startRank,
+    required List<ShootoutParticipantRef> tiedParticipants,
+    required List<TournamentParticipantId> orderedWinners,
+    required this.status,
+  })  : tiedParticipants = List.unmodifiable(tiedParticipants),
+        orderedWinners = List.unmodifiable(orderedWinners);
+
+  final String shootoutId;
+  final TournamentId tournamentId;
+
+  /// Zero-based rank of the first tied member in the overall ranking
+  /// (mirrors `tournament_shootouts.start_rank` / [ShootoutGroup.startRank]).
+  final int startRank;
+
+  final List<ShootoutParticipantRef> tiedParticipants;
+  final List<TournamentParticipantId> orderedWinners;
+  final ShootoutStatus status;
+
+  /// Tied participant ids only, in stored order — convenience for callers
+  /// that build a [ShootoutResult]/permutation check.
+  List<TournamentParticipantId> get tiedParticipantIds =>
+      [for (final p in tiedParticipants) p.participantId];
+
+  /// Still open for input: not yet resolved.
+  bool get isOpen => status != ShootoutStatus.resolved;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PendingShootout &&
+          other.shootoutId == shootoutId &&
+          other.tournamentId == tournamentId &&
+          other.startRank == startRank &&
+          _listEq(other.tiedParticipants, tiedParticipants) &&
+          _listEq(other.orderedWinners, orderedWinners) &&
+          other.status == status;
+
+  @override
+  int get hashCode => Object.hash(
+        shootoutId,
+        tournamentId,
+        startRank,
+        Object.hashAll(tiedParticipants),
+        Object.hashAll(orderedWinners),
+        status,
+      );
+}
+
+/// A tied participant with its server-projected display name, used to label
+/// the shoot-out UI rows. [displayName] is null when the server projection
+/// has neither a nickname nor a team name on record; callers render
+/// `tournamentParticipantUnknown` ("Unbekannt") in that case.
+@immutable
+class ShootoutParticipantRef {
+  const ShootoutParticipantRef({
+    required this.participantId,
+    this.displayName,
+  });
+
+  final TournamentParticipantId participantId;
+  final String? displayName;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ShootoutParticipantRef &&
+          other.participantId == participantId &&
+          other.displayName == displayName;
+
+  @override
+  int get hashCode => Object.hash(participantId, displayName);
+}
+
+bool _listEq<T>(List<T> a, List<T> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
 /// Port for cloud-side tournament data.
 ///
 /// Per ADR-0014, tournament matches use per-match-result semantics with
@@ -733,4 +858,40 @@ abstract interface class TournamentRemote {
     TournamentId tournamentId,
     List<TournamentParticipantId> orderedParticipants,
   );
+
+  // Shoot-Out tiebreak (P6 D2b — docs/P6_SHOOTOUT_TIEBREAK.md). The server
+  // side (D2a, migration 20261202000000_tournament_shootout_server.sql)
+  // exposes no "list-pending" RPC; the client reads the RLS-gated
+  // `tournament_shootouts` table directly and acts via the two consensus
+  // RPCs `tournament_report_shootout_winners` / `tournament_confirm_shootout`.
+
+  /// Loads the shoot-out tie groups of [tournamentId] that are still open
+  /// for the caller (status `pending` or `reported`), with the involved
+  /// participants and their display names. Backed by a direct select on the
+  /// RLS-gated `tournament_shootouts` table (no dedicated RPC exists) — RLS
+  /// already restricts visibility to the organizer and registered
+  /// participants. Resolved groups are filtered out so they no longer show
+  /// as open. Returns an empty list when none are open.
+  Future<List<PendingShootout>> listPendingShootouts(TournamentId tournamentId);
+
+  /// Reports the shoot-out winner ordering for one tie group via the D2a
+  /// `tournament_report_shootout_winners` RPC. [orderedWinners] must be a
+  /// full permutation of the group's tied participant ids (best first); the
+  /// server enforces the [ShootoutResult] permutation invariant and rejects
+  /// a partial/duplicate ordering with `INVALID_ORDER`. A second report by an
+  /// involved user overwrites the previous one and resets any confirmation.
+  Future<void> reportShootoutWinners({
+    required String shootoutId,
+    required List<TournamentParticipantId> orderedWinners,
+  });
+
+  /// Confirms a previously reported ordering for one tie group via the D2a
+  /// `tournament_confirm_shootout` RPC. [orderedWinners] must match the
+  /// reported ordering exactly (server raises `ORDER_MISMATCH` otherwise) and
+  /// the confirming side must differ from the reporter. On success the group
+  /// becomes [ShootoutStatus.resolved].
+  Future<void> confirmShootout({
+    required String shootoutId,
+    required List<TournamentParticipantId> orderedWinners,
+  });
 }

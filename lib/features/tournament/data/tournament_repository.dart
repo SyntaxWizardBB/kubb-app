@@ -912,6 +912,100 @@ class TournamentRepository implements TournamentRemote {
     );
   }
 
+  // ---- P6 D2b shoot-out tiebreak (client/UI) ----
+
+  /// Reads the open shoot-out tie groups of [tournamentId] directly from the
+  /// RLS-gated `tournament_shootouts` table — D2a exposes no list-pending
+  /// RPC, and RLS already scopes the rows to the organizer + registered
+  /// participants. Only `pending`/`reported` rows are returned; `resolved`
+  /// groups are filtered out client-side so they stop showing as open.
+  ///
+  /// Display names for the tied participants are resolved from the same
+  /// `tournament_get` detail payload the rest of the UI uses (its
+  /// `participants[]` block carries the server-projected
+  /// `COALESCE(nickname, team name)` display name), avoiding a bespoke join.
+  @override
+  Future<List<PendingShootout>> listPendingShootouts(
+    TournamentId tournamentId,
+  ) async {
+    final rows = await _client
+        .from('tournament_shootouts')
+        .select(
+          'id, tournament_id, start_rank, tied_participant_ids, '
+          'ordered_winners, status',
+        )
+        .eq('tournament_id', tournamentId.value)
+        // Pending = status in ('pending','reported'); resolved groups are not
+        // open anymore and must not be surfaced.
+        .inFilter('status', const <String>['pending', 'reported'])
+        .order('start_rank');
+    final shootoutRows = rows.cast<Map<String, dynamic>>();
+    if (shootoutRows.isEmpty) return const <PendingShootout>[];
+
+    // One detail fetch resolves every participant display name.
+    final detail = await getTournamentDetail(tournamentId);
+    final names = <String, String?>{
+      for (final p in detail?.participants ?? const <TournamentParticipant>[])
+        p.participantId: p.displayName,
+    };
+
+    return [
+      for (final row in shootoutRows)
+        PendingShootout(
+          shootoutId: row['id'] as String,
+          tournamentId: TournamentId(row['tournament_id'] as String),
+          startRank: _asInt(row['start_rank']),
+          tiedParticipants: [
+            for (final id in (row['tied_participant_ids'] as List<dynamic>? ??
+                const <dynamic>[]))
+              ShootoutParticipantRef(
+                participantId: TournamentParticipantId(id as String),
+                displayName: names[id],
+              ),
+          ],
+          orderedWinners: [
+            for (final id in (row['ordered_winners'] as List<dynamic>? ??
+                const <dynamic>[]))
+              TournamentParticipantId(id as String),
+          ],
+          status: ShootoutStatus.fromWire(row['status'] as String),
+        ),
+    ];
+  }
+
+  /// Reports the shoot-out winner ordering via the D2a RPC
+  /// `tournament_report_shootout_winners(p_shootout_id, p_ordered_winners)`.
+  @override
+  Future<void> reportShootoutWinners({
+    required String shootoutId,
+    required List<TournamentParticipantId> orderedWinners,
+  }) {
+    return _client.rpc<Map<String, dynamic>>(
+      'tournament_report_shootout_winners',
+      params: <String, dynamic>{
+        'p_shootout_id': shootoutId,
+        'p_ordered_winners': [for (final p in orderedWinners) p.value],
+      },
+    );
+  }
+
+  /// Confirms a reported shoot-out ordering via the D2a RPC
+  /// `tournament_confirm_shootout(p_shootout_id, p_ordered_winners)`. The
+  /// server requires the confirmation to match the reported ordering exactly.
+  @override
+  Future<void> confirmShootout({
+    required String shootoutId,
+    required List<TournamentParticipantId> orderedWinners,
+  }) {
+    return _client.rpc<Map<String, dynamic>>(
+      'tournament_confirm_shootout',
+      params: <String, dynamic>{
+        'p_shootout_id': shootoutId,
+        'p_ordered_winners': [for (final p in orderedWinners) p.value],
+      },
+    );
+  }
+
   ParticipantStats _participantStatsFromRow(Map<String, dynamic> row) {
     return ParticipantStats(
       participantId: row['participant_id'] as String,

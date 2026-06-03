@@ -984,6 +984,135 @@ class FakeTournamentRemote implements TournamentRemote {
         List<TournamentParticipantId>.unmodifiable(orderedParticipants);
   }
 
+  // ---------------------------------------------------------------------
+  // P6 D2b shoot-out tiebreak. Mirrors the `tournament_shootouts` table +
+  // the report/confirm consensus RPCs in pure Dart so widget/provider tests
+  // see the same observable state machine production hits via Supabase.
+  // ---------------------------------------------------------------------
+
+  /// In-memory mirror of `tournament_shootouts`, keyed by tournament.
+  final Map<TournamentId, List<_Shootout>> _shootouts =
+      <TournamentId, List<_Shootout>>{};
+
+  /// Test hook: seeds one shoot-out tie group (status `pending`). Returns the
+  /// generated shoot-out id so tests can drive report/confirm against it.
+  String seedShootout(
+    TournamentId tournamentId, {
+    required int startRank,
+    required List<TournamentParticipantId> tiedParticipantIds,
+  }) {
+    final id = _nextId('so');
+    _shootouts.putIfAbsent(tournamentId, () => <_Shootout>[]).add(
+          _Shootout(
+            id: id,
+            tournamentId: tournamentId,
+            startRank: startRank,
+            tied: List<TournamentParticipantId>.of(tiedParticipantIds),
+          ),
+        );
+    return id;
+  }
+
+  @override
+  Future<List<PendingShootout>> listPendingShootouts(
+    TournamentId tournamentId,
+  ) async {
+    final rows = _shootouts[tournamentId] ?? const <_Shootout>[];
+    final detail = await getTournamentDetail(tournamentId);
+    final names = <String, String?>{
+      for (final p in detail?.participants ?? const <TournamentParticipant>[])
+        p.participantId: p.displayName,
+    };
+    return [
+      for (final s in rows)
+        if (s.status != ShootoutStatus.resolved)
+          PendingShootout(
+            shootoutId: s.id,
+            tournamentId: s.tournamentId,
+            startRank: s.startRank,
+            tiedParticipants: [
+              for (final id in s.tied)
+                ShootoutParticipantRef(
+                  participantId: id,
+                  displayName: names[id.value],
+                ),
+            ],
+            orderedWinners: List<TournamentParticipantId>.of(s.ordered),
+            status: s.status,
+          ),
+    ];
+  }
+
+  @override
+  Future<void> reportShootoutWinners({
+    required String shootoutId,
+    required List<TournamentParticipantId> orderedWinners,
+  }) async {
+    final s = _findShootout(shootoutId);
+    _validatePermutation(s.tied, orderedWinners);
+    s
+      ..ordered = List<TournamentParticipantId>.of(orderedWinners)
+      ..status = ShootoutStatus.reported
+      ..reportedBy = currentUser
+      ..confirmedBy = null;
+  }
+
+  @override
+  Future<void> confirmShootout({
+    required String shootoutId,
+    required List<TournamentParticipantId> orderedWinners,
+  }) async {
+    final s = _findShootout(shootoutId);
+    if (s.status == ShootoutStatus.resolved) return; // idempotent
+    if (s.status != ShootoutStatus.reported) {
+      throw StateError('NOT_REPORTED: nothing to confirm yet');
+    }
+    if (s.reportedBy == currentUser) {
+      throw StateError('NOT_AUTHORISED: reporter cannot self-confirm');
+    }
+    if (!_orderEquals(orderedWinners, s.ordered)) {
+      throw StateError('ORDER_MISMATCH: does not match reported ordering');
+    }
+    s
+      ..status = ShootoutStatus.resolved
+      ..confirmedBy = currentUser;
+  }
+
+  _Shootout _findShootout(String shootoutId) {
+    for (final list in _shootouts.values) {
+      for (final s in list) {
+        if (s.id == shootoutId) return s;
+      }
+    }
+    throw StateError('unknown shootout: $shootoutId');
+  }
+
+  void _validatePermutation(
+    List<TournamentParticipantId> tied,
+    List<TournamentParticipantId> ordered,
+  ) {
+    final tiedSet = tied.toSet();
+    final orderedSet = ordered.toSet();
+    if (ordered.length != tied.length ||
+        orderedSet.length != ordered.length ||
+        !orderedSet.containsAll(tiedSet)) {
+      throw StateError(
+        'INVALID_ORDER: ordered_winners must be a permutation of the tied set',
+      );
+    }
+  }
+
+  bool _orderEquals(
+    List<TournamentParticipantId> a,
+    List<TournamentParticipantId> b,
+  ) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
   /// Builds a [ParticipantStats] row from finalized non-KO matches —
   /// enough to satisfy the [PoolGroupStandings] contract without
   /// re-implementing the tiebreaker chain (callers that need a sorted
@@ -1400,6 +1529,25 @@ class FakeTournamentRemote implements TournamentRemote {
 
 enum _Side { a, b }
 enum _PStatus { pending, approved, withdrawn, rejected }
+
+/// In-memory mirror of one `tournament_shootouts` row.
+class _Shootout {
+  _Shootout({
+    required this.id,
+    required this.tournamentId,
+    required this.startRank,
+    required this.tied,
+  });
+
+  final String id;
+  final TournamentId tournamentId;
+  final int startRank;
+  final List<TournamentParticipantId> tied;
+  List<TournamentParticipantId> ordered = <TournamentParticipantId>[];
+  ShootoutStatus status = ShootoutStatus.pending;
+  UserId? reportedBy;
+  UserId? confirmedBy;
+}
 
 class _Tournament {
   _Tournament({

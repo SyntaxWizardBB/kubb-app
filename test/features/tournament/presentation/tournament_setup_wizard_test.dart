@@ -254,6 +254,29 @@ class _FakeTournamentRemote implements TournamentRemote {
   ) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<List<PendingShootout>> listPendingShootouts(
+    TournamentId tournamentId,
+  ) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> reportShootoutWinners({
+    required String shootoutId,
+    required List<TournamentParticipantId> orderedWinners,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> confirmShootout({
+    required String shootoutId,
+    required List<TournamentParticipantId> orderedWinners,
+  }) {
+    throw UnimplementedError();
+  }
 }
 
 /// Controller variant that starts the draft on a Schoch Vorrunde so the

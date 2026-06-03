@@ -4289,5 +4289,120 @@
   "settingsRowImprint": "Impressum",
   "@settingsRowImprint": {
     "description": "Settings row label that opens the imprint screen"
+  },
+  "shootoutTitle": "Shoot-Out",
+  "@shootoutTitle": {
+    "description": "P6 shoot-out report/confirm screen — app bar title"
+  },
+  "shootoutEyebrow": "Quali-Entscheidung",
+  "@shootoutEyebrow": {
+    "description": "P6 shoot-out screen — app bar eyebrow"
+  },
+  "shootoutIntro": "Gleichstand an der Qualifikations-Grenze. Legt gemeinsam fest, in welcher Reihenfolge die beteiligten Teams den Shoot-Out gewonnen haben — bestes Team zuerst.",
+  "@shootoutIntro": {
+    "description": "P6 shoot-out screen — explanatory intro text"
+  },
+  "shootoutParticipantsHeader": "Beteiligte Teams",
+  "@shootoutParticipantsHeader": {
+    "description": "P6 shoot-out screen — section header above the ordered list of tied teams"
+  },
+  "shootoutOrderHint": "Reihenfolge per Pfeile anpassen — oben = Sieger.",
+  "@shootoutOrderHint": {
+    "description": "P6 shoot-out screen — hint how to reorder the tied teams"
+  },
+  "shootoutRankLabel": "{rank}.",
+  "@shootoutRankLabel": {
+    "description": "P6 shoot-out screen — 1-based rank prefix for an ordered team row",
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "shootoutMoveUp": "Nach oben",
+  "@shootoutMoveUp": {
+    "description": "P6 shoot-out screen — tooltip/label to move a team up in the order"
+  },
+  "shootoutMoveDown": "Nach unten",
+  "@shootoutMoveDown": {
+    "description": "P6 shoot-out screen — tooltip/label to move a team down in the order"
+  },
+  "shootoutReportAction": "Sieger melden",
+  "@shootoutReportAction": {
+    "description": "P6 shoot-out screen — primary action that reports the chosen winner ordering"
+  },
+  "shootoutConfirmAction": "Bestätigen",
+  "@shootoutConfirmAction": {
+    "description": "P6 shoot-out screen — action that confirms the reported winner ordering"
+  },
+  "shootoutReportedBanner": "Eine Reihenfolge wurde gemeldet. Die andere Seite muss sie bestätigen.",
+  "@shootoutReportedBanner": {
+    "description": "P6 shoot-out screen — banner shown once an ordering was reported and is awaiting confirmation"
+  },
+  "shootoutReportedSnack": "Sieger-Reihenfolge gemeldet",
+  "@shootoutReportedSnack": {
+    "description": "P6 shoot-out screen — snackbar after a successful report"
+  },
+  "shootoutConfirmedSnack": "Shoot-Out bestätigt",
+  "@shootoutConfirmedSnack": {
+    "description": "P6 shoot-out screen — snackbar after a successful confirmation"
+  },
+  "shootoutError": "Shoot-Out konnte nicht aktualisiert werden: {error}",
+  "@shootoutError": {
+    "description": "P6 shoot-out screen — error message when report/confirm fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shootoutEmptyTitle": "Kein offener Shoot-Out",
+  "@shootoutEmptyTitle": {
+    "description": "P6 shoot-out screen — empty state title when no open shoot-out remains"
+  },
+  "shootoutEmptyBody": "Für dieses Turnier ist aktuell kein Shoot-Out für dich offen.",
+  "@shootoutEmptyBody": {
+    "description": "P6 shoot-out screen — empty state body"
+  },
+  "shootoutLoadError": "Shoot-Out konnte nicht geladen werden:\n{error}",
+  "@shootoutLoadError": {
+    "description": "P6 shoot-out screen — load error message",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shootoutInboxOpenAction": "Shoot-Out öffnen",
+  "@shootoutInboxOpenAction": {
+    "description": "Inbox detail — button that opens the shoot-out report/confirm screen"
+  },
+  "shootoutErrorInvalidOrder": "Die Reihenfolge muss alle beteiligten Teams genau einmal enthalten.",
+  "@shootoutErrorInvalidOrder": {
+    "description": "P6 shoot-out screen — friendly message for server INVALID_ORDER"
+  },
+  "shootoutErrorOrderMismatch": "Die Reihenfolge weicht von der gemeldeten ab. Bitte bestätige die gemeldete Reihenfolge unverändert.",
+  "@shootoutErrorOrderMismatch": {
+    "description": "P6 shoot-out screen — friendly message for server ORDER_MISMATCH"
+  },
+  "shootoutErrorNotAuthorised": "Du gehörst nicht zu diesem Shoot-Out und kannst ihn nicht bearbeiten.",
+  "@shootoutErrorNotAuthorised": {
+    "description": "P6 shoot-out screen — friendly message for server NOT_AUTHORISED"
+  },
+  "shootoutErrorAlreadyResolved": "Dieser Shoot-Out wurde bereits entschieden.",
+  "@shootoutErrorAlreadyResolved": {
+    "description": "P6 shoot-out screen — friendly message for server ALREADY_RESOLVED"
+  },
+  "shootoutErrorNotReported": "Es wurde noch keine Reihenfolge gemeldet, die du bestätigen könntest.",
+  "@shootoutErrorNotReported": {
+    "description": "P6 shoot-out screen — friendly message for server NOT_REPORTED"
+  },
+  "shootoutErrorSelfConfirm": "Die gemeldete Reihenfolge muss von der anderen Seite bestätigt werden.",
+  "@shootoutErrorSelfConfirm": {
+    "description": "P6 shoot-out screen — friendly message when the reporter tries to self-confirm"
+  },
+  "shootoutOrderHintReadonly": "Die gemeldete Reihenfolge bestätigen — bestes Team zuerst.",
+  "@shootoutOrderHintReadonly": {
+    "description": "P6 shoot-out screen — read-only hint shown to the confirming side (order is locked)"
   }
 }

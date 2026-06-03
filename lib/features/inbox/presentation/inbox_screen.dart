@@ -15,6 +15,7 @@ import 'package:kubb_app/features/social/application/social_providers.dart';
 import 'package:kubb_app/features/social/presentation/social_routes.dart';
 import 'package:kubb_app/features/team/application/team_list_provider.dart';
 import 'package:kubb_app/features/team/application/team_membership_controller.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -158,6 +159,7 @@ class _MessageTile extends ConsumerWidget {
       case InboxMessageKind.clubInvitation:
       case InboxMessageKind.clubMemberRemoved:
       case InboxMessageKind.clubJoinRequest:
+      case InboxMessageKind.tournamentShootout:
         return const Color(0xFFFBF2D6);
     }
   }
@@ -184,6 +186,8 @@ class _MessageTile extends ConsumerWidget {
         return 'Vereins-Änderung';
       case InboxMessageKind.clubJoinRequest:
         return 'Beitrittsanfrage';
+      case InboxMessageKind.tournamentShootout:
+        return 'Shoot-Out';
     }
   }
 
@@ -338,6 +342,12 @@ class _MessageDetail extends ConsumerWidget {
     final invitationId = message.actionPayload?['invitation_id'] as String?;
     final joinRequestId = message.actionPayload?['request_id'] as String?;
     final clubId = message.actionPayload?['club_id'] as String?;
+    // P6 shoot-out task payload (action_payload.kind == 'shootout'): carries
+    // the tournament id + the tie group's zero-based start_rank.
+    final shootoutTournamentId =
+        message.actionPayload?['tournament_id'] as String?;
+    final shootoutStartRank =
+        (message.actionPayload?['start_rank'] as num?)?.toInt() ?? 0;
 
     return SafeArea(
       child: Padding(
@@ -437,6 +447,26 @@ class _MessageDetail extends ConsumerWidget {
                     matchId: matchId,
                   ),
                   child: const Text('Resultat eintragen'),
+                ),
+              ),
+            ] else if (message.kind == InboxMessageKind.tournamentShootout &&
+                shootoutTournamentId != null) ...[
+              // P6: open the dedicated shoot-out report/confirm screen. The
+              // tie group is addressed by its zero-based start_rank from the
+              // action payload.
+              const SizedBox(height: KubbTokens.space5),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => _handleShootout(
+                    context,
+                    ref,
+                    messageId: message.id,
+                    tournamentId: shootoutTournamentId,
+                    startRank: shootoutStartRank,
+                  ),
+                  child:
+                      Text(AppLocalizations.of(context).shootoutInboxOpenAction),
                 ),
               ),
             ] else if (message.kind == InboxMessageKind.teamInvitation &&
@@ -605,6 +635,30 @@ class _MessageDetail extends ConsumerWidget {
       if (!context.mounted) return;
       Navigator.of(context).pop();
       context.go('${MatchRoutes.result}/$matchId');
+    } on Object catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Fehler: $e'),
+          backgroundColor: KubbTokens.miss,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleShootout(
+    BuildContext context,
+    WidgetRef ref, {
+    required String messageId,
+    required String tournamentId,
+    required int startRank,
+  }) async {
+    final inboxActions = ref.read(inboxActionsProvider);
+    try {
+      await inboxActions.markRead(messageId);
+      if (!context.mounted) return;
+      Navigator.of(context).pop();
+      context.go(TournamentRoutes.shootout(tournamentId, startRank));
     } on Object catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
