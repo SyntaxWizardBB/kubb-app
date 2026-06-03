@@ -346,8 +346,9 @@ class _Actions extends ConsumerWidget {
             SingleEliminationBracket(:final rounds) => rounds.isNotEmpty,
             DoubleEliminationBracket(:final wbRounds) => wbRounds.isNotEmpty,
             // ADR-0028: a consolation tree (Model B) counts as a bracket once
-            // it has any consolation rounds materialised.
-            ConsolationBracket(:final rounds) => rounds.isNotEmpty,
+            // either its main tree or any consolation round is materialised.
+            ConsolationBracket(:final mainRounds, :final rounds) =>
+              mainRounds.isNotEmpty || rounds.isNotEmpty,
           },
           orElse: () => false,
         );

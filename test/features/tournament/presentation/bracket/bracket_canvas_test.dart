@@ -55,6 +55,86 @@ ConsolationBracket _consolationBracket() => bracketFromMatches(<KoMatchRow>[
       ),
     ]) as ConsolationBracket;
 
+/// A consolation tree that ALSO carries the single-elim main tree in
+/// `mainRounds` — exactly what `bracketFromMatches` now projects from mixed
+/// `ko`/`final`/`third_place` + `consolation` rows (ADR-0028 §7.3 / DoD-06).
+ConsolationBracket _consolationWithMain() => bracketFromMatches(<KoMatchRow>[
+      // --- Main tree: 4er bracket (semis + final) + 3rd-place playoff.
+      (
+        roundNumber: 1,
+        bracketPosition: 1,
+        phase: BracketPhase.winners,
+        participantA: 'mA',
+        participantB: 'mD',
+        winnerParticipantId: null,
+        isBye: false,
+      ),
+      (
+        roundNumber: 1,
+        bracketPosition: 2,
+        phase: BracketPhase.winners,
+        participantA: 'mB',
+        participantB: 'mC',
+        winnerParticipantId: null,
+        isBye: false,
+      ),
+      (
+        roundNumber: 2,
+        bracketPosition: 1,
+        phase: BracketPhase.finals,
+        participantA: 'mA',
+        participantB: 'mB',
+        winnerParticipantId: null,
+        isBye: false,
+      ),
+      (
+        roundNumber: 1,
+        bracketPosition: 1,
+        phase: BracketPhase.thirdPlace,
+        participantA: 'mD',
+        participantB: 'mC',
+        winnerParticipantId: null,
+        isBye: false,
+      ),
+      // --- Consolation tree: R1 (2 pairings) + final + 3rd-place playoff.
+      (
+        roundNumber: 1,
+        bracketPosition: 1,
+        phase: BracketPhase.consolation,
+        participantA: 'cE',
+        participantB: 'cF',
+        winnerParticipantId: null,
+        isBye: false,
+      ),
+      (
+        roundNumber: 1,
+        bracketPosition: 2,
+        phase: BracketPhase.consolation,
+        participantA: 'cG',
+        participantB: 'cH',
+        winnerParticipantId: null,
+        isBye: false,
+      ),
+      (
+        roundNumber: 2,
+        bracketPosition: 1,
+        phase: BracketPhase.consolation,
+        participantA: 'cE',
+        participantB: 'cG',
+        winnerParticipantId: null,
+        isBye: false,
+      ),
+      (
+        roundNumber: 1,
+        bracketPosition: 1,
+        phase: BracketPhase.consolationThirdPlace,
+        participantA: 'cF',
+        participantB: 'cH',
+        winnerParticipantId: null,
+        isBye: false,
+      ),
+    ]) as ConsolationBracket;
+
 Future<void> _pumpCanvas(
   WidgetTester tester,
   Widget child,
@@ -262,6 +342,58 @@ void main() {
         ),
         findsOneWidget,
       );
+    });
+
+    const hintText = 'Der Hauptbaum ist hier nicht verfügbar. '
+        'Endplatzierungen 1–4 siehe Turnier-Detail.';
+
+    testWidgets(
+        'main section renders the real main tree from mainRounds (DoD-08/09/10)',
+        (tester) async {
+      await _pumpCanvas(
+        tester,
+        BracketCanvas(
+          bracket: _consolationWithMain(),
+          editable: false,
+          tournamentId: _id,
+        ),
+      );
+
+      // Initial segment is the Hauptbaum (mainRounds present, DoD-10) and it
+      // shows real main-bracket cards, not the unavailable hint (DoD-08/09).
+      // 'mA' appears in the main semifinal AND the final pairing -> findsWidgets.
+      expect(_cardWith('mA'), findsWidgets);
+      expect(find.text(hintText), findsNothing);
+      expect(_cardWith('cE'), findsNothing);
+
+      // Switch to Trost: consolation cards appear, main cards gone.
+      await tester.tap(find.text('Trostturnier'));
+      await tester.pumpAndSettle();
+      expect(_cardWith('cE'), findsWidgets);
+      expect(_cardWith('mA'), findsNothing);
+
+      // Switch back to Hauptbaum: real main tree again, still no hint.
+      await tester.tap(find.text('Hauptbaum'));
+      await tester.pumpAndSettle();
+      expect(_cardWith('mA'), findsWidgets);
+      expect(find.text(hintText), findsNothing);
+    });
+
+    testWidgets(
+        'hint is the fallback only when mainRounds are empty (DoD-09)',
+        (tester) async {
+      // Consolation-only bracket (no mainRounds): Hauptbaum shows the hint.
+      await _pumpCanvas(
+        tester,
+        BracketCanvas(
+          bracket: _consolationBracket(),
+          editable: false,
+          tournamentId: _id,
+        ),
+      );
+      await tester.tap(find.text('Hauptbaum'));
+      await tester.pumpAndSettle();
+      expect(find.text(hintText), findsOneWidget);
     });
   });
 }

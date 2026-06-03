@@ -759,7 +759,20 @@ final class DoubleEliminationBracket extends Bracket {
 /// and `(third_place, round_number)` would then collide (§7.2).
 @immutable
 final class ConsolationBracket extends Bracket {
-  const ConsolationBracket({required this.rounds, required this.thirdPlace});
+  const ConsolationBracket({
+    required this.rounds,
+    required this.thirdPlace,
+    this.mainRounds = const [],
+  });
+
+  /// The single-elimination MAIN tree (places 1-4), same projection as a
+  /// [SingleEliminationBracket]: `winners` rounds + the last round as
+  /// [BracketPhase.finals] + the [BracketPhase.thirdPlace] playoff round
+  /// (ADR-0028 §1.1 / §6). Optional with default `const []` so the
+  /// [Bracket.consolation] factory — which only generates the consolation
+  /// structure — stays unchanged; the read-path [bracketFromMatches] populates
+  /// it from the `ko`/`final`/`third_place` rows (ADR-0028 §7.3).
+  final List<BracketRound> mainRounds;
 
   /// Consolation rounds, number = 1..consRounds, phase ==
   /// [BracketPhase.consolation]. The last round is the consolation final
@@ -771,6 +784,18 @@ final class ConsolationBracket extends Bracket {
   /// to have a consolation semifinal.
   final BracketRound? thirdPlace;
 
+  /// Returns a copy with the given fields replaced.
+  ConsolationBracket copyWith({
+    List<BracketRound>? mainRounds,
+    List<BracketRound>? rounds,
+    BracketRound? thirdPlace,
+  }) =>
+      ConsolationBracket(
+        mainRounds: mainRounds ?? this.mainRounds,
+        rounds: rounds ?? this.rounds,
+        thirdPlace: thirdPlace ?? this.thirdPlace,
+      );
+
   @override
   Bracket fill({
     required int round,
@@ -780,12 +805,16 @@ final class ConsolationBracket extends Bracket {
     // Phase-targeted fill is delegated to the server trigger at runtime
     // (ADR-0028 §7.4); the pure factory only materialises the topology. We
     // expose the slot write into the consolation rounds without cross-phase
-    // side effects.
+    // side effects. The main tree ([mainRounds]) is carried through unchanged.
     final newRounds = [...rounds];
     _writeAt(newRounds, round, position,
         (seed: 0, participantId: participantId, isBye: false),
         allowThirdPlace: false);
-    return ConsolationBracket(rounds: newRounds, thirdPlace: thirdPlace);
+    return ConsolationBracket(
+      mainRounds: mainRounds,
+      rounds: newRounds,
+      thirdPlace: thirdPlace,
+    );
   }
 
   @override
@@ -793,10 +822,16 @@ final class ConsolationBracket extends Bracket {
       identical(this, other) ||
       other is ConsolationBracket &&
           other.thirdPlace == thirdPlace &&
+          const ListEquality<BracketRound>()
+              .equals(other.mainRounds, mainRounds) &&
           const ListEquality<BracketRound>().equals(other.rounds, rounds);
 
   @override
-  int get hashCode => Object.hash(Object.hashAll(rounds), thirdPlace);
+  int get hashCode => Object.hash(
+        Object.hashAll(mainRounds),
+        Object.hashAll(rounds),
+        thirdPlace,
+      );
 }
 
 /// One KO-match row as observed by the mapper.
@@ -842,30 +877,18 @@ Bracket bracketFromMatches(List<KoMatchRow> matches) {
       m.phase == BracketPhase.consolation ||
       m.phase == BracketPhase.consolationThirdPlace);
   if (hasConsolation) return _consolationFromMatches(matches); // ADR-0028 §7.3
-  final winners = matches.where((m) => m.phase != BracketPhase.thirdPlace);
+  // Single-elim: winners + finals rows project to the winners/finals rounds,
+  // third_place rows to the third-place round (shared with the consolation
+  // main tree, see [_singleElimRoundsFromMatches]).
+  final winners = matches.where((m) => m.phase == BracketPhase.winners);
+  final finals = matches.where((m) => m.phase == BracketPhase.finals);
   final thirdPlace =
       matches.where((m) => m.phase == BracketPhase.thirdPlace).toList();
-  final byRound = <int, List<KoMatchRow>>{};
-  for (final m in winners) {
-    byRound.putIfAbsent(m.roundNumber, () => <KoMatchRow>[]).add(m);
-  }
-  final totalRounds =
-      byRound.keys.isEmpty ? 0 : byRound.keys.reduce((a, b) => a > b ? a : b);
-  final rounds = <BracketRound>[
-    for (var r = 1; r <= totalRounds; r++)
-      BracketRound(
-        number: r,
-        phase:
-            r == totalRounds ? BracketPhase.finals : BracketPhase.winners,
-        pairings: _pairingsForRound(byRound[r] ?? const <KoMatchRow>[]),
-      ),
-    if (thirdPlace.isNotEmpty)
-      BracketRound(
-        number: totalRounds,
-        phase: BracketPhase.thirdPlace,
-        pairings: _pairingsForRound(thirdPlace),
-      ),
-  ];
+  final rounds = _singleElimRoundsFromMatches(
+    winners: winners.toList(),
+    finals: finals.toList(),
+    thirdPlace: thirdPlace,
+  );
   return SingleEliminationBracket(rounds: rounds);
 }
 
@@ -923,24 +946,34 @@ Bracket _doubleEliminationFromMatches(List<KoMatchRow> matches) {
 
 /// Rebuild a [ConsolationBracket] from DB-match rows (ADR-0028 §7.3).
 ///
-/// Groups the `consolation` rows by phase-local `round_number` into the
-/// consolation rounds and projects the single `consolation_third_place` row
-/// into the playoff. Reuses the existing [_pairingsForRound] helper. Like the
-/// single-/double-elim paths the mapper is **passive** — it reflects only the
-/// DB state and never writes follow-up slots. Disambiguation is solely via
-/// `phase` (no extra column).
+/// Builds BOTH trees in one pass:
+///   * the single-elim MAIN tree ([ConsolationBracket.mainRounds]) from the
+///     non-consolation rows (`winners`/`ko` + `finals`/`final` +
+///     `third_place`) — IDENTICAL projection to the single-elim path in
+///     [bracketFromMatches] (winners rounds + last round as finals +
+///     third-place round); and
+///   * the consolation tree ([ConsolationBracket.rounds] /
+///     [ConsolationBracket.thirdPlace]) from the `consolation` /
+///     `consolation_third_place` rows.
+///
+/// Reuses the existing [_pairingsForRound] helper. Like the single-/double-elim
+/// paths the mapper is **passive** — it reflects only the DB state and never
+/// writes follow-up slots. Disambiguation is solely via `phase` (no extra
+/// column). When no main-tree rows are present (e.g. a synthetic consolation-
+/// only fixture) [ConsolationBracket.mainRounds] stays empty.
 Bracket _consolationFromMatches(List<KoMatchRow> matches) {
-  final byRound = <int, List<KoMatchRow>>{};
+  // --- Consolation tree (rounds + own 3rd-place playoff). ---
+  final byConsRound = <int, List<KoMatchRow>>{};
   for (final m in matches.where((m) => m.phase == BracketPhase.consolation)) {
-    byRound.putIfAbsent(m.roundNumber, () => <KoMatchRow>[]).add(m);
+    byConsRound.putIfAbsent(m.roundNumber, () => <KoMatchRow>[]).add(m);
   }
-  final numbers = byRound.keys.toList()..sort();
+  final consNumbers = byConsRound.keys.toList()..sort();
   final rounds = <BracketRound>[
-    for (final r in numbers)
+    for (final r in consNumbers)
       BracketRound(
         number: r,
         phase: BracketPhase.consolation,
-        pairings: _pairingsForRound(byRound[r]!),
+        pairings: _pairingsForRound(byConsRound[r]!),
       ),
   ];
   final thirdRows = matches
@@ -953,7 +986,60 @@ Bracket _consolationFromMatches(List<KoMatchRow> matches) {
           phase: BracketPhase.consolationThirdPlace,
           pairings: _pairingsForRound(thirdRows),
         );
-  return ConsolationBracket(rounds: rounds, thirdPlace: thirdPlace);
+
+  // --- Main single-elim tree: same projection as the single-elim branch of
+  // bracketFromMatches (winners rounds + last = finals + third-place round).
+  final mainWinners =
+      matches.where((m) => m.phase == BracketPhase.winners).toList();
+  final mainFinals =
+      matches.where((m) => m.phase == BracketPhase.finals).toList();
+  final mainThird =
+      matches.where((m) => m.phase == BracketPhase.thirdPlace).toList();
+  final mainRounds = _singleElimRoundsFromMatches(
+    winners: mainWinners,
+    finals: mainFinals,
+    thirdPlace: mainThird,
+  );
+
+  return ConsolationBracket(
+    mainRounds: mainRounds,
+    rounds: rounds,
+    thirdPlace: thirdPlace,
+  );
+}
+
+/// Shared single-elim round projection used by both the pure single-elim
+/// branch of [bracketFromMatches] and the main tree inside
+/// [_consolationFromMatches]. Groups [winners]/[finals] rows by `round_number`
+/// into the winners rounds (the highest round_number becomes the
+/// [BracketPhase.finals] round, matching ADR-0017 §4), then appends the
+/// [thirdPlace] playoff row(s) as a [BracketPhase.thirdPlace] round sharing the
+/// final's round number. Returns an empty list when there are no rows.
+List<BracketRound> _singleElimRoundsFromMatches({
+  required List<KoMatchRow> winners,
+  required List<KoMatchRow> finals,
+  required List<KoMatchRow> thirdPlace,
+}) {
+  final byRound = <int, List<KoMatchRow>>{};
+  for (final m in [...winners, ...finals]) {
+    byRound.putIfAbsent(m.roundNumber, () => <KoMatchRow>[]).add(m);
+  }
+  if (byRound.isEmpty) return const <BracketRound>[];
+  final totalRounds = byRound.keys.reduce((a, b) => a > b ? a : b);
+  return <BracketRound>[
+    for (var r = 1; r <= totalRounds; r++)
+      BracketRound(
+        number: r,
+        phase: r == totalRounds ? BracketPhase.finals : BracketPhase.winners,
+        pairings: _pairingsForRound(byRound[r] ?? const <KoMatchRow>[]),
+      ),
+    if (thirdPlace.isNotEmpty)
+      BracketRound(
+        number: totalRounds,
+        phase: BracketPhase.thirdPlace,
+        pairings: _pairingsForRound(thirdPlace),
+      ),
+  ];
 }
 
 void _writeAt(

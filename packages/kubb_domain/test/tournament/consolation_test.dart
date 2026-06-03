@@ -346,6 +346,126 @@ void main() {
       final c = bracketFromMatches(rows) as ConsolationBracket;
       expect(c.thirdPlace, isNull);
     });
+
+    test('consolation-only rows leave mainRounds empty (DoD-07)', () {
+      final rows = <KoMatchRow>[
+        row(round: 1, position: 1, phase: BracketPhase.consolation, a: 'a', b: 'b'),
+        row(round: 1, position: 2, phase: BracketPhase.consolation, a: 'c', b: 'd'),
+        row(round: 2, position: 1, phase: BracketPhase.consolation),
+      ];
+      final c = bracketFromMatches(rows) as ConsolationBracket;
+      expect(c.rounds, isNotEmpty);
+      expect(c.mainRounds, isEmpty);
+    });
+
+    test(
+        'mixed ko+final+third_place+consolation rows build BOTH trees (DoD-06)',
+        () {
+      // 4er main bracket (2 rounds: R1 semis, R2 final) + a 3rd-place playoff,
+      // plus a 2-round consolation tree with its own 3rd-place playoff.
+      final rows = <KoMatchRow>[
+        // Main R1 (semifinals).
+        row(round: 1, position: 1, phase: BracketPhase.winners, a: 'A', b: 'D'),
+        row(round: 1, position: 2, phase: BracketPhase.winners, a: 'B', b: 'C'),
+        // Main R2 = final.
+        row(round: 2, position: 1, phase: BracketPhase.finals, a: 'A', b: 'B'),
+        // Main 3rd-place playoff.
+        row(round: 1, position: 1, phase: BracketPhase.thirdPlace, a: 'D', b: 'C'),
+        // Consolation R1 + consolation final.
+        row(round: 1, position: 1, phase: BracketPhase.consolation, a: 'E', b: 'F'),
+        row(round: 1, position: 2, phase: BracketPhase.consolation, a: 'G', b: 'H'),
+        row(round: 2, position: 1, phase: BracketPhase.consolation),
+        // Consolation 3rd-place playoff.
+        row(
+            round: 1,
+            position: 1,
+            phase: BracketPhase.consolationThirdPlace),
+      ];
+      final c = bracketFromMatches(rows) as ConsolationBracket;
+
+      // Main tree: 2 winners/finals rounds + a third-place round.
+      expect(c.mainRounds, isNotEmpty);
+      final mainWinnersFinals = c.mainRounds
+          .where((r) => r.phase != BracketPhase.thirdPlace)
+          .toList();
+      expect(mainWinnersFinals, hasLength(2),
+          reason: '4er main bracket => 2 rounds (semis + final)');
+      expect(mainWinnersFinals.last.phase, BracketPhase.finals,
+          reason: 'last main round is the final');
+      expect(
+        c.mainRounds.any((r) => r.phase == BracketPhase.thirdPlace),
+        isTrue,
+        reason: 'main third-place playoff present',
+      );
+      // The main final carries the main participants, not consolation ones.
+      expect(mainWinnersFinals.last.pairings.first.$1.participantId, 'A');
+
+      // Consolation tree still built independently.
+      expect(c.rounds, isNotEmpty);
+      expect(c.thirdPlace, isNotNull);
+      expect(c.thirdPlace!.phase, BracketPhase.consolationThirdPlace);
+    });
+  });
+
+  group('ConsolationBracket — mainRounds field (DoD-04/05)', () {
+    BracketRound roundOf(int n, String a, String b,
+            {BracketPhase phase = BracketPhase.winners}) =>
+        BracketRound(
+          number: n,
+          phase: phase,
+          pairings: [
+            (
+              (seed: 0, participantId: a, isBye: false),
+              (seed: 0, participantId: b, isBye: false),
+            ),
+          ],
+        );
+
+    test('default is const [] and Bracket.consolation leaves it empty', () {
+      final b = Bracket.consolation(8) as ConsolationBracket;
+      expect(b.mainRounds, isEmpty);
+    });
+
+    test('differing mainRounds => unequal and different hashCode', () {
+      final cons = [roundOf(1, 'a', 'b', phase: BracketPhase.consolation)];
+      final base = ConsolationBracket(rounds: cons, thirdPlace: null);
+      final withMain = ConsolationBracket(
+        rounds: cons,
+        thirdPlace: null,
+        mainRounds: [roundOf(1, 'A', 'B', phase: BracketPhase.finals)],
+      );
+      expect(base == withMain, isFalse);
+      expect(base.hashCode == withMain.hashCode, isFalse);
+    });
+
+    test('copyWith and fill preserve mainRounds', () {
+      final main = [roundOf(1, 'A', 'B', phase: BracketPhase.finals)];
+      final original = ConsolationBracket(
+        rounds: const [
+          BracketRound(
+            number: 1,
+            phase: BracketPhase.consolation,
+            pairings: [
+              (
+                (seed: 0, participantId: null, isBye: false),
+                (seed: 0, participantId: null, isBye: false),
+              ),
+            ],
+          ),
+        ],
+        thirdPlace: null,
+        mainRounds: main,
+      );
+      // copyWith without mainRounds keeps them.
+      final copied = original.copyWith(rounds: original.rounds);
+      expect(copied.mainRounds, equals(main));
+      // fill into the consolation rounds keeps the main tree untouched.
+      final filled =
+          original.fill(round: 1, position: 1, participantId: 'x')
+              as ConsolationBracket;
+      expect(filled.mainRounds, equals(main));
+      expect(filled.rounds.first.pairings.first.$1.participantId, 'x');
+    });
   });
 
   group('kBracketPhaseWire — consolation round-trip', () {

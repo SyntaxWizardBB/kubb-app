@@ -83,17 +83,17 @@ class TournamentBracketScreen extends ConsumerWidget {
   ///
   /// Exhaustive over all three sealed [Bracket] subtypes — the inverse of the
   /// `hasBracket` switch in `tournament_detail_screen.dart`: a
-  /// [ConsolationBracket] (Modell B, ADR-0028) counts as non-empty once any
-  /// consolation round has been materialised, and a [DoubleEliminationBracket]
-  /// once its WB has rounds.
+  /// [ConsolationBracket] (Modell B, ADR-0028) counts as non-empty once either
+  /// its main tree or any consolation round has been materialised, and a
+  /// [DoubleEliminationBracket] once its WB has rounds.
   bool _isEmpty(Bracket bracket) {
+    bool roundsEmpty(List<BracketRound> rounds) =>
+        rounds.isEmpty || rounds.every((r) => r.pairings.isEmpty);
     return switch (bracket) {
-      SingleEliminationBracket(:final rounds) =>
-        rounds.isEmpty || rounds.every((r) => r.pairings.isEmpty),
-      DoubleEliminationBracket(:final wbRounds) =>
-        wbRounds.isEmpty || wbRounds.every((r) => r.pairings.isEmpty),
-      ConsolationBracket(:final rounds) =>
-        rounds.isEmpty || rounds.every((r) => r.pairings.isEmpty),
+      SingleEliminationBracket(:final rounds) => roundsEmpty(rounds),
+      DoubleEliminationBracket(:final wbRounds) => roundsEmpty(wbRounds),
+      ConsolationBracket(:final mainRounds, :final rounds) =>
+        roundsEmpty(mainRounds) && roundsEmpty(rounds),
     };
   }
 }

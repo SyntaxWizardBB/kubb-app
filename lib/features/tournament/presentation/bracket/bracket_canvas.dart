@@ -17,9 +17,11 @@ import 'package:kubb_domain/kubb_domain.dart';
 ///
 /// For a [ConsolationBracket] (Trostturnier, Modell B — ADR-0028) the canvas
 /// shows TWO switchable sections via a [SegmentedButton] (analogous to the
-/// WB/LB split of a double-elim): the single-elim main tree ([mainBracket],
-/// when supplied) and the consolation tree (the [ConsolationBracket] itself).
-/// Both sections reuse the exact same render path — each tree is projected to a
+/// WB/LB split of a double-elim): the single-elim main tree (from
+/// [ConsolationBracket.mainRounds] carried by the read-path, or the explicit
+/// [mainBracket] fallback) and the consolation tree (the [ConsolationBracket]
+/// itself). Both sections reuse the exact same render path — each tree is
+/// projected to a
 /// [SingleEliminationBracket]-shaped structure and fed through
 /// [BracketLayout.compute] / [KubbMatchCard] / [BracketConnectorPainter]; no new
 /// canvas concept is introduced (ADR-0028 §UI / DoD-08).
@@ -37,10 +39,11 @@ class BracketCanvas extends ConsumerStatefulWidget {
   final bool editable;
   final TournamentId? tournamentId;
 
-  /// Optional single-elim main tree shown in the "Hauptbaum" section when
-  /// [bracket] is a [ConsolationBracket]. When `null`, the Hauptbaum section
-  /// shows an informational hint (the main tree is not carried by the
-  /// consolation domain object; see ADR-0028 §1.1).
+  /// Optional explicit single-elim main tree FALLBACK for the "Hauptbaum"
+  /// section when [bracket] is a [ConsolationBracket]. The read-path now carries
+  /// the main tree in [ConsolationBracket.mainRounds] (ADR-0028 §7.3), so this
+  /// is only used when those are empty. When neither is available the Hauptbaum
+  /// section shows an informational hint.
   final Bracket? mainBracket;
 
   /// Display name of the consolation side-tournament (`consolation_name`).
@@ -60,13 +63,27 @@ class _BracketCanvasState extends ConsumerState<BracketCanvas> {
   @override
   void initState() {
     super.initState();
-    // Default to the section that actually has a tree to show: when no main
-    // tree is supplied (the consolation provider never carries one, ADR-0028
-    // §1.1), open straight on the consolation tree so the user sees match
-    // cards instead of an empty hint page (reviewer finding).
-    _section = widget.mainBracket is SingleEliminationBracket
-        ? _BracketSection.main
-        : _BracketSection.consolation;
+    // Default to the section that actually has a tree to show: open on the
+    // main tree whenever one is available (the ConsolationBracket now carries
+    // its own [mainRounds] from the read-path, ADR-0028 §7.3 / DoD-10), else on
+    // the consolation tree so the user sees match cards instead of an empty
+    // hint page.
+    _section =
+        _mainTree() != null ? _BracketSection.main : _BracketSection.consolation;
+  }
+
+  /// The single-elim main tree to render in the "Hauptbaum" section, or `null`
+  /// when none is available. Prefers the [ConsolationBracket.mainRounds] carried
+  /// by the read-path; falls back to an explicit [BracketCanvas.mainBracket].
+  SingleEliminationBracket? _mainTree() {
+    final bracket = widget.bracket;
+    if (bracket is ConsolationBracket && bracket.mainRounds.isNotEmpty) {
+      return SingleEliminationBracket(rounds: bracket.mainRounds);
+    }
+    if (widget.mainBracket is SingleEliminationBracket) {
+      return widget.mainBracket! as SingleEliminationBracket;
+    }
+    return null;
   }
 
   @override
@@ -95,15 +112,16 @@ class _BracketCanvasState extends ConsumerState<BracketCanvas> {
         widget.consolationName ?? l.tournamentBracketConsolationLabel;
 
     // Project each tree into a single-elim-shaped structure so the existing
-    // layout/painter/card path renders it verbatim (DoD-08).
-    final mainTree = widget.mainBracket is SingleEliminationBracket
-        ? widget.mainBracket! as SingleEliminationBracket
-        : null;
+    // layout/painter/card path renders it verbatim (DoD-08). The main tree now
+    // comes from [ConsolationBracket.mainRounds] (read-path, ADR-0028 §7.3).
+    final mainTree = _mainTree();
     final consolationTree = _consolationToSingleElim(bracket);
 
     final body = switch (_section) {
       _BracketSection.main => mainTree != null
           ? _BracketTreeView(
+              // Distinct key so InteractiveViewer state resets between sections.
+              key: const ValueKey('main-tree'),
               bracket: mainTree,
               editable: widget.editable,
               tournamentId: widget.tournamentId,
