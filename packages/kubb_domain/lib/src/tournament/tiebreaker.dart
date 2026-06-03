@@ -11,10 +11,14 @@ enum TiebreakerCriterion {
   directComparison,
   wins,
 
-  /// Physical on-site decider (Mighty-Finisher shootout, decision §H). It
-  /// cannot be resolved from precomputed stats, so the comparator treats it
-  /// as a no-op (falls through to the next criterion / the ID fallback);
-  /// the organiser feeds the shootout result back at runtime.
+  /// Physical on-site decider (Mighty-Finisher shoot-out, decision §H,
+  /// docs/P6_SHOOTOUT_TIEBREAK.md). It cannot be resolved from precomputed
+  /// stats, so the in-chain comparator stays neutral (returns 0, falls through
+  /// to the next criterion / the ID fallback). The actual resolution happens
+  /// out-of-band: `shootout.dart` detects only the *qualification-relevant*
+  /// tie groups (those straddling the cut line) and re-orders them from a
+  /// recorded on-site shoot-out result, replacing the ID fallback for those
+  /// groups. Cosmetic ties keep the neutral behaviour.
   mightyFinisherShootout,
   random,
 }
@@ -78,6 +82,21 @@ class TiebreakerChain {
     // implementation-defined. See TASK-M2.1-T10.
     return a.participantId.compareTo(b.participantId);
   }
+
+  /// Compares [a] and [b] on a single [criterion] only, without applying the
+  /// participantId fallback. Returns 0 when the criterion does not separate
+  /// them. Exposed so callers (e.g. the shoot-out detector) can probe "are
+  /// these two exactly tied on every regular criterion?" using the chain's own
+  /// semantics instead of re-implementing them. [TiebreakerCriterion
+  /// .mightyFinisherShootout] is intentionally neutral here (returns 0): the
+  /// shoot-out is resolved out-of-band from a recorded on-site result, not
+  /// from stats.
+  int compareCriterion(
+    TiebreakerCriterion criterion,
+    ParticipantStats a,
+    ParticipantStats b,
+  ) =>
+      _apply(criterion, a, b);
 
   int _apply(TiebreakerCriterion c, ParticipantStats a, ParticipantStats b) {
     switch (c) {
