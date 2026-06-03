@@ -1767,6 +1767,34 @@ class AppLocalizationsDe extends AppLocalizations {
       'Single-Out plus separates Nebenturnier für die hinteren Plätze.';
 
   @override
+  String get tournamentKoModelExplainerOpen => 'K.-o.-Systeme erklärt';
+
+  @override
+  String get tournamentKoModelExplainerTitle => 'Welcher zweite Baum?';
+
+  @override
+  String get tournamentKoModelExplainerSingleOutHeading => 'Single-Out';
+
+  @override
+  String get tournamentKoModelExplainerSingleOutBody =>
+      'Eine Niederlage und du bist draussen. Der Final entscheidet Platz 1 und 2, dazu gibt es ein Spiel um Platz 3. Schnell und einfach.';
+
+  @override
+  String get tournamentKoModelExplainerDoubleElimHeading =>
+      'Double-Elimination';
+
+  @override
+  String get tournamentKoModelExplainerDoubleElimBody =>
+      'Du musst zweimal verlieren, um auszuscheiden. Wer im Hauptbaum verliert, fällt in den Verliererbaum und kann sich von dort bis ins Finale zurückkämpfen — der Verliererbaum-Sieger kann am Ende noch Turniersieger werden. Sportlich am fairsten, aber mehr Spiele.';
+
+  @override
+  String get tournamentKoModelExplainerTrostturnierHeading => 'Trostturnier';
+
+  @override
+  String get tournamentKoModelExplainerTrostturnierBody =>
+      'Der Hauptbaum entscheidet Platz 1 und 2 endgültig. Wer im Hauptbaum ausscheidet (ausser den Halbfinal-Verlierern, die um Platz 3 spielen), kommt ins Trostturnier und spielt dort die hinteren Plätze aus. Optional starten zusätzlich einige Teams direkt aus der Vorrunde im Trostturnier. Es gibt keinen Weg zurück ins Finale — aber alle bekommen mehr Spiele und eine Platzierung.';
+
+  @override
   String get tournamentWizardConsolationMainBracketSizeLabel =>
       'Hauptbaum-Grösse';
 

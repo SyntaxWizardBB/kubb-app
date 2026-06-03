@@ -3322,6 +3322,54 @@ abstract class AppLocalizations {
   /// **'Single-Out plus separates Nebenturnier für die hinteren Plätze.'**
   String get tournamentWizardKoSystemConsolationHint;
 
+  /// Accessibility/tooltip label for the info icon that opens the KO-model explainer sheet
+  ///
+  /// In de, this message translates to:
+  /// **'K.-o.-Systeme erklärt'**
+  String get tournamentKoModelExplainerOpen;
+
+  /// Title of the KO-model explainer modal
+  ///
+  /// In de, this message translates to:
+  /// **'Welcher zweite Baum?'**
+  String get tournamentKoModelExplainerTitle;
+
+  /// Section heading for the Single-Out KO model in the explainer modal
+  ///
+  /// In de, this message translates to:
+  /// **'Single-Out'**
+  String get tournamentKoModelExplainerSingleOutHeading;
+
+  /// Explanation paragraph for the Single-Out KO model
+  ///
+  /// In de, this message translates to:
+  /// **'Eine Niederlage und du bist draussen. Der Final entscheidet Platz 1 und 2, dazu gibt es ein Spiel um Platz 3. Schnell und einfach.'**
+  String get tournamentKoModelExplainerSingleOutBody;
+
+  /// Section heading for the Double-Elimination KO model in the explainer modal
+  ///
+  /// In de, this message translates to:
+  /// **'Double-Elimination'**
+  String get tournamentKoModelExplainerDoubleElimHeading;
+
+  /// Explanation paragraph for the Double-Elimination KO model
+  ///
+  /// In de, this message translates to:
+  /// **'Du musst zweimal verlieren, um auszuscheiden. Wer im Hauptbaum verliert, fällt in den Verliererbaum und kann sich von dort bis ins Finale zurückkämpfen — der Verliererbaum-Sieger kann am Ende noch Turniersieger werden. Sportlich am fairsten, aber mehr Spiele.'**
+  String get tournamentKoModelExplainerDoubleElimBody;
+
+  /// Section heading for the Trostturnier (consolation) KO model in the explainer modal
+  ///
+  /// In de, this message translates to:
+  /// **'Trostturnier'**
+  String get tournamentKoModelExplainerTrostturnierHeading;
+
+  /// Explanation paragraph for the Trostturnier (consolation) KO model
+  ///
+  /// In de, this message translates to:
+  /// **'Der Hauptbaum entscheidet Platz 1 und 2 endgültig. Wer im Hauptbaum ausscheidet (ausser den Halbfinal-Verlierern, die um Platz 3 spielen), kommt ins Trostturnier und spielt dort die hinteren Plätze aus. Optional starten zusätzlich einige Teams direkt aus der Vorrunde im Trostturnier. Es gibt keinen Weg zurück ins Finale — aber alle bekommen mehr Spiele und eine Platzierung.'**
+  String get tournamentKoModelExplainerTrostturnierBody;
+
   /// Model-B main bracket size label (= KO size)
   ///
   /// In de, this message translates to:

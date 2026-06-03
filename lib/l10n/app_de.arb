@@ -2338,6 +2338,38 @@
   "@tournamentWizardKoSystemConsolationHint": {
     "description": "Consolation KO description"
   },
+  "tournamentKoModelExplainerOpen": "K.-o.-Systeme erklärt",
+  "@tournamentKoModelExplainerOpen": {
+    "description": "Accessibility/tooltip label for the info icon that opens the KO-model explainer sheet"
+  },
+  "tournamentKoModelExplainerTitle": "Welcher zweite Baum?",
+  "@tournamentKoModelExplainerTitle": {
+    "description": "Title of the KO-model explainer modal"
+  },
+  "tournamentKoModelExplainerSingleOutHeading": "Single-Out",
+  "@tournamentKoModelExplainerSingleOutHeading": {
+    "description": "Section heading for the Single-Out KO model in the explainer modal"
+  },
+  "tournamentKoModelExplainerSingleOutBody": "Eine Niederlage und du bist draussen. Der Final entscheidet Platz 1 und 2, dazu gibt es ein Spiel um Platz 3. Schnell und einfach.",
+  "@tournamentKoModelExplainerSingleOutBody": {
+    "description": "Explanation paragraph for the Single-Out KO model"
+  },
+  "tournamentKoModelExplainerDoubleElimHeading": "Double-Elimination",
+  "@tournamentKoModelExplainerDoubleElimHeading": {
+    "description": "Section heading for the Double-Elimination KO model in the explainer modal"
+  },
+  "tournamentKoModelExplainerDoubleElimBody": "Du musst zweimal verlieren, um auszuscheiden. Wer im Hauptbaum verliert, fällt in den Verliererbaum und kann sich von dort bis ins Finale zurückkämpfen — der Verliererbaum-Sieger kann am Ende noch Turniersieger werden. Sportlich am fairsten, aber mehr Spiele.",
+  "@tournamentKoModelExplainerDoubleElimBody": {
+    "description": "Explanation paragraph for the Double-Elimination KO model"
+  },
+  "tournamentKoModelExplainerTrostturnierHeading": "Trostturnier",
+  "@tournamentKoModelExplainerTrostturnierHeading": {
+    "description": "Section heading for the Trostturnier (consolation) KO model in the explainer modal"
+  },
+  "tournamentKoModelExplainerTrostturnierBody": "Der Hauptbaum entscheidet Platz 1 und 2 endgültig. Wer im Hauptbaum ausscheidet (ausser den Halbfinal-Verlierern, die um Platz 3 spielen), kommt ins Trostturnier und spielt dort die hinteren Plätze aus. Optional starten zusätzlich einige Teams direkt aus der Vorrunde im Trostturnier. Es gibt keinen Weg zurück ins Finale — aber alle bekommen mehr Spiele und eine Platzierung.",
+  "@tournamentKoModelExplainerTrostturnierBody": {
+    "description": "Explanation paragraph for the Trostturnier (consolation) KO model"
+  },
   "tournamentWizardConsolationMainBracketSizeLabel": "Hauptbaum-Grösse",
   "@tournamentWizardConsolationMainBracketSizeLabel": {
     "description": "Model-B main bracket size label (= KO size)"

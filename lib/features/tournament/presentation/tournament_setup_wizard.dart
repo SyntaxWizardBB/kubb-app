@@ -11,10 +11,12 @@ import 'package:kubb_app/features/tournament/data/tournament_pdf_uploader.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_pool_config_step.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/ko_model_explainer_sheet.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/swiss_config_section.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 /// Logical step identifiers. The visible step index is derived from
 /// `_visibleSteps`. KO-config precedes the group-phase (pool) step so the
@@ -1435,14 +1437,33 @@ class _StepFormat extends StatelessWidget {
           ),
         const SizedBox(height: KubbTokens.space5),
         // ---- KO axis (Single-Out | Double-Elimination | Trostturnier) ----
-        Text(
-          l10n.tournamentWizardKoSystemLabel,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.4,
-            color: tokens.fgMuted,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l10n.tournamentWizardKoSystemLabel,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.4,
+                  color: tokens.fgMuted,
+                ),
+              ),
+            ),
+            // Info icon opens the KO-model explainer sheet. >=48dp touch
+            // target per --bk-touch-min (Design-System).
+            IconButton(
+              icon: Icon(
+                LucideIcons.info,
+                size: 18,
+                color: tokens.fgMuted,
+              ),
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              padding: EdgeInsets.zero,
+              tooltip: l10n.tournamentKoModelExplainerOpen,
+              onPressed: () => KoModelExplainerSheet.show(context),
+            ),
+          ],
         ),
         const SizedBox(height: KubbTokens.space2),
         _OptionRow(
