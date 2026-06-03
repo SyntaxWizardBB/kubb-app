@@ -102,14 +102,23 @@ void main() {
       expect(v.issues.any((i) => i.contains('Sätze zum Sieg')), isTrue);
     });
 
-    test('flags max_sets too small for the configured sets_to_win', () {
+    test('accepts an even prelim max_sets (decoupled from sets_to_win)', () {
+      // P6: the prelim allows draws, so max_sets=2 (an even value, no longer
+      // tied to 2*setsToWin-1) must validate.
       const d = TournamentConfigDraft(
         displayName: 'Cup',
-        setsToWin: 3,
+        maxSets: 2,
       );
       final v = d.validate();
-      expect(v.isValid, isFalse);
-      expect(v.issues.any((i) => i.contains('Max. Sätze')), isTrue);
+      expect(v.isValid, isTrue);
+      expect(v.issues, isEmpty);
+    });
+
+    test('flags a prelim max_sets outside the absolute range', () {
+      const tooHigh = TournamentConfigDraft(displayName: 'Cup', maxSets: 99);
+      expect(tooHigh.validate().isValid, isFalse);
+      const tooLow = TournamentConfigDraft(displayName: 'Cup', maxSets: 0);
+      expect(tooLow.validate().isValid, isFalse);
     });
   });
 
@@ -245,11 +254,9 @@ void main() {
   });
 
   group('TournamentConfigDraft two-axis format mapping', () {
-    test('formatFor maps every Vorrunde × KO combo correctly', () {
-      expect(
-        TournamentConfigDraft.formatFor(VorrundeType.groupPhase, KoType.none),
-        TournamentFormat.roundRobin,
-      );
+    test('formatFor maps every Vorrunde × KO combo to its hybrid format', () {
+      // Every tournament has a KO stage, so a prelim always maps to its
+      // hybrid (…ThenKo) format regardless of the KO type.
       expect(
         TournamentConfigDraft.formatFor(
             VorrundeType.groupPhase, KoType.singleOut),
@@ -261,8 +268,9 @@ void main() {
         TournamentFormat.roundRobinThenKo,
       );
       expect(
-        TournamentConfigDraft.formatFor(VorrundeType.schoch, KoType.none),
-        TournamentFormat.swiss,
+        TournamentConfigDraft.formatFor(
+            VorrundeType.groupPhase, KoType.consolation),
+        TournamentFormat.roundRobinThenKo,
       );
       expect(
         TournamentConfigDraft.formatFor(VorrundeType.schoch, KoType.singleOut),
@@ -272,15 +280,21 @@ void main() {
         TournamentConfigDraft.formatFor(VorrundeType.schoch, KoType.doubleOut),
         TournamentFormat.swissThenKo,
       );
+      expect(
+        TournamentConfigDraft.formatFor(
+            VorrundeType.schoch, KoType.consolation),
+        TournamentFormat.swissThenKo,
+      );
     });
 
-    test('bracketTypeFor reflects the KO single/double choice', () {
-      expect(TournamentConfigDraft.bracketTypeFor(KoType.none),
-          BracketType.singleElimination);
+    test('bracketTypeFor reflects the KO single/double/consolation choice', () {
       expect(TournamentConfigDraft.bracketTypeFor(KoType.singleOut),
           BracketType.singleElimination);
       expect(TournamentConfigDraft.bracketTypeFor(KoType.doubleOut),
           BracketType.doubleElimination);
+      // Consolation rides on a single-elimination main bracket (ADR-0028).
+      expect(TournamentConfigDraft.bracketTypeFor(KoType.consolation),
+          BracketType.singleElimination);
     });
 
     test('derived getters expose format + bracketType from the axes', () {
@@ -333,7 +347,6 @@ void main() {
       final grown = TournamentConfigDraft(
         koConfig: ko,
         koMatchFormat: seed,
-        koType: KoType.singleOut,
       ).withResizedKoRoundFormats();
       // 8 qualifiers => 3 KO rounds, all seeded from koMatchFormat.
       expect(grown.koRoundFormats, hasLength(3));
@@ -351,7 +364,7 @@ void main() {
 
     test('withResizedKoRoundFormats falls back to the default seed', () {
       final ko = KoPhaseConfig(qualifierCount: 4, participantCount: 8);
-      final d = TournamentConfigDraft(koConfig: ko, koType: KoType.singleOut)
+      final d = TournamentConfigDraft(koConfig: ko)
           .withResizedKoRoundFormats();
       expect(d.koRoundFormats, hasLength(2));
       expect(
@@ -375,9 +388,10 @@ void main() {
       expect(setup['ko_match_format'], isNull);
       expect(setup['pitch_plan'], isNull);
       expect(setup['rule_variants'], isA<Map<String, Object?>>());
-      // Two-axis defaults: group phase, no KO, empty per-round list.
+      // Two-axis defaults: group phase, single-out KO (no none), empty
+      // per-round list (no koConfig set yet).
       expect(setup['vorrunde_type'], 'group_phase');
-      expect(setup['ko_type'], 'none');
+      expect(setup['ko_type'], 'single_out');
       expect(setup['ko_round_formats'], isEmpty);
     });
 
@@ -417,6 +431,27 @@ void main() {
         true,
       );
       expect((rounds.first! as Map<String, Object?>)['sets_to_win'], 2);
+    });
+
+    test('emits the Model-B consolation fields as snake_case (ADR-0028 §5)', () {
+      const d = TournamentConfigDraft(
+        koType: KoType.consolation,
+        consolationMainBracketSize: 16,
+        consolationDirectCount: 4,
+        consolationName: 'Bâton Rouille',
+      );
+      final setup = d.toSetupConfig();
+      expect(setup['consolation_main_bracket_size'], 16);
+      expect(setup['consolation_direct_count'], 4);
+      expect(setup['consolation_name'], 'Bâton Rouille');
+    });
+
+    test('Model-B defaults: size 8, direct count 0, null name', () {
+      const d = TournamentConfigDraft();
+      final setup = d.toSetupConfig();
+      expect(setup['consolation_main_bracket_size'], 8);
+      expect(setup['consolation_direct_count'], 0);
+      expect(setup['consolation_name'], isNull);
     });
 
     test('serialises P6 fields into the snake_case wire shape', () {
@@ -647,6 +682,25 @@ void main() {
       expect(back.ruleVariants.diggy, isTrue);
     });
 
+    test('round-trips the Model-B consolation fields (ADR-0028 §5)', () {
+      final original = TournamentConfigDraft(
+        displayName: 'Trost-Cup',
+        format: TournamentFormat.roundRobinThenKo,
+        koType: KoType.consolation,
+        koConfig: KoPhaseConfig(qualifierCount: 8, participantCount: 16),
+        consolationMainBracketSize: 16,
+        consolationDirectCount: 4,
+        consolationName: 'Bâton Rouille',
+      );
+
+      final back = TournamentConfigDraft.fromDetail(headerFor(original));
+
+      expect(back.koType, KoType.consolation);
+      expect(back.consolationMainBracketSize, 16);
+      expect(back.consolationDirectCount, 4);
+      expect(back.consolationName, 'Bâton Rouille');
+    });
+
     test('falls back to defaults when the setup map is empty', () {
       const header = TournamentDetailHeader(
         tournamentId: 't-2',
@@ -673,7 +727,8 @@ void main() {
 
       expect(back.displayName, 'Bare');
       expect(back.vorrundeType, VorrundeType.groupPhase);
-      expect(back.koType, KoType.none);
+      // No "kein KO" axis value anymore: an empty setup defaults to single-out.
+      expect(back.koType, KoType.singleOut);
       expect(back.scoring, 'ekc');
       expect(back.currency, 'CHF');
       expect(back.koConfig, isNull);

@@ -10,9 +10,10 @@ import 'package:kubb_domain/kubb_domain.dart';
 /// pushed pitch plan back into the draft, so the test can assert the
 /// per-group assignment without standing up the whole wizard.
 class _Host extends StatefulWidget {
-  const _Host({required this.draft, super.key});
+  const _Host({required this.draft, required this.koBracketSize, super.key});
 
   final TournamentConfigDraft draft;
+  final int koBracketSize;
 
   @override
   State<_Host> createState() => _HostState();
@@ -30,6 +31,7 @@ class _HostState extends State<_Host> {
       body: SingleChildScrollView(
         child: WizardPoolConfigStep(
           draft: _draft,
+          koBracketSize: widget.koBracketSize,
           onConfigChanged: (cfg) => setState(() => lastConfig = cfg),
           onPitchPlanChanged: (plan) =>
               setState(() => _draft = _draft.copyWith(pitchPlan: plan)),
@@ -42,6 +44,7 @@ class _HostState extends State<_Host> {
 Future<_HostState> _pump(
   WidgetTester tester, {
   required TournamentConfigDraft draft,
+  int koBracketSize = 8,
 }) async {
   tester.view.physicalSize = const Size(800, 2400);
   tester.view.devicePixelRatio = 1;
@@ -55,7 +58,7 @@ Future<_HostState> _pump(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: const Locale('de'),
-      home: _Host(key: key, draft: draft),
+      home: _Host(key: key, draft: draft, koBracketSize: koBracketSize),
     ),
   );
   await tester.pumpAndSettle();
@@ -107,5 +110,42 @@ void main() {
     );
     expect(find.text('Pitch-Zuteilung pro Gruppe'), findsNothing);
     expect(host.pitchPlan, isNull);
+  });
+
+  testWidgets(
+      'derives qualifier-per-group read-only from KO size / group count',
+      (tester) async {
+    // Default group count is 4; KO size 8 => 2 qualifiers per group.
+    final host = await _pump(
+      tester,
+      draft: const TournamentConfigDraft(
+        displayName: 'Cup',
+        format: TournamentFormat.roundRobinThenKo,
+      ),
+    );
+    expect(host.lastConfig?.qualifiersPerGroup, 2);
+    // The derived value renders read-only (no editable qualifier field).
+    expect(find.text('Qualifier pro Gruppe'), findsOneWidget);
+    expect(find.text('2'), findsWidgets);
+  });
+
+  testWidgets('group count that does not divide the KO size fails validation',
+      (tester) async {
+    // KO size 8, group count 4 divides cleanly; retype 3 → 8 % 3 != 0.
+    final host = await _pump(
+      tester,
+      draft: const TournamentConfigDraft(
+        displayName: 'Cup',
+        format: TournamentFormat.roundRobinThenKo,
+      ),
+    );
+    expect(host.lastConfig, isNotNull);
+
+    await tester.enterText(find.byType(TextField).first, '3');
+    await tester.pumpAndSettle();
+
+    // Divisibility violated → config cleared and an error surfaces.
+    expect(host.lastConfig, isNull);
+    expect(find.textContaining('glatt teilen'), findsOneWidget);
   });
 }

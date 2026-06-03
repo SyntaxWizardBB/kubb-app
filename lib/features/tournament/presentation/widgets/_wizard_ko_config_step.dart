@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
@@ -7,13 +6,14 @@ import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
-/// Wizard step 5 (T13): KO-phase configuration.
+/// Wizard KO-phase configuration step.
 ///
-/// Hosts the free-integer qualifier-count input (U1/U2), the preview panel
-/// (U3), the bronze-match switch (pre-filled from
-/// [TournamentConfigDraft.suggestedWithThirdPlacePlayoff]) and the seeding
-/// mode radio. Domain rules pinned by `docs/domain-knowledge/qualifier-count.md`
-/// U1–U4 and ADR-0017 §3.
+/// Hosts the power-of-two KO-size selector (no byes — the main bracket is a
+/// power of two, P6_SETUP_WIZARD_SPEC.md Screen 6), the seeding-source radio
+/// ("Automatisch aus Vorrunde" / manual) and the per-KO-round rule blocks.
+/// Spiel um Platz 3 is always on (no toggle); the Shoot-Out and the
+/// Mighty-Finisher quali are removed from the wizard scope (always on resp.
+/// dropped). Domain rules pinned by ADR-0017 §3.
 class WizardKoConfigStep extends StatefulWidget {
   const WizardKoConfigStep({
     required this.draft,
@@ -33,9 +33,7 @@ class WizardKoConfigStep extends StatefulWidget {
 }
 
 class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
-  late TextEditingController _qualifierCtrl;
   late int _qualifierCount;
-  late bool _withBronze;
   late SeedingMode _seedingMode;
 
   @override
@@ -44,15 +42,12 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
     final participants = widget.draft.maxParticipants;
     final existing = widget.draft.koConfig;
     _qualifierCount = existing?.qualifierCount ?? _smartDefault(participants);
-    _withBronze = existing?.withThirdPlacePlayoff ??
-        widget.draft.suggestedWithThirdPlacePlayoff;
     _seedingMode = widget.draft.bracketSeedingMode ??
         existing?.seedingMode ??
         SeedingMode.auto;
-    _qualifierCtrl = TextEditingController(text: '$_qualifierCount');
-    // Commit the smart default upfront so the wizard's `_stepValid` can
-    // verify the KO config without waiting for user input, then seed the
-    // per-round §A default profiles for rounds still at the bare default.
+    // Commit the smart default upfront so the wizard's `_stepValid` can verify
+    // the KO config without waiting for user input, then seed the per-round §A
+    // default profiles for rounds still at the bare default.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _pushIfValid();
       _seedRoundDefaults();
@@ -90,15 +85,22 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
     }
   }
 
-  @override
-  void dispose() {
-    _qualifierCtrl.dispose();
-    super.dispose();
+  /// Power-of-two KO sizes selectable for [participants] (no byes — the main
+  /// bracket is a power of two). Always offers at least {2, 4}.
+  static List<int> _bracketSizes(int participants) {
+    final out = <int>[];
+    var size = 2;
+    while (size <= participants) {
+      out.add(size);
+      size <<= 1;
+    }
+    if (out.isEmpty) out.add(2);
+    return out;
   }
 
   /// U4 — `participantCount` is a power of two → `participantCount / 2`,
   /// otherwise the largest 2^n strictly below `participantCount`. Clamped
-  /// to the U2 minimum of 2.
+  /// to the minimum of 2.
   static int _smartDefault(int participants) {
     if (participants < 2) return 2;
     if (_isPow2(participants)) return participants ~/ 2;
@@ -106,15 +108,6 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
   }
 
   static bool _isPow2(int n) => n > 0 && (n & (n - 1)) == 0;
-
-  static int _nextPow2(int n) {
-    if (n < 2) return 2;
-    var v = 1;
-    while (v < n) {
-      v <<= 1;
-    }
-    return v;
-  }
 
   static int _prevPow2(int n) {
     var v = 1;
@@ -125,7 +118,9 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
   }
 
   bool get _isValid =>
-      _qualifierCount >= 2 && _qualifierCount <= widget.draft.maxParticipants;
+      _qualifierCount >= 2 &&
+      _qualifierCount <= widget.draft.maxParticipants &&
+      _isPow2(_qualifierCount);
 
   void _pushIfValid() {
     if (!_isValid) {
@@ -136,22 +131,15 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
       KoPhaseConfig(
         qualifierCount: _qualifierCount,
         participantCount: widget.draft.maxParticipants,
-        withThirdPlacePlayoff: _withBronze,
+        // Spiel um Platz 3 is always on now (P6_SETUP_WIZARD_SPEC.md Screen 6).
+        withThirdPlacePlayoff: true,
         seedingMode: _seedingMode,
       ),
     );
   }
 
-  void _onQualifierTyped(String raw) {
-    final parsed = int.tryParse(raw.trim());
-    setState(() {
-      _qualifierCount = parsed ?? 0;
-    });
-    _pushIfValid();
-  }
-
-  void _onBronzeChanged(bool value) {
-    setState(() => _withBronze = value);
+  void _onSizePicked(int size) {
+    setState(() => _qualifierCount = size);
     _pushIfValid();
   }
 
@@ -166,8 +154,7 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l10n = AppLocalizations.of(context);
-    final participants = widget.draft.maxParticipants;
-    final outOfRange = !_isValid;
+    final sizes = _bracketSizes(widget.draft.maxParticipants);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -181,39 +168,24 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
           ),
         ),
         const SizedBox(height: KubbTokens.space2),
-        TextField(
-          controller: _qualifierCtrl,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          onChanged: _onQualifierTyped,
-          decoration: InputDecoration(
-            errorText: outOfRange
-                ? 'Wert zwischen 2 und $participants erforderlich.'
-                : null,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-              borderSide: BorderSide(color: tokens.lineStrong, width: 1.5),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-              borderSide: BorderSide(color: tokens.lineStrong, width: 1.5),
-            ),
-          ),
+        // KO size is restricted to powers of two — no byes in the main
+        // bracket (P6_SETUP_WIZARD_SPEC.md Screen 6).
+        Wrap(
+          spacing: KubbTokens.space2,
+          runSpacing: KubbTokens.space2,
+          children: [
+            for (final s in sizes)
+              _KoSizeChip(
+                label: '$s',
+                selected: _qualifierCount == s,
+                onTap: () => _onSizePicked(s),
+              ),
+          ],
         ),
         const SizedBox(height: KubbTokens.space2),
         Text(
           l10n.tournamentWizardQualifierCountHelper,
-          style: TextStyle(
-            fontSize: 12,
-            color: tokens.fgMuted,
-          ),
-        ),
-        const SizedBox(height: KubbTokens.space4),
-        if (_isValid) _PreviewPanel(qualifierCount: _qualifierCount),
-        const SizedBox(height: KubbTokens.space5),
-        _BronzeSwitch(
-          value: _withBronze,
-          onChanged: _onBronzeChanged,
+          style: TextStyle(fontSize: 12, color: tokens.fgMuted),
         ),
         const SizedBox(height: KubbTokens.space5),
         _SeedingModeRadios(
@@ -281,8 +253,6 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
     final l10n = AppLocalizations.of(context);
     final d = widget.draft;
     final c = widget.controller;
-    final quali = d.mightyFinisherQuali;
-    final consol = d.consolationBracket;
 
     Widget label(String text) => Padding(
           padding: const EdgeInsets.only(bottom: KubbTokens.space2),
@@ -339,40 +309,6 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
       // qualifier count (bracket size) and kept in sync by the controller;
       // each block edits one round's MatchFormatSpec via setKoRoundFormat.
       ..._koRoundSections(context, label),
-      const SizedBox(height: KubbTokens.space5),
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(l10n.tournamentWizardMightyQualiLabel),
-        subtitle: Text(l10n.tournamentWizardMightyQualiHint),
-        value: quali?.enabled ?? false,
-        onChanged: (v) => c.setMightyFinisherQuali(
-          MightyFinisherQuali(enabled: v, slots: quali?.slots ?? 6),
-        ),
-      ),
-      if (quali?.enabled ?? false)
-        WizardNumberField(
-          label: l10n.tournamentWizardMightyQualiSlots,
-          value: quali?.slots ?? 6,
-          min: 1,
-          max: 32,
-          compact: true,
-          onChanged: (v) => c.setMightyFinisherQuali(
-            MightyFinisherQuali(enabled: true, slots: v),
-          ),
-        ),
-      const SizedBox(height: KubbTokens.space5),
-      SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(l10n.tournamentWizardConsolationLabel),
-        subtitle: Text(l10n.tournamentWizardConsolationHint),
-        value: consol?.enabled ?? false,
-        onChanged: (v) => c.setConsolationBracket(
-          ConsolationConfig(
-            enabled: v,
-            sourceRounds: v ? const <int>[1, 2] : const <int>[],
-          ),
-        ),
-      ),
     ];
   }
 }
@@ -485,92 +421,53 @@ class _KoRoundBlock extends StatelessWidget {
   }
 }
 
-class _PreviewPanel extends StatelessWidget {
-  const _PreviewPanel({required this.qualifierCount});
+/// Pill-style selectable chip for one power-of-two KO size.
+class _KoSizeChip extends StatelessWidget {
+  const _KoSizeChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
-  final int qualifierCount;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final l10n = AppLocalizations.of(context);
-    final size = _WizardKoConfigStepState._nextPow2(qualifierCount);
-    final byes = size - qualifierCount;
-    final realMatches = qualifierCount - byes;
-    return Container(
-      padding: const EdgeInsets.all(KubbTokens.space4),
-      decoration: BoxDecoration(
-        color: tokens.bgRaised,
-        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-        border: Border.all(color: tokens.line, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _previewLine(
-            tokens,
-            l10n.tournamentWizardQualifierPreviewBracketSize(size),
-          ),
-          const SizedBox(height: KubbTokens.space2),
-          _previewLine(
-            tokens,
-            l10n.tournamentWizardQualifierPreviewByes(byes),
-          ),
-          const SizedBox(height: KubbTokens.space2),
-          _previewLine(
-            tokens,
-            l10n.tournamentWizardQualifierPreviewRealMatches(realMatches),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _previewLine(KubbTokens tokens, String text) {
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: tokens.fg,
-      ),
-    );
-  }
-}
-
-class _BronzeSwitch extends StatelessWidget {
-  const _BronzeSwitch({required this.value, required this.onChanged});
-
-  final bool value;
-  final ValueChanged<bool> onChanged;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final l10n = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                l10n.tournamentWizardBronzeMatchLabel,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: tokens.fg,
-                ),
-              ),
+    return InkWell(
+      borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(
+          minHeight: KubbTokens.touchMin,
+          minWidth: KubbTokens.touchMin,
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: KubbTokens.space4,
+          vertical: KubbTokens.space2,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? tokens.primary : tokens.bgRaised,
+          borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
+          border: Border.all(
+            color: selected ? tokens.primary : tokens.line,
+            width: 1.5,
+          ),
+        ),
+        child: Center(
+          widthFactor: 1,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: selected ? Colors.white : tokens.fg,
             ),
-            Switch(value: value, onChanged: onChanged),
-          ],
+          ),
         ),
-        Text(
-          l10n.tournamentWizardBronzeMatchHelper,
-          style: TextStyle(fontSize: 12, color: tokens.fgMuted),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -606,7 +503,9 @@ class _SeedingModeRadios extends StatelessWidget {
               RadioListTile<SeedingMode>(
                 value: SeedingMode.auto,
                 contentPadding: EdgeInsets.zero,
-                title: Text('Automatisch aus Gruppenphase'),
+                // "aus Vorrunde" (not "Gruppenphase") — Schoch is also a
+                // valid Vorrunde (P6_SETUP_WIZARD_SPEC.md Screen 6).
+                title: Text('Automatisch aus Vorrunde'),
               ),
               RadioListTile<SeedingMode>(
                 value: SeedingMode.manual,

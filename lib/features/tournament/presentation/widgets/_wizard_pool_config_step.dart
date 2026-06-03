@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
@@ -7,25 +5,36 @@ import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
-/// Wizard step (M3.3-T9): pool-phase configuration for hybrid formats.
+/// Wizard step: group-phase (pool) configuration for hybrid formats.
 ///
-/// Hosts the on/off toggle, group-count and qualifiers-per-group inputs and
-/// the grouping-strategy dropdown. Live validation mirrors the domain rules
-/// pinned by `generatePools` in `pool_phase.dart`:
+/// Hosts the group-count input and the grouping-strategy dropdown. The
+/// qualifier-per-group count is no longer an input — it is DERIVED read-only
+/// as `koBracketSize / groupCount` (P6_SETUP_WIZARD_SPEC.md Screen 5) and the
+/// group count must evenly divide the KO bracket size (divisibility
+/// validation). Live validation mirrors the domain rules pinned by
+/// `generatePools` in `pool_phase.dart`:
 ///   * `groupCount >= 2`, capped at 16 by the wizard UI for sanity.
-///   * `qualifiersPerGroup >= 1` and `<= ceil(maxParticipants / groupCount)`.
+///   * `koBracketSize % groupCount == 0` (so each group sends the same number
+///     of qualifiers into the KO bracket).
 ///
-/// When the toggle is off the parent hides the step entirely and the draft's
-/// `poolPhaseConfig` is cleared via `setPoolPhaseConfig(null)`.
+/// When the Vorrunde is not a group phase the parent hides the step entirely
+/// and the draft's `poolPhaseConfig` is cleared via `setPoolPhaseConfig(null)`.
 class WizardPoolConfigStep extends StatefulWidget {
   const WizardPoolConfigStep({
     required this.draft,
+    required this.koBracketSize,
     required this.onConfigChanged,
     required this.onPitchPlanChanged,
     super.key,
   });
 
   final TournamentConfigDraft draft;
+
+  /// KO bracket size (power of two) the qualifier-per-group count is derived
+  /// from. Computed by the wizard from the KO config (which precedes this
+  /// step). 0 when the KO size is not yet valid.
+  final int koBracketSize;
+
   final ValueChanged<PoolPhaseConfig?> onConfigChanged;
 
   /// Pushes the (possibly group-assigned) pitch plan back up. Only invoked
@@ -42,10 +51,8 @@ class _WizardPoolConfigStepState extends State<WizardPoolConfigStep> {
   static const int _groupCountMax = 16;
 
   late TextEditingController _groupCountCtrl;
-  late TextEditingController _qualifiersCtrl;
   late TextEditingController _seedCtrl;
   late int _groupCount;
-  late int _qualifiersPerGroup;
   late PoolGroupingStrategy _strategy;
   int? _randomSeed;
 
@@ -54,11 +61,9 @@ class _WizardPoolConfigStepState extends State<WizardPoolConfigStep> {
     super.initState();
     final existing = widget.draft.poolPhaseConfig;
     _groupCount = existing?.groupCount ?? 4;
-    _qualifiersPerGroup = existing?.qualifiersPerGroup ?? 2;
     _strategy = existing?.strategy ?? PoolGroupingStrategy.snake;
     _randomSeed = existing?.randomSeed;
     _groupCountCtrl = TextEditingController(text: '$_groupCount');
-    _qualifiersCtrl = TextEditingController(text: '$_qualifiersPerGroup');
     _seedCtrl = TextEditingController(text: _randomSeed?.toString() ?? '');
     WidgetsBinding.instance.addPostFrameCallback((_) => _pushIfValid());
   }
@@ -66,23 +71,28 @@ class _WizardPoolConfigStepState extends State<WizardPoolConfigStep> {
   @override
   void dispose() {
     _groupCountCtrl.dispose();
-    _qualifiersCtrl.dispose();
     _seedCtrl.dispose();
     super.dispose();
   }
 
-  int get _maxQualifiersPerGroup =>
-      (widget.draft.maxParticipants + _groupCount - 1) ~/
-          math.max(_groupCount, 1);
+  /// Qualifier-per-group count derived read-only from the KO bracket size
+  /// (`koBracketSize / groupCount`). 0 when the group count is invalid or
+  /// does not evenly divide the bracket size.
+  int get _derivedQualifiersPerGroup {
+    final size = widget.koBracketSize;
+    if (!_groupCountValid || size <= 0 || size % _groupCount != 0) return 0;
+    return size ~/ _groupCount;
+  }
 
   bool get _groupCountValid =>
       _groupCount >= _groupCountMin && _groupCount <= _groupCountMax;
 
-  bool get _qualifiersValid =>
-      _qualifiersPerGroup >= 1 &&
-      _qualifiersPerGroup <= _maxQualifiersPerGroup;
+  /// The group count must evenly divide the KO bracket size so every group
+  /// sends the same number of teams into the KO bracket.
+  bool get _divisible =>
+      widget.koBracketSize > 0 && widget.koBracketSize % _groupCount == 0;
 
-  bool get _isValid => _groupCountValid && _qualifiersValid;
+  bool get _isValid => _groupCountValid && _divisible;
 
   void _pushIfValid() {
     if (!_isValid) {
@@ -92,7 +102,7 @@ class _WizardPoolConfigStepState extends State<WizardPoolConfigStep> {
     widget.onConfigChanged(
       PoolPhaseConfig(
         groupCount: _groupCount,
-        qualifiersPerGroup: _qualifiersPerGroup,
+        qualifiersPerGroup: _derivedQualifiersPerGroup,
         strategy: _strategy,
         randomSeed: _strategy == PoolGroupingStrategy.random
             ? _randomSeed
@@ -103,11 +113,6 @@ class _WizardPoolConfigStepState extends State<WizardPoolConfigStep> {
 
   void _onGroupsTyped(String raw) {
     setState(() => _groupCount = int.tryParse(raw.trim()) ?? 0);
-    _pushIfValid();
-  }
-
-  void _onQualifiersTyped(String raw) {
-    setState(() => _qualifiersPerGroup = int.tryParse(raw.trim()) ?? 0);
     _pushIfValid();
   }
 
@@ -159,20 +164,20 @@ class _WizardPoolConfigStepState extends State<WizardPoolConfigStep> {
           tokens: tokens,
           controller: _groupCountCtrl,
           onChanged: _onGroupsTyped,
-          errorText: _groupCountValid
-              ? null
-              : 'Wert zwischen $_groupCountMin und $_groupCountMax erforderlich.',
+          errorText: !_groupCountValid
+              ? 'Wert zwischen $_groupCountMin und $_groupCountMax erforderlich.'
+              : (!_divisible
+                  ? 'Gruppen müssen die KO-Grösse (${widget.koBracketSize}) glatt teilen.'
+                  : null),
         ),
         const SizedBox(height: KubbTokens.space4),
+        // Qualifier-per-group is derived read-only from the KO bracket size /
+        // group count (P6_SETUP_WIZARD_SPEC.md Screen 5).
         _fieldLabel(tokens, 'Qualifier pro Gruppe'),
         const SizedBox(height: KubbTokens.space2),
-        _intField(
+        _DerivedValueBox(
           tokens: tokens,
-          controller: _qualifiersCtrl,
-          onChanged: _onQualifiersTyped,
-          errorText: _qualifiersValid
-              ? null
-              : 'Max. $_maxQualifiersPerGroup bei ${widget.draft.maxParticipants} Teilnehmern.',
+          value: _isValid ? '$_derivedQualifiersPerGroup' : '—',
         ),
         const SizedBox(height: KubbTokens.space5),
         _fieldLabel(tokens, 'Grouping-Strategie'),
@@ -338,6 +343,37 @@ class WizardPoolToggle extends StatelessWidget {
           ),
           Switch(value: value, onChanged: onChanged),
         ],
+      ),
+    );
+  }
+}
+
+/// Read-only display box for a derived value (e.g. qualifier-per-group),
+/// styled like a disabled outline field so it reads as non-editable.
+class _DerivedValueBox extends StatelessWidget {
+  const _DerivedValueBox({required this.tokens, required this.value});
+
+  final KubbTokens tokens;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 56,
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space3),
+      decoration: BoxDecoration(
+        color: tokens.bgSunken,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+        border: Border.all(color: tokens.line, width: 1.5),
+      ),
+      child: Text(
+        value,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: tokens.fg,
+        ),
       ),
     );
   }

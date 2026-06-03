@@ -78,8 +78,12 @@ class TournamentConfigDraft {
     this.koMatchup = KoMatchup.seedHighVsLow,
     this.koTiebreakMethod = KoTiebreakMethod.classicKingtossRemoval,
     this.vorrundeType = VorrundeType.groupPhase,
-    this.koType = KoType.none,
+    this.koType = KoType.singleOut,
     this.koRoundFormats = const <MatchFormatSpec>[],
+    // --- Model-B (consolation / Trostturnier) config (ADR-0028 §5) ---
+    this.consolationMainBracketSize = 8,
+    this.consolationDirectCount = 0,
+    this.consolationName,
   });
 
   /// Rebuilds a draft from a [TournamentDetailHeader] so the setup wizard
@@ -213,6 +217,10 @@ class TournamentConfigDraft {
                 MatchFormatSpec.fromJson((f as Map).cast<String, Object?>()),
             ]
           : const <MatchFormatSpec>[],
+      consolationMainBracketSize:
+          intOf(setup['consolation_main_bracket_size']) ?? 8,
+      consolationDirectCount: intOf(setup['consolation_direct_count']) ?? 0,
+      consolationName: setup['consolation_name'] as String?,
     );
   }
 
@@ -234,20 +242,11 @@ class TournamentConfigDraft {
 
   /// Maps the legacy [TournamentFormat] (+ bracket type for the
   /// single/double distinction) back to the KO axis. Used by `fromDetail`
-  /// when the explicit `ko_type` wire key is absent.
+  /// when the explicit `ko_type` wire key is absent. Every tournament has a
+  /// KO stage now, so the default is [KoType.singleOut]; a stored
+  /// consolation config is recovered from the explicit `ko_type` wire key
+  /// (handled in `fromDetail`), not from the legacy format.
   static KoType _koFromFormat(TournamentFormat format, BracketType bracket) {
-    final hasKo = switch (format) {
-      TournamentFormat.singleElimination ||
-      TournamentFormat.roundRobinThenKo ||
-      TournamentFormat.schochThenKo ||
-      TournamentFormat.swissThenKo =>
-        true,
-      TournamentFormat.roundRobin ||
-      TournamentFormat.schoch ||
-      TournamentFormat.swiss =>
-        false,
-    };
-    if (!hasKo) return KoType.none;
     return bracket == BracketType.doubleElimination
         ? KoType.doubleOut
         : KoType.singleOut;
@@ -351,9 +350,26 @@ class TournamentConfigDraft {
   /// [bracketType] in sync with these axes.
   final VorrundeType vorrundeType;
 
-  /// KO stage type (none / single-out / double-out), the second format
-  /// axis. See [vorrundeType].
+  /// KO stage type (single-out / double-out / consolation), the second
+  /// format axis. See [vorrundeType].
   final KoType koType;
+
+  // --- Model-B (consolation / Trostturnier) config (ADR-0028 §5) -------
+  // Only meaningful when [koType] is [KoType.consolation]; the engine
+  // (Block E) consumes these — here they are draft state + persistence
+  // only, emitted as snake_case in [toSetupConfig].
+
+  /// Consolation main-bracket size (power of two). Mirrors the KO bracket
+  /// size for the consolation model. Wire key `consolation_main_bracket_size`.
+  final int consolationMainBracketSize;
+
+  /// Number of prelim teams that start directly in the consolation bracket
+  /// (free integer >= 0, default 0). Wire key `consolation_direct_count`.
+  final int consolationDirectCount;
+
+  /// Free display name of the consolation/Trostturnier. Null = default name.
+  /// Wire key `consolation_name`.
+  final String? consolationName;
 
   /// Per-KO-round match rulesets, index 0 = first KO round … last = final.
   /// Length is derived from the KO bracket size via
@@ -492,6 +508,12 @@ class TournamentConfigDraft {
   static const int setsToWinMin = 1;
   static const int setsToWinMax = 4;
 
+  /// Prelim "Max. Sätze" bounds. Decoupled from [setsToWin] (P6 spec:
+  /// prelim needs no unique per-match winner, so even values like 2 — a
+  /// possible draw — are allowed).
+  static const int maxSetsMin = 1;
+  static const int maxSetsMax = 9;
+
   /// Payment-method vocabulary accepted by the schema CHECK constraint.
   static const List<String> paymentMethodVocabulary = <String>[
     'cash',
@@ -557,6 +579,10 @@ class TournamentConfigDraft {
     VorrundeType? vorrundeType,
     KoType? koType,
     List<MatchFormatSpec>? koRoundFormats,
+    int? consolationMainBracketSize,
+    int? consolationDirectCount,
+    String? consolationName,
+    bool clearConsolationName = false,
   }) {
     return TournamentConfigDraft(
       displayName: displayName ?? this.displayName,
@@ -619,32 +645,40 @@ class TournamentConfigDraft {
       vorrundeType: vorrundeType ?? this.vorrundeType,
       koType: koType ?? this.koType,
       koRoundFormats: koRoundFormats ?? this.koRoundFormats,
+      consolationMainBracketSize:
+          consolationMainBracketSize ?? this.consolationMainBracketSize,
+      consolationDirectCount:
+          consolationDirectCount ?? this.consolationDirectCount,
+      consolationName: clearConsolationName
+          ? null
+          : (consolationName ?? this.consolationName),
     );
   }
 
   // ---- Two-axis ⇄ legacy enum mapping ---------------------------------
 
   /// Derives the legacy [TournamentFormat] from the ([vorrundeType],
-  /// [koType]) pair so the RPC/server keep working unchanged:
-  ///   groupPhase + none          → roundRobin
-  ///   groupPhase + single/double → roundRobinThenKo
-  ///   schoch     + none          → swiss   (server routes swiss == schoch)
-  ///   schoch     + single/double → swissThenKo
+  /// [koType]) pair so the RPC/server keep working unchanged. Every
+  /// tournament has a KO stage, so a prelim always maps to its hybrid
+  /// (…ThenKo) format:
+  ///   groupPhase + any KO → roundRobinThenKo
+  ///   schoch     + any KO → swissThenKo   (server routes swiss == schoch)
   static TournamentFormat formatFor(VorrundeType vorrunde, KoType ko) {
-    final hasKo = ko != KoType.none;
     return switch (vorrunde) {
-      VorrundeType.groupPhase =>
-        hasKo ? TournamentFormat.roundRobinThenKo : TournamentFormat.roundRobin,
-      VorrundeType.schoch =>
-        hasKo ? TournamentFormat.swissThenKo : TournamentFormat.swiss,
+      VorrundeType.groupPhase => TournamentFormat.roundRobinThenKo,
+      VorrundeType.schoch => TournamentFormat.swissThenKo,
     };
   }
 
-  /// Derives the [BracketType] from a [KoType] (only meaningful when a KO
-  /// stage is present; defaults to single elimination otherwise).
+  /// Derives the [BracketType] from a [KoType]. Double-Elimination maps to
+  /// [BracketType.doubleElimination] (ADR-0027); Single-Out and the
+  /// consolation/Trostturnier model both use a single-elimination main
+  /// bracket (ADR-0028 — the consolation bracket is an additive second tree
+  /// layered on `ConsolationConfig`, not a different main bracket type).
   static BracketType bracketTypeFor(KoType ko) => switch (ko) {
         KoType.doubleOut => BracketType.doubleElimination,
-        KoType.none || KoType.singleOut => BracketType.singleElimination,
+        KoType.singleOut || KoType.consolation =>
+          BracketType.singleElimination,
       };
 
   /// Number of KO rounds for a given qualifier count: `ceil(log2(n))`
@@ -667,11 +701,8 @@ class TournamentConfigDraft {
   BracketType get derivedBracketType => bracketTypeFor(koType);
 
   /// Number of KO rounds implied by the current [koConfig] qualifier count.
-  /// 0 when no KO phase is configured ([koType] none) or no qualifier count
-  /// is set.
-  int get koRoundCount => koType == KoType.none
-      ? 0
-      : koRoundCountFor(koConfig?.qualifierCount ?? 0);
+  /// 0 when no qualifier count is set.
+  int get koRoundCount => koRoundCountFor(koConfig?.qualifierCount ?? 0);
 
   /// Returns a copy whose [koRoundFormats] has exactly [koRoundCount]
   /// entries. Existing entries are preserved; new tail entries are seeded
@@ -740,9 +771,10 @@ class TournamentConfigDraft {
     if (setsToWin < setsToWinMin || setsToWin > setsToWinMax) {
       issues.add('Sätze zum Sieg muss zwischen $setsToWinMin und $setsToWinMax liegen.');
     }
-    final requiredMaxSets = 2 * setsToWin - 1;
-    if (maxSets < requiredMaxSets) {
-      issues.add('Max. Sätze muss mindestens $requiredMaxSets sein.');
+    // Prelim max-sets is decoupled from setsToWin (P6: draws allowed in the
+    // prelim, so even values are valid). Only a sane absolute range applies.
+    if (maxSets < maxSetsMin || maxSets > maxSetsMax) {
+      issues.add('Max. Sätze muss zwischen $maxSetsMin und $maxSetsMax liegen.');
     }
 
     if (roundTimeSeconds < 60) {
@@ -850,6 +882,12 @@ class TournamentConfigDraft {
       'pitch_plan': pitchPlan?.toJson(),
       'mighty_finisher_quali': mightyFinisherQuali?.toJson(),
       'consolation_bracket': consolationBracket?.toJson(),
+      // Model-B (consolation / Trostturnier) config (ADR-0028 §5). Persisted
+      // unconditionally; only consumed by the engine (Block E) when
+      // koType == consolation.
+      'consolation_main_bracket_size': consolationMainBracketSize,
+      'consolation_direct_count': consolationDirectCount,
+      'consolation_name': _blankToNull(consolationName),
       'pool_phase_config': poolPhaseConfig?.toWire(),
       'ko_config': koConfig?.toWire(),
       'bracket_type': bracketType.wire,
@@ -910,7 +948,10 @@ class TournamentConfigDraft {
           other.koTiebreakMethod == koTiebreakMethod &&
           other.vorrundeType == vorrundeType &&
           other.koType == koType &&
-          listEquals(other.koRoundFormats, koRoundFormats);
+          listEquals(other.koRoundFormats, koRoundFormats) &&
+          other.consolationMainBracketSize == consolationMainBracketSize &&
+          other.consolationDirectCount == consolationDirectCount &&
+          other.consolationName == consolationName;
 
   @override
   int get hashCode => Object.hashAll(<Object?>[
@@ -961,5 +1002,8 @@ class TournamentConfigDraft {
         vorrundeType,
         koType,
         Object.hashAll(koRoundFormats),
+        consolationMainBracketSize,
+        consolationDirectCount,
+        consolationName,
       ]);
 }

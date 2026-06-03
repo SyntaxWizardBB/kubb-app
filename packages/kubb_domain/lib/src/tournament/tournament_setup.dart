@@ -55,13 +55,15 @@ enum VorrundeType {
       );
 }
 
-/// KO-stage type, the second format axis. `none` = no KO bracket (the
-/// prelim alone decides the tournament); `singleOut`/`doubleOut` add a
-/// single- resp. double-elimination KO bracket after the prelim.
+/// KO-stage type, the second format axis. Every tournament always has a KO
+/// stage (no "kein KO" option, P6_SETUP_WIZARD_SPEC.md). `singleOut` =
+/// single-elimination main bracket; `doubleOut` = double-elimination
+/// (ADR-0027); `consolation` = single-elimination main bracket plus a
+/// separate consolation/Trostturnier bracket (ADR-0028).
 enum KoType {
-  none('none'),
   singleOut('single_out'),
-  doubleOut('double_out');
+  doubleOut('double_out'),
+  consolation('consolation');
 
   const KoType(this.wire);
   final String wire;

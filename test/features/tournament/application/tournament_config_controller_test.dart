@@ -33,13 +33,6 @@ void main() {
   });
 
   group('setVorrundeType / setKoType mapping', () {
-    test('groupPhase + none => roundRobin (single bracket)', () {
-      controller.setVorrundeType(VorrundeType.groupPhase);
-      controller.setKoType(KoType.none);
-      expect(state().format, TournamentFormat.roundRobin);
-      expect(state().bracketType, BracketType.singleElimination);
-    });
-
     test('groupPhase + singleOut => roundRobinThenKo + single', () {
       controller.setVorrundeType(VorrundeType.groupPhase);
       controller.setKoType(KoType.singleOut);
@@ -54,11 +47,21 @@ void main() {
       expect(state().bracketType, BracketType.doubleElimination);
     });
 
-    test('schoch + none => swiss', () {
-      controller.setVorrundeType(VorrundeType.schoch);
-      controller.setKoType(KoType.none);
-      expect(state().format, TournamentFormat.swiss);
+    test('groupPhase + consolation => roundRobinThenKo + single + bracket', () {
+      controller.setVorrundeType(VorrundeType.groupPhase);
+      controller.setKoType(KoType.consolation);
+      expect(state().format, TournamentFormat.roundRobinThenKo);
+      // Consolation/Trostturnier rides on a single-elimination main bracket
+      // (ADR-0028) with the consolation bracket enabled.
       expect(state().bracketType, BracketType.singleElimination);
+      expect(state().consolationBracket?.enabled, isTrue);
+    });
+
+    test('switching away from consolation clears the consolation bracket', () {
+      controller.setKoType(KoType.consolation);
+      expect(state().consolationBracket?.enabled, isTrue);
+      controller.setKoType(KoType.singleOut);
+      expect(state().consolationBracket, isNull);
     });
 
     test('schoch + singleOut => swissThenKo + single', () {
@@ -82,7 +85,9 @@ void main() {
 
       controller.setFormat(TournamentFormat.roundRobin);
       expect(state().vorrundeType, VorrundeType.groupPhase);
-      expect(state().koType, KoType.none);
+      // Every tournament has a KO stage now: a pure round-robin legacy format
+      // maps onto a single-out KO axis (the "kein KO" value is gone).
+      expect(state().koType, KoType.singleOut);
     });
   });
 
@@ -100,14 +105,17 @@ void main() {
       expect(state().koRoundFormats, hasLength(2));
     });
 
-    test('setKoType(none) empties the per-round list', () {
+    test('setKoType resizes the per-round list to the KO round count', () {
       controller.setKoType(KoType.singleOut);
       controller
           .setKoConfig(KoPhaseConfig(qualifierCount: 4, participantCount: 8));
-      expect(state().koRoundFormats, isNotEmpty);
+      // 4 qualifiers => 2 KO rounds.
+      expect(state().koRoundFormats, hasLength(2));
 
-      controller.setKoType(KoType.none);
-      expect(state().koRoundFormats, isEmpty);
+      // Switching the KO type keeps a KO stage (no none) and re-derives the
+      // per-round list for the unchanged qualifier count.
+      controller.setKoType(KoType.doubleOut);
+      expect(state().koRoundFormats, hasLength(2));
     });
 
     test('setKoRoundFormat replaces a single round in place', () {

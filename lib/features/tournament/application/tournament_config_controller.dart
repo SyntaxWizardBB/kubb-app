@@ -16,7 +16,18 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
   final TournamentConfigDraft? _initial;
 
   @override
-  TournamentConfigDraft build() => _initial ?? const TournamentConfigDraft();
+  TournamentConfigDraft build() {
+    final draft = _initial ?? const TournamentConfigDraft();
+    // Every tournament has a KO stage now, so the legacy `format` /
+    // `bracketType` must always agree with the two-axis (vorrundeType ×
+    // koType) selection — even for a bare default draft that the organiser
+    // never edited (it would otherwise submit as a pure round-robin without a
+    // KO). Normalise on build so submit reads a consistent format.
+    return draft.copyWith(
+      format: draft.derivedFormat,
+      bracketType: draft.derivedBracketType,
+    );
+  }
 
   void setDisplayName(String value) {
     state = state.copyWith(displayName: value);
@@ -66,12 +77,16 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     final ko = bracketType == BracketType.doubleElimination
         ? KoType.doubleOut
         : KoType.singleOut;
+    // Every tournament has a KO stage now (the "kein KO" axis value was
+    // removed). A pure prelim
+    // legacy format still maps onto a hybrid axis with a single-out KO so the
+    // two-axis selection stays consistent.
     return switch (format) {
-      TournamentFormat.roundRobin => (VorrundeType.groupPhase, KoType.none),
+      TournamentFormat.roundRobin ||
+      TournamentFormat.roundRobinThenKo =>
+        (VorrundeType.groupPhase, ko),
       TournamentFormat.swiss ||
-      TournamentFormat.schoch =>
-        (VorrundeType.schoch, KoType.none),
-      TournamentFormat.roundRobinThenKo => (VorrundeType.groupPhase, ko),
+      TournamentFormat.schoch ||
       TournamentFormat.singleElimination ||
       TournamentFormat.swissThenKo ||
       TournamentFormat.schochThenKo =>
@@ -88,13 +103,28 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
   }
 
   /// Sets the KO stage axis and re-derives the legacy format + bracket
-  /// type, then resizes the per-KO-round format list (none => empty).
+  /// type, then resizes the per-KO-round format list. For
+  /// [KoType.consolation] the consolation bracket is enabled (ADR-0028); for
+  /// the other KO types it is cleared so the draft stays consistent.
   void setKoType(KoType type) {
+    final existing = state.consolationBracket;
+    final consolation = type == KoType.consolation
+        ? ConsolationConfig(
+            enabled: true,
+            source: existing?.source ?? ConsolationSource.earlyKoLosers,
+            sourceRounds: existing?.sourceRounds ?? const <int>[],
+            rankFrom: existing?.rankFrom,
+            rankTo: existing?.rankTo,
+            matchFormat: existing?.matchFormat,
+          )
+        : null;
     state = state
         .copyWith(
           koType: type,
           format: TournamentConfigDraft.formatFor(state.vorrundeType, type),
           bracketType: TournamentConfigDraft.bracketTypeFor(type),
+          consolationBracket: consolation,
+          clearConsolationBracket: consolation == null,
         )
         .withResizedKoRoundFormats();
   }
@@ -122,9 +152,14 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     state = state.copyWith(setsToWin: next, maxSets: nextMax);
   }
 
+  /// Sets the prelim "Max. Sätze". Decoupled from `setsToWin` (P6 spec: the
+  /// prelim allows draws, so even values like 2 are valid). Only the sane
+  /// absolute range `maxSetsMin..maxSetsMax` is enforced.
   void setMaxSets(int value) {
-    final floor = 2 * state.setsToWin - 1;
-    final next = value < floor ? floor : value;
+    final next = value.clamp(
+      TournamentConfigDraft.maxSetsMin,
+      TournamentConfigDraft.maxSetsMax,
+    );
     state = state.copyWith(maxSets: next);
   }
 
@@ -158,6 +193,29 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
 
   void setLeagueEligible(bool value) {
     state = state.copyWith(leagueEligible: value);
+  }
+
+  // --- Model-B (consolation / Trostturnier) config (ADR-0028 §5) -------
+
+  /// Consolation main-bracket size (power of two). Only meaningful when
+  /// [KoType.consolation] is selected; persisted regardless.
+  void setConsolationMainBracketSize(int value) {
+    state = state.copyWith(consolationMainBracketSize: value);
+  }
+
+  /// Number of prelim teams that start directly in the consolation bracket
+  /// (free integer >= 0).
+  void setConsolationDirectCount(int value) {
+    state = state.copyWith(consolationDirectCount: value < 0 ? 0 : value);
+  }
+
+  /// Free display name of the consolation/Trostturnier.
+  void setConsolationName(String? value) {
+    final trimmed = value?.trim();
+    state = state.copyWith(
+      consolationName: trimmed,
+      clearConsolationName: trimmed == null || trimmed.isEmpty,
+    );
   }
 
   // --- P6 Stammdaten setters (Phase 1b) ---
@@ -313,13 +371,6 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     state = state.copyWith(
       koMatchFormat: format,
       clearKoMatchFormat: format == null,
-    );
-  }
-
-  void setMightyFinisherQuali(MightyFinisherQuali? quali) {
-    state = state.copyWith(
-      mightyFinisherQuali: quali,
-      clearMightyFinisherQuali: quali == null,
     );
   }
 

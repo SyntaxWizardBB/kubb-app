@@ -1377,7 +1377,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardStep2Title => 'Teilnehmer';
 
   @override
-  String get tournamentWizardStep3Title => 'Format';
+  String get tournamentWizardStep3Title => 'Vorrunde';
+
+  @override
+  String get tournamentWizardStepGroupPhaseTitle => 'Gruppenphase';
 
   @override
   String get tournamentWizardStep4Title => 'Übersicht';
@@ -1696,23 +1699,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardKoFinalNoTiebreak => 'Ab Halbfinale ohne Tiebreak';
 
   @override
-  String get tournamentWizardMightyQualiLabel => 'Mighty-Finisher-Quali';
-
-  @override
-  String get tournamentWizardMightyQualiHint =>
-      'Gruppenzweite spielen um Restplätze';
-
-  @override
-  String get tournamentWizardMightyQualiSlots => 'Plätze';
-
-  @override
-  String get tournamentWizardConsolationLabel => 'Trostturnier';
-
-  @override
-  String get tournamentWizardConsolationHint =>
-      'Früh ausgeschiedene spielen ein zweites Bracket (Best of the Rest)';
-
-  @override
   String get tournamentWizardMinParticipantsLabel => 'Min. Teilnehmer';
 
   @override
@@ -1748,13 +1734,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardKoSystemLabel => 'K.-o.-System';
 
   @override
-  String get tournamentWizardKoSystemNone => 'Kein K.-o.';
-
-  @override
-  String get tournamentWizardKoSystemNoneHint =>
-      'Nur Vorrunde, Rangliste entscheidet.';
-
-  @override
   String get tournamentWizardKoSystemSingle => 'Single-Out';
 
   @override
@@ -1762,11 +1741,36 @@ class AppLocalizationsDe extends AppLocalizations {
       'Eine Niederlage und du bist raus.';
 
   @override
-  String get tournamentWizardKoSystemDouble => 'Double-Out';
+  String get tournamentWizardKoSystemDouble => 'Double-Elimination';
 
   @override
   String get tournamentWizardKoSystemDoubleHint =>
       'Erst nach zwei Niederlagen ausgeschieden.';
+
+  @override
+  String get tournamentWizardKoSystemConsolation => 'Trostturnier';
+
+  @override
+  String get tournamentWizardKoSystemConsolationHint =>
+      'Single-Out plus separates Nebenturnier für die hinteren Plätze.';
+
+  @override
+  String get tournamentWizardConsolationMainBracketSizeLabel =>
+      'Hauptbaum-Grösse';
+
+  @override
+  String get tournamentWizardConsolationDirectCountLabel =>
+      'Direkt ins Trostturnier';
+
+  @override
+  String get tournamentWizardConsolationDirectCountHint =>
+      'Wie viele Vorrunden-Teams starten direkt im Trostturnier (zusätzlich zu den Hauptbaum-Verlierern).';
+
+  @override
+  String get tournamentWizardConsolationNameLabel => 'Name des Trostturniers';
+
+  @override
+  String get tournamentWizardConsolationNameHint => 'z. B. Bâton Rouille';
 
   @override
   String get tournamentWizardSetsToWinLabel => 'Sätze zum Sieg';
@@ -2544,29 +2548,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentWizardQualifierCountHelper =>
-      'Wie viele Teams ziehen aus der Gruppenphase in die KO-Phase ein? Beliebige Zahl möglich — die App füllt fehlende Plätze mit Freilosen auf.';
-
-  @override
-  String tournamentWizardQualifierPreviewBracketSize(int size) {
-    return 'Bracket-Grösse: $size';
-  }
-
-  @override
-  String tournamentWizardQualifierPreviewByes(int byes) {
-    return 'Davon $byes Freilos(e) an die Top-Seeds';
-  }
-
-  @override
-  String tournamentWizardQualifierPreviewRealMatches(int matches) {
-    return 'Runde 1: $matches echte Spiele';
-  }
-
-  @override
-  String get tournamentWizardBronzeMatchLabel => 'Spiel um Platz 3 austragen';
-
-  @override
-  String get tournamentWizardBronzeMatchHelper =>
-      'Empfohlen bei Liga-Turnieren — entscheidet zwischen Rang 3 und 4.';
+      'Wie viele Teams ziehen aus der Vorrunde in die KO-Phase ein? Nur Zweierpotenzen (4/8/16/32) — keine Freilose im Hauptbaum.';
 
   @override
   String get tournamentWizardStep6Title => 'Tiebreaker-Reihenfolge';

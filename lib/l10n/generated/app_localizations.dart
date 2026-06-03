@@ -2608,11 +2608,17 @@ abstract class AppLocalizations {
   /// **'Teilnehmer'**
   String get tournamentWizardStep2Title;
 
-  /// Wizard step 3 eyebrow
+  /// Wizard step 3 title (Vorrunde + KO axis)
   ///
   /// In de, this message translates to:
-  /// **'Format'**
+  /// **'Vorrunde'**
   String get tournamentWizardStep3Title;
+
+  /// Wizard group-phase step title
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppenphase'**
+  String get tournamentWizardStepGroupPhaseTitle;
 
   /// Wizard step 4 eyebrow
   ///
@@ -3196,36 +3202,6 @@ abstract class AppLocalizations {
   /// **'Ab Halbfinale ohne Tiebreak'**
   String get tournamentWizardKoFinalNoTiebreak;
 
-  /// Mighty finisher qualification toggle
-  ///
-  /// In de, this message translates to:
-  /// **'Mighty-Finisher-Quali'**
-  String get tournamentWizardMightyQualiLabel;
-
-  /// Quali helper text
-  ///
-  /// In de, this message translates to:
-  /// **'Gruppenzweite spielen um Restplätze'**
-  String get tournamentWizardMightyQualiHint;
-
-  /// Quali slots stepper label
-  ///
-  /// In de, this message translates to:
-  /// **'Plätze'**
-  String get tournamentWizardMightyQualiSlots;
-
-  /// Consolation bracket toggle
-  ///
-  /// In de, this message translates to:
-  /// **'Trostturnier'**
-  String get tournamentWizardConsolationLabel;
-
-  /// Consolation helper text
-  ///
-  /// In de, this message translates to:
-  /// **'Früh ausgeschiedene spielen ein zweites Bracket (Best of the Rest)'**
-  String get tournamentWizardConsolationHint;
-
   /// Min participants stepper label
   ///
   /// In de, this message translates to:
@@ -3292,18 +3268,6 @@ abstract class AppLocalizations {
   /// **'K.-o.-System'**
   String get tournamentWizardKoSystemLabel;
 
-  /// No KO stage option
-  ///
-  /// In de, this message translates to:
-  /// **'Kein K.-o.'**
-  String get tournamentWizardKoSystemNone;
-
-  /// No KO stage description
-  ///
-  /// In de, this message translates to:
-  /// **'Nur Vorrunde, Rangliste entscheidet.'**
-  String get tournamentWizardKoSystemNoneHint;
-
   /// Single elimination KO option
   ///
   /// In de, this message translates to:
@@ -3319,7 +3283,7 @@ abstract class AppLocalizations {
   /// Double elimination KO option
   ///
   /// In de, this message translates to:
-  /// **'Double-Out'**
+  /// **'Double-Elimination'**
   String get tournamentWizardKoSystemDouble;
 
   /// Double-out KO description
@@ -3327,6 +3291,48 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Erst nach zwei Niederlagen ausgeschieden.'**
   String get tournamentWizardKoSystemDoubleHint;
+
+  /// Consolation bracket KO option (Modell B)
+  ///
+  /// In de, this message translates to:
+  /// **'Trostturnier'**
+  String get tournamentWizardKoSystemConsolation;
+
+  /// Consolation KO description
+  ///
+  /// In de, this message translates to:
+  /// **'Single-Out plus separates Nebenturnier für die hinteren Plätze.'**
+  String get tournamentWizardKoSystemConsolationHint;
+
+  /// Model-B main bracket size label (= KO size)
+  ///
+  /// In de, this message translates to:
+  /// **'Hauptbaum-Grösse'**
+  String get tournamentWizardConsolationMainBracketSizeLabel;
+
+  /// Model-B direct-starter count label
+  ///
+  /// In de, this message translates to:
+  /// **'Direkt ins Trostturnier'**
+  String get tournamentWizardConsolationDirectCountLabel;
+
+  /// Model-B direct-starter count helper
+  ///
+  /// In de, this message translates to:
+  /// **'Wie viele Vorrunden-Teams starten direkt im Trostturnier (zusätzlich zu den Hauptbaum-Verlierern).'**
+  String get tournamentWizardConsolationDirectCountHint;
+
+  /// Model-B consolation display-name label
+  ///
+  /// In de, this message translates to:
+  /// **'Name des Trostturniers'**
+  String get tournamentWizardConsolationNameLabel;
+
+  /// Model-B consolation display-name hint
+  ///
+  /// In de, this message translates to:
+  /// **'z. B. Bâton Rouille'**
+  String get tournamentWizardConsolationNameHint;
 
   /// Sets-to-win stepper label
   ///
@@ -4702,41 +4708,11 @@ abstract class AppLocalizations {
   /// **'Anzahl Qualifikanten'**
   String get tournamentWizardQualifierCountLabel;
 
-  /// Helper text for qualifier-count input (U1, U2)
+  /// Helper text for the power-of-two KO size selector
   ///
   /// In de, this message translates to:
-  /// **'Wie viele Teams ziehen aus der Gruppenphase in die KO-Phase ein? Beliebige Zahl möglich — die App füllt fehlende Plätze mit Freilosen auf.'**
+  /// **'Wie viele Teams ziehen aus der Vorrunde in die KO-Phase ein? Nur Zweierpotenzen (4/8/16/32) — keine Freilose im Hauptbaum.'**
   String get tournamentWizardQualifierCountHelper;
-
-  /// Preview line: next power of two used as bracket size (U3)
-  ///
-  /// In de, this message translates to:
-  /// **'Bracket-Grösse: {size}'**
-  String tournamentWizardQualifierPreviewBracketSize(int size);
-
-  /// Preview line: number of BYEs awarded to top seeds (U3)
-  ///
-  /// In de, this message translates to:
-  /// **'Davon {byes} Freilos(e) an die Top-Seeds'**
-  String tournamentWizardQualifierPreviewByes(int byes);
-
-  /// Preview line: number of real R1 matches after BYE deduction (U3)
-  ///
-  /// In de, this message translates to:
-  /// **'Runde 1: {matches} echte Spiele'**
-  String tournamentWizardQualifierPreviewRealMatches(int matches);
-
-  /// Switch label for with_third_place_playoff toggle
-  ///
-  /// In de, this message translates to:
-  /// **'Spiel um Platz 3 austragen'**
-  String get tournamentWizardBronzeMatchLabel;
-
-  /// Helper text under the bronze-match switch
-  ///
-  /// In de, this message translates to:
-  /// **'Empfohlen bei Liga-Turnieren — entscheidet zwischen Rang 3 und 4.'**
-  String get tournamentWizardBronzeMatchHelper;
 
   /// Title of wizard step 6 for tiebreaker reordering
   ///

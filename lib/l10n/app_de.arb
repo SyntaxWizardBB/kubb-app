@@ -1873,9 +1873,13 @@
   "@tournamentWizardStep2Title": {
     "description": "Wizard step 2 eyebrow"
   },
-  "tournamentWizardStep3Title": "Format",
+  "tournamentWizardStep3Title": "Vorrunde",
   "@tournamentWizardStep3Title": {
-    "description": "Wizard step 3 eyebrow"
+    "description": "Wizard step 3 title (Vorrunde + KO axis)"
+  },
+  "tournamentWizardStepGroupPhaseTitle": "Gruppenphase",
+  "@tournamentWizardStepGroupPhaseTitle": {
+    "description": "Wizard group-phase step title"
   },
   "tournamentWizardStep4Title": "Übersicht",
   "@tournamentWizardStep4Title": {
@@ -2249,16 +2253,6 @@
   "@tournamentWizardKoRoundTiebreakAfterLabel": { "description": "Per-round tiebreak-after label" },
   "tournamentWizardKoFinalNoTiebreak": "Ab Halbfinale ohne Tiebreak",
   "@tournamentWizardKoFinalNoTiebreak": { "description": "Final/semifinal without tiebreak toggle" },
-  "tournamentWizardMightyQualiLabel": "Mighty-Finisher-Quali",
-  "@tournamentWizardMightyQualiLabel": { "description": "Mighty finisher qualification toggle" },
-  "tournamentWizardMightyQualiHint": "Gruppenzweite spielen um Restplätze",
-  "@tournamentWizardMightyQualiHint": { "description": "Quali helper text" },
-  "tournamentWizardMightyQualiSlots": "Plätze",
-  "@tournamentWizardMightyQualiSlots": { "description": "Quali slots stepper label" },
-  "tournamentWizardConsolationLabel": "Trostturnier",
-  "@tournamentWizardConsolationLabel": { "description": "Consolation bracket toggle" },
-  "tournamentWizardConsolationHint": "Früh ausgeschiedene spielen ein zweites Bracket (Best of the Rest)",
-  "@tournamentWizardConsolationHint": { "description": "Consolation helper text" },
   "tournamentWizardMinParticipantsLabel": "Min. Teilnehmer",
   "@tournamentWizardMinParticipantsLabel": {
     "description": "Min participants stepper label"
@@ -2303,14 +2297,6 @@
   "@tournamentWizardKoSystemLabel": {
     "description": "KO stage selector label"
   },
-  "tournamentWizardKoSystemNone": "Kein K.-o.",
-  "@tournamentWizardKoSystemNone": {
-    "description": "No KO stage option"
-  },
-  "tournamentWizardKoSystemNoneHint": "Nur Vorrunde, Rangliste entscheidet.",
-  "@tournamentWizardKoSystemNoneHint": {
-    "description": "No KO stage description"
-  },
   "tournamentWizardKoSystemSingle": "Single-Out",
   "@tournamentWizardKoSystemSingle": {
     "description": "Single elimination KO option"
@@ -2319,13 +2305,41 @@
   "@tournamentWizardKoSystemSingleHint": {
     "description": "Single-out KO description"
   },
-  "tournamentWizardKoSystemDouble": "Double-Out",
+  "tournamentWizardKoSystemDouble": "Double-Elimination",
   "@tournamentWizardKoSystemDouble": {
     "description": "Double elimination KO option"
   },
   "tournamentWizardKoSystemDoubleHint": "Erst nach zwei Niederlagen ausgeschieden.",
   "@tournamentWizardKoSystemDoubleHint": {
     "description": "Double-out KO description"
+  },
+  "tournamentWizardKoSystemConsolation": "Trostturnier",
+  "@tournamentWizardKoSystemConsolation": {
+    "description": "Consolation bracket KO option (Modell B)"
+  },
+  "tournamentWizardKoSystemConsolationHint": "Single-Out plus separates Nebenturnier für die hinteren Plätze.",
+  "@tournamentWizardKoSystemConsolationHint": {
+    "description": "Consolation KO description"
+  },
+  "tournamentWizardConsolationMainBracketSizeLabel": "Hauptbaum-Grösse",
+  "@tournamentWizardConsolationMainBracketSizeLabel": {
+    "description": "Model-B main bracket size label (= KO size)"
+  },
+  "tournamentWizardConsolationDirectCountLabel": "Direkt ins Trostturnier",
+  "@tournamentWizardConsolationDirectCountLabel": {
+    "description": "Model-B direct-starter count label"
+  },
+  "tournamentWizardConsolationDirectCountHint": "Wie viele Vorrunden-Teams starten direkt im Trostturnier (zusätzlich zu den Hauptbaum-Verlierern).",
+  "@tournamentWizardConsolationDirectCountHint": {
+    "description": "Model-B direct-starter count helper"
+  },
+  "tournamentWizardConsolationNameLabel": "Name des Trostturniers",
+  "@tournamentWizardConsolationNameLabel": {
+    "description": "Model-B consolation display-name label"
+  },
+  "tournamentWizardConsolationNameHint": "z. B. Bâton Rouille",
+  "@tournamentWizardConsolationNameHint": {
+    "description": "Model-B consolation display-name hint"
   },
   "tournamentWizardSetsToWinLabel": "Sätze zum Sieg",
   "@tournamentWizardSetsToWinLabel": {
@@ -3350,44 +3364,9 @@
   "@tournamentWizardQualifierCountLabel": {
     "description": "Label for the qualifier-count integer input (U1)"
   },
-  "tournamentWizardQualifierCountHelper": "Wie viele Teams ziehen aus der Gruppenphase in die KO-Phase ein? Beliebige Zahl möglich — die App füllt fehlende Plätze mit Freilosen auf.",
+  "tournamentWizardQualifierCountHelper": "Wie viele Teams ziehen aus der Vorrunde in die KO-Phase ein? Nur Zweierpotenzen (4/8/16/32) — keine Freilose im Hauptbaum.",
   "@tournamentWizardQualifierCountHelper": {
-    "description": "Helper text for qualifier-count input (U1, U2)"
-  },
-  "tournamentWizardQualifierPreviewBracketSize": "Bracket-Grösse: {size}",
-  "@tournamentWizardQualifierPreviewBracketSize": {
-    "description": "Preview line: next power of two used as bracket size (U3)",
-    "placeholders": {
-      "size": {
-        "type": "int"
-      }
-    }
-  },
-  "tournamentWizardQualifierPreviewByes": "Davon {byes} Freilos(e) an die Top-Seeds",
-  "@tournamentWizardQualifierPreviewByes": {
-    "description": "Preview line: number of BYEs awarded to top seeds (U3)",
-    "placeholders": {
-      "byes": {
-        "type": "int"
-      }
-    }
-  },
-  "tournamentWizardQualifierPreviewRealMatches": "Runde 1: {matches} echte Spiele",
-  "@tournamentWizardQualifierPreviewRealMatches": {
-    "description": "Preview line: number of real R1 matches after BYE deduction (U3)",
-    "placeholders": {
-      "matches": {
-        "type": "int"
-      }
-    }
-  },
-  "tournamentWizardBronzeMatchLabel": "Spiel um Platz 3 austragen",
-  "@tournamentWizardBronzeMatchLabel": {
-    "description": "Switch label for with_third_place_playoff toggle"
-  },
-  "tournamentWizardBronzeMatchHelper": "Empfohlen bei Liga-Turnieren — entscheidet zwischen Rang 3 und 4.",
-  "@tournamentWizardBronzeMatchHelper": {
-    "description": "Helper text under the bronze-match switch"
+    "description": "Helper text for the power-of-two KO size selector"
   },
   "tournamentWizardStep6Title": "Tiebreaker-Reihenfolge",
   "@tournamentWizardStep6Title": {

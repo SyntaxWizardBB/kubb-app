@@ -114,9 +114,9 @@ void main() {
   });
 
   testWidgets(
-      'preview for n=6 of 12 shows bracket 8, 2 BYEs, 4 real matches (U3)',
+      'KO size selector only offers powers of two up to the participant cap',
       (tester) async {
-    await _pump(
+    final host = await _pump(
       tester,
       draft: const TournamentConfigDraft(
         displayName: 'Cup',
@@ -124,48 +124,48 @@ void main() {
         format: TournamentFormat.roundRobinThenKo,
       ),
     );
-    await tester.enterText(find.byType(TextField), '6');
-    await tester.pumpAndSettle();
+    // Powers of two up to 12: 2, 4, 8 (16 is above the cap, never offered).
+    expect(find.widgetWithText(InkWell, '2'), findsOneWidget);
+    expect(find.widgetWithText(InkWell, '4'), findsOneWidget);
+    expect(find.widgetWithText(InkWell, '8'), findsOneWidget);
+    expect(find.widgetWithText(InkWell, '16'), findsNothing);
 
-    expect(find.text('Bracket-Grösse: 8'), findsOneWidget);
-    expect(find.text('Davon 2 Freilos(e) an die Top-Seeds'), findsOneWidget);
-    expect(find.text('Runde 1: 4 echte Spiele'), findsOneWidget);
-  });
-
-  testWidgets('out-of-range qualifier count clears the pushed config (U2)',
-      (tester) async {
-    final host = await _pump(
-      tester,
-      draft: const TournamentConfigDraft(
-        displayName: 'Cup',
-        format: TournamentFormat.roundRobinThenKo,
-      ),
-    );
-    // Below the minimum of 2.
-    await tester.enterText(find.byType(TextField), '1');
-    await tester.pumpAndSettle();
-    expect(host.lastConfig, isNull);
-    // Above participantCount.
-    await tester.enterText(find.byType(TextField), '99');
-    await tester.pumpAndSettle();
-    expect(host.lastConfig, isNull);
-    // Back in range.
-    await tester.enterText(find.byType(TextField), '4');
+    // Picking a size pushes that power-of-two qualifier count.
+    await tester.tap(find.widgetWithText(InkWell, '4'));
     await tester.pumpAndSettle();
     expect(host.lastConfig?.qualifierCount, 4);
   });
 
-  testWidgets('bronze switch pre-fills from suggestedWithThirdPlacePlayoff',
+  testWidgets('Spiel um Platz 3 is always on (no toggle) (DOD-12)',
       (tester) async {
     final host = await _pump(
       tester,
       draft: const TournamentConfigDraft(
         displayName: 'Cup',
         format: TournamentFormat.roundRobinThenKo,
-        leagueEligible: true,
       ),
     );
+    // withThirdPlacePlayoff is hard-wired true; no bronze switch is rendered.
     expect(host.lastConfig?.withThirdPlacePlayoff, isTrue);
+    expect(find.text('Spiel um Platz 3 austragen'), findsNothing);
+  });
+
+  testWidgets(
+      'no removed UI: byes preview, Mighty quali and Shoot-Out are gone',
+      (tester) async {
+    await _pump(
+      tester,
+      draft: const TournamentConfigDraft(
+        displayName: 'Cup',
+        format: TournamentFormat.roundRobinThenKo,
+      ),
+    );
+    expect(find.textContaining('Bracket-Grösse'), findsNothing);
+    // The old byes-preview line ("… Freilos(e) an die Top-Seeds") is gone.
+    expect(find.textContaining('an die Top-Seeds'), findsNothing);
+    expect(find.text('Mighty-Finisher-Quali'), findsNothing);
+    // Seeding label reads "aus Vorrunde" (not "Gruppenphase").
+    expect(find.text('Automatisch aus Vorrunde'), findsOneWidget);
   });
 
   testWidgets(
@@ -178,7 +178,6 @@ void main() {
       draft: TournamentConfigDraft(
         displayName: 'Cup',
         format: TournamentFormat.roundRobinThenKo,
-        koType: KoType.singleOut,
         koConfig: KoPhaseConfig(qualifierCount: 8, participantCount: 8),
         koRoundFormats: const <MatchFormatSpec>[
           MatchFormatSpec(setsToWin: 2, maxSets: 3, timeLimitSeconds: 1800),
@@ -221,7 +220,6 @@ void main() {
     final draft = TournamentConfigDraft(
       displayName: 'Cup',
       format: TournamentFormat.roundRobinThenKo,
-      koType: KoType.singleOut,
       koConfig: KoPhaseConfig(qualifierCount: 4, participantCount: 4),
       koRoundFormats: const <MatchFormatSpec>[
         MatchFormatSpec(setsToWin: 2, maxSets: 3, timeLimitSeconds: 1800),
