@@ -1597,6 +1597,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardPitchSortManual => 'Manuelle Reihenfolge';
 
   @override
+  String get tournamentWizardPitchOrderLabel => 'Reihenfolge der Felder';
+
+  @override
+  String get tournamentWizardPitchOrderHint =>
+      'Per Drag die gewünschte Reihenfolge der Feldnummern festlegen.';
+
+  @override
+  String tournamentWizardPitchOrderItem(int number) {
+    return 'Feld $number';
+  }
+
+  @override
   String tournamentWizardPitchSummary(int count) {
     return '$count Pitches';
   }

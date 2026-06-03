@@ -2162,6 +2162,23 @@
   "@tournamentWizardPitchSortManual": {
     "description": "Pitch sort: manual order"
   },
+  "tournamentWizardPitchOrderLabel": "Reihenfolge der Felder",
+  "@tournamentWizardPitchOrderLabel": {
+    "description": "Title of the manual pitch-order editor"
+  },
+  "tournamentWizardPitchOrderHint": "Per Drag die gewünschte Reihenfolge der Feldnummern festlegen.",
+  "@tournamentWizardPitchOrderHint": {
+    "description": "Helper text explaining how to reorder pitches by dragging"
+  },
+  "tournamentWizardPitchOrderItem": "Feld {number}",
+  "@tournamentWizardPitchOrderItem": {
+    "description": "Label for a single pitch row in the manual order editor",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "tournamentWizardPitchSummary": "{count} Pitches",
   "@tournamentWizardPitchSummary": {
     "description": "Count of configured pitches",

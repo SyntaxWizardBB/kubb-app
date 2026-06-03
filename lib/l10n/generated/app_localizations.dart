@@ -3022,6 +3022,24 @@ abstract class AppLocalizations {
   /// **'Manuelle Reihenfolge'**
   String get tournamentWizardPitchSortManual;
 
+  /// Title of the manual pitch-order editor
+  ///
+  /// In de, this message translates to:
+  /// **'Reihenfolge der Felder'**
+  String get tournamentWizardPitchOrderLabel;
+
+  /// Helper text explaining how to reorder pitches by dragging
+  ///
+  /// In de, this message translates to:
+  /// **'Per Drag die gewünschte Reihenfolge der Feldnummern festlegen.'**
+  String get tournamentWizardPitchOrderHint;
+
+  /// Label for a single pitch row in the manual order editor
+  ///
+  /// In de, this message translates to:
+  /// **'Feld {number}'**
+  String tournamentWizardPitchOrderItem(int number);
+
   /// Count of configured pitches
   ///
   /// In de, this message translates to:

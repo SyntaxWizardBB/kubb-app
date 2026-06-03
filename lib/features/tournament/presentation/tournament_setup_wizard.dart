@@ -1817,12 +1817,17 @@ class _PitchPlanSectionState extends State<_PitchPlanSection> {
   late final TextEditingController _toCtrl;
   late final TextEditingController _numbersCtrl;
 
+  /// Organiser-defined pitch order. Only written/emitted while
+  /// [PitchSortStrategy.manual] is active; reset on switch to top-seeds.
+  List<int> _order = const <int>[];
+
   @override
   void initState() {
     super.initState();
     final p = widget.plan;
     _mode = p?.mode ?? PitchMode.range;
     _sort = p?.sortStrategy ?? PitchSortStrategy.topSeedsLowNumbers;
+    _order = List<int>.of(p?.order ?? const <int>[]);
     _fromCtrl = TextEditingController(text: p?.rangeFrom?.toString() ?? '');
     _toCtrl = TextEditingController(text: p?.rangeTo?.toString() ?? '');
     _numbersCtrl = TextEditingController(
@@ -1851,8 +1856,37 @@ class _PitchPlanSectionState extends State<_PitchPlanSection> {
       .where((n) => n > 0)
       .toList();
 
+  /// Raw available pitch numbers for the current inputs, WITHOUT applying
+  /// any manual `order` (used to seed/sync the reorder editor).
+  List<int> _availablePitches() {
+    if (_mode == PitchMode.range) {
+      final from = _parseInt(_fromCtrl.text);
+      final to = _parseInt(_toCtrl.text);
+      if (from == null || to == null || from < 1 || to < from) {
+        return const <int>[];
+      }
+      return <int>[for (var n = from; n <= to; n++) n];
+    }
+    return _parseNumbers(_numbersCtrl.text);
+  }
+
+  /// Effective manual order: keep stored entries that are still available
+  /// (no stale numbers), then append any new available pitches. Returns an
+  /// empty list when there is nothing to order yet.
+  List<int> _effectiveOrder() {
+    final available = _availablePitches();
+    if (available.isEmpty) return const <int>[];
+    final inOrder = _order.where(available.contains).toList();
+    final rest = available.where((n) => !inOrder.contains(n));
+    return <int>[...inOrder, ...rest];
+  }
+
   /// Builds the plan from the current inputs (null when effectively empty).
+  /// `order` is only carried while `PitchSortStrategy.manual` is active.
   PitchPlan? _currentPlan() {
+    final manualOrder = _sort == PitchSortStrategy.manual
+        ? _effectiveOrder()
+        : const <int>[];
     if (_mode == PitchMode.range) {
       final from = _parseInt(_fromCtrl.text);
       final to = _parseInt(_toCtrl.text);
@@ -1861,6 +1895,7 @@ class _PitchPlanSectionState extends State<_PitchPlanSection> {
         mode: PitchMode.range,
         rangeFrom: from,
         rangeTo: to,
+        order: manualOrder,
         sortStrategy: _sort,
       );
     }
@@ -1869,11 +1904,22 @@ class _PitchPlanSectionState extends State<_PitchPlanSection> {
     return PitchPlan(
       mode: PitchMode.manual,
       numbers: nums,
+      order: manualOrder,
       sortStrategy: _sort,
     );
   }
 
   void _emit() => widget.onChanged(_currentPlan());
+
+  void _onReorder(int oldIndex, int newIndex) {
+    final items = _effectiveOrder();
+    var target = newIndex;
+    if (target > oldIndex) target -= 1;
+    final moved = items.removeAt(oldIndex);
+    items.insert(target, moved);
+    setState(() => _order = items);
+    _emit();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1964,8 +2010,11 @@ class _PitchPlanSectionState extends State<_PitchPlanSection> {
               label: l10n.tournamentWizardPitchSortTopSeeds,
               selected: _sort == PitchSortStrategy.topSeedsLowNumbers,
               onTap: () {
-                setState(
-                    () => _sort = PitchSortStrategy.topSeedsLowNumbers);
+                setState(() {
+                  _sort = PitchSortStrategy.topSeedsLowNumbers;
+                  // Drop any stale manual order when leaving manual mode.
+                  _order = const <int>[];
+                });
                 _emit();
               },
             ),
@@ -1979,9 +2028,111 @@ class _PitchPlanSectionState extends State<_PitchPlanSection> {
             ),
           ],
         ),
+        if (_sort == PitchSortStrategy.manual) ...[
+          const SizedBox(height: KubbTokens.space4),
+          _PitchOrderEditor(
+            pitches: _effectiveOrder(),
+            onReorder: _onReorder,
+          ),
+        ],
         if (count > 0) ...[
           const SizedBox(height: KubbTokens.space2),
           _HelperText(l10n.tournamentWizardPitchSummary(count)),
+        ],
+      ],
+    );
+  }
+}
+
+/// Drag-to-reorder editor for the manual pitch order. Renders the
+/// available pitch numbers as a [ReorderableListView]; each row is a
+/// >= 48 dp touch target with an explicit drag handle.
+class _PitchOrderEditor extends StatelessWidget {
+  const _PitchOrderEditor({required this.pitches, required this.onReorder});
+
+  final List<int> pitches;
+  final void Function(int oldIndex, int newIndex) onReorder;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _FieldLabel(l10n.tournamentWizardPitchOrderLabel),
+        const SizedBox(height: KubbTokens.space2),
+        _HelperText(l10n.tournamentWizardPitchOrderHint),
+        if (pitches.isNotEmpty) ...[
+          const SizedBox(height: KubbTokens.space3),
+          ReorderableListView.builder(
+            key: const Key('wizardPitchOrderEditor'),
+            shrinkWrap: true,
+            buildDefaultDragHandles: false,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: pitches.length,
+            onReorder: onReorder,
+            itemBuilder: (context, index) {
+              final pitch = pitches[index];
+              return Padding(
+                key: ValueKey<int>(pitch),
+                padding: const EdgeInsets.only(bottom: KubbTokens.space2),
+                child: Container(
+                  constraints:
+                      const BoxConstraints(minHeight: KubbTokens.touchMin),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: KubbTokens.space3,
+                    vertical: KubbTokens.space2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: tokens.bgRaised,
+                    borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+                    border: Border.all(color: tokens.line, width: 1.5),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: KubbTokens.space6,
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: tokens.fgMuted,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: KubbTokens.space2),
+                      Expanded(
+                        child: Text(
+                          l10n.tournamentWizardPitchOrderItem(pitch),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: tokens.fg,
+                          ),
+                        ),
+                      ),
+                      ReorderableDragStartListener(
+                        index: index,
+                        child: Container(
+                          width: KubbTokens.touchMin,
+                          height: KubbTokens.touchMin,
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.drag_handle,
+                            size: 20,
+                            color: tokens.fgMuted,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ],
       ],
     );
