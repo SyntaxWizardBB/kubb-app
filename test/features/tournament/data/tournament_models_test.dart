@@ -312,5 +312,35 @@ void main() {
       ];
       expect(bracketFromMatches(rows), isA<SingleEliminationBracket>());
     });
+
+    test('maps the two consolation phases (ADR-0028 §7.3)', () {
+      expect(
+        koMatchRowFromRow(koRow(phase: 'consolation'))!.phase,
+        BracketPhase.consolation,
+      );
+      expect(
+        koMatchRowFromRow(koRow(phase: 'consolation_third_place'))!.phase,
+        BracketPhase.consolationThirdPlace,
+      );
+    });
+
+    test('bracketFromMatches builds a ConsolationBracket from consolation rows',
+        () {
+      final rows = <KoMatchRow>[
+        koMatchRowFromRow(koRow(phase: 'consolation'))!,
+        koMatchRowFromRow(
+          koRow(phase: 'consolation', round: 2, a: null, b: null),
+        )!,
+        koMatchRowFromRow(
+          koRow(phase: 'consolation_third_place', a: null, b: null),
+        )!,
+      ];
+      final bracket = bracketFromMatches(rows);
+      expect(bracket, isA<ConsolationBracket>());
+      final c = bracket as ConsolationBracket;
+      expect(c.rounds, hasLength(2));
+      expect(c.thirdPlace, isNotNull);
+      expect(c.thirdPlace!.phase, BracketPhase.consolationThirdPlace);
+    });
   });
 }

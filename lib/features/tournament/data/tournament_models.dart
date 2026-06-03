@@ -84,6 +84,9 @@ const Map<BracketPhase, String> _bracketPhaseWire = {
   BracketPhase.lb: 'lb',
   BracketPhase.grandFinal: 'grand_final',
   BracketPhase.grandFinalReset: 'grand_final_reset',
+  // Consolation / Trostturnier (ADR-0028 §7.1 / §7.3).
+  BracketPhase.consolation: 'consolation',
+  BracketPhase.consolationThirdPlace: 'consolation_third_place',
 };
 
 /// Wire helper for [BracketPhase]. Returns `null` for the sentinel

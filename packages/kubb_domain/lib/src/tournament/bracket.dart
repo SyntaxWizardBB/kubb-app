@@ -19,7 +19,15 @@ enum BracketPhase {
   wb, // winner bracket round
   lb, // loser bracket round (major + minor)
   grandFinal, // GF game 1
-  grandFinalReset // GF game 2 (only materialised when with_bracket_reset)
+  grandFinalReset, // GF game 2 (only materialised when with_bracket_reset)
+  // Consolation / Trostturnier (ADR-0028 §7.1): the consolation rounds carry
+  // `consolation`; its 3rd-place playoff carries its OWN phase
+  // `consolationThirdPlace`. The two are NOT folded into `thirdPlace`/
+  // `consolation` + round_number, because consRounds can equal mainRounds (e.g.
+  // an 8er main bracket with enough direct starters), which would collide on
+  // (phase, round_number). phase stays the SOLE discriminator (ADR-0017/0027).
+  consolation, // consolation (Trostturnier) round
+  consolationThirdPlace, // consolation 3rd-place playoff (own phase)
 }
 
 /// Wire-Mapping (DB phase text <-> [BracketPhase]). Single source of truth
@@ -33,6 +41,8 @@ const Map<String, BracketPhase> kBracketPhaseWire = {
   'lb': BracketPhase.lb,
   'grand_final': BracketPhase.grandFinal,
   'grand_final_reset': BracketPhase.grandFinalReset,
+  'consolation': BracketPhase.consolation, // ADR-0028 §7.1
+  'consolation_third_place': BracketPhase.consolationThirdPlace, // ADR-0028 §7.1
 };
 
 typedef BracketEntry = ({int seed, String? participantId, bool isBye});
@@ -250,6 +260,105 @@ sealed class Bracket {
     );
   }
 
+  /// Build a consolation (Trostturnier, Model B) bracket (ADR-0028).
+  ///
+  /// Combines the [directIds] direct starters (preliminary qualifiers entering
+  /// the consolation directly, highest prelim rank first) and the staggered
+  /// main-bracket losers into ONE tree. The main bracket itself is NOT built
+  /// here — only the consolation tree is materialised (the main single-elim
+  /// stays the unchanged [Bracket.singleElimination] output, §1.1).
+  ///
+  /// Topology follows the staggered-aware recurrence ([consolationShape],
+  /// §3.3) — NOT `next_pow2(total)`. Direct starters + main-bracket R1 losers
+  /// seed round 1 via `_standardBracketOrder(P_1)` (recursive seeding, byes at
+  /// top seeds, §3.3/§4). Later main-bracket rounds (`r >= 2`) dock their
+  /// losers as B-slots of their target consolation round (A-slot = consolation
+  /// survivor of the prior round) — placeholders here, filled by the server
+  /// trigger at runtime. The consolation 3rd-place playoff carries its own
+  /// phase [BracketPhase.consolationThirdPlace].
+  ///
+  /// [mainSize] is the power-of-two main-bracket size. [r1LoserIds] are the
+  /// main-bracket R1 losers already known at generation time (typically empty
+  /// — the trigger fills them as the main R1 finalises); when given they are
+  /// seeded into consolation R1 after the direct starters (§3.3 step 2).
+  /// [withThirdPlace] materialises the consolation 3rd-place playoff (default
+  /// true, mirroring the §6 ranking layout).
+  factory Bracket.consolation(
+    int mainSize, {
+    List<String> directIds = const <String>[],
+    List<String> r1LoserIds = const <String>[],
+    bool withThirdPlace = true,
+    BracketSeedingPattern seedingPattern = BracketSeedingPattern.recursive,
+  }) {
+    final shape = consolationShape(mainSize, directIds.length);
+    const placeholder = (seed: 0, participantId: null, isBye: false);
+    if (shape.shapes.isEmpty) {
+      return const ConsolationBracket(rounds: [], thirdPlace: null);
+    }
+
+    // --- Round 1: seed direct starters + main-R1 losers, byes at top seeds.
+    final r1 = shape.shapes.first;
+    // Seed order: direct starters first (best prelim rank = seed 1), then the
+    // R1 losers by main-bracket seed (§3.3 step 2).
+    final seeded = <String>[...directIds, ...r1LoserIds];
+    final p1 = r1.padded;
+    final slots = <BracketEntry>[
+      for (var i = 0; i < p1; i++)
+        (
+          seed: i + 1,
+          participantId: i < seeded.length ? seeded[i] : null,
+          isBye: i >= seeded.length, // byes pad the bottom seeds...
+        ),
+    ];
+    final order = switch (seedingPattern) {
+      BracketSeedingPattern.linear => [
+          for (var i = 0; i < p1 ~/ 2; i++) ...[i + 1, p1 - i],
+        ],
+      BracketSeedingPattern.recursive => _standardBracketOrder(p1),
+    };
+    // ...so via recursive seeding the byes face the TOP seeds (FR-FMT-11).
+    final round1 = <BracketPairing>[
+      for (var i = 0; i < p1; i += 2)
+        (slots[order[i] - 1], slots[order[i + 1] - 1]),
+    ];
+
+    final rounds = <BracketRound>[
+      BracketRound(
+        number: 1,
+        phase: BracketPhase.consolation,
+        pairings: round1,
+      ),
+      // Rounds r >= 2 are bare placeholders here: the A-slot (consolation
+      // survivor of round r-1) and the B-slot (staggered main-round-r loser,
+      // reflected via [consolationDropSlot]) are both filled by the server
+      // trigger at runtime (ADR-0028 §3.3/§7.4). This deliberately mirrors the
+      // doubleElimination factory, where LB-R2+ are likewise bare placeholders
+      // and the slot fill is the trigger's job. Only the match COUNT per round
+      // (from [consolationShape]) is materialised here.
+      for (var i = 1; i < shape.shapes.length; i++)
+        BracketRound(
+          number: shape.shapes[i].round,
+          phase: BracketPhase.consolation,
+          pairings: List.generate(
+            shape.shapes[i].matches,
+            (_) => (placeholder, placeholder),
+          ),
+        ),
+    ];
+
+    // Consolation 3rd-place playoff only exists when there is a consolation
+    // semifinal (>= 2 rounds) — otherwise the tree has no losers to rank 7/8.
+    final thirdPlace = (withThirdPlace && shape.consRounds >= 2)
+        ? const BracketRound(
+            number: 1,
+            phase: BracketPhase.consolationThirdPlace,
+            pairings: [(placeholder, placeholder)],
+          )
+        : null;
+
+    return ConsolationBracket(rounds: rounds, thirdPlace: thirdPlace);
+  }
+
   /// Place [participantId] into slot ([round], [position]). 1-based indices.
   ///
   /// [round] targets a [BracketRound] whose `phase` is not
@@ -299,6 +408,199 @@ int _lbR1DropSlot(int wbPosition, int size) {
   final lbPairing = (lbMatches - 1) - (i ~/ 2); // reflect between halves
   final side = i % 2; // even => A, odd => B
   return lbPairing * 2 + side;
+}
+
+// --- Consolation / Trostturnier (ADR-0028) -------------------------------
+
+/// Sentinels for the consolation drop target (ADR-0028 §2).
+const int kConsolationThirdPlace = -1; // semifinal loser -> 3rd-place playoff
+const int kConsolationNone = 0; // final / no consolation feed
+
+/// Closed-form, pure mapping (ADR-0028 §2.2): which consolation round a loser of
+/// main-bracket round [mainRound] (1-based) enters. [mainSize] is the
+/// power-of-two main-bracket size; [position] is the 1-based pairing index in
+/// the main round (kept for parity with [lbDropTarget]; the target ROUND does
+/// not depend on it — only the within-round seeding/slot does, see §3.3).
+///
+/// mainRounds = log2(mainSize). Round mainRounds-1 = semifinal (its losers go to
+/// the third-place playoff, NOT the consolation), round mainRounds = final.
+///
+/// The return value is the target consolation ROUND, not a slot. Staggered feed
+/// (major/minor mechanic, like the LB in ADR-0027 §1.3): a loser eliminated in
+/// main round `r` (1 <= r <= mainRounds-2) enters consolation round `r`. For
+/// r == 1 the loser is one of the consolation-R1 entrants (seeded via §3.3). For
+/// r >= 2 the loser does NOT open a fresh consolation-R`r` pairing; it occupies
+/// the B-slot of a pairing whose A-slot is the consolation survivor of the prior
+/// round (the round is then sized recursively, §3.3 — never via
+/// next_pow2(total)).
+int consolationDropTarget(int mainRound, int position, int mainSize) {
+  final mainRounds = _log2(mainSize);
+  if (mainRound >= mainRounds) return kConsolationNone; // final -> P1/P2
+  if (mainRound == mainRounds - 1) {
+    return kConsolationThirdPlace; // semifinal
+  }
+  // Feeding rounds 1..mainRounds-2 map 1:1 onto consolation rounds.
+  return mainRound; // consolation round index (1-based)
+}
+
+/// Closed-form B-slot reflection for a staggered consolation feed (ADR-0028
+/// §3.3) — the slot analogue of [lbDropTarget].
+///
+/// While [consolationDropTarget] returns the target consolation ROUND, this
+/// returns the 0-based slot (pairing-index * 2 + side) inside that round into
+/// which the loser of main-bracket round `r >= 2`, `bracket_position`
+/// [mainPosition] (1-based), docks. The loser always occupies the B-slot of a
+/// consolation pairing whose A-slot is the consolation survivor of the prior
+/// round (major-round mechanic, ADR-0028 §3.3 / ADR-0027 §1.4). [consMatches]
+/// is the number of pairings in the target consolation round
+/// (`P_r / 2` from [consolationShape]).
+///
+/// Anti-rematch: the main-round pairing order is reflected onto the consolation
+/// pairing order, exactly like [lbDropTarget] reflects WB onto LB. Pure
+/// function of `(mainPosition, consMatches)` — identical in Dart and plpgsql so
+/// property parity stays trivially testable. Only meaningful for the staggered
+/// feed (`mainRound >= 2`); for `mainRound == 1` the loser is seeded into
+/// consolation R1 via `_standardBracketOrder` (§3.3 step 2), not docked.
+int consolationDropSlot(int mainPosition, int consMatches) {
+  final i = mainPosition - 1; // 0-based main pairing index in its round
+  final consPairing = (consMatches - 1) - i; // reflection (anti-rematch)
+  return consPairing * 2 + 1; // +1 => B-slot (A = consolation survivor)
+}
+
+int _log2(int n) {
+  var r = 0;
+  var x = n;
+  while (x > 1) {
+    x >>= 1;
+    r++;
+  }
+  return r;
+}
+
+int _nextPow2(int n) {
+  var size = 1;
+  while (size < n) {
+    size *= 2;
+  }
+  return size;
+}
+
+/// Per-round structure numbers of the consolation tree (ADR-0028 §3.3).
+///
+/// One entry per consolation round `r` (1-based). [entrants] is `E_r`
+/// (survivors `S_{r-1}` + freshly-fed losers `L_r`), [padded] is
+/// `P_r = next_pow2(E_r)`, [byes] is `P_r - E_r`, [survivors] is `S_r = P_r/2`,
+/// [matches] is `P_r/2`.
+@immutable
+final class ConsolationRoundShape {
+  const ConsolationRoundShape({
+    required this.round,
+    required this.entrants,
+    required this.padded,
+    required this.byes,
+    required this.survivors,
+    required this.matches,
+  });
+
+  final int round;
+  final int entrants; // E_r
+  final int padded; // P_r = next_pow2(E_r)
+  final int byes; // P_r - E_r
+  final int survivors; // S_r = P_r / 2
+  final int matches; // P_r / 2
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ConsolationRoundShape &&
+          other.round == round &&
+          other.entrants == entrants &&
+          other.padded == padded &&
+          other.byes == byes &&
+          other.survivors == survivors &&
+          other.matches == matches;
+
+  @override
+  int get hashCode =>
+      Object.hash(round, entrants, padded, byes, survivors, matches);
+}
+
+/// The full staggered-aware recurrence of the consolation tree (ADR-0028 §3.3).
+///
+/// [shapes] is one [ConsolationRoundShape] per consolation round (1-based);
+/// [consRounds] == `shapes.length` == smallest `r` with `S_r == 1`.
+@immutable
+final class ConsolationShape {
+  const ConsolationShape({required this.shapes});
+
+  final List<ConsolationRoundShape> shapes;
+
+  int get consRounds => shapes.length;
+  int get totalByes => shapes.fold<int>(0, (s, r) => s + r.byes);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ConsolationShape &&
+          const ListEquality<ConsolationRoundShape>()
+              .equals(other.shapes, shapes);
+
+  @override
+  int get hashCode => Object.hashAll(shapes);
+}
+
+/// Compute the staggered-aware consolation recurrence (ADR-0028 §3.3).
+///
+/// `L_r = mainSize / 2^r` for `r in 1..mainRounds-2` (main-bracket losers fed
+/// from main round `r`), `L_r = 0` otherwise (the semifinal feeds the
+/// third-place playoff, not the consolation). `E_1 = directCount + L_1`,
+/// `P_r = next_pow2(E_r)`, `S_r = P_r/2`, `E_r = S_{r-1} + L_r` for `r >= 2`.
+/// `consRounds` is the smallest `r` with `S_r == 1`. The tree size is derived
+/// from the EARLIEST-round population (never `next_pow2(total)`); the total
+/// participant count `C` is only ever used for the per-round bye balance.
+///
+/// [mainSize] must be a power of two; [directCount] (`D`) must be `>= 0`.
+ConsolationShape consolationShape(int mainSize, int directCount) {
+  if (mainSize < 2 || (mainSize & (mainSize - 1)) != 0) {
+    throw ArgumentError.value(mainSize, 'mainSize', 'must be a power of two');
+  }
+  if (directCount < 0) {
+    throw ArgumentError.value(directCount, 'directCount', 'must be >= 0');
+  }
+  final mainRounds = _log2(mainSize);
+  // L_r = mainSize / 2^r for feeding rounds 1..mainRounds-2, else 0.
+  int losersFrom(int r) =>
+      (r >= 1 && r <= mainRounds - 2) ? mainSize >> r : 0;
+
+  final shapes = <ConsolationRoundShape>[];
+  var survivorsPrev = 0; // S_{r-1}
+  var r = 1;
+  while (true) {
+    final lr = losersFrom(r);
+    final entrants = (r == 1) ? directCount + lr : survivorsPrev + lr;
+    if (entrants <= 0) {
+      // No population at all (e.g. D=0 on a 2-team main bracket): no tree.
+      break;
+    }
+    if (entrants == 1 && lr == 0) {
+      // A lone survivor with no fresh feed is already the consolation winner.
+      break;
+    }
+    final padded = _nextPow2(entrants);
+    final survivors = padded ~/ 2;
+    shapes.add(ConsolationRoundShape(
+      round: r,
+      entrants: entrants,
+      padded: padded,
+      byes: padded - entrants,
+      survivors: survivors,
+      matches: padded ~/ 2,
+    ));
+    if (survivors <= 1 && losersFrom(r + 1) == 0) break;
+    survivorsPrev = survivors;
+    r++;
+  }
+  return ConsolationShape(shapes: shapes);
 }
 
 List<int> _standardBracketOrder(int n) {
@@ -443,6 +745,60 @@ final class DoubleEliminationBracket extends Bracket {
       );
 }
 
+/// Consolation (Trostturnier, Model B) bracket (ADR-0028).
+///
+/// A separate single-elimination tree that collects the staggered early
+/// main-bracket losers plus optional direct starters and plays out the back
+/// places (5+). There is NO grand-final merge back into the main bracket
+/// (§1.2) — the consolation winner takes place 5, never the title.
+///
+/// [BracketRound.number] is **phase-local** (consolation R1 == `number == 1`);
+/// disambiguation runs exclusively via `phase`. The consolation 3rd-place
+/// playoff carries its OWN phase [BracketPhase.consolationThirdPlace] rather
+/// than [BracketPhase.thirdPlace], because `consRounds` may equal `mainRounds`
+/// and `(third_place, round_number)` would then collide (§7.2).
+@immutable
+final class ConsolationBracket extends Bracket {
+  const ConsolationBracket({required this.rounds, required this.thirdPlace});
+
+  /// Consolation rounds, number = 1..consRounds, phase ==
+  /// [BracketPhase.consolation]. The last round is the consolation final
+  /// (places 5/6).
+  final List<BracketRound> rounds;
+
+  /// Consolation 3rd-place playoff (places 7/8), phase ==
+  /// [BracketPhase.consolationThirdPlace]; `null` when the tree is too small
+  /// to have a consolation semifinal.
+  final BracketRound? thirdPlace;
+
+  @override
+  Bracket fill({
+    required int round,
+    required int position,
+    required String participantId,
+  }) {
+    // Phase-targeted fill is delegated to the server trigger at runtime
+    // (ADR-0028 §7.4); the pure factory only materialises the topology. We
+    // expose the slot write into the consolation rounds without cross-phase
+    // side effects.
+    final newRounds = [...rounds];
+    _writeAt(newRounds, round, position,
+        (seed: 0, participantId: participantId, isBye: false),
+        allowThirdPlace: false);
+    return ConsolationBracket(rounds: newRounds, thirdPlace: thirdPlace);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ConsolationBracket &&
+          other.thirdPlace == thirdPlace &&
+          const ListEquality<BracketRound>().equals(other.rounds, rounds);
+
+  @override
+  int get hashCode => Object.hash(Object.hashAll(rounds), thirdPlace);
+}
+
 /// One KO-match row as observed by the mapper.
 ///
 /// Pure-Dart input record for [bracketFromMatches]. The Supabase wire
@@ -482,6 +838,10 @@ Bracket bracketFromMatches(List<KoMatchRow> matches) {
       m.phase == BracketPhase.grandFinal ||
       m.phase == BracketPhase.grandFinalReset);
   if (hasDouble) return _doubleEliminationFromMatches(matches);
+  final hasConsolation = matches.any((m) =>
+      m.phase == BracketPhase.consolation ||
+      m.phase == BracketPhase.consolationThirdPlace);
+  if (hasConsolation) return _consolationFromMatches(matches); // ADR-0028 §7.3
   final winners = matches.where((m) => m.phase != BracketPhase.thirdPlace);
   final thirdPlace =
       matches.where((m) => m.phase == BracketPhase.thirdPlace).toList();
@@ -559,6 +919,41 @@ Bracket _doubleEliminationFromMatches(List<KoMatchRow> matches) {
     grandFinalReset: resetRounds.isEmpty ? null : resetRounds.first,
     withBracketReset: resetRounds.isNotEmpty,
   );
+}
+
+/// Rebuild a [ConsolationBracket] from DB-match rows (ADR-0028 §7.3).
+///
+/// Groups the `consolation` rows by phase-local `round_number` into the
+/// consolation rounds and projects the single `consolation_third_place` row
+/// into the playoff. Reuses the existing [_pairingsForRound] helper. Like the
+/// single-/double-elim paths the mapper is **passive** — it reflects only the
+/// DB state and never writes follow-up slots. Disambiguation is solely via
+/// `phase` (no extra column).
+Bracket _consolationFromMatches(List<KoMatchRow> matches) {
+  final byRound = <int, List<KoMatchRow>>{};
+  for (final m in matches.where((m) => m.phase == BracketPhase.consolation)) {
+    byRound.putIfAbsent(m.roundNumber, () => <KoMatchRow>[]).add(m);
+  }
+  final numbers = byRound.keys.toList()..sort();
+  final rounds = <BracketRound>[
+    for (final r in numbers)
+      BracketRound(
+        number: r,
+        phase: BracketPhase.consolation,
+        pairings: _pairingsForRound(byRound[r]!),
+      ),
+  ];
+  final thirdRows = matches
+      .where((m) => m.phase == BracketPhase.consolationThirdPlace)
+      .toList();
+  final thirdPlace = thirdRows.isEmpty
+      ? null
+      : BracketRound(
+          number: 1,
+          phase: BracketPhase.consolationThirdPlace,
+          pairings: _pairingsForRound(thirdRows),
+        );
+  return ConsolationBracket(rounds: rounds, thirdPlace: thirdPlace);
 }
 
 void _writeAt(
