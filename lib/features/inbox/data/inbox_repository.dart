@@ -174,9 +174,16 @@ class InboxRepository {
     final body = jsonDecode(row.bodyJson) as Map<String, dynamic>;
     DateTime? fromMs(int? ms) =>
         ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
+    // The cached wire kind alone is ambiguous for shoot-outs (wire kind is
+    // 'tournament_round'); fromWire needs the action_payload to disambiguate
+    // 'shootout' from a plain tournament round. Pass it through exactly like
+    // InboxMessage.fromRow, otherwise the offline-first cache path mis-routes
+    // the shoot-out message to `notice` and the CTA never renders.
+    final actionPayload =
+        (body['action_payload'] as Map?)?.cast<String, dynamic>();
     return InboxMessage(
       id: row.id,
-      kind: InboxMessageKind.fromWire(row.kind),
+      kind: InboxMessageKind.fromWire(row.kind, actionPayload: actionPayload),
       subject: body['subject'] as String? ?? '',
       body: body['body'] as String? ?? '',
       sentAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt, isUtc: true),
@@ -185,7 +192,7 @@ class InboxRepository {
       archivedAt: body['archived_at'] is String
           ? DateTime.parse(body['archived_at'] as String)
           : null,
-      actionPayload: (body['action_payload'] as Map?)?.cast<String, dynamic>(),
+      actionPayload: actionPayload,
       replyPayload: (body['reply_payload'] as Map?)?.cast<String, dynamic>(),
     );
   }

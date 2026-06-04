@@ -216,14 +216,18 @@ class ShootoutResolution {
   })  : qualifiers = List.unmodifiable(qualifiers),
         pending = List.unmodifiable(pending);
 
-  /// Finalised qualifier participantIds (length == requested qualifierCount)
-  /// when [pending] is empty. While groups are pending the qualifier list is
-  /// not yet authoritative for the affected ranks.
+  /// Finalised qualifier participantIds. When [pending] is empty this is the
+  /// authoritative cut of length `qualifierCount`. While groups are pending the
+  /// list is truncated to the authoritative prefix BEFORE the first contested
+  /// rank: the contested slots are deliberately omitted rather than filled with
+  /// the arbitrary participantId fallback (no silent ID fallback — see
+  /// P6_SHOOTOUT_TIEBREAK §5). Callers must check [isFinal] before seeding a
+  /// bracket from this list.
   final List<String> qualifiers;
 
   /// Qualification-relevant tie groups still awaiting a shoot-out result. The
   /// resolution intentionally does *not* fall back to the participantId order
-  /// for these groups.
+  /// for these groups, neither in [pending] nor in [qualifiers].
   final List<ShootoutGroup> pending;
 
   bool get isFinal => pending.isEmpty;
@@ -249,7 +253,9 @@ class ShootoutResolution {
 ///     re-ordered by its [ShootoutResult.orderedWinners] (replacing the ID
 ///     fallback);
 ///   * otherwise the group is reported in [ShootoutResolution.pending] and the
-///     ranking is left as-is for that group (no silent ID fallback).
+///     contested ranks are omitted from [ShootoutResolution.qualifiers] (the
+///     list is truncated at the first pending startRank — no silent ID
+///     fallback).
 ///
 /// Cosmetic ties (not straddling the cut line) keep the chain's existing order,
 /// including its deterministic ID fallback, exactly as before. Deterministic.
@@ -276,8 +282,20 @@ ShootoutResolution resolveWithShootouts(
     }
   }
 
+  // No silent ID fallback (P6_SHOOTOUT_TIEBREAK §5): when groups are still
+  // pending, only ranks BEFORE the first contested startRank are authoritative.
+  // Truncating there keeps the arbitrary participantId order out of the
+  // qualifier list for the undecided slots — a future consumer that ignores
+  // [isFinal] then under-seeds rather than seeding the ID-fallback winner.
+  var authoritativeCount = qualifierCount;
+  for (final group in pending) {
+    if (group.startRank < authoritativeCount) {
+      authoritativeCount = group.startRank;
+    }
+  }
+
   return ShootoutResolution(
-    qualifiers: order.take(qualifierCount).toList(),
+    qualifiers: order.take(authoritativeCount).toList(),
     pending: pending,
   );
 }

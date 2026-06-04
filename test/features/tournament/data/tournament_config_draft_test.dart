@@ -454,9 +454,40 @@ void main() {
       expect(setup['consolation_name'], isNull);
     });
 
+    test(
+        'C11: an enabled consolation_bracket carries direct_count + '
+        'main_bracket_size so the server actually consumes them', () {
+      const d = TournamentConfigDraft(
+        koType: KoType.consolation,
+        consolationMainBracketSize: 16,
+        consolationDirectCount: 4,
+        consolationBracket: ConsolationConfig(enabled: true),
+      );
+      final setup = d.toSetupConfig();
+      final cons = setup['consolation_bracket']! as Map<String, Object?>;
+      expect(cons['enabled'], true);
+      expect(cons['direct_count'], 4);
+      expect(cons['main_bracket_size'], 16);
+    });
+
+    test(
+        'C2/C11: main_bracket_size is only authoritative in consolation mode; '
+        'omitted (null) for single-elimination', () {
+      const d = TournamentConfigDraft(
+        consolationMainBracketSize: 16,
+        consolationBracket: ConsolationConfig(),
+      );
+      final setup = d.toSetupConfig();
+      final cons = setup['consolation_bracket']! as Map<String, Object?>;
+      expect(cons['main_bracket_size'], isNull);
+    });
+
     test('serialises P6 fields into the snake_case wire shape', () {
       final d = TournamentConfigDraft(
         displayName: 'Bâton',
+        // League categories only ship for a club-hosted tournament (C1 /
+        // P6_SETUP_WIZARD_SPEC Screen 1); a club is required to assert them.
+        clubId: 'club-1',
         location: 'Brugg',
         venueAddress: 'P3 Geissenschachen',
         eventStartsAt: DateTime.utc(2026, 6, 19, 18, 30),
@@ -590,6 +621,8 @@ void main() {
     test('round-trips the prelim match format + meta fields', () {
       final original = TournamentConfigDraft(
         displayName: 'Sommer-Cup',
+        // A club is required for league categories to round-trip (C1).
+        clubId: 'club-1',
         minParticipants: 4,
         maxParticipants: 16,
         setsToWin: 3,

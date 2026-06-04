@@ -636,6 +636,8 @@ final class ConsolationConfig {
     this.rankFrom,
     this.rankTo,
     this.matchFormat,
+    this.directCount = 0,
+    this.mainBracketSize,
   });
 
   factory ConsolationConfig.fromJson(Map<String, Object?> json) {
@@ -652,6 +654,8 @@ final class ConsolationConfig {
       matchFormat: rawFormat == null
           ? null
           : MatchFormatSpec.fromJson((rawFormat as Map).cast<String, Object?>()),
+      directCount: (json['direct_count'] as num?)?.toInt() ?? 0,
+      mainBracketSize: (json['main_bracket_size'] as num?)?.toInt(),
     );
   }
 
@@ -676,6 +680,17 @@ final class ConsolationConfig {
   /// Own match rules for the consolation bracket. Null => reuse the KO
   /// match format.
   final MatchFormatSpec? matchFormat;
+
+  /// Model B (ADR-0028 §5): number of prelim teams seeded DIRECTLY into the
+  /// consolation bracket (in addition to the staggered main-bracket losers).
+  /// Persisted on the wire as `direct_count`; consumed by the server.
+  final int directCount;
+
+  /// Model B (ADR-0028 §5): the main (single-elim) bracket size `mainSize`,
+  /// a power of two. Persisted as `main_bracket_size`; the server derives the
+  /// consolation topology from it (falls back to next_pow2(qualifier_count)
+  /// when null).
+  final int? mainBracketSize;
 
   List<String> issues() {
     final out = <String>[];
@@ -707,6 +722,8 @@ final class ConsolationConfig {
         'rank_from': rankFrom,
         'rank_to': rankTo,
         'match_format': matchFormat?.toJson(),
+        'direct_count': directCount,
+        'main_bracket_size': mainBracketSize,
       };
 
   @override
@@ -718,7 +735,9 @@ final class ConsolationConfig {
           _listEq(other.sourceRounds, sourceRounds) &&
           other.rankFrom == rankFrom &&
           other.rankTo == rankTo &&
-          other.matchFormat == matchFormat;
+          other.matchFormat == matchFormat &&
+          other.directCount == directCount &&
+          other.mainBracketSize == mainBracketSize;
 
   @override
   int get hashCode => Object.hash(
@@ -728,6 +747,8 @@ final class ConsolationConfig {
         rankFrom,
         rankTo,
         matchFormat,
+        directCount,
+        mainBracketSize,
       );
 }
 

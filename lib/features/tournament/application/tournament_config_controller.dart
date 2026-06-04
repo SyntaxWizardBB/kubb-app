@@ -35,9 +35,19 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
 
   /// Sets (or clears, when [clubId] is null) the optional organizing club.
   /// A null club makes the tournament personal (creator-only manage).
+  ///
+  /// Per P6_SETUP_WIZARD_SPEC Screen 1: a personal tournament (no club) is
+  /// never league-relevant. Clearing the club therefore also clears any
+  /// previously picked league categories — otherwise they would linger in the
+  /// draft (the chips are hidden when clubId == null) and `toSetupConfig()`
+  /// would emit a non-empty `league_categories`, making a personal tournament
+  /// wrongly league-relevant.
   void setClubId(String? clubId) {
     state = clubId == null
-        ? state.copyWith(clearClubId: true)
+        ? state.copyWith(
+            clearClubId: true,
+            leagueCategories: const <LeagueCategory>[],
+          )
         : state.copyWith(clubId: clubId);
   }
 
@@ -181,7 +191,27 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
   void setKoConfig(KoPhaseConfig? config) {
     // Re-derive the per-KO-round format list whenever the qualifier count
     // (and thus the KO round count) changes.
-    state = state.copyWith(koConfig: config).withResizedKoRoundFormats();
+    var next = state.copyWith(koConfig: config).withResizedKoRoundFormats();
+    // C2: in consolation mode the main-bracket size and the KO qualifier count
+    // denote the SAME concept ("wie viele aus der Vorrunde in den Hauptbaum").
+    // Keep consolationMainBracketSize == next_pow2(qualifierCount) so the two
+    // controls can never diverge (the engine consumes main_bracket_size).
+    if (state.koType == KoType.consolation && config != null) {
+      next = next.copyWith(
+        consolationMainBracketSize: _nextPow2(config.qualifierCount),
+      );
+    }
+    state = next;
+  }
+
+  /// Smallest power of two >= [n] (>= 2). Used to keep the consolation
+  /// main-bracket size in lockstep with the KO qualifier count (C2).
+  static int _nextPow2(int n) {
+    var p = 1;
+    while (p < n) {
+      p *= 2;
+    }
+    return p < 2 ? 2 : p;
   }
 
   /// Persists the seeding source choice independent of the KO-config
@@ -199,8 +229,27 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
 
   /// Consolation main-bracket size (power of two). Only meaningful when
   /// [KoType.consolation] is selected; persisted regardless.
+  ///
+  /// C2: keeps the KO qualifier count in lockstep — the main-bracket size and
+  /// the qualifier count are the same concept (ADR-0028 / spec), so editing one
+  /// must move the other, otherwise the wizard could persist two divergent
+  /// "Hauptbaum-Grösse" values (e.g. 8 vs 4 by default).
   void setConsolationMainBracketSize(int value) {
-    state = state.copyWith(consolationMainBracketSize: value);
+    var next = state.copyWith(consolationMainBracketSize: value);
+    final existing = state.koConfig;
+    if (existing != null && existing.qualifierCount != value) {
+      next = next
+          .copyWith(
+            koConfig: KoPhaseConfig(
+              qualifierCount: value,
+              participantCount: existing.participantCount,
+              withThirdPlacePlayoff: existing.withThirdPlacePlayoff,
+              seedingMode: existing.seedingMode,
+            ),
+          )
+          .withResizedKoRoundFormats();
+    }
+    state = next;
   }
 
   /// Number of prelim teams that start directly in the consolation bracket

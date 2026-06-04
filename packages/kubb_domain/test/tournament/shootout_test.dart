@@ -197,6 +197,11 @@ void main() {
       expect(res.isFinal, isFalse);
       expect(res.pending, hasLength(1));
       expect(res.pending.single.participantIds.toSet(), equals({'P1', 'P2'}));
+      // C3: the contested last qualifier slot must NOT be filled by the
+      // arbitrary participantId fallback. qualifiers is truncated at the
+      // pending startRank (here 1) — P1 is not authoritatively placed.
+      expect(res.qualifiers, equals(['P0']));
+      expect(res.qualifiers, isNot(contains('P1')));
     });
 
     test('cosmetic tie below the cut keeps deterministic order, not pending',

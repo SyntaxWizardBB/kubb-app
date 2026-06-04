@@ -110,4 +110,88 @@ void main() {
       throwsA(isA<StateError>()),
     );
   });
+
+  group('C5: real two-sided consensus across open-team participants', () {
+    late TournamentId teamTid;
+    late TournamentParticipantId teamA;
+    late TournamentParticipantId teamB;
+    late String teamShootoutId;
+
+    const a1 = UserId('u-a1');
+    const a2 = UserId('u-a2');
+    const b1 = UserId('u-b1');
+    const b2 = UserId('u-b2');
+
+    setUp(() async {
+      remote = FakeTournamentRemote(initialUser: organizer);
+      teamTid = await remote.createTournament(
+        displayName: 'TeamT',
+        teamSize: 2,
+        minParticipants: 2,
+        maxParticipants: 4,
+        format: TournamentFormat.roundRobin,
+        matchFormatConfig: const <String, Object?>{},
+        tiebreakerOrder: const <String>[],
+      );
+      // Team A with two distinct members.
+      remote.currentUser = a1;
+      teamA = await remote.registerTeam(
+        tournamentId: teamTid,
+        teamId: const TeamId('team-a'),
+        roster: [
+          RosterSlotInput.member(1, a1),
+          RosterSlotInput.member(2, a2),
+        ],
+      );
+      // Team B with two distinct members.
+      remote.currentUser = b1;
+      teamB = await remote.registerTeam(
+        tournamentId: teamTid,
+        teamId: const TeamId('team-b'),
+        roster: [
+          RosterSlotInput.member(1, b1),
+          RosterSlotInput.member(2, b2),
+        ],
+      );
+      teamShootoutId = remote.seedShootout(
+        teamTid,
+        startRank: 1,
+        tiedParticipantIds: [teamA, teamB],
+      );
+    });
+
+    test('two members of the SAME team cannot report+confirm', () async {
+      // A1 reports for team A...
+      remote.currentUser = a1;
+      await remote.reportShootoutWinners(
+        shootoutId: teamShootoutId,
+        orderedWinners: [teamA, teamB],
+      );
+      // ...A2 (same team A) must NOT be able to confirm it.
+      remote.currentUser = a2;
+      await expectLater(
+        remote.confirmShootout(
+          shootoutId: teamShootoutId,
+          orderedWinners: [teamA, teamB],
+        ),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('a member of the opposing team CAN confirm', () async {
+      remote.currentUser = a1;
+      await remote.reportShootoutWinners(
+        shootoutId: teamShootoutId,
+        orderedWinners: [teamA, teamB],
+      );
+      // B1 (team B, the other participant) confirms -> resolved.
+      remote.currentUser = b1;
+      await remote.confirmShootout(
+        shootoutId: teamShootoutId,
+        orderedWinners: [teamA, teamB],
+      );
+      final pending = await remote.listPendingShootouts(teamTid);
+      expect(pending, isEmpty);
+    });
+  });
 }

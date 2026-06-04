@@ -155,4 +155,34 @@ void main() {
     expect(msg.repliedAt, isNotNull);
     expect(msg.isUnread, isFalse);
   });
+
+  test(
+      'C4: cached shoot-out row routes to tournamentShootout, not notice '
+      '(action_payload disambiguation through the cache path)', () async {
+    // Shoot-out rows ship on the generic 'tournament_round' wire kind and are
+    // tagged via action_payload['kind'] == 'shootout'. The offline-first cache
+    // path must pass the payload to fromWire, otherwise the CTA never renders.
+    await db.inboxMessagesDao.upsertMany([
+      InboxMessagesCompanion(
+        id: const Value('shootout-1'),
+        userId: const Value('user-1'),
+        kind: const Value('tournament_round'),
+        bodyJson: Value(jsonEncode(<String, dynamic>{
+          'subject': 'Shoot-Out nötig',
+          'body': 'Tragt den Sieger ein.',
+          'action_payload': <String, dynamic>{
+            'tournament_id': 't-1',
+            'kind': 'shootout',
+            'start_rank': 2,
+          },
+        })),
+        createdAt: Value(DateTime.utc(2026, 5, 28, 10).millisecondsSinceEpoch),
+      ),
+    ]);
+
+    final hydrated = await repo.loadFromCache('user-1');
+    expect(hydrated, hasLength(1));
+    expect(hydrated.single.kind, InboxMessageKind.tournamentShootout);
+    expect(hydrated.single.actionPayload?['start_rank'], 2);
+  });
 }

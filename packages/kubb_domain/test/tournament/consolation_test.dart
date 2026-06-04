@@ -280,6 +280,51 @@ void main() {
       final b = Bracket.consolation(32) as ConsolationBracket;
       expect(b.rounds, isNotEmpty);
     });
+
+    test(
+        'C7: R1 bye count uses E_1, not seeded.length, on the realistic '
+        'empty-r1LoserIds path (parity with the SQL generator)', () {
+      // The trigger-start state passes NO r1 losers (they are filled at runtime).
+      // Byes are the slots with seed index >= E_1, NOT >= seeded.length. The
+      // reserved (not-yet-known) loser slots must stay non-bye placeholders.
+      for (final (mainSize, directCount) in const [(8, 0), (8, 2)]) {
+        final directIds = _ids('d', directCount);
+        final b = Bracket.consolation(mainSize, directIds: directIds)
+            as ConsolationBracket;
+        final actualByes =
+            _entries(b.rounds.first).where((e) => e.isBye).length;
+        final expectedByes = consolationShape(mainSize, directCount)
+            .shapes
+            .first
+            .byes;
+        expect(
+          actualByes,
+          expectedByes,
+          reason: 'mainSize=$mainSize D=$directCount: R1 byes must equal the '
+              'shape byes ($expectedByes), not pad reserved loser slots.',
+        );
+      }
+    });
+  });
+
+  group('ConsolationBracket.copyWith — C8 explicit-null clears thirdPlace', () {
+    test('copyWith(thirdPlace: null) clears an existing 3rd-place playoff', () {
+      const tp = BracketRound(
+        number: 1,
+        phase: BracketPhase.consolationThirdPlace,
+        pairings: [
+          (
+            (seed: 0, participantId: null, isBye: false),
+            (seed: 0, participantId: null, isBye: false),
+          ),
+        ],
+      );
+      const b = ConsolationBracket(rounds: [], thirdPlace: tp);
+      // Explicit null clears it...
+      expect(b.copyWith(thirdPlace: null).thirdPlace, isNull);
+      // ...while omitting the argument keeps it (sentinel distinguishes them).
+      expect(b.copyWith().thirdPlace, same(tp));
+    });
   });
 
   group('bracketFromMatches — consolation projection (ADR-0028 §7.3)', () {

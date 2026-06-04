@@ -868,9 +868,15 @@ class TournamentConfigDraft {
       'currency': currency,
       'max_team_size': maxTeamSize,
       'payment_methods': paymentMethods,
-      'league_categories': <String>[
-        for (final c in leagueCategories) c.wire,
-      ],
+      // A personal tournament (no club) is never league-relevant
+      // (P6_SETUP_WIZARD_SPEC Screen 1). Defense-in-depth: even if a stale
+      // selection lingers in the draft, never emit league categories without
+      // a club.
+      'league_categories': _blankToNull(clubId) == null
+          ? const <String>[]
+          : <String>[
+              for (final c in leagueCategories) c.wire,
+            ],
       'scoring': scoring,
       'rule_variants': ruleVariants.toJson(),
       'ko_match_format': koMatchFormat?.toJson(),
@@ -881,10 +887,27 @@ class TournamentConfigDraft {
       ],
       'pitch_plan': pitchPlan?.toJson(),
       'mighty_finisher_quali': mightyFinisherQuali?.toJson(),
-      'consolation_bracket': consolationBracket?.toJson(),
-      // Model-B (consolation / Trostturnier) config (ADR-0028 §5). Persisted
-      // unconditionally; only consumed by the engine (Block E) when
-      // koType == consolation.
+      // The consolation_bracket JSON carries the Model-B sizing (ADR-0028 §5):
+      // direct_count + main_bracket_size are merged in from the wizard fields so
+      // the server actually consumes them (otherwise the top-level keys below
+      // are dropped at create-time / DOD-09). main_bracket_size is only the
+      // engine-authoritative size in consolation mode; in single/double-elim it
+      // is omitted (null) so the server keeps deriving from qualifier_count.
+      'consolation_bracket': consolationBracket == null
+          ? null
+          : ConsolationConfig(
+              enabled: consolationBracket!.enabled,
+              source: consolationBracket!.source,
+              sourceRounds: consolationBracket!.sourceRounds,
+              rankFrom: consolationBracket!.rankFrom,
+              rankTo: consolationBracket!.rankTo,
+              matchFormat: consolationBracket!.matchFormat,
+              directCount: consolationDirectCount,
+              mainBracketSize: koType == KoType.consolation
+                  ? consolationMainBracketSize
+                  : null,
+            ).toJson(),
+      // Mirrored top-level keys (kept for forward-compat / debugging).
       'consolation_main_bracket_size': consolationMainBracketSize,
       'consolation_direct_count': consolationDirectCount,
       'consolation_name': _blankToNull(consolationName),

@@ -635,6 +635,28 @@ class TournamentRepository implements TournamentRemote {
   /// envelope returned by `tournament_list_matches` (M1) does not
   /// expose them. RLS on `tournament_matches` filters the rows down to
   /// what the caller is allowed to see.
+  ///
+  /// The phase filter must list EVERY non-`group` phase that
+  /// [kBracketPhaseWire] knows about, otherwise rows of an omitted phase are
+  /// silently dropped before [bracketFromMatches] sees them. This includes the
+  /// ADR-0028 consolation phases (`consolation` / `consolation_third_place`) —
+  /// without them the consolation tree never reaches the UI.
+  /// Wire `phase` values selected by [getBracket] — every non-`group` phase
+  /// known to `kBracketPhaseWire` (a `kubb_domain` const). Exposed for a
+  /// coverage regression test so a
+  /// newly added phase can't silently drop out of the bracket read path.
+  static const List<String> bracketReadPhases = <String>[
+    'ko',
+    'third_place',
+    'final',
+    'wb',
+    'lb',
+    'grand_final',
+    'grand_final_reset',
+    'consolation',
+    'consolation_third_place',
+  ];
+
   @override
   Future<Bracket> getBracket(TournamentId tournamentId) async {
     final rows = await _client
@@ -644,15 +666,7 @@ class TournamentRepository implements TournamentRemote {
           'participant_a, participant_b, winner_participant, status',
         )
         .eq('tournament_id', tournamentId.value)
-        .inFilter('phase', const <String>[
-          'ko',
-          'third_place',
-          'final',
-          'wb',
-          'lb',
-          'grand_final',
-          'grand_final_reset',
-        ])
+        .inFilter('phase', bracketReadPhases)
         .order('round_number')
         .order('bracket_position');
     final koRows = <KoMatchRow>[

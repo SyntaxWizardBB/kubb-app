@@ -302,12 +302,21 @@ sealed class Bracket {
     // R1 losers by main-bracket seed (§3.3 step 2).
     final seeded = <String>[...directIds, ...r1LoserIds];
     final p1 = r1.padded;
+    // Structural byes are the slots whose seed index is >= E_1 (the expected R1
+    // entrant population = directCount + L_1), NOT >= seeded.length (ADR-0028
+    // §3.3/§4). At generation time the main-R1 losers are usually not yet known
+    // (r1LoserIds empty), so the slots in [seeded.length .. E_1-1] are RESERVED,
+    // non-bye loser placeholders the trigger fills later — they must stay
+    // participantId:null, isBye:false to match the plpgsql generator
+    // (20261203000000_consolation_bracket_server.sql:459-468). Using
+    // seeded.length here wrongly walks over those reserved slots.
+    final e1 = r1.entrants;
     final slots = <BracketEntry>[
       for (var i = 0; i < p1; i++)
         (
           seed: i + 1,
           participantId: i < seeded.length ? seeded[i] : null,
-          isBye: i >= seeded.length, // byes pad the bottom seeds...
+          isBye: i >= e1, // byes pad the bottom seeds (index >= E_1)...
         ),
     ];
     final order = switch (seedingPattern) {
@@ -784,16 +793,24 @@ final class ConsolationBracket extends Bracket {
   /// to have a consolation semifinal.
   final BracketRound? thirdPlace;
 
-  /// Returns a copy with the given fields replaced.
+  /// Sentinel distinguishing "argument omitted" from an explicit `null` for
+  /// the nullable [thirdPlace] field in [copyWith].
+  static const Object _unset = Object();
+
+  /// Returns a copy with the given fields replaced. Passing
+  /// `thirdPlace: null` explicitly clears the consolation 3rd-place playoff
+  /// (the sentinel keeps that distinguishable from omitting the argument).
   ConsolationBracket copyWith({
     List<BracketRound>? mainRounds,
     List<BracketRound>? rounds,
-    BracketRound? thirdPlace,
+    Object? thirdPlace = _unset,
   }) =>
       ConsolationBracket(
         mainRounds: mainRounds ?? this.mainRounds,
         rounds: rounds ?? this.rounds,
-        thirdPlace: thirdPlace ?? this.thirdPlace,
+        thirdPlace: identical(thirdPlace, _unset)
+            ? this.thirdPlace
+            : thirdPlace as BracketRound?,
       );
 
   @override

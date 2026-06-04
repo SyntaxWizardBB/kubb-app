@@ -1050,10 +1050,17 @@ class FakeTournamentRemote implements TournamentRemote {
   }) async {
     final s = _findShootout(shootoutId);
     _validatePermutation(s.tied, orderedWinners);
+    final reporterParticipant = _shootoutParticipantOf(s, currentUser);
+    if (reporterParticipant == null) {
+      throw StateError(
+        'NOT_AUTHORISED: caller is not part of this shoot-out group',
+      );
+    }
     s
       ..ordered = List<TournamentParticipantId>.of(orderedWinners)
       ..status = ShootoutStatus.reported
       ..reportedBy = currentUser
+      ..reportedParticipant = reporterParticipant
       ..confirmedBy = null;
   }
 
@@ -1067,8 +1074,21 @@ class FakeTournamentRemote implements TournamentRemote {
     if (s.status != ShootoutStatus.reported) {
       throw StateError('NOT_REPORTED: nothing to confirm yet');
     }
-    if (s.reportedBy == currentUser) {
-      throw StateError('NOT_AUTHORISED: reporter cannot self-confirm');
+    // C5: real two-sided consensus — the confirmer must belong to a DIFFERENT
+    // tied participant (team/solo) than the reporter. Two members of the SAME
+    // open team are distinct users but the same participant and must NOT be
+    // able to resolve a shoot-out between them.
+    final confirmerParticipant = _shootoutParticipantOf(s, currentUser);
+    if (confirmerParticipant == null) {
+      throw StateError(
+        'NOT_AUTHORISED: caller is not part of this shoot-out group',
+      );
+    }
+    if (confirmerParticipant == s.reportedParticipant) {
+      throw StateError(
+        'NOT_AUTHORISED: confirmation must come from a different '
+        'participant/team',
+      );
     }
     if (!_orderEquals(orderedWinners, s.ordered)) {
       throw StateError('ORDER_MISMATCH: does not match reported ordering');
@@ -1076,6 +1096,16 @@ class FakeTournamentRemote implements TournamentRemote {
     s
       ..status = ShootoutStatus.resolved
       ..confirmedBy = currentUser;
+  }
+
+  /// Resolves the tied participant of [s] that [user] belongs to (solo via
+  /// user_id, team via an active roster slot), or null when the user is not
+  /// part of the group. Mirrors `_tournament_shootout_participant_of`.
+  TournamentParticipantId? _shootoutParticipantOf(_Shootout s, UserId user) {
+    for (final pid in s.tied) {
+      if (_participantBelongsTo(pid, user)) return pid;
+    }
+    return null;
   }
 
   _Shootout _findShootout(String shootoutId) {
@@ -1546,6 +1576,9 @@ class _Shootout {
   List<TournamentParticipantId> ordered = <TournamentParticipantId>[];
   ShootoutStatus status = ShootoutStatus.pending;
   UserId? reportedBy;
+  // C5: the tied participant (solo/team) the reporter belongs to. Consensus
+  // must come from a DIFFERENT participant, not just a different user.
+  TournamentParticipantId? reportedParticipant;
   UserId? confirmedBy;
 }
 

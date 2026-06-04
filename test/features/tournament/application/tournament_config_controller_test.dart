@@ -30,6 +30,22 @@ void main() {
       controller.setClubId(null);
       expect(state().clubId, isNull);
     });
+
+    test('clearing the club resets league categories (C1)', () {
+      // Per P6_SETUP_WIZARD_SPEC Screen 1: a personal tournament (no club) is
+      // never league-relevant. Picking a club, ticking a league category and
+      // then switching back to personal must drop the categories, otherwise
+      // they linger in the draft (the chips are hidden) and would be emitted.
+      controller.setClubId('club-1');
+      controller.toggleLeagueCategory(LeagueCategory.a);
+      expect(state().leagueCategories, <LeagueCategory>[LeagueCategory.a]);
+
+      controller.setClubId(null);
+      expect(state().leagueCategories, isEmpty);
+      // Defense-in-depth: even if a stale selection survived, the wire payload
+      // for a personal tournament carries no league categories.
+      expect(state().toSetupConfig()['league_categories'], isEmpty);
+    });
   });
 
   group('setVorrundeType / setKoType mapping', () {
