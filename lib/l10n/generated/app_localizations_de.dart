@@ -1878,6 +1878,48 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentHubStatsSubtitle => 'In Vorbereitung';
 
   @override
+  String get tournamentHubPastTitle => 'Vergangene Turniere';
+
+  @override
+  String get tournamentHubPastSubtitle => 'Abgeschlossene Turniere ansehen';
+
+  @override
+  String get tournamentHubMercenaryTitle => 'Söldnermarkt';
+
+  @override
+  String get tournamentHubMercenarySubtitle =>
+      'Bald verfügbar – Mitspieler für Turniere finden';
+
+  @override
+  String get tournamentHubComingSoonBadge => 'Coming Soon';
+
+  @override
+  String get tournamentPastEyebrow => 'Turniere';
+
+  @override
+  String get tournamentPastTitle => 'Vergangene Turniere';
+
+  @override
+  String get tournamentPastEmptyTitle => 'Noch keine vergangenen Turniere';
+
+  @override
+  String get tournamentPastEmptyBody =>
+      'Sobald ein Turnier abgeschlossen ist, erscheint es hier.';
+
+  @override
+  String get tournamentMercenaryEyebrow => 'Turniere';
+
+  @override
+  String get tournamentMercenaryTitle => 'Söldnermarkt';
+
+  @override
+  String get tournamentMercenaryComingSoonTitle => 'Bald verfügbar';
+
+  @override
+  String get tournamentMercenaryComingSoonBody =>
+      'Der Söldnermarkt ist noch in Arbeit. Bald kannst du hier Mitspieler für Turniere finden und dich selbst als Söldner anbieten.';
+
+  @override
   String get tournamentRegistrationsTitle => 'Angemeldet';
 
   @override

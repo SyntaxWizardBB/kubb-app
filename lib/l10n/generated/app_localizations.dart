@@ -3526,6 +3526,84 @@ abstract class AppLocalizations {
   /// **'In Vorbereitung'**
   String get tournamentHubStatsSubtitle;
 
+  /// Hub tile: past (finalized) tournaments
+  ///
+  /// In de, this message translates to:
+  /// **'Vergangene Turniere'**
+  String get tournamentHubPastTitle;
+
+  /// Hub tile subtitle for past tournaments
+  ///
+  /// In de, this message translates to:
+  /// **'Abgeschlossene Turniere ansehen'**
+  String get tournamentHubPastSubtitle;
+
+  /// Hub tile: mercenary market (coming soon)
+  ///
+  /// In de, this message translates to:
+  /// **'Söldnermarkt'**
+  String get tournamentHubMercenaryTitle;
+
+  /// Hub tile subtitle for the mercenary market, includes the coming-soon hint
+  ///
+  /// In de, this message translates to:
+  /// **'Bald verfügbar – Mitspieler für Turniere finden'**
+  String get tournamentHubMercenarySubtitle;
+
+  /// Coming-soon marker shown on not-yet-available hub tiles
+  ///
+  /// In de, this message translates to:
+  /// **'Coming Soon'**
+  String get tournamentHubComingSoonBadge;
+
+  /// Eyebrow on the past tournaments screen
+  ///
+  /// In de, this message translates to:
+  /// **'Turniere'**
+  String get tournamentPastEyebrow;
+
+  /// Screen title: past (finalized) tournaments
+  ///
+  /// In de, this message translates to:
+  /// **'Vergangene Turniere'**
+  String get tournamentPastTitle;
+
+  /// Empty state title on the past tournaments screen
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine vergangenen Turniere'**
+  String get tournamentPastEmptyTitle;
+
+  /// Empty state body on the past tournaments screen
+  ///
+  /// In de, this message translates to:
+  /// **'Sobald ein Turnier abgeschlossen ist, erscheint es hier.'**
+  String get tournamentPastEmptyBody;
+
+  /// Eyebrow on the mercenary market screen
+  ///
+  /// In de, this message translates to:
+  /// **'Turniere'**
+  String get tournamentMercenaryEyebrow;
+
+  /// Screen title: mercenary market
+  ///
+  /// In de, this message translates to:
+  /// **'Söldnermarkt'**
+  String get tournamentMercenaryTitle;
+
+  /// Coming-soon placeholder title on the mercenary market screen
+  ///
+  /// In de, this message translates to:
+  /// **'Bald verfügbar'**
+  String get tournamentMercenaryComingSoonTitle;
+
+  /// Coming-soon placeholder body on the mercenary market screen
+  ///
+  /// In de, this message translates to:
+  /// **'Der Söldnermarkt ist noch in Arbeit. Bald kannst du hier Mitspieler für Turniere finden und dich selbst als Söldner anbieten.'**
+  String get tournamentMercenaryComingSoonBody;
+
   /// Screen title: my tournament registrations
   ///
   /// In de, this message translates to:

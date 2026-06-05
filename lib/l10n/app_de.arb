@@ -2479,6 +2479,58 @@
   "@tournamentHubStatsSubtitle": {
     "description": "Hub tile subtitle for the not-yet-built stats screen"
   },
+  "tournamentHubPastTitle": "Vergangene Turniere",
+  "@tournamentHubPastTitle": {
+    "description": "Hub tile: past (finalized) tournaments"
+  },
+  "tournamentHubPastSubtitle": "Abgeschlossene Turniere ansehen",
+  "@tournamentHubPastSubtitle": {
+    "description": "Hub tile subtitle for past tournaments"
+  },
+  "tournamentHubMercenaryTitle": "Söldnermarkt",
+  "@tournamentHubMercenaryTitle": {
+    "description": "Hub tile: mercenary market (coming soon)"
+  },
+  "tournamentHubMercenarySubtitle": "Bald verfügbar – Mitspieler für Turniere finden",
+  "@tournamentHubMercenarySubtitle": {
+    "description": "Hub tile subtitle for the mercenary market, includes the coming-soon hint"
+  },
+  "tournamentHubComingSoonBadge": "Coming Soon",
+  "@tournamentHubComingSoonBadge": {
+    "description": "Coming-soon marker shown on not-yet-available hub tiles"
+  },
+  "tournamentPastEyebrow": "Turniere",
+  "@tournamentPastEyebrow": {
+    "description": "Eyebrow on the past tournaments screen"
+  },
+  "tournamentPastTitle": "Vergangene Turniere",
+  "@tournamentPastTitle": {
+    "description": "Screen title: past (finalized) tournaments"
+  },
+  "tournamentPastEmptyTitle": "Noch keine vergangenen Turniere",
+  "@tournamentPastEmptyTitle": {
+    "description": "Empty state title on the past tournaments screen"
+  },
+  "tournamentPastEmptyBody": "Sobald ein Turnier abgeschlossen ist, erscheint es hier.",
+  "@tournamentPastEmptyBody": {
+    "description": "Empty state body on the past tournaments screen"
+  },
+  "tournamentMercenaryEyebrow": "Turniere",
+  "@tournamentMercenaryEyebrow": {
+    "description": "Eyebrow on the mercenary market screen"
+  },
+  "tournamentMercenaryTitle": "Söldnermarkt",
+  "@tournamentMercenaryTitle": {
+    "description": "Screen title: mercenary market"
+  },
+  "tournamentMercenaryComingSoonTitle": "Bald verfügbar",
+  "@tournamentMercenaryComingSoonTitle": {
+    "description": "Coming-soon placeholder title on the mercenary market screen"
+  },
+  "tournamentMercenaryComingSoonBody": "Der Söldnermarkt ist noch in Arbeit. Bald kannst du hier Mitspieler für Turniere finden und dich selbst als Söldner anbieten.",
+  "@tournamentMercenaryComingSoonBody": {
+    "description": "Coming-soon placeholder body on the mercenary market screen"
+  },
   "tournamentRegistrationsTitle": "Angemeldet",
   "@tournamentRegistrationsTitle": {
     "description": "Screen title: my tournament registrations"

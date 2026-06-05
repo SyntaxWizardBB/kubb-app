@@ -53,7 +53,9 @@ import 'package:kubb_app/features/tournament/presentation/tournament_list_screen
 import 'package:kubb_app/features/tournament/presentation/tournament_live_dashboard_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_match_detail_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_match_list_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_mercenary_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_override_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_past_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_registration_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_registrations_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
@@ -465,6 +467,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: TournamentRoutes.stats,
                 builder: (_, _) => const TournamentStatsScreen(),
+              ),
+              GoRoute(
+                path: TournamentRoutes.pastTournaments,
+                builder: (_, _) => const TournamentPastScreen(),
+              ),
+              GoRoute(
+                path: TournamentRoutes.mercenaryMarket,
+                builder: (_, _) => const TournamentMercenaryScreen(),
               ),
               GoRoute(
                 path: TournamentRoutes.newTournament,

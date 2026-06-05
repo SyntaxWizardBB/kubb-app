@@ -108,6 +108,31 @@ class TournamentHubScreen extends ConsumerWidget {
               onTap: () => unawaited(context.push(TournamentRoutes.list)),
             ),
             const SizedBox(height: KubbTokens.space3),
+            // P8: past (finalized) tournaments.
+            KubbModeCard(
+              title: l.tournamentHubPastTitle,
+              subtitle: l.tournamentHubPastSubtitle,
+              icon: LucideIcons.history,
+              accentTone: KubbChipTone.finisseurInk,
+              onTap: () =>
+                  unawaited(context.push(TournamentRoutes.pastTournaments)),
+            ),
+            const SizedBox(height: KubbTokens.space3),
+            // P8: mercenary market — Coming-Soon. The tile carries a
+            // visible "Coming Soon" badge while staying tappable to the
+            // placeholder screen.
+            _ComingSoonBadge(
+              label: l.tournamentHubComingSoonBadge,
+              child: KubbModeCard(
+                title: l.tournamentHubMercenaryTitle,
+                subtitle: l.tournamentHubMercenarySubtitle,
+                icon: LucideIcons.swords,
+                accentTone: KubbChipTone.matchWood,
+                onTap: () =>
+                    unawaited(context.push(TournamentRoutes.mercenaryMarket)),
+              ),
+            ),
+            const SizedBox(height: KubbTokens.space3),
             KubbModeCard(
               title: l.tournamentHubStatsTitle,
               subtitle: l.tournamentHubStatsSubtitle,
@@ -118,6 +143,52 @@ class TournamentHubScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Overlays a small "Coming Soon" pill on the top-right corner of a hub
+/// tile. Kept local to the hub since it is the only Coming-Soon entry for
+/// now; the underlying tile stays fully tappable (the badge ignores
+/// pointer events).
+class _ComingSoonBadge extends StatelessWidget {
+  const _ComingSoonBadge({required this.label, required this.child});
+
+  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          top: KubbTokens.space2,
+          right: KubbTokens.space2,
+          child: IgnorePointer(
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: KubbTokens.space2,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: KubbTokens.wood500,
+                borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
+              ),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.4,
+                  color: tokens.bgRaised,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

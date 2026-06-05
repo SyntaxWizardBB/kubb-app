@@ -22,6 +22,15 @@ abstract final class TournamentRoutes {
   /// is a later task).
   static const stats = '/tournament/stats';
 
+  /// Past tournaments (P8): every tournament whose final has been entered
+  /// and confirmed (`TournamentStatus.finalized`). Static prefix so it
+  /// wins over the dynamic `/tournament/:id` detail route.
+  static const pastTournaments = '/tournament/past';
+
+  /// Mercenary market (P8, "Söldnermarkt") — Coming-Soon placeholder.
+  /// Static prefix so it wins over the dynamic `/tournament/:id` route.
+  static const mercenaryMarket = '/tournament/mercenaries';
+
   /// Single tournament overview. Append `/:id`.
   static const detail = '/tournament';
 
