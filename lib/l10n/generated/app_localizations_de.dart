@@ -1894,6 +1894,39 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentHubComingSoonBadge => 'Coming Soon';
 
   @override
+  String get tournamentHubRankingTitle => 'Rangliste';
+
+  @override
+  String get tournamentHubRankingSubtitle => 'Ewige Bestenliste der Turniere';
+
+  @override
+  String get tournamentRankingTabLigaA => 'Liga A';
+
+  @override
+  String get tournamentRankingTabLigaB => 'Liga B';
+
+  @override
+  String get tournamentRankingTabLigaC => 'Liga C';
+
+  @override
+  String get tournamentRankingTabEinzel => 'Einzel';
+
+  @override
+  String get tournamentRankingColName => 'Name';
+
+  @override
+  String get tournamentRankingColPoints => 'Punkte';
+
+  @override
+  String get tournamentRankingColCount => 'Turniere';
+
+  @override
+  String get tournamentRankingEmpty => 'Noch keine Wertungen';
+
+  @override
+  String get tournamentRankingError => 'Rangliste konnte nicht geladen werden';
+
+  @override
   String get tournamentPastEyebrow => 'Turniere';
 
   @override

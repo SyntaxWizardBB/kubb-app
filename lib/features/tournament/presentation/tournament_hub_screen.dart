@@ -133,6 +133,16 @@ class TournamentHubScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: KubbTokens.space3),
+            // P8-Hub-B2: all-time tournament leaderboard. Sits between the
+            // mercenary market and the stats tile.
+            KubbModeCard(
+              title: l.tournamentHubRankingTitle,
+              subtitle: l.tournamentHubRankingSubtitle,
+              icon: LucideIcons.listOrdered,
+              accentTone: KubbChipTone.sniperMeadow,
+              onTap: () => unawaited(context.push(TournamentRoutes.ranking)),
+            ),
+            const SizedBox(height: KubbTokens.space3),
             KubbModeCard(
               title: l.tournamentHubStatsTitle,
               subtitle: l.tournamentHubStatsSubtitle,

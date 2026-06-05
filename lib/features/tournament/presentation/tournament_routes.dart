@@ -31,6 +31,10 @@ abstract final class TournamentRoutes {
   /// Static prefix so it wins over the dynamic `/tournament/:id` route.
   static const mercenaryMarket = '/tournament/mercenaries';
 
+  /// All-time tournament leaderboard (P8-Hub-B2, "Rangliste"). Static
+  /// prefix so it wins over the dynamic `/tournament/:id` detail route.
+  static const ranking = '/tournament/ranking';
+
   /// Single tournament overview. Append `/:id`.
   static const detail = '/tournament';
 

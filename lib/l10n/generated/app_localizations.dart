@@ -3556,6 +3556,72 @@ abstract class AppLocalizations {
   /// **'Coming Soon'**
   String get tournamentHubComingSoonBadge;
 
+  /// Hub tile title and app-bar title for the all-time tournament leaderboard
+  ///
+  /// In de, this message translates to:
+  /// **'Rangliste'**
+  String get tournamentHubRankingTitle;
+
+  /// Hub tile subtitle for the all-time tournament leaderboard
+  ///
+  /// In de, this message translates to:
+  /// **'Ewige Bestenliste der Turniere'**
+  String get tournamentHubRankingSubtitle;
+
+  /// Ranking screen tab label for league-A team leaderboard
+  ///
+  /// In de, this message translates to:
+  /// **'Liga A'**
+  String get tournamentRankingTabLigaA;
+
+  /// Ranking screen tab label for league-B team leaderboard
+  ///
+  /// In de, this message translates to:
+  /// **'Liga B'**
+  String get tournamentRankingTabLigaB;
+
+  /// Ranking screen tab label for league-C team leaderboard
+  ///
+  /// In de, this message translates to:
+  /// **'Liga C'**
+  String get tournamentRankingTabLigaC;
+
+  /// Ranking screen tab label for the singles leaderboard
+  ///
+  /// In de, this message translates to:
+  /// **'Einzel'**
+  String get tournamentRankingTabEinzel;
+
+  /// Ranking list column header for the participant name
+  ///
+  /// In de, this message translates to:
+  /// **'Name'**
+  String get tournamentRankingColName;
+
+  /// Ranking list column header for total points
+  ///
+  /// In de, this message translates to:
+  /// **'Punkte'**
+  String get tournamentRankingColPoints;
+
+  /// Ranking list column header for the tournament count
+  ///
+  /// In de, this message translates to:
+  /// **'Turniere'**
+  String get tournamentRankingColCount;
+
+  /// Empty-state text on a ranking tab with no entries yet
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Wertungen'**
+  String get tournamentRankingEmpty;
+
+  /// Error text when the ranking leaderboard fails to load
+  ///
+  /// In de, this message translates to:
+  /// **'Rangliste konnte nicht geladen werden'**
+  String get tournamentRankingError;
+
   /// Eyebrow on the past tournaments screen
   ///
   /// In de, this message translates to:

@@ -2499,6 +2499,50 @@
   "@tournamentHubComingSoonBadge": {
     "description": "Coming-soon marker shown on not-yet-available hub tiles"
   },
+  "tournamentHubRankingTitle": "Rangliste",
+  "@tournamentHubRankingTitle": {
+    "description": "Hub tile title and app-bar title for the all-time tournament leaderboard"
+  },
+  "tournamentHubRankingSubtitle": "Ewige Bestenliste der Turniere",
+  "@tournamentHubRankingSubtitle": {
+    "description": "Hub tile subtitle for the all-time tournament leaderboard"
+  },
+  "tournamentRankingTabLigaA": "Liga A",
+  "@tournamentRankingTabLigaA": {
+    "description": "Ranking screen tab label for league-A team leaderboard"
+  },
+  "tournamentRankingTabLigaB": "Liga B",
+  "@tournamentRankingTabLigaB": {
+    "description": "Ranking screen tab label for league-B team leaderboard"
+  },
+  "tournamentRankingTabLigaC": "Liga C",
+  "@tournamentRankingTabLigaC": {
+    "description": "Ranking screen tab label for league-C team leaderboard"
+  },
+  "tournamentRankingTabEinzel": "Einzel",
+  "@tournamentRankingTabEinzel": {
+    "description": "Ranking screen tab label for the singles leaderboard"
+  },
+  "tournamentRankingColName": "Name",
+  "@tournamentRankingColName": {
+    "description": "Ranking list column header for the participant name"
+  },
+  "tournamentRankingColPoints": "Punkte",
+  "@tournamentRankingColPoints": {
+    "description": "Ranking list column header for total points"
+  },
+  "tournamentRankingColCount": "Turniere",
+  "@tournamentRankingColCount": {
+    "description": "Ranking list column header for the tournament count"
+  },
+  "tournamentRankingEmpty": "Noch keine Wertungen",
+  "@tournamentRankingEmpty": {
+    "description": "Empty-state text on a ranking tab with no entries yet"
+  },
+  "tournamentRankingError": "Rangliste konnte nicht geladen werden",
+  "@tournamentRankingError": {
+    "description": "Error text when the ranking leaderboard fails to load"
+  },
   "tournamentPastEyebrow": "Turniere",
   "@tournamentPastEyebrow": {
     "description": "Eyebrow on the past tournaments screen"

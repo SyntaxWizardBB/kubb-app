@@ -25,6 +25,10 @@ Future<void> _pump(WidgetTester tester) async {
         path: TournamentRoutes.mercenaryMarket,
         builder: (_, _) => const Scaffold(body: Text('mercenary-route')),
       ),
+      GoRoute(
+        path: TournamentRoutes.ranking,
+        builder: (_, _) => const Scaffold(body: Text('ranking-route')),
+      ),
     ],
   );
 
@@ -64,9 +68,34 @@ void main() {
     final statsY = tester.getTopLeft(stats).dy;
     expect(pastY, lessThan(mercenaryY));
     expect(mercenaryY, lessThan(statsY));
+  });
 
-    // No ranking tile yet (that is a later P8 block).
-    expect(find.text('Rangliste'), findsNothing);
+  testWidgets(
+      'ranking tile sits between the mercenary and the stats tile',
+      (tester) async {
+    await _pump(tester);
+
+    final mercenary = find.text('Söldnermarkt');
+    final ranking = find.text('Rangliste');
+    final stats = find.text('Turnierstatistik');
+
+    expect(mercenary, findsOneWidget);
+    expect(ranking, findsOneWidget);
+    expect(stats, findsOneWidget);
+
+    // P8-Hub-B2: Söldnermarkt -> Rangliste -> Statistik.
+    final mercenaryY = tester.getTopLeft(mercenary).dy;
+    final rankingY = tester.getTopLeft(ranking).dy;
+    final statsY = tester.getTopLeft(stats).dy;
+    expect(mercenaryY, lessThan(rankingY));
+    expect(rankingY, lessThan(statsY));
+  });
+
+  testWidgets('ranking tile pushes the ranking route', (tester) async {
+    await _pump(tester);
+    await tester.tap(find.text('Rangliste'));
+    await tester.pumpAndSettle();
+    expect(find.text('ranking-route'), findsOneWidget);
   });
 
   testWidgets('mercenary tile carries a Coming Soon marker', (tester) async {
@@ -88,8 +117,8 @@ void main() {
     expect(find.text('mercenary-route'), findsOneWidget);
   });
 
-  testWidgets('hub renders exactly five mode-card tiles', (tester) async {
+  testWidgets('hub renders exactly six mode-card tiles', (tester) async {
     await _pump(tester);
-    expect(find.byType(KubbModeCard), findsNWidgets(5));
+    expect(find.byType(KubbModeCard), findsNWidgets(6));
   });
 }
