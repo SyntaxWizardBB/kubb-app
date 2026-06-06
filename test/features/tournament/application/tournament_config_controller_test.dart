@@ -213,4 +213,25 @@ void main() {
       expect(state().koRoundFormats, before);
     });
   });
+
+  group('participant limits (K09/K10)', () {
+    test('K10: setMaxParticipants accepts up to 1000', () {
+      controller.setMaxParticipants(1000);
+      expect(state().maxParticipants, 1000);
+      expect(TournamentConfigDraft.participantsHardMax, 1000);
+    });
+
+    test('K10: setMaxParticipants clamps above 1000 to the hard max', () {
+      controller.setMaxParticipants(5000);
+      expect(state().maxParticipants, 1000);
+    });
+
+    test('K09: minParticipants floor is the non-zero internal sanity bound', () {
+      // K09 removed the user-facing minimum. The internal floor is just a
+      // sanity bound (participantsHardMin == 1), never surfaced in the UI.
+      expect(TournamentConfigDraft.participantsHardMin, 1);
+      controller.setMinParticipants(0);
+      expect(state().minParticipants, TournamentConfigDraft.participantsHardMin);
+    });
+  });
 }

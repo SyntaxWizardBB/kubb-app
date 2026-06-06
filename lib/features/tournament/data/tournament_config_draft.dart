@@ -550,8 +550,16 @@ class TournamentConfigDraft {
   static bool _containsFourDigitYear(String text) =>
       RegExp(r'(?<!\d)(19|20)\d{2}(?!\d)').hasMatch(text);
 
-  static const int participantsHardMin = 2;
-  static const int participantsHardMax = 64;
+  // K09: no user-facing minimum participant count anymore. We keep a non-zero
+  // floor (the KO minimum) purely as an internal sanity bound; it is never
+  // shown in the UI nor user-validated.
+  static const int participantsHardMin = 1;
+  // K10: tournaments must be configurable with up to 1000 participants.
+  static const int participantsHardMax = 1000;
+  // K11: the KO bracket size is decoupled from the participant count. A bracket
+  // is a power of two; we cap it at 64 (a 6-round main bracket) which is a sane
+  // ceiling for a live Kubb event regardless of how many players register.
+  static const int koBracketSizeCap = 64;
   static const int setsToWinMin = 1;
   static const int setsToWinMax = 4;
 
@@ -829,14 +837,13 @@ class TournamentConfigDraft {
       issues.add('Max. Spieler pro Team darf nicht kleiner als Min. sein.');
     }
 
-    if (minParticipants < participantsHardMin) {
-      issues.add('Mindestens $participantsHardMin Teilnehmer.');
+    // K09: no minimum participant validation anymore. Only the upper bound
+    // (K10: up to 1000) and a non-empty roster (>= 2 to play at all) apply.
+    if (maxParticipants < 2) {
+      issues.add('Mindestens 2 Teilnehmer.');
     }
     if (maxParticipants > participantsHardMax) {
       issues.add('Höchstens $participantsHardMax Teilnehmer.');
-    }
-    if (minParticipants > maxParticipants) {
-      issues.add('Min. Teilnehmer darf nicht grösser als Max. sein.');
     }
 
     if (setsToWin < setsToWinMin || setsToWin > setsToWinMax) {

@@ -115,18 +115,22 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
             draft.registrationClosesAt != null &&
             draft.checkinUntil != null;
       case _StepKind.participants:
-        return draft.minParticipants <= draft.maxParticipants &&
-            draft.minParticipants >= TournamentConfigDraft.participantsHardMin;
+        // K09: no minimum-participant rule anymore — only the upper bound
+        // (K10) and a non-empty roster gate this step.
+        return draft.maxParticipants >= 2 &&
+            draft.maxParticipants <= TournamentConfigDraft.participantsHardMax;
       case _StepKind.format:
         // Prelim "Max. Sätze" is decoupled from setsToWin (P6): only a sane
         // absolute range applies.
         return draft.maxSets >= TournamentConfigDraft.maxSetsMin &&
             draft.maxSets <= TournamentConfigDraft.maxSetsMax;
       case _StepKind.koConfig:
+        // K11: KO size is bounded by the fixed bracket cap, decoupled from
+        // maxParticipants (which may be up to 1000).
         final cfg = draft.koConfig;
         return cfg != null &&
             cfg.qualifierCount >= 2 &&
-            cfg.qualifierCount <= draft.maxParticipants;
+            cfg.qualifierCount <= TournamentConfigDraft.koBracketSizeCap;
       case _StepKind.poolConfig:
         // The group-phase step requires a valid PoolPhaseConfig whose group
         // count evenly divides the KO bracket size (the qualifier-per-group
@@ -288,7 +292,6 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
       case _StepKind.participants:
         return _StepParticipants(
           draft: draft,
-          onMin: controller.setMinParticipants,
           onMax: controller.setMaxParticipants,
           onTeamSize: controller.setTeamSize,
           onMaxTeamSize: controller.setMaxTeamSize,
@@ -1375,14 +1378,12 @@ class _ScoringOption extends StatelessWidget {
 class _StepParticipants extends StatelessWidget {
   const _StepParticipants({
     required this.draft,
-    required this.onMin,
     required this.onMax,
     required this.onTeamSize,
     required this.onMaxTeamSize,
   });
 
   final TournamentConfigDraft draft;
-  final ValueChanged<int> onMin;
   final ValueChanged<int> onMax;
   final ValueChanged<int> onTeamSize;
   final ValueChanged<int> onMaxTeamSize;
@@ -1411,18 +1412,12 @@ class _StepParticipants extends StatelessWidget {
         const SizedBox(height: KubbTokens.space1half),
         _HelperText(l10n.tournamentWizardTeamSizeHint),
         const SizedBox(height: KubbTokens.space5),
-        WizardNumberField(
-          label: l10n.tournamentWizardMinParticipantsLabel,
-          value: draft.minParticipants,
-          min: TournamentConfigDraft.participantsHardMin,
-          max: draft.maxParticipants,
-          onChanged: onMin,
-        ),
-        const SizedBox(height: KubbTokens.space4),
+        // K09: the minimum-participant field was removed. K10: the maximum may
+        // be configured up to participantsHardMax (1000).
         WizardNumberField(
           label: l10n.tournamentWizardMaxParticipantsLabel,
           value: draft.maxParticipants,
-          min: draft.minParticipants,
+          min: 2,
           max: TournamentConfigDraft.participantsHardMax,
           onChanged: onMax,
         ),
@@ -1808,11 +1803,7 @@ class _StepSummary extends StatelessWidget {
             l10n.tournamentWizardDisplayNameLabel,
             (draft.displayName ?? '').trim(),
           ),
-          _summaryRow(
-            tokens,
-            l10n.tournamentWizardMinParticipantsLabel,
-            '${draft.minParticipants}',
-          ),
+          // K09: no minimum-participant row anymore — only the maximum.
           _summaryRow(
             tokens,
             l10n.tournamentWizardMaxParticipantsLabel,

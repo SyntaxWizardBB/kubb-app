@@ -85,12 +85,14 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
     }
   }
 
-  /// Power-of-two KO sizes selectable for [participants] (no byes — the main
-  /// bracket is a power of two). Always offers at least {2, 4}.
-  static List<int> _bracketSizes(int participants) {
+  /// K11 — selectable KO sizes are decoupled from the participant count: the
+  /// bracket is a power of two from 2 up to [TournamentConfigDraft.koBracketSizeCap]
+  /// (64), independent of `maxParticipants` (which may be up to 1000). This
+  /// keeps the live KO bracket sane no matter how many players register.
+  static List<int> _bracketSizes() {
     final out = <int>[];
     var size = 2;
-    while (size <= participants) {
+    while (size <= TournamentConfigDraft.koBracketSizeCap) {
       out.add(size);
       size <<= 1;
     }
@@ -98,13 +100,15 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
     return out;
   }
 
-  /// U4 — `participantCount` is a power of two → `participantCount / 2`,
-  /// otherwise the largest 2^n strictly below `participantCount`. Clamped
-  /// to the minimum of 2.
+  /// U4 — `participants` is a power of two → `participants / 2`, otherwise the
+  /// largest 2^n strictly below `participants`. Clamped to [2, koBracketSizeCap]
+  /// so the default never exceeds the KO cap even for very large rosters (K11).
   static int _smartDefault(int participants) {
     if (participants < 2) return 2;
-    if (_isPow2(participants)) return participants ~/ 2;
-    return _prevPow2(participants).clamp(2, participants);
+    final raw = _isPow2(participants)
+        ? participants ~/ 2
+        : _prevPow2(participants);
+    return raw.clamp(2, TournamentConfigDraft.koBracketSizeCap);
   }
 
   static bool _isPow2(int n) => n > 0 && (n & (n - 1)) == 0;
@@ -117,9 +121,10 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
     return v;
   }
 
+  // K11 — KO size is bounded by the fixed bracket cap, NOT by maxParticipants.
   bool get _isValid =>
       _qualifierCount >= 2 &&
-      _qualifierCount <= widget.draft.maxParticipants &&
+      _qualifierCount <= TournamentConfigDraft.koBracketSizeCap &&
       _isPow2(_qualifierCount);
 
   void _pushIfValid() {
@@ -130,7 +135,13 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
     widget.onConfigChanged(
       KoPhaseConfig(
         qualifierCount: _qualifierCount,
-        participantCount: widget.draft.maxParticipants,
+        // K11: KO size is decoupled from maxParticipants. The domain invariant
+        // requires qualifierCount <= participantCount, so the bracket capacity
+        // must be at least the chosen KO size (e.g. a 16-bracket on a 8-player
+        // cap is allowed now). Take the max so the invariant always holds.
+        participantCount: widget.draft.maxParticipants > _qualifierCount
+            ? widget.draft.maxParticipants
+            : _qualifierCount,
         // Spiel um Platz 3 is always on now (P6_SETUP_WIZARD_SPEC.md Screen 6).
         withThirdPlacePlayoff: true,
         seedingMode: _seedingMode,
@@ -154,7 +165,7 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l10n = AppLocalizations.of(context);
-    final sizes = _bracketSizes(widget.draft.maxParticipants);
+    final sizes = _bracketSizes();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

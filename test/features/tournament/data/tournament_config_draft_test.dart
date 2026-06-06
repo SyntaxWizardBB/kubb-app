@@ -96,18 +96,51 @@ void main() {
       expect(v.issues.any((i) => i.contains('höchstens')), isTrue);
     });
 
-    test('flags min > max participants', () {
+    test('K09: no minimum-participant rule (min > max is not flagged)', () {
+      // K09 removed the minimum-participant concept entirely: minParticipants is
+      // an internal-only value and is no longer validated against
+      // maxParticipants. (Other Stammdaten issues are unrelated to K09.)
       const d = TournamentConfigDraft(
         displayName: 'Cup',
         minParticipants: 10,
         maxParticipants: 4,
       );
+      final issues = d.validate().issues;
+      // Sharpened (reviewer): with a valid roster (2..1000) there must be NO
+      // participant-related issue at all — neither a 'min > max' nor any
+      // lower-bound rule. Asserting on the substring 'Teilnehmer' keeps the
+      // test meaningful even though the old 'grösser'/'Mindestens' min-strings
+      // were removed from the validator entirely.
+      expect(
+        issues.any((i) => i.contains('Teilnehmer')),
+        isFalse,
+        reason: 'min > max must not produce a participant issue (K09)',
+      );
+      expect(
+        issues.any((i) => i.contains('grösser') || i.contains('Mindestens')),
+        isFalse,
+      );
+    });
+
+    test('K10: maxParticipants up to 1000 raises no participant-count issue',
+        () {
+      const d = TournamentConfigDraft(
+        displayName: 'Cup',
+        maxParticipants: 1000,
+      );
+      final issues = d.validate().issues;
+      expect(issues.any((i) => i.contains('Höchstens')), isFalse);
+      expect(TournamentConfigDraft.participantsHardMax, 1000);
+    });
+
+    test('K10: maxParticipants above 1000 is flagged', () {
+      const d = TournamentConfigDraft(
+        displayName: 'Cup',
+        maxParticipants: 1001,
+      );
       final v = d.validate();
       expect(v.isValid, isFalse);
-      expect(
-        v.issues.any((i) => i.contains('grösser') || i.contains('Min')),
-        isTrue,
-      );
+      expect(v.issues.any((i) => i.contains('Höchstens')), isTrue);
     });
 
     test('flags sets-to-win below 1', () {
