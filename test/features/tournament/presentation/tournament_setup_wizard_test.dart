@@ -328,6 +328,22 @@ class _ConsolationSeededController extends TournamentConfigController {
       );
 }
 
+/// W5/K26: a Schoch-seeded draft that PASSES every per-step gate (so the
+/// wizard can reach the summary) but FAILS `validate()` — `setsToWin` is out
+/// of the 1..4 range, which no step gate checks but the final validator does.
+/// Used to assert the summary surfaces the validation issues (ERR-1) and the
+/// "Anlegen" button stays disabled (ERR-3).
+class _InvalidDraftSeededController extends TournamentConfigController {
+  @override
+  TournamentConfigDraft build() => _withStammdaten(
+        const TournamentConfigDraft(
+          format: TournamentFormat.swissThenKo,
+          vorrundeType: VorrundeType.schoch,
+          setsToWin: 9,
+        ),
+      );
+}
+
 Future<_FakeTournamentRemote> _pumpWizard(
   WidgetTester tester, {
   List<Object> extraOverrides = const <Object>[],
@@ -1128,5 +1144,188 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Pitch-Zuteilung pro Gruppe'), findsNothing);
+  });
+
+  // ---- W5: summary step (K26 + error marking) ----
+
+  testWidgets(
+      'K26: summary groups every step and shows representative fields from '
+      'all of them', (tester) async {
+    await _pumpWizard(tester);
+    // Use a name without a year so K01 appends the event year (2026).
+    await _typeName(tester, 'Sommercup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    await _tapNext(tester); // -> summary
+    expect(find.text('Übersicht'), findsOneWidget);
+
+    // Section headings for all four wizard steps.
+    expect(find.text('Stammdaten'), findsOneWidget);
+    expect(find.text('Teilnehmer'), findsOneWidget);
+    expect(find.text('Vorrunde'), findsWidgets);
+    expect(find.text('K.-o.'), findsOneWidget);
+
+    // K26-1: name with the auto-appended year + Spasstournier + scoring.
+    expect(find.text('Sommercup 2026'), findsOneWidget);
+    expect(find.text('Spasstournier – ohne Wertung'), findsWidgets);
+    expect(find.text('EKC'), findsWidgets);
+
+    // K26-3: prelim format (group phase = default) is rendered.
+    expect(find.text('Gruppenphase'), findsWidgets);
+
+    // K26-4: KO type (default single-out).
+    expect(find.text('Single-Out'), findsWidgets);
+  });
+
+  testWidgets('K26-4: consolation summary shows the Trostturnier name',
+      (tester) async {
+    await _pumpWizard(
+      tester,
+      controllerOverride: _ConsolationSeededController.new,
+    );
+    await _typeName(tester, 'Herzcup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    // K18: consolation name is required — fill it so we can reach the summary.
+    await tester.enterText(
+      find.byKey(const Key('wizardConsolationNameField')),
+      'Sieger der Herzen',
+    );
+    await tester.pumpAndSettle();
+    await _tapNext(tester); // -> summary
+
+    expect(find.text('Übersicht'), findsOneWidget);
+    expect(find.text('Trostturnier'), findsWidgets);
+    expect(find.text('Sieger der Herzen'), findsOneWidget);
+  });
+
+  testWidgets(
+      'ERR-1/ERR-3: invalid draft shows the issue list and disables Anlegen',
+      (tester) async {
+    await _pumpWizard(
+      tester,
+      controllerOverride: _InvalidDraftSeededController.new,
+    );
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    await _tapNext(tester); // -> summary
+    expect(find.text('Übersicht'), findsOneWidget);
+
+    // ERR-1: the prominent issue box + the concrete validation issue render.
+    expect(find.byKey(const Key('wizardSummaryErrorBox')), findsOneWidget);
+    expect(find.text('Turnier kann nicht angelegt werden'), findsOneWidget);
+    expect(
+      find.text('Sätze zum Sieg muss zwischen 1 und 4 liegen.'),
+      findsOneWidget,
+    );
+
+    // ERR-3: the create button is disabled while the draft is invalid.
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Turnier anlegen'),
+    );
+    expect(button.onPressed, isNull);
+  });
+
+  testWidgets(
+      'ERR-2/ERR-3: valid draft shows no issue list and enables Anlegen',
+      (tester) async {
+    await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    await _tapNext(tester); // -> summary
+    expect(find.text('Übersicht'), findsOneWidget);
+
+    // ERR-2: no error box / no error title for a valid draft.
+    expect(find.byKey(const Key('wizardSummaryErrorBox')), findsNothing);
+    expect(find.text('Turnier kann nicht angelegt werden'), findsNothing);
+
+    // ERR-3: the create button is enabled.
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Turnier anlegen'),
+    );
+    expect(button.onPressed, isNotNull);
+  });
+
+  testWidgets(
+      'K26-5: unset optional fields render the "—" placeholder in the summary',
+      (tester) async {
+    // The default seed leaves PDFs, contact and info texts empty → "—" /
+    // "Nein" placeholders, and a free tournament → "Gratis".
+    await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    await _tapNext(tester); // -> summary
+
+    // Placeholder for empty optional fields (contact + info texts).
+    expect(find.text('—'), findsWidgets);
+    // No entry fee → "Gratis"; PDFs not uploaded → "Nein".
+    expect(find.text('Gratis'), findsOneWidget);
+    expect(find.text('Nein'), findsWidgets);
+  });
+
+  testWidgets(
+      'K26-1: a chosen club is shown by its resolved name (not the field '
+      'label) in the summary', (tester) async {
+    await _pumpWizard(
+      tester,
+      extraOverrides: <Object>[
+        manageableClubsProvider.overrideWith(
+          (_) async => const <ManageableClub>[
+            (id: 'c-1', name: 'Kubb Club Aarau'),
+          ],
+        ),
+      ],
+    );
+    await _typeName(tester, 'Vereins-Cup');
+
+    // Pick the organizing club + a required league category (K29).
+    await tester.tap(find.byKey(const Key('wizardClubPicker')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Kubb Club Aarau').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Liga A'));
+    await tester.pumpAndSettle();
+
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    await _tapNext(tester); // -> summary
+    expect(find.text('Übersicht'), findsOneWidget);
+
+    // The summary value is the resolved club name, NOT the field label
+    // "Ausrichtender Verein" (which only appears once, as the row label).
+    expect(find.text('Kubb Club Aarau'), findsOneWidget);
+    expect(find.text('Ausrichtender Verein'), findsOneWidget);
+  });
+
+  testWidgets(
+      'K26-4: the KO per-round rules render a short best-of form, not just a '
+      'count', (tester) async {
+    await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    await _tapNext(tester); // -> summary
+    expect(find.text('Übersicht'), findsOneWidget);
+
+    // The per-round value is a short "R<n>: Bo<maxSets>" form (round 1 always
+    // present once a KO bracket exists), NOT a bare count.
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is Text && (w.data?.startsWith('R1: Bo') ?? false),
+      ),
+      findsOneWidget,
+    );
+    // And it is NOT the old "<n> Runden konfiguriert" count string.
+    expect(find.textContaining('Runden konfiguriert'), findsNothing);
   });
 }

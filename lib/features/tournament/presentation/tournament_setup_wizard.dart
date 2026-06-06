@@ -1912,21 +1912,6 @@ class _DerivedValueBox extends StatelessWidget {
   }
 }
 
-/// Human-friendly German label for the selected format, derived from the
-/// two-axis (Vorrunde × KO) selection rather than the legacy enum. Used by
-/// the summary step.
-String _humanFormatLabel(VorrundeType vorrunde, KoType ko) {
-  final base = switch (vorrunde) {
-    VorrundeType.groupPhase => 'Gruppenphase',
-    VorrundeType.schoch => 'Schoch',
-  };
-  return switch (ko) {
-    KoType.singleOut => '$base + Single-Out-K.-o.',
-    KoType.doubleOut => '$base + Double-Elimination',
-    KoType.consolation => '$base + Trostturnier',
-  };
-}
-
 /// Radio-style selectable card with a label + one-line description. Used by
 /// the two-axis format selector (Vorrunde / KO system).
 class _OptionRow extends StatelessWidget {
@@ -2001,75 +1986,429 @@ class _OptionRow extends StatelessWidget {
   }
 }
 
-class _StepSummary extends StatelessWidget {
+/// Final wizard step (K26): a full read-only review of EVERYTHING the
+/// organizer configured, grouped by the wizard steps (Stammdaten /
+/// Teilnehmer / Vorrunde / K.-o.). Optional/empty fields render a clear
+/// "—" placeholder rather than blank or `null`. When the draft does not
+/// validate, the concrete validation issues are surfaced PROMINENTLY in
+/// `tokens.miss` (ERR-1) so the organizer sees WHY the "Anlegen" button is
+/// blocked; the gate itself stays in `_stepValid` / `_BottomBar` (ERR-3).
+class _StepSummary extends ConsumerWidget {
   const _StepSummary({required this.draft});
 
   final TournamentConfigDraft draft;
 
   @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    return Container(
-      padding: const EdgeInsets.all(KubbTokens.space4),
-      decoration: BoxDecoration(
-        color: tokens.bgRaised,
-        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
-        border: Border.all(color: tokens.line, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _summaryRow(
-            tokens,
-            l10n.tournamentWizardDisplayNameLabel,
-            (draft.displayName ?? '').trim(),
-          ),
-          // K09: no minimum-participant row anymore — only the maximum.
-          _summaryRow(
-            tokens,
-            l10n.tournamentWizardMaxParticipantsLabel,
-            '${draft.maxParticipants}',
-          ),
-          _summaryRow(
-            tokens,
-            l10n.tournamentWizardFormatLabel,
-            _humanFormatLabel(draft.vorrundeType, draft.koType),
-          ),
-          // K12/K25: surface the group config read-only in the summary — the
-          // group count and the DERIVED "Qualifier pro Gruppe" (the former
-          // pool-config step). Only shown for the group phase.
-          if (draft.vorrundeType == VorrundeType.groupPhase &&
-              draft.poolPhaseConfig != null) ...[
-            _summaryRow(
-              tokens,
-              l10n.tournamentWizardPoolGroupCountLabel,
-              '${draft.poolPhaseConfig!.groupCount}',
+    final materialL10n = MaterialLocalizations.of(context);
+    final validation = draft.validate();
+    final placeholder = l10n.tournamentWizardSummaryPlaceholder;
+    // Resolve the chosen club's display name from the same provider the
+    // picker uses, so the summary shows WHICH club was selected (not the
+    // field label). While the list loads/errors we fall back to the id.
+    final clubs = ref.watch(manageableClubsProvider).maybeWhen(
+          data: (list) => list,
+          orElse: () => const <ManageableClub>[],
+        );
+
+    // -- text helpers (placeholder mapping for null/empty/optional) --------
+    String text(String? value) {
+      final v = value?.trim() ?? '';
+      return v.isEmpty ? placeholder : v;
+    }
+
+    String dateText(DateTime? value) {
+      if (value == null) return placeholder;
+      return '${materialL10n.formatMediumDate(value)} · '
+          '${TimeOfDay.fromDateTime(value).format(context)}';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // ERR-1: the issue list is rendered first (prominently) whenever the
+        // draft is invalid, so the organizer immediately sees the blockers.
+        if (!validation.isValid) ...[
+          _SummaryErrorBox(issues: validation.issues),
+          const SizedBox(height: KubbTokens.space4),
+        ],
+        _SummarySection(
+          title: l10n.tournamentWizardSummarySectionStammdaten,
+          rows: <_SummaryRowData>[
+            // K26-1: name with the auto-appended year (resolvedDisplayName).
+            _SummaryRowData(
+              l10n.tournamentWizardDisplayNameLabel,
+              text(draft.resolvedDisplayName),
             ),
-            _summaryRow(
-              tokens,
-              l10n.tournamentWizardPoolQualifiersPerGroupLabel,
-              '${draft.poolPhaseConfig!.qualifiersPerGroup}',
+            // Verein OR Spasstournier (clubId == null && choice made).
+            _SummaryRowData(
+              l10n.tournamentWizardClubLabel,
+              _clubText(l10n, placeholder, clubs),
+            ),
+            // Liga-Kategorien only when a club is chosen.
+            if (draft.clubId != null)
+              _SummaryRowData(
+                l10n.tournamentWizardLeagueCategoriesLabel,
+                draft.leagueCategories.isEmpty
+                    ? placeholder
+                    : draft.leagueCategories.map((c) => c.wire).join(', '),
+              ),
+            _SummaryRowData(
+              l10n.tournamentWizardLocationLabel,
+              text(draft.location),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardVenueAddressLabel,
+              text(draft.venueAddress),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardEventDateLabel,
+              dateText(draft.eventStartsAt),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardRegistrationDeadlineLabel,
+              dateText(draft.registrationClosesAt),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardCheckinUntilLabel,
+              dateText(draft.checkinUntil),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardEntryFeeLabel,
+              _feeText(l10n),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardPaymentMethodsLabel,
+              draft.paymentMethods.isEmpty
+                  ? placeholder
+                  : draft.paymentMethods.join(', '),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryContactLabel,
+              _contactText(placeholder),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryInfoLabel,
+              _infoText(l10n, placeholder),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryPdfRulesLabel,
+              draft.rulesPdfUrl != null
+                  ? l10n.tournamentWizardSummaryYes
+                  : l10n.tournamentWizardSummaryNo,
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryPdfSiteMapLabel,
+              draft.siteMapPdfUrl != null
+                  ? l10n.tournamentWizardSummaryYes
+                  : l10n.tournamentWizardSummaryNo,
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryRulesLabel,
+              _rulesText(l10n),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardScoringLabel,
+              draft.scoring == 'classic'
+                  ? l10n.tournamentWizardSummaryScoringClassic
+                  : l10n.tournamentWizardSummaryScoringEkc,
             ),
           ],
-          _summaryRow(
-            tokens,
-            l10n.tournamentWizardSetsToWinLabel,
-            '${draft.setsToWin}',
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        // K26-2: participants step.
+        _SummarySection(
+          title: l10n.tournamentWizardSummarySectionParticipants,
+          rows: <_SummaryRowData>[
+            _SummaryRowData(
+              l10n.tournamentWizardMaxParticipantsLabel,
+              '${draft.maxParticipants}',
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryTeamSizeLabel,
+              draft.teamSize == draft.maxTeamSize
+                  ? l10n.tournamentWizardSummaryTeamSizeFixed(draft.teamSize)
+                  : l10n.tournamentWizardSummaryTeamSizeRange(
+                      draft.maxTeamSize,
+                      draft.teamSize,
+                    ),
+            ),
+          ],
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        // K26-3: prelim (Vorrunde) step.
+        _SummarySection(
+          title: l10n.tournamentWizardSummarySectionVorrunde,
+          rows: <_SummaryRowData>[
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryFormatLabel,
+              draft.vorrundeType == VorrundeType.schoch
+                  ? l10n.tournamentWizardVorrundeSchoch
+                  : l10n.tournamentWizardVorrundeGroupPhase,
+            ),
+            // Group count + grouping strategy only for the group phase.
+            if (draft.vorrundeType == VorrundeType.groupPhase) ...[
+              _SummaryRowData(
+                l10n.tournamentWizardPoolGroupCountLabel,
+                draft.poolPhaseConfig == null
+                    ? placeholder
+                    : '${draft.poolPhaseConfig!.groupCount}',
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardPoolStrategyLabel,
+                _strategyText(l10n, placeholder),
+              ),
+            ],
+            _SummaryRowData(
+              l10n.tournamentWizardMaxSetsLabel,
+              '${draft.maxSets}',
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryMatchTimeLabel,
+              '${(draft.roundTimeSeconds / 60).round()}',
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardBreakBetweenLabel,
+              '${(draft.breakBetweenMatchesSeconds / 60).round()}',
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryPitchesLabel,
+              _pitchText(placeholder),
+            ),
+          ],
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        // K26-4: KO step.
+        _SummarySection(
+          title: l10n.tournamentWizardSummarySectionKo,
+          rows: <_SummaryRowData>[
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryKoTypeLabel,
+              _koTypeText(l10n),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryKoSizeLabel,
+              (draft.koConfig?.qualifierCount ?? 0) >= 2
+                  ? '${draft.koConfig!.qualifierCount}'
+                  : placeholder,
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryKoRoundsLabel,
+              _koRoundsText(l10n, placeholder),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummarySeedingLabel,
+              (draft.bracketSeedingMode ?? SeedingMode.auto) ==
+                      SeedingMode.manual
+                  ? l10n.tournamentWizardSummarySeedingManual
+                  : l10n.tournamentWizardSummarySeedingAuto,
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardKoMatchupLabel,
+              draft.koMatchup == KoMatchup.oneVsTwo
+                  ? l10n.tournamentWizardKoMatchupOneTwo
+                  : l10n.tournamentWizardKoMatchupHighLow,
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardKoTiebreakMethodLabel,
+              draft.koTiebreakMethod ==
+                      KoTiebreakMethod.mightyFinisherShootout
+                  ? l10n.tournamentWizardKoTiebreakMighty
+                  : l10n.tournamentWizardKoTiebreakClassic,
+            ),
+            // Consolation-only: name + direct-starter count.
+            if (draft.koType == KoType.consolation) ...[
+              _SummaryRowData(
+                l10n.tournamentWizardConsolationNameLabel,
+                text(draft.consolationName),
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardSummaryConsolationDirectLabel,
+                draft.consolationDirectCount <= 0
+                    ? l10n.tournamentWizardConsolationDirectCountNone
+                    : '${draft.consolationDirectCount}',
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Verein name when a club is chosen, otherwise the "Spasstournier – ohne
+  /// Wertung" label (clubId == null after an explicit choice). Falls back to
+  /// the placeholder while no choice was made yet.
+  String _clubText(
+    AppLocalizations l10n,
+    String placeholder,
+    List<ManageableClub> clubs,
+  ) {
+    if (draft.clubId == null) {
+      return draft.clubChoiceMade
+          ? l10n.tournamentWizardClubNone
+          : placeholder;
+    }
+    // Resolve the chosen club's display name from the manageable-clubs list
+    // (the draft only holds the opaque club_id). Fall back to the raw id if
+    // the list has not resolved the club, so the value is never the field
+    // label and always tells the organizer WHICH club was picked.
+    for (final c in clubs) {
+      if (c.id == draft.clubId) return c.name;
+    }
+    return draft.clubId!;
+  }
+
+  /// Entry fee as `amount currency`, "Gratis" for a free tournament.
+  String _feeText(AppLocalizations l10n) {
+    final cents = draft.entryFeeCents;
+    if (cents == null || cents == 0) {
+      return l10n.tournamentWizardSummaryFeeFree;
+    }
+    final amount =
+        cents % 100 == 0 ? '${cents ~/ 100}' : (cents / 100).toStringAsFixed(2);
+    return l10n.tournamentWizardSummaryFee(amount, draft.currency);
+  }
+
+  /// Contact `name · phone`; placeholder when both are empty.
+  String _contactText(String placeholder) {
+    final name = draft.contactName?.trim() ?? '';
+    final phone = draft.contactPhone?.trim() ?? '';
+    final parts = <String>[
+      if (name.isNotEmpty) name,
+      if (phone.isNotEmpty) phone,
+    ];
+    return parts.isEmpty ? placeholder : parts.join(' · ');
+  }
+
+  /// Count of the four info free-text blocks that carry content.
+  String _infoText(AppLocalizations l10n, String placeholder) {
+    final filled = <String?>[
+      draft.weatherNote,
+      draft.infoFood,
+      draft.infoTravel,
+      draft.infoAccommodation,
+    ].where((s) => s?.trim().isNotEmpty ?? false).length;
+    return filled == 0
+        ? placeholder
+        : l10n.tournamentWizardSummaryInfoCount(filled);
+  }
+
+  /// Active rule variants as a short comma list (Diggy/Sureshot/Strafkubb +
+  /// the opening rule); "Keine Sonderregeln" when nothing is on.
+  String _rulesText(AppLocalizations l10n) {
+    final rv = draft.ruleVariants;
+    // Opening rule is always shown (it always has a value, default 2-4-6).
+    final opening = rv.openingRule == 'free'
+        ? l10n.tournamentWizardRuleOpeningFree
+        : l10n.tournamentWizardRuleOpening246;
+    final parts = <String>[
+      if (rv.diggy) l10n.tournamentWizardRuleDiggy,
+      if (rv.sureshot) l10n.tournamentWizardRuleSureshot,
+      if (rv.strafkubbOffBaseline) l10n.tournamentWizardRuleStrafkubb,
+      opening,
+    ];
+    return parts.isEmpty
+        ? l10n.tournamentWizardSummaryRulesNone
+        : parts.join(', ');
+  }
+
+  String _strategyText(AppLocalizations l10n, String placeholder) {
+    final strategy = draft.poolPhaseConfig?.strategy;
+    return switch (strategy) {
+      PoolGroupingStrategy.snake => l10n.tournamentWizardPoolStrategySnake,
+      PoolGroupingStrategy.seeded => l10n.tournamentWizardPoolStrategySeeded,
+      PoolGroupingStrategy.random => l10n.tournamentWizardPoolStrategyRandom,
+      null => placeholder,
+    };
+  }
+
+  String _pitchText(String placeholder) {
+    final plan = draft.pitchPlan;
+    if (plan == null) return placeholder;
+    final count = plan.availablePitches().length;
+    return count == 0 ? placeholder : '$count';
+  }
+
+  /// K26-4: a real short form of the per-round KO rules — one "best-of"
+  /// chip per round (e.g. "R1: Bo3 · R2: Bo5"), where the best-of count is
+  /// the round's max sets. Empty list → placeholder.
+  String _koRoundsText(AppLocalizations l10n, String placeholder) {
+    final rounds = draft.koRoundFormats;
+    if (rounds.isEmpty) return placeholder;
+    final parts = <String>[
+      for (var i = 0; i < rounds.length; i++)
+        l10n.tournamentWizardSummaryKoRoundEntry(i + 1, rounds[i].maxSets),
+    ];
+    return parts.join(' · ');
+  }
+
+  String _koTypeText(AppLocalizations l10n) {
+    return switch (draft.koType) {
+      KoType.singleOut => l10n.tournamentWizardSummaryKoTypeSingle,
+      KoType.doubleOut => l10n.tournamentWizardSummaryKoTypeDouble,
+      KoType.consolation => l10n.tournamentWizardSummaryKoTypeConsolation,
+    };
+  }
+}
+
+/// Immutable (label, value) pair for one summary row.
+class _SummaryRowData {
+  const _SummaryRowData(this.label, this.value);
+  final String label;
+  final String value;
+}
+
+/// A titled card grouping one wizard step's review rows. Uses only
+/// [KubbTokens] for colours / spacing / radii (K26-6).
+class _SummarySection extends StatelessWidget {
+  const _SummarySection({required this.title, required this.rows});
+
+  final String title;
+  final List<_SummaryRowData> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(
+            left: KubbTokens.space1,
+            bottom: KubbTokens.space2,
           ),
-          _summaryRow(
-            tokens,
-            l10n.tournamentWizardMaxSetsLabel,
-            '${draft.maxSets}',
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.4,
+              color: tokens.fg,
+            ),
           ),
-          _summaryRow(
-            tokens,
-            l10n.tournamentWizardRoundTimeLabel,
-            '${(draft.roundTimeSeconds / 60).round()}',
-            isLast: true,
+        ),
+        Container(
+          padding: const EdgeInsets.all(KubbTokens.space4),
+          decoration: BoxDecoration(
+            color: tokens.bgRaised,
+            borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+            border: Border.all(color: tokens.line, width: 1.5),
           ),
-        ],
-      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < rows.length; i++)
+                _summaryRow(
+                  tokens,
+                  rows[i].label,
+                  rows[i].value,
+                  isLast: i == rows.length - 1,
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -2094,6 +2433,7 @@ class _StepSummary extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(width: KubbTokens.space3),
           Expanded(
             child: Text(
               value,
@@ -2105,6 +2445,82 @@ class _StepSummary extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// ERR-1: prominent validation-issue box shown in the summary step when the
+/// draft does not validate. Rendered in `tokens.miss` so the organizer sees
+/// exactly which fields block the "Anlegen" button.
+class _SummaryErrorBox extends StatelessWidget {
+  const _SummaryErrorBox({required this.issues});
+
+  final List<String> issues;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    // ERR-1: the spec requires tokens.miss for the issue list. `KubbTokens.miss`
+    // is the shared danger accent (== tokens.danger); a low-opacity tint backs
+    // the box so the red text stays legible on the wizard background.
+    const miss = KubbTokens.miss;
+    return Container(
+      key: const Key('wizardSummaryErrorBox'),
+      padding: const EdgeInsets.all(KubbTokens.space4),
+      decoration: BoxDecoration(
+        color: miss.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+        border: Border.all(color: miss, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.alertTriangle, size: 18, color: miss),
+              const SizedBox(width: KubbTokens.space2),
+              Expanded(
+                child: Text(
+                  l10n.tournamentWizardSummaryErrorTitle,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: miss,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: KubbTokens.space2),
+          for (final issue in issues)
+            Padding(
+              padding: const EdgeInsets.only(bottom: KubbTokens.space1),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '• ',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: miss,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      issue,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        height: 1.35,
+                        color: miss,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

@@ -6429,6 +6429,222 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Die gemeldete Reihenfolge bestätigen — bestes Team zuerst.'**
   String get shootoutOrderHintReadonly;
+
+  /// K26: placeholder shown for an empty/unset optional field in the summary review
+  ///
+  /// In de, this message translates to:
+  /// **'—'**
+  String get tournamentWizardSummaryPlaceholder;
+
+  /// K26: summary section heading for the master-data step
+  ///
+  /// In de, this message translates to:
+  /// **'Stammdaten'**
+  String get tournamentWizardSummarySectionStammdaten;
+
+  /// K26: summary section heading for the participants step
+  ///
+  /// In de, this message translates to:
+  /// **'Teilnehmer'**
+  String get tournamentWizardSummarySectionParticipants;
+
+  /// K26: summary section heading for the prelim step
+  ///
+  /// In de, this message translates to:
+  /// **'Vorrunde'**
+  String get tournamentWizardSummarySectionVorrunde;
+
+  /// K26: summary section heading for the KO step
+  ///
+  /// In de, this message translates to:
+  /// **'K.-o.'**
+  String get tournamentWizardSummarySectionKo;
+
+  /// K26/ERR-1: heading of the validation-issue list shown when the draft is invalid
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier kann nicht angelegt werden'**
+  String get tournamentWizardSummaryErrorTitle;
+
+  /// K26: summary label for the team size (min/max players per team)
+  ///
+  /// In de, this message translates to:
+  /// **'Teamgrösse'**
+  String get tournamentWizardSummaryTeamSizeLabel;
+
+  /// K26: summary value for a fixed team size
+  ///
+  /// In de, this message translates to:
+  /// **'{size} (fix)'**
+  String tournamentWizardSummaryTeamSizeFixed(int size);
+
+  /// K26: summary value for a variable team size range
+  ///
+  /// In de, this message translates to:
+  /// **'{min}–{max}'**
+  String tournamentWizardSummaryTeamSizeRange(int min, int max);
+
+  /// K26: summary value 'yes' (e.g. PDF present)
+  ///
+  /// In de, this message translates to:
+  /// **'Ja'**
+  String get tournamentWizardSummaryYes;
+
+  /// K26: summary value 'no' (e.g. PDF not present)
+  ///
+  /// In de, this message translates to:
+  /// **'Nein'**
+  String get tournamentWizardSummaryNo;
+
+  /// K26: summary value for the entry fee (amount + currency)
+  ///
+  /// In de, this message translates to:
+  /// **'{amount} {currency}'**
+  String tournamentWizardSummaryFee(String amount, String currency);
+
+  /// K26: summary value when there is no entry fee
+  ///
+  /// In de, this message translates to:
+  /// **'Gratis'**
+  String get tournamentWizardSummaryFeeFree;
+
+  /// K26: summary value for the EKC scoring system
+  ///
+  /// In de, this message translates to:
+  /// **'EKC'**
+  String get tournamentWizardSummaryScoringEkc;
+
+  /// K26: summary value for the classic scoring system
+  ///
+  /// In de, this message translates to:
+  /// **'Klassisch'**
+  String get tournamentWizardSummaryScoringClassic;
+
+  /// K26: summary label for the active rule variants
+  ///
+  /// In de, this message translates to:
+  /// **'Regel-Varianten'**
+  String get tournamentWizardSummaryRulesLabel;
+
+  /// K26: summary value when no rule variant toggle is active
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Sonderregeln'**
+  String get tournamentWizardSummaryRulesNone;
+
+  /// K26: summary label for whether a rules PDF was uploaded
+  ///
+  /// In de, this message translates to:
+  /// **'Regelwerk-PDF'**
+  String get tournamentWizardSummaryPdfRulesLabel;
+
+  /// K26: summary label for whether a site-map PDF was uploaded
+  ///
+  /// In de, this message translates to:
+  /// **'Lageplan-PDF'**
+  String get tournamentWizardSummaryPdfSiteMapLabel;
+
+  /// K26: summary label for the organiser contact (name + phone)
+  ///
+  /// In de, this message translates to:
+  /// **'Kontakt'**
+  String get tournamentWizardSummaryContactLabel;
+
+  /// K26: summary label for the participant info free-text blocks
+  ///
+  /// In de, this message translates to:
+  /// **'Infotexte'**
+  String get tournamentWizardSummaryInfoLabel;
+
+  /// K26: summary value counting the filled participant info texts
+  ///
+  /// In de, this message translates to:
+  /// **'{count} hinterlegt'**
+  String tournamentWizardSummaryInfoCount(int count);
+
+  /// K26: summary label for the prelim format (group phase vs Schoch)
+  ///
+  /// In de, this message translates to:
+  /// **'Format'**
+  String get tournamentWizardSummaryFormatLabel;
+
+  /// K26: summary label for the prelim match time limit in minutes
+  ///
+  /// In de, this message translates to:
+  /// **'Match-Zeit (Min.)'**
+  String get tournamentWizardSummaryMatchTimeLabel;
+
+  /// K26: summary label for the configured pitch count
+  ///
+  /// In de, this message translates to:
+  /// **'Pitches'**
+  String get tournamentWizardSummaryPitchesLabel;
+
+  /// K26: summary label for the KO system (single-out / double / consolation)
+  ///
+  /// In de, this message translates to:
+  /// **'KO-System'**
+  String get tournamentWizardSummaryKoTypeLabel;
+
+  /// K26: summary value for the single-out KO system
+  ///
+  /// In de, this message translates to:
+  /// **'Single-Out'**
+  String get tournamentWizardSummaryKoTypeSingle;
+
+  /// K26: summary value for the double-elimination KO system
+  ///
+  /// In de, this message translates to:
+  /// **'Double-Elimination'**
+  String get tournamentWizardSummaryKoTypeDouble;
+
+  /// K26: summary value for the consolation/Trostturnier KO system
+  ///
+  /// In de, this message translates to:
+  /// **'Trostturnier'**
+  String get tournamentWizardSummaryKoTypeConsolation;
+
+  /// K26: summary label for the KO bracket size (qualifier count)
+  ///
+  /// In de, this message translates to:
+  /// **'Bracket-Grösse'**
+  String get tournamentWizardSummaryKoSizeLabel;
+
+  /// K26: summary label for the per-round KO rules short form
+  ///
+  /// In de, this message translates to:
+  /// **'Per-Runde-Regeln'**
+  String get tournamentWizardSummaryKoRoundsLabel;
+
+  /// K26: summary short form for one KO round (round number + best-of from its max sets), joined by '·'
+  ///
+  /// In de, this message translates to:
+  /// **'R{round}: Bo{maxSets}'**
+  String tournamentWizardSummaryKoRoundEntry(int round, int maxSets);
+
+  /// K26: summary label for the KO seeding source
+  ///
+  /// In de, this message translates to:
+  /// **'Seeding-Quelle'**
+  String get tournamentWizardSummarySeedingLabel;
+
+  /// K26: summary value for automatic seeding from the prelim
+  ///
+  /// In de, this message translates to:
+  /// **'Automatisch aus Vorrunde'**
+  String get tournamentWizardSummarySeedingAuto;
+
+  /// K26: summary value for manual seeding
+  ///
+  /// In de, this message translates to:
+  /// **'Manuell festlegen'**
+  String get tournamentWizardSummarySeedingManual;
+
+  /// K26: summary label for the consolation direct-starter count
+  ///
+  /// In de, this message translates to:
+  /// **'Direkt ins Trostturnier'**
+  String get tournamentWizardSummaryConsolationDirectLabel;
 }
 
 class _AppLocalizationsDelegate

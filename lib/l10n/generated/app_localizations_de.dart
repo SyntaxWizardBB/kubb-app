@@ -3513,4 +3513,124 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get shootoutOrderHintReadonly =>
       'Die gemeldete Reihenfolge bestätigen — bestes Team zuerst.';
+
+  @override
+  String get tournamentWizardSummaryPlaceholder => '—';
+
+  @override
+  String get tournamentWizardSummarySectionStammdaten => 'Stammdaten';
+
+  @override
+  String get tournamentWizardSummarySectionParticipants => 'Teilnehmer';
+
+  @override
+  String get tournamentWizardSummarySectionVorrunde => 'Vorrunde';
+
+  @override
+  String get tournamentWizardSummarySectionKo => 'K.-o.';
+
+  @override
+  String get tournamentWizardSummaryErrorTitle =>
+      'Turnier kann nicht angelegt werden';
+
+  @override
+  String get tournamentWizardSummaryTeamSizeLabel => 'Teamgrösse';
+
+  @override
+  String tournamentWizardSummaryTeamSizeFixed(int size) {
+    return '$size (fix)';
+  }
+
+  @override
+  String tournamentWizardSummaryTeamSizeRange(int min, int max) {
+    return '$min–$max';
+  }
+
+  @override
+  String get tournamentWizardSummaryYes => 'Ja';
+
+  @override
+  String get tournamentWizardSummaryNo => 'Nein';
+
+  @override
+  String tournamentWizardSummaryFee(String amount, String currency) {
+    return '$amount $currency';
+  }
+
+  @override
+  String get tournamentWizardSummaryFeeFree => 'Gratis';
+
+  @override
+  String get tournamentWizardSummaryScoringEkc => 'EKC';
+
+  @override
+  String get tournamentWizardSummaryScoringClassic => 'Klassisch';
+
+  @override
+  String get tournamentWizardSummaryRulesLabel => 'Regel-Varianten';
+
+  @override
+  String get tournamentWizardSummaryRulesNone => 'Keine Sonderregeln';
+
+  @override
+  String get tournamentWizardSummaryPdfRulesLabel => 'Regelwerk-PDF';
+
+  @override
+  String get tournamentWizardSummaryPdfSiteMapLabel => 'Lageplan-PDF';
+
+  @override
+  String get tournamentWizardSummaryContactLabel => 'Kontakt';
+
+  @override
+  String get tournamentWizardSummaryInfoLabel => 'Infotexte';
+
+  @override
+  String tournamentWizardSummaryInfoCount(int count) {
+    return '$count hinterlegt';
+  }
+
+  @override
+  String get tournamentWizardSummaryFormatLabel => 'Format';
+
+  @override
+  String get tournamentWizardSummaryMatchTimeLabel => 'Match-Zeit (Min.)';
+
+  @override
+  String get tournamentWizardSummaryPitchesLabel => 'Pitches';
+
+  @override
+  String get tournamentWizardSummaryKoTypeLabel => 'KO-System';
+
+  @override
+  String get tournamentWizardSummaryKoTypeSingle => 'Single-Out';
+
+  @override
+  String get tournamentWizardSummaryKoTypeDouble => 'Double-Elimination';
+
+  @override
+  String get tournamentWizardSummaryKoTypeConsolation => 'Trostturnier';
+
+  @override
+  String get tournamentWizardSummaryKoSizeLabel => 'Bracket-Grösse';
+
+  @override
+  String get tournamentWizardSummaryKoRoundsLabel => 'Per-Runde-Regeln';
+
+  @override
+  String tournamentWizardSummaryKoRoundEntry(int round, int maxSets) {
+    return 'R$round: Bo$maxSets';
+  }
+
+  @override
+  String get tournamentWizardSummarySeedingLabel => 'Seeding-Quelle';
+
+  @override
+  String get tournamentWizardSummarySeedingAuto => 'Automatisch aus Vorrunde';
+
+  @override
+  String get tournamentWizardSummarySeedingManual => 'Manuell festlegen';
+
+  @override
+  String get tournamentWizardSummaryConsolationDirectLabel =>
+      'Direkt ins Trostturnier';
 }
