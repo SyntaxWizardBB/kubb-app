@@ -36,7 +36,9 @@ class TournamentConfigDraft {
     this.maxParticipants = 8,
     this.format = TournamentFormat.roundRobin,
     this.setsToWin = 2,
-    this.maxSets = 3,
+    // K14: prelim "Max. Sätze" defaults to 2. Draws are allowed in the prelim
+    // (maxSets is decoupled from setsToWin, so even values are valid).
+    this.maxSets = 2,
     this.roundTimeSeconds = 1800,
     this.basekubbsPerSide = 5,
     this.prelimTiebreakAfterSeconds,
@@ -154,7 +156,9 @@ class TournamentConfigDraft {
       maxParticipants: header.maxParticipants,
       format: format,
       setsToWin: intOf(cfg['sets_to_win']) ?? 2,
-      maxSets: intOf(cfg['max_sets']) ?? 3,
+      // K14: fall back to the 2-default when the stored config lacks max_sets,
+      // consistent with the constructor default.
+      maxSets: intOf(cfg['max_sets']) ?? 2,
       roundTimeSeconds: intOf(cfg['round_time_seconds']) ?? 1800,
       basekubbsPerSide: intOf(cfg['basekubbs_per_side']) ?? 5,
       prelimTiebreakAfterSeconds: tbEnabled ? tbAfter : null,
@@ -782,6 +786,21 @@ class TournamentConfigDraft {
   /// Number of KO rounds implied by the current [koConfig] qualifier count.
   /// 0 when no qualifier count is set.
   int get koRoundCount => koRoundCountFor(koConfig?.qualifierCount ?? 0);
+
+  /// KO bracket slot count (power of two) implied by the current [koConfig]
+  /// qualifier count — the basis for the derived qualifier-per-group count
+  /// (K12). 0 when fewer than two qualifiers are configured.
+  static int koBracketSizeFor(int qualifierCount) {
+    if (qualifierCount < 2) return 0;
+    var size = 1;
+    while (size < qualifierCount) {
+      size <<= 1;
+    }
+    return size;
+  }
+
+  /// KO bracket slot count for the current [koConfig]. See [koBracketSizeFor].
+  int get koBracketSize => koBracketSizeFor(koConfig?.qualifierCount ?? 0);
 
   /// Returns a copy whose [koRoundFormats] has exactly [koRoundCount]
   /// entries. Existing entries are preserved; new tail entries are seeded

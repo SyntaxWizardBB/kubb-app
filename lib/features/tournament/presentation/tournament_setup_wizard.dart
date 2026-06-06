@@ -1,5 +1,6 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
@@ -10,7 +11,6 @@ import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/data/tournament_pdf_uploader.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
-import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_pool_config_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_model_explainer_sheet.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/swiss_config_section.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
@@ -19,15 +19,14 @@ import 'package:kubb_domain/kubb_domain.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 /// Logical step identifiers. The visible step index is derived from
-/// `_visibleSteps`. KO-config precedes the group-phase (pool) step so the
-/// "Qualifier pro Gruppe" value can be computed from the KO bracket size
-/// (P6_SETUP_WIZARD_SPEC.md Screen 5).
+/// `_visibleSteps`. K12/K25: the group-phase inputs (group count + grouping
+/// strategy + per-group pitch assignment) now live in the Vorrunde step
+/// (`_StepFormat`), so there is no separate pool-config step anymore.
 enum _StepKind {
   name,
   participants,
   format,
   koConfig,
-  poolConfig,
   summary,
 }
 
@@ -64,17 +63,15 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
   int? _swissRounds;
 
   /// Logical step list for the current draft. KO config always appears
-  /// (every tournament has a KO stage) and precedes the group-phase step so
-  /// the qualifier-per-group count is derivable from the KO bracket size
-  /// (P6_SETUP_WIZARD_SPEC.md). The group-phase step only shows for a group
-  /// Vorrunde (`vorrundeType == groupPhase`).
+  /// (every tournament has a KO stage). K12/K25: the former group-phase step
+  /// is gone — group count + grouping strategy are configured inline in the
+  /// Vorrunde step (`_StepFormat`) when `vorrundeType == groupPhase`.
   List<_StepKind> _visibleSteps(TournamentConfigDraft draft) {
     return <_StepKind>[
       _StepKind.name,
       _StepKind.participants,
       _StepKind.format,
       _StepKind.koConfig,
-      if (draft.vorrundeType == VorrundeType.groupPhase) _StepKind.poolConfig,
       _StepKind.summary,
     ];
   }
@@ -122,25 +119,45 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
       case _StepKind.format:
         // Prelim "Max. Sätze" is decoupled from setsToWin (P6): only a sane
         // absolute range applies.
-        return draft.maxSets >= TournamentConfigDraft.maxSetsMin &&
+        final maxSetsOk = draft.maxSets >= TournamentConfigDraft.maxSetsMin &&
             draft.maxSets <= TournamentConfigDraft.maxSetsMax;
+        if (!maxSetsOk) return false;
+        // K12: in the group phase the inline group-count input must be a valid
+        // group count (2..16). The qualifier-per-group divisibility check
+        // (koBracketSize % groupCount) needs the KO size, which is only chosen
+        // in the NEXT step — so it is gated on the koConfig step instead and
+        // not required here.
+        if (draft.vorrundeType == VorrundeType.groupPhase) {
+          final cfg = draft.poolPhaseConfig;
+          if (cfg == null) return false;
+          return cfg.groupCount >= _StepFormat.groupCountMin &&
+              cfg.groupCount <= _StepFormat.groupCountMax;
+        }
+        return true;
       case _StepKind.koConfig:
         // K11: KO size is bounded by the fixed bracket cap, decoupled from
         // maxParticipants (which may be up to 1000).
         final cfg = draft.koConfig;
-        return cfg != null &&
-            cfg.qualifierCount >= 2 &&
-            cfg.qualifierCount <= TournamentConfigDraft.koBracketSizeCap;
-      case _StepKind.poolConfig:
-        // The group-phase step requires a valid PoolPhaseConfig whose group
-        // count evenly divides the KO bracket size (the qualifier-per-group
-        // count is derived from KO bracket size / group count).
-        final cfg = draft.poolPhaseConfig;
-        if (cfg == null) return false;
-        final bracketSize = _koBracketSize(draft);
-        return bracketSize > 0 &&
-            cfg.groupCount > 0 &&
-            bracketSize % cfg.groupCount == 0;
+        if (cfg == null ||
+            cfg.qualifierCount < 2 ||
+            cfg.qualifierCount > TournamentConfigDraft.koBracketSizeCap) {
+          return false;
+        }
+        // K12: the group count chosen in the Vorrunde step must evenly divide
+        // the KO bracket size (the qualifier-per-group count is derived as
+        // koBracketSize / groupCount). The KO size is final on this step, so
+        // the divisibility gate lives here.
+        if (draft.vorrundeType == VorrundeType.groupPhase) {
+          final pool = draft.poolPhaseConfig;
+          final bracketSize = _koBracketSize(draft);
+          if (pool == null ||
+              pool.groupCount <= 0 ||
+              bracketSize <= 0 ||
+              bracketSize % pool.groupCount != 0) {
+            return false;
+          }
+        }
+        return true;
       case _StepKind.summary:
         return draft.validate().isValid;
     }
@@ -269,8 +286,6 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
         return l10n.tournamentWizardStep2Title;
       case _StepKind.format:
         return l10n.tournamentWizardStep3Title;
-      case _StepKind.poolConfig:
-        return l10n.tournamentWizardStepGroupPhaseTitle;
       case _StepKind.koConfig:
         return l10n.tournamentWizardStep5Title;
       case _StepKind.summary:
@@ -300,23 +315,17 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
         return _StepFormat(
           draft: draft,
           controller: controller,
+          koBracketSize: _koBracketSize(draft),
           onVorrundeType: controller.setVorrundeType,
           onKoType: controller.setKoType,
           onMaxSets: controller.setMaxSets,
+          onPoolGrouping: controller.setPoolGrouping,
           swissRounds: _swissRounds ??
               SwissConfigSection.defaultRounds(draft.maxParticipants),
           onSwissRoundsChanged: (v) => setState(() => _swissRounds = v),
           onPitchPlanChanged: controller.setPitchPlan,
           onRoundTime: controller.setRoundTime,
           onBreakBetween: controller.setBreakBetweenMatchesSeconds,
-        );
-      case _StepKind.poolConfig:
-        return WizardPoolConfigStep(
-          key: ValueKey<int>(_koBracketSize(draft)),
-          draft: draft,
-          koBracketSize: _koBracketSize(draft),
-          onConfigChanged: controller.setPoolPhaseConfig,
-          onPitchPlanChanged: controller.setPitchPlan,
         );
       case _StepKind.koConfig:
         return WizardKoConfigStep(
@@ -1426,13 +1435,15 @@ class _StepParticipants extends StatelessWidget {
   }
 }
 
-class _StepFormat extends StatelessWidget {
+class _StepFormat extends StatefulWidget {
   const _StepFormat({
     required this.draft,
     required this.controller,
+    required this.koBracketSize,
     required this.onVorrundeType,
     required this.onKoType,
     required this.onMaxSets,
+    required this.onPoolGrouping,
     required this.swissRounds,
     required this.onSwissRoundsChanged,
     required this.onPitchPlanChanged,
@@ -1440,14 +1451,31 @@ class _StepFormat extends StatelessWidget {
     required this.onBreakBetween,
   });
 
+  /// K12: group-count bounds for the inline group-phase config.
+  static const int groupCountMin = 2;
+  static const int groupCountMax = 16;
+
   final TournamentConfigDraft draft;
   final TournamentConfigController controller;
+
+  /// KO bracket size (power of two) implied by the current KO config. Basis
+  /// for the read-only "Qualifier pro Gruppe" value derived inline (K12).
+  /// 0 until a valid KO size is chosen (the KO step follows this one).
+  final int koBracketSize;
   // Two-axis format selection: Vorrunde (group phase vs Schoch) and KO
   // system (single-out / double-elimination / consolation). The controller
   // derives the legacy `TournamentFormat` + `BracketType` from these axes.
   final ValueChanged<VorrundeType> onVorrundeType;
   final ValueChanged<KoType> onKoType;
   final ValueChanged<int> onMaxSets;
+
+  /// K12: pushes the group-phase grouping inputs (group count + strategy +
+  /// optional random seed) gathered inline in this step.
+  final void Function({
+    required int groupCount,
+    required PoolGroupingStrategy strategy,
+    int? randomSeed,
+  }) onPoolGrouping;
   // T10: Swiss-System round count — surfaced inline when the Vorrunde is
   // Schoch. State lives in the wizard.
   final int swissRounds;
@@ -1457,9 +1485,123 @@ class _StepFormat extends StatelessWidget {
   final ValueChanged<int> onBreakBetween;
 
   @override
+  State<_StepFormat> createState() => _StepFormatState();
+}
+
+class _StepFormatState extends State<_StepFormat> {
+  late final TextEditingController _groupCountCtrl;
+  late final TextEditingController _seedCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    final pool = widget.draft.poolPhaseConfig;
+    _groupCountCtrl = TextEditingController(
+      text: '${pool?.groupCount ?? 4}',
+    );
+    _seedCtrl = TextEditingController(text: pool?.randomSeed?.toString() ?? '');
+  }
+
+  @override
+  void dispose() {
+    _groupCountCtrl.dispose();
+    _seedCtrl.dispose();
+    super.dispose();
+  }
+
+  /// Current grouping strategy (defaults to snake before the organiser picks).
+  PoolGroupingStrategy get _strategy =>
+      widget.draft.poolPhaseConfig?.strategy ?? PoolGroupingStrategy.snake;
+
+  int get _groupCount => widget.draft.poolPhaseConfig?.groupCount ?? 0;
+
+  bool get _groupCountValid =>
+      _groupCount >= _StepFormat.groupCountMin &&
+      _groupCount <= _StepFormat.groupCountMax;
+
+  /// Whether the chosen group count evenly divides the KO bracket size. When
+  /// the KO size is not yet known (0) the check is deferred to the KO step.
+  bool get _divisible =>
+      widget.koBracketSize <= 0 ||
+      widget.koBracketSize % _groupCount == 0;
+
+  /// Qualifier-per-group derived read-only as koBracketSize / groupCount.
+  int get _derivedQualifiersPerGroup {
+    if (!_groupCountValid ||
+        widget.koBracketSize <= 0 ||
+        widget.koBracketSize % _groupCount != 0) {
+      return 0;
+    }
+    return widget.koBracketSize ~/ _groupCount;
+  }
+
+  void _onGroupsTyped(String raw) {
+    final value = int.tryParse(raw.trim()) ?? 0;
+    widget.onPoolGrouping(
+      groupCount: value,
+      strategy: _strategy,
+      randomSeed: _randomSeed(),
+    );
+  }
+
+  void _onStrategyChanged(PoolGroupingStrategy? next) {
+    if (next == null) return;
+    widget.onPoolGrouping(
+      groupCount: _groupCount,
+      strategy: next,
+      randomSeed: _randomSeed(),
+    );
+  }
+
+  void _onSeedTyped(String raw) {
+    final trimmed = raw.trim();
+    widget.onPoolGrouping(
+      groupCount: _groupCount,
+      strategy: _strategy,
+      randomSeed: trimmed.isEmpty ? null : int.tryParse(trimmed),
+    );
+  }
+
+  int? _randomSeed() {
+    final t = _seedCtrl.text.trim();
+    return t.isEmpty ? null : int.tryParse(t);
+  }
+
+  /// Group label for index 0..n: 'A', 'B', 'C', …
+  static String _groupLabel(int index) =>
+      String.fromCharCode('A'.codeUnitAt(0) + index);
+
+  /// K23/K24: toggles [pitch] in the assignment list of group [label] and
+  /// pushes the updated pitch plan. A pitch may serve several groups, so this
+  /// only flips the one group.
+  void _togglePitchForGroup(PitchPlan plan, String label, int pitch) {
+    final next = <String, List<int>>{
+      for (final entry in plan.groupAssignment.entries)
+        entry.key: List<int>.of(entry.value),
+    };
+    final current = next.putIfAbsent(label, () => <int>[]);
+    if (current.contains(pitch)) {
+      current.remove(pitch);
+    } else {
+      current
+        ..add(pitch)
+        ..sort();
+    }
+    if (current.isEmpty) next.remove(label);
+    widget.onPitchPlanChanged(plan.copyWith(groupAssignment: next));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l10n = AppLocalizations.of(context);
+    final draft = widget.draft;
+    final onVorrundeType = widget.onVorrundeType;
+    final onKoType = widget.onKoType;
+    final onMaxSets = widget.onMaxSets;
+    final controller = widget.controller;
+    final onRoundTime = widget.onRoundTime;
+    final onBreakBetween = widget.onBreakBetween;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1491,9 +1633,13 @@ class _StepFormat extends StatelessWidget {
         if (draft.vorrundeType == VorrundeType.schoch)
           SwissConfigSection(
             participantCount: draft.maxParticipants,
-            rounds: swissRounds,
-            onRoundsChanged: onSwissRoundsChanged,
+            rounds: widget.swissRounds,
+            onRoundsChanged: widget.onSwissRoundsChanged,
           ),
+        // K12: group-phase config (group count + grouping strategy) lives
+        // inline here, only when the group phase is the selected Vorrunde.
+        if (draft.vorrundeType == VorrundeType.groupPhase)
+          ..._groupPhaseSection(tokens, l10n),
         const SizedBox(height: KubbTokens.space5),
         // ---- KO axis (Single-Out | Double-Elimination | Trostturnier) ----
         Row(
@@ -1579,12 +1725,187 @@ class _StepFormat extends StatelessWidget {
         const SizedBox(height: KubbTokens.space3),
         _PitchPlanSection(
           plan: draft.pitchPlan,
-          onChanged: onPitchPlanChanged,
+          onChanged: widget.onPitchPlanChanged,
         ),
+        // K23/K24: per-group pitch assignment lives in the pitch context, gated
+        // on group phase + a pitch plan with available pitches.
+        if (draft.vorrundeType == VorrundeType.groupPhase)
+          ..._pitchAssignmentSection(tokens, l10n),
       ],
     );
   }
 
+  /// K12: inline group-phase config — group count + grouping strategy +
+  /// optional random seed + read-only derived "Qualifier pro Gruppe".
+  List<Widget> _groupPhaseSection(KubbTokens tokens, AppLocalizations l10n) {
+    final divisibilityError = (!_divisible && widget.koBracketSize > 0)
+        ? l10n.tournamentWizardPoolDivisibilityError(widget.koBracketSize)
+        : null;
+    return <Widget>[
+      const SizedBox(height: KubbTokens.space4),
+      _FieldLabel(l10n.tournamentWizardPoolGroupCountLabel),
+      const SizedBox(height: KubbTokens.space2),
+      TextField(
+        key: const Key('wizardGroupCountField'),
+        controller: _groupCountCtrl,
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        onChanged: _onGroupsTyped,
+        decoration: _outlineDecoration(tokens).copyWith(
+          counterText: '',
+          errorText: !_groupCountValid
+              ? l10n.tournamentWizardPoolGroupCountRangeError(
+                  _StepFormat.groupCountMin,
+                  _StepFormat.groupCountMax,
+                )
+              : divisibilityError,
+        ),
+      ),
+      const SizedBox(height: KubbTokens.space4),
+      // Qualifier-per-group is derived read-only from koBracketSize / groupCount
+      // (K12 — not an input). The KO step follows this one, so it shows "—"
+      // until the KO size is chosen.
+      _FieldLabel(l10n.tournamentWizardPoolQualifiersPerGroupLabel),
+      const SizedBox(height: KubbTokens.space2),
+      _DerivedValueBox(
+        tokens: tokens,
+        value: _derivedQualifiersPerGroup > 0
+            ? '$_derivedQualifiersPerGroup'
+            : '—',
+      ),
+      const SizedBox(height: KubbTokens.space4),
+      _FieldLabel(l10n.tournamentWizardPoolStrategyLabel),
+      const SizedBox(height: KubbTokens.space2),
+      DropdownButtonFormField<PoolGroupingStrategy>(
+        key: const Key('wizardGroupStrategyField'),
+        initialValue: _strategy,
+        onChanged: _onStrategyChanged,
+        decoration: _outlineDecoration(tokens),
+        items: [
+          DropdownMenuItem(
+            value: PoolGroupingStrategy.snake,
+            child: Text(l10n.tournamentWizardPoolStrategySnake),
+          ),
+          DropdownMenuItem(
+            value: PoolGroupingStrategy.seeded,
+            child: Text(l10n.tournamentWizardPoolStrategySeeded),
+          ),
+          DropdownMenuItem(
+            value: PoolGroupingStrategy.random,
+            child: Text(l10n.tournamentWizardPoolStrategyRandom),
+          ),
+        ],
+      ),
+      if (_strategy == PoolGroupingStrategy.random) ...[
+        const SizedBox(height: KubbTokens.space4),
+        _FieldLabel(l10n.tournamentWizardPoolRandomSeedLabel),
+        const SizedBox(height: KubbTokens.space2),
+        TextField(
+          key: const Key('wizardGroupRandomSeedField'),
+          controller: _seedCtrl,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onChanged: _onSeedTyped,
+          decoration: _outlineDecoration(tokens).copyWith(counterText: ''),
+        ),
+      ],
+    ];
+  }
+
+  /// K23/K24: "Pitch-Zuteilung pro Gruppe" — rendered in the pitch context
+  /// only when a pitch plan with available pitches exists and the group count
+  /// is valid. For each group label (A, B, …) the organiser multi-selects
+  /// which pitch numbers serve that group.
+  List<Widget> _pitchAssignmentSection(
+    KubbTokens tokens,
+    AppLocalizations l10n,
+  ) {
+    final plan = widget.draft.pitchPlan;
+    if (plan == null || !_groupCountValid) return const <Widget>[];
+    final pitches = plan.availablePitches();
+    if (pitches.isEmpty) return const <Widget>[];
+    return <Widget>[
+      const SizedBox(height: KubbTokens.space6),
+      _FieldLabel(l10n.tournamentWizardPoolPitchAssignmentLabel),
+      const SizedBox(height: KubbTokens.space2),
+      _HelperText(l10n.tournamentWizardPoolPitchAssignmentHint),
+      const SizedBox(height: KubbTokens.space3),
+      for (var g = 0; g < _groupCount; g++) ...[
+        if (g > 0) const SizedBox(height: KubbTokens.space4),
+        Builder(
+          builder: (context) {
+            final label = _groupLabel(g);
+            final assigned = plan.groupAssignment[label] ?? const <int>[];
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.tournamentWizardPoolGroupLabel(label),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.fg,
+                  ),
+                ),
+                const SizedBox(height: KubbTokens.space2),
+                Wrap(
+                  spacing: KubbTokens.space2,
+                  runSpacing: KubbTokens.space2,
+                  children: [
+                    for (final pitch in pitches)
+                      _SelectChip(
+                        label: '$pitch',
+                        selected: assigned.contains(pitch),
+                        onTap: () => _togglePitchForGroup(plan, label, pitch),
+                      ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    ];
+  }
+
+  InputDecoration _outlineDecoration(KubbTokens tokens) {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+      borderSide: BorderSide(color: tokens.lineStrong, width: 1.5),
+    );
+    return InputDecoration(border: border, enabledBorder: border);
+  }
+}
+
+/// Read-only display box for a derived value (e.g. qualifier-per-group),
+/// styled like a disabled outline field so it reads as non-editable (K12).
+class _DerivedValueBox extends StatelessWidget {
+  const _DerivedValueBox({required this.tokens, required this.value});
+
+  final KubbTokens tokens;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 56,
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space3),
+      decoration: BoxDecoration(
+        color: tokens.bgSunken,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+        border: Border.all(color: tokens.line, width: 1.5),
+      ),
+      child: Text(
+        value,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: tokens.fg,
+        ),
+      ),
+    );
+  }
 }
 
 /// Model-B (Trostturnier / consolation) configuration block. Only rendered
@@ -1814,6 +2135,22 @@ class _StepSummary extends StatelessWidget {
             l10n.tournamentWizardFormatLabel,
             _humanFormatLabel(draft.vorrundeType, draft.koType),
           ),
+          // K12/K25: surface the group config read-only in the summary — the
+          // group count and the DERIVED "Qualifier pro Gruppe" (the former
+          // pool-config step). Only shown for the group phase.
+          if (draft.vorrundeType == VorrundeType.groupPhase &&
+              draft.poolPhaseConfig != null) ...[
+            _summaryRow(
+              tokens,
+              l10n.tournamentWizardPoolGroupCountLabel,
+              '${draft.poolPhaseConfig!.groupCount}',
+            ),
+            _summaryRow(
+              tokens,
+              l10n.tournamentWizardPoolQualifiersPerGroupLabel,
+              '${draft.poolPhaseConfig!.qualifiersPerGroup}',
+            ),
+          ],
           _summaryRow(
             tokens,
             l10n.tournamentWizardSetsToWinLabel,

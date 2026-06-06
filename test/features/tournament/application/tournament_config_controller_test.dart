@@ -109,7 +109,8 @@ void main() {
 
   group('Schoch auto single-pool config', () {
     test('selecting Schoch auto-inits a single-pool pool_phase_config', () {
-      expect(state().poolPhaseConfig, isNull);
+      // K12: the default group-phase draft now seeds a 4-group config; switch
+      // to Schoch to verify the single-pool backfill replaces it.
       controller.setVorrundeType(VorrundeType.schoch);
       final pool = state().poolPhaseConfig;
       expect(pool, isNotNull);
@@ -148,13 +149,72 @@ void main() {
       expect(wire['strategy'], 'seeded');
     });
 
-    test('switching Schoch -> groupPhase drops the auto single pool', () {
+    test('switching Schoch -> groupPhase seeds the default group config', () {
       controller.setVorrundeType(VorrundeType.schoch);
       expect(state().poolPhaseConfig?.groupCount, 1);
       controller.setVorrundeType(VorrundeType.groupPhase);
-      // The group-phase step requires group_count >= 2 and configures the pool
-      // itself, so the invalid single pool must not linger.
-      expect(state().poolPhaseConfig, isNull);
+      // K12: the group phase configures groups inline (default group_count 4);
+      // the invalid single pool (group_count == 1) must not linger.
+      expect(state().poolPhaseConfig?.groupCount, 4);
+    });
+  });
+
+  group('K12 group-phase grouping (setPoolGrouping)', () {
+    test('default group-phase draft seeds a 4-group config', () {
+      // The bare default draft is a group phase → a 4-group config is seeded.
+      expect(state().poolPhaseConfig?.groupCount, 4);
+      expect(state().poolPhaseConfig?.strategy, PoolGroupingStrategy.snake);
+    });
+
+    test('setPoolGrouping stores group count + strategy + seed', () {
+      controller.setPoolGrouping(
+        groupCount: 8,
+        strategy: PoolGroupingStrategy.random,
+        randomSeed: 42,
+      );
+      final pool = state().poolPhaseConfig!;
+      expect(pool.groupCount, 8);
+      expect(pool.strategy, PoolGroupingStrategy.random);
+      expect(pool.randomSeed, 42);
+    });
+
+    test('qualifiers-per-group is derived from the KO bracket size', () {
+      // KO size 8, 4 groups → 2 qualifiers per group (derived, K12).
+      controller
+          .setKoConfig(KoPhaseConfig(qualifierCount: 8, participantCount: 16));
+      controller.setPoolGrouping(
+        groupCount: 4,
+        strategy: PoolGroupingStrategy.snake,
+      );
+      expect(state().poolPhaseConfig?.qualifiersPerGroup, 2);
+    });
+
+    test('setKoConfig re-derives qualifiers-per-group for the group phase', () {
+      // Choose the group count first (KO size unknown → provisional 1), then
+      // commit the KO config; the qualifier count must re-derive.
+      controller.setPoolGrouping(
+        groupCount: 4,
+        strategy: PoolGroupingStrategy.snake,
+      );
+      controller
+          .setKoConfig(KoPhaseConfig(qualifierCount: 8, participantCount: 16));
+      expect(state().poolPhaseConfig?.groupCount, 4);
+      expect(state().poolPhaseConfig?.qualifiersPerGroup, 2);
+    });
+
+    test('toSetupConfig emits a valid group pool_phase_config', () {
+      controller
+          .setKoConfig(KoPhaseConfig(qualifierCount: 8, participantCount: 16));
+      controller.setPoolGrouping(
+        groupCount: 4,
+        strategy: PoolGroupingStrategy.seeded,
+      );
+      final wire =
+          state().toSetupConfig()['pool_phase_config'] as Map<String, Object?>?;
+      expect(wire, isNotNull);
+      expect(wire!['group_count'], 4);
+      expect(wire['qualifiers_per_group'], 2);
+      expect(wire['strategy'], 'seeded');
     });
   });
 

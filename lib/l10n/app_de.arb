@@ -2229,6 +2229,55 @@
       }
     }
   },
+  "tournamentWizardPoolGroupCountLabel": "Anzahl Gruppen",
+  "@tournamentWizardPoolGroupCountLabel": {
+    "description": "Label for the group-count input in the Vorrunde step (K12)"
+  },
+  "tournamentWizardPoolGroupCountRangeError": "Wert zwischen {min} und {max} erforderlich.",
+  "@tournamentWizardPoolGroupCountRangeError": {
+    "description": "Validation error when the group count is out of range",
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "tournamentWizardPoolDivisibilityError": "Gruppen müssen die KO-Grösse ({koSize}) glatt teilen.",
+  "@tournamentWizardPoolDivisibilityError": {
+    "description": "Validation error when the group count does not evenly divide the KO bracket size",
+    "placeholders": {
+      "koSize": {
+        "type": "int"
+      }
+    }
+  },
+  "tournamentWizardPoolQualifiersPerGroupLabel": "Qualifier pro Gruppe",
+  "@tournamentWizardPoolQualifiersPerGroupLabel": {
+    "description": "Read-only label for the derived qualifiers-per-group value"
+  },
+  "tournamentWizardPoolStrategyLabel": "Grouping-Strategie",
+  "@tournamentWizardPoolStrategyLabel": {
+    "description": "Label for the pool grouping-strategy selector"
+  },
+  "tournamentWizardPoolStrategySnake": "Snake (Schweizer-Liga)",
+  "@tournamentWizardPoolStrategySnake": {
+    "description": "Snake grouping-strategy option"
+  },
+  "tournamentWizardPoolStrategySeeded": "Seeded (Blockweise)",
+  "@tournamentWizardPoolStrategySeeded": {
+    "description": "Seeded grouping-strategy option"
+  },
+  "tournamentWizardPoolStrategyRandom": "Random (deterministisch)",
+  "@tournamentWizardPoolStrategyRandom": {
+    "description": "Random grouping-strategy option"
+  },
+  "tournamentWizardPoolRandomSeedLabel": "Random-Seed (optional)",
+  "@tournamentWizardPoolRandomSeedLabel": {
+    "description": "Label for the optional random-seed input shown for the random strategy"
+  },
   "tournamentWizardMatchTimeLabel": "Zeit pro Match (Min.)",
   "@tournamentWizardMatchTimeLabel": {
     "description": "Prelim time limit per match stepper label"

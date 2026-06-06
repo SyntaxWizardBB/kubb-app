@@ -1647,6 +1647,38 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get tournamentWizardPoolGroupCountLabel => 'Anzahl Gruppen';
+
+  @override
+  String tournamentWizardPoolGroupCountRangeError(int min, int max) {
+    return 'Wert zwischen $min und $max erforderlich.';
+  }
+
+  @override
+  String tournamentWizardPoolDivisibilityError(int koSize) {
+    return 'Gruppen müssen die KO-Grösse ($koSize) glatt teilen.';
+  }
+
+  @override
+  String get tournamentWizardPoolQualifiersPerGroupLabel =>
+      'Qualifier pro Gruppe';
+
+  @override
+  String get tournamentWizardPoolStrategyLabel => 'Grouping-Strategie';
+
+  @override
+  String get tournamentWizardPoolStrategySnake => 'Snake (Schweizer-Liga)';
+
+  @override
+  String get tournamentWizardPoolStrategySeeded => 'Seeded (Blockweise)';
+
+  @override
+  String get tournamentWizardPoolStrategyRandom => 'Random (deterministisch)';
+
+  @override
+  String get tournamentWizardPoolRandomSeedLabel => 'Random-Seed (optional)';
+
+  @override
   String get tournamentWizardMatchTimeLabel => 'Zeit pro Match (Min.)';
 
   @override

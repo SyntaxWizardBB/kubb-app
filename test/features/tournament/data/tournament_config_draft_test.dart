@@ -30,7 +30,8 @@ void main() {
       expect(d.maxParticipants, 8);
       expect(d.format, TournamentFormat.roundRobin);
       expect(d.setsToWin, 2);
-      expect(d.maxSets, 3);
+      // K14: prelim "Max. Sätze" default is 2 (draws allowed in the prelim).
+      expect(d.maxSets, 2);
       expect(d.roundTimeSeconds, 1800);
       expect(d.basekubbsPerSide, 5);
       expect(d.tiebreakerOrder, [

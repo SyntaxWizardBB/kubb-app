@@ -26,10 +26,22 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     // Schoch always needs a single-pool config to start the hybrid format.
     // Backfill it here so an EDIT-mode draft rebuilt from a row that pre-dates
     // this fix (pool_phase_config = null) is repaired before submit.
-    final poolBackfill =
-        draft.vorrundeType == VorrundeType.schoch && draft.poolPhaseConfig == null
-            ? TournamentConfigDraft.schochSinglePoolConfig(draft.koConfig)
-            : draft.poolPhaseConfig;
+    // K12: a group-phase draft equally needs a valid pool config; seed the
+    // default (group_count == 4) so the Vorrunde step shows the default and
+    // submit always carries a valid pool_phase_config for the hybrid format.
+    final PoolPhaseConfig? poolBackfill;
+    if (draft.poolPhaseConfig != null) {
+      poolBackfill = draft.poolPhaseConfig;
+    } else if (draft.vorrundeType == VorrundeType.schoch) {
+      poolBackfill = TournamentConfigDraft.schochSinglePoolConfig(draft.koConfig);
+    } else {
+      poolBackfill = PoolPhaseConfig(
+        groupCount: 4,
+        qualifiersPerGroup:
+            _derivedQualifiersPerGroup(draft.koBracketSize, 4),
+        strategy: PoolGroupingStrategy.snake,
+      );
+    }
     return draft.copyWith(
       format: draft.derivedFormat,
       bracketType: draft.derivedBracketType,
@@ -85,8 +97,11 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     final (vorrunde, ko) = _axesFor(format, state.bracketType);
     // Mirror setVorrundeType: a Schoch Vorrunde always needs a single-pool
     // pool_phase_config so the hybrid format starts (see setVorrundeType).
-    final wantsSinglePool =
-        vorrunde == VorrundeType.schoch && state.poolPhaseConfig == null;
+    // Reseed when the current config is not already a single pool (a lingering
+    // group-phase multi-group config, K12).
+    final wantsSinglePool = vorrunde == VorrundeType.schoch &&
+        (state.poolPhaseConfig == null ||
+            state.poolPhaseConfig!.groupCount != 1);
     state = state.copyWith(
       format: format,
       vorrundeType: vorrunde,
@@ -135,23 +150,36 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
   /// hybrid format" (SQLSTATE 22023). Group-phase keeps configuring the pool
   /// explicitly in its step, so only Schoch auto-fills here.
   void setVorrundeType(VorrundeType type) {
-    final wantsSinglePool =
-        type == VorrundeType.schoch && state.poolPhaseConfig == null;
-    // Leaving Schoch for the group phase: drop the auto single-pool config so
-    // the group-phase step starts clean (its UI requires group_count >= 2 and
-    // would otherwise inherit the invalid group_count == 1). A user-built
-    // multi-group config is preserved.
+    // Schoch always runs as a single pool (group_count == 1). Seed/replace the
+    // pool config whenever the current one is not already a single pool — the
+    // group phase may have left a multi-group config behind (K12).
+    final wantsSinglePool = type == VorrundeType.schoch &&
+        (state.poolPhaseConfig == null ||
+            state.poolPhaseConfig!.groupCount != 1);
+    // K12: the group phase now configures groups directly in the Vorrunde
+    // step, so switching INTO the group phase seeds a default multi-group
+    // config (group_count == 4) when none exists yet or when only the Schoch
+    // single-pool (group_count == 1) lingers — the group-phase UI requires
+    // group_count >= 2. A user-built multi-group config (group_count > 1) is
+    // preserved.
     final pool = state.poolPhaseConfig;
-    final dropSinglePool = type == VorrundeType.groupPhase &&
-        pool != null &&
-        pool.groupCount == 1;
+    final needsGroupDefault = type == VorrundeType.groupPhase &&
+        (pool == null || pool.groupCount < 2);
+    final groupDefault = PoolPhaseConfig(
+      groupCount: 4,
+      qualifiersPerGroup:
+          _derivedQualifiersPerGroup(state.koBracketSize, 4),
+      strategy: pool?.strategy ?? PoolGroupingStrategy.snake,
+      randomSeed: pool?.strategy == PoolGroupingStrategy.random
+          ? pool?.randomSeed
+          : null,
+    );
     state = state.copyWith(
       vorrundeType: type,
       format: TournamentConfigDraft.formatFor(type, state.koType),
       poolPhaseConfig: wantsSinglePool
           ? TournamentConfigDraft.schochSinglePoolConfig(state.koConfig)
-          : (dropSinglePool ? null : state.poolPhaseConfig),
-      clearPoolPhaseConfig: dropSinglePool,
+          : (needsGroupDefault ? groupDefault : state.poolPhaseConfig),
     );
   }
 
@@ -248,8 +276,7 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     // count into the bracket. The KO-config step runs AFTER the format step, so
     // (re)derive qualifiersPerGroup here. This both backfills a still-missing
     // single-pool config (e.g. when the format axis was seeded directly) and
-    // keeps an existing auto single pool in step with the qualifier count. A
-    // user-built multi-group config (group_count > 1) is left untouched.
+    // keeps an existing auto single pool in step with the qualifier count.
     final pool = next.poolPhaseConfig;
     if (next.vorrundeType == VorrundeType.schoch &&
         config != null &&
@@ -263,6 +290,27 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
           randomSeed: pool?.randomSeed,
         ),
       );
+    } else if (next.vorrundeType == VorrundeType.groupPhase &&
+        config != null &&
+        pool != null &&
+        pool.groupCount > 0) {
+      // K12: group-phase qualifiers-per-group is derived from the KO bracket
+      // size / group count. The Vorrunde step gathers group count + strategy
+      // BEFORE the KO size is known, so re-derive the qualifier count here once
+      // the KO config is committed. Only update when it actually changes so the
+      // strategy/seed the organiser picked are preserved.
+      final derived =
+          _derivedQualifiersPerGroup(next.koBracketSize, pool.groupCount);
+      if (pool.qualifiersPerGroup != derived) {
+        next = next.copyWith(
+          poolPhaseConfig: PoolPhaseConfig(
+            groupCount: pool.groupCount,
+            qualifiersPerGroup: derived,
+            strategy: pool.strategy,
+            randomSeed: pool.randomSeed,
+          ),
+        );
+      }
     }
     state = next;
   }
@@ -502,6 +550,43 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
       poolPhaseConfig: config,
       clearPoolPhaseConfig: config == null,
     );
+  }
+
+  /// K12: sets the group-phase grouping inputs (group count + strategy +
+  /// optional random seed) gathered directly in the Vorrunde step. The
+  /// "Qualifier pro Gruppe" count stays DERIVED, not an input: it is
+  /// `koBracketSize / groupCount` when the KO size is already known and the
+  /// group count divides it evenly, otherwise a provisional `1` (the KO step
+  /// runs after the Vorrunde step and re-derives the value in [setKoConfig]).
+  ///
+  /// The `randomSeed` is only carried for [PoolGroupingStrategy.random].
+  void setPoolGrouping({
+    required int groupCount,
+    required PoolGroupingStrategy strategy,
+    int? randomSeed,
+  }) {
+    state = state.copyWith(
+      poolPhaseConfig: PoolPhaseConfig(
+        groupCount: groupCount,
+        qualifiersPerGroup: _derivedQualifiersPerGroup(
+          state.koBracketSize,
+          groupCount,
+        ),
+        strategy: strategy,
+        randomSeed:
+            strategy == PoolGroupingStrategy.random ? randomSeed : null,
+      ),
+    );
+  }
+
+  /// Derives the qualifier-per-group count from the KO bracket size and the
+  /// group count (K12). Returns the provisional minimum `1` when the KO size
+  /// is unknown or the group count does not evenly divide it — the actual
+  /// divisibility gate lives in the wizard step validation.
+  static int _derivedQualifiersPerGroup(int koBracketSize, int groupCount) {
+    if (groupCount < 1 || koBracketSize <= 0) return 1;
+    if (koBracketSize % groupCount != 0) return 1;
+    return koBracketSize ~/ groupCount;
   }
 
   TournamentConfigValidation validate() => state.validate();

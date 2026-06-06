@@ -3100,6 +3100,60 @@ abstract class AppLocalizations {
   /// **'Gruppe {label}'**
   String tournamentWizardPoolGroupLabel(String label);
 
+  /// Label for the group-count input in the Vorrunde step (K12)
+  ///
+  /// In de, this message translates to:
+  /// **'Anzahl Gruppen'**
+  String get tournamentWizardPoolGroupCountLabel;
+
+  /// Validation error when the group count is out of range
+  ///
+  /// In de, this message translates to:
+  /// **'Wert zwischen {min} und {max} erforderlich.'**
+  String tournamentWizardPoolGroupCountRangeError(int min, int max);
+
+  /// Validation error when the group count does not evenly divide the KO bracket size
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppen müssen die KO-Grösse ({koSize}) glatt teilen.'**
+  String tournamentWizardPoolDivisibilityError(int koSize);
+
+  /// Read-only label for the derived qualifiers-per-group value
+  ///
+  /// In de, this message translates to:
+  /// **'Qualifier pro Gruppe'**
+  String get tournamentWizardPoolQualifiersPerGroupLabel;
+
+  /// Label for the pool grouping-strategy selector
+  ///
+  /// In de, this message translates to:
+  /// **'Grouping-Strategie'**
+  String get tournamentWizardPoolStrategyLabel;
+
+  /// Snake grouping-strategy option
+  ///
+  /// In de, this message translates to:
+  /// **'Snake (Schweizer-Liga)'**
+  String get tournamentWizardPoolStrategySnake;
+
+  /// Seeded grouping-strategy option
+  ///
+  /// In de, this message translates to:
+  /// **'Seeded (Blockweise)'**
+  String get tournamentWizardPoolStrategySeeded;
+
+  /// Random grouping-strategy option
+  ///
+  /// In de, this message translates to:
+  /// **'Random (deterministisch)'**
+  String get tournamentWizardPoolStrategyRandom;
+
+  /// Label for the optional random-seed input shown for the random strategy
+  ///
+  /// In de, this message translates to:
+  /// **'Random-Seed (optional)'**
+  String get tournamentWizardPoolRandomSeedLabel;
+
   /// Prelim time limit per match stepper label
   ///
   /// In de, this message translates to:

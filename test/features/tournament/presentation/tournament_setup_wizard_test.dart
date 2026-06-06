@@ -446,8 +446,9 @@ void main() {
   testWidgets('lands on step 1, step name is the bold app-bar title (DOD-04)',
       (tester) async {
     await _pumpWizard(tester);
-    // Default flow (group phase + single-out KO): 6 visible steps.
-    expect(find.text('Schritt 1 von 6'), findsOneWidget);
+    // K25: the separate group-phase step is gone — group config now lives in
+    // the Vorrunde step, so every flow has 5 visible steps.
+    expect(find.text('Schritt 1 von 5'), findsOneWidget);
     // Title hierarchy: step name as the (mixed-case) title; "Neues Turnier"
     // as the uppercased eyebrow above it.
     expect(find.text('Stammdaten'), findsOneWidget);
@@ -470,35 +471,42 @@ void main() {
   });
 
   testWidgets(
-      'group-phase flow walks name → Teilnehmer → Vorrunde → KO → Gruppenphase'
-      ' → Übersicht (KO before group phase, DOD-13)', (tester) async {
+      'group-phase flow walks name → Teilnehmer → Vorrunde → KO → Übersicht'
+      ' (K25: no separate group-phase step)', (tester) async {
     final fake = await _pumpWizard(tester);
     await _typeName(tester, 'Cup 2026');
 
     await _tapNext(tester); // -> participants
-    expect(find.text('Schritt 2 von 6'), findsOneWidget);
+    expect(find.text('Schritt 2 von 5'), findsOneWidget);
     expect(find.text('Teilnehmer'), findsOneWidget);
 
     await _tapNext(tester); // -> Vorrunde (renamed from "Format")
-    expect(find.text('Schritt 3 von 6'), findsOneWidget);
+    expect(find.text('Schritt 3 von 5'), findsOneWidget);
     expect(find.text('Vorrunde'), findsWidgets);
+    // K12: group count + grouping strategy are configured inline here.
+    expect(find.text('Anzahl Gruppen'), findsOneWidget);
+    expect(find.text('Grouping-Strategie'), findsOneWidget);
 
-    await _tapNext(tester); // -> KO config (precedes the group phase)
-    expect(find.text('Schritt 4 von 6'), findsOneWidget);
+    await _tapNext(tester); // -> KO config (no separate group-phase step)
+    expect(find.text('Schritt 4 von 5'), findsOneWidget);
     expect(find.text('KO-Konfiguration'), findsOneWidget);
 
-    await _tapNext(tester); // -> Gruppenphase
-    expect(find.text('Schritt 5 von 6'), findsOneWidget);
-    expect(find.text('Gruppenphase'), findsWidgets);
-
     await _tapNext(tester); // -> summary
-    expect(find.text('Schritt 6 von 6'), findsOneWidget);
+    expect(find.text('Schritt 5 von 5'), findsOneWidget);
     expect(find.text('Übersicht'), findsOneWidget);
 
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
     await tester.pumpAndSettle();
     expect(fake.callCount, 1);
     expect(fake.createdFormat, TournamentFormat.roundRobinThenKo);
+    // K25: a valid pool_phase_config is still produced from the inline inputs.
+    final pool =
+        fake.createdSetup?['pool_phase_config'] as Map<String, Object?>?;
+    expect(pool, isNotNull);
+    expect(pool?['group_count'], 4);
+    // Default 8 participants → KO smart-default 4 qualifiers → bracket size 4;
+    // 4 / 4 groups → 1 qualifier per group (derived, not an input).
+    expect(pool?['qualifiers_per_group'], 1);
   });
 
   testWidgets(
@@ -620,7 +628,6 @@ void main() {
     await _tapNext(tester); // -> participants
     await _tapNext(tester); // -> Vorrunde
     await _tapNext(tester); // -> KO config
-    await _tapNext(tester); // -> Gruppenphase
     await _tapNext(tester); // -> summary
 
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
@@ -685,7 +692,6 @@ void main() {
     await _tapNext(tester); // -> participants
     await _tapNext(tester); // -> Vorrunde
     await _tapNext(tester); // -> KO config
-    await _tapNext(tester); // -> Gruppenphase
     await _tapNext(tester); // -> summary
 
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
@@ -747,7 +753,6 @@ void main() {
     await _tapNext(tester); // -> participants
     await _tapNext(tester); // -> Vorrunde
     await _tapNext(tester); // -> KO config
-    await _tapNext(tester); // -> Gruppenphase
     await _tapNext(tester); // -> summary
 
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
@@ -780,7 +785,6 @@ void main() {
     await tester.pumpAndSettle();
 
     await _tapNext(tester); // -> KO config
-    await _tapNext(tester); // -> Gruppenphase
     await _tapNext(tester); // -> summary
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
     await tester.pumpAndSettle();
@@ -814,7 +818,6 @@ void main() {
     await _tapNext(tester); // -> participants
     await _tapNext(tester); // -> Vorrunde
     await _tapNext(tester); // -> KO config
-    await _tapNext(tester); // -> Gruppenphase
     await _tapNext(tester); // -> summary
 
     await tester.tap(
@@ -908,5 +911,121 @@ void main() {
     for (final f in infoFields) {
       expect(f.minLines, 3);
     }
+  });
+
+  // ---- W3: K12 group config in the Vorrunde step ----
+
+  testWidgets(
+      'K12: the group-phase shows group count (default 4) + strategy inline; '
+      'Schoch hides them', (tester) async {
+    // Group phase (default seed): walk to the Vorrunde step.
+    await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    expect(find.text('Anzahl Gruppen'), findsOneWidget);
+    expect(find.text('Grouping-Strategie'), findsOneWidget);
+    // The inline group-count field defaults to 4.
+    final groupCount = tester.widget<TextField>(
+      find.byKey(const Key('wizardGroupCountField')),
+    );
+    expect(groupCount.controller?.text, '4');
+    // The qualifier-per-group is read-only (no editable qualifier input here).
+    expect(find.text('Qualifier pro Gruppe'), findsOneWidget);
+  });
+
+  testWidgets('K12: Schoch hides the group-count + strategy inputs',
+      (tester) async {
+    await _pumpWizard(
+      tester,
+      controllerOverride: _SchochSeededController.new,
+    );
+    await _typeName(tester, 'Schoch Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    expect(find.byKey(const Key('wizardGroupCountField')), findsNothing);
+    expect(find.text('Grouping-Strategie'), findsNothing);
+  });
+
+  testWidgets('K12: picking the Random strategy reveals the seed field',
+      (tester) async {
+    await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    // The seed field is hidden for the default (snake) strategy.
+    expect(find.byKey(const Key('wizardGroupRandomSeedField')), findsNothing);
+    await tester.tap(find.byKey(const Key('wizardGroupStrategyField')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Random (deterministisch)').last);
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('wizardGroupRandomSeedField')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+      'K12: a group count that does not divide the KO size blocks the KO step',
+      (tester) async {
+    await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    // KO smart-default = 4 (8 participants). Type 3 → 4 % 3 != 0.
+    await tester.enterText(
+      find.byKey(const Key('wizardGroupCountField')),
+      '3',
+    );
+    await tester.pumpAndSettle();
+    await _tapNext(tester); // -> KO config
+    // The divisibility gate lives on the KO step (the KO size is final there):
+    // Weiter is disabled until the group count divides the KO bracket size.
+    final next = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Weiter'),
+    );
+    expect(next.onPressed, isNull);
+  });
+
+  testWidgets(
+      'K23/K24: per-group pitch assignment shows in the pitch context for the '
+      'group phase with pitches, absent for Schoch', (tester) async {
+    // Group phase + a pitch range → the per-group assignment surfaces.
+    await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await tester.enterText(
+      find.byKey(const Key('wizardPitchRangeFromField')),
+      '1',
+    );
+    await tester.enterText(
+      find.byKey(const Key('wizardPitchRangeToField')),
+      '3',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Pitch-Zuteilung pro Gruppe'), findsOneWidget);
+    expect(find.text('Gruppe A'), findsOneWidget);
+  });
+
+  testWidgets('K23/K24: no per-group pitch assignment for the Schoch Vorrunde',
+      (tester) async {
+    await _pumpWizard(
+      tester,
+      controllerOverride: _SchochSeededController.new,
+    );
+    await _typeName(tester, 'Schoch Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await tester.enterText(
+      find.byKey(const Key('wizardPitchRangeFromField')),
+      '1',
+    );
+    await tester.enterText(
+      find.byKey(const Key('wizardPitchRangeToField')),
+      '3',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Pitch-Zuteilung pro Gruppe'), findsNothing);
   });
 }
