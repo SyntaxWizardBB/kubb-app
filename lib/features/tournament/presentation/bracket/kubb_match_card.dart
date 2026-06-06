@@ -25,6 +25,7 @@ class KubbMatchCard extends StatelessWidget {
     this.onTap,
     this.editable = true,
     this.winnerId,
+    this.nameFor,
   });
 
   final String matchId;
@@ -33,13 +34,31 @@ class KubbMatchCard extends StatelessWidget {
   final bool editable;
   final String? winnerId;
 
+  /// Resolves a participant id to its display label (CF3 / K08). When
+  /// `null` or it returns `null` the raw participant id is shown, matching
+  /// the legacy behaviour.
+  final String? Function(String participantId)? nameFor;
+
+  /// Display label for a participant slot: the resolved name (CF3 / K08)
+  /// when available, else the raw participant id, else the em-dash for an
+  /// empty slot. Keeps the pre-CF3 fallback so brackets without a name
+  /// resolver render exactly as before.
+  String _label(String? participantId) {
+    if (participantId == null) return '—';
+    final resolved = nameFor?.call(participantId)?.trim();
+    if (resolved != null && resolved.isNotEmpty) return resolved;
+    return participantId;
+  }
+
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final (a, b) = pairing;
-    final nameA = a.isBye ? l.tournamentBracketByeLabel : (a.participantId ?? '—');
-    final nameB = b.isBye ? l.tournamentBracketByeLabel : (b.participantId ?? '—');
+    final nameA =
+        a.isBye ? l.tournamentBracketByeLabel : _label(a.participantId);
+    final nameB =
+        b.isBye ? l.tournamentBracketByeLabel : _label(b.participantId);
     final semanticsLabel =
         'Match $matchId: ${l.tournamentMatchVersusHeader(nameA, nameB)}';
 

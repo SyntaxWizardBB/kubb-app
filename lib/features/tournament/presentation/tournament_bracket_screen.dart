@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/tournament/application/tournament_bracket_provider.dart';
+import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/bracket/bracket_canvas.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -29,6 +30,20 @@ class TournamentBracketScreen extends ConsumerWidget {
     // newly advanced winners surface without manual reloads (M1 spec).
     ref.watch(tournamentBracketPollingProvider(id));
     final async = ref.watch(tournamentBracketProvider(id));
+    // CF3 / K08: resolve participant ids to their display names from the
+    // SAME server-projected source the match list/detail use
+    // (team_id-driven: single -> nickname, team -> team name). The bracket
+    // value object carries only participant ids, so the screen supplies a
+    // resolver instead of the bracket exposing a second name source.
+    final detail = ref
+        .watch(tournamentDetailProvider(id))
+        .maybeWhen(data: (d) => d, orElse: () => null);
+    final nameById = <String, String>{
+      for (final p in detail?.participants ?? const <TournamentParticipant>[])
+        if ((p.displayName ?? '').trim().isNotEmpty)
+          p.participantId: p.displayName!.trim(),
+    };
+    String? nameFor(String participantId) => nameById[participantId];
 
     return Scaffold(
       backgroundColor: tokens.bg,
@@ -72,6 +87,7 @@ class TournamentBracketScreen extends ConsumerWidget {
             bracket: bracket,
             editable: false,
             tournamentId: id,
+            nameFor: nameFor,
           );
         },
       ),

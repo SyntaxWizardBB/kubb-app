@@ -33,11 +33,17 @@ class BracketCanvas extends ConsumerStatefulWidget {
     this.tournamentId,
     this.mainBracket,
     this.consolationName,
+    this.nameFor,
   });
 
   final Bracket bracket;
   final bool editable;
   final TournamentId? tournamentId;
+
+  /// Resolves a participant id to its display label (CF3 / K08: single ->
+  /// nickname, team -> team name). When `null` or it returns `null` the
+  /// card keeps the raw participant id, matching the legacy behaviour.
+  final String? Function(String participantId)? nameFor;
 
   /// Optional explicit single-elim main tree FALLBACK for the "Hauptbaum"
   /// section when [bracket] is a [ConsolationBracket]. The read-path now carries
@@ -95,6 +101,7 @@ class _BracketCanvasState extends ConsumerState<BracketCanvas> {
         bracket: bracket,
         editable: widget.editable,
         tournamentId: widget.tournamentId,
+        nameFor: widget.nameFor,
       );
     }
     // Consolation (Trostturnier, Modell B): two switchable sections.
@@ -125,6 +132,7 @@ class _BracketCanvasState extends ConsumerState<BracketCanvas> {
               bracket: mainTree,
               editable: widget.editable,
               tournamentId: widget.tournamentId,
+              nameFor: widget.nameFor,
             )
           : Center(
               child: Padding(
@@ -142,6 +150,7 @@ class _BracketCanvasState extends ConsumerState<BracketCanvas> {
           bracket: consolationTree,
           editable: widget.editable,
           tournamentId: widget.tournamentId,
+          nameFor: widget.nameFor,
         ),
     };
 
@@ -225,12 +234,14 @@ class _BracketTreeView extends StatelessWidget {
     required this.bracket,
     required this.editable,
     this.tournamentId,
+    this.nameFor,
     super.key,
   });
 
   final SingleEliminationBracket bracket;
   final bool editable;
   final TournamentId? tournamentId;
+  final String? Function(String participantId)? nameFor;
 
   @override
   Widget build(BuildContext context) {
@@ -255,6 +266,7 @@ class _BracketTreeView extends StatelessWidget {
             matchId: matchId,
             pairing: pairing,
             editable: editable,
+            nameFor: nameFor,
             onTap: () => _onTap(context, matchId),
           ),
         ));

@@ -24,12 +24,16 @@ class TournamentMatchCard extends StatelessWidget {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final isBye = match.participantB == null;
+    // CF3 / K08: prefer the server-projected display name (team_id-driven:
+    // single -> nickname, team -> team name). Fall back to the [nameFor]
+    // resolver only when the server shipped no name (older RPC / pending
+    // slot), so the single player's name shows everywhere a match renders.
     final aLabel = match.participantA == null
         ? '?'
-        : nameFor(match.participantA!);
+        : _resolveLabel(match.participantADisplayName, match.participantA!);
     final bLabel = isBye
         ? l.tournamentMatchBye
-        : nameFor(match.participantB!);
+        : _resolveLabel(match.participantBDisplayName, match.participantB!);
     final scoreLabel = _scoreLabel(match);
 
     return Material(
@@ -113,6 +117,15 @@ class TournamentMatchCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Server-projected display name when present, else the [nameFor]
+  /// resolver. Keeps the UUID/short-id fallback for rows an older RPC or a
+  /// not-yet-named slot returns without a `display_name`.
+  String _resolveLabel(String? serverName, TournamentParticipantId id) {
+    final trimmed = serverName?.trim();
+    if (trimmed != null && trimmed.isNotEmpty) return trimmed;
+    return nameFor(id);
   }
 
   String? _scoreLabel(TournamentMatchRef m) {

@@ -130,6 +130,32 @@ void main() {
           isNull);
     });
 
+    test('decodes single-participant roster entries with slot_id null', () {
+      // CF3 / K08: singles have no roster slot, so public_tournament_get
+      // projects slot_id = NULL. The decoder must tolerate the null slot_id
+      // and surface the player's nickname instead of crashing the whole
+      // spectator screen.
+      final env = _publicEnvelope(
+        roster: const <Map<String, dynamic>>[
+          <String, dynamic>{
+            'slot_id': null,
+            'participant_id': 'p-a',
+            'slot_index': 0,
+            'display_name': 'SingleAlice',
+          },
+        ],
+        participantCount: 1,
+      );
+      final detail = publicTournamentDetailFromEnvelope(env);
+      expect(detail.roster, hasLength(1));
+      expect(detail.roster.first.slotId, isNull);
+      expect(detail.roster.first.displayName, 'SingleAlice');
+      expect(
+        detail.displayNameFor(const TournamentParticipantId('p-a')),
+        'SingleAlice',
+      );
+    });
+
     test('tolerates empty matches and roster arrays', () {
       final env = _publicEnvelope(
         matches: const <Map<String, dynamic>>[],

@@ -126,7 +126,10 @@ class PublicRosterEntry {
     required this.displayName,
   });
 
-  final String slotId;
+  /// Opaque, optional slot identifier. Team roster entries carry the
+  /// roster-slot UUID; single participants have no roster slot, so the
+  /// server projects `slot_id = NULL` for them (CF3 / K08).
+  final String? slotId;
   final String participantId;
   final int slotIndex;
   final String displayName;
@@ -201,7 +204,7 @@ PublicMatchDetail publicMatchDetailFromRow(Map<String, dynamic> row) {
 
 PublicRosterEntry _rosterEntryFromRow(Map<String, dynamic> row) {
   return PublicRosterEntry(
-    slotId: row['slot_id'] as String,
+    slotId: row['slot_id'] as String?,
     participantId: row['participant_id'] as String,
     slotIndex: _asInt(row['slot_index']),
     displayName: row['display_name'] as String,
