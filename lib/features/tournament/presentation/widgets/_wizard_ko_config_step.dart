@@ -36,6 +36,10 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
   late int _qualifierCount;
   late SeedingMode _seedingMode;
 
+  /// Controller for the (now required, K18) consolation/Trostturnier name.
+  /// Lives here so its text survives rebuilds while the organiser types.
+  late final TextEditingController _consolationNameCtrl;
+
   @override
   void initState() {
     super.initState();
@@ -45,6 +49,8 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
     _seedingMode = widget.draft.bracketSeedingMode ??
         existing?.seedingMode ??
         SeedingMode.auto;
+    _consolationNameCtrl =
+        TextEditingController(text: widget.draft.consolationName ?? '');
     // Commit the smart default upfront so the wizard's `_stepValid` can verify
     // the KO config without waiting for user input, then seed the per-round §A
     // default profiles for rounds still at the bare default.
@@ -52,6 +58,12 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
       _pushIfValid();
       _seedRoundDefaults();
     });
+  }
+
+  @override
+  void dispose() {
+    _consolationNameCtrl.dispose();
+    super.dispose();
   }
 
   @override
@@ -279,41 +291,68 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
         );
 
     return [
+      // K15/K16/K18: the whole Model-B (Trostturnier) config lives here in the
+      // KO step (no longer on the format step), only when the consolation KO
+      // type is chosen. The main-bracket size is NOT asked again — it equals
+      // the KO bracket size picked above (single source, K15).
+      if (d.koType == KoType.consolation) ...[
+        _ConsolationKoSection(
+          draft: d,
+          controller: c,
+          nameController: _consolationNameCtrl,
+          bracketSize: _qualifierCount,
+        ),
+        const SizedBox(height: KubbTokens.space6),
+      ],
       // The single/double-out distinction is chosen on the format step via
       // the KO-system axis (KoType) — `bracketType` derives from it, so we
       // do NOT ask it again here to avoid a conflicting second source.
+      // K21: KO-matchup as radio buttons (same pattern as _SeedingModeRadios).
       label(l10n.tournamentWizardKoMatchupLabel),
-      SegmentedButton<KoMatchup>(
-        segments: [
-          ButtonSegment(
-            value: KoMatchup.seedHighVsLow,
-            label: Text(l10n.tournamentWizardKoMatchupHighLow),
-          ),
-          ButtonSegment(
-            value: KoMatchup.oneVsTwo,
-            label: Text(l10n.tournamentWizardKoMatchupOneTwo),
-          ),
-        ],
-        selected: {d.koMatchup},
-        onSelectionChanged: (s) => c.setKoMatchup(s.first),
-        showSelectedIcon: false,
+      RadioGroup<KoMatchup>(
+        groupValue: d.koMatchup,
+        onChanged: (m) {
+          if (m != null) c.setKoMatchup(m);
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            RadioListTile<KoMatchup>(
+              value: KoMatchup.seedHighVsLow,
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.tournamentWizardKoMatchupHighLow),
+            ),
+            RadioListTile<KoMatchup>(
+              value: KoMatchup.oneVsTwo,
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.tournamentWizardKoMatchupOneTwo),
+            ),
+          ],
+        ),
       ),
       const SizedBox(height: KubbTokens.space5),
+      // K22: KO-tiebreak method as radio buttons (same pattern as K21).
       label(l10n.tournamentWizardKoTiebreakMethodLabel),
-      SegmentedButton<KoTiebreakMethod>(
-        segments: [
-          ButtonSegment(
-            value: KoTiebreakMethod.classicKingtossRemoval,
-            label: Text(l10n.tournamentWizardKoTiebreakClassic),
-          ),
-          ButtonSegment(
-            value: KoTiebreakMethod.mightyFinisherShootout,
-            label: Text(l10n.tournamentWizardKoTiebreakMighty),
-          ),
-        ],
-        selected: {d.koTiebreakMethod},
-        onSelectionChanged: (s) => c.setKoTiebreakMethod(s.first),
-        showSelectedIcon: false,
+      RadioGroup<KoTiebreakMethod>(
+        groupValue: d.koTiebreakMethod,
+        onChanged: (m) {
+          if (m != null) c.setKoTiebreakMethod(m);
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            RadioListTile<KoTiebreakMethod>(
+              value: KoTiebreakMethod.classicKingtossRemoval,
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.tournamentWizardKoTiebreakClassic),
+            ),
+            RadioListTile<KoTiebreakMethod>(
+              value: KoTiebreakMethod.mightyFinisherShootout,
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.tournamentWizardKoTiebreakMighty),
+            ),
+          ],
+        ),
       ),
       const SizedBox(height: KubbTokens.space5),
       // Per-KO-round rule blocks. The list length is derived from the
@@ -426,6 +465,118 @@ class _KoRoundBlock extends StatelessWidget {
               onChanged: (v) =>
                   onChanged(spec.copyWith(tiebreakAfterSeconds: v * 60)),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// K15/K16/K18 — Model-B (consolation / Trostturnier) config, rendered only
+/// in the KO step when [KoType.consolation] is chosen. The main-bracket size
+/// is NOT asked here: it equals the KO bracket size picked above (single
+/// source, K15). Offers the direct-starter count as chips (K16) and the
+/// required consolation name (K18).
+class _ConsolationKoSection extends StatelessWidget {
+  const _ConsolationKoSection({
+    required this.draft,
+    required this.controller,
+    required this.nameController,
+    required this.bracketSize,
+  });
+
+  final TournamentConfigDraft draft;
+  final TournamentConfigController controller;
+  final TextEditingController nameController;
+
+  /// The KO bracket size chosen above (= consolation main-bracket size). The
+  /// direct-starter chip options are derived from it.
+  final int bracketSize;
+
+  /// K16 — sensible direct-starter chip options derived from the bracket size:
+  /// 0 ("Keine") plus the powers of two strictly below the bracket size
+  /// (e.g. size 16 → 0/4/8; size 8 → 0/4; size 4 → 0). No option is >= the
+  /// bracket size.
+  static List<int> directCountOptions(int bracketSize) {
+    final out = <int>[0];
+    for (final v in <int>[4, 8, 16, 32]) {
+      if (v < bracketSize) out.add(v);
+    }
+    return out;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    final options = directCountOptions(bracketSize);
+    final selectedDirect = draft.consolationDirectCount;
+    Widget label(String text) => Text(
+          text,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.4,
+            color: tokens.fgMuted,
+          ),
+        );
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+      borderSide: BorderSide(color: tokens.lineStrong, width: 1.5),
+    );
+    return Container(
+      // Section now holds only direct-starter chips + the required name field
+      // (the main bracket size lives in the KO size chips), hence the KO-scoped
+      // key rather than the legacy Model-B name.
+      key: const Key('wizardConsolationKoSection'),
+      padding: const EdgeInsets.all(KubbTokens.space4),
+      decoration: BoxDecoration(
+        color: tokens.bgSunken,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+        border: Border.all(color: tokens.line, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          label(l10n.tournamentWizardConsolationSectionLabel),
+          const SizedBox(height: KubbTokens.space4),
+          // K16 — direct starters as chips (no free number field anymore).
+          label(l10n.tournamentWizardConsolationDirectCountLabel),
+          const SizedBox(height: KubbTokens.space2),
+          Wrap(
+            key: const Key('wizardConsolationDirectCountChips'),
+            spacing: KubbTokens.space2,
+            runSpacing: KubbTokens.space2,
+            children: [
+              for (final v in options)
+                _KoSizeChip(
+                  label: v == 0
+                      ? l10n.tournamentWizardConsolationDirectCountNone
+                      : '$v',
+                  selected: selectedDirect == v,
+                  onTap: () => controller.setConsolationDirectCount(v),
+                ),
+            ],
+          ),
+          const SizedBox(height: KubbTokens.space1half),
+          Text(
+            l10n.tournamentWizardConsolationDirectCountHint,
+            style: TextStyle(fontSize: 11, height: 1.35, color: tokens.fgSubtle),
+          ),
+          const SizedBox(height: KubbTokens.space4),
+          // K18 — consolation name is required (no "optional" badge).
+          label(l10n.tournamentWizardConsolationNameLabel),
+          const SizedBox(height: KubbTokens.space2),
+          TextField(
+            key: const Key('wizardConsolationNameField'),
+            controller: nameController,
+            onChanged: controller.setConsolationName,
+            decoration: InputDecoration(
+              counterText: '',
+              hintText: l10n.tournamentWizardConsolationNameHint,
+              border: border,
+              enabledBorder: border,
+            ),
+          ),
         ],
       ),
     );

@@ -1865,6 +1865,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardConsolationNameHint => 'z. B. Bâton Rouille';
 
   @override
+  String get tournamentWizardConsolationSectionLabel =>
+      'Trostturnier (Nebenturnier)';
+
+  @override
+  String get tournamentWizardConsolationDirectCountNone => 'Keine';
+
+  @override
   String get tournamentWizardSetsToWinLabel => 'Sätze zum Sieg';
 
   @override

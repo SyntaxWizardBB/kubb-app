@@ -157,6 +157,12 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
             return false;
           }
         }
+        // K18: the consolation/Trostturnier config lives in this step now; its
+        // name is required, so "Weiter" stays blocked until it is filled.
+        if (draft.koType == KoType.consolation &&
+            (draft.consolationName?.trim().isEmpty ?? true)) {
+          return false;
+        }
         return true;
       case _StepKind.summary:
         return draft.validate().isValid;
@@ -1599,7 +1605,6 @@ class _StepFormatState extends State<_StepFormat> {
     final onVorrundeType = widget.onVorrundeType;
     final onKoType = widget.onKoType;
     final onMaxSets = widget.onMaxSets;
-    final controller = widget.controller;
     final onRoundTime = widget.onRoundTime;
     final onBreakBetween = widget.onBreakBetween;
     return Column(
@@ -1689,11 +1694,10 @@ class _StepFormatState extends State<_StepFormat> {
           description: l10n.tournamentWizardKoSystemConsolationHint,
           onTap: () => onKoType(KoType.consolation),
         ),
-        // Model-B (Trostturnier) config — only when consolation is chosen.
-        if (draft.koType == KoType.consolation) ...[
-          const SizedBox(height: KubbTokens.space4),
-          _ConsolationModelBSection(draft: draft, controller: controller),
-        ],
+        // K15: the Model-B (Trostturnier) config — main-bracket size, direct
+        // starters and the (required) name — lives ENTIRELY in the KO step now
+        // (_wizard_ko_config_step.dart, _ConsolationKoSection). It is no longer
+        // rendered here, so the main-bracket size is chosen exactly once.
         const SizedBox(height: KubbTokens.space5),
         // ---- Vorrunde scoring: only "Max. Sätze" (P6 spec) ----
         WizardNumberField(
@@ -1903,109 +1907,6 @@ class _DerivedValueBox extends StatelessWidget {
           fontWeight: FontWeight.w700,
           color: tokens.fg,
         ),
-      ),
-    );
-  }
-}
-
-/// Model-B (Trostturnier / consolation) configuration block. Only rendered
-/// when [KoType.consolation] is chosen (gated by the caller). Exposes the
-/// main-bracket size (power of two, == KO size), the free direct-starter
-/// count and the free display name. These persist into the draft and are
-/// emitted as snake_case in `toSetupConfig` (ADR-0028 §5); the engine
-/// consumes them later (Block E).
-class _ConsolationModelBSection extends StatefulWidget {
-  const _ConsolationModelBSection({
-    required this.draft,
-    required this.controller,
-  });
-
-  final TournamentConfigDraft draft;
-  final TournamentConfigController controller;
-
-  @override
-  State<_ConsolationModelBSection> createState() =>
-      _ConsolationModelBSectionState();
-}
-
-class _ConsolationModelBSectionState extends State<_ConsolationModelBSection> {
-  late final TextEditingController _directCountCtrl;
-  late final TextEditingController _nameCtrl;
-
-  /// Allowed main-bracket sizes (powers of two, no byes in the main bracket).
-  static const List<int> _bracketSizes = <int>[4, 8, 16, 32];
-
-  @override
-  void initState() {
-    super.initState();
-    _directCountCtrl =
-        TextEditingController(text: '${widget.draft.consolationDirectCount}');
-    _nameCtrl = TextEditingController(text: widget.draft.consolationName ?? '');
-  }
-
-  @override
-  void dispose() {
-    _directCountCtrl.dispose();
-    _nameCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final l10n = AppLocalizations.of(context);
-    final draft = widget.draft;
-    final controller = widget.controller;
-    final size = _bracketSizes.contains(draft.consolationMainBracketSize)
-        ? draft.consolationMainBracketSize
-        : _bracketSizes.first;
-    return Container(
-      key: const Key('wizardConsolationModelBSection'),
-      padding: const EdgeInsets.all(KubbTokens.space4),
-      decoration: BoxDecoration(
-        color: tokens.bgSunken,
-        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-        border: Border.all(color: tokens.line, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _FieldLabel(l10n.tournamentWizardConsolationMainBracketSizeLabel),
-          const SizedBox(height: KubbTokens.space2),
-          Wrap(
-            spacing: KubbTokens.space2,
-            runSpacing: KubbTokens.space2,
-            children: [
-              for (final s in _bracketSizes)
-                _SelectChip(
-                  label: '$s',
-                  selected: size == s,
-                  onTap: () => controller.setConsolationMainBracketSize(s),
-                ),
-            ],
-          ),
-          const SizedBox(height: KubbTokens.space4),
-          _FieldLabel(l10n.tournamentWizardConsolationDirectCountLabel),
-          const SizedBox(height: KubbTokens.space2),
-          _PlainTextField(
-            key: const Key('wizardConsolationDirectCountField'),
-            controller: _directCountCtrl,
-            keyboardType: TextInputType.number,
-            onChanged: (raw) =>
-                controller.setConsolationDirectCount(int.tryParse(raw.trim()) ?? 0),
-          ),
-          const SizedBox(height: KubbTokens.space1half),
-          _HelperText(l10n.tournamentWizardConsolationDirectCountHint),
-          const SizedBox(height: KubbTokens.space4),
-          _FieldLabel(l10n.tournamentWizardConsolationNameLabel, optional: true),
-          const SizedBox(height: KubbTokens.space2),
-          _PlainTextField(
-            key: const Key('wizardConsolationNameField'),
-            controller: _nameCtrl,
-            hintText: l10n.tournamentWizardConsolationNameHint,
-            onChanged: controller.setConsolationName,
-          ),
-        ],
       ),
     );
   }

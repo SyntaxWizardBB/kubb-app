@@ -895,6 +895,12 @@ class TournamentConfigDraft {
       issues.add('KO-Phase-Konfiguration fehlt.');
     }
 
+    // K18: the consolation/Trostturnier name is required once the consolation
+    // KO model is selected (it is otherwise hidden, so exempt from the rule).
+    if (koType == KoType.consolation && _blankToNull(consolationName) == null) {
+      issues.add('Name des Trostturniers fehlt.');
+    }
+
     // --- P6 setup fields ---
     if (scoring != 'ekc' && scoring != 'classic') {
       issues.add('Wertung muss EKC oder klassisch sein.');

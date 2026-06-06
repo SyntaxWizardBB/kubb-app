@@ -3490,6 +3490,18 @@ abstract class AppLocalizations {
   /// **'z. B. Bâton Rouille'**
   String get tournamentWizardConsolationNameHint;
 
+  /// Model-B consolation section heading shown in the KO step
+  ///
+  /// In de, this message translates to:
+  /// **'Trostturnier (Nebenturnier)'**
+  String get tournamentWizardConsolationSectionLabel;
+
+  /// Label for the 0-direct-starters chip in the consolation config
+  ///
+  /// In de, this message translates to:
+  /// **'Keine'**
+  String get tournamentWizardConsolationDirectCountNone;
+
   /// Sets-to-win stepper label
   ///
   /// In de, this message translates to:

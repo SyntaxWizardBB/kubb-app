@@ -2463,6 +2463,14 @@
   "@tournamentWizardConsolationNameHint": {
     "description": "Model-B consolation display-name hint"
   },
+  "tournamentWizardConsolationSectionLabel": "Trostturnier (Nebenturnier)",
+  "@tournamentWizardConsolationSectionLabel": {
+    "description": "Model-B consolation section heading shown in the KO step"
+  },
+  "tournamentWizardConsolationDirectCountNone": "Keine",
+  "@tournamentWizardConsolationDirectCountNone": {
+    "description": "Label for the 0-direct-starters chip in the consolation config"
+  },
   "tournamentWizardSetsToWinLabel": "Sätze zum Sieg",
   "@tournamentWizardSetsToWinLabel": {
     "description": "Sets-to-win stepper label"

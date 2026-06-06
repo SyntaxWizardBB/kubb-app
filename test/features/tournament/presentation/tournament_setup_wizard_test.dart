@@ -560,40 +560,97 @@ void main() {
     expect(find.text('Trostturnier'), findsOneWidget);
   });
 
-  testWidgets('Model-B inputs only show for the Trostturnier KO type (DOD-14)',
+  testWidgets(
+      'K15: Model-B config is NEVER in the format step — even for Trostturnier',
       (tester) async {
-    // Single-out seeded: no Model-B section.
     await _pumpWizard(
       tester,
       controllerOverride: _SchochSeededController.new,
     );
     await _typeName(tester, 'Cup');
     await _tapNext(tester); // -> participants
-    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> Vorrunde (format step)
     expect(
-      find.byKey(const Key('wizardConsolationModelBSection')),
+      find.byKey(const Key('wizardConsolationKoSection')),
       findsNothing,
     );
 
-    // Picking Trostturnier reveals the Model-B config inputs.
+    // Picking Trostturnier in the format step must NOT reveal the Model-B
+    // section here anymore (K15: it lives in the KO step).
     await tester.tap(find.text('Trostturnier'));
     await tester.pumpAndSettle();
     expect(
-      find.byKey(const Key('wizardConsolationModelBSection')),
+      find.byKey(const Key('wizardConsolationKoSection')),
+      findsNothing,
+    );
+  });
+
+  testWidgets(
+      'K15/K16/K18: Model-B section (chips + required name) renders in the KO '
+      'step for the Trostturnier KO type', (tester) async {
+    await _pumpWizard(
+      tester,
+      controllerOverride: _ConsolationSeededController.new,
+    );
+    await _typeName(tester, 'Trost Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde (format step)
+    // Not here (K15).
+    expect(
+      find.byKey(const Key('wizardConsolationKoSection')),
+      findsNothing,
+    );
+    await _tapNext(tester); // -> KO config
+    // The whole Model-B section is in the KO step.
+    expect(
+      find.byKey(const Key('wizardConsolationKoSection')),
+      findsOneWidget,
+    );
+    // K16: direct starters are chips, not a free text field.
+    expect(
+      find.byKey(const Key('wizardConsolationDirectCountChips')),
       findsOneWidget,
     );
     expect(
       find.byKey(const Key('wizardConsolationDirectCountField')),
-      findsOneWidget,
+      findsNothing,
     );
+    // K18: the required name field is present.
     expect(
       find.byKey(const Key('wizardConsolationNameField')),
       findsOneWidget,
     );
   });
 
-  testWidgets('Trostturnier Model-B inputs flow into the create payload',
-      (tester) async {
+  testWidgets('K18: KO step "Weiter" stays disabled until the Trostturnier '
+      'name is filled', (tester) async {
+    await _pumpWizard(
+      tester,
+      controllerOverride: _ConsolationSeededController.new,
+    );
+    await _typeName(tester, 'Trost Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+
+    final blocked = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Weiter'),
+    );
+    expect(blocked.onPressed, isNull);
+
+    await tester.enterText(
+      find.byKey(const Key('wizardConsolationNameField')),
+      'Bâton Rouille',
+    );
+    await tester.pumpAndSettle();
+    final enabled = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Weiter'),
+    );
+    expect(enabled.onPressed, isNotNull);
+  });
+
+  testWidgets('K16/K18: Trostturnier name + direct-count chip flow into the '
+      'create payload', (tester) async {
     final fake = await _pumpWizard(
       tester,
       controllerOverride: _ConsolationSeededController.new,
@@ -601,17 +658,28 @@ void main() {
     await _typeName(tester, 'Trost Cup');
     await _tapNext(tester); // -> participants
     await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+
+    // Pick a 16-bracket so the direct-starter chips include 4 and 8 (K16).
+    await tester.tap(find.widgetWithText(InkWell, '16').first);
+    await tester.pumpAndSettle();
+
+    // K16: tap the "4" direct-starter chip (scoped to the chip Wrap so it does
+    // not collide with the KO-size "4" chip).
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('wizardConsolationDirectCountChips')),
+        matching: find.text('4'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
     await tester.enterText(
       find.byKey(const Key('wizardConsolationNameField')),
       'Bâton Rouille',
     );
-    await tester.enterText(
-      find.byKey(const Key('wizardConsolationDirectCountField')),
-      '4',
-    );
     await tester.pumpAndSettle();
 
-    await _tapNext(tester); // -> KO config
     await _tapNext(tester); // -> summary
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
     await tester.pumpAndSettle();
@@ -619,6 +687,39 @@ void main() {
     expect(fake.createdSetup?['ko_type'], 'consolation');
     expect(fake.createdSetup?['consolation_name'], 'Bâton Rouille');
     expect(fake.createdSetup?['consolation_direct_count'], 4);
+  });
+
+  testWidgets('K21/K22: KO matchup + tiebreak are radio buttons, not '
+      'SegmentedButtons, and are selectable', (tester) async {
+    final fake = await _pumpWizard(
+      tester,
+      controllerOverride: _SchochSeededController.new,
+    );
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+
+    // No SegmentedButton for either axis anymore (K21/K22).
+    expect(find.byType(SegmentedButton<KoMatchup>), findsNothing);
+    expect(find.byType(SegmentedButton<KoTiebreakMethod>), findsNothing);
+    // Radios are rendered for both axes.
+    expect(find.byType(RadioListTile<KoMatchup>), findsNWidgets(2));
+    expect(find.byType(RadioListTile<KoTiebreakMethod>), findsNWidgets(2));
+
+    // Selecting the "1. vs 2." matchup updates the draft.
+    await tester.tap(find.text('1. vs 2.'));
+    await tester.pumpAndSettle();
+    // Selecting the "Mighty-Finisher" tiebreak updates the draft.
+    await tester.tap(find.text('Mighty-Finisher'));
+    await tester.pumpAndSettle();
+
+    await _tapNext(tester); // -> summary
+    await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
+    await tester.pumpAndSettle();
+
+    expect(fake.createdSetup?['ko_matchup'], 'one_vs_two');
+    expect(fake.createdSetup?['ko_tiebreak_method'], 'mighty_finisher_shootout');
   });
 
   testWidgets('submit calls createTournament with the configured draft',

@@ -233,6 +233,45 @@ void main() {
       expect(iss.any((i) => i.contains('Check-in')), isTrue);
     });
 
+    // K18: the consolation/Trostturnier name is required once the consolation
+    // KO model is selected; other KO types do not require it.
+    test('flags a missing Trostturnier name for the consolation KO type (K18)',
+        () {
+      final missingName = _validStammdaten().copyWith(
+        koType: KoType.consolation,
+      );
+      final iss = missingName.validate().issues;
+      expect(iss.any((i) => i.contains('Trostturnier')), isTrue);
+      expect(missingName.validate().isValid, isFalse);
+
+      // Blank-only name still counts as missing.
+      final blankName = _validStammdaten().copyWith(
+        koType: KoType.consolation,
+        consolationName: '   ',
+      );
+      expect(
+        blankName.validate().issues.any((i) => i.contains('Trostturnier')),
+        isTrue,
+      );
+
+      // A non-empty name clears the issue.
+      final namedOk = _validStammdaten().copyWith(
+        koType: KoType.consolation,
+        consolationName: 'Bâton Rouille',
+      );
+      expect(
+        namedOk.validate().issues.any((i) => i.contains('Trostturnier')),
+        isFalse,
+      );
+
+      // A non-consolation KO type with an empty name produces no issue.
+      final singleOut = _validStammdaten().copyWith(koType: KoType.singleOut);
+      expect(
+        singleOut.validate().issues.any((i) => i.contains('Trostturnier')),
+        isFalse,
+      );
+    });
+
     // K01: the displayName max-length check excludes the auto year suffix —
     // a name at the limit stays valid (resolvedDisplayName may overflow).
     test('name at the max length still validates (year suffix exempt, K01)',
