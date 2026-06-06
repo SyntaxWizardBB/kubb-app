@@ -45,6 +45,13 @@ class TournamentBracketScreen extends ConsumerWidget {
     };
     String? nameFor(String participantId) => nameById[participantId];
 
+    // K17: the Trostturnier name lives in the consolation_bracket jsonb
+    // (`setup['consolation_bracket']['name']`, written by
+    // TournamentConfigDraft.toSetupConfig). Pass it to the canvas so the
+    // consolation section header reads the configured name instead of the
+    // generic 'Trostturnier' fallback. Empty/missing -> null -> fallback.
+    final consolationName = _consolationNameFrom(detail);
+
     return Scaffold(
       backgroundColor: tokens.bg,
       // TODO(sprintB-followup): migrate to KubbAppBar
@@ -88,10 +95,25 @@ class TournamentBracketScreen extends ConsumerWidget {
             editable: false,
             tournamentId: id,
             nameFor: nameFor,
+            consolationName: consolationName,
           );
         },
       ),
     );
+  }
+
+  /// K17: extracts the configured Trostturnier name from the detail's setup
+  /// map. Source of truth is `setup['consolation_bracket']['name']` (merged in
+  /// by `TournamentConfigDraft.toSetupConfig` and round-tripped via
+  /// `tournament_get`). Returns null when absent/blank so the canvas falls back
+  /// to the localized 'Trostturnier' label.
+  String? _consolationNameFrom(TournamentDetail? detail) {
+    final consolation = detail?.tournament.setup['consolation_bracket'];
+    if (consolation is! Map) return null;
+    final name = consolation['name'];
+    if (name is! String) return null;
+    final trimmed = name.trim();
+    return trimmed.isEmpty ? null : trimmed;
   }
 
   /// A bracket counts as empty when the server returned no KO rounds

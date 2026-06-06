@@ -696,6 +696,46 @@ void main() {
     });
 
     test(
+        'K17: the consolation name is merged INTO consolation_bracket.name so '
+        'it survives the create RPC and round-trips via fromDetail', () {
+      const d = TournamentConfigDraft(
+        koType: KoType.consolation,
+        consolationName: 'Sieger der gebrochenen Herzen',
+        consolationBracket: ConsolationConfig(enabled: true),
+      );
+      final setup = d.toSetupConfig();
+      final cons = setup['consolation_bracket']! as Map<String, Object?>;
+      // The name now lives inside the jsonb the server stores verbatim.
+      expect(cons['name'], 'Sieger der gebrochenen Herzen');
+
+      // It round-trips back into the draft for the edit-prefill, even though
+      // the standalone top-level `consolation_name` is dropped by the server.
+      final header = TournamentDetailHeader(
+        tournamentId: 't-1',
+        displayName: 'X',
+        createdByUserId: 'u',
+        clubId: null,
+        teamSize: 1,
+        maxTeamSize: 1,
+        minParticipants: 2,
+        maxParticipants: 8,
+        format: TournamentFormat.singleElimination,
+        scoring: TournamentScoring.ekc,
+        matchFormatConfig: const <String, Object?>{},
+        tiebreakerOrder: const <String>[],
+        byePoints: null,
+        forfeitPoints: null,
+        status: TournamentStatus.draft,
+        publishedAt: null,
+        startedAt: null,
+        completedAt: null,
+        setup: <String, Object?>{'consolation_bracket': cons},
+      );
+      final round = TournamentConfigDraft.fromDetail(header);
+      expect(round.consolationName, 'Sieger der gebrochenen Herzen');
+    });
+
+    test(
         'C2/C11: main_bracket_size is only authoritative in consolation mode; '
         'omitted (null) for single-elimination', () {
       const d = TournamentConfigDraft(

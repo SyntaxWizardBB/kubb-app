@@ -4192,6 +4192,240 @@ abstract class AppLocalizations {
   /// **'Gruppe {label}'**
   String tournamentDetailPoolGroup(String label);
 
+  /// CF5/K28: card heading for venue/location meta fields
+  ///
+  /// In de, this message translates to:
+  /// **'Veranstaltung'**
+  String get tournamentDetailInfoHeading;
+
+  /// CF5/K28: label for the venue town/location
+  ///
+  /// In de, this message translates to:
+  /// **'Ort'**
+  String get tournamentDetailLocation;
+
+  /// CF5/K28: label for the full venue address
+  ///
+  /// In de, this message translates to:
+  /// **'Adresse'**
+  String get tournamentDetailVenueAddress;
+
+  /// CF5/K28: card heading for date/deadline fields
+  ///
+  /// In de, this message translates to:
+  /// **'Termine'**
+  String get tournamentDetailDatesHeading;
+
+  /// CF5/K28: label for the official tournament start datetime
+  ///
+  /// In de, this message translates to:
+  /// **'Turnierstart'**
+  String get tournamentDetailEventStart;
+
+  /// CF5/K28: label for the in-app registration deadline
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldeschluss'**
+  String get tournamentDetailRegistrationCloses;
+
+  /// CF5/K28: label for the on-site check-in deadline
+  ///
+  /// In de, this message translates to:
+  /// **'Check-in bis'**
+  String get tournamentDetailCheckinUntil;
+
+  /// CF5/K28: card heading for entry fee and payment methods
+  ///
+  /// In de, this message translates to:
+  /// **'Gebühr & Zahlung'**
+  String get tournamentDetailFeeHeading;
+
+  /// CF5/K28: label for the entry fee
+  ///
+  /// In de, this message translates to:
+  /// **'Startgebühr'**
+  String get tournamentDetailEntryFee;
+
+  /// CF5/K28: label for accepted payment methods
+  ///
+  /// In de, this message translates to:
+  /// **'Zahlarten'**
+  String get tournamentDetailPaymentMethods;
+
+  /// CF5/K28: card heading for the organizer contact
+  ///
+  /// In de, this message translates to:
+  /// **'Kontakt'**
+  String get tournamentDetailContactHeading;
+
+  /// CF5/K28: label for the contact name
+  ///
+  /// In de, this message translates to:
+  /// **'Ansprechperson'**
+  String get tournamentDetailContactName;
+
+  /// CF5/K28: label for the contact phone number
+  ///
+  /// In de, this message translates to:
+  /// **'Telefon'**
+  String get tournamentDetailContactPhone;
+
+  /// CF5/K28: card heading for the free-text participant infos
+  ///
+  /// In de, this message translates to:
+  /// **'Infos für Teilnehmer'**
+  String get tournamentDetailInfoTextsHeading;
+
+  /// CF5/K28: label for the catering info text
+  ///
+  /// In de, this message translates to:
+  /// **'Verpflegung'**
+  String get tournamentDetailInfoFood;
+
+  /// CF5/K28: label for the travel info text
+  ///
+  /// In de, this message translates to:
+  /// **'Anreise'**
+  String get tournamentDetailInfoTravel;
+
+  /// CF5/K28: label for the accommodation info text
+  ///
+  /// In de, this message translates to:
+  /// **'Unterkunft'**
+  String get tournamentDetailInfoAccommodation;
+
+  /// CF5/K28: label for the weather note
+  ///
+  /// In de, this message translates to:
+  /// **'Wetter'**
+  String get tournamentDetailWeatherNote;
+
+  /// CF5/K28: card heading for the rule variants
+  ///
+  /// In de, this message translates to:
+  /// **'Regel-Varianten'**
+  String get tournamentDetailRulesHeading;
+
+  /// CF5/K28: label for the diggy rule toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Diggy'**
+  String get tournamentDetailRuleDiggy;
+
+  /// CF5/K28: label for the sureshot rule toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Sureshot'**
+  String get tournamentDetailRuleSureshot;
+
+  /// CF5/K28: label for the penalty-kubb rule toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Strafkubb hinter Grundlinie'**
+  String get tournamentDetailRuleStrafkubb;
+
+  /// CF5/K28: label for the opening rule
+  ///
+  /// In de, this message translates to:
+  /// **'Anspielregel'**
+  String get tournamentDetailRuleOpening;
+
+  /// CF5/K28: value shown when a rule toggle is enabled
+  ///
+  /// In de, this message translates to:
+  /// **'An'**
+  String get tournamentDetailRuleOn;
+
+  /// CF5/K28: value shown when a rule toggle is disabled
+  ///
+  /// In de, this message translates to:
+  /// **'Aus'**
+  String get tournamentDetailRuleOff;
+
+  /// CF5/K28: label for the scoring system
+  ///
+  /// In de, this message translates to:
+  /// **'Wertung'**
+  String get tournamentDetailScoring;
+
+  /// CF5/K28: value for the EKC scoring system
+  ///
+  /// In de, this message translates to:
+  /// **'EKC'**
+  String get tournamentDetailScoringEkc;
+
+  /// CF5/K28: value for the classic scoring system
+  ///
+  /// In de, this message translates to:
+  /// **'Classic'**
+  String get tournamentDetailScoringClassic;
+
+  /// CF5/K28: card heading for club / fun-tournament / league info
+  ///
+  /// In de, this message translates to:
+  /// **'Veranstalter & Liga'**
+  String get tournamentDetailOrganizationHeading;
+
+  /// CF5/K28: label for the organizing club
+  ///
+  /// In de, this message translates to:
+  /// **'Verein'**
+  String get tournamentDetailClubLabel;
+
+  /// CF5/K28: value shown when no club is set (fun tournament)
+  ///
+  /// In de, this message translates to:
+  /// **'Spasstournier – ohne Wertung'**
+  String get tournamentDetailFunTournament;
+
+  /// CF5/K28: label for the league categories
+  ///
+  /// In de, this message translates to:
+  /// **'Liga-Kategorien'**
+  String get tournamentDetailLeagueCategories;
+
+  /// CF5/K28: label for the short KO bracket setup info
+  ///
+  /// In de, this message translates to:
+  /// **'KO-Setup'**
+  String get tournamentDetailKoSetup;
+
+  /// CF5/K28: KO bracket size value
+  ///
+  /// In de, this message translates to:
+  /// **'{count} Qualifikanten'**
+  String tournamentDetailKoQualifiers(int count);
+
+  /// CF5/K28: label for the consolation/Trostturnier name row
+  ///
+  /// In de, this message translates to:
+  /// **'Trostturnier'**
+  String get tournamentDetailConsolationLabel;
+
+  /// CF5/K28: card heading for downloadable PDF documents
+  ///
+  /// In de, this message translates to:
+  /// **'Dokumente'**
+  String get tournamentDetailDocumentsHeading;
+
+  /// CF5/K28: download button label for the rules PDF
+  ///
+  /// In de, this message translates to:
+  /// **'Regelwerk (PDF)'**
+  String get tournamentDetailRulesPdf;
+
+  /// CF5/K28: download button label for the site-map PDF
+  ///
+  /// In de, this message translates to:
+  /// **'Geländeplan (PDF)'**
+  String get tournamentDetailSiteMapPdf;
+
+  /// CF5/K28: error shown when a PDF link cannot be opened
+  ///
+  /// In de, this message translates to:
+  /// **'PDF konnte nicht geöffnet werden.'**
+  String get tournamentDetailPdfOpenError;
+
   /// Section heading: audit tail
   ///
   /// In de, this message translates to:

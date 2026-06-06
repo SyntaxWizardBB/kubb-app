@@ -18,6 +18,7 @@ TournamentDetail _detail({
   TournamentStatus status = TournamentStatus.draft,
   List<TournamentParticipant> participants = const [],
   String? clubId,
+  Map<String, Object?> setup = const <String, Object?>{},
 }) {
   return TournamentDetail(
     tournament: TournamentDetailHeader(
@@ -42,6 +43,7 @@ TournamentDetail _detail({
       publishedAt: null,
       startedAt: null,
       completedAt: null,
+      setup: setup,
     ),
     participants: participants,
     matches: const [],
@@ -57,6 +59,7 @@ Future<void> _pump(
   bool canManage = false,
   String? manageableClubId,
   String? unmanageableClubId,
+  TournamentUrlOpener? urlOpener,
 }) async {
   final router = GoRouter(
     initialLocation: '/tournament/t-1',
@@ -84,6 +87,8 @@ Future<void> _pump(
         tournamentBracketProvider(_id).overrideWith(
           (_) async => bracket ?? (throw ArgumentError('no ko matches')),
         ),
+        if (urlOpener != null)
+          tournamentUrlOpenerProvider.overrideWithValue(urlOpener),
       ],
       child: MaterialApp.router(
         theme: KubbTheme.light(),
@@ -265,6 +270,12 @@ void main() {
       callerUserId: 'u-club-admin',
       manageableClubId: 'c-1',
     );
+    // A club-linked tournament now renders the "Veranstalter & Liga" meta
+    // card (CF5/K28), so the lifecycle actions sit further down the lazily
+    // built ListView — scroll them into view before asserting.
+    final list = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(find.text('Veröffentlichen'), 200,
+        scrollable: list);
     expect(find.text('Veröffentlichen'), findsOneWidget);
     expect(find.text('Bearbeiten'), findsOneWidget);
   });
@@ -396,5 +407,125 @@ void main() {
     );
     expect(find.text('Anmelden'), findsOneWidget);
     expect(find.text('Abmelden'), findsNothing);
+  });
+
+  // ---- CF5/K28: meta-field rendering + PDF download -----------------------
+
+  Map<String, Object?> fullSetup() => <String, Object?>{
+        'location': 'Bern',
+        'venue_address': 'Wankdorfstrasse 1, 3014 Bern',
+        'event_starts_at': '2026-07-04T08:00:00.000Z',
+        'registration_closes_at': '2026-06-30T22:00:00.000Z',
+        'checkin_until': '2026-07-04T07:30:00.000Z',
+        'entry_fee_cents': 1000,
+        'currency': 'CHF',
+        'payment_methods': <String>['twint', 'cash'],
+        'contact_name': 'Anna Meier',
+        'contact_phone': '+41 79 123 45 67',
+        'info_food': 'Foodtruck vor Ort',
+        'info_travel': 'Tram 9 bis Wankdorf',
+        'info_accommodation': 'Hotel Bern',
+        'weather_note': 'Bei Regen Verschiebung',
+        'rule_variants': <String, Object?>{
+          'diggy': true,
+          'sureshot': false,
+          'strafkubb_off_baseline': true,
+          'opening_rule': '2-4-6',
+        },
+        'league_categories': <String>['a', 'b'],
+        'ko_config': <String, Object?>{'qualifier_count': 8},
+        'consolation_bracket': <String, Object?>{
+          'enabled': true,
+          'name': 'Sieger der gebrochenen Herzen',
+        },
+        'rules_pdf_url': 'https://storage.example/tournament-pdfs/rules/x.pdf',
+        'site_map_pdf_url':
+            'https://storage.example/tournament-pdfs/maps/y.pdf',
+      };
+
+  testWidgets('CF5/K28: detail screen renders the configured meta fields',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(clubId: 'club-1', setup: fullSetup()),
+      callerUserId: 'u-other',
+    );
+
+    // The detail body is a long lazily-built ListView; scroll each
+    // representative field into view before asserting. `scrollUntilVisible`
+    // builds the off-screen card on the way.
+    final list = find.byType(Scrollable).first;
+    Future<void> seek(Finder f) async {
+      await tester.scrollUntilVisible(f, 200, scrollable: list);
+      expect(f, findsOneWidget);
+    }
+
+    // Card headings + representative values across the cards.
+    await seek(find.text('VERANSTALTUNG'));
+    await seek(find.text('Bern'));
+    await seek(find.text('Wankdorfstrasse 1, 3014 Bern'));
+    await seek(find.text('TERMINE'));
+    await seek(find.text('GEBÜHR & ZAHLUNG'));
+    await seek(find.text('CHF 10.00'));
+    await seek(find.text('twint, cash'));
+    await seek(find.text('KONTAKT'));
+    await seek(find.text('Anna Meier'));
+    await seek(find.text('INFOS FÜR TEILNEHMER'));
+    await seek(find.text('Foodtruck vor Ort'));
+    await seek(find.text('REGEL-VARIANTEN'));
+    // Scoring shows 'EKC'.
+    await seek(find.text('EKC'));
+    // Consolation name surfaces in the organization card.
+    await seek(find.text('Sieger der gebrochenen Herzen'));
+  });
+
+  testWidgets('CF5/K28: empty/minimal setup hides the optional cards',
+      (tester) async {
+    await _pump(tester, _detail(), callerUserId: 'u-other');
+    // None of the optional meta-card headings appear.
+    expect(find.text('VERANSTALTUNG'), findsNothing);
+    expect(find.text('TERMINE'), findsNothing);
+    expect(find.text('GEBÜHR & ZAHLUNG'), findsNothing);
+    expect(find.text('KONTAKT'), findsNothing);
+    expect(find.text('INFOS FÜR TEILNEHMER'), findsNothing);
+    expect(find.text('DOKUMENTE'), findsNothing);
+  });
+
+  testWidgets('CF5/K28: PDF links appear and tapping opens the URL',
+      (tester) async {
+    final opened = <Uri>[];
+    await _pump(
+      tester,
+      _detail(setup: fullSetup()),
+      callerUserId: 'u-other',
+      urlOpener: (url) async {
+        opened.add(url);
+        return true;
+      },
+    );
+
+    final list = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(find.text('Regelwerk (PDF)'), 200,
+        scrollable: list);
+    expect(find.text('DOKUMENTE'), findsOneWidget);
+    expect(find.text('Regelwerk (PDF)'), findsOneWidget);
+    expect(find.text('Geländeplan (PDF)'), findsOneWidget);
+
+    await tester.tap(find.text('Regelwerk (PDF)'));
+    await tester.pump();
+    expect(opened, hasLength(1));
+    expect(opened.single.toString(),
+        'https://storage.example/tournament-pdfs/rules/x.pdf');
+  });
+
+  testWidgets('CF5/K28: no PDF link when the URLs are unset', (tester) async {
+    await _pump(
+      tester,
+      _detail(setup: const <String, Object?>{'location': 'Bern'}),
+      callerUserId: 'u-other',
+    );
+    expect(find.text('DOKUMENTE'), findsNothing);
+    expect(find.text('Regelwerk (PDF)'), findsNothing);
+    expect(find.text('Geländeplan (PDF)'), findsNothing);
   });
 }

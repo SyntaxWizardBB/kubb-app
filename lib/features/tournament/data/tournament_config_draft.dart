@@ -228,7 +228,11 @@ class TournamentConfigDraft {
       consolationMainBracketSize:
           intOf(setup['consolation_main_bracket_size']) ?? 8,
       consolationDirectCount: intOf(setup['consolation_direct_count']) ?? 0,
-      consolationName: setup['consolation_name'] as String?,
+      // K17: the name is persisted INSIDE consolation_bracket.name (the
+      // standalone consolation_name key is dropped by the create RPC). Prefer
+      // the nested value; fall back to the legacy top-level key for older rows.
+      consolationName: (consolationJson?['name'] as String?) ??
+          setup['consolation_name'] as String?,
     );
   }
 
@@ -1030,20 +1034,30 @@ class TournamentConfigDraft {
       // are dropped at create-time / DOD-09). main_bracket_size is only the
       // engine-authoritative size in consolation mode; in single/double-elim it
       // is omitted (null) so the server keeps deriving from qualifier_count.
+      //
+      // K17: the consolation display name is merged into this jsonb as `name`
+      // so it survives the create RPC (which stores `v_setup->'consolation_bracket'`
+      // verbatim) and round-trips through `tournament_get` — the standalone
+      // top-level `consolation_name` key below is dropped at create-time, so the
+      // bracket header reads the name from `consolation_bracket.name` instead.
       'consolation_bracket': consolationBracket == null
           ? null
-          : ConsolationConfig(
-              enabled: consolationBracket!.enabled,
-              source: consolationBracket!.source,
-              sourceRounds: consolationBracket!.sourceRounds,
-              rankFrom: consolationBracket!.rankFrom,
-              rankTo: consolationBracket!.rankTo,
-              matchFormat: consolationBracket!.matchFormat,
-              directCount: consolationDirectCount,
-              mainBracketSize: koType == KoType.consolation
-                  ? consolationMainBracketSize
-                  : null,
-            ).toJson(),
+          : <String, Object?>{
+              ...ConsolationConfig(
+                enabled: consolationBracket!.enabled,
+                source: consolationBracket!.source,
+                sourceRounds: consolationBracket!.sourceRounds,
+                rankFrom: consolationBracket!.rankFrom,
+                rankTo: consolationBracket!.rankTo,
+                matchFormat: consolationBracket!.matchFormat,
+                directCount: consolationDirectCount,
+                mainBracketSize: koType == KoType.consolation
+                    ? consolationMainBracketSize
+                    : null,
+              ).toJson(),
+              if (_blankToNull(consolationName) != null)
+                'name': _blankToNull(consolationName),
+            },
       // Mirrored top-level keys (kept for forward-compat / debugging).
       'consolation_main_bracket_size': consolationMainBracketSize,
       'consolation_direct_count': consolationDirectCount,

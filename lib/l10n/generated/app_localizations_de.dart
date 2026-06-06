@@ -2240,6 +2240,126 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get tournamentDetailInfoHeading => 'Veranstaltung';
+
+  @override
+  String get tournamentDetailLocation => 'Ort';
+
+  @override
+  String get tournamentDetailVenueAddress => 'Adresse';
+
+  @override
+  String get tournamentDetailDatesHeading => 'Termine';
+
+  @override
+  String get tournamentDetailEventStart => 'Turnierstart';
+
+  @override
+  String get tournamentDetailRegistrationCloses => 'Anmeldeschluss';
+
+  @override
+  String get tournamentDetailCheckinUntil => 'Check-in bis';
+
+  @override
+  String get tournamentDetailFeeHeading => 'Gebühr & Zahlung';
+
+  @override
+  String get tournamentDetailEntryFee => 'Startgebühr';
+
+  @override
+  String get tournamentDetailPaymentMethods => 'Zahlarten';
+
+  @override
+  String get tournamentDetailContactHeading => 'Kontakt';
+
+  @override
+  String get tournamentDetailContactName => 'Ansprechperson';
+
+  @override
+  String get tournamentDetailContactPhone => 'Telefon';
+
+  @override
+  String get tournamentDetailInfoTextsHeading => 'Infos für Teilnehmer';
+
+  @override
+  String get tournamentDetailInfoFood => 'Verpflegung';
+
+  @override
+  String get tournamentDetailInfoTravel => 'Anreise';
+
+  @override
+  String get tournamentDetailInfoAccommodation => 'Unterkunft';
+
+  @override
+  String get tournamentDetailWeatherNote => 'Wetter';
+
+  @override
+  String get tournamentDetailRulesHeading => 'Regel-Varianten';
+
+  @override
+  String get tournamentDetailRuleDiggy => 'Diggy';
+
+  @override
+  String get tournamentDetailRuleSureshot => 'Sureshot';
+
+  @override
+  String get tournamentDetailRuleStrafkubb => 'Strafkubb hinter Grundlinie';
+
+  @override
+  String get tournamentDetailRuleOpening => 'Anspielregel';
+
+  @override
+  String get tournamentDetailRuleOn => 'An';
+
+  @override
+  String get tournamentDetailRuleOff => 'Aus';
+
+  @override
+  String get tournamentDetailScoring => 'Wertung';
+
+  @override
+  String get tournamentDetailScoringEkc => 'EKC';
+
+  @override
+  String get tournamentDetailScoringClassic => 'Classic';
+
+  @override
+  String get tournamentDetailOrganizationHeading => 'Veranstalter & Liga';
+
+  @override
+  String get tournamentDetailClubLabel => 'Verein';
+
+  @override
+  String get tournamentDetailFunTournament => 'Spasstournier – ohne Wertung';
+
+  @override
+  String get tournamentDetailLeagueCategories => 'Liga-Kategorien';
+
+  @override
+  String get tournamentDetailKoSetup => 'KO-Setup';
+
+  @override
+  String tournamentDetailKoQualifiers(int count) {
+    return '$count Qualifikanten';
+  }
+
+  @override
+  String get tournamentDetailConsolationLabel => 'Trostturnier';
+
+  @override
+  String get tournamentDetailDocumentsHeading => 'Dokumente';
+
+  @override
+  String get tournamentDetailRulesPdf => 'Regelwerk (PDF)';
+
+  @override
+  String get tournamentDetailSiteMapPdf => 'Geländeplan (PDF)';
+
+  @override
+  String get tournamentDetailPdfOpenError =>
+      'PDF konnte nicht geöffnet werden.';
+
+  @override
   String get tournamentDetailAuditHeader => 'Verlauf';
 
   @override
