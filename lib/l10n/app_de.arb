@@ -1901,17 +1901,25 @@
   "@tournamentWizardDisplayNameLabel": {
     "description": "Display-name input label"
   },
+  "tournamentWizardDisplayNameYearHint": "Die Jahreszahl wird automatisch angehängt (z.B. 2026).",
+  "@tournamentWizardDisplayNameYearHint": {
+    "description": "Helper text explaining the auto-appended year suffix (K01)"
+  },
   "tournamentWizardClubLabel": "Ausrichtender Verein",
   "@tournamentWizardClubLabel": {
     "description": "Optional organizing-club picker label on the Stammdaten step"
   },
-  "tournamentWizardClubHint": "Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten.",
+  "tournamentWizardClubHint": "Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten. Ohne Verein (Spasstournier) zählt das Turnier nicht für die Wertung.",
   "@tournamentWizardClubHint": {
     "description": "Helper text under the organizing-club picker"
   },
-  "tournamentWizardClubNone": "Kein Verein (persönlich)",
+  "tournamentWizardClubNone": "Spasstournier – ohne Wertung",
   "@tournamentWizardClubNone": {
-    "description": "Dropdown option for no organizing club (personal tournament)"
+    "description": "Dropdown option for no organizing club; a non-rated fun tournament (K02)"
+  },
+  "tournamentWizardClubChoosePrompt": "Bitte wählen",
+  "@tournamentWizardClubChoosePrompt": {
+    "description": "Hint shown in the club picker until the organizer actively picks (K03)"
   },
   "tournamentWizardLocationLabel": "Ort",
   "@tournamentWizardLocationLabel": {
@@ -2069,6 +2077,22 @@
   "tournamentWizardRuleDiggyHint": "Doppel-Chriesi dürfen aufgestellt werden",
   "@tournamentWizardRuleDiggyHint": {
     "description": "Diggy rule toggle subtitle"
+  },
+  "tournamentWizardRuleOpeningLabel": "Anspielregel",
+  "@tournamentWizardRuleOpeningLabel": {
+    "description": "Opening-rule (Anspielregel) selector label (K06)"
+  },
+  "tournamentWizardRuleOpening246": "2-4-6",
+  "@tournamentWizardRuleOpening246": {
+    "description": "Opening-rule option: 2-4-6 (K06)"
+  },
+  "tournamentWizardRuleOpeningFree": "Frei",
+  "@tournamentWizardRuleOpeningFree": {
+    "description": "Opening-rule option: free opening (K06)"
+  },
+  "tournamentWizardRuleOpeningHint": "Reihenfolge beim Anspiel (Standard: 2-4-6).",
+  "@tournamentWizardRuleOpeningHint": {
+    "description": "Helper text under the opening-rule selector (K06)"
   },
   "tournamentWizardRuleStrafkubb": "Strafkubb mit Abstand",
   "@tournamentWizardRuleStrafkubb": {

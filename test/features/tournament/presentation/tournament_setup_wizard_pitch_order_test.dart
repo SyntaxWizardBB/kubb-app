@@ -19,17 +19,39 @@ class _StubRemote implements TournamentRemote {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// Required Stammdaten (W1 / K03, K30-K33) so the wizard can advance past
+/// the stricter step 1 (Spasstournier = no club, so no league needed, K29).
+TournamentConfigDraft _withStammdaten(TournamentConfigDraft d) {
+  final start = DateTime(2026, 8, 1, 10);
+  return d.copyWith(
+    clubChoiceMade: true,
+    location: 'Esp',
+    venueAddress: 'Sportplatz Esp, Fislisbach',
+    eventStartsAt: start,
+    registrationClosesAt: start.subtract(const Duration(days: 7)),
+    checkinUntil: start.subtract(const Duration(minutes: 30)),
+  );
+}
+
+/// Default controller: Stammdaten pre-filled so navigation past step 1 works.
+class _StammdatenSeededController extends TournamentConfigController {
+  @override
+  TournamentConfigDraft build() => _withStammdaten(super.build());
+}
+
 /// Controller seeded with a manual pitch plan whose stored order (3, 1, 2)
 /// differs from the natural range order, to assert the editor honours it.
 class _PreseededOrderController extends TournamentConfigController {
   @override
-  TournamentConfigDraft build() => const TournamentConfigDraft(
-        pitchPlan: PitchPlan(
-          mode: PitchMode.range,
-          rangeFrom: 1,
-          rangeTo: 3,
-          order: <int>[3, 1, 2],
-          sortStrategy: PitchSortStrategy.manual,
+  TournamentConfigDraft build() => _withStammdaten(
+        const TournamentConfigDraft(
+          pitchPlan: PitchPlan(
+            mode: PitchMode.range,
+            rangeFrom: 1,
+            rangeTo: 3,
+            order: <int>[3, 1, 2],
+            sortStrategy: PitchSortStrategy.manual,
+          ),
         ),
       );
 }
@@ -39,6 +61,7 @@ class _PreseededOrderController extends TournamentConfigController {
 Future<ProviderContainer> _pump(
   WidgetTester tester, {
   List<Object> extraOverrides = const <Object>[],
+  TournamentConfigController Function()? controllerOverride,
 }) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1;
@@ -48,6 +71,10 @@ Future<ProviderContainer> _pump(
   final container = ProviderContainer(
     overrides: <Object>[
       tournamentRemoteProvider.overrideWithValue(_StubRemote()),
+      // Pre-fill the required Stammdaten so the wizard walks past step 1.
+      tournamentConfigControllerProvider.overrideWith(
+        controllerOverride ?? _StammdatenSeededController.new,
+      ),
       ...extraOverrides,
     ].cast(),
   );
@@ -151,10 +178,7 @@ void main() {
       (tester) async {
     await _pump(
       tester,
-      extraOverrides: [
-        tournamentConfigControllerProvider
-            .overrideWith(_PreseededOrderController.new),
-      ],
+      controllerOverride: _PreseededOrderController.new,
     );
     await tester.enterText(find.byKey(const Key('wizardNameField')), 'Cup');
     await tester.pumpAndSettle();

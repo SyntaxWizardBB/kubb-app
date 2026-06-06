@@ -29,6 +29,7 @@ class TournamentConfigDraft {
   const TournamentConfigDraft({
     this.displayName,
     this.clubId,
+    this.clubChoiceMade = false,
     this.teamSize = 1,
     this.maxTeamSize = 1,
     this.minParticipants = 2,
@@ -144,6 +145,9 @@ class TournamentConfigDraft {
     return TournamentConfigDraft(
       displayName: header.displayName,
       clubId: header.clubId,
+      // EDIT mode: the club choice was already made when the tournament was
+      // created, so the Stammdaten step is valid without re-picking (K03).
+      clubChoiceMade: true,
       teamSize: header.teamSize,
       maxTeamSize: maxTeamSize < header.teamSize ? header.teamSize : maxTeamSize,
       minParticipants: header.minParticipants,
@@ -390,6 +394,23 @@ class TournamentConfigDraft {
   /// the `club_id` setup key.
   final String? clubId;
 
+  /// K03: whether the organizer has actively made the club choice in the
+  /// wizard — either picking a club ([clubId] != null) OR explicitly
+  /// choosing "Spasstournier – ohne Wertung" ([clubId] == null). A bare
+  /// default draft has `false` here so the wizard can tell "not chosen yet"
+  /// apart from "explicitly no club" (the dropdown alone can't, since both
+  /// map to a null `clubId`). Not persisted on the wire — the server only
+  /// needs the resulting [clubId]; this is wizard-validation state.
+  final bool clubChoiceMade;
+
+  /// K02: a tournament is rating-/league-relevant only when an organizing
+  /// club is selected. "Spasstournier – ohne Wertung" ([clubId] == null) is
+  /// never rated — the points/league system must skip it. Derived from
+  /// [clubId] so no separate persisted flag is required; the wertungsfrei
+  /// state round-trips implicitly via the `club_id` setup key (and
+  /// [toSetupConfig] emits an empty `league_categories` for it).
+  bool get isRated => clubId != null;
+
   /// Minimum players per team (1 = singles). The M1 `team_size` column.
   final int teamSize;
 
@@ -502,7 +523,33 @@ class TournamentConfigDraft {
   final KoTiebreakMethod koTiebreakMethod;
 
   static const int displayNameMinChars = 3;
+
+  /// K01: max length of the user-typed name. The auto-appended 4-digit year
+  /// suffix (` 2026`, +5 chars) is added on top and is exempt from this
+  /// limit, so [resolvedDisplayName] may exceed it by the suffix length.
   static const int displayNameMaxChars = 60;
+
+  /// K01: the tournament name with the relevant year appended for
+  /// uniqueness across years (e.g. "Sommercup" → "Sommercup 2026"), so a
+  /// host re-running the same tournament next year stays distinguishable.
+  ///
+  /// Idempotent: if the trimmed name already contains a 4-digit year
+  /// (1900–2099) it is returned unchanged. The appended year is
+  /// [eventStartsAt].year when the start date is set, otherwise the current
+  /// year ([DateTime.now]). Returns null when no name is set yet.
+  String? get resolvedDisplayName {
+    final name = displayName?.trim();
+    if (name == null || name.isEmpty) return name;
+    if (_containsFourDigitYear(name)) return name;
+    final year = eventStartsAt?.year ?? DateTime.now().year;
+    return '$name $year';
+  }
+
+  /// True when [text] already contains a standalone 4-digit year in the
+  /// 1900–2099 range, so [resolvedDisplayName] does not append a second one.
+  static bool _containsFourDigitYear(String text) =>
+      RegExp(r'(?<!\d)(19|20)\d{2}(?!\d)').hasMatch(text);
+
   static const int participantsHardMin = 2;
   static const int participantsHardMax = 64;
   static const int setsToWinMin = 1;
@@ -525,6 +572,7 @@ class TournamentConfigDraft {
     String? displayName,
     String? clubId,
     bool clearClubId = false,
+    bool? clubChoiceMade,
     int? teamSize,
     int? maxTeamSize,
     int? minParticipants,
@@ -587,6 +635,7 @@ class TournamentConfigDraft {
     return TournamentConfigDraft(
       displayName: displayName ?? this.displayName,
       clubId: clearClubId ? null : (clubId ?? this.clubId),
+      clubChoiceMade: clubChoiceMade ?? this.clubChoiceMade,
       teamSize: teamSize ?? this.teamSize,
       maxTeamSize: maxTeamSize ?? this.maxTeamSize,
       minParticipants: minParticipants ?? this.minParticipants,
@@ -692,6 +741,28 @@ class TournamentConfigDraft {
       rounds++;
     }
     return rounds;
+  }
+
+  /// Default single-pool [PoolPhaseConfig] for the Schoch Vorrunde.
+  ///
+  /// User requirement (P5/P6): selecting "Schoch" must automatically produce
+  /// EXACTLY ONE pool that holds ALL participants — i.e. `group_count == 1` —
+  /// so the hybrid (`swiss_then_ko`) format always carries a valid
+  /// `pool_phase_config` and `tournament_start` no longer fails with
+  /// "pool_phase_config required for hybrid format".
+  ///
+  /// `qualifiersPerGroup` mirrors the KO qualifier count when known (all teams
+  /// in the single pool advance into the KO bracket up to that cut), falling
+  /// back to 2 — the minimum a KO bracket can hold — when the KO config has
+  /// not been chosen yet. `strategy` is `seeded` (block-fill), which is the
+  /// transparent, deterministic choice for a single pool and matches the
+  /// existing `seeded` examples persisted in the DB.
+  static PoolPhaseConfig schochSinglePoolConfig(KoPhaseConfig? koConfig) {
+    return PoolPhaseConfig(
+      groupCount: 1,
+      qualifiersPerGroup: koConfig?.qualifierCount ?? 2,
+      strategy: PoolGroupingStrategy.seeded,
+    );
   }
 
   /// [TournamentFormat] derived from the two-axis selection.
@@ -814,6 +885,40 @@ class TournamentConfigDraft {
     if (leagueCategories.toSet().length != leagueCategories.length) {
       issues.add('Liga-Kategorien dürfen sich nicht wiederholen.');
     }
+
+    // K03: the organizer must actively choose a club OR "Spasstournier –
+    // ohne Wertung". A bare default draft (clubChoiceMade == false) is not
+    // valid — there is no implicit "Spasstournier" default.
+    if (!clubChoiceMade) {
+      issues.add('Bitte einen Verein oder "Spasstournier – ohne Wertung" wählen.');
+    }
+    // K29: when a club is selected (i.e. NOT a Spasstournier) at least one
+    // league category is required so the points/league system can dock on.
+    // For a Spasstournier (clubId == null) the field is hidden, so it is
+    // exempt from the required rule (K27 carve-out).
+    if (clubId != null && leagueCategories.isEmpty) {
+      issues.add('Bitte mindestens eine Liga-Kategorie wählen.');
+    }
+    // K30: venue / town is required.
+    if (_blankToNull(location) == null) {
+      issues.add('Ort fehlt.');
+    }
+    // K31: full venue address is required.
+    if (_blankToNull(venueAddress) == null) {
+      issues.add('Adresse fehlt.');
+    }
+    // K32: tournament start (date + time) is required.
+    if (eventStartsAt == null) {
+      issues.add('Turnierstart fehlt.');
+    }
+    // K33: registration deadline and on-site check-in deadline are required.
+    if (registrationClosesAt == null) {
+      issues.add('Anmeldeschluss fehlt.');
+    }
+    if (checkinUntil == null) {
+      issues.add('Check-in-Zeit fehlt.');
+    }
+
     final closes = registrationClosesAt;
     final starts = eventStartsAt;
     if (closes != null && starts != null && closes.isAfter(starts)) {
@@ -927,6 +1032,7 @@ class TournamentConfigDraft {
       other is TournamentConfigDraft &&
           other.displayName == displayName &&
           other.clubId == clubId &&
+          other.clubChoiceMade == clubChoiceMade &&
           other.teamSize == teamSize &&
           other.maxTeamSize == maxTeamSize &&
           other.minParticipants == minParticipants &&
@@ -980,6 +1086,7 @@ class TournamentConfigDraft {
   int get hashCode => Object.hashAll(<Object?>[
         displayName,
         clubId,
+        clubChoiceMade,
         teamSize,
         maxTeamSize,
         minParticipants,

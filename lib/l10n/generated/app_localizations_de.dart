@@ -1394,14 +1394,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardDisplayNameLabel => 'Turniername';
 
   @override
+  String get tournamentWizardDisplayNameYearHint =>
+      'Die Jahreszahl wird automatisch angehängt (z.B. 2026).';
+
+  @override
   String get tournamentWizardClubLabel => 'Ausrichtender Verein';
 
   @override
   String get tournamentWizardClubHint =>
-      'Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten.';
+      'Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten. Ohne Verein (Spasstournier) zählt das Turnier nicht für die Wertung.';
 
   @override
-  String get tournamentWizardClubNone => 'Kein Verein (persönlich)';
+  String get tournamentWizardClubNone => 'Spasstournier – ohne Wertung';
+
+  @override
+  String get tournamentWizardClubChoosePrompt => 'Bitte wählen';
 
   @override
   String get tournamentWizardLocationLabel => 'Ort';
@@ -1523,6 +1530,19 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get tournamentWizardRuleDiggyHint =>
       'Doppel-Chriesi dürfen aufgestellt werden';
+
+  @override
+  String get tournamentWizardRuleOpeningLabel => 'Anspielregel';
+
+  @override
+  String get tournamentWizardRuleOpening246 => '2-4-6';
+
+  @override
+  String get tournamentWizardRuleOpeningFree => 'Frei';
+
+  @override
+  String get tournamentWizardRuleOpeningHint =>
+      'Reihenfolge beim Anspiel (Standard: 2-4-6).';
 
   @override
   String get tournamentWizardRuleStrafkubb => 'Strafkubb mit Abstand';

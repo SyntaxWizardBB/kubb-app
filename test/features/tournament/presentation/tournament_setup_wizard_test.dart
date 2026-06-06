@@ -279,14 +279,39 @@ class _FakeTournamentRemote implements TournamentRemote {
   }
 }
 
+/// Required Stammdaten fields (W1 / K03, K30-K33) merged onto a draft so
+/// navigation-focused tests can advance past the (now stricter) step 1
+/// without driving every date picker. Spasstournier (no club) so no league
+/// category is required (K29).
+TournamentConfigDraft _withStammdaten(TournamentConfigDraft d) {
+  final start = DateTime(2026, 8, 1, 10);
+  return d.copyWith(
+    clubChoiceMade: true,
+    location: 'Esp',
+    venueAddress: 'Sportplatz Esp, Fislisbach',
+    eventStartsAt: start,
+    registrationClosesAt: start.subtract(const Duration(days: 7)),
+    checkinUntil: start.subtract(const Duration(minutes: 30)),
+  );
+}
+
+/// Default controller for [_pumpWizard]: a group-phase draft with the
+/// required Stammdaten pre-filled so the wizard can walk past step 1.
+class _StammdatenSeededController extends TournamentConfigController {
+  @override
+  TournamentConfigDraft build() => _withStammdaten(super.build());
+}
+
 /// Controller variant that starts the draft on a Schoch Vorrunde so the
 /// group-phase (pool) step is hidden — yielding the minimal 5-step flow
 /// (name, Vorrunde, KO-config, summary; every tournament has a KO stage).
 class _SchochSeededController extends TournamentConfigController {
   @override
-  TournamentConfigDraft build() => const TournamentConfigDraft(
-        format: TournamentFormat.swissThenKo,
-        vorrundeType: VorrundeType.schoch,
+  TournamentConfigDraft build() => _withStammdaten(
+        const TournamentConfigDraft(
+          format: TournamentFormat.swissThenKo,
+          vorrundeType: VorrundeType.schoch,
+        ),
       );
 }
 
@@ -294,16 +319,19 @@ class _SchochSeededController extends TournamentConfigController {
 /// Vorrunde, used to assert the Model-B config inputs surface.
 class _ConsolationSeededController extends TournamentConfigController {
   @override
-  TournamentConfigDraft build() => const TournamentConfigDraft(
-        format: TournamentFormat.swissThenKo,
-        vorrundeType: VorrundeType.schoch,
-        koType: KoType.consolation,
+  TournamentConfigDraft build() => _withStammdaten(
+        const TournamentConfigDraft(
+          format: TournamentFormat.swissThenKo,
+          vorrundeType: VorrundeType.schoch,
+          koType: KoType.consolation,
+        ),
       );
 }
 
 Future<_FakeTournamentRemote> _pumpWizard(
   WidgetTester tester, {
   List<Object> extraOverrides = const <Object>[],
+  TournamentConfigController Function()? controllerOverride,
 }) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1;
@@ -331,6 +359,13 @@ Future<_FakeTournamentRemote> _pumpWizard(
     ProviderScope(
       overrides: <Object>[
         tournamentRemoteProvider.overrideWithValue(fake),
+        // Default: a draft with the required Stammdaten pre-filled (W1) so
+        // navigation tests can advance past step 1. A test may swap in its
+        // own controller via [controllerOverride] (e.g. Schoch/consolation
+        // seeds); those seeds also include the Stammdaten via [_withStammdaten].
+        tournamentConfigControllerProvider.overrideWith(
+          controllerOverride ?? _StammdatenSeededController.new,
+        ),
         ...extraOverrides,
       ].cast(),
       child: MaterialApp.router(
@@ -471,10 +506,7 @@ void main() {
       (tester) async {
     final fake = await _pumpWizard(
       tester,
-      extraOverrides: [
-        tournamentConfigControllerProvider
-            .overrideWith(_SchochSeededController.new),
-      ],
+      controllerOverride: _SchochSeededController.new,
     );
     expect(find.text('Schritt 1 von 5'), findsOneWidget);
 
@@ -494,6 +526,17 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
     await tester.pumpAndSettle();
     expect(fake.createdFormat, TournamentFormat.swissThenKo);
+    // Schoch auto-fills a single-pool pool_phase_config (group_count == 1, all
+    // participants in one pool) even though the pool-config step is hidden, so
+    // tournament_start no longer fails with "pool_phase_config required for
+    // hybrid format".
+    final pool =
+        fake.createdSetup?['pool_phase_config'] as Map<String, Object?>?;
+    expect(pool, isNotNull);
+    expect(pool?['group_count'], 1);
+    expect(pool?['strategy'], 'seeded');
+    // qualifiers_per_group tracks the KO qualifier count chosen in the KO step.
+    expect(pool?['qualifiers_per_group'], isNotNull);
   });
 
   testWidgets('no "Kein K.-o." option remains; three KO choices are offered',
@@ -514,10 +557,7 @@ void main() {
     // Single-out seeded: no Model-B section.
     await _pumpWizard(
       tester,
-      extraOverrides: [
-        tournamentConfigControllerProvider
-            .overrideWith(_SchochSeededController.new),
-      ],
+      controllerOverride: _SchochSeededController.new,
     );
     await _typeName(tester, 'Cup');
     await _tapNext(tester); // -> participants
@@ -548,10 +588,7 @@ void main() {
       (tester) async {
     final fake = await _pumpWizard(
       tester,
-      extraOverrides: [
-        tournamentConfigControllerProvider
-            .overrideWith(_ConsolationSeededController.new),
-      ],
+      controllerOverride: _ConsolationSeededController.new,
     );
     await _typeName(tester, 'Trost Cup');
     await _tapNext(tester); // -> participants
@@ -679,7 +716,8 @@ void main() {
 
     expect(find.text('Kubb Club Aarau'), findsWidgets);
     expect(find.text('Kubb Club Bern'), findsWidgets);
-    expect(find.text('Kein Verein (persönlich)'), findsWidgets);
+    // K02: the no-club option is now the Spasstournier label.
+    expect(find.text('Spasstournier – ohne Wertung'), findsWidgets);
     // A club the caller does NOT manage is never offered.
     expect(find.text('Kubb Club Zürich'), findsNothing);
   });
@@ -701,6 +739,9 @@ void main() {
     await tester.tap(find.byKey(const Key('wizardClubPicker')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Kubb Club Aarau').last);
+    await tester.pumpAndSettle();
+    // K29: a club tournament requires at least one league category.
+    await tester.tap(find.text('Liga A'));
     await tester.pumpAndSettle();
 
     await _tapNext(tester); // -> participants
@@ -755,7 +796,8 @@ void main() {
   testWidgets('edit mode pre-fills the name and submits via updateTournament',
       (tester) async {
     const editId = TournamentId('t-edit-1');
-    const initial = TournamentConfigDraft(displayName: 'Alt-Name');
+    final initial =
+        _withStammdaten(const TournamentConfigDraft(displayName: 'Alt-Name'));
     final fake = await _pumpEditWizard(
       tester,
       editId: editId,
@@ -784,8 +826,87 @@ void main() {
     expect(fake.callCount, 0);
     expect(fake.updateCallCount, 1);
     expect(fake.updatedId, editId);
-    expect(fake.updatedDisplayName, 'Neuer-Name');
+    // K01: the year (from eventStartsAt = 2026) is auto-appended on submit.
+    expect(fake.updatedDisplayName, 'Neuer-Name 2026');
     expect(fake.updatedSetup, isNotNull);
     expect(find.text('detail:t-edit-1'), findsOneWidget);
+  });
+
+  // ---- W1 wizard-rework Stammdaten UI ----
+
+  testWidgets('K01: a helper text explains the auto-appended year',
+      (tester) async {
+    await _pumpWizard(tester);
+    expect(
+      find.text('Die Jahreszahl wird automatisch angehängt (z.B. 2026).'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('K02: the no-club option is labelled "Spasstournier – ohne '
+      'Wertung"', (tester) async {
+    await _pumpWizard(tester);
+    // Default seed = Spasstournier (no club), so the label shows as the
+    // selected value of the picker.
+    expect(find.text('Spasstournier – ohne Wertung'), findsWidgets);
+  });
+
+  testWidgets('K03: Weiter stays disabled until the club choice is made',
+      (tester) async {
+    // Fresh draft (no Stammdaten seed): even with a valid name, the club
+    // choice is unmade, so the step is invalid.
+    await _pumpWizard(
+      tester,
+      controllerOverride: TournamentConfigController.new,
+    );
+    await _typeName(tester, 'Cup');
+    final next = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Weiter'),
+    );
+    expect(next.onPressed, isNull);
+  });
+
+  testWidgets('K05: the Diggy toggle is ON for a fresh draft', (tester) async {
+    await _pumpWizard(tester);
+    final diggySwitch = tester.widget<Switch>(
+      find.descendant(
+        of: find.ancestor(
+          of: find.text('Diggy-Regel'),
+          matching: find.byType(Row),
+        ),
+        matching: find.byType(Switch),
+      ),
+    );
+    expect(diggySwitch.value, isTrue);
+  });
+
+  testWidgets('K06: the opening-rule selector is present and selectable',
+      (tester) async {
+    await _pumpWizard(tester);
+    final segmented = find.byKey(const Key('wizardOpeningRule'));
+    expect(segmented, findsOneWidget);
+    // Default shows 2-4-6 selected.
+    final button = tester.widget<SegmentedButton<String>>(segmented);
+    expect(button.selected, <String>{'2-4-6'});
+    // Picking "Frei" updates the rule variants.
+    await tester.tap(find.text('Frei'));
+    await tester.pumpAndSettle();
+    final updated = tester.widget<SegmentedButton<String>>(segmented);
+    expect(updated.selected, <String>{'free'});
+  });
+
+  testWidgets('K07: the participant info fields allow up to 5 lines',
+      (tester) async {
+    await _pumpWizard(tester);
+    // The info fields are built into the step regardless of scroll position.
+    final infoFields = tester
+        .widgetList<TextField>(find.byType(TextField))
+        .where((f) => f.maxLines == 5)
+        .toList();
+    // The four info free-text fields (food/travel/accommodation/weather).
+    expect(infoFields.length, greaterThanOrEqualTo(4));
+    for (final f in infoFields) {
+      expect(f.minLines, 3);
+    }
   });
 }

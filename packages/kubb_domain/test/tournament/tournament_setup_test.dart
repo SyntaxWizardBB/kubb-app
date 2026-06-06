@@ -96,7 +96,8 @@ void main() {
     test('JSON round-trips', () {
       const rv = RuleVariants(
         sureshot: true,
-        diggy: true,
+        // Non-default (K05 default is true) so the round-trip covers it.
+        diggy: false,
         strafkubbOffBaseline: false,
       );
       expect(RuleVariants.fromJson(rv.toJson()), rv);
@@ -105,9 +106,20 @@ void main() {
     test('defaults match the conservative Swiss ruleset', () {
       const rv = RuleVariants();
       expect(rv.sureshot, false);
-      expect(rv.diggy, false);
+      // K05: Diggy defaults to ON for new tournaments.
+      expect(rv.diggy, true);
       expect(rv.openingRule, '2-4-6');
       expect(rv.strafkubbOffBaseline, true);
+    });
+
+    test('K05: diggy default is ON and fromJson falls back to true', () {
+      expect(const RuleVariants().diggy, isTrue);
+      expect(RuleVariants.fromJson(const <String, Object?>{}).diggy, isTrue);
+      // An explicit false still round-trips.
+      expect(
+        RuleVariants.fromJson(const <String, Object?>{'diggy': false}).diggy,
+        isFalse,
+      );
     });
   });
 

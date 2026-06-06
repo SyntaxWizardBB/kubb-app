@@ -23,9 +23,17 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     // koType) selection — even for a bare default draft that the organiser
     // never edited (it would otherwise submit as a pure round-robin without a
     // KO). Normalise on build so submit reads a consistent format.
+    // Schoch always needs a single-pool config to start the hybrid format.
+    // Backfill it here so an EDIT-mode draft rebuilt from a row that pre-dates
+    // this fix (pool_phase_config = null) is repaired before submit.
+    final poolBackfill =
+        draft.vorrundeType == VorrundeType.schoch && draft.poolPhaseConfig == null
+            ? TournamentConfigDraft.schochSinglePoolConfig(draft.koConfig)
+            : draft.poolPhaseConfig;
     return draft.copyWith(
       format: draft.derivedFormat,
       bracketType: draft.derivedBracketType,
+      poolPhaseConfig: poolBackfill,
     );
   }
 
@@ -42,13 +50,18 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
   /// draft (the chips are hidden when clubId == null) and `toSetupConfig()`
   /// would emit a non-empty `league_categories`, making a personal tournament
   /// wrongly league-relevant.
+  /// K03: any selection in the picker (a club OR "Spasstournier – ohne
+  /// Wertung") marks the club choice as actively made, so the Stammdaten
+  /// step becomes valid. A null [clubId] therefore means the explicit
+  /// Spasstournier choice, not "not chosen yet".
   void setClubId(String? clubId) {
     state = clubId == null
         ? state.copyWith(
             clearClubId: true,
+            clubChoiceMade: true,
             leagueCategories: const <LeagueCategory>[],
           )
-        : state.copyWith(clubId: clubId);
+        : state.copyWith(clubId: clubId, clubChoiceMade: true);
   }
 
   void setMinParticipants(int value) {
@@ -70,10 +83,17 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     // legacy enum so either entry point stays consistent. Bracket-type
     // (single/double) is preserved when the raw enum can't express it.
     final (vorrunde, ko) = _axesFor(format, state.bracketType);
+    // Mirror setVorrundeType: a Schoch Vorrunde always needs a single-pool
+    // pool_phase_config so the hybrid format starts (see setVorrundeType).
+    final wantsSinglePool =
+        vorrunde == VorrundeType.schoch && state.poolPhaseConfig == null;
     state = state.copyWith(
       format: format,
       vorrundeType: vorrunde,
       koType: ko,
+      poolPhaseConfig: wantsSinglePool
+          ? TournamentConfigDraft.schochSinglePoolConfig(state.koConfig)
+          : state.poolPhaseConfig,
     );
   }
 
@@ -105,10 +125,33 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
   }
 
   /// Sets the preliminary stage axis and re-derives the legacy format.
+  ///
+  /// Switching to [VorrundeType.schoch] auto-initialises a single-pool
+  /// [PoolPhaseConfig] (group_count == 1, all participants in one pool) when
+  /// none is set yet. The Schoch Vorrunde never visits the pool-config wizard
+  /// step (it is only shown for [VorrundeType.groupPhase]), so without this
+  /// the hybrid `swiss_then_ko` format would persist `pool_phase_config: null`
+  /// and `tournament_start` would fail with "pool_phase_config required for
+  /// hybrid format" (SQLSTATE 22023). Group-phase keeps configuring the pool
+  /// explicitly in its step, so only Schoch auto-fills here.
   void setVorrundeType(VorrundeType type) {
+    final wantsSinglePool =
+        type == VorrundeType.schoch && state.poolPhaseConfig == null;
+    // Leaving Schoch for the group phase: drop the auto single-pool config so
+    // the group-phase step starts clean (its UI requires group_count >= 2 and
+    // would otherwise inherit the invalid group_count == 1). A user-built
+    // multi-group config is preserved.
+    final pool = state.poolPhaseConfig;
+    final dropSinglePool = type == VorrundeType.groupPhase &&
+        pool != null &&
+        pool.groupCount == 1;
     state = state.copyWith(
       vorrundeType: type,
       format: TournamentConfigDraft.formatFor(type, state.koType),
+      poolPhaseConfig: wantsSinglePool
+          ? TournamentConfigDraft.schochSinglePoolConfig(state.koConfig)
+          : (dropSinglePool ? null : state.poolPhaseConfig),
+      clearPoolPhaseConfig: dropSinglePool,
     );
   }
 
@@ -199,6 +242,26 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     if (state.koType == KoType.consolation && config != null) {
       next = next.copyWith(
         consolationMainBracketSize: _nextPow2(config.qualifierCount),
+      );
+    }
+    // Schoch single-pool mode: the lone pool advances exactly the KO qualifier
+    // count into the bracket. The KO-config step runs AFTER the format step, so
+    // (re)derive qualifiersPerGroup here. This both backfills a still-missing
+    // single-pool config (e.g. when the format axis was seeded directly) and
+    // keeps an existing auto single pool in step with the qualifier count. A
+    // user-built multi-group config (group_count > 1) is left untouched.
+    final pool = next.poolPhaseConfig;
+    if (next.vorrundeType == VorrundeType.schoch &&
+        config != null &&
+        (pool == null || pool.groupCount == 1) &&
+        pool?.qualifiersPerGroup != config.qualifierCount) {
+      next = next.copyWith(
+        poolPhaseConfig: PoolPhaseConfig(
+          groupCount: 1,
+          qualifiersPerGroup: config.qualifierCount,
+          strategy: pool?.strategy ?? PoolGroupingStrategy.seeded,
+          randomSeed: pool?.randomSeed,
+        ),
       );
     }
     state = next;

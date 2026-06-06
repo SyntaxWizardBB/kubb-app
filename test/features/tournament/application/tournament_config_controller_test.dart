@@ -107,6 +107,57 @@ void main() {
     });
   });
 
+  group('Schoch auto single-pool config', () {
+    test('selecting Schoch auto-inits a single-pool pool_phase_config', () {
+      expect(state().poolPhaseConfig, isNull);
+      controller.setVorrundeType(VorrundeType.schoch);
+      final pool = state().poolPhaseConfig;
+      expect(pool, isNotNull);
+      // Exactly one pool holding all participants (user requirement).
+      expect(pool!.groupCount, 1);
+      expect(pool.strategy, PoolGroupingStrategy.seeded);
+      // No KO config yet => minimum-bracket fallback.
+      expect(pool.qualifiersPerGroup, 2);
+    });
+
+    test('setKoConfig syncs qualifiers_per_group for the Schoch single pool',
+        () {
+      controller.setVorrundeType(VorrundeType.schoch);
+      controller
+          .setKoConfig(KoPhaseConfig(qualifierCount: 8, participantCount: 16));
+      final pool = state().poolPhaseConfig;
+      expect(pool!.groupCount, 1);
+      expect(pool.qualifiersPerGroup, 8);
+    });
+
+    test('setFormat(swissThenKo) also auto-inits the single pool', () {
+      controller.setFormat(TournamentFormat.swissThenKo);
+      final pool = state().poolPhaseConfig;
+      expect(pool!.groupCount, 1);
+    });
+
+    test('toSetupConfig emits a non-null single-pool config for Schoch', () {
+      controller.setVorrundeType(VorrundeType.schoch);
+      controller
+          .setKoConfig(KoPhaseConfig(qualifierCount: 4, participantCount: 8));
+      final wire =
+          state().toSetupConfig()['pool_phase_config'] as Map<String, Object?>?;
+      expect(wire, isNotNull);
+      expect(wire!['group_count'], 1);
+      expect(wire['qualifiers_per_group'], 4);
+      expect(wire['strategy'], 'seeded');
+    });
+
+    test('switching Schoch -> groupPhase drops the auto single pool', () {
+      controller.setVorrundeType(VorrundeType.schoch);
+      expect(state().poolPhaseConfig?.groupCount, 1);
+      controller.setVorrundeType(VorrundeType.groupPhase);
+      // The group-phase step requires group_count >= 2 and configures the pool
+      // itself, so the invalid single pool must not linger.
+      expect(state().poolPhaseConfig, isNull);
+    });
+  });
+
   group('per-KO-round format list', () {
     test('resizes on qualifier change via setKoConfig', () {
       controller.setKoType(KoType.singleOut);

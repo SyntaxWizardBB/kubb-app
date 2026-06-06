@@ -2,6 +2,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
+/// A draft that passes the (now stricter) Stammdaten validation: name,
+/// club/Spasstournier choice and the required Stammdaten fields are all set.
+/// Used by tests that assert `validate().isValid == true` for non-Stammdaten
+/// concerns. Defaults to a Spasstournier (no club) so no league category is
+/// required (K29). Override individual fields via copyWith.
+TournamentConfigDraft _validStammdaten({String name = 'Cup'}) {
+  final now = DateTime(2026, 8, 1, 10);
+  return TournamentConfigDraft(
+    displayName: name,
+    clubChoiceMade: true,
+    location: 'Esp',
+    venueAddress: 'Sportplatz Esp, Fislisbach',
+    eventStartsAt: now,
+    registrationClosesAt: now.subtract(const Duration(days: 7)),
+    checkinUntil: now.subtract(const Duration(minutes: 30)),
+  );
+}
+
 void main() {
   group('TournamentConfigDraft', () {
     test('defaults match spec', () {
@@ -51,7 +69,7 @@ void main() {
 
   group('TournamentConfigDraft.validate', () {
     test('valid for a fully filled draft', () {
-      const d = TournamentConfigDraft(displayName: 'Cup 2026');
+      final d = _validStammdaten(name: 'Cup 2026');
       final v = d.validate();
       expect(v.isValid, isTrue);
       expect(v.issues, isEmpty);
@@ -105,10 +123,7 @@ void main() {
     test('accepts an even prelim max_sets (decoupled from sets_to_win)', () {
       // P6: the prelim allows draws, so max_sets=2 (an even value, no longer
       // tied to 2*setsToWin-1) must validate.
-      const d = TournamentConfigDraft(
-        displayName: 'Cup',
-        maxSets: 2,
-      );
+      final d = _validStammdaten().copyWith(maxSets: 2);
       final v = d.validate();
       expect(v.isValid, isTrue);
       expect(v.issues, isEmpty);
@@ -119,6 +134,127 @@ void main() {
       expect(tooHigh.validate().isValid, isFalse);
       const tooLow = TournamentConfigDraft(displayName: 'Cup', maxSets: 0);
       expect(tooLow.validate().isValid, isFalse);
+    });
+
+    // K03: club/Spasstournier choice is required.
+    test('flags a missing club choice (K03)', () {
+      expect(_validStammdaten().validate().isValid, isTrue);
+      final notChosen =
+          _validStammdaten().copyWith(clubChoiceMade: false);
+      final v = notChosen.validate();
+      expect(v.isValid, isFalse);
+      expect(
+        v.issues.any((i) => i.contains('Spasstournier') || i.contains('Verein')),
+        isTrue,
+      );
+    });
+
+    // K29: league category required when a club is chosen, exempt otherwise.
+    test('flags missing league category when a club is set (K29)', () {
+      final withClub = _validStammdaten().copyWith(clubId: 'club-1');
+      final v = withClub.validate();
+      expect(v.isValid, isFalse);
+      expect(v.issues.any((i) => i.contains('Liga-Kategorie')), isTrue);
+
+      final withCategory = withClub.copyWith(
+        leagueCategories: const <LeagueCategory>[LeagueCategory.a],
+      );
+      expect(
+        withCategory.validate().issues.any((i) => i.contains('Liga-Kategorie')),
+        isFalse,
+      );
+
+      // Spasstournier (no club) is exempt from the league requirement.
+      final funTournament = _validStammdaten();
+      expect(
+        funTournament.validate().issues.any((i) => i.contains('Liga-Kategorie')),
+        isFalse,
+      );
+    });
+
+    // K30/K31: location + address required.
+    test('flags missing location and address (K30/K31)', () {
+      final noLocation = _validStammdaten().copyWith(location: '   ');
+      expect(noLocation.validate().issues.any((i) => i.contains('Ort')), isTrue);
+      final noAddress = _validStammdaten().copyWith(venueAddress: '');
+      expect(
+        noAddress.validate().issues.any((i) => i.contains('Adresse')),
+        isTrue,
+      );
+    });
+
+    // K32/K33: start, registration deadline, check-in required.
+    test('flags missing start / deadlines (K32/K33)', () {
+      expect(_validStammdaten().validate().isValid, isTrue);
+      // No copyWith null-clear for dates exists, so build a minimal draft.
+      const noStart = TournamentConfigDraft(
+        displayName: 'Cup',
+        clubChoiceMade: true,
+        location: 'X',
+        venueAddress: 'Y',
+      );
+      final iss = noStart.validate().issues;
+      expect(iss.any((i) => i.contains('Turnierstart')), isTrue);
+      expect(iss.any((i) => i.contains('Anmeldeschluss')), isTrue);
+      expect(iss.any((i) => i.contains('Check-in')), isTrue);
+    });
+
+    // K01: the displayName max-length check excludes the auto year suffix —
+    // a name at the limit stays valid (resolvedDisplayName may overflow).
+    test('name at the max length still validates (year suffix exempt, K01)',
+        () {
+      final d = _validStammdaten(
+        name: 'A' * TournamentConfigDraft.displayNameMaxChars,
+      );
+      expect(d.validate().isValid, isTrue);
+    });
+  });
+
+  group('TournamentConfigDraft.resolvedDisplayName (K01)', () {
+    test('appends the current year when no year is present', () {
+      final year = DateTime.now().year;
+      const d = TournamentConfigDraft(displayName: 'Sommercup');
+      expect(d.resolvedDisplayName, 'Sommercup $year');
+    });
+
+    test('appends the event-start year when set', () {
+      final d = TournamentConfigDraft(
+        displayName: 'Sommercup',
+        eventStartsAt: DateTime(2027, 5, 20),
+      );
+      expect(d.resolvedDisplayName, 'Sommercup 2027');
+    });
+
+    test('is idempotent: an existing 4-digit year is not re-appended', () {
+      const d = TournamentConfigDraft(displayName: 'Sommercup 2026');
+      expect(d.resolvedDisplayName, 'Sommercup 2026');
+      const d2 = TournamentConfigDraft(displayName: '2025 Winter Open');
+      expect(d2.resolvedDisplayName, '2025 Winter Open');
+    });
+
+    test('returns null/empty unchanged', () {
+      const d = TournamentConfigDraft();
+      expect(d.resolvedDisplayName, isNull);
+    });
+  });
+
+  group('TournamentConfigDraft rating relevance (K02)', () {
+    test('Spasstournier (no club) is not rated and emits no league categories',
+        () {
+      final d = _validStammdaten();
+      expect(d.clubId, isNull);
+      expect(d.isRated, isFalse);
+      final setup = d.toSetupConfig();
+      expect(setup['league_categories'], isEmpty);
+    });
+
+    test('a club tournament is rated', () {
+      final d = _validStammdaten().copyWith(
+        clubId: 'club-1',
+        leagueCategories: const <LeagueCategory>[LeagueCategory.a],
+      );
+      expect(d.isRated, isTrue);
+      expect(d.toSetupConfig()['league_categories'], <String>['A']);
     });
   });
 
@@ -178,8 +314,7 @@ void main() {
     });
 
     test('validate passes when koConfig set for single_elimination', () {
-      final d = TournamentConfigDraft(
-        displayName: 'Cup',
+      final d = _validStammdaten().copyWith(
         format: TournamentFormat.singleElimination,
         koConfig: ko,
       );
@@ -189,7 +324,7 @@ void main() {
     });
 
     test('validate ignores koConfig for round_robin', () {
-      const d = TournamentConfigDraft(displayName: 'Cup');
+      final d = _validStammdaten();
       final v = d.validate();
       expect(v.isValid, isTrue);
     });
@@ -250,6 +385,23 @@ void main() {
         result.issues.any((i) => i.contains('Tiebreak-Zeit')),
         isTrue,
       );
+    });
+  });
+
+  group('TournamentConfigDraft.schochSinglePoolConfig', () {
+    test('builds a single pool that advances the KO qualifier count', () {
+      final cfg = TournamentConfigDraft.schochSinglePoolConfig(
+        KoPhaseConfig(qualifierCount: 8, participantCount: 16),
+      );
+      expect(cfg.groupCount, 1);
+      expect(cfg.qualifiersPerGroup, 8);
+      expect(cfg.strategy, PoolGroupingStrategy.seeded);
+    });
+
+    test('falls back to 2 qualifiers when the KO config is unknown', () {
+      final cfg = TournamentConfigDraft.schochSinglePoolConfig(null);
+      expect(cfg.groupCount, 1);
+      expect(cfg.qualifiersPerGroup, 2);
     });
   });
 
@@ -499,7 +651,9 @@ void main() {
           LeagueCategory.b,
         ],
         scoring: 'classic',
-        ruleVariants: const RuleVariants(diggy: true),
+        // Use the non-default diggy=false here so the serialization is
+        // exercised against a value that differs from the K05 default (true).
+        ruleVariants: const RuleVariants(diggy: false),
         koMatchFormat: const MatchFormatSpec(
           setsToWin: 3,
           maxSets: 5,
@@ -524,7 +678,7 @@ void main() {
       expect(setup['scoring'], 'classic');
       expect(
         (setup['rule_variants']! as Map<String, Object?>)['diggy'],
-        true,
+        false,
       );
       expect(
         (setup['ko_match_format']! as Map<String, Object?>)['final_no_tiebreak'],
@@ -544,7 +698,7 @@ void main() {
         contactPhone: '079 347 18 35',
         infoFood: 'Bratwurst & Bier',
         weatherNote: 'Findet bei jedem Wetter statt',
-        ruleVariants: RuleVariants(sureshot: true, diggy: true),
+        ruleVariants: RuleVariants(sureshot: true),
         rulesPdfUrl: 'https://x/rules.pdf',
         siteMapPdfUrl: 'https://x/map.pdf',
       );
@@ -701,7 +855,9 @@ void main() {
         koType: KoType.doubleOut,
         bracketType: BracketType.doubleElimination,
         koConfig: ko,
-        ruleVariants: const RuleVariants(sureshot: true, diggy: true),
+        // diggy=false is the non-default value (K05 default is true), so the
+        // round-trip is exercised against a value that differs from default.
+        ruleVariants: const RuleVariants(sureshot: true, diggy: false),
       );
 
       final back = TournamentConfigDraft.fromDetail(headerFor(original));
@@ -712,7 +868,7 @@ void main() {
       expect(back.bracketType, BracketType.doubleElimination);
       expect(back.koConfig?.qualifierCount, 4);
       expect(back.ruleVariants.sureshot, isTrue);
-      expect(back.ruleVariants.diggy, isTrue);
+      expect(back.ruleVariants.diggy, isFalse);
     });
 
     test('round-trips the Model-B consolation fields (ADR-0028 §5)', () {

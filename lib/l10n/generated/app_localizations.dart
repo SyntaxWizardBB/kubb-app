@@ -2638,6 +2638,12 @@ abstract class AppLocalizations {
   /// **'Turniername'**
   String get tournamentWizardDisplayNameLabel;
 
+  /// Helper text explaining the auto-appended year suffix (K01)
+  ///
+  /// In de, this message translates to:
+  /// **'Die Jahreszahl wird automatisch angehängt (z.B. 2026).'**
+  String get tournamentWizardDisplayNameYearHint;
+
   /// Optional organizing-club picker label on the Stammdaten step
   ///
   /// In de, this message translates to:
@@ -2647,14 +2653,20 @@ abstract class AppLocalizations {
   /// Helper text under the organizing-club picker
   ///
   /// In de, this message translates to:
-  /// **'Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten.'**
+  /// **'Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten. Ohne Verein (Spasstournier) zählt das Turnier nicht für die Wertung.'**
   String get tournamentWizardClubHint;
 
-  /// Dropdown option for no organizing club (personal tournament)
+  /// Dropdown option for no organizing club; a non-rated fun tournament (K02)
   ///
   /// In de, this message translates to:
-  /// **'Kein Verein (persönlich)'**
+  /// **'Spasstournier – ohne Wertung'**
   String get tournamentWizardClubNone;
+
+  /// Hint shown in the club picker until the organizer actively picks (K03)
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte wählen'**
+  String get tournamentWizardClubChoosePrompt;
 
   /// Venue / town input label on the Stammdaten step
   ///
@@ -2883,6 +2895,30 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Doppel-Chriesi dürfen aufgestellt werden'**
   String get tournamentWizardRuleDiggyHint;
+
+  /// Opening-rule (Anspielregel) selector label (K06)
+  ///
+  /// In de, this message translates to:
+  /// **'Anspielregel'**
+  String get tournamentWizardRuleOpeningLabel;
+
+  /// Opening-rule option: 2-4-6 (K06)
+  ///
+  /// In de, this message translates to:
+  /// **'2-4-6'**
+  String get tournamentWizardRuleOpening246;
+
+  /// Opening-rule option: free opening (K06)
+  ///
+  /// In de, this message translates to:
+  /// **'Frei'**
+  String get tournamentWizardRuleOpeningFree;
+
+  /// Helper text under the opening-rule selector (K06)
+  ///
+  /// In de, this message translates to:
+  /// **'Reihenfolge beim Anspiel (Standard: 2-4-6).'**
+  String get tournamentWizardRuleOpeningHint;
 
   /// Penalty kubb rule toggle title
   ///

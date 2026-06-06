@@ -97,9 +97,23 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
     if (_step >= kinds.length) return false;
     switch (kinds[_step]) {
       case _StepKind.name:
+        // K01/K03/K29-K33: the Stammdaten step is only valid once the name,
+        // the club/Spasstournier choice and every required field are set.
+        // Liga is only required when a club is chosen (K29 carve-out).
         final n = draft.displayName?.trim() ?? '';
-        return n.length >= TournamentConfigDraft.displayNameMinChars &&
-            n.length <= TournamentConfigDraft.displayNameMaxChars;
+        final nameOk =
+            n.length >= TournamentConfigDraft.displayNameMinChars &&
+                n.length <= TournamentConfigDraft.displayNameMaxChars;
+        final leagueOk =
+            draft.clubId == null || draft.leagueCategories.isNotEmpty;
+        return nameOk &&
+            draft.clubChoiceMade &&
+            leagueOk &&
+            (draft.location?.trim().isNotEmpty ?? false) &&
+            (draft.venueAddress?.trim().isNotEmpty ?? false) &&
+            draft.eventStartsAt != null &&
+            draft.registrationClosesAt != null &&
+            draft.checkinUntil != null;
       case _StepKind.participants:
         return draft.minParticipants <= draft.maxParticipants &&
             draft.minParticipants >= TournamentConfigDraft.participantsHardMin;
@@ -536,14 +550,19 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         _PlainTextField(
           key: const Key('wizardNameField'),
           controller: _nameCtrl,
-          maxLength: TournamentConfigDraft.displayNameMaxChars,
+          // K01: leave room for the auto-appended " 2026" suffix (+5 chars)
+          // so it never gets clipped by the input length limit.
+          maxLength: TournamentConfigDraft.displayNameMaxChars + 5,
           onChanged: controller.setDisplayName,
         ),
+        const SizedBox(height: KubbTokens.space1half),
+        _HelperText(l10n.tournamentWizardDisplayNameYearHint),
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(l10n.tournamentWizardClubLabel, optional: true),
+        _FieldLabel(l10n.tournamentWizardClubLabel),
         const SizedBox(height: KubbTokens.space2),
         _ClubPickerField(
           selectedClubId: draft.clubId,
+          choiceMade: draft.clubChoiceMade,
           onChanged: controller.setClubId,
         ),
         const SizedBox(height: KubbTokens.space1half),
@@ -554,10 +573,8 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         // organiser actively picks the league via these chips.
         if (draft.clubId != null) ...[
           const SizedBox(height: KubbTokens.space5),
-          _FieldLabel(
-            l10n.tournamentWizardLeagueCategoriesLabel,
-            optional: true,
-          ),
+          // K29: league categories are required once a club is chosen.
+          _FieldLabel(l10n.tournamentWizardLeagueCategoriesLabel),
           const SizedBox(height: KubbTokens.space2),
           Wrap(
             spacing: KubbTokens.space2,
@@ -575,7 +592,7 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           _HelperText(l10n.tournamentWizardLeagueCategoriesHint),
         ],
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(l10n.tournamentWizardLocationLabel, optional: true),
+        _FieldLabel(l10n.tournamentWizardLocationLabel),
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _locationCtrl,
@@ -583,7 +600,7 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           onChanged: controller.setLocation,
         ),
         const SizedBox(height: KubbTokens.space4),
-        _FieldLabel(l10n.tournamentWizardVenueAddressLabel, optional: true),
+        _FieldLabel(l10n.tournamentWizardVenueAddressLabel),
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _addressCtrl,
@@ -591,7 +608,7 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           onChanged: controller.setVenueAddress,
         ),
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(l10n.tournamentWizardEventDateLabel, optional: true),
+        _FieldLabel(l10n.tournamentWizardEventDateLabel),
         const SizedBox(height: KubbTokens.space2),
         _DateField(
           value: draft.eventStartsAt,
@@ -601,10 +618,7 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           ),
         ),
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(
-          l10n.tournamentWizardRegistrationDeadlineLabel,
-          optional: true,
-        ),
+        _FieldLabel(l10n.tournamentWizardRegistrationDeadlineLabel),
         const SizedBox(height: KubbTokens.space2),
         _DateField(
           value: draft.registrationClosesAt,
@@ -614,10 +628,7 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           ),
         ),
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(
-          l10n.tournamentWizardCheckinUntilLabel,
-          optional: true,
-        ),
+        _FieldLabel(l10n.tournamentWizardCheckinUntilLabel),
         const SizedBox(height: KubbTokens.space2),
         _DateField(
           value: draft.checkinUntil,
@@ -668,6 +679,34 @@ class _StepStammdatenState extends State<_StepStammdaten> {
             draft.ruleVariants.copyWith(strafkubbOffBaseline: v),
           ),
         ),
+        // K06: surface the opening rule (Anspielregel). Default stays
+        // '2-4-6'; the segmented control writes the choice via
+        // setRuleVariants so the value is no longer invisible in the wizard.
+        const SizedBox(height: KubbTokens.space2),
+        _FieldLabel(l10n.tournamentWizardRuleOpeningLabel),
+        const SizedBox(height: KubbTokens.space2),
+        SegmentedButton<String>(
+          key: const Key('wizardOpeningRule'),
+          showSelectedIcon: false,
+          segments: <ButtonSegment<String>>[
+            ButtonSegment<String>(
+              value: '2-4-6',
+              label: Text(l10n.tournamentWizardRuleOpening246),
+            ),
+            ButtonSegment<String>(
+              value: 'free',
+              label: Text(l10n.tournamentWizardRuleOpeningFree),
+            ),
+          ],
+          selected: <String>{
+            if (draft.ruleVariants.openingRule == 'free') 'free' else '2-4-6',
+          },
+          onSelectionChanged: (sel) => controller.setRuleVariants(
+            draft.ruleVariants.copyWith(openingRule: sel.first),
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space1half),
+        _HelperText(l10n.tournamentWizardRuleOpeningHint),
         const SizedBox(height: KubbTokens.space4),
         _FieldLabel(l10n.tournamentWizardRulesPdfLabel, optional: true),
         const SizedBox(height: KubbTokens.space2),
@@ -736,7 +775,9 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _foodCtrl,
-          maxLines: 2,
+          // K07: allow up to 5 lines for the participant info free-text.
+          minLines: 3,
+          maxLines: 5,
           onChanged: controller.setInfoFood,
         ),
         const SizedBox(height: KubbTokens.space4),
@@ -744,7 +785,9 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _travelCtrl,
-          maxLines: 2,
+          // K07: allow up to 5 lines for the participant info free-text.
+          minLines: 3,
+          maxLines: 5,
           onChanged: controller.setInfoTravel,
         ),
         const SizedBox(height: KubbTokens.space4),
@@ -753,7 +796,9 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _accommodationCtrl,
-          maxLines: 2,
+          // K07: allow up to 5 lines for the participant info free-text.
+          minLines: 3,
+          maxLines: 5,
           onChanged: controller.setInfoAccommodation,
         ),
         const SizedBox(height: KubbTokens.space4),
@@ -761,7 +806,9 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _weatherCtrl,
-          maxLines: 2,
+          // K07: allow up to 5 lines for the participant info free-text.
+          minLines: 3,
+          maxLines: 5,
           onChanged: controller.setWeatherNote,
         ),
       ],
@@ -1048,6 +1095,7 @@ class _PlainTextField extends StatelessWidget {
     this.hintText,
     this.maxLength,
     this.maxLines = 1,
+    this.minLines,
     this.keyboardType,
     super.key,
   });
@@ -1057,6 +1105,7 @@ class _PlainTextField extends StatelessWidget {
   final String? hintText;
   final int? maxLength;
   final int maxLines;
+  final int? minLines;
   final TextInputType? keyboardType;
 
   @override
@@ -1070,6 +1119,7 @@ class _PlainTextField extends StatelessWidget {
       controller: controller,
       maxLength: maxLength,
       maxLines: maxLines,
+      minLines: minLines,
       keyboardType: keyboardType,
       onChanged: onChanged,
       decoration: InputDecoration(
@@ -1092,10 +1142,16 @@ class _PlainTextField extends StatelessWidget {
 class _ClubPickerField extends ConsumerWidget {
   const _ClubPickerField({
     required this.selectedClubId,
+    required this.choiceMade,
     required this.onChanged,
   });
 
   final String? selectedClubId;
+
+  /// K03: whether the organizer has actively made the club choice. While
+  /// `false` the dropdown shows a "bitte wählen" hint and no value is
+  /// pre-selected, so "Spasstournier" is never an implicit default.
+  final bool choiceMade;
   final ValueChanged<String?> onChanged;
 
   @override
@@ -1115,15 +1171,23 @@ class _ClubPickerField extends ConsumerWidget {
     // the dropdown never holds a value absent from its item list.
     final value =
         items.any((c) => c.id == selectedClubId) ? selectedClubId : null;
+    // K03: until the organizer actively chooses, no value is selected and a
+    // "bitte wählen" hint shows — the null `clubId` (Spasstournier) must be
+    // an explicit pick, not an implicit default.
     return DropdownButtonFormField<String?>(
       key: const Key('wizardClubPicker'),
-      initialValue: value,
+      initialValue: choiceMade ? value : null,
       isExpanded: true,
+      hint: Text(l10n.tournamentWizardClubChoosePrompt),
       decoration: InputDecoration(
         border: border,
         enabledBorder: border,
       ),
       items: <DropdownMenuItem<String?>>[
+        // K02/K03: this item carries the implicit null value = the
+        // "Spasstournier – ohne Wertung" choice. It is the only null-valued
+        // item (every club below has a non-null id), so the picker maps a null
+        // selection unambiguously to Spasstournier.
         DropdownMenuItem<String?>(
           child: Text(l10n.tournamentWizardClubNone),
         ),
