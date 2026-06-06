@@ -332,6 +332,18 @@ class _StandingsTab extends StatelessWidget {
     final rows = computeStandings(
       participantIds: participantIds,
       results: results,
+      // CF2 / ChangeSpec K04: standings respect the tournament scoring
+      // mode. The anon public envelope (`public_tournament_get`) does not
+      // project `tournaments.scoring` — PublicTournamentHeader carries no
+      // scoring field — so the spectator path uses the EKC default. This
+      // is a deliberate fallback: extending the public RPC to expose the
+      // mode is out of CF2 scope (privacy boundary, ADR-0026), so classic
+      // tournaments render EKC-style totals on the anon spectator screen
+      // only. The authenticated standings path (tournamentStandingsProvider)
+      // reads the real mode from the detail header.
+      // explicit to document the deliberate anon-path EKC fallback (CF2-05)
+      // ignore: avoid_redundant_argument_values
+      scoring: TournamentScoring.ekc,
       tiebreaker: const TiebreakerChain(<TiebreakerCriterion>[
         TiebreakerCriterion.totalPoints,
         TiebreakerCriterion.wins,

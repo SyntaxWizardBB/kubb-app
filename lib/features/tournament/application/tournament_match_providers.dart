@@ -72,6 +72,13 @@ final tournamentStandingsProvider =
         (ref, id) async {
   final remote = ref.read(tournamentRemoteProvider);
   final matches = await remote.listMatchesForTournament(id);
+  // CF2 / ChangeSpec K04: the standings point source follows the
+  // tournament's scoring mode (tournaments.scoring). Read it from the
+  // detail header; fall back to EKC when the detail is unavailable
+  // (no read access / not yet loaded) so behaviour is unchanged for
+  // the historical default.
+  final detail = await remote.getTournamentDetail(id);
+  final scoring = detail?.tournament.scoring ?? TournamentScoring.ekc;
   final participantIds = <String>{
     for (final m in matches) ...[
       if (m.participantA != null) m.participantA!.value,
@@ -92,6 +99,7 @@ final tournamentStandingsProvider =
   return computeStandings(
     participantIds: participantIds,
     results: results,
+    scoring: scoring,
     tiebreaker: const TiebreakerChain(<TiebreakerCriterion>[
       TiebreakerCriterion.totalPoints,
       TiebreakerCriterion.wins,

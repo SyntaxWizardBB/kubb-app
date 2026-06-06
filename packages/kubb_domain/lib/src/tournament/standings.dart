@@ -1,3 +1,4 @@
+import 'package:kubb_domain/src/ports/tournament_remote.dart';
 import 'package:kubb_domain/src/tournament/ekc_score.dart';
 import 'package:kubb_domain/src/tournament/tiebreaker.dart';
 import 'package:meta/meta.dart';
@@ -43,10 +44,25 @@ class _Acc {
 
 /// Pure ranking function (FR-RANK-3/-4). Computes per-participant stats from
 /// confirmed match results, then sorts via [tiebreaker].
+///
+/// [scoring] (CF2 / ChangeSpec K04) selects how a match contributes points:
+///
+///  * [TournamentScoring.ekc] — the historical behaviour. Each side scores
+///    its EKC total ([MatchEkcScore] `pointsForA` / `pointsForB`): 1 point
+///    per basekubb + 3 per set win + king-outcome bonus.
+///  * [TournamentScoring.classic] — "only the set win counts". Points come
+///    solely from sets won ([MatchEkcScore] `setsWonA` / `setsWonB`);
+///    basekubb counts are NOT point-bearing. `kubbsScored` / `kubbsConceded`
+///    are still accumulated so the kubb-difference can act as a tiebreak, but
+///    they do not feed `totalPoints`.
+///
+/// Defaults to [TournamentScoring.ekc] for backward compatibility with
+/// existing call sites and tests.
 List<ParticipantStats> computeStandings({
   required List<String> participantIds,
   required List<TournamentMatchResult> results,
   required TiebreakerChain tiebreaker,
+  TournamentScoring scoring = TournamentScoring.ekc,
   int byeScoreForUnopposedParticipant = 0,
 }) {
   final ids = participantIds.toSet();
@@ -72,14 +88,21 @@ List<ParticipantStats> computeStandings({
     final kB = r.score.sets.fold<int>(0, (s, x) => s + x.basekubbsKnockedByB);
     final w = r.score.matchWinner;
     final d = w == null ? 0 : (w == SetWinner.teamA ? 1 : -1);
+    // CF2: point source switches on the tournament scoring mode. EKC uses
+    // the per-set EKC total; classic counts won sets only (basekubbs stay
+    // out of the points and remain a tiebreak via kubbsScored/conceded).
+    final (pointsA, pointsB) = switch (scoring) {
+      TournamentScoring.ekc => (r.score.pointsForA, r.score.pointsForB),
+      TournamentScoring.classic => (r.score.setsWonA, r.score.setsWonB),
+    };
     a
-      ..totalPoints += r.score.pointsForA
+      ..totalPoints += pointsA
       ..kubbsScored += kA
       ..kubbsConceded += kB
       ..wins += w == SetWinner.teamA ? 1 : 0
       ..opponentIds.add(r.participantB!);
     b
-      ..totalPoints += r.score.pointsForB
+      ..totalPoints += pointsB
       ..kubbsScored += kB
       ..kubbsConceded += kA
       ..wins += w == SetWinner.teamB ? 1 : 0
