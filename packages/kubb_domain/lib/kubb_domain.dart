@@ -22,6 +22,7 @@ export 'src/season/season_standings.dart';
 export 'src/tournament/bracket.dart';
 export 'src/tournament/bracket_advance_event.dart';
 export 'src/tournament/bracket_layout.dart';
+export 'src/tournament/bracket_placement.dart';
 export 'src/tournament/ekc_score.dart';
 export 'src/tournament/elo_seeding.dart';
 export 'src/tournament/final_ranking.dart';
