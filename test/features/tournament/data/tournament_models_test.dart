@@ -53,6 +53,8 @@ Map<String, dynamic> _matchRow({
   String status = 'scheduled',
   Object? aDisplayName = 'Alice',
   Object? bDisplayName = 'Bob',
+  Object? setsWonA,
+  Object? setsWonB,
 }) =>
     <String, dynamic>{
       'match_id': 'm-1',
@@ -67,6 +69,8 @@ Map<String, dynamic> _matchRow({
       'consensus_round': 0,
       'started_at': null,
       'completed_at': null,
+      'sets_won_a': ?setsWonA,
+      'sets_won_b': ?setsWonB,
     };
 
 void main() {
@@ -195,6 +199,21 @@ void main() {
       ));
       expect(m.participantADisplayName, isNull);
       expect(m.participantBDisplayName, isNull);
+    });
+
+    test('FF2/B2: parses sets_won_a/_b when present', () {
+      final m = tournamentMatchRefFromRow(_matchRow(
+        setsWonA: 2,
+        setsWonB: 1,
+      ));
+      expect(m.setsWonA, 2);
+      expect(m.setsWonB, 1);
+    });
+
+    test('FF2/B2: leaves set wins null when the RPC omits them', () {
+      final m = tournamentMatchRefFromRow(_matchRow());
+      expect(m.setsWonA, isNull);
+      expect(m.setsWonB, isNull);
     });
   });
 

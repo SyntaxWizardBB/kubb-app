@@ -33,6 +33,114 @@ class TournamentMatchResult {
       'TournamentMatchResult($participantA vs ${participantB ?? "BYE"})';
 }
 
+/// FF2 / Finding B: builds a [TournamentMatchResult] for the standings
+/// input from a match's final score and — when available — the real
+/// per-side set-win counts.
+///
+/// Both Dart standings callers (the authenticated match-list provider and
+/// the anon public spectator screen) previously synthesised a SINGLE
+/// [SetScore] from `finalScoreA/B`. In classic mode [computeStandings]
+/// then derived `setsWon = 1/0` per match — i.e. MATCH wins — whereas the
+/// server (`tournament_pool_standings`, CF2) sums real SET wins from
+/// `tournament_set_score_proposals`. For best-of-3 the two diverge.
+///
+/// Set-win reconstruction is CLASSIC-ONLY. In classic mode the points are
+/// the won sets, so when [setsWonA] / [setsWonB] are non-null (the RPCs now
+/// project them) this reconstructs exactly that many won sets per side so
+/// `MatchEkcScore.setsWonA/B` equals the server's `sets_won_a/_b` and the
+/// classic standings match. The total basekubbs ([finalScoreA] /
+/// [finalScoreB]) are placed in a single set so `kubbsScored/conceded`
+/// stay identical to the previous behaviour and the kubb-difference
+/// tiebreak is unaffected.
+///
+/// In EKC mode — or when [setsWonA] / [setsWonB] are null (older RPC
+/// revision, realtime CDC row, or a match with no agreed sets) — it falls
+/// back to the historical single-set synthesis: one set carrying the full
+/// final score, winner = whichever side is higher. This is REQUIRED for
+/// EKC: `pointsForA/B` is the per-set EKC contribution, and the historical
+/// EKC standings were always computed over a single synthesised set, so
+/// reconstructing multiple sets would change the EKC points. The classic
+/// scoring branch ignores per-set basekubbs entirely (it reads setsWon),
+/// so the multi-set reconstruction is safe there.
+TournamentMatchResult tournamentMatchResultFromFinalScore({
+  required String participantA,
+  required String? participantB,
+  required int finalScoreA,
+  required int finalScoreB,
+  required TournamentScoring scoring,
+  int? setsWonA,
+  int? setsWonB,
+}) {
+  // EKC, or no real per-side set wins -> historical single-set fallback.
+  if (scoring != TournamentScoring.classic ||
+      setsWonA == null ||
+      setsWonB == null) {
+    final winner =
+        finalScoreA >= finalScoreB ? SetWinner.teamA : SetWinner.teamB;
+    return TournamentMatchResult(
+      participantA: participantA,
+      participantB: participantB,
+      score: MatchEkcScore(<SetScore>[
+        SetScore(
+          basekubbsKnockedByA: finalScoreA,
+          basekubbsKnockedByB: finalScoreB,
+          winner: winner,
+        ),
+      ]),
+    );
+  }
+
+  // Real set wins available and at least one side won a set. Reconstruct
+  // `setsWonA` sets won by A and `setsWonB` won by B so
+  // MatchEkcScore.setsWonA/B == server sets_won. The full basekubb totals
+  // live in exactly one set (the first) so the accumulated
+  // kubbsScored/conceded equal finalScoreA/B unchanged.
+  //
+  // Degenerate 0:0: the RPC projected sets_won_a == sets_won_b == 0 (a
+  // match finalised without any agreed set proposal). The server's classic
+  // standings (tournament_pool_standings, CF2) award 0 points and count 0
+  // kubbs for such a match — there is no agreed set to score. Mirror that
+  // EXACTLY with an empty MatchEkcScore (no synthetic winner set, no
+  // basekubbs) so client and server classic totals stay identical. (The
+  // legacy null-fallback above still synthesises a winner set, which is the
+  // correct behaviour when the real per-side counts are simply unknown.)
+  if (setsWonA == 0 && setsWonB == 0) {
+    return TournamentMatchResult(
+      participantA: participantA,
+      participantB: participantB,
+      score: MatchEkcScore(const <SetScore>[]),
+    );
+  }
+
+  final sets = <SetScore>[];
+  var carriedKubbsA = false;
+  void addSet(SetWinner winner) {
+    final kubbsA = carriedKubbsA ? 0 : finalScoreA;
+    final kubbsB = carriedKubbsA ? 0 : finalScoreB;
+    carriedKubbsA = true;
+    sets.add(SetScore(
+      basekubbsKnockedByA: kubbsA,
+      basekubbsKnockedByB: kubbsB,
+      winner: winner,
+    ));
+  }
+
+  // At least one of setsWonA / setsWonB is > 0 here (the 0:0 case returned
+  // early above), so `sets` is guaranteed non-empty.
+  for (var i = 0; i < setsWonA; i++) {
+    addSet(SetWinner.teamA);
+  }
+  for (var i = 0; i < setsWonB; i++) {
+    addSet(SetWinner.teamB);
+  }
+
+  return TournamentMatchResult(
+    participantA: participantA,
+    participantB: participantB,
+    score: MatchEkcScore(sets),
+  );
+}
+
 class _Acc {
   int totalPoints = 0;
   int wins = 0;

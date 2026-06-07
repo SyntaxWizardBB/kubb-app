@@ -56,6 +56,7 @@ class PublicTournamentHeader {
     required this.displayName,
     required this.teamSize,
     required this.format,
+    required this.scoring,
     required this.status,
     required this.matchFormatConfig,
     this.startedAt,
@@ -66,6 +67,13 @@ class PublicTournamentHeader {
   final String displayName;
   final int teamSize;
   final TournamentFormat format;
+
+  /// FF2 / Finding A: the tournament scoring mode (`ekc` / `classic`),
+  /// now projected by `public_tournament_get`. The anon spectator
+  /// standings use this instead of a hard-coded EKC fallback so a classic
+  /// tournament renders classic totals. Backward-compat: the decoder maps
+  /// a missing / unknown wire value to [TournamentScoring.ekc].
+  final TournamentScoring scoring;
   final TournamentStatus status;
   final Map<String, Object?> matchFormatConfig;
   final DateTime? startedAt;
@@ -91,6 +99,8 @@ class PublicMatchDetail {
     this.winnerParticipant,
     this.finalScoreA,
     this.finalScoreB,
+    this.setsWonA,
+    this.setsWonB,
     this.phase,
     this.bracketPosition,
   });
@@ -108,6 +118,16 @@ class PublicMatchDetail {
   final TournamentParticipantId? winnerParticipant;
   final int? finalScoreA;
   final int? finalScoreB;
+
+  /// FF2 / Finding B: the real per-side set wins, aggregated server-side
+  /// from `tournament_set_score_proposals` exactly like
+  /// `tournament_pool_standings` (CF2). Null when the wire row predates
+  /// FF2 (backward-compat); in that case the standings synthesis falls
+  /// back to the single-set / match-win approximation. In classic mode
+  /// these drive the real set-win count so client and server standings
+  /// agree for best-of-3.
+  final int? setsWonA;
+  final int? setsWonB;
 
   /// Wire-Wert der `phase`-Spalte (`group`, `ko`, `third_place`,
   /// `final`). Bewusst als String belassen; der Public-Pfad nutzt das
@@ -165,6 +185,7 @@ PublicTournamentHeader _headerFromRow(Map<String, dynamic> row) {
     displayName: row['display_name'] as String,
     teamSize: _asInt(row['team_size']),
     format: _formatFromWire(row['format'] as String),
+    scoring: _scoringFromWire(row['scoring']),
     status: _statusFromWire(row['status'] as String),
     matchFormatConfig: cfg is Map<String, dynamic>
         ? Map<String, Object?>.from(cfg)
@@ -197,6 +218,8 @@ PublicMatchDetail publicMatchDetailFromRow(Map<String, dynamic> row) {
         : TournamentParticipantId(row['winner_participant_id'] as String),
     finalScoreA: _asIntOrNull(row['final_score_a']),
     finalScoreB: _asIntOrNull(row['final_score_b']),
+    setsWonA: _asIntOrNull(row['sets_won_a']),
+    setsWonB: _asIntOrNull(row['sets_won_b']),
     phase: row['phase'] as String?,
     bracketPosition: _asIntOrNull(row['bracket_position']),
   );
@@ -239,6 +262,11 @@ const Map<TournamentStatus, String> _statusWire = {
   TournamentStatus.aborted: 'aborted',
 };
 
+const Map<TournamentScoring, String> _scoringWire = {
+  TournamentScoring.ekc: 'ekc',
+  TournamentScoring.classic: 'classic',
+};
+
 const Map<TournamentMatchStatus, String> _matchStatusWire = {
   TournamentMatchStatus.scheduled: 'scheduled',
   TournamentMatchStatus.awaitingResults: 'awaiting_results',
@@ -260,6 +288,18 @@ TournamentStatus _statusFromWire(String raw) {
     if (entry.value == raw) return entry.key;
   }
   throw ArgumentError.value(raw, 'raw', 'Unknown TournamentStatus');
+}
+
+/// FF2 / Finding A: maps the wire `scoring` value to [TournamentScoring].
+/// Unlike the other wire helpers this is DELIBERATELY lenient — a missing
+/// or unknown value (older RPC revision without the field) falls back to
+/// [TournamentScoring.ekc], the historical default, so the spectator
+/// screen never crashes on a stale envelope.
+TournamentScoring _scoringFromWire(Object? raw) {
+  for (final entry in _scoringWire.entries) {
+    if (entry.value == raw) return entry.key;
+  }
+  return TournamentScoring.ekc;
 }
 
 TournamentMatchStatus _matchStatusFromWire(String raw) {
