@@ -24,6 +24,7 @@ export 'src/tournament/bracket_advance_event.dart';
 export 'src/tournament/bracket_layout.dart';
 export 'src/tournament/ekc_score.dart';
 export 'src/tournament/elo_seeding.dart';
+export 'src/tournament/final_ranking.dart';
 export 'src/tournament/king_outcome.dart';
 export 'src/tournament/ko_phase.dart';
 export 'src/tournament/league_points_engine.dart';
