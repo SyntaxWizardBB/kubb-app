@@ -40,20 +40,28 @@ final Provider<RealtimeChannel> realtimeChannelProvider =
 final Provider<bool> realtimeEnabledFlagProvider =
     Provider<bool>((ref) => true);
 
-/// Emits `true` when the per-tournament realtime channel is unhealthy and
-/// the polling-fallback should take over. OD-M4-02 Empfehlung A:
+/// Generalised polling-fallback gate. Emits `true` when the realtime channel
+/// identified by `channelKey` is unhealthy and the per-concern polling
+/// fallback should take over (ADR-0029 §(c) FC-6). OD-M4-02 Empfehlung A:
 ///
-/// - `joined`            → `false` (realtime healthy).
-/// - `errored` ≥ 60 s    → `true`  (assume the WebSocket is gone for good).
+/// - `joined`             → `false` (realtime healthy).
+/// - `errored` ≥ 60 s     → `true`  (assume the WebSocket is gone for good).
 /// - `joined` after error → `false` (cancel pending flip, polling off).
-/// - feature-flag off    → `true`  (always poll).
+/// - feature-flag off     → `true`  (always poll).
+///
+/// This is a **pure boolean gate** — it owns no data source and never starts
+/// a `Timer.periodic`. The polling cadence (30 s authenticated, 10 s anon)
+/// belongs to the concern-specific poller that watches this gate, NOT here.
+/// The channel-key is always built via a `kubb_domain` builder by the caller
+/// (never hand-built). Subscribing uses the App-singleton
+/// [realtimeChannelProvider] adapter so all concerns multiplex one socket.
 ///
 /// The stream stays open for the lifetime of the listener; the per-channel
 /// reference-counting in [RealtimeChannel] handles teardown.
 //
 // ignore: specify_nonobvious_property_types
-final realtimeFallbackProvider =
-    StreamProvider.autoDispose.family<bool, TournamentId>((ref, id) {
+final realtimePollingFallbackProvider =
+    StreamProvider.autoDispose.family<bool, String>((ref, channelKey) {
   if (!ref.watch(realtimeEnabledFlagProvider)) {
     return Stream<bool>.value(true);
   }
@@ -68,7 +76,7 @@ final realtimeFallbackProvider =
     controller.add(polling);
   }
 
-  final sub = channel.stateStream(tournamentRealtimeChannelKey(id)).listen(
+  final sub = channel.stateStream(channelKey).listen(
     (state) {
       switch (state) {
         case RealtimeChannelState.errored:
@@ -94,5 +102,30 @@ final realtimeFallbackProvider =
     unawaited(sub.cancel());
     unawaited(controller.close());
   });
+  return controller.stream;
+});
+
+/// Per-tournament polling-fallback gate. Thin DELEGATOR onto the generalised
+/// [realtimePollingFallbackProvider] (ADR-0029 §(c) FC-6) so existing
+/// call-sites keep resolving against `family<bool, TournamentId>` unchanged.
+/// The channel-key is derived exclusively via the `kubb_domain` builder
+/// [tournamentRealtimeChannelKey] — no hand-built string literal.
+//
+// ignore: specify_nonobvious_property_types
+final realtimeFallbackProvider =
+    StreamProvider.autoDispose.family<bool, TournamentId>((ref, id) {
+  final key = tournamentRealtimeChannelKey(id);
+  final controller = StreamController<bool>(sync: true);
+  // Mirror the generalised gate's emissions onto the legacy
+  // TournamentId-keyed stream. No own state-machine is duplicated.
+  ref
+    ..listen<AsyncValue<bool>>(
+      realtimePollingFallbackProvider(key),
+      (previous, next) {
+        next.whenData(controller.add);
+      },
+      fireImmediately: true,
+    )
+    ..onDispose(() => unawaited(controller.close()));
   return controller.stream;
 });
