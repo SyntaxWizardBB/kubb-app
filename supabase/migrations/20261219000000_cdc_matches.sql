@@ -1,0 +1,13 @@
+-- SRV-09 (ADR-0029, messaging-framework-plan §(d) + Phase P7): the live 1vs1 match
+-- view subscribes to one per-match CDC channel matches:id=<id>. Add the table to
+-- the (NOT "FOR ALL TABLES") supabase_realtime publication so Postgres emits
+-- row-level change events.
+--
+-- No new RLS policy: the existing matches_participant_read SELECT policy already
+-- authorises the id row scope the CDC filter needs (created_by = auth.uid() OR the
+-- caller is a row in match_participants for matches.id). That policy gates on
+-- matches.id, which is the CDC filter column.
+--
+-- REPLICA IDENTITY stays DEFAULT ('d'): the consumer refreshes on the new row and
+-- never inspects the OLD row, so REPLICA IDENTITY FULL is deliberately NOT set.
+ALTER PUBLICATION supabase_realtime ADD TABLE public.matches;

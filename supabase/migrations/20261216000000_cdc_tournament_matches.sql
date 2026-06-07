@@ -1,0 +1,16 @@
+-- SRV-02 (ADR-0029, messaging-framework-plan §(d) + Phase P7): the live tournament
+-- bracket/standings view subscribes to one per-tournament CDC channel
+-- tournament_matches:tournament_id=<id>. For Postgres to emit row-level change
+-- events the table must be a member of the (NOT "FOR ALL TABLES") supabase_realtime
+-- publication, so the explicit ADD TABLE below is required.
+--
+-- No new RLS policy: the existing SELECT policies already authorise the
+-- tournament_id row scope the CDC filter needs —
+--   * tournament_matches_read            (non-draft or own draft)
+--   * tournament_matches_anon_public_read (public + visible status)
+-- Both gate on tournament_matches.tournament_id, which is the CDC filter column.
+--
+-- REPLICA IDENTITY stays DEFAULT ('d'): the consumer only needs the new row to
+-- trigger a refresh and never inspects the OLD row, so REPLICA IDENTITY FULL is
+-- deliberately NOT set.
+ALTER PUBLICATION supabase_realtime ADD TABLE public.tournament_matches;
