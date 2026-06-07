@@ -72,6 +72,13 @@ final tournamentStandingsProvider =
         (ref, id) async {
   final remote = ref.read(tournamentRemoteProvider);
   final matches = await remote.listMatchesForTournament(id);
+  // CF2 / ChangeSpec K04: the standings point source follows the
+  // tournament's scoring mode (tournaments.scoring). Read it from the
+  // detail header; fall back to EKC when the detail is unavailable
+  // (no read access / not yet loaded) so behaviour is unchanged for
+  // the historical default.
+  final detail = await remote.getTournamentDetail(id);
+  final scoring = detail?.tournament.scoring ?? TournamentScoring.ekc;
   final participantIds = <String>{
     for (final m in matches) ...[
       if (m.participantA != null) m.participantA!.value,
@@ -79,19 +86,21 @@ final tournamentStandingsProvider =
     ],
   }.toList(growable: false);
 
-  // Synthesise a single-set MatchEkcScore from `finalScoreA/B`. The
-  // match cards themselves don't yet ship per-set detail on the
-  // match-list RPC, so we approximate the inputs that
-  // computeStandings needs: kubbs scored / conceded come from the
-  // final score, the winner comes from whichever side is higher.
+  // FF2 / Finding B: build the standings input from each match. In
+  // classic mode tournament_list_matches now projects the real per-side
+  // set wins (sets_won_a/_b, same source as tournament_pool_standings), so
+  // the synthesis reconstructs real set wins instead of a single match
+  // win — client and server classic standings now agree for best-of-3.
+  // The EKC path is unchanged (single-set synthesis from finalScoreA/B).
   final results = <TournamentMatchResult>[
     for (final m in matches.where(_isStandingsCounted))
-      _resultFromMatch(m),
+      _resultFromMatch(m, scoring),
   ];
 
   return computeStandings(
     participantIds: participantIds,
     results: results,
+    scoring: scoring,
     tiebreaker: const TiebreakerChain(<TiebreakerCriterion>[
       TiebreakerCriterion.totalPoints,
       TiebreakerCriterion.wins,
@@ -106,21 +115,17 @@ bool _isStandingsCounted(TournamentMatchRef m) {
       m.status == TournamentMatchStatus.overridden;
 }
 
-TournamentMatchResult _resultFromMatch(TournamentMatchRef m) {
-  final a = m.participantA!.value;
-  final b = m.participantB?.value;
-  final sA = m.finalScoreA ?? 0;
-  final sB = m.finalScoreB ?? 0;
-  final winner = sA >= sB ? SetWinner.teamA : SetWinner.teamB;
-  return TournamentMatchResult(
-    participantA: a,
-    participantB: b,
-    score: MatchEkcScore(<SetScore>[
-      SetScore(
-        basekubbsKnockedByA: sA,
-        basekubbsKnockedByB: sB,
-        winner: winner,
-      ),
-    ]),
+TournamentMatchResult _resultFromMatch(
+  TournamentMatchRef m,
+  TournamentScoring scoring,
+) {
+  return tournamentMatchResultFromFinalScore(
+    participantA: m.participantA!.value,
+    participantB: m.participantB?.value,
+    finalScoreA: m.finalScoreA ?? 0,
+    finalScoreB: m.finalScoreB ?? 0,
+    scoring: scoring,
+    setsWonA: m.setsWonA,
+    setsWonB: m.setsWonB,
   );
 }

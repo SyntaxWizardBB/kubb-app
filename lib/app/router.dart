@@ -60,6 +60,7 @@ import 'package:kubb_app/features/tournament/presentation/tournament_ranking_scr
 import 'package:kubb_app/features/tournament/presentation/tournament_registration_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_registrations_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_seeding_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_setup_wizard.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_shootout_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_standings_screen.dart';
@@ -549,6 +550,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/tournament/:id/bracket',
                 builder: (_, state) => TournamentBracketScreen(
+                  tournamentId: state.pathParameters['id']!,
+                ),
+              ),
+              GoRoute(
+                // CF6 (K19): organizer-only manual-seeding editor reached on
+                // the Vorrunde->KO transition when seeding_mode == manual.
+                path: '/tournament/:id/seeding',
+                builder: (_, state) => TournamentSeedingScreen(
                   tournamentId: state.pathParameters['id']!,
                 ),
               ),

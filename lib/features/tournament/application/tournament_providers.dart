@@ -120,7 +120,8 @@ class TournamentActions {
       throw StateError(validation.issues.first);
     }
     final id = await _ref.read(tournamentRemoteProvider).createTournament(
-          displayName: draft.displayName!.trim(),
+          // K01: persist the name with the year suffix appended (idempotent).
+          displayName: draft.resolvedDisplayName!,
           teamSize: draft.teamSize,
           minParticipants: draft.minParticipants,
           maxParticipants: draft.maxParticipants,
@@ -147,7 +148,8 @@ class TournamentActions {
     }
     await _ref.read(tournamentRemoteProvider).updateTournament(
           id: id,
-          displayName: draft.displayName!.trim(),
+          // K01: persist the name with the year suffix appended (idempotent).
+          displayName: draft.resolvedDisplayName!,
           teamSize: draft.teamSize,
           minParticipants: draft.minParticipants,
           maxParticipants: draft.maxParticipants,

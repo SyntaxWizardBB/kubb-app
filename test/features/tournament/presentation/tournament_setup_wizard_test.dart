@@ -279,14 +279,39 @@ class _FakeTournamentRemote implements TournamentRemote {
   }
 }
 
+/// Required Stammdaten fields (W1 / K03, K30-K33) merged onto a draft so
+/// navigation-focused tests can advance past the (now stricter) step 1
+/// without driving every date picker. Spasstournier (no club) so no league
+/// category is required (K29).
+TournamentConfigDraft _withStammdaten(TournamentConfigDraft d) {
+  final start = DateTime(2026, 8, 1, 10);
+  return d.copyWith(
+    clubChoiceMade: true,
+    location: 'Esp',
+    venueAddress: 'Sportplatz Esp, Fislisbach',
+    eventStartsAt: start,
+    registrationClosesAt: start.subtract(const Duration(days: 7)),
+    checkinUntil: start.subtract(const Duration(minutes: 30)),
+  );
+}
+
+/// Default controller for [_pumpWizard]: a group-phase draft with the
+/// required Stammdaten pre-filled so the wizard can walk past step 1.
+class _StammdatenSeededController extends TournamentConfigController {
+  @override
+  TournamentConfigDraft build() => _withStammdaten(super.build());
+}
+
 /// Controller variant that starts the draft on a Schoch Vorrunde so the
 /// group-phase (pool) step is hidden — yielding the minimal 5-step flow
 /// (name, Vorrunde, KO-config, summary; every tournament has a KO stage).
 class _SchochSeededController extends TournamentConfigController {
   @override
-  TournamentConfigDraft build() => const TournamentConfigDraft(
-        format: TournamentFormat.swissThenKo,
-        vorrundeType: VorrundeType.schoch,
+  TournamentConfigDraft build() => _withStammdaten(
+        const TournamentConfigDraft(
+          format: TournamentFormat.swissThenKo,
+          vorrundeType: VorrundeType.schoch,
+        ),
       );
 }
 
@@ -294,16 +319,35 @@ class _SchochSeededController extends TournamentConfigController {
 /// Vorrunde, used to assert the Model-B config inputs surface.
 class _ConsolationSeededController extends TournamentConfigController {
   @override
-  TournamentConfigDraft build() => const TournamentConfigDraft(
-        format: TournamentFormat.swissThenKo,
-        vorrundeType: VorrundeType.schoch,
-        koType: KoType.consolation,
+  TournamentConfigDraft build() => _withStammdaten(
+        const TournamentConfigDraft(
+          format: TournamentFormat.swissThenKo,
+          vorrundeType: VorrundeType.schoch,
+          koType: KoType.consolation,
+        ),
+      );
+}
+
+/// W5/K26: a Schoch-seeded draft that PASSES every per-step gate (so the
+/// wizard can reach the summary) but FAILS `validate()` — `setsToWin` is out
+/// of the 1..4 range, which no step gate checks but the final validator does.
+/// Used to assert the summary surfaces the validation issues (ERR-1) and the
+/// "Anlegen" button stays disabled (ERR-3).
+class _InvalidDraftSeededController extends TournamentConfigController {
+  @override
+  TournamentConfigDraft build() => _withStammdaten(
+        const TournamentConfigDraft(
+          format: TournamentFormat.swissThenKo,
+          vorrundeType: VorrundeType.schoch,
+          setsToWin: 9,
+        ),
       );
 }
 
 Future<_FakeTournamentRemote> _pumpWizard(
   WidgetTester tester, {
   List<Object> extraOverrides = const <Object>[],
+  TournamentConfigController Function()? controllerOverride,
 }) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1;
@@ -331,6 +375,13 @@ Future<_FakeTournamentRemote> _pumpWizard(
     ProviderScope(
       overrides: <Object>[
         tournamentRemoteProvider.overrideWithValue(fake),
+        // Default: a draft with the required Stammdaten pre-filled (W1) so
+        // navigation tests can advance past step 1. A test may swap in its
+        // own controller via [controllerOverride] (e.g. Schoch/consolation
+        // seeds); those seeds also include the Stammdaten via [_withStammdaten].
+        tournamentConfigControllerProvider.overrideWith(
+          controllerOverride ?? _StammdatenSeededController.new,
+        ),
         ...extraOverrides,
       ].cast(),
       child: MaterialApp.router(
@@ -411,8 +462,9 @@ void main() {
   testWidgets('lands on step 1, step name is the bold app-bar title (DOD-04)',
       (tester) async {
     await _pumpWizard(tester);
-    // Default flow (group phase + single-out KO): 6 visible steps.
-    expect(find.text('Schritt 1 von 6'), findsOneWidget);
+    // K25: the separate group-phase step is gone — group config now lives in
+    // the Vorrunde step, so every flow has 5 visible steps.
+    expect(find.text('Schritt 1 von 5'), findsOneWidget);
     // Title hierarchy: step name as the (mixed-case) title; "Neues Turnier"
     // as the uppercased eyebrow above it.
     expect(find.text('Stammdaten'), findsOneWidget);
@@ -435,35 +487,42 @@ void main() {
   });
 
   testWidgets(
-      'group-phase flow walks name → Teilnehmer → Vorrunde → KO → Gruppenphase'
-      ' → Übersicht (KO before group phase, DOD-13)', (tester) async {
+      'group-phase flow walks name → Teilnehmer → Vorrunde → KO → Übersicht'
+      ' (K25: no separate group-phase step)', (tester) async {
     final fake = await _pumpWizard(tester);
     await _typeName(tester, 'Cup 2026');
 
     await _tapNext(tester); // -> participants
-    expect(find.text('Schritt 2 von 6'), findsOneWidget);
+    expect(find.text('Schritt 2 von 5'), findsOneWidget);
     expect(find.text('Teilnehmer'), findsOneWidget);
 
     await _tapNext(tester); // -> Vorrunde (renamed from "Format")
-    expect(find.text('Schritt 3 von 6'), findsOneWidget);
+    expect(find.text('Schritt 3 von 5'), findsOneWidget);
     expect(find.text('Vorrunde'), findsWidgets);
+    // K12: group count + grouping strategy are configured inline here.
+    expect(find.text('Anzahl Gruppen'), findsOneWidget);
+    expect(find.text('Grouping-Strategie'), findsOneWidget);
 
-    await _tapNext(tester); // -> KO config (precedes the group phase)
-    expect(find.text('Schritt 4 von 6'), findsOneWidget);
+    await _tapNext(tester); // -> KO config (no separate group-phase step)
+    expect(find.text('Schritt 4 von 5'), findsOneWidget);
     expect(find.text('KO-Konfiguration'), findsOneWidget);
 
-    await _tapNext(tester); // -> Gruppenphase
-    expect(find.text('Schritt 5 von 6'), findsOneWidget);
-    expect(find.text('Gruppenphase'), findsWidgets);
-
     await _tapNext(tester); // -> summary
-    expect(find.text('Schritt 6 von 6'), findsOneWidget);
+    expect(find.text('Schritt 5 von 5'), findsOneWidget);
     expect(find.text('Übersicht'), findsOneWidget);
 
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
     await tester.pumpAndSettle();
     expect(fake.callCount, 1);
     expect(fake.createdFormat, TournamentFormat.roundRobinThenKo);
+    // K25: a valid pool_phase_config is still produced from the inline inputs.
+    final pool =
+        fake.createdSetup?['pool_phase_config'] as Map<String, Object?>?;
+    expect(pool, isNotNull);
+    expect(pool?['group_count'], 4);
+    // Default 8 participants → KO smart-default 4 qualifiers → bracket size 4;
+    // 4 / 4 groups → 1 qualifier per group (derived, not an input).
+    expect(pool?['qualifiers_per_group'], 1);
   });
 
   testWidgets(
@@ -471,10 +530,7 @@ void main() {
       (tester) async {
     final fake = await _pumpWizard(
       tester,
-      extraOverrides: [
-        tournamentConfigControllerProvider
-            .overrideWith(_SchochSeededController.new),
-      ],
+      controllerOverride: _SchochSeededController.new,
     );
     expect(find.text('Schritt 1 von 5'), findsOneWidget);
 
@@ -494,6 +550,17 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
     await tester.pumpAndSettle();
     expect(fake.createdFormat, TournamentFormat.swissThenKo);
+    // Schoch auto-fills a single-pool pool_phase_config (group_count == 1, all
+    // participants in one pool) even though the pool-config step is hidden, so
+    // tournament_start no longer fails with "pool_phase_config required for
+    // hybrid format".
+    final pool =
+        fake.createdSetup?['pool_phase_config'] as Map<String, Object?>?;
+    expect(pool, isNotNull);
+    expect(pool?['group_count'], 1);
+    expect(pool?['strategy'], 'seeded');
+    // qualifiers_per_group tracks the KO qualifier count chosen in the KO step.
+    expect(pool?['qualifiers_per_group'], isNotNull);
   });
 
   testWidgets('no "Kein K.-o." option remains; three KO choices are offered',
@@ -509,64 +576,126 @@ void main() {
     expect(find.text('Trostturnier'), findsOneWidget);
   });
 
-  testWidgets('Model-B inputs only show for the Trostturnier KO type (DOD-14)',
+  testWidgets(
+      'K15: Model-B config is NEVER in the format step — even for Trostturnier',
       (tester) async {
-    // Single-out seeded: no Model-B section.
     await _pumpWizard(
       tester,
-      extraOverrides: [
-        tournamentConfigControllerProvider
-            .overrideWith(_SchochSeededController.new),
-      ],
+      controllerOverride: _SchochSeededController.new,
     );
     await _typeName(tester, 'Cup');
     await _tapNext(tester); // -> participants
-    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> Vorrunde (format step)
     expect(
-      find.byKey(const Key('wizardConsolationModelBSection')),
+      find.byKey(const Key('wizardConsolationKoSection')),
       findsNothing,
     );
 
-    // Picking Trostturnier reveals the Model-B config inputs.
+    // Picking Trostturnier in the format step must NOT reveal the Model-B
+    // section here anymore (K15: it lives in the KO step).
     await tester.tap(find.text('Trostturnier'));
     await tester.pumpAndSettle();
     expect(
-      find.byKey(const Key('wizardConsolationModelBSection')),
+      find.byKey(const Key('wizardConsolationKoSection')),
+      findsNothing,
+    );
+  });
+
+  testWidgets(
+      'K15/K16/K18: Model-B section (chips + required name) renders in the KO '
+      'step for the Trostturnier KO type', (tester) async {
+    await _pumpWizard(
+      tester,
+      controllerOverride: _ConsolationSeededController.new,
+    );
+    await _typeName(tester, 'Trost Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde (format step)
+    // Not here (K15).
+    expect(
+      find.byKey(const Key('wizardConsolationKoSection')),
+      findsNothing,
+    );
+    await _tapNext(tester); // -> KO config
+    // The whole Model-B section is in the KO step.
+    expect(
+      find.byKey(const Key('wizardConsolationKoSection')),
+      findsOneWidget,
+    );
+    // K16: direct starters are chips, not a free text field.
+    expect(
+      find.byKey(const Key('wizardConsolationDirectCountChips')),
       findsOneWidget,
     );
     expect(
       find.byKey(const Key('wizardConsolationDirectCountField')),
-      findsOneWidget,
+      findsNothing,
     );
+    // K18: the required name field is present.
     expect(
       find.byKey(const Key('wizardConsolationNameField')),
       findsOneWidget,
     );
   });
 
-  testWidgets('Trostturnier Model-B inputs flow into the create payload',
-      (tester) async {
-    final fake = await _pumpWizard(
+  testWidgets('K18: KO step "Weiter" stays disabled until the Trostturnier '
+      'name is filled', (tester) async {
+    await _pumpWizard(
       tester,
-      extraOverrides: [
-        tournamentConfigControllerProvider
-            .overrideWith(_ConsolationSeededController.new),
-      ],
+      controllerOverride: _ConsolationSeededController.new,
     );
     await _typeName(tester, 'Trost Cup');
     await _tapNext(tester); // -> participants
     await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+
+    final blocked = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Weiter'),
+    );
+    expect(blocked.onPressed, isNull);
+
     await tester.enterText(
       find.byKey(const Key('wizardConsolationNameField')),
       'Bâton Rouille',
     );
-    await tester.enterText(
-      find.byKey(const Key('wizardConsolationDirectCountField')),
-      '4',
+    await tester.pumpAndSettle();
+    final enabled = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Weiter'),
+    );
+    expect(enabled.onPressed, isNotNull);
+  });
+
+  testWidgets('K16/K18: Trostturnier name + direct-count chip flow into the '
+      'create payload', (tester) async {
+    final fake = await _pumpWizard(
+      tester,
+      controllerOverride: _ConsolationSeededController.new,
+    );
+    await _typeName(tester, 'Trost Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+
+    // Pick a 16-bracket so the direct-starter chips include 4 and 8 (K16).
+    await tester.tap(find.widgetWithText(InkWell, '16').first);
+    await tester.pumpAndSettle();
+
+    // K16: tap the "4" direct-starter chip (scoped to the chip Wrap so it does
+    // not collide with the KO-size "4" chip).
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('wizardConsolationDirectCountChips')),
+        matching: find.text('4'),
+      ),
     );
     await tester.pumpAndSettle();
 
-    await _tapNext(tester); // -> KO config
+    await tester.enterText(
+      find.byKey(const Key('wizardConsolationNameField')),
+      'Bâton Rouille',
+    );
+    await tester.pumpAndSettle();
+
     await _tapNext(tester); // -> summary
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
     await tester.pumpAndSettle();
@@ -576,6 +705,39 @@ void main() {
     expect(fake.createdSetup?['consolation_direct_count'], 4);
   });
 
+  testWidgets('K21/K22: KO matchup + tiebreak are radio buttons, not '
+      'SegmentedButtons, and are selectable', (tester) async {
+    final fake = await _pumpWizard(
+      tester,
+      controllerOverride: _SchochSeededController.new,
+    );
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+
+    // No SegmentedButton for either axis anymore (K21/K22).
+    expect(find.byType(SegmentedButton<KoMatchup>), findsNothing);
+    expect(find.byType(SegmentedButton<KoTiebreakMethod>), findsNothing);
+    // Radios are rendered for both axes.
+    expect(find.byType(RadioListTile<KoMatchup>), findsNWidgets(2));
+    expect(find.byType(RadioListTile<KoTiebreakMethod>), findsNWidgets(2));
+
+    // Selecting the "1. vs 2." matchup updates the draft.
+    await tester.tap(find.text('1. vs 2.'));
+    await tester.pumpAndSettle();
+    // Selecting the "Mighty-Finisher" tiebreak updates the draft.
+    await tester.tap(find.text('Mighty-Finisher'));
+    await tester.pumpAndSettle();
+
+    await _tapNext(tester); // -> summary
+    await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
+    await tester.pumpAndSettle();
+
+    expect(fake.createdSetup?['ko_matchup'], 'one_vs_two');
+    expect(fake.createdSetup?['ko_tiebreak_method'], 'mighty_finisher_shootout');
+  });
+
   testWidgets('submit calls createTournament with the configured draft',
       (tester) async {
     final fake = await _pumpWizard(tester);
@@ -583,7 +745,6 @@ void main() {
     await _tapNext(tester); // -> participants
     await _tapNext(tester); // -> Vorrunde
     await _tapNext(tester); // -> KO config
-    await _tapNext(tester); // -> Gruppenphase
     await _tapNext(tester); // -> summary
 
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
@@ -648,7 +809,6 @@ void main() {
     await _tapNext(tester); // -> participants
     await _tapNext(tester); // -> Vorrunde
     await _tapNext(tester); // -> KO config
-    await _tapNext(tester); // -> Gruppenphase
     await _tapNext(tester); // -> summary
 
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
@@ -679,7 +839,8 @@ void main() {
 
     expect(find.text('Kubb Club Aarau'), findsWidgets);
     expect(find.text('Kubb Club Bern'), findsWidgets);
-    expect(find.text('Kein Verein (persönlich)'), findsWidgets);
+    // K02: the no-club option is now the Spasstournier label.
+    expect(find.text('Spasstournier – ohne Wertung'), findsWidgets);
     // A club the caller does NOT manage is never offered.
     expect(find.text('Kubb Club Zürich'), findsNothing);
   });
@@ -702,11 +863,13 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Kubb Club Aarau').last);
     await tester.pumpAndSettle();
+    // K29: a club tournament requires at least one league category.
+    await tester.tap(find.text('Liga A'));
+    await tester.pumpAndSettle();
 
     await _tapNext(tester); // -> participants
     await _tapNext(tester); // -> Vorrunde
     await _tapNext(tester); // -> KO config
-    await _tapNext(tester); // -> Gruppenphase
     await _tapNext(tester); // -> summary
 
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
@@ -739,7 +902,6 @@ void main() {
     await tester.pumpAndSettle();
 
     await _tapNext(tester); // -> KO config
-    await _tapNext(tester); // -> Gruppenphase
     await _tapNext(tester); // -> summary
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
     await tester.pumpAndSettle();
@@ -755,7 +917,8 @@ void main() {
   testWidgets('edit mode pre-fills the name and submits via updateTournament',
       (tester) async {
     const editId = TournamentId('t-edit-1');
-    const initial = TournamentConfigDraft(displayName: 'Alt-Name');
+    final initial =
+        _withStammdaten(const TournamentConfigDraft(displayName: 'Alt-Name'));
     final fake = await _pumpEditWizard(
       tester,
       editId: editId,
@@ -772,7 +935,6 @@ void main() {
     await _tapNext(tester); // -> participants
     await _tapNext(tester); // -> Vorrunde
     await _tapNext(tester); // -> KO config
-    await _tapNext(tester); // -> Gruppenphase
     await _tapNext(tester); // -> summary
 
     await tester.tap(
@@ -784,8 +946,386 @@ void main() {
     expect(fake.callCount, 0);
     expect(fake.updateCallCount, 1);
     expect(fake.updatedId, editId);
-    expect(fake.updatedDisplayName, 'Neuer-Name');
+    // K01: the year (from eventStartsAt = 2026) is auto-appended on submit.
+    expect(fake.updatedDisplayName, 'Neuer-Name 2026');
     expect(fake.updatedSetup, isNotNull);
     expect(find.text('detail:t-edit-1'), findsOneWidget);
+  });
+
+  // ---- W1 wizard-rework Stammdaten UI ----
+
+  testWidgets('K01: a helper text explains the auto-appended year',
+      (tester) async {
+    await _pumpWizard(tester);
+    expect(
+      find.text('Die Jahreszahl wird automatisch angehängt (z.B. 2026).'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('K02: the no-club option is labelled "Spasstournier – ohne '
+      'Wertung"', (tester) async {
+    await _pumpWizard(tester);
+    // Default seed = Spasstournier (no club), so the label shows as the
+    // selected value of the picker.
+    expect(find.text('Spasstournier – ohne Wertung'), findsWidgets);
+  });
+
+  testWidgets('K03: Weiter stays disabled until the club choice is made',
+      (tester) async {
+    // Fresh draft (no Stammdaten seed): even with a valid name, the club
+    // choice is unmade, so the step is invalid.
+    await _pumpWizard(
+      tester,
+      controllerOverride: TournamentConfigController.new,
+    );
+    await _typeName(tester, 'Cup');
+    final next = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Weiter'),
+    );
+    expect(next.onPressed, isNull);
+  });
+
+  testWidgets('K05: the Diggy toggle is ON for a fresh draft', (tester) async {
+    await _pumpWizard(tester);
+    final diggySwitch = tester.widget<Switch>(
+      find.descendant(
+        of: find.ancestor(
+          of: find.text('Diggy-Regel'),
+          matching: find.byType(Row),
+        ),
+        matching: find.byType(Switch),
+      ),
+    );
+    expect(diggySwitch.value, isTrue);
+  });
+
+  testWidgets('K06: the opening-rule selector is present and selectable',
+      (tester) async {
+    await _pumpWizard(tester);
+    final segmented = find.byKey(const Key('wizardOpeningRule'));
+    expect(segmented, findsOneWidget);
+    // Default shows 2-4-6 selected.
+    final button = tester.widget<SegmentedButton<String>>(segmented);
+    expect(button.selected, <String>{'2-4-6'});
+    // Picking "Frei" updates the rule variants.
+    await tester.tap(find.text('Frei'));
+    await tester.pumpAndSettle();
+    final updated = tester.widget<SegmentedButton<String>>(segmented);
+    expect(updated.selected, <String>{'free'});
+  });
+
+  testWidgets('K07: the participant info fields allow up to 5 lines',
+      (tester) async {
+    await _pumpWizard(tester);
+    // The info fields are built into the step regardless of scroll position.
+    final infoFields = tester
+        .widgetList<TextField>(find.byType(TextField))
+        .where((f) => f.maxLines == 5)
+        .toList();
+    // The four info free-text fields (food/travel/accommodation/weather).
+    expect(infoFields.length, greaterThanOrEqualTo(4));
+    for (final f in infoFields) {
+      expect(f.minLines, 3);
+    }
+  });
+
+  // ---- W3: K12 group config in the Vorrunde step ----
+
+  testWidgets(
+      'K12: the group-phase shows group count (default 4) + strategy inline; '
+      'Schoch hides them', (tester) async {
+    // Group phase (default seed): walk to the Vorrunde step.
+    await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    expect(find.text('Anzahl Gruppen'), findsOneWidget);
+    expect(find.text('Grouping-Strategie'), findsOneWidget);
+    // The inline group-count field defaults to 4.
+    final groupCount = tester.widget<TextField>(
+      find.byKey(const Key('wizardGroupCountField')),
+    );
+    expect(groupCount.controller?.text, '4');
+    // The qualifier-per-group is read-only (no editable qualifier input here).
+    expect(find.text('Qualifier pro Gruppe'), findsOneWidget);
+  });
+
+  testWidgets('K12: Schoch hides the group-count + strategy inputs',
+      (tester) async {
+    await _pumpWizard(
+      tester,
+      controllerOverride: _SchochSeededController.new,
+    );
+    await _typeName(tester, 'Schoch Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    expect(find.byKey(const Key('wizardGroupCountField')), findsNothing);
+    expect(find.text('Grouping-Strategie'), findsNothing);
+  });
+
+  testWidgets('K12: picking the Random strategy reveals the seed field',
+      (tester) async {
+    await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    // The seed field is hidden for the default (snake) strategy.
+    expect(find.byKey(const Key('wizardGroupRandomSeedField')), findsNothing);
+    await tester.tap(find.byKey(const Key('wizardGroupStrategyField')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Random (deterministisch)').last);
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('wizardGroupRandomSeedField')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+      'K12: a group count that does not divide the KO size blocks the KO step',
+      (tester) async {
+    await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    // KO smart-default = 4 (8 participants). Type 3 → 4 % 3 != 0.
+    await tester.enterText(
+      find.byKey(const Key('wizardGroupCountField')),
+      '3',
+    );
+    await tester.pumpAndSettle();
+    await _tapNext(tester); // -> KO config
+    // The divisibility gate lives on the KO step (the KO size is final there):
+    // Weiter is disabled until the group count divides the KO bracket size.
+    final next = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Weiter'),
+    );
+    expect(next.onPressed, isNull);
+  });
+
+  testWidgets(
+      'K23/K24: per-group pitch assignment shows in the pitch context for the '
+      'group phase with pitches, absent for Schoch', (tester) async {
+    // Group phase + a pitch range → the per-group assignment surfaces.
+    await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await tester.enterText(
+      find.byKey(const Key('wizardPitchRangeFromField')),
+      '1',
+    );
+    await tester.enterText(
+      find.byKey(const Key('wizardPitchRangeToField')),
+      '3',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Pitch-Zuteilung pro Gruppe'), findsOneWidget);
+    expect(find.text('Gruppe A'), findsOneWidget);
+  });
+
+  testWidgets('K23/K24: no per-group pitch assignment for the Schoch Vorrunde',
+      (tester) async {
+    await _pumpWizard(
+      tester,
+      controllerOverride: _SchochSeededController.new,
+    );
+    await _typeName(tester, 'Schoch Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await tester.enterText(
+      find.byKey(const Key('wizardPitchRangeFromField')),
+      '1',
+    );
+    await tester.enterText(
+      find.byKey(const Key('wizardPitchRangeToField')),
+      '3',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Pitch-Zuteilung pro Gruppe'), findsNothing);
+  });
+
+  // ---- W5: summary step (K26 + error marking) ----
+
+  testWidgets(
+      'K26: summary groups every step and shows representative fields from '
+      'all of them', (tester) async {
+    await _pumpWizard(tester);
+    // Use a name without a year so K01 appends the event year (2026).
+    await _typeName(tester, 'Sommercup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    await _tapNext(tester); // -> summary
+    expect(find.text('Übersicht'), findsOneWidget);
+
+    // Section headings for all four wizard steps.
+    expect(find.text('Stammdaten'), findsOneWidget);
+    expect(find.text('Teilnehmer'), findsOneWidget);
+    expect(find.text('Vorrunde'), findsWidgets);
+    expect(find.text('K.-o.'), findsOneWidget);
+
+    // K26-1: name with the auto-appended year + Spasstournier + scoring.
+    expect(find.text('Sommercup 2026'), findsOneWidget);
+    expect(find.text('Spasstournier – ohne Wertung'), findsWidgets);
+    expect(find.text('EKC'), findsWidgets);
+
+    // K26-3: prelim format (group phase = default) is rendered.
+    expect(find.text('Gruppenphase'), findsWidgets);
+
+    // K26-4: KO type (default single-out).
+    expect(find.text('Single-Out'), findsWidgets);
+  });
+
+  testWidgets('K26-4: consolation summary shows the Trostturnier name',
+      (tester) async {
+    await _pumpWizard(
+      tester,
+      controllerOverride: _ConsolationSeededController.new,
+    );
+    await _typeName(tester, 'Herzcup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    // K18: consolation name is required — fill it so we can reach the summary.
+    await tester.enterText(
+      find.byKey(const Key('wizardConsolationNameField')),
+      'Sieger der Herzen',
+    );
+    await tester.pumpAndSettle();
+    await _tapNext(tester); // -> summary
+
+    expect(find.text('Übersicht'), findsOneWidget);
+    expect(find.text('Trostturnier'), findsWidgets);
+    expect(find.text('Sieger der Herzen'), findsOneWidget);
+  });
+
+  testWidgets(
+      'ERR-1/ERR-3: invalid draft shows the issue list and disables Anlegen',
+      (tester) async {
+    await _pumpWizard(
+      tester,
+      controllerOverride: _InvalidDraftSeededController.new,
+    );
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    await _tapNext(tester); // -> summary
+    expect(find.text('Übersicht'), findsOneWidget);
+
+    // ERR-1: the prominent issue box + the concrete validation issue render.
+    expect(find.byKey(const Key('wizardSummaryErrorBox')), findsOneWidget);
+    expect(find.text('Turnier kann nicht angelegt werden'), findsOneWidget);
+    expect(
+      find.text('Sätze zum Sieg muss zwischen 1 und 4 liegen.'),
+      findsOneWidget,
+    );
+
+    // ERR-3: the create button is disabled while the draft is invalid.
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Turnier anlegen'),
+    );
+    expect(button.onPressed, isNull);
+  });
+
+  testWidgets(
+      'ERR-2/ERR-3: valid draft shows no issue list and enables Anlegen',
+      (tester) async {
+    await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    await _tapNext(tester); // -> summary
+    expect(find.text('Übersicht'), findsOneWidget);
+
+    // ERR-2: no error box / no error title for a valid draft.
+    expect(find.byKey(const Key('wizardSummaryErrorBox')), findsNothing);
+    expect(find.text('Turnier kann nicht angelegt werden'), findsNothing);
+
+    // ERR-3: the create button is enabled.
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Turnier anlegen'),
+    );
+    expect(button.onPressed, isNotNull);
+  });
+
+  testWidgets(
+      'K26-5: unset optional fields render the "—" placeholder in the summary',
+      (tester) async {
+    // The default seed leaves PDFs, contact and info texts empty → "—" /
+    // "Nein" placeholders, and a free tournament → "Gratis".
+    await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    await _tapNext(tester); // -> summary
+
+    // Placeholder for empty optional fields (contact + info texts).
+    expect(find.text('—'), findsWidgets);
+    // No entry fee → "Gratis"; PDFs not uploaded → "Nein".
+    expect(find.text('Gratis'), findsOneWidget);
+    expect(find.text('Nein'), findsWidgets);
+  });
+
+  testWidgets(
+      'K26-1: a chosen club is shown by its resolved name (not the field '
+      'label) in the summary', (tester) async {
+    await _pumpWizard(
+      tester,
+      extraOverrides: <Object>[
+        manageableClubsProvider.overrideWith(
+          (_) async => const <ManageableClub>[
+            (id: 'c-1', name: 'Kubb Club Aarau'),
+          ],
+        ),
+      ],
+    );
+    await _typeName(tester, 'Vereins-Cup');
+
+    // Pick the organizing club + a required league category (K29).
+    await tester.tap(find.byKey(const Key('wizardClubPicker')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Kubb Club Aarau').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Liga A'));
+    await tester.pumpAndSettle();
+
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    await _tapNext(tester); // -> summary
+    expect(find.text('Übersicht'), findsOneWidget);
+
+    // The summary value is the resolved club name, NOT the field label
+    // "Ausrichtender Verein" (which only appears once, as the row label).
+    expect(find.text('Kubb Club Aarau'), findsOneWidget);
+    expect(find.text('Ausrichtender Verein'), findsOneWidget);
+  });
+
+  testWidgets(
+      'K26-4: the KO per-round rules render a short best-of form, not just a '
+      'count', (tester) async {
+    await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    await _tapNext(tester); // -> summary
+    expect(find.text('Übersicht'), findsOneWidget);
+
+    // The per-round value is a short "R<n>: Bo<maxSets>" form (round 1 always
+    // present once a KO bracket exists), NOT a bare count.
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is Text && (w.data?.startsWith('R1: Bo') ?? false),
+      ),
+      findsOneWidget,
+    );
+    // And it is NOT the old "<n> Runden konfiguriert" count string.
+    expect(find.textContaining('Runden konfiguriert'), findsNothing);
   });
 }

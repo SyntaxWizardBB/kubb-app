@@ -56,6 +56,7 @@ Map<String, dynamic> _publicEnvelope({
       'display_name': 'Live Cup',
       'team_size': 1,
       'format': 'round_robin',
+      'scoring': 'ekc',
       'status': status,
       'match_format_config': <String, dynamic>{'format': 'best_of_1'},
       'started_at': '2026-05-28T10:00:00.000Z',
@@ -128,6 +129,101 @@ void main() {
       expect(
           detail.displayNameFor(const TournamentParticipantId('unknown')),
           isNull);
+    });
+
+    test('decodes single-participant roster entries with slot_id null', () {
+      // CF3 / K08: singles have no roster slot, so public_tournament_get
+      // projects slot_id = NULL. The decoder must tolerate the null slot_id
+      // and surface the player's nickname instead of crashing the whole
+      // spectator screen.
+      final env = _publicEnvelope(
+        roster: const <Map<String, dynamic>>[
+          <String, dynamic>{
+            'slot_id': null,
+            'participant_id': 'p-a',
+            'slot_index': 0,
+            'display_name': 'SingleAlice',
+          },
+        ],
+        participantCount: 1,
+      );
+      final detail = publicTournamentDetailFromEnvelope(env);
+      expect(detail.roster, hasLength(1));
+      expect(detail.roster.first.slotId, isNull);
+      expect(detail.roster.first.displayName, 'SingleAlice');
+      expect(
+        detail.displayNameFor(const TournamentParticipantId('p-a')),
+        'SingleAlice',
+      );
+    });
+
+    test('FF2/A2: decodes scoring=classic from the envelope', () {
+      final env = _publicEnvelope();
+      (env['tournament'] as Map<String, dynamic>)['scoring'] = 'classic';
+      final detail = publicTournamentDetailFromEnvelope(env);
+      expect(detail.tournament.scoring, TournamentScoring.classic);
+    });
+
+    test('FF2/A2: missing scoring key falls back to ekc', () {
+      final env = _publicEnvelope();
+      (env['tournament'] as Map<String, dynamic>).remove('scoring');
+      final detail = publicTournamentDetailFromEnvelope(env);
+      expect(detail.tournament.scoring, TournamentScoring.ekc);
+    });
+
+    test('FF2/A2: unknown scoring value falls back to ekc', () {
+      final env = _publicEnvelope();
+      (env['tournament'] as Map<String, dynamic>)['scoring'] = 'bogus';
+      final detail = publicTournamentDetailFromEnvelope(env);
+      expect(detail.tournament.scoring, TournamentScoring.ekc);
+    });
+
+    test('FF2/B2: decodes sets_won_a/_b onto matches; null when absent', () {
+      final detail = publicTournamentDetailFromEnvelope(_publicEnvelope(
+        matches: <Map<String, dynamic>>[
+          <String, dynamic>{
+            'match_id': 'm-1',
+            'tournament_id': 't-1',
+            'round_number': 1,
+            'match_number_in_round': 1,
+            'participant_a_id': 'p-a',
+            'participant_b_id': 'p-b',
+            'status': 'finalized',
+            'consensus_round': 1,
+            'started_at': null,
+            'completed_at': null,
+            'winner_participant_id': 'p-a',
+            'final_score_a': 17,
+            'final_score_b': 11,
+            'sets_won_a': 2,
+            'sets_won_b': 1,
+            'phase': 'group',
+            'bracket_position': null,
+          },
+          <String, dynamic>{
+            'match_id': 'm-2',
+            'tournament_id': 't-1',
+            'round_number': 1,
+            'match_number_in_round': 2,
+            'participant_a_id': 'p-a',
+            'participant_b_id': 'p-b',
+            'status': 'finalized',
+            'consensus_round': 1,
+            'started_at': null,
+            'completed_at': null,
+            'winner_participant_id': 'p-a',
+            'final_score_a': 6,
+            'final_score_b': 2,
+            'phase': 'group',
+            'bracket_position': null,
+          },
+        ],
+      ));
+      expect(detail.matches[0].setsWonA, 2);
+      expect(detail.matches[0].setsWonB, 1);
+      // Row without the keys decodes to null (backward-compat).
+      expect(detail.matches[1].setsWonA, isNull);
+      expect(detail.matches[1].setsWonB, isNull);
     });
 
     test('tolerates empty matches and roster arrays', () {

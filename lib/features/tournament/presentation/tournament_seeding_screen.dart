@@ -8,6 +8,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_seeding_controller.dart';
+import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -158,7 +159,16 @@ class _Editor extends ConsumerWidget {
               style: const TextStyle(fontSize: 13)),
           if (err != null) ...[
             const SizedBox(height: KubbTokens.space3),
-            _errorBanner(l.tournamentSeedingErrorTitle, err),
+            // CF6 (K19): the manual-seeding gate surfaces as a typed
+            // SeedingRequiredException; show the localized German hint
+            // instead of the raw server message. Other errors fall back to
+            // their string form.
+            _errorBanner(
+              l.tournamentSeedingErrorTitle,
+              err is SeedingRequiredException
+                  ? l.tournamentSeedingRequiredError
+                  : err.toString(),
+            ),
           ],
           const SizedBox(height: KubbTokens.space3),
           Expanded(
@@ -235,7 +245,7 @@ class _Editor extends ConsumerWidget {
     );
   }
 
-  Widget _errorBanner(String title, Object error) => Container(
+  Widget _errorBanner(String title, String message) => Container(
         padding: const EdgeInsets.all(KubbTokens.space3),
         decoration: BoxDecoration(
           color: KubbTokens.miss.withValues(alpha: 0.1),
@@ -249,7 +259,7 @@ class _Editor extends ConsumerWidget {
                 style: const TextStyle(
                     color: KubbTokens.miss, fontWeight: FontWeight.w700)),
             const SizedBox(height: KubbTokens.space1),
-            Text(error.toString(), style: const TextStyle(fontSize: 12)),
+            Text(message, style: const TextStyle(fontSize: 12)),
           ],
         ),
       );

@@ -1901,17 +1901,25 @@
   "@tournamentWizardDisplayNameLabel": {
     "description": "Display-name input label"
   },
+  "tournamentWizardDisplayNameYearHint": "Die Jahreszahl wird automatisch angehängt (z.B. 2026).",
+  "@tournamentWizardDisplayNameYearHint": {
+    "description": "Helper text explaining the auto-appended year suffix (K01)"
+  },
   "tournamentWizardClubLabel": "Ausrichtender Verein",
   "@tournamentWizardClubLabel": {
     "description": "Optional organizing-club picker label on the Stammdaten step"
   },
-  "tournamentWizardClubHint": "Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten.",
+  "tournamentWizardClubHint": "Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten. Ohne Verein (Spasstournier) zählt das Turnier nicht für die Wertung.",
   "@tournamentWizardClubHint": {
     "description": "Helper text under the organizing-club picker"
   },
-  "tournamentWizardClubNone": "Kein Verein (persönlich)",
+  "tournamentWizardClubNone": "Spasstournier – ohne Wertung",
   "@tournamentWizardClubNone": {
-    "description": "Dropdown option for no organizing club (personal tournament)"
+    "description": "Dropdown option for no organizing club; a non-rated fun tournament (K02)"
+  },
+  "tournamentWizardClubChoosePrompt": "Bitte wählen",
+  "@tournamentWizardClubChoosePrompt": {
+    "description": "Hint shown in the club picker until the organizer actively picks (K03)"
   },
   "tournamentWizardLocationLabel": "Ort",
   "@tournamentWizardLocationLabel": {
@@ -2070,6 +2078,22 @@
   "@tournamentWizardRuleDiggyHint": {
     "description": "Diggy rule toggle subtitle"
   },
+  "tournamentWizardRuleOpeningLabel": "Anspielregel",
+  "@tournamentWizardRuleOpeningLabel": {
+    "description": "Opening-rule (Anspielregel) selector label (K06)"
+  },
+  "tournamentWizardRuleOpening246": "2-4-6",
+  "@tournamentWizardRuleOpening246": {
+    "description": "Opening-rule option: 2-4-6 (K06)"
+  },
+  "tournamentWizardRuleOpeningFree": "Frei",
+  "@tournamentWizardRuleOpeningFree": {
+    "description": "Opening-rule option: free opening (K06)"
+  },
+  "tournamentWizardRuleOpeningHint": "Reihenfolge beim Anspiel (Standard: 2-4-6).",
+  "@tournamentWizardRuleOpeningHint": {
+    "description": "Helper text under the opening-rule selector (K06)"
+  },
   "tournamentWizardRuleStrafkubb": "Strafkubb mit Abstand",
   "@tournamentWizardRuleStrafkubb": {
     "description": "Penalty kubb rule toggle title"
@@ -2204,6 +2228,55 @@
         "type": "String"
       }
     }
+  },
+  "tournamentWizardPoolGroupCountLabel": "Anzahl Gruppen",
+  "@tournamentWizardPoolGroupCountLabel": {
+    "description": "Label for the group-count input in the Vorrunde step (K12)"
+  },
+  "tournamentWizardPoolGroupCountRangeError": "Wert zwischen {min} und {max} erforderlich.",
+  "@tournamentWizardPoolGroupCountRangeError": {
+    "description": "Validation error when the group count is out of range",
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "tournamentWizardPoolDivisibilityError": "Gruppen müssen die KO-Grösse ({koSize}) glatt teilen.",
+  "@tournamentWizardPoolDivisibilityError": {
+    "description": "Validation error when the group count does not evenly divide the KO bracket size",
+    "placeholders": {
+      "koSize": {
+        "type": "int"
+      }
+    }
+  },
+  "tournamentWizardPoolQualifiersPerGroupLabel": "Qualifier pro Gruppe",
+  "@tournamentWizardPoolQualifiersPerGroupLabel": {
+    "description": "Read-only label for the derived qualifiers-per-group value"
+  },
+  "tournamentWizardPoolStrategyLabel": "Grouping-Strategie",
+  "@tournamentWizardPoolStrategyLabel": {
+    "description": "Label for the pool grouping-strategy selector"
+  },
+  "tournamentWizardPoolStrategySnake": "Snake (Schweizer-Liga)",
+  "@tournamentWizardPoolStrategySnake": {
+    "description": "Snake grouping-strategy option"
+  },
+  "tournamentWizardPoolStrategySeeded": "Seeded (Blockweise)",
+  "@tournamentWizardPoolStrategySeeded": {
+    "description": "Seeded grouping-strategy option"
+  },
+  "tournamentWizardPoolStrategyRandom": "Random (deterministisch)",
+  "@tournamentWizardPoolStrategyRandom": {
+    "description": "Random grouping-strategy option"
+  },
+  "tournamentWizardPoolRandomSeedLabel": "Random-Seed (optional)",
+  "@tournamentWizardPoolRandomSeedLabel": {
+    "description": "Label for the optional random-seed input shown for the random strategy"
   },
   "tournamentWizardMatchTimeLabel": "Zeit pro Match (Min.)",
   "@tournamentWizardMatchTimeLabel": {
@@ -2389,6 +2462,14 @@
   "tournamentWizardConsolationNameHint": "z. B. Bâton Rouille",
   "@tournamentWizardConsolationNameHint": {
     "description": "Model-B consolation display-name hint"
+  },
+  "tournamentWizardConsolationSectionLabel": "Trostturnier (Nebenturnier)",
+  "@tournamentWizardConsolationSectionLabel": {
+    "description": "Model-B consolation section heading shown in the KO step"
+  },
+  "tournamentWizardConsolationDirectCountNone": "Keine",
+  "@tournamentWizardConsolationDirectCountNone": {
+    "description": "Label for the 0-direct-starters chip in the consolation config"
   },
   "tournamentWizardSetsToWinLabel": "Sätze zum Sieg",
   "@tournamentWizardSetsToWinLabel": {
@@ -2826,6 +2907,14 @@
   "@tournamentDetailActionGotoMatches": {
     "description": "Action: navigate to matches screen"
   },
+  "tournamentDetailActionSetSeeding": "Seeding festlegen",
+  "@tournamentDetailActionSetSeeding": {
+    "description": "CF6 (K19): organizer CTA to open the manual seeding editor before the KO phase can start"
+  },
+  "tournamentSeedingRequiredError": "Seeding erforderlich: Lege die Setzliste fest, bevor die KO-Phase startet.",
+  "@tournamentSeedingRequiredError": {
+    "description": "CF6 (K19): error shown when the KO start is blocked because manual seeding has not been set yet"
+  },
   "tournamentDetailActionStandings": "Endrangliste",
   "@tournamentDetailActionStandings": {
     "description": "Action: navigate to final standings"
@@ -2876,6 +2965,165 @@
     "placeholders": {
       "label": { "type": "String" }
     }
+  },
+  "tournamentDetailInfoHeading": "Veranstaltung",
+  "@tournamentDetailInfoHeading": {
+    "description": "CF5/K28: card heading for venue/location meta fields"
+  },
+  "tournamentDetailLocation": "Ort",
+  "@tournamentDetailLocation": {
+    "description": "CF5/K28: label for the venue town/location"
+  },
+  "tournamentDetailVenueAddress": "Adresse",
+  "@tournamentDetailVenueAddress": {
+    "description": "CF5/K28: label for the full venue address"
+  },
+  "tournamentDetailDatesHeading": "Termine",
+  "@tournamentDetailDatesHeading": {
+    "description": "CF5/K28: card heading for date/deadline fields"
+  },
+  "tournamentDetailEventStart": "Turnierstart",
+  "@tournamentDetailEventStart": {
+    "description": "CF5/K28: label for the official tournament start datetime"
+  },
+  "tournamentDetailRegistrationCloses": "Anmeldeschluss",
+  "@tournamentDetailRegistrationCloses": {
+    "description": "CF5/K28: label for the in-app registration deadline"
+  },
+  "tournamentDetailCheckinUntil": "Check-in bis",
+  "@tournamentDetailCheckinUntil": {
+    "description": "CF5/K28: label for the on-site check-in deadline"
+  },
+  "tournamentDetailFeeHeading": "Gebühr & Zahlung",
+  "@tournamentDetailFeeHeading": {
+    "description": "CF5/K28: card heading for entry fee and payment methods"
+  },
+  "tournamentDetailEntryFee": "Startgebühr",
+  "@tournamentDetailEntryFee": {
+    "description": "CF5/K28: label for the entry fee"
+  },
+  "tournamentDetailPaymentMethods": "Zahlarten",
+  "@tournamentDetailPaymentMethods": {
+    "description": "CF5/K28: label for accepted payment methods"
+  },
+  "tournamentDetailContactHeading": "Kontakt",
+  "@tournamentDetailContactHeading": {
+    "description": "CF5/K28: card heading for the organizer contact"
+  },
+  "tournamentDetailContactName": "Ansprechperson",
+  "@tournamentDetailContactName": {
+    "description": "CF5/K28: label for the contact name"
+  },
+  "tournamentDetailContactPhone": "Telefon",
+  "@tournamentDetailContactPhone": {
+    "description": "CF5/K28: label for the contact phone number"
+  },
+  "tournamentDetailInfoTextsHeading": "Infos für Teilnehmer",
+  "@tournamentDetailInfoTextsHeading": {
+    "description": "CF5/K28: card heading for the free-text participant infos"
+  },
+  "tournamentDetailInfoFood": "Verpflegung",
+  "@tournamentDetailInfoFood": {
+    "description": "CF5/K28: label for the catering info text"
+  },
+  "tournamentDetailInfoTravel": "Anreise",
+  "@tournamentDetailInfoTravel": {
+    "description": "CF5/K28: label for the travel info text"
+  },
+  "tournamentDetailInfoAccommodation": "Unterkunft",
+  "@tournamentDetailInfoAccommodation": {
+    "description": "CF5/K28: label for the accommodation info text"
+  },
+  "tournamentDetailWeatherNote": "Wetter",
+  "@tournamentDetailWeatherNote": {
+    "description": "CF5/K28: label for the weather note"
+  },
+  "tournamentDetailRulesHeading": "Regel-Varianten",
+  "@tournamentDetailRulesHeading": {
+    "description": "CF5/K28: card heading for the rule variants"
+  },
+  "tournamentDetailRuleDiggy": "Diggy",
+  "@tournamentDetailRuleDiggy": {
+    "description": "CF5/K28: label for the diggy rule toggle"
+  },
+  "tournamentDetailRuleSureshot": "Sureshot",
+  "@tournamentDetailRuleSureshot": {
+    "description": "CF5/K28: label for the sureshot rule toggle"
+  },
+  "tournamentDetailRuleStrafkubb": "Strafkubb hinter Grundlinie",
+  "@tournamentDetailRuleStrafkubb": {
+    "description": "CF5/K28: label for the penalty-kubb rule toggle"
+  },
+  "tournamentDetailRuleOpening": "Anspielregel",
+  "@tournamentDetailRuleOpening": {
+    "description": "CF5/K28: label for the opening rule"
+  },
+  "tournamentDetailRuleOn": "An",
+  "@tournamentDetailRuleOn": {
+    "description": "CF5/K28: value shown when a rule toggle is enabled"
+  },
+  "tournamentDetailRuleOff": "Aus",
+  "@tournamentDetailRuleOff": {
+    "description": "CF5/K28: value shown when a rule toggle is disabled"
+  },
+  "tournamentDetailScoring": "Wertung",
+  "@tournamentDetailScoring": {
+    "description": "CF5/K28: label for the scoring system"
+  },
+  "tournamentDetailScoringEkc": "EKC",
+  "@tournamentDetailScoringEkc": {
+    "description": "CF5/K28: value for the EKC scoring system"
+  },
+  "tournamentDetailScoringClassic": "Classic",
+  "@tournamentDetailScoringClassic": {
+    "description": "CF5/K28: value for the classic scoring system"
+  },
+  "tournamentDetailOrganizationHeading": "Veranstalter & Liga",
+  "@tournamentDetailOrganizationHeading": {
+    "description": "CF5/K28: card heading for club / fun-tournament / league info"
+  },
+  "tournamentDetailClubLabel": "Verein",
+  "@tournamentDetailClubLabel": {
+    "description": "CF5/K28: label for the organizing club"
+  },
+  "tournamentDetailFunTournament": "Spasstournier – ohne Wertung",
+  "@tournamentDetailFunTournament": {
+    "description": "CF5/K28: value shown when no club is set (fun tournament)"
+  },
+  "tournamentDetailLeagueCategories": "Liga-Kategorien",
+  "@tournamentDetailLeagueCategories": {
+    "description": "CF5/K28: label for the league categories"
+  },
+  "tournamentDetailKoSetup": "KO-Setup",
+  "@tournamentDetailKoSetup": {
+    "description": "CF5/K28: label for the short KO bracket setup info"
+  },
+  "tournamentDetailKoQualifiers": "{count} Qualifikanten",
+  "@tournamentDetailKoQualifiers": {
+    "description": "CF5/K28: KO bracket size value",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "tournamentDetailConsolationLabel": "Trostturnier",
+  "@tournamentDetailConsolationLabel": {
+    "description": "CF5/K28: label for the consolation/Trostturnier name row"
+  },
+  "tournamentDetailDocumentsHeading": "Dokumente",
+  "@tournamentDetailDocumentsHeading": {
+    "description": "CF5/K28: card heading for downloadable PDF documents"
+  },
+  "tournamentDetailRulesPdf": "Regelwerk (PDF)",
+  "@tournamentDetailRulesPdf": {
+    "description": "CF5/K28: download button label for the rules PDF"
+  },
+  "tournamentDetailSiteMapPdf": "Geländeplan (PDF)",
+  "@tournamentDetailSiteMapPdf": {
+    "description": "CF5/K28: download button label for the site-map PDF"
+  },
+  "tournamentDetailPdfOpenError": "PDF konnte nicht geöffnet werden.",
+  "@tournamentDetailPdfOpenError": {
+    "description": "CF5/K28: error shown when a PDF link cannot be opened"
   },
   "tournamentDetailAuditHeader": "Verlauf",
   "@tournamentDetailAuditHeader": {
@@ -4512,5 +4760,160 @@
   "shootoutOrderHintReadonly": "Die gemeldete Reihenfolge bestätigen — bestes Team zuerst.",
   "@shootoutOrderHintReadonly": {
     "description": "P6 shoot-out screen — read-only hint shown to the confirming side (order is locked)"
+  },
+  "tournamentWizardSummaryPlaceholder": "—",
+  "@tournamentWizardSummaryPlaceholder": {
+    "description": "K26: placeholder shown for an empty/unset optional field in the summary review"
+  },
+  "tournamentWizardSummarySectionStammdaten": "Stammdaten",
+  "@tournamentWizardSummarySectionStammdaten": {
+    "description": "K26: summary section heading for the master-data step"
+  },
+  "tournamentWizardSummarySectionParticipants": "Teilnehmer",
+  "@tournamentWizardSummarySectionParticipants": {
+    "description": "K26: summary section heading for the participants step"
+  },
+  "tournamentWizardSummarySectionVorrunde": "Vorrunde",
+  "@tournamentWizardSummarySectionVorrunde": {
+    "description": "K26: summary section heading for the prelim step"
+  },
+  "tournamentWizardSummarySectionKo": "K.-o.",
+  "@tournamentWizardSummarySectionKo": {
+    "description": "K26: summary section heading for the KO step"
+  },
+  "tournamentWizardSummaryErrorTitle": "Turnier kann nicht angelegt werden",
+  "@tournamentWizardSummaryErrorTitle": {
+    "description": "K26/ERR-1: heading of the validation-issue list shown when the draft is invalid"
+  },
+  "tournamentWizardSummaryTeamSizeLabel": "Teamgrösse",
+  "@tournamentWizardSummaryTeamSizeLabel": {
+    "description": "K26: summary label for the team size (min/max players per team)"
+  },
+  "tournamentWizardSummaryTeamSizeFixed": "{size} (fix)",
+  "@tournamentWizardSummaryTeamSizeFixed": {
+    "description": "K26: summary value for a fixed team size",
+    "placeholders": { "size": { "type": "int" } }
+  },
+  "tournamentWizardSummaryTeamSizeRange": "{min}–{max}",
+  "@tournamentWizardSummaryTeamSizeRange": {
+    "description": "K26: summary value for a variable team size range",
+    "placeholders": { "min": { "type": "int" }, "max": { "type": "int" } }
+  },
+  "tournamentWizardSummaryYes": "Ja",
+  "@tournamentWizardSummaryYes": {
+    "description": "K26: summary value 'yes' (e.g. PDF present)"
+  },
+  "tournamentWizardSummaryNo": "Nein",
+  "@tournamentWizardSummaryNo": {
+    "description": "K26: summary value 'no' (e.g. PDF not present)"
+  },
+  "tournamentWizardSummaryFee": "{amount} {currency}",
+  "@tournamentWizardSummaryFee": {
+    "description": "K26: summary value for the entry fee (amount + currency)",
+    "placeholders": {
+      "amount": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "tournamentWizardSummaryFeeFree": "Gratis",
+  "@tournamentWizardSummaryFeeFree": {
+    "description": "K26: summary value when there is no entry fee"
+  },
+  "tournamentWizardSummaryScoringEkc": "EKC",
+  "@tournamentWizardSummaryScoringEkc": {
+    "description": "K26: summary value for the EKC scoring system"
+  },
+  "tournamentWizardSummaryScoringClassic": "Klassisch",
+  "@tournamentWizardSummaryScoringClassic": {
+    "description": "K26: summary value for the classic scoring system"
+  },
+  "tournamentWizardSummaryRulesLabel": "Regel-Varianten",
+  "@tournamentWizardSummaryRulesLabel": {
+    "description": "K26: summary label for the active rule variants"
+  },
+  "tournamentWizardSummaryRulesNone": "Keine Sonderregeln",
+  "@tournamentWizardSummaryRulesNone": {
+    "description": "K26: summary value when no rule variant toggle is active"
+  },
+  "tournamentWizardSummaryPdfRulesLabel": "Regelwerk-PDF",
+  "@tournamentWizardSummaryPdfRulesLabel": {
+    "description": "K26: summary label for whether a rules PDF was uploaded"
+  },
+  "tournamentWizardSummaryPdfSiteMapLabel": "Lageplan-PDF",
+  "@tournamentWizardSummaryPdfSiteMapLabel": {
+    "description": "K26: summary label for whether a site-map PDF was uploaded"
+  },
+  "tournamentWizardSummaryContactLabel": "Kontakt",
+  "@tournamentWizardSummaryContactLabel": {
+    "description": "K26: summary label for the organiser contact (name + phone)"
+  },
+  "tournamentWizardSummaryInfoLabel": "Infotexte",
+  "@tournamentWizardSummaryInfoLabel": {
+    "description": "K26: summary label for the participant info free-text blocks"
+  },
+  "tournamentWizardSummaryInfoCount": "{count} hinterlegt",
+  "@tournamentWizardSummaryInfoCount": {
+    "description": "K26: summary value counting the filled participant info texts",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "tournamentWizardSummaryFormatLabel": "Format",
+  "@tournamentWizardSummaryFormatLabel": {
+    "description": "K26: summary label for the prelim format (group phase vs Schoch)"
+  },
+  "tournamentWizardSummaryMatchTimeLabel": "Match-Zeit (Min.)",
+  "@tournamentWizardSummaryMatchTimeLabel": {
+    "description": "K26: summary label for the prelim match time limit in minutes"
+  },
+  "tournamentWizardSummaryPitchesLabel": "Pitches",
+  "@tournamentWizardSummaryPitchesLabel": {
+    "description": "K26: summary label for the configured pitch count"
+  },
+  "tournamentWizardSummaryKoTypeLabel": "KO-System",
+  "@tournamentWizardSummaryKoTypeLabel": {
+    "description": "K26: summary label for the KO system (single-out / double / consolation)"
+  },
+  "tournamentWizardSummaryKoTypeSingle": "Single-Out",
+  "@tournamentWizardSummaryKoTypeSingle": {
+    "description": "K26: summary value for the single-out KO system"
+  },
+  "tournamentWizardSummaryKoTypeDouble": "Double-Elimination",
+  "@tournamentWizardSummaryKoTypeDouble": {
+    "description": "K26: summary value for the double-elimination KO system"
+  },
+  "tournamentWizardSummaryKoTypeConsolation": "Trostturnier",
+  "@tournamentWizardSummaryKoTypeConsolation": {
+    "description": "K26: summary value for the consolation/Trostturnier KO system"
+  },
+  "tournamentWizardSummaryKoSizeLabel": "Bracket-Grösse",
+  "@tournamentWizardSummaryKoSizeLabel": {
+    "description": "K26: summary label for the KO bracket size (qualifier count)"
+  },
+  "tournamentWizardSummaryKoRoundsLabel": "Per-Runde-Regeln",
+  "@tournamentWizardSummaryKoRoundsLabel": {
+    "description": "K26: summary label for the per-round KO rules short form"
+  },
+  "tournamentWizardSummaryKoRoundEntry": "R{round}: Bo{maxSets}",
+  "@tournamentWizardSummaryKoRoundEntry": {
+    "description": "K26: summary short form for one KO round (round number + best-of from its max sets), joined by '·'",
+    "placeholders": {
+      "round": { "type": "int" },
+      "maxSets": { "type": "int" }
+    }
+  },
+  "tournamentWizardSummarySeedingLabel": "Seeding-Quelle",
+  "@tournamentWizardSummarySeedingLabel": {
+    "description": "K26: summary label for the KO seeding source"
+  },
+  "tournamentWizardSummarySeedingAuto": "Automatisch aus Vorrunde",
+  "@tournamentWizardSummarySeedingAuto": {
+    "description": "K26: summary value for automatic seeding from the prelim"
+  },
+  "tournamentWizardSummarySeedingManual": "Manuell festlegen",
+  "@tournamentWizardSummarySeedingManual": {
+    "description": "K26: summary value for manual seeding"
+  },
+  "tournamentWizardSummaryConsolationDirectLabel": "Direkt ins Trostturnier",
+  "@tournamentWizardSummaryConsolationDirectLabel": {
+    "description": "K26: summary label for the consolation direct-starter count"
   }
 }

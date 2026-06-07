@@ -146,6 +146,8 @@ class TournamentMatchRef {
     this.winnerParticipant,
     this.finalScoreA,
     this.finalScoreB,
+    this.setsWonA,
+    this.setsWonB,
     this.participantADisplayName,
     this.participantBDisplayName,
   });
@@ -163,6 +165,16 @@ class TournamentMatchRef {
   final TournamentParticipantId? winnerParticipant;
   final int? finalScoreA;
   final int? finalScoreB;
+
+  /// FF2 / Finding B: the real per-side set wins, aggregated server-side
+  /// from `tournament_set_score_proposals` exactly like
+  /// `tournament_pool_standings` (CF2). Null when the wire row predates
+  /// FF2 or comes from the realtime CDC channel (raw table columns) —
+  /// the standings synthesis then falls back to the single-set / match-win
+  /// approximation. In classic mode these drive the real set-win count so
+  /// client and server standings agree for best-of-3.
+  final int? setsWonA;
+  final int? setsWonB;
 
   /// W3-T4: server-projected display name for participant A — same
   /// `COALESCE(user_profiles.nickname, teams.display_name)` shape used by
@@ -190,6 +202,8 @@ class TournamentMatchRef {
           other.winnerParticipant == winnerParticipant &&
           other.finalScoreA == finalScoreA &&
           other.finalScoreB == finalScoreB &&
+          other.setsWonA == setsWonA &&
+          other.setsWonB == setsWonB &&
           other.participantADisplayName == participantADisplayName &&
           other.participantBDisplayName == participantBDisplayName;
 
@@ -208,6 +222,8 @@ class TournamentMatchRef {
         winnerParticipant,
         finalScoreA,
         finalScoreB,
+        setsWonA,
+        setsWonB,
         participantADisplayName,
         participantBDisplayName,
       );

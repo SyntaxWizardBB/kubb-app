@@ -1,5 +1,6 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
@@ -10,7 +11,6 @@ import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/data/tournament_pdf_uploader.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
-import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_pool_config_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_model_explainer_sheet.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/swiss_config_section.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
@@ -19,15 +19,14 @@ import 'package:kubb_domain/kubb_domain.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 /// Logical step identifiers. The visible step index is derived from
-/// `_visibleSteps`. KO-config precedes the group-phase (pool) step so the
-/// "Qualifier pro Gruppe" value can be computed from the KO bracket size
-/// (P6_SETUP_WIZARD_SPEC.md Screen 5).
+/// `_visibleSteps`. K12/K25: the group-phase inputs (group count + grouping
+/// strategy + per-group pitch assignment) now live in the Vorrunde step
+/// (`_StepFormat`), so there is no separate pool-config step anymore.
 enum _StepKind {
   name,
   participants,
   format,
   koConfig,
-  poolConfig,
   summary,
 }
 
@@ -64,17 +63,15 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
   int? _swissRounds;
 
   /// Logical step list for the current draft. KO config always appears
-  /// (every tournament has a KO stage) and precedes the group-phase step so
-  /// the qualifier-per-group count is derivable from the KO bracket size
-  /// (P6_SETUP_WIZARD_SPEC.md). The group-phase step only shows for a group
-  /// Vorrunde (`vorrundeType == groupPhase`).
+  /// (every tournament has a KO stage). K12/K25: the former group-phase step
+  /// is gone — group count + grouping strategy are configured inline in the
+  /// Vorrunde step (`_StepFormat`) when `vorrundeType == groupPhase`.
   List<_StepKind> _visibleSteps(TournamentConfigDraft draft) {
     return <_StepKind>[
       _StepKind.name,
       _StepKind.participants,
       _StepKind.format,
       _StepKind.koConfig,
-      if (draft.vorrundeType == VorrundeType.groupPhase) _StepKind.poolConfig,
       _StepKind.summary,
     ];
   }
@@ -97,32 +94,76 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
     if (_step >= kinds.length) return false;
     switch (kinds[_step]) {
       case _StepKind.name:
+        // K01/K03/K29-K33: the Stammdaten step is only valid once the name,
+        // the club/Spasstournier choice and every required field are set.
+        // Liga is only required when a club is chosen (K29 carve-out).
         final n = draft.displayName?.trim() ?? '';
-        return n.length >= TournamentConfigDraft.displayNameMinChars &&
-            n.length <= TournamentConfigDraft.displayNameMaxChars;
+        final nameOk =
+            n.length >= TournamentConfigDraft.displayNameMinChars &&
+                n.length <= TournamentConfigDraft.displayNameMaxChars;
+        final leagueOk =
+            draft.clubId == null || draft.leagueCategories.isNotEmpty;
+        return nameOk &&
+            draft.clubChoiceMade &&
+            leagueOk &&
+            (draft.location?.trim().isNotEmpty ?? false) &&
+            (draft.venueAddress?.trim().isNotEmpty ?? false) &&
+            draft.eventStartsAt != null &&
+            draft.registrationClosesAt != null &&
+            draft.checkinUntil != null;
       case _StepKind.participants:
-        return draft.minParticipants <= draft.maxParticipants &&
-            draft.minParticipants >= TournamentConfigDraft.participantsHardMin;
+        // K09: no minimum-participant rule anymore — only the upper bound
+        // (K10) and a non-empty roster gate this step.
+        return draft.maxParticipants >= 2 &&
+            draft.maxParticipants <= TournamentConfigDraft.participantsHardMax;
       case _StepKind.format:
         // Prelim "Max. Sätze" is decoupled from setsToWin (P6): only a sane
         // absolute range applies.
-        return draft.maxSets >= TournamentConfigDraft.maxSetsMin &&
+        final maxSetsOk = draft.maxSets >= TournamentConfigDraft.maxSetsMin &&
             draft.maxSets <= TournamentConfigDraft.maxSetsMax;
+        if (!maxSetsOk) return false;
+        // K12: in the group phase the inline group-count input must be a valid
+        // group count (2..16). The qualifier-per-group divisibility check
+        // (koBracketSize % groupCount) needs the KO size, which is only chosen
+        // in the NEXT step — so it is gated on the koConfig step instead and
+        // not required here.
+        if (draft.vorrundeType == VorrundeType.groupPhase) {
+          final cfg = draft.poolPhaseConfig;
+          if (cfg == null) return false;
+          return cfg.groupCount >= _StepFormat.groupCountMin &&
+              cfg.groupCount <= _StepFormat.groupCountMax;
+        }
+        return true;
       case _StepKind.koConfig:
+        // K11: KO size is bounded by the fixed bracket cap, decoupled from
+        // maxParticipants (which may be up to 1000).
         final cfg = draft.koConfig;
-        return cfg != null &&
-            cfg.qualifierCount >= 2 &&
-            cfg.qualifierCount <= draft.maxParticipants;
-      case _StepKind.poolConfig:
-        // The group-phase step requires a valid PoolPhaseConfig whose group
-        // count evenly divides the KO bracket size (the qualifier-per-group
-        // count is derived from KO bracket size / group count).
-        final cfg = draft.poolPhaseConfig;
-        if (cfg == null) return false;
-        final bracketSize = _koBracketSize(draft);
-        return bracketSize > 0 &&
-            cfg.groupCount > 0 &&
-            bracketSize % cfg.groupCount == 0;
+        if (cfg == null ||
+            cfg.qualifierCount < 2 ||
+            cfg.qualifierCount > TournamentConfigDraft.koBracketSizeCap) {
+          return false;
+        }
+        // K12: the group count chosen in the Vorrunde step must evenly divide
+        // the KO bracket size (the qualifier-per-group count is derived as
+        // koBracketSize / groupCount). The KO size is final on this step, so
+        // the divisibility gate lives here.
+        if (draft.vorrundeType == VorrundeType.groupPhase) {
+          final pool = draft.poolPhaseConfig;
+          final bracketSize = _koBracketSize(draft);
+          if (pool == null ||
+              pool.groupCount <= 0 ||
+              bracketSize <= 0 ||
+              bracketSize % pool.groupCount != 0) {
+            return false;
+          }
+        }
+        // K18: the consolation/Trostturnier config lives in this step now; its
+        // name is required, so "Weiter" stays blocked until it is filled.
+        if (draft.koType == KoType.consolation &&
+            (draft.consolationName?.trim().isEmpty ?? true)) {
+          return false;
+        }
+        return true;
       case _StepKind.summary:
         return draft.validate().isValid;
     }
@@ -251,8 +292,6 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
         return l10n.tournamentWizardStep2Title;
       case _StepKind.format:
         return l10n.tournamentWizardStep3Title;
-      case _StepKind.poolConfig:
-        return l10n.tournamentWizardStepGroupPhaseTitle;
       case _StepKind.koConfig:
         return l10n.tournamentWizardStep5Title;
       case _StepKind.summary:
@@ -274,7 +313,6 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
       case _StepKind.participants:
         return _StepParticipants(
           draft: draft,
-          onMin: controller.setMinParticipants,
           onMax: controller.setMaxParticipants,
           onTeamSize: controller.setTeamSize,
           onMaxTeamSize: controller.setMaxTeamSize,
@@ -283,23 +321,17 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
         return _StepFormat(
           draft: draft,
           controller: controller,
+          koBracketSize: _koBracketSize(draft),
           onVorrundeType: controller.setVorrundeType,
           onKoType: controller.setKoType,
           onMaxSets: controller.setMaxSets,
+          onPoolGrouping: controller.setPoolGrouping,
           swissRounds: _swissRounds ??
               SwissConfigSection.defaultRounds(draft.maxParticipants),
           onSwissRoundsChanged: (v) => setState(() => _swissRounds = v),
           onPitchPlanChanged: controller.setPitchPlan,
           onRoundTime: controller.setRoundTime,
           onBreakBetween: controller.setBreakBetweenMatchesSeconds,
-        );
-      case _StepKind.poolConfig:
-        return WizardPoolConfigStep(
-          key: ValueKey<int>(_koBracketSize(draft)),
-          draft: draft,
-          koBracketSize: _koBracketSize(draft),
-          onConfigChanged: controller.setPoolPhaseConfig,
-          onPitchPlanChanged: controller.setPitchPlan,
         );
       case _StepKind.koConfig:
         return WizardKoConfigStep(
@@ -536,14 +568,19 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         _PlainTextField(
           key: const Key('wizardNameField'),
           controller: _nameCtrl,
-          maxLength: TournamentConfigDraft.displayNameMaxChars,
+          // K01: leave room for the auto-appended " 2026" suffix (+5 chars)
+          // so it never gets clipped by the input length limit.
+          maxLength: TournamentConfigDraft.displayNameMaxChars + 5,
           onChanged: controller.setDisplayName,
         ),
+        const SizedBox(height: KubbTokens.space1half),
+        _HelperText(l10n.tournamentWizardDisplayNameYearHint),
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(l10n.tournamentWizardClubLabel, optional: true),
+        _FieldLabel(l10n.tournamentWizardClubLabel),
         const SizedBox(height: KubbTokens.space2),
         _ClubPickerField(
           selectedClubId: draft.clubId,
+          choiceMade: draft.clubChoiceMade,
           onChanged: controller.setClubId,
         ),
         const SizedBox(height: KubbTokens.space1half),
@@ -554,10 +591,8 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         // organiser actively picks the league via these chips.
         if (draft.clubId != null) ...[
           const SizedBox(height: KubbTokens.space5),
-          _FieldLabel(
-            l10n.tournamentWizardLeagueCategoriesLabel,
-            optional: true,
-          ),
+          // K29: league categories are required once a club is chosen.
+          _FieldLabel(l10n.tournamentWizardLeagueCategoriesLabel),
           const SizedBox(height: KubbTokens.space2),
           Wrap(
             spacing: KubbTokens.space2,
@@ -575,7 +610,7 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           _HelperText(l10n.tournamentWizardLeagueCategoriesHint),
         ],
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(l10n.tournamentWizardLocationLabel, optional: true),
+        _FieldLabel(l10n.tournamentWizardLocationLabel),
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _locationCtrl,
@@ -583,7 +618,7 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           onChanged: controller.setLocation,
         ),
         const SizedBox(height: KubbTokens.space4),
-        _FieldLabel(l10n.tournamentWizardVenueAddressLabel, optional: true),
+        _FieldLabel(l10n.tournamentWizardVenueAddressLabel),
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _addressCtrl,
@@ -591,7 +626,7 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           onChanged: controller.setVenueAddress,
         ),
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(l10n.tournamentWizardEventDateLabel, optional: true),
+        _FieldLabel(l10n.tournamentWizardEventDateLabel),
         const SizedBox(height: KubbTokens.space2),
         _DateField(
           value: draft.eventStartsAt,
@@ -601,10 +636,7 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           ),
         ),
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(
-          l10n.tournamentWizardRegistrationDeadlineLabel,
-          optional: true,
-        ),
+        _FieldLabel(l10n.tournamentWizardRegistrationDeadlineLabel),
         const SizedBox(height: KubbTokens.space2),
         _DateField(
           value: draft.registrationClosesAt,
@@ -614,10 +646,7 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           ),
         ),
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(
-          l10n.tournamentWizardCheckinUntilLabel,
-          optional: true,
-        ),
+        _FieldLabel(l10n.tournamentWizardCheckinUntilLabel),
         const SizedBox(height: KubbTokens.space2),
         _DateField(
           value: draft.checkinUntil,
@@ -668,6 +697,34 @@ class _StepStammdatenState extends State<_StepStammdaten> {
             draft.ruleVariants.copyWith(strafkubbOffBaseline: v),
           ),
         ),
+        // K06: surface the opening rule (Anspielregel). Default stays
+        // '2-4-6'; the segmented control writes the choice via
+        // setRuleVariants so the value is no longer invisible in the wizard.
+        const SizedBox(height: KubbTokens.space2),
+        _FieldLabel(l10n.tournamentWizardRuleOpeningLabel),
+        const SizedBox(height: KubbTokens.space2),
+        SegmentedButton<String>(
+          key: const Key('wizardOpeningRule'),
+          showSelectedIcon: false,
+          segments: <ButtonSegment<String>>[
+            ButtonSegment<String>(
+              value: '2-4-6',
+              label: Text(l10n.tournamentWizardRuleOpening246),
+            ),
+            ButtonSegment<String>(
+              value: 'free',
+              label: Text(l10n.tournamentWizardRuleOpeningFree),
+            ),
+          ],
+          selected: <String>{
+            if (draft.ruleVariants.openingRule == 'free') 'free' else '2-4-6',
+          },
+          onSelectionChanged: (sel) => controller.setRuleVariants(
+            draft.ruleVariants.copyWith(openingRule: sel.first),
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space1half),
+        _HelperText(l10n.tournamentWizardRuleOpeningHint),
         const SizedBox(height: KubbTokens.space4),
         _FieldLabel(l10n.tournamentWizardRulesPdfLabel, optional: true),
         const SizedBox(height: KubbTokens.space2),
@@ -736,7 +793,9 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _foodCtrl,
-          maxLines: 2,
+          // K07: allow up to 5 lines for the participant info free-text.
+          minLines: 3,
+          maxLines: 5,
           onChanged: controller.setInfoFood,
         ),
         const SizedBox(height: KubbTokens.space4),
@@ -744,7 +803,9 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _travelCtrl,
-          maxLines: 2,
+          // K07: allow up to 5 lines for the participant info free-text.
+          minLines: 3,
+          maxLines: 5,
           onChanged: controller.setInfoTravel,
         ),
         const SizedBox(height: KubbTokens.space4),
@@ -753,7 +814,9 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _accommodationCtrl,
-          maxLines: 2,
+          // K07: allow up to 5 lines for the participant info free-text.
+          minLines: 3,
+          maxLines: 5,
           onChanged: controller.setInfoAccommodation,
         ),
         const SizedBox(height: KubbTokens.space4),
@@ -761,7 +824,9 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _weatherCtrl,
-          maxLines: 2,
+          // K07: allow up to 5 lines for the participant info free-text.
+          minLines: 3,
+          maxLines: 5,
           onChanged: controller.setWeatherNote,
         ),
       ],
@@ -1048,6 +1113,7 @@ class _PlainTextField extends StatelessWidget {
     this.hintText,
     this.maxLength,
     this.maxLines = 1,
+    this.minLines,
     this.keyboardType,
     super.key,
   });
@@ -1057,6 +1123,7 @@ class _PlainTextField extends StatelessWidget {
   final String? hintText;
   final int? maxLength;
   final int maxLines;
+  final int? minLines;
   final TextInputType? keyboardType;
 
   @override
@@ -1070,6 +1137,7 @@ class _PlainTextField extends StatelessWidget {
       controller: controller,
       maxLength: maxLength,
       maxLines: maxLines,
+      minLines: minLines,
       keyboardType: keyboardType,
       onChanged: onChanged,
       decoration: InputDecoration(
@@ -1092,10 +1160,16 @@ class _PlainTextField extends StatelessWidget {
 class _ClubPickerField extends ConsumerWidget {
   const _ClubPickerField({
     required this.selectedClubId,
+    required this.choiceMade,
     required this.onChanged,
   });
 
   final String? selectedClubId;
+
+  /// K03: whether the organizer has actively made the club choice. While
+  /// `false` the dropdown shows a "bitte wählen" hint and no value is
+  /// pre-selected, so "Spasstournier" is never an implicit default.
+  final bool choiceMade;
   final ValueChanged<String?> onChanged;
 
   @override
@@ -1115,15 +1189,23 @@ class _ClubPickerField extends ConsumerWidget {
     // the dropdown never holds a value absent from its item list.
     final value =
         items.any((c) => c.id == selectedClubId) ? selectedClubId : null;
+    // K03: until the organizer actively chooses, no value is selected and a
+    // "bitte wählen" hint shows — the null `clubId` (Spasstournier) must be
+    // an explicit pick, not an implicit default.
     return DropdownButtonFormField<String?>(
       key: const Key('wizardClubPicker'),
-      initialValue: value,
+      initialValue: choiceMade ? value : null,
       isExpanded: true,
+      hint: Text(l10n.tournamentWizardClubChoosePrompt),
       decoration: InputDecoration(
         border: border,
         enabledBorder: border,
       ),
       items: <DropdownMenuItem<String?>>[
+        // K02/K03: this item carries the implicit null value = the
+        // "Spasstournier – ohne Wertung" choice. It is the only null-valued
+        // item (every club below has a non-null id), so the picker maps a null
+        // selection unambiguously to Spasstournier.
         DropdownMenuItem<String?>(
           child: Text(l10n.tournamentWizardClubNone),
         ),
@@ -1311,14 +1393,12 @@ class _ScoringOption extends StatelessWidget {
 class _StepParticipants extends StatelessWidget {
   const _StepParticipants({
     required this.draft,
-    required this.onMin,
     required this.onMax,
     required this.onTeamSize,
     required this.onMaxTeamSize,
   });
 
   final TournamentConfigDraft draft;
-  final ValueChanged<int> onMin;
   final ValueChanged<int> onMax;
   final ValueChanged<int> onTeamSize;
   final ValueChanged<int> onMaxTeamSize;
@@ -1347,18 +1427,12 @@ class _StepParticipants extends StatelessWidget {
         const SizedBox(height: KubbTokens.space1half),
         _HelperText(l10n.tournamentWizardTeamSizeHint),
         const SizedBox(height: KubbTokens.space5),
-        WizardNumberField(
-          label: l10n.tournamentWizardMinParticipantsLabel,
-          value: draft.minParticipants,
-          min: TournamentConfigDraft.participantsHardMin,
-          max: draft.maxParticipants,
-          onChanged: onMin,
-        ),
-        const SizedBox(height: KubbTokens.space4),
+        // K09: the minimum-participant field was removed. K10: the maximum may
+        // be configured up to participantsHardMax (1000).
         WizardNumberField(
           label: l10n.tournamentWizardMaxParticipantsLabel,
           value: draft.maxParticipants,
-          min: draft.minParticipants,
+          min: 2,
           max: TournamentConfigDraft.participantsHardMax,
           onChanged: onMax,
         ),
@@ -1367,13 +1441,15 @@ class _StepParticipants extends StatelessWidget {
   }
 }
 
-class _StepFormat extends StatelessWidget {
+class _StepFormat extends StatefulWidget {
   const _StepFormat({
     required this.draft,
     required this.controller,
+    required this.koBracketSize,
     required this.onVorrundeType,
     required this.onKoType,
     required this.onMaxSets,
+    required this.onPoolGrouping,
     required this.swissRounds,
     required this.onSwissRoundsChanged,
     required this.onPitchPlanChanged,
@@ -1381,14 +1457,31 @@ class _StepFormat extends StatelessWidget {
     required this.onBreakBetween,
   });
 
+  /// K12: group-count bounds for the inline group-phase config.
+  static const int groupCountMin = 2;
+  static const int groupCountMax = 16;
+
   final TournamentConfigDraft draft;
   final TournamentConfigController controller;
+
+  /// KO bracket size (power of two) implied by the current KO config. Basis
+  /// for the read-only "Qualifier pro Gruppe" value derived inline (K12).
+  /// 0 until a valid KO size is chosen (the KO step follows this one).
+  final int koBracketSize;
   // Two-axis format selection: Vorrunde (group phase vs Schoch) and KO
   // system (single-out / double-elimination / consolation). The controller
   // derives the legacy `TournamentFormat` + `BracketType` from these axes.
   final ValueChanged<VorrundeType> onVorrundeType;
   final ValueChanged<KoType> onKoType;
   final ValueChanged<int> onMaxSets;
+
+  /// K12: pushes the group-phase grouping inputs (group count + strategy +
+  /// optional random seed) gathered inline in this step.
+  final void Function({
+    required int groupCount,
+    required PoolGroupingStrategy strategy,
+    int? randomSeed,
+  }) onPoolGrouping;
   // T10: Swiss-System round count — surfaced inline when the Vorrunde is
   // Schoch. State lives in the wizard.
   final int swissRounds;
@@ -1398,9 +1491,122 @@ class _StepFormat extends StatelessWidget {
   final ValueChanged<int> onBreakBetween;
 
   @override
+  State<_StepFormat> createState() => _StepFormatState();
+}
+
+class _StepFormatState extends State<_StepFormat> {
+  late final TextEditingController _groupCountCtrl;
+  late final TextEditingController _seedCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    final pool = widget.draft.poolPhaseConfig;
+    _groupCountCtrl = TextEditingController(
+      text: '${pool?.groupCount ?? 4}',
+    );
+    _seedCtrl = TextEditingController(text: pool?.randomSeed?.toString() ?? '');
+  }
+
+  @override
+  void dispose() {
+    _groupCountCtrl.dispose();
+    _seedCtrl.dispose();
+    super.dispose();
+  }
+
+  /// Current grouping strategy (defaults to snake before the organiser picks).
+  PoolGroupingStrategy get _strategy =>
+      widget.draft.poolPhaseConfig?.strategy ?? PoolGroupingStrategy.snake;
+
+  int get _groupCount => widget.draft.poolPhaseConfig?.groupCount ?? 0;
+
+  bool get _groupCountValid =>
+      _groupCount >= _StepFormat.groupCountMin &&
+      _groupCount <= _StepFormat.groupCountMax;
+
+  /// Whether the chosen group count evenly divides the KO bracket size. When
+  /// the KO size is not yet known (0) the check is deferred to the KO step.
+  bool get _divisible =>
+      widget.koBracketSize <= 0 ||
+      widget.koBracketSize % _groupCount == 0;
+
+  /// Qualifier-per-group derived read-only as koBracketSize / groupCount.
+  int get _derivedQualifiersPerGroup {
+    if (!_groupCountValid ||
+        widget.koBracketSize <= 0 ||
+        widget.koBracketSize % _groupCount != 0) {
+      return 0;
+    }
+    return widget.koBracketSize ~/ _groupCount;
+  }
+
+  void _onGroupsTyped(String raw) {
+    final value = int.tryParse(raw.trim()) ?? 0;
+    widget.onPoolGrouping(
+      groupCount: value,
+      strategy: _strategy,
+      randomSeed: _randomSeed(),
+    );
+  }
+
+  void _onStrategyChanged(PoolGroupingStrategy? next) {
+    if (next == null) return;
+    widget.onPoolGrouping(
+      groupCount: _groupCount,
+      strategy: next,
+      randomSeed: _randomSeed(),
+    );
+  }
+
+  void _onSeedTyped(String raw) {
+    final trimmed = raw.trim();
+    widget.onPoolGrouping(
+      groupCount: _groupCount,
+      strategy: _strategy,
+      randomSeed: trimmed.isEmpty ? null : int.tryParse(trimmed),
+    );
+  }
+
+  int? _randomSeed() {
+    final t = _seedCtrl.text.trim();
+    return t.isEmpty ? null : int.tryParse(t);
+  }
+
+  /// Group label for index 0..n: 'A', 'B', 'C', …
+  static String _groupLabel(int index) =>
+      String.fromCharCode('A'.codeUnitAt(0) + index);
+
+  /// K23/K24: toggles [pitch] in the assignment list of group [label] and
+  /// pushes the updated pitch plan. A pitch may serve several groups, so this
+  /// only flips the one group.
+  void _togglePitchForGroup(PitchPlan plan, String label, int pitch) {
+    final next = <String, List<int>>{
+      for (final entry in plan.groupAssignment.entries)
+        entry.key: List<int>.of(entry.value),
+    };
+    final current = next.putIfAbsent(label, () => <int>[]);
+    if (current.contains(pitch)) {
+      current.remove(pitch);
+    } else {
+      current
+        ..add(pitch)
+        ..sort();
+    }
+    if (current.isEmpty) next.remove(label);
+    widget.onPitchPlanChanged(plan.copyWith(groupAssignment: next));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l10n = AppLocalizations.of(context);
+    final draft = widget.draft;
+    final onVorrundeType = widget.onVorrundeType;
+    final onKoType = widget.onKoType;
+    final onMaxSets = widget.onMaxSets;
+    final onRoundTime = widget.onRoundTime;
+    final onBreakBetween = widget.onBreakBetween;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1432,9 +1638,13 @@ class _StepFormat extends StatelessWidget {
         if (draft.vorrundeType == VorrundeType.schoch)
           SwissConfigSection(
             participantCount: draft.maxParticipants,
-            rounds: swissRounds,
-            onRoundsChanged: onSwissRoundsChanged,
+            rounds: widget.swissRounds,
+            onRoundsChanged: widget.onSwissRoundsChanged,
           ),
+        // K12: group-phase config (group count + grouping strategy) lives
+        // inline here, only when the group phase is the selected Vorrunde.
+        if (draft.vorrundeType == VorrundeType.groupPhase)
+          ..._groupPhaseSection(tokens, l10n),
         const SizedBox(height: KubbTokens.space5),
         // ---- KO axis (Single-Out | Double-Elimination | Trostturnier) ----
         Row(
@@ -1484,11 +1694,10 @@ class _StepFormat extends StatelessWidget {
           description: l10n.tournamentWizardKoSystemConsolationHint,
           onTap: () => onKoType(KoType.consolation),
         ),
-        // Model-B (Trostturnier) config — only when consolation is chosen.
-        if (draft.koType == KoType.consolation) ...[
-          const SizedBox(height: KubbTokens.space4),
-          _ConsolationModelBSection(draft: draft, controller: controller),
-        ],
+        // K15: the Model-B (Trostturnier) config — main-bracket size, direct
+        // starters and the (required) name — lives ENTIRELY in the KO step now
+        // (_wizard_ko_config_step.dart, _ConsolationKoSection). It is no longer
+        // rendered here, so the main-bracket size is chosen exactly once.
         const SizedBox(height: KubbTokens.space5),
         // ---- Vorrunde scoring: only "Max. Sätze" (P6 spec) ----
         WizardNumberField(
@@ -1520,130 +1729,187 @@ class _StepFormat extends StatelessWidget {
         const SizedBox(height: KubbTokens.space3),
         _PitchPlanSection(
           plan: draft.pitchPlan,
-          onChanged: onPitchPlanChanged,
+          onChanged: widget.onPitchPlanChanged,
         ),
+        // K23/K24: per-group pitch assignment lives in the pitch context, gated
+        // on group phase + a pitch plan with available pitches.
+        if (draft.vorrundeType == VorrundeType.groupPhase)
+          ..._pitchAssignmentSection(tokens, l10n),
       ],
     );
   }
 
-}
-
-/// Model-B (Trostturnier / consolation) configuration block. Only rendered
-/// when [KoType.consolation] is chosen (gated by the caller). Exposes the
-/// main-bracket size (power of two, == KO size), the free direct-starter
-/// count and the free display name. These persist into the draft and are
-/// emitted as snake_case in `toSetupConfig` (ADR-0028 §5); the engine
-/// consumes them later (Block E).
-class _ConsolationModelBSection extends StatefulWidget {
-  const _ConsolationModelBSection({
-    required this.draft,
-    required this.controller,
-  });
-
-  final TournamentConfigDraft draft;
-  final TournamentConfigController controller;
-
-  @override
-  State<_ConsolationModelBSection> createState() =>
-      _ConsolationModelBSectionState();
-}
-
-class _ConsolationModelBSectionState extends State<_ConsolationModelBSection> {
-  late final TextEditingController _directCountCtrl;
-  late final TextEditingController _nameCtrl;
-
-  /// Allowed main-bracket sizes (powers of two, no byes in the main bracket).
-  static const List<int> _bracketSizes = <int>[4, 8, 16, 32];
-
-  @override
-  void initState() {
-    super.initState();
-    _directCountCtrl =
-        TextEditingController(text: '${widget.draft.consolationDirectCount}');
-    _nameCtrl = TextEditingController(text: widget.draft.consolationName ?? '');
+  /// K12: inline group-phase config — group count + grouping strategy +
+  /// optional random seed + read-only derived "Qualifier pro Gruppe".
+  List<Widget> _groupPhaseSection(KubbTokens tokens, AppLocalizations l10n) {
+    final divisibilityError = (!_divisible && widget.koBracketSize > 0)
+        ? l10n.tournamentWizardPoolDivisibilityError(widget.koBracketSize)
+        : null;
+    return <Widget>[
+      const SizedBox(height: KubbTokens.space4),
+      _FieldLabel(l10n.tournamentWizardPoolGroupCountLabel),
+      const SizedBox(height: KubbTokens.space2),
+      TextField(
+        key: const Key('wizardGroupCountField'),
+        controller: _groupCountCtrl,
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        onChanged: _onGroupsTyped,
+        decoration: _outlineDecoration(tokens).copyWith(
+          counterText: '',
+          errorText: !_groupCountValid
+              ? l10n.tournamentWizardPoolGroupCountRangeError(
+                  _StepFormat.groupCountMin,
+                  _StepFormat.groupCountMax,
+                )
+              : divisibilityError,
+        ),
+      ),
+      const SizedBox(height: KubbTokens.space4),
+      // Qualifier-per-group is derived read-only from koBracketSize / groupCount
+      // (K12 — not an input). The KO step follows this one, so it shows "—"
+      // until the KO size is chosen.
+      _FieldLabel(l10n.tournamentWizardPoolQualifiersPerGroupLabel),
+      const SizedBox(height: KubbTokens.space2),
+      _DerivedValueBox(
+        tokens: tokens,
+        value: _derivedQualifiersPerGroup > 0
+            ? '$_derivedQualifiersPerGroup'
+            : '—',
+      ),
+      const SizedBox(height: KubbTokens.space4),
+      _FieldLabel(l10n.tournamentWizardPoolStrategyLabel),
+      const SizedBox(height: KubbTokens.space2),
+      DropdownButtonFormField<PoolGroupingStrategy>(
+        key: const Key('wizardGroupStrategyField'),
+        initialValue: _strategy,
+        onChanged: _onStrategyChanged,
+        decoration: _outlineDecoration(tokens),
+        items: [
+          DropdownMenuItem(
+            value: PoolGroupingStrategy.snake,
+            child: Text(l10n.tournamentWizardPoolStrategySnake),
+          ),
+          DropdownMenuItem(
+            value: PoolGroupingStrategy.seeded,
+            child: Text(l10n.tournamentWizardPoolStrategySeeded),
+          ),
+          DropdownMenuItem(
+            value: PoolGroupingStrategy.random,
+            child: Text(l10n.tournamentWizardPoolStrategyRandom),
+          ),
+        ],
+      ),
+      if (_strategy == PoolGroupingStrategy.random) ...[
+        const SizedBox(height: KubbTokens.space4),
+        _FieldLabel(l10n.tournamentWizardPoolRandomSeedLabel),
+        const SizedBox(height: KubbTokens.space2),
+        TextField(
+          key: const Key('wizardGroupRandomSeedField'),
+          controller: _seedCtrl,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onChanged: _onSeedTyped,
+          decoration: _outlineDecoration(tokens).copyWith(counterText: ''),
+        ),
+      ],
+    ];
   }
 
-  @override
-  void dispose() {
-    _directCountCtrl.dispose();
-    _nameCtrl.dispose();
-    super.dispose();
+  /// K23/K24: "Pitch-Zuteilung pro Gruppe" — rendered in the pitch context
+  /// only when a pitch plan with available pitches exists and the group count
+  /// is valid. For each group label (A, B, …) the organiser multi-selects
+  /// which pitch numbers serve that group.
+  List<Widget> _pitchAssignmentSection(
+    KubbTokens tokens,
+    AppLocalizations l10n,
+  ) {
+    final plan = widget.draft.pitchPlan;
+    if (plan == null || !_groupCountValid) return const <Widget>[];
+    final pitches = plan.availablePitches();
+    if (pitches.isEmpty) return const <Widget>[];
+    return <Widget>[
+      const SizedBox(height: KubbTokens.space6),
+      _FieldLabel(l10n.tournamentWizardPoolPitchAssignmentLabel),
+      const SizedBox(height: KubbTokens.space2),
+      _HelperText(l10n.tournamentWizardPoolPitchAssignmentHint),
+      const SizedBox(height: KubbTokens.space3),
+      for (var g = 0; g < _groupCount; g++) ...[
+        if (g > 0) const SizedBox(height: KubbTokens.space4),
+        Builder(
+          builder: (context) {
+            final label = _groupLabel(g);
+            final assigned = plan.groupAssignment[label] ?? const <int>[];
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.tournamentWizardPoolGroupLabel(label),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.fg,
+                  ),
+                ),
+                const SizedBox(height: KubbTokens.space2),
+                Wrap(
+                  spacing: KubbTokens.space2,
+                  runSpacing: KubbTokens.space2,
+                  children: [
+                    for (final pitch in pitches)
+                      _SelectChip(
+                        label: '$pitch',
+                        selected: assigned.contains(pitch),
+                        onTap: () => _togglePitchForGroup(plan, label, pitch),
+                      ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    ];
   }
+
+  InputDecoration _outlineDecoration(KubbTokens tokens) {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+      borderSide: BorderSide(color: tokens.lineStrong, width: 1.5),
+    );
+    return InputDecoration(border: border, enabledBorder: border);
+  }
+}
+
+/// Read-only display box for a derived value (e.g. qualifier-per-group),
+/// styled like a disabled outline field so it reads as non-editable (K12).
+class _DerivedValueBox extends StatelessWidget {
+  const _DerivedValueBox({required this.tokens, required this.value});
+
+  final KubbTokens tokens;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final l10n = AppLocalizations.of(context);
-    final draft = widget.draft;
-    final controller = widget.controller;
-    final size = _bracketSizes.contains(draft.consolationMainBracketSize)
-        ? draft.consolationMainBracketSize
-        : _bracketSizes.first;
     return Container(
-      key: const Key('wizardConsolationModelBSection'),
-      padding: const EdgeInsets.all(KubbTokens.space4),
+      height: 56,
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space3),
       decoration: BoxDecoration(
         color: tokens.bgSunken,
         borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
         border: Border.all(color: tokens.line, width: 1.5),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _FieldLabel(l10n.tournamentWizardConsolationMainBracketSizeLabel),
-          const SizedBox(height: KubbTokens.space2),
-          Wrap(
-            spacing: KubbTokens.space2,
-            runSpacing: KubbTokens.space2,
-            children: [
-              for (final s in _bracketSizes)
-                _SelectChip(
-                  label: '$s',
-                  selected: size == s,
-                  onTap: () => controller.setConsolationMainBracketSize(s),
-                ),
-            ],
-          ),
-          const SizedBox(height: KubbTokens.space4),
-          _FieldLabel(l10n.tournamentWizardConsolationDirectCountLabel),
-          const SizedBox(height: KubbTokens.space2),
-          _PlainTextField(
-            key: const Key('wizardConsolationDirectCountField'),
-            controller: _directCountCtrl,
-            keyboardType: TextInputType.number,
-            onChanged: (raw) =>
-                controller.setConsolationDirectCount(int.tryParse(raw.trim()) ?? 0),
-          ),
-          const SizedBox(height: KubbTokens.space1half),
-          _HelperText(l10n.tournamentWizardConsolationDirectCountHint),
-          const SizedBox(height: KubbTokens.space4),
-          _FieldLabel(l10n.tournamentWizardConsolationNameLabel, optional: true),
-          const SizedBox(height: KubbTokens.space2),
-          _PlainTextField(
-            key: const Key('wizardConsolationNameField'),
-            controller: _nameCtrl,
-            hintText: l10n.tournamentWizardConsolationNameHint,
-            onChanged: controller.setConsolationName,
-          ),
-        ],
+      child: Text(
+        value,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: tokens.fg,
+        ),
       ),
     );
   }
-}
-
-/// Human-friendly German label for the selected format, derived from the
-/// two-axis (Vorrunde × KO) selection rather than the legacy enum. Used by
-/// the summary step.
-String _humanFormatLabel(VorrundeType vorrunde, KoType ko) {
-  final base = switch (vorrunde) {
-    VorrundeType.groupPhase => 'Gruppenphase',
-    VorrundeType.schoch => 'Schoch',
-  };
-  return switch (ko) {
-    KoType.singleOut => '$base + Single-Out-K.-o.',
-    KoType.doubleOut => '$base + Double-Elimination',
-    KoType.consolation => '$base + Trostturnier',
-  };
 }
 
 /// Radio-style selectable card with a label + one-line description. Used by
@@ -1720,63 +1986,429 @@ class _OptionRow extends StatelessWidget {
   }
 }
 
-class _StepSummary extends StatelessWidget {
+/// Final wizard step (K26): a full read-only review of EVERYTHING the
+/// organizer configured, grouped by the wizard steps (Stammdaten /
+/// Teilnehmer / Vorrunde / K.-o.). Optional/empty fields render a clear
+/// "—" placeholder rather than blank or `null`. When the draft does not
+/// validate, the concrete validation issues are surfaced PROMINENTLY in
+/// `tokens.miss` (ERR-1) so the organizer sees WHY the "Anlegen" button is
+/// blocked; the gate itself stays in `_stepValid` / `_BottomBar` (ERR-3).
+class _StepSummary extends ConsumerWidget {
   const _StepSummary({required this.draft});
 
   final TournamentConfigDraft draft;
 
   @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final materialL10n = MaterialLocalizations.of(context);
+    final validation = draft.validate();
+    final placeholder = l10n.tournamentWizardSummaryPlaceholder;
+    // Resolve the chosen club's display name from the same provider the
+    // picker uses, so the summary shows WHICH club was selected (not the
+    // field label). While the list loads/errors we fall back to the id.
+    final clubs = ref.watch(manageableClubsProvider).maybeWhen(
+          data: (list) => list,
+          orElse: () => const <ManageableClub>[],
+        );
+
+    // -- text helpers (placeholder mapping for null/empty/optional) --------
+    String text(String? value) {
+      final v = value?.trim() ?? '';
+      return v.isEmpty ? placeholder : v;
+    }
+
+    String dateText(DateTime? value) {
+      if (value == null) return placeholder;
+      return '${materialL10n.formatMediumDate(value)} · '
+          '${TimeOfDay.fromDateTime(value).format(context)}';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // ERR-1: the issue list is rendered first (prominently) whenever the
+        // draft is invalid, so the organizer immediately sees the blockers.
+        if (!validation.isValid) ...[
+          _SummaryErrorBox(issues: validation.issues),
+          const SizedBox(height: KubbTokens.space4),
+        ],
+        _SummarySection(
+          title: l10n.tournamentWizardSummarySectionStammdaten,
+          rows: <_SummaryRowData>[
+            // K26-1: name with the auto-appended year (resolvedDisplayName).
+            _SummaryRowData(
+              l10n.tournamentWizardDisplayNameLabel,
+              text(draft.resolvedDisplayName),
+            ),
+            // Verein OR Spasstournier (clubId == null && choice made).
+            _SummaryRowData(
+              l10n.tournamentWizardClubLabel,
+              _clubText(l10n, placeholder, clubs),
+            ),
+            // Liga-Kategorien only when a club is chosen.
+            if (draft.clubId != null)
+              _SummaryRowData(
+                l10n.tournamentWizardLeagueCategoriesLabel,
+                draft.leagueCategories.isEmpty
+                    ? placeholder
+                    : draft.leagueCategories.map((c) => c.wire).join(', '),
+              ),
+            _SummaryRowData(
+              l10n.tournamentWizardLocationLabel,
+              text(draft.location),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardVenueAddressLabel,
+              text(draft.venueAddress),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardEventDateLabel,
+              dateText(draft.eventStartsAt),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardRegistrationDeadlineLabel,
+              dateText(draft.registrationClosesAt),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardCheckinUntilLabel,
+              dateText(draft.checkinUntil),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardEntryFeeLabel,
+              _feeText(l10n),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardPaymentMethodsLabel,
+              draft.paymentMethods.isEmpty
+                  ? placeholder
+                  : draft.paymentMethods.join(', '),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryContactLabel,
+              _contactText(placeholder),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryInfoLabel,
+              _infoText(l10n, placeholder),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryPdfRulesLabel,
+              draft.rulesPdfUrl != null
+                  ? l10n.tournamentWizardSummaryYes
+                  : l10n.tournamentWizardSummaryNo,
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryPdfSiteMapLabel,
+              draft.siteMapPdfUrl != null
+                  ? l10n.tournamentWizardSummaryYes
+                  : l10n.tournamentWizardSummaryNo,
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryRulesLabel,
+              _rulesText(l10n),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardScoringLabel,
+              draft.scoring == 'classic'
+                  ? l10n.tournamentWizardSummaryScoringClassic
+                  : l10n.tournamentWizardSummaryScoringEkc,
+            ),
+          ],
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        // K26-2: participants step.
+        _SummarySection(
+          title: l10n.tournamentWizardSummarySectionParticipants,
+          rows: <_SummaryRowData>[
+            _SummaryRowData(
+              l10n.tournamentWizardMaxParticipantsLabel,
+              '${draft.maxParticipants}',
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryTeamSizeLabel,
+              draft.teamSize == draft.maxTeamSize
+                  ? l10n.tournamentWizardSummaryTeamSizeFixed(draft.teamSize)
+                  : l10n.tournamentWizardSummaryTeamSizeRange(
+                      draft.maxTeamSize,
+                      draft.teamSize,
+                    ),
+            ),
+          ],
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        // K26-3: prelim (Vorrunde) step.
+        _SummarySection(
+          title: l10n.tournamentWizardSummarySectionVorrunde,
+          rows: <_SummaryRowData>[
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryFormatLabel,
+              draft.vorrundeType == VorrundeType.schoch
+                  ? l10n.tournamentWizardVorrundeSchoch
+                  : l10n.tournamentWizardVorrundeGroupPhase,
+            ),
+            // Group count + grouping strategy only for the group phase.
+            if (draft.vorrundeType == VorrundeType.groupPhase) ...[
+              _SummaryRowData(
+                l10n.tournamentWizardPoolGroupCountLabel,
+                draft.poolPhaseConfig == null
+                    ? placeholder
+                    : '${draft.poolPhaseConfig!.groupCount}',
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardPoolStrategyLabel,
+                _strategyText(l10n, placeholder),
+              ),
+            ],
+            _SummaryRowData(
+              l10n.tournamentWizardMaxSetsLabel,
+              '${draft.maxSets}',
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryMatchTimeLabel,
+              '${(draft.roundTimeSeconds / 60).round()}',
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardBreakBetweenLabel,
+              '${(draft.breakBetweenMatchesSeconds / 60).round()}',
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryPitchesLabel,
+              _pitchText(placeholder),
+            ),
+          ],
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        // K26-4: KO step.
+        _SummarySection(
+          title: l10n.tournamentWizardSummarySectionKo,
+          rows: <_SummaryRowData>[
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryKoTypeLabel,
+              _koTypeText(l10n),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryKoSizeLabel,
+              (draft.koConfig?.qualifierCount ?? 0) >= 2
+                  ? '${draft.koConfig!.qualifierCount}'
+                  : placeholder,
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummaryKoRoundsLabel,
+              _koRoundsText(l10n, placeholder),
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardSummarySeedingLabel,
+              (draft.bracketSeedingMode ?? SeedingMode.auto) ==
+                      SeedingMode.manual
+                  ? l10n.tournamentWizardSummarySeedingManual
+                  : l10n.tournamentWizardSummarySeedingAuto,
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardKoMatchupLabel,
+              draft.koMatchup == KoMatchup.oneVsTwo
+                  ? l10n.tournamentWizardKoMatchupOneTwo
+                  : l10n.tournamentWizardKoMatchupHighLow,
+            ),
+            _SummaryRowData(
+              l10n.tournamentWizardKoTiebreakMethodLabel,
+              draft.koTiebreakMethod ==
+                      KoTiebreakMethod.mightyFinisherShootout
+                  ? l10n.tournamentWizardKoTiebreakMighty
+                  : l10n.tournamentWizardKoTiebreakClassic,
+            ),
+            // Consolation-only: name + direct-starter count.
+            if (draft.koType == KoType.consolation) ...[
+              _SummaryRowData(
+                l10n.tournamentWizardConsolationNameLabel,
+                text(draft.consolationName),
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardSummaryConsolationDirectLabel,
+                draft.consolationDirectCount <= 0
+                    ? l10n.tournamentWizardConsolationDirectCountNone
+                    : '${draft.consolationDirectCount}',
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Verein name when a club is chosen, otherwise the "Spasstournier – ohne
+  /// Wertung" label (clubId == null after an explicit choice). Falls back to
+  /// the placeholder while no choice was made yet.
+  String _clubText(
+    AppLocalizations l10n,
+    String placeholder,
+    List<ManageableClub> clubs,
+  ) {
+    if (draft.clubId == null) {
+      return draft.clubChoiceMade
+          ? l10n.tournamentWizardClubNone
+          : placeholder;
+    }
+    // Resolve the chosen club's display name from the manageable-clubs list
+    // (the draft only holds the opaque club_id). Fall back to the raw id if
+    // the list has not resolved the club, so the value is never the field
+    // label and always tells the organizer WHICH club was picked.
+    for (final c in clubs) {
+      if (c.id == draft.clubId) return c.name;
+    }
+    return draft.clubId!;
+  }
+
+  /// Entry fee as `amount currency`, "Gratis" for a free tournament.
+  String _feeText(AppLocalizations l10n) {
+    final cents = draft.entryFeeCents;
+    if (cents == null || cents == 0) {
+      return l10n.tournamentWizardSummaryFeeFree;
+    }
+    final amount =
+        cents % 100 == 0 ? '${cents ~/ 100}' : (cents / 100).toStringAsFixed(2);
+    return l10n.tournamentWizardSummaryFee(amount, draft.currency);
+  }
+
+  /// Contact `name · phone`; placeholder when both are empty.
+  String _contactText(String placeholder) {
+    final name = draft.contactName?.trim() ?? '';
+    final phone = draft.contactPhone?.trim() ?? '';
+    final parts = <String>[
+      if (name.isNotEmpty) name,
+      if (phone.isNotEmpty) phone,
+    ];
+    return parts.isEmpty ? placeholder : parts.join(' · ');
+  }
+
+  /// Count of the four info free-text blocks that carry content.
+  String _infoText(AppLocalizations l10n, String placeholder) {
+    final filled = <String?>[
+      draft.weatherNote,
+      draft.infoFood,
+      draft.infoTravel,
+      draft.infoAccommodation,
+    ].where((s) => s?.trim().isNotEmpty ?? false).length;
+    return filled == 0
+        ? placeholder
+        : l10n.tournamentWizardSummaryInfoCount(filled);
+  }
+
+  /// Active rule variants as a short comma list (Diggy/Sureshot/Strafkubb +
+  /// the opening rule); "Keine Sonderregeln" when nothing is on.
+  String _rulesText(AppLocalizations l10n) {
+    final rv = draft.ruleVariants;
+    // Opening rule is always shown (it always has a value, default 2-4-6).
+    final opening = rv.openingRule == 'free'
+        ? l10n.tournamentWizardRuleOpeningFree
+        : l10n.tournamentWizardRuleOpening246;
+    final parts = <String>[
+      if (rv.diggy) l10n.tournamentWizardRuleDiggy,
+      if (rv.sureshot) l10n.tournamentWizardRuleSureshot,
+      if (rv.strafkubbOffBaseline) l10n.tournamentWizardRuleStrafkubb,
+      opening,
+    ];
+    return parts.isEmpty
+        ? l10n.tournamentWizardSummaryRulesNone
+        : parts.join(', ');
+  }
+
+  String _strategyText(AppLocalizations l10n, String placeholder) {
+    final strategy = draft.poolPhaseConfig?.strategy;
+    return switch (strategy) {
+      PoolGroupingStrategy.snake => l10n.tournamentWizardPoolStrategySnake,
+      PoolGroupingStrategy.seeded => l10n.tournamentWizardPoolStrategySeeded,
+      PoolGroupingStrategy.random => l10n.tournamentWizardPoolStrategyRandom,
+      null => placeholder,
+    };
+  }
+
+  String _pitchText(String placeholder) {
+    final plan = draft.pitchPlan;
+    if (plan == null) return placeholder;
+    final count = plan.availablePitches().length;
+    return count == 0 ? placeholder : '$count';
+  }
+
+  /// K26-4: a real short form of the per-round KO rules — one "best-of"
+  /// chip per round (e.g. "R1: Bo3 · R2: Bo5"), where the best-of count is
+  /// the round's max sets. Empty list → placeholder.
+  String _koRoundsText(AppLocalizations l10n, String placeholder) {
+    final rounds = draft.koRoundFormats;
+    if (rounds.isEmpty) return placeholder;
+    final parts = <String>[
+      for (var i = 0; i < rounds.length; i++)
+        l10n.tournamentWizardSummaryKoRoundEntry(i + 1, rounds[i].maxSets),
+    ];
+    return parts.join(' · ');
+  }
+
+  String _koTypeText(AppLocalizations l10n) {
+    return switch (draft.koType) {
+      KoType.singleOut => l10n.tournamentWizardSummaryKoTypeSingle,
+      KoType.doubleOut => l10n.tournamentWizardSummaryKoTypeDouble,
+      KoType.consolation => l10n.tournamentWizardSummaryKoTypeConsolation,
+    };
+  }
+}
+
+/// Immutable (label, value) pair for one summary row.
+class _SummaryRowData {
+  const _SummaryRowData(this.label, this.value);
+  final String label;
+  final String value;
+}
+
+/// A titled card grouping one wizard step's review rows. Uses only
+/// [KubbTokens] for colours / spacing / radii (K26-6).
+class _SummarySection extends StatelessWidget {
+  const _SummarySection({required this.title, required this.rows});
+
+  final String title;
+  final List<_SummaryRowData> rows;
+
+  @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final l10n = AppLocalizations.of(context);
-    return Container(
-      padding: const EdgeInsets.all(KubbTokens.space4),
-      decoration: BoxDecoration(
-        color: tokens.bgRaised,
-        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
-        border: Border.all(color: tokens.line, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _summaryRow(
-            tokens,
-            l10n.tournamentWizardDisplayNameLabel,
-            (draft.displayName ?? '').trim(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(
+            left: KubbTokens.space1,
+            bottom: KubbTokens.space2,
           ),
-          _summaryRow(
-            tokens,
-            l10n.tournamentWizardMinParticipantsLabel,
-            '${draft.minParticipants}',
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.4,
+              color: tokens.fg,
+            ),
           ),
-          _summaryRow(
-            tokens,
-            l10n.tournamentWizardMaxParticipantsLabel,
-            '${draft.maxParticipants}',
+        ),
+        Container(
+          padding: const EdgeInsets.all(KubbTokens.space4),
+          decoration: BoxDecoration(
+            color: tokens.bgRaised,
+            borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+            border: Border.all(color: tokens.line, width: 1.5),
           ),
-          _summaryRow(
-            tokens,
-            l10n.tournamentWizardFormatLabel,
-            _humanFormatLabel(draft.vorrundeType, draft.koType),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < rows.length; i++)
+                _summaryRow(
+                  tokens,
+                  rows[i].label,
+                  rows[i].value,
+                  isLast: i == rows.length - 1,
+                ),
+            ],
           ),
-          _summaryRow(
-            tokens,
-            l10n.tournamentWizardSetsToWinLabel,
-            '${draft.setsToWin}',
-          ),
-          _summaryRow(
-            tokens,
-            l10n.tournamentWizardMaxSetsLabel,
-            '${draft.maxSets}',
-          ),
-          _summaryRow(
-            tokens,
-            l10n.tournamentWizardRoundTimeLabel,
-            '${(draft.roundTimeSeconds / 60).round()}',
-            isLast: true,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -1801,6 +2433,7 @@ class _StepSummary extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(width: KubbTokens.space3),
           Expanded(
             child: Text(
               value,
@@ -1812,6 +2445,82 @@ class _StepSummary extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// ERR-1: prominent validation-issue box shown in the summary step when the
+/// draft does not validate. Rendered in `tokens.miss` so the organizer sees
+/// exactly which fields block the "Anlegen" button.
+class _SummaryErrorBox extends StatelessWidget {
+  const _SummaryErrorBox({required this.issues});
+
+  final List<String> issues;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    // ERR-1: the spec requires tokens.miss for the issue list. `KubbTokens.miss`
+    // is the shared danger accent (== tokens.danger); a low-opacity tint backs
+    // the box so the red text stays legible on the wizard background.
+    const miss = KubbTokens.miss;
+    return Container(
+      key: const Key('wizardSummaryErrorBox'),
+      padding: const EdgeInsets.all(KubbTokens.space4),
+      decoration: BoxDecoration(
+        color: miss.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+        border: Border.all(color: miss, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.alertTriangle, size: 18, color: miss),
+              const SizedBox(width: KubbTokens.space2),
+              Expanded(
+                child: Text(
+                  l10n.tournamentWizardSummaryErrorTitle,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: miss,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: KubbTokens.space2),
+          for (final issue in issues)
+            Padding(
+              padding: const EdgeInsets.only(bottom: KubbTokens.space1),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '• ',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: miss,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      issue,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        height: 1.35,
+                        color: miss,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

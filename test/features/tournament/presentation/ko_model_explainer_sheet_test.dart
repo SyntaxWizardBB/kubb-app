@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
+import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
+import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_setup_wizard.dart';
@@ -16,6 +19,23 @@ import 'package:lucide_icons/lucide_icons.dart';
 class _StubRemote implements TournamentRemote {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Controller with the required Stammdaten (W1) pre-filled so the real wizard
+/// can advance past the stricter step 1 to the format step.
+class _StammdatenSeededController extends TournamentConfigController {
+  @override
+  TournamentConfigDraft build() {
+    final start = DateTime(2026, 8, 1, 10);
+    return super.build().copyWith(
+          clubChoiceMade: true,
+          location: 'Esp',
+          venueAddress: 'Sportplatz Esp, Fislisbach',
+          eventStartsAt: start,
+          registrationClosesAt: start.subtract(const Duration(days: 7)),
+          checkinUntil: start.subtract(const Duration(minutes: 30)),
+        );
+  }
 }
 
 /// Host that exposes the same info-icon affordance as `_StepFormat`: an
@@ -127,6 +147,8 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         tournamentRemoteProvider.overrideWithValue(_StubRemote()),
+        tournamentConfigControllerProvider
+            .overrideWith(_StammdatenSeededController.new),
       ],
     );
     addTearDown(container.dispose);

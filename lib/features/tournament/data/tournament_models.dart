@@ -376,6 +376,10 @@ TournamentMatchRef tournamentMatchRefFromRow(Map<String, dynamic> row) {
     consensusRound: _asInt(row['consensus_round']),
     startedAt: _asDateOrNull(row['started_at']),
     completedAt: _asDateOrNull(row['completed_at']),
+    // FF2 / Finding B: real per-side set wins from tournament_list_matches
+    // (null on older RPC revisions — synthesis falls back to single-set).
+    setsWonA: _asIntOrNull(row['sets_won_a']),
+    setsWonB: _asIntOrNull(row['sets_won_b']),
   );
 }
 

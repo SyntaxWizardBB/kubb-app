@@ -114,26 +114,47 @@ void main() {
   });
 
   testWidgets(
-      'KO size selector only offers powers of two up to the participant cap',
+      'K11: KO size selector is decoupled from maxParticipants and capped at 64',
       (tester) async {
+    // Small roster (8) but the selectable KO sizes are NOT capped at the
+    // roster — they span powers of two up to koBracketSizeCap (64).
     final host = await _pump(
       tester,
       draft: const TournamentConfigDraft(
         displayName: 'Cup',
-        maxParticipants: 12,
+        // Default roster of 8 — decoupled, the KO sizes still span up to 64.
         format: TournamentFormat.roundRobinThenKo,
       ),
     );
-    // Powers of two up to 12: 2, 4, 8 (16 is above the cap, never offered).
-    expect(find.widgetWithText(InkWell, '2'), findsOneWidget);
-    expect(find.widgetWithText(InkWell, '4'), findsOneWidget);
-    expect(find.widgetWithText(InkWell, '8'), findsOneWidget);
-    expect(find.widgetWithText(InkWell, '16'), findsNothing);
+    for (final size in const [2, 4, 8, 16, 32, 64]) {
+      expect(find.widgetWithText(InkWell, '$size'), findsOneWidget,
+          reason: 'size $size must be offered up to the KO cap');
+    }
+    // Nothing above the cap, regardless of the participant count.
+    expect(find.widgetWithText(InkWell, '128'), findsNothing);
 
-    // Picking a size pushes that power-of-two qualifier count.
-    await tester.tap(find.widgetWithText(InkWell, '4'));
+    // Picking a size above the roster still works (decoupled): a 16-bracket on
+    // an 8-player cap is valid now.
+    await tester.tap(find.widgetWithText(InkWell, '16'));
     await tester.pumpAndSettle();
-    expect(host.lastConfig?.qualifierCount, 4);
+    expect(host.lastConfig?.qualifierCount, 16);
+  });
+
+  testWidgets(
+      'K11: with 1000 participants the KO sizes stay capped at 64',
+      (tester) async {
+    await _pump(
+      tester,
+      draft: const TournamentConfigDraft(
+        displayName: 'Cup',
+        maxParticipants: 1000,
+        format: TournamentFormat.roundRobinThenKo,
+      ),
+    );
+    expect(find.widgetWithText(InkWell, '64'), findsOneWidget);
+    expect(find.widgetWithText(InkWell, '128'), findsNothing);
+    expect(find.widgetWithText(InkWell, '256'), findsNothing);
+    expect(find.widgetWithText(InkWell, '512'), findsNothing);
   });
 
   testWidgets('Spiel um Platz 3 is always on (no toggle) (DOD-12)',

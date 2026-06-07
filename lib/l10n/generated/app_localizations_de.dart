@@ -1394,14 +1394,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardDisplayNameLabel => 'Turniername';
 
   @override
+  String get tournamentWizardDisplayNameYearHint =>
+      'Die Jahreszahl wird automatisch angehängt (z.B. 2026).';
+
+  @override
   String get tournamentWizardClubLabel => 'Ausrichtender Verein';
 
   @override
   String get tournamentWizardClubHint =>
-      'Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten.';
+      'Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten. Ohne Verein (Spasstournier) zählt das Turnier nicht für die Wertung.';
 
   @override
-  String get tournamentWizardClubNone => 'Kein Verein (persönlich)';
+  String get tournamentWizardClubNone => 'Spasstournier – ohne Wertung';
+
+  @override
+  String get tournamentWizardClubChoosePrompt => 'Bitte wählen';
 
   @override
   String get tournamentWizardLocationLabel => 'Ort';
@@ -1525,6 +1532,19 @@ class AppLocalizationsDe extends AppLocalizations {
       'Doppel-Chriesi dürfen aufgestellt werden';
 
   @override
+  String get tournamentWizardRuleOpeningLabel => 'Anspielregel';
+
+  @override
+  String get tournamentWizardRuleOpening246 => '2-4-6';
+
+  @override
+  String get tournamentWizardRuleOpeningFree => 'Frei';
+
+  @override
+  String get tournamentWizardRuleOpeningHint =>
+      'Reihenfolge beim Anspiel (Standard: 2-4-6).';
+
+  @override
   String get tournamentWizardRuleStrafkubb => 'Strafkubb mit Abstand';
 
   @override
@@ -1625,6 +1645,38 @@ class AppLocalizationsDe extends AppLocalizations {
   String tournamentWizardPoolGroupLabel(String label) {
     return 'Gruppe $label';
   }
+
+  @override
+  String get tournamentWizardPoolGroupCountLabel => 'Anzahl Gruppen';
+
+  @override
+  String tournamentWizardPoolGroupCountRangeError(int min, int max) {
+    return 'Wert zwischen $min und $max erforderlich.';
+  }
+
+  @override
+  String tournamentWizardPoolDivisibilityError(int koSize) {
+    return 'Gruppen müssen die KO-Grösse ($koSize) glatt teilen.';
+  }
+
+  @override
+  String get tournamentWizardPoolQualifiersPerGroupLabel =>
+      'Qualifier pro Gruppe';
+
+  @override
+  String get tournamentWizardPoolStrategyLabel => 'Grouping-Strategie';
+
+  @override
+  String get tournamentWizardPoolStrategySnake => 'Snake (Schweizer-Liga)';
+
+  @override
+  String get tournamentWizardPoolStrategySeeded => 'Seeded (Blockweise)';
+
+  @override
+  String get tournamentWizardPoolStrategyRandom => 'Random (deterministisch)';
+
+  @override
+  String get tournamentWizardPoolRandomSeedLabel => 'Random-Seed (optional)';
 
   @override
   String get tournamentWizardMatchTimeLabel => 'Zeit pro Match (Min.)';
@@ -1811,6 +1863,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentWizardConsolationNameHint => 'z. B. Bâton Rouille';
+
+  @override
+  String get tournamentWizardConsolationSectionLabel =>
+      'Trostturnier (Nebenturnier)';
+
+  @override
+  String get tournamentWizardConsolationDirectCountNone => 'Keine';
 
   @override
   String get tournamentWizardSetsToWinLabel => 'Sätze zum Sieg';
@@ -2139,6 +2198,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentDetailActionGotoMatches => 'Zu den Matches';
 
   @override
+  String get tournamentDetailActionSetSeeding => 'Seeding festlegen';
+
+  @override
+  String get tournamentSeedingRequiredError =>
+      'Seeding erforderlich: Lege die Setzliste fest, bevor die KO-Phase startet.';
+
+  @override
   String get tournamentDetailActionStandings => 'Endrangliste';
 
   @override
@@ -2179,6 +2245,126 @@ class AppLocalizationsDe extends AppLocalizations {
   String tournamentDetailPoolGroup(String label) {
     return 'Gruppe $label';
   }
+
+  @override
+  String get tournamentDetailInfoHeading => 'Veranstaltung';
+
+  @override
+  String get tournamentDetailLocation => 'Ort';
+
+  @override
+  String get tournamentDetailVenueAddress => 'Adresse';
+
+  @override
+  String get tournamentDetailDatesHeading => 'Termine';
+
+  @override
+  String get tournamentDetailEventStart => 'Turnierstart';
+
+  @override
+  String get tournamentDetailRegistrationCloses => 'Anmeldeschluss';
+
+  @override
+  String get tournamentDetailCheckinUntil => 'Check-in bis';
+
+  @override
+  String get tournamentDetailFeeHeading => 'Gebühr & Zahlung';
+
+  @override
+  String get tournamentDetailEntryFee => 'Startgebühr';
+
+  @override
+  String get tournamentDetailPaymentMethods => 'Zahlarten';
+
+  @override
+  String get tournamentDetailContactHeading => 'Kontakt';
+
+  @override
+  String get tournamentDetailContactName => 'Ansprechperson';
+
+  @override
+  String get tournamentDetailContactPhone => 'Telefon';
+
+  @override
+  String get tournamentDetailInfoTextsHeading => 'Infos für Teilnehmer';
+
+  @override
+  String get tournamentDetailInfoFood => 'Verpflegung';
+
+  @override
+  String get tournamentDetailInfoTravel => 'Anreise';
+
+  @override
+  String get tournamentDetailInfoAccommodation => 'Unterkunft';
+
+  @override
+  String get tournamentDetailWeatherNote => 'Wetter';
+
+  @override
+  String get tournamentDetailRulesHeading => 'Regel-Varianten';
+
+  @override
+  String get tournamentDetailRuleDiggy => 'Diggy';
+
+  @override
+  String get tournamentDetailRuleSureshot => 'Sureshot';
+
+  @override
+  String get tournamentDetailRuleStrafkubb => 'Strafkubb hinter Grundlinie';
+
+  @override
+  String get tournamentDetailRuleOpening => 'Anspielregel';
+
+  @override
+  String get tournamentDetailRuleOn => 'An';
+
+  @override
+  String get tournamentDetailRuleOff => 'Aus';
+
+  @override
+  String get tournamentDetailScoring => 'Wertung';
+
+  @override
+  String get tournamentDetailScoringEkc => 'EKC';
+
+  @override
+  String get tournamentDetailScoringClassic => 'Classic';
+
+  @override
+  String get tournamentDetailOrganizationHeading => 'Veranstalter & Liga';
+
+  @override
+  String get tournamentDetailClubLabel => 'Verein';
+
+  @override
+  String get tournamentDetailFunTournament => 'Spasstournier – ohne Wertung';
+
+  @override
+  String get tournamentDetailLeagueCategories => 'Liga-Kategorien';
+
+  @override
+  String get tournamentDetailKoSetup => 'KO-Setup';
+
+  @override
+  String tournamentDetailKoQualifiers(int count) {
+    return '$count Qualifikanten';
+  }
+
+  @override
+  String get tournamentDetailConsolationLabel => 'Trostturnier';
+
+  @override
+  String get tournamentDetailDocumentsHeading => 'Dokumente';
+
+  @override
+  String get tournamentDetailRulesPdf => 'Regelwerk (PDF)';
+
+  @override
+  String get tournamentDetailSiteMapPdf => 'Geländeplan (PDF)';
+
+  @override
+  String get tournamentDetailPdfOpenError =>
+      'PDF konnte nicht geöffnet werden.';
 
   @override
   String get tournamentDetailAuditHeader => 'Verlauf';
@@ -3454,4 +3640,124 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get shootoutOrderHintReadonly =>
       'Die gemeldete Reihenfolge bestätigen — bestes Team zuerst.';
+
+  @override
+  String get tournamentWizardSummaryPlaceholder => '—';
+
+  @override
+  String get tournamentWizardSummarySectionStammdaten => 'Stammdaten';
+
+  @override
+  String get tournamentWizardSummarySectionParticipants => 'Teilnehmer';
+
+  @override
+  String get tournamentWizardSummarySectionVorrunde => 'Vorrunde';
+
+  @override
+  String get tournamentWizardSummarySectionKo => 'K.-o.';
+
+  @override
+  String get tournamentWizardSummaryErrorTitle =>
+      'Turnier kann nicht angelegt werden';
+
+  @override
+  String get tournamentWizardSummaryTeamSizeLabel => 'Teamgrösse';
+
+  @override
+  String tournamentWizardSummaryTeamSizeFixed(int size) {
+    return '$size (fix)';
+  }
+
+  @override
+  String tournamentWizardSummaryTeamSizeRange(int min, int max) {
+    return '$min–$max';
+  }
+
+  @override
+  String get tournamentWizardSummaryYes => 'Ja';
+
+  @override
+  String get tournamentWizardSummaryNo => 'Nein';
+
+  @override
+  String tournamentWizardSummaryFee(String amount, String currency) {
+    return '$amount $currency';
+  }
+
+  @override
+  String get tournamentWizardSummaryFeeFree => 'Gratis';
+
+  @override
+  String get tournamentWizardSummaryScoringEkc => 'EKC';
+
+  @override
+  String get tournamentWizardSummaryScoringClassic => 'Klassisch';
+
+  @override
+  String get tournamentWizardSummaryRulesLabel => 'Regel-Varianten';
+
+  @override
+  String get tournamentWizardSummaryRulesNone => 'Keine Sonderregeln';
+
+  @override
+  String get tournamentWizardSummaryPdfRulesLabel => 'Regelwerk-PDF';
+
+  @override
+  String get tournamentWizardSummaryPdfSiteMapLabel => 'Lageplan-PDF';
+
+  @override
+  String get tournamentWizardSummaryContactLabel => 'Kontakt';
+
+  @override
+  String get tournamentWizardSummaryInfoLabel => 'Infotexte';
+
+  @override
+  String tournamentWizardSummaryInfoCount(int count) {
+    return '$count hinterlegt';
+  }
+
+  @override
+  String get tournamentWizardSummaryFormatLabel => 'Format';
+
+  @override
+  String get tournamentWizardSummaryMatchTimeLabel => 'Match-Zeit (Min.)';
+
+  @override
+  String get tournamentWizardSummaryPitchesLabel => 'Pitches';
+
+  @override
+  String get tournamentWizardSummaryKoTypeLabel => 'KO-System';
+
+  @override
+  String get tournamentWizardSummaryKoTypeSingle => 'Single-Out';
+
+  @override
+  String get tournamentWizardSummaryKoTypeDouble => 'Double-Elimination';
+
+  @override
+  String get tournamentWizardSummaryKoTypeConsolation => 'Trostturnier';
+
+  @override
+  String get tournamentWizardSummaryKoSizeLabel => 'Bracket-Grösse';
+
+  @override
+  String get tournamentWizardSummaryKoRoundsLabel => 'Per-Runde-Regeln';
+
+  @override
+  String tournamentWizardSummaryKoRoundEntry(int round, int maxSets) {
+    return 'R$round: Bo$maxSets';
+  }
+
+  @override
+  String get tournamentWizardSummarySeedingLabel => 'Seeding-Quelle';
+
+  @override
+  String get tournamentWizardSummarySeedingAuto => 'Automatisch aus Vorrunde';
+
+  @override
+  String get tournamentWizardSummarySeedingManual => 'Manuell festlegen';
+
+  @override
+  String get tournamentWizardSummaryConsolationDirectLabel =>
+      'Direkt ins Trostturnier';
 }

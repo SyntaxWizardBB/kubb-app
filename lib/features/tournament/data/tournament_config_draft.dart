@@ -29,13 +29,16 @@ class TournamentConfigDraft {
   const TournamentConfigDraft({
     this.displayName,
     this.clubId,
+    this.clubChoiceMade = false,
     this.teamSize = 1,
     this.maxTeamSize = 1,
     this.minParticipants = 2,
     this.maxParticipants = 8,
     this.format = TournamentFormat.roundRobin,
     this.setsToWin = 2,
-    this.maxSets = 3,
+    // K14: prelim "Max. Sätze" defaults to 2. Draws are allowed in the prelim
+    // (maxSets is decoupled from setsToWin, so even values are valid).
+    this.maxSets = 2,
     this.roundTimeSeconds = 1800,
     this.basekubbsPerSide = 5,
     this.prelimTiebreakAfterSeconds,
@@ -144,13 +147,18 @@ class TournamentConfigDraft {
     return TournamentConfigDraft(
       displayName: header.displayName,
       clubId: header.clubId,
+      // EDIT mode: the club choice was already made when the tournament was
+      // created, so the Stammdaten step is valid without re-picking (K03).
+      clubChoiceMade: true,
       teamSize: header.teamSize,
       maxTeamSize: maxTeamSize < header.teamSize ? header.teamSize : maxTeamSize,
       minParticipants: header.minParticipants,
       maxParticipants: header.maxParticipants,
       format: format,
       setsToWin: intOf(cfg['sets_to_win']) ?? 2,
-      maxSets: intOf(cfg['max_sets']) ?? 3,
+      // K14: fall back to the 2-default when the stored config lacks max_sets,
+      // consistent with the constructor default.
+      maxSets: intOf(cfg['max_sets']) ?? 2,
       roundTimeSeconds: intOf(cfg['round_time_seconds']) ?? 1800,
       basekubbsPerSide: intOf(cfg['basekubbs_per_side']) ?? 5,
       prelimTiebreakAfterSeconds: tbEnabled ? tbAfter : null,
@@ -220,7 +228,11 @@ class TournamentConfigDraft {
       consolationMainBracketSize:
           intOf(setup['consolation_main_bracket_size']) ?? 8,
       consolationDirectCount: intOf(setup['consolation_direct_count']) ?? 0,
-      consolationName: setup['consolation_name'] as String?,
+      // K17: the name is persisted INSIDE consolation_bracket.name (the
+      // standalone consolation_name key is dropped by the create RPC). Prefer
+      // the nested value; fall back to the legacy top-level key for older rows.
+      consolationName: (consolationJson?['name'] as String?) ??
+          setup['consolation_name'] as String?,
     );
   }
 
@@ -390,6 +402,23 @@ class TournamentConfigDraft {
   /// the `club_id` setup key.
   final String? clubId;
 
+  /// K03: whether the organizer has actively made the club choice in the
+  /// wizard — either picking a club ([clubId] != null) OR explicitly
+  /// choosing "Spasstournier – ohne Wertung" ([clubId] == null). A bare
+  /// default draft has `false` here so the wizard can tell "not chosen yet"
+  /// apart from "explicitly no club" (the dropdown alone can't, since both
+  /// map to a null `clubId`). Not persisted on the wire — the server only
+  /// needs the resulting [clubId]; this is wizard-validation state.
+  final bool clubChoiceMade;
+
+  /// K02: a tournament is rating-/league-relevant only when an organizing
+  /// club is selected. "Spasstournier – ohne Wertung" ([clubId] == null) is
+  /// never rated — the points/league system must skip it. Derived from
+  /// [clubId] so no separate persisted flag is required; the wertungsfrei
+  /// state round-trips implicitly via the `club_id` setup key (and
+  /// [toSetupConfig] emits an empty `league_categories` for it).
+  bool get isRated => clubId != null;
+
   /// Minimum players per team (1 = singles). The M1 `team_size` column.
   final int teamSize;
 
@@ -502,9 +531,43 @@ class TournamentConfigDraft {
   final KoTiebreakMethod koTiebreakMethod;
 
   static const int displayNameMinChars = 3;
+
+  /// K01: max length of the user-typed name. The auto-appended 4-digit year
+  /// suffix (` 2026`, +5 chars) is added on top and is exempt from this
+  /// limit, so [resolvedDisplayName] may exceed it by the suffix length.
   static const int displayNameMaxChars = 60;
-  static const int participantsHardMin = 2;
-  static const int participantsHardMax = 64;
+
+  /// K01: the tournament name with the relevant year appended for
+  /// uniqueness across years (e.g. "Sommercup" → "Sommercup 2026"), so a
+  /// host re-running the same tournament next year stays distinguishable.
+  ///
+  /// Idempotent: if the trimmed name already contains a 4-digit year
+  /// (1900–2099) it is returned unchanged. The appended year is
+  /// [eventStartsAt].year when the start date is set, otherwise the current
+  /// year ([DateTime.now]). Returns null when no name is set yet.
+  String? get resolvedDisplayName {
+    final name = displayName?.trim();
+    if (name == null || name.isEmpty) return name;
+    if (_containsFourDigitYear(name)) return name;
+    final year = eventStartsAt?.year ?? DateTime.now().year;
+    return '$name $year';
+  }
+
+  /// True when [text] already contains a standalone 4-digit year in the
+  /// 1900–2099 range, so [resolvedDisplayName] does not append a second one.
+  static bool _containsFourDigitYear(String text) =>
+      RegExp(r'(?<!\d)(19|20)\d{2}(?!\d)').hasMatch(text);
+
+  // K09: no user-facing minimum participant count anymore. We keep a non-zero
+  // floor (the KO minimum) purely as an internal sanity bound; it is never
+  // shown in the UI nor user-validated.
+  static const int participantsHardMin = 1;
+  // K10: tournaments must be configurable with up to 1000 participants.
+  static const int participantsHardMax = 1000;
+  // K11: the KO bracket size is decoupled from the participant count. A bracket
+  // is a power of two; we cap it at 64 (a 6-round main bracket) which is a sane
+  // ceiling for a live Kubb event regardless of how many players register.
+  static const int koBracketSizeCap = 64;
   static const int setsToWinMin = 1;
   static const int setsToWinMax = 4;
 
@@ -525,6 +588,7 @@ class TournamentConfigDraft {
     String? displayName,
     String? clubId,
     bool clearClubId = false,
+    bool? clubChoiceMade,
     int? teamSize,
     int? maxTeamSize,
     int? minParticipants,
@@ -587,6 +651,7 @@ class TournamentConfigDraft {
     return TournamentConfigDraft(
       displayName: displayName ?? this.displayName,
       clubId: clearClubId ? null : (clubId ?? this.clubId),
+      clubChoiceMade: clubChoiceMade ?? this.clubChoiceMade,
       teamSize: teamSize ?? this.teamSize,
       maxTeamSize: maxTeamSize ?? this.maxTeamSize,
       minParticipants: minParticipants ?? this.minParticipants,
@@ -694,6 +759,28 @@ class TournamentConfigDraft {
     return rounds;
   }
 
+  /// Default single-pool [PoolPhaseConfig] for the Schoch Vorrunde.
+  ///
+  /// User requirement (P5/P6): selecting "Schoch" must automatically produce
+  /// EXACTLY ONE pool that holds ALL participants — i.e. `group_count == 1` —
+  /// so the hybrid (`swiss_then_ko`) format always carries a valid
+  /// `pool_phase_config` and `tournament_start` no longer fails with
+  /// "pool_phase_config required for hybrid format".
+  ///
+  /// `qualifiersPerGroup` mirrors the KO qualifier count when known (all teams
+  /// in the single pool advance into the KO bracket up to that cut), falling
+  /// back to 2 — the minimum a KO bracket can hold — when the KO config has
+  /// not been chosen yet. `strategy` is `seeded` (block-fill), which is the
+  /// transparent, deterministic choice for a single pool and matches the
+  /// existing `seeded` examples persisted in the DB.
+  static PoolPhaseConfig schochSinglePoolConfig(KoPhaseConfig? koConfig) {
+    return PoolPhaseConfig(
+      groupCount: 1,
+      qualifiersPerGroup: koConfig?.qualifierCount ?? 2,
+      strategy: PoolGroupingStrategy.seeded,
+    );
+  }
+
   /// [TournamentFormat] derived from the two-axis selection.
   TournamentFormat get derivedFormat => formatFor(vorrundeType, koType);
 
@@ -703,6 +790,21 @@ class TournamentConfigDraft {
   /// Number of KO rounds implied by the current [koConfig] qualifier count.
   /// 0 when no qualifier count is set.
   int get koRoundCount => koRoundCountFor(koConfig?.qualifierCount ?? 0);
+
+  /// KO bracket slot count (power of two) implied by the current [koConfig]
+  /// qualifier count — the basis for the derived qualifier-per-group count
+  /// (K12). 0 when fewer than two qualifiers are configured.
+  static int koBracketSizeFor(int qualifierCount) {
+    if (qualifierCount < 2) return 0;
+    var size = 1;
+    while (size < qualifierCount) {
+      size <<= 1;
+    }
+    return size;
+  }
+
+  /// KO bracket slot count for the current [koConfig]. See [koBracketSizeFor].
+  int get koBracketSize => koBracketSizeFor(koConfig?.qualifierCount ?? 0);
 
   /// Returns a copy whose [koRoundFormats] has exactly [koRoundCount]
   /// entries. Existing entries are preserved; new tail entries are seeded
@@ -758,14 +860,13 @@ class TournamentConfigDraft {
       issues.add('Max. Spieler pro Team darf nicht kleiner als Min. sein.');
     }
 
-    if (minParticipants < participantsHardMin) {
-      issues.add('Mindestens $participantsHardMin Teilnehmer.');
+    // K09: no minimum participant validation anymore. Only the upper bound
+    // (K10: up to 1000) and a non-empty roster (>= 2 to play at all) apply.
+    if (maxParticipants < 2) {
+      issues.add('Mindestens 2 Teilnehmer.');
     }
     if (maxParticipants > participantsHardMax) {
       issues.add('Höchstens $participantsHardMax Teilnehmer.');
-    }
-    if (minParticipants > maxParticipants) {
-      issues.add('Min. Teilnehmer darf nicht grösser als Max. sein.');
     }
 
     if (setsToWin < setsToWinMin || setsToWin > setsToWinMax) {
@@ -798,6 +899,12 @@ class TournamentConfigDraft {
       issues.add('KO-Phase-Konfiguration fehlt.');
     }
 
+    // K18: the consolation/Trostturnier name is required once the consolation
+    // KO model is selected (it is otherwise hidden, so exempt from the rule).
+    if (koType == KoType.consolation && _blankToNull(consolationName) == null) {
+      issues.add('Name des Trostturniers fehlt.');
+    }
+
     // --- P6 setup fields ---
     if (scoring != 'ekc' && scoring != 'classic') {
       issues.add('Wertung muss EKC oder klassisch sein.');
@@ -814,6 +921,40 @@ class TournamentConfigDraft {
     if (leagueCategories.toSet().length != leagueCategories.length) {
       issues.add('Liga-Kategorien dürfen sich nicht wiederholen.');
     }
+
+    // K03: the organizer must actively choose a club OR "Spasstournier –
+    // ohne Wertung". A bare default draft (clubChoiceMade == false) is not
+    // valid — there is no implicit "Spasstournier" default.
+    if (!clubChoiceMade) {
+      issues.add('Bitte einen Verein oder "Spasstournier – ohne Wertung" wählen.');
+    }
+    // K29: when a club is selected (i.e. NOT a Spasstournier) at least one
+    // league category is required so the points/league system can dock on.
+    // For a Spasstournier (clubId == null) the field is hidden, so it is
+    // exempt from the required rule (K27 carve-out).
+    if (clubId != null && leagueCategories.isEmpty) {
+      issues.add('Bitte mindestens eine Liga-Kategorie wählen.');
+    }
+    // K30: venue / town is required.
+    if (_blankToNull(location) == null) {
+      issues.add('Ort fehlt.');
+    }
+    // K31: full venue address is required.
+    if (_blankToNull(venueAddress) == null) {
+      issues.add('Adresse fehlt.');
+    }
+    // K32: tournament start (date + time) is required.
+    if (eventStartsAt == null) {
+      issues.add('Turnierstart fehlt.');
+    }
+    // K33: registration deadline and on-site check-in deadline are required.
+    if (registrationClosesAt == null) {
+      issues.add('Anmeldeschluss fehlt.');
+    }
+    if (checkinUntil == null) {
+      issues.add('Check-in-Zeit fehlt.');
+    }
+
     final closes = registrationClosesAt;
     final starts = eventStartsAt;
     if (closes != null && starts != null && closes.isAfter(starts)) {
@@ -893,20 +1034,30 @@ class TournamentConfigDraft {
       // are dropped at create-time / DOD-09). main_bracket_size is only the
       // engine-authoritative size in consolation mode; in single/double-elim it
       // is omitted (null) so the server keeps deriving from qualifier_count.
+      //
+      // K17: the consolation display name is merged into this jsonb as `name`
+      // so it survives the create RPC (which stores `v_setup->'consolation_bracket'`
+      // verbatim) and round-trips through `tournament_get` — the standalone
+      // top-level `consolation_name` key below is dropped at create-time, so the
+      // bracket header reads the name from `consolation_bracket.name` instead.
       'consolation_bracket': consolationBracket == null
           ? null
-          : ConsolationConfig(
-              enabled: consolationBracket!.enabled,
-              source: consolationBracket!.source,
-              sourceRounds: consolationBracket!.sourceRounds,
-              rankFrom: consolationBracket!.rankFrom,
-              rankTo: consolationBracket!.rankTo,
-              matchFormat: consolationBracket!.matchFormat,
-              directCount: consolationDirectCount,
-              mainBracketSize: koType == KoType.consolation
-                  ? consolationMainBracketSize
-                  : null,
-            ).toJson(),
+          : <String, Object?>{
+              ...ConsolationConfig(
+                enabled: consolationBracket!.enabled,
+                source: consolationBracket!.source,
+                sourceRounds: consolationBracket!.sourceRounds,
+                rankFrom: consolationBracket!.rankFrom,
+                rankTo: consolationBracket!.rankTo,
+                matchFormat: consolationBracket!.matchFormat,
+                directCount: consolationDirectCount,
+                mainBracketSize: koType == KoType.consolation
+                    ? consolationMainBracketSize
+                    : null,
+              ).toJson(),
+              if (_blankToNull(consolationName) != null)
+                'name': _blankToNull(consolationName),
+            },
       // Mirrored top-level keys (kept for forward-compat / debugging).
       'consolation_main_bracket_size': consolationMainBracketSize,
       'consolation_direct_count': consolationDirectCount,
@@ -927,6 +1078,7 @@ class TournamentConfigDraft {
       other is TournamentConfigDraft &&
           other.displayName == displayName &&
           other.clubId == clubId &&
+          other.clubChoiceMade == clubChoiceMade &&
           other.teamSize == teamSize &&
           other.maxTeamSize == maxTeamSize &&
           other.minParticipants == minParticipants &&
@@ -980,6 +1132,7 @@ class TournamentConfigDraft {
   int get hashCode => Object.hashAll(<Object?>[
         displayName,
         clubId,
+        clubChoiceMade,
         teamSize,
         maxTeamSize,
         minParticipants,

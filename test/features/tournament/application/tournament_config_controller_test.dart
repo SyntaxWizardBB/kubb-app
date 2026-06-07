@@ -107,6 +107,117 @@ void main() {
     });
   });
 
+  group('Schoch auto single-pool config', () {
+    test('selecting Schoch auto-inits a single-pool pool_phase_config', () {
+      // K12: the default group-phase draft now seeds a 4-group config; switch
+      // to Schoch to verify the single-pool backfill replaces it.
+      controller.setVorrundeType(VorrundeType.schoch);
+      final pool = state().poolPhaseConfig;
+      expect(pool, isNotNull);
+      // Exactly one pool holding all participants (user requirement).
+      expect(pool!.groupCount, 1);
+      expect(pool.strategy, PoolGroupingStrategy.seeded);
+      // No KO config yet => minimum-bracket fallback.
+      expect(pool.qualifiersPerGroup, 2);
+    });
+
+    test('setKoConfig syncs qualifiers_per_group for the Schoch single pool',
+        () {
+      controller.setVorrundeType(VorrundeType.schoch);
+      controller
+          .setKoConfig(KoPhaseConfig(qualifierCount: 8, participantCount: 16));
+      final pool = state().poolPhaseConfig;
+      expect(pool!.groupCount, 1);
+      expect(pool.qualifiersPerGroup, 8);
+    });
+
+    test('setFormat(swissThenKo) also auto-inits the single pool', () {
+      controller.setFormat(TournamentFormat.swissThenKo);
+      final pool = state().poolPhaseConfig;
+      expect(pool!.groupCount, 1);
+    });
+
+    test('toSetupConfig emits a non-null single-pool config for Schoch', () {
+      controller.setVorrundeType(VorrundeType.schoch);
+      controller
+          .setKoConfig(KoPhaseConfig(qualifierCount: 4, participantCount: 8));
+      final wire =
+          state().toSetupConfig()['pool_phase_config'] as Map<String, Object?>?;
+      expect(wire, isNotNull);
+      expect(wire!['group_count'], 1);
+      expect(wire['qualifiers_per_group'], 4);
+      expect(wire['strategy'], 'seeded');
+    });
+
+    test('switching Schoch -> groupPhase seeds the default group config', () {
+      controller.setVorrundeType(VorrundeType.schoch);
+      expect(state().poolPhaseConfig?.groupCount, 1);
+      controller.setVorrundeType(VorrundeType.groupPhase);
+      // K12: the group phase configures groups inline (default group_count 4);
+      // the invalid single pool (group_count == 1) must not linger.
+      expect(state().poolPhaseConfig?.groupCount, 4);
+    });
+  });
+
+  group('K12 group-phase grouping (setPoolGrouping)', () {
+    test('default group-phase draft seeds a 4-group config', () {
+      // The bare default draft is a group phase → a 4-group config is seeded.
+      expect(state().poolPhaseConfig?.groupCount, 4);
+      expect(state().poolPhaseConfig?.strategy, PoolGroupingStrategy.snake);
+    });
+
+    test('setPoolGrouping stores group count + strategy + seed', () {
+      controller.setPoolGrouping(
+        groupCount: 8,
+        strategy: PoolGroupingStrategy.random,
+        randomSeed: 42,
+      );
+      final pool = state().poolPhaseConfig!;
+      expect(pool.groupCount, 8);
+      expect(pool.strategy, PoolGroupingStrategy.random);
+      expect(pool.randomSeed, 42);
+    });
+
+    test('qualifiers-per-group is derived from the KO bracket size', () {
+      // KO size 8, 4 groups → 2 qualifiers per group (derived, K12).
+      controller
+          .setKoConfig(KoPhaseConfig(qualifierCount: 8, participantCount: 16));
+      controller.setPoolGrouping(
+        groupCount: 4,
+        strategy: PoolGroupingStrategy.snake,
+      );
+      expect(state().poolPhaseConfig?.qualifiersPerGroup, 2);
+    });
+
+    test('setKoConfig re-derives qualifiers-per-group for the group phase', () {
+      // Choose the group count first (KO size unknown → provisional 1), then
+      // commit the KO config; the qualifier count must re-derive.
+      controller.setPoolGrouping(
+        groupCount: 4,
+        strategy: PoolGroupingStrategy.snake,
+      );
+      controller
+          .setKoConfig(KoPhaseConfig(qualifierCount: 8, participantCount: 16));
+      expect(state().poolPhaseConfig?.groupCount, 4);
+      expect(state().poolPhaseConfig?.qualifiersPerGroup, 2);
+    });
+
+    test('toSetupConfig emits a valid group pool_phase_config', () {
+      controller
+          .setKoConfig(KoPhaseConfig(qualifierCount: 8, participantCount: 16));
+      controller.setPoolGrouping(
+        groupCount: 4,
+        strategy: PoolGroupingStrategy.seeded,
+      );
+      final wire =
+          state().toSetupConfig()['pool_phase_config'] as Map<String, Object?>?;
+      expect(wire, isNotNull);
+      expect(wire!['group_count'], 4);
+      expect(wire['qualifiers_per_group'], 2);
+      expect(wire['strategy'], 'seeded');
+    });
+  });
+
   group('per-KO-round format list', () {
     test('resizes on qualifier change via setKoConfig', () {
       controller.setKoType(KoType.singleOut);
@@ -160,6 +271,27 @@ void main() {
         const MatchFormatSpec(setsToWin: 1, maxSets: 1, timeLimitSeconds: 600),
       );
       expect(state().koRoundFormats, before);
+    });
+  });
+
+  group('participant limits (K09/K10)', () {
+    test('K10: setMaxParticipants accepts up to 1000', () {
+      controller.setMaxParticipants(1000);
+      expect(state().maxParticipants, 1000);
+      expect(TournamentConfigDraft.participantsHardMax, 1000);
+    });
+
+    test('K10: setMaxParticipants clamps above 1000 to the hard max', () {
+      controller.setMaxParticipants(5000);
+      expect(state().maxParticipants, 1000);
+    });
+
+    test('K09: minParticipants floor is the non-zero internal sanity bound', () {
+      // K09 removed the user-facing minimum. The internal floor is just a
+      // sanity bound (participantsHardMin == 1), never surfaced in the UI.
+      expect(TournamentConfigDraft.participantsHardMin, 1);
+      controller.setMinParticipants(0);
+      expect(state().minParticipants, TournamentConfigDraft.participantsHardMin);
     });
   });
 }

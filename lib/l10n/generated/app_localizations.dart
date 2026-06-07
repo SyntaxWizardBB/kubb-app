@@ -2638,6 +2638,12 @@ abstract class AppLocalizations {
   /// **'Turniername'**
   String get tournamentWizardDisplayNameLabel;
 
+  /// Helper text explaining the auto-appended year suffix (K01)
+  ///
+  /// In de, this message translates to:
+  /// **'Die Jahreszahl wird automatisch angehängt (z.B. 2026).'**
+  String get tournamentWizardDisplayNameYearHint;
+
   /// Optional organizing-club picker label on the Stammdaten step
   ///
   /// In de, this message translates to:
@@ -2647,14 +2653,20 @@ abstract class AppLocalizations {
   /// Helper text under the organizing-club picker
   ///
   /// In de, this message translates to:
-  /// **'Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten.'**
+  /// **'Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten. Ohne Verein (Spasstournier) zählt das Turnier nicht für die Wertung.'**
   String get tournamentWizardClubHint;
 
-  /// Dropdown option for no organizing club (personal tournament)
+  /// Dropdown option for no organizing club; a non-rated fun tournament (K02)
   ///
   /// In de, this message translates to:
-  /// **'Kein Verein (persönlich)'**
+  /// **'Spasstournier – ohne Wertung'**
   String get tournamentWizardClubNone;
+
+  /// Hint shown in the club picker until the organizer actively picks (K03)
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte wählen'**
+  String get tournamentWizardClubChoosePrompt;
 
   /// Venue / town input label on the Stammdaten step
   ///
@@ -2884,6 +2896,30 @@ abstract class AppLocalizations {
   /// **'Doppel-Chriesi dürfen aufgestellt werden'**
   String get tournamentWizardRuleDiggyHint;
 
+  /// Opening-rule (Anspielregel) selector label (K06)
+  ///
+  /// In de, this message translates to:
+  /// **'Anspielregel'**
+  String get tournamentWizardRuleOpeningLabel;
+
+  /// Opening-rule option: 2-4-6 (K06)
+  ///
+  /// In de, this message translates to:
+  /// **'2-4-6'**
+  String get tournamentWizardRuleOpening246;
+
+  /// Opening-rule option: free opening (K06)
+  ///
+  /// In de, this message translates to:
+  /// **'Frei'**
+  String get tournamentWizardRuleOpeningFree;
+
+  /// Helper text under the opening-rule selector (K06)
+  ///
+  /// In de, this message translates to:
+  /// **'Reihenfolge beim Anspiel (Standard: 2-4-6).'**
+  String get tournamentWizardRuleOpeningHint;
+
   /// Penalty kubb rule toggle title
   ///
   /// In de, this message translates to:
@@ -3063,6 +3099,60 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Gruppe {label}'**
   String tournamentWizardPoolGroupLabel(String label);
+
+  /// Label for the group-count input in the Vorrunde step (K12)
+  ///
+  /// In de, this message translates to:
+  /// **'Anzahl Gruppen'**
+  String get tournamentWizardPoolGroupCountLabel;
+
+  /// Validation error when the group count is out of range
+  ///
+  /// In de, this message translates to:
+  /// **'Wert zwischen {min} und {max} erforderlich.'**
+  String tournamentWizardPoolGroupCountRangeError(int min, int max);
+
+  /// Validation error when the group count does not evenly divide the KO bracket size
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppen müssen die KO-Grösse ({koSize}) glatt teilen.'**
+  String tournamentWizardPoolDivisibilityError(int koSize);
+
+  /// Read-only label for the derived qualifiers-per-group value
+  ///
+  /// In de, this message translates to:
+  /// **'Qualifier pro Gruppe'**
+  String get tournamentWizardPoolQualifiersPerGroupLabel;
+
+  /// Label for the pool grouping-strategy selector
+  ///
+  /// In de, this message translates to:
+  /// **'Grouping-Strategie'**
+  String get tournamentWizardPoolStrategyLabel;
+
+  /// Snake grouping-strategy option
+  ///
+  /// In de, this message translates to:
+  /// **'Snake (Schweizer-Liga)'**
+  String get tournamentWizardPoolStrategySnake;
+
+  /// Seeded grouping-strategy option
+  ///
+  /// In de, this message translates to:
+  /// **'Seeded (Blockweise)'**
+  String get tournamentWizardPoolStrategySeeded;
+
+  /// Random grouping-strategy option
+  ///
+  /// In de, this message translates to:
+  /// **'Random (deterministisch)'**
+  String get tournamentWizardPoolStrategyRandom;
+
+  /// Label for the optional random-seed input shown for the random strategy
+  ///
+  /// In de, this message translates to:
+  /// **'Random-Seed (optional)'**
+  String get tournamentWizardPoolRandomSeedLabel;
 
   /// Prelim time limit per match stepper label
   ///
@@ -3399,6 +3489,18 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'z. B. Bâton Rouille'**
   String get tournamentWizardConsolationNameHint;
+
+  /// Model-B consolation section heading shown in the KO step
+  ///
+  /// In de, this message translates to:
+  /// **'Trostturnier (Nebenturnier)'**
+  String get tournamentWizardConsolationSectionLabel;
+
+  /// Label for the 0-direct-starters chip in the consolation config
+  ///
+  /// In de, this message translates to:
+  /// **'Keine'**
+  String get tournamentWizardConsolationDirectCountNone;
 
   /// Sets-to-win stepper label
   ///
@@ -4018,6 +4120,18 @@ abstract class AppLocalizations {
   /// **'Zu den Matches'**
   String get tournamentDetailActionGotoMatches;
 
+  /// CF6 (K19): organizer CTA to open the manual seeding editor before the KO phase can start
+  ///
+  /// In de, this message translates to:
+  /// **'Seeding festlegen'**
+  String get tournamentDetailActionSetSeeding;
+
+  /// CF6 (K19): error shown when the KO start is blocked because manual seeding has not been set yet
+  ///
+  /// In de, this message translates to:
+  /// **'Seeding erforderlich: Lege die Setzliste fest, bevor die KO-Phase startet.'**
+  String get tournamentSeedingRequiredError;
+
   /// Action: navigate to final standings
   ///
   /// In de, this message translates to:
@@ -4089,6 +4203,240 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Gruppe {label}'**
   String tournamentDetailPoolGroup(String label);
+
+  /// CF5/K28: card heading for venue/location meta fields
+  ///
+  /// In de, this message translates to:
+  /// **'Veranstaltung'**
+  String get tournamentDetailInfoHeading;
+
+  /// CF5/K28: label for the venue town/location
+  ///
+  /// In de, this message translates to:
+  /// **'Ort'**
+  String get tournamentDetailLocation;
+
+  /// CF5/K28: label for the full venue address
+  ///
+  /// In de, this message translates to:
+  /// **'Adresse'**
+  String get tournamentDetailVenueAddress;
+
+  /// CF5/K28: card heading for date/deadline fields
+  ///
+  /// In de, this message translates to:
+  /// **'Termine'**
+  String get tournamentDetailDatesHeading;
+
+  /// CF5/K28: label for the official tournament start datetime
+  ///
+  /// In de, this message translates to:
+  /// **'Turnierstart'**
+  String get tournamentDetailEventStart;
+
+  /// CF5/K28: label for the in-app registration deadline
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldeschluss'**
+  String get tournamentDetailRegistrationCloses;
+
+  /// CF5/K28: label for the on-site check-in deadline
+  ///
+  /// In de, this message translates to:
+  /// **'Check-in bis'**
+  String get tournamentDetailCheckinUntil;
+
+  /// CF5/K28: card heading for entry fee and payment methods
+  ///
+  /// In de, this message translates to:
+  /// **'Gebühr & Zahlung'**
+  String get tournamentDetailFeeHeading;
+
+  /// CF5/K28: label for the entry fee
+  ///
+  /// In de, this message translates to:
+  /// **'Startgebühr'**
+  String get tournamentDetailEntryFee;
+
+  /// CF5/K28: label for accepted payment methods
+  ///
+  /// In de, this message translates to:
+  /// **'Zahlarten'**
+  String get tournamentDetailPaymentMethods;
+
+  /// CF5/K28: card heading for the organizer contact
+  ///
+  /// In de, this message translates to:
+  /// **'Kontakt'**
+  String get tournamentDetailContactHeading;
+
+  /// CF5/K28: label for the contact name
+  ///
+  /// In de, this message translates to:
+  /// **'Ansprechperson'**
+  String get tournamentDetailContactName;
+
+  /// CF5/K28: label for the contact phone number
+  ///
+  /// In de, this message translates to:
+  /// **'Telefon'**
+  String get tournamentDetailContactPhone;
+
+  /// CF5/K28: card heading for the free-text participant infos
+  ///
+  /// In de, this message translates to:
+  /// **'Infos für Teilnehmer'**
+  String get tournamentDetailInfoTextsHeading;
+
+  /// CF5/K28: label for the catering info text
+  ///
+  /// In de, this message translates to:
+  /// **'Verpflegung'**
+  String get tournamentDetailInfoFood;
+
+  /// CF5/K28: label for the travel info text
+  ///
+  /// In de, this message translates to:
+  /// **'Anreise'**
+  String get tournamentDetailInfoTravel;
+
+  /// CF5/K28: label for the accommodation info text
+  ///
+  /// In de, this message translates to:
+  /// **'Unterkunft'**
+  String get tournamentDetailInfoAccommodation;
+
+  /// CF5/K28: label for the weather note
+  ///
+  /// In de, this message translates to:
+  /// **'Wetter'**
+  String get tournamentDetailWeatherNote;
+
+  /// CF5/K28: card heading for the rule variants
+  ///
+  /// In de, this message translates to:
+  /// **'Regel-Varianten'**
+  String get tournamentDetailRulesHeading;
+
+  /// CF5/K28: label for the diggy rule toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Diggy'**
+  String get tournamentDetailRuleDiggy;
+
+  /// CF5/K28: label for the sureshot rule toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Sureshot'**
+  String get tournamentDetailRuleSureshot;
+
+  /// CF5/K28: label for the penalty-kubb rule toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Strafkubb hinter Grundlinie'**
+  String get tournamentDetailRuleStrafkubb;
+
+  /// CF5/K28: label for the opening rule
+  ///
+  /// In de, this message translates to:
+  /// **'Anspielregel'**
+  String get tournamentDetailRuleOpening;
+
+  /// CF5/K28: value shown when a rule toggle is enabled
+  ///
+  /// In de, this message translates to:
+  /// **'An'**
+  String get tournamentDetailRuleOn;
+
+  /// CF5/K28: value shown when a rule toggle is disabled
+  ///
+  /// In de, this message translates to:
+  /// **'Aus'**
+  String get tournamentDetailRuleOff;
+
+  /// CF5/K28: label for the scoring system
+  ///
+  /// In de, this message translates to:
+  /// **'Wertung'**
+  String get tournamentDetailScoring;
+
+  /// CF5/K28: value for the EKC scoring system
+  ///
+  /// In de, this message translates to:
+  /// **'EKC'**
+  String get tournamentDetailScoringEkc;
+
+  /// CF5/K28: value for the classic scoring system
+  ///
+  /// In de, this message translates to:
+  /// **'Classic'**
+  String get tournamentDetailScoringClassic;
+
+  /// CF5/K28: card heading for club / fun-tournament / league info
+  ///
+  /// In de, this message translates to:
+  /// **'Veranstalter & Liga'**
+  String get tournamentDetailOrganizationHeading;
+
+  /// CF5/K28: label for the organizing club
+  ///
+  /// In de, this message translates to:
+  /// **'Verein'**
+  String get tournamentDetailClubLabel;
+
+  /// CF5/K28: value shown when no club is set (fun tournament)
+  ///
+  /// In de, this message translates to:
+  /// **'Spasstournier – ohne Wertung'**
+  String get tournamentDetailFunTournament;
+
+  /// CF5/K28: label for the league categories
+  ///
+  /// In de, this message translates to:
+  /// **'Liga-Kategorien'**
+  String get tournamentDetailLeagueCategories;
+
+  /// CF5/K28: label for the short KO bracket setup info
+  ///
+  /// In de, this message translates to:
+  /// **'KO-Setup'**
+  String get tournamentDetailKoSetup;
+
+  /// CF5/K28: KO bracket size value
+  ///
+  /// In de, this message translates to:
+  /// **'{count} Qualifikanten'**
+  String tournamentDetailKoQualifiers(int count);
+
+  /// CF5/K28: label for the consolation/Trostturnier name row
+  ///
+  /// In de, this message translates to:
+  /// **'Trostturnier'**
+  String get tournamentDetailConsolationLabel;
+
+  /// CF5/K28: card heading for downloadable PDF documents
+  ///
+  /// In de, this message translates to:
+  /// **'Dokumente'**
+  String get tournamentDetailDocumentsHeading;
+
+  /// CF5/K28: download button label for the rules PDF
+  ///
+  /// In de, this message translates to:
+  /// **'Regelwerk (PDF)'**
+  String get tournamentDetailRulesPdf;
+
+  /// CF5/K28: download button label for the site-map PDF
+  ///
+  /// In de, this message translates to:
+  /// **'Geländeplan (PDF)'**
+  String get tournamentDetailSiteMapPdf;
+
+  /// CF5/K28: error shown when a PDF link cannot be opened
+  ///
+  /// In de, this message translates to:
+  /// **'PDF konnte nicht geöffnet werden.'**
+  String get tournamentDetailPdfOpenError;
 
   /// Section heading: audit tail
   ///
@@ -6327,6 +6675,222 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Die gemeldete Reihenfolge bestätigen — bestes Team zuerst.'**
   String get shootoutOrderHintReadonly;
+
+  /// K26: placeholder shown for an empty/unset optional field in the summary review
+  ///
+  /// In de, this message translates to:
+  /// **'—'**
+  String get tournamentWizardSummaryPlaceholder;
+
+  /// K26: summary section heading for the master-data step
+  ///
+  /// In de, this message translates to:
+  /// **'Stammdaten'**
+  String get tournamentWizardSummarySectionStammdaten;
+
+  /// K26: summary section heading for the participants step
+  ///
+  /// In de, this message translates to:
+  /// **'Teilnehmer'**
+  String get tournamentWizardSummarySectionParticipants;
+
+  /// K26: summary section heading for the prelim step
+  ///
+  /// In de, this message translates to:
+  /// **'Vorrunde'**
+  String get tournamentWizardSummarySectionVorrunde;
+
+  /// K26: summary section heading for the KO step
+  ///
+  /// In de, this message translates to:
+  /// **'K.-o.'**
+  String get tournamentWizardSummarySectionKo;
+
+  /// K26/ERR-1: heading of the validation-issue list shown when the draft is invalid
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier kann nicht angelegt werden'**
+  String get tournamentWizardSummaryErrorTitle;
+
+  /// K26: summary label for the team size (min/max players per team)
+  ///
+  /// In de, this message translates to:
+  /// **'Teamgrösse'**
+  String get tournamentWizardSummaryTeamSizeLabel;
+
+  /// K26: summary value for a fixed team size
+  ///
+  /// In de, this message translates to:
+  /// **'{size} (fix)'**
+  String tournamentWizardSummaryTeamSizeFixed(int size);
+
+  /// K26: summary value for a variable team size range
+  ///
+  /// In de, this message translates to:
+  /// **'{min}–{max}'**
+  String tournamentWizardSummaryTeamSizeRange(int min, int max);
+
+  /// K26: summary value 'yes' (e.g. PDF present)
+  ///
+  /// In de, this message translates to:
+  /// **'Ja'**
+  String get tournamentWizardSummaryYes;
+
+  /// K26: summary value 'no' (e.g. PDF not present)
+  ///
+  /// In de, this message translates to:
+  /// **'Nein'**
+  String get tournamentWizardSummaryNo;
+
+  /// K26: summary value for the entry fee (amount + currency)
+  ///
+  /// In de, this message translates to:
+  /// **'{amount} {currency}'**
+  String tournamentWizardSummaryFee(String amount, String currency);
+
+  /// K26: summary value when there is no entry fee
+  ///
+  /// In de, this message translates to:
+  /// **'Gratis'**
+  String get tournamentWizardSummaryFeeFree;
+
+  /// K26: summary value for the EKC scoring system
+  ///
+  /// In de, this message translates to:
+  /// **'EKC'**
+  String get tournamentWizardSummaryScoringEkc;
+
+  /// K26: summary value for the classic scoring system
+  ///
+  /// In de, this message translates to:
+  /// **'Klassisch'**
+  String get tournamentWizardSummaryScoringClassic;
+
+  /// K26: summary label for the active rule variants
+  ///
+  /// In de, this message translates to:
+  /// **'Regel-Varianten'**
+  String get tournamentWizardSummaryRulesLabel;
+
+  /// K26: summary value when no rule variant toggle is active
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Sonderregeln'**
+  String get tournamentWizardSummaryRulesNone;
+
+  /// K26: summary label for whether a rules PDF was uploaded
+  ///
+  /// In de, this message translates to:
+  /// **'Regelwerk-PDF'**
+  String get tournamentWizardSummaryPdfRulesLabel;
+
+  /// K26: summary label for whether a site-map PDF was uploaded
+  ///
+  /// In de, this message translates to:
+  /// **'Lageplan-PDF'**
+  String get tournamentWizardSummaryPdfSiteMapLabel;
+
+  /// K26: summary label for the organiser contact (name + phone)
+  ///
+  /// In de, this message translates to:
+  /// **'Kontakt'**
+  String get tournamentWizardSummaryContactLabel;
+
+  /// K26: summary label for the participant info free-text blocks
+  ///
+  /// In de, this message translates to:
+  /// **'Infotexte'**
+  String get tournamentWizardSummaryInfoLabel;
+
+  /// K26: summary value counting the filled participant info texts
+  ///
+  /// In de, this message translates to:
+  /// **'{count} hinterlegt'**
+  String tournamentWizardSummaryInfoCount(int count);
+
+  /// K26: summary label for the prelim format (group phase vs Schoch)
+  ///
+  /// In de, this message translates to:
+  /// **'Format'**
+  String get tournamentWizardSummaryFormatLabel;
+
+  /// K26: summary label for the prelim match time limit in minutes
+  ///
+  /// In de, this message translates to:
+  /// **'Match-Zeit (Min.)'**
+  String get tournamentWizardSummaryMatchTimeLabel;
+
+  /// K26: summary label for the configured pitch count
+  ///
+  /// In de, this message translates to:
+  /// **'Pitches'**
+  String get tournamentWizardSummaryPitchesLabel;
+
+  /// K26: summary label for the KO system (single-out / double / consolation)
+  ///
+  /// In de, this message translates to:
+  /// **'KO-System'**
+  String get tournamentWizardSummaryKoTypeLabel;
+
+  /// K26: summary value for the single-out KO system
+  ///
+  /// In de, this message translates to:
+  /// **'Single-Out'**
+  String get tournamentWizardSummaryKoTypeSingle;
+
+  /// K26: summary value for the double-elimination KO system
+  ///
+  /// In de, this message translates to:
+  /// **'Double-Elimination'**
+  String get tournamentWizardSummaryKoTypeDouble;
+
+  /// K26: summary value for the consolation/Trostturnier KO system
+  ///
+  /// In de, this message translates to:
+  /// **'Trostturnier'**
+  String get tournamentWizardSummaryKoTypeConsolation;
+
+  /// K26: summary label for the KO bracket size (qualifier count)
+  ///
+  /// In de, this message translates to:
+  /// **'Bracket-Grösse'**
+  String get tournamentWizardSummaryKoSizeLabel;
+
+  /// K26: summary label for the per-round KO rules short form
+  ///
+  /// In de, this message translates to:
+  /// **'Per-Runde-Regeln'**
+  String get tournamentWizardSummaryKoRoundsLabel;
+
+  /// K26: summary short form for one KO round (round number + best-of from its max sets), joined by '·'
+  ///
+  /// In de, this message translates to:
+  /// **'R{round}: Bo{maxSets}'**
+  String tournamentWizardSummaryKoRoundEntry(int round, int maxSets);
+
+  /// K26: summary label for the KO seeding source
+  ///
+  /// In de, this message translates to:
+  /// **'Seeding-Quelle'**
+  String get tournamentWizardSummarySeedingLabel;
+
+  /// K26: summary value for automatic seeding from the prelim
+  ///
+  /// In de, this message translates to:
+  /// **'Automatisch aus Vorrunde'**
+  String get tournamentWizardSummarySeedingAuto;
+
+  /// K26: summary value for manual seeding
+  ///
+  /// In de, this message translates to:
+  /// **'Manuell festlegen'**
+  String get tournamentWizardSummarySeedingManual;
+
+  /// K26: summary label for the consolation direct-starter count
+  ///
+  /// In de, this message translates to:
+  /// **'Direkt ins Trostturnier'**
+  String get tournamentWizardSummaryConsolationDirectLabel;
 }
 
 class _AppLocalizationsDelegate

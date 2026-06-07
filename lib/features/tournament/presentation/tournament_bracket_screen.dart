@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/tournament/application/tournament_bracket_provider.dart';
+import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/bracket/bracket_canvas.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -29,6 +30,27 @@ class TournamentBracketScreen extends ConsumerWidget {
     // newly advanced winners surface without manual reloads (M1 spec).
     ref.watch(tournamentBracketPollingProvider(id));
     final async = ref.watch(tournamentBracketProvider(id));
+    // CF3 / K08: resolve participant ids to their display names from the
+    // SAME server-projected source the match list/detail use
+    // (team_id-driven: single -> nickname, team -> team name). The bracket
+    // value object carries only participant ids, so the screen supplies a
+    // resolver instead of the bracket exposing a second name source.
+    final detail = ref
+        .watch(tournamentDetailProvider(id))
+        .maybeWhen(data: (d) => d, orElse: () => null);
+    final nameById = <String, String>{
+      for (final p in detail?.participants ?? const <TournamentParticipant>[])
+        if ((p.displayName ?? '').trim().isNotEmpty)
+          p.participantId: p.displayName!.trim(),
+    };
+    String? nameFor(String participantId) => nameById[participantId];
+
+    // K17: the Trostturnier name lives in the consolation_bracket jsonb
+    // (`setup['consolation_bracket']['name']`, written by
+    // TournamentConfigDraft.toSetupConfig). Pass it to the canvas so the
+    // consolation section header reads the configured name instead of the
+    // generic 'Trostturnier' fallback. Empty/missing -> null -> fallback.
+    final consolationName = _consolationNameFrom(detail);
 
     return Scaffold(
       backgroundColor: tokens.bg,
@@ -72,10 +94,26 @@ class TournamentBracketScreen extends ConsumerWidget {
             bracket: bracket,
             editable: false,
             tournamentId: id,
+            nameFor: nameFor,
+            consolationName: consolationName,
           );
         },
       ),
     );
+  }
+
+  /// K17: extracts the configured Trostturnier name from the detail's setup
+  /// map. Source of truth is `setup['consolation_bracket']['name']` (merged in
+  /// by `TournamentConfigDraft.toSetupConfig` and round-tripped via
+  /// `tournament_get`). Returns null when absent/blank so the canvas falls back
+  /// to the localized 'Trostturnier' label.
+  String? _consolationNameFrom(TournamentDetail? detail) {
+    final consolation = detail?.tournament.setup['consolation_bracket'];
+    if (consolation is! Map) return null;
+    final name = consolation['name'];
+    if (name is! String) return null;
+    final trimmed = name.trim();
+    return trimmed.isEmpty ? null : trimmed;
   }
 
   /// A bracket counts as empty when the server returned no KO rounds

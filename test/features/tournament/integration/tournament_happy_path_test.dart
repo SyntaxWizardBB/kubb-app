@@ -129,12 +129,19 @@ void main() {
       final actions = c.read(tournamentActionsProvider);
 
       // Step 1: organizer creates a 4-player BO1 round-robin tournament.
-      const draft = TournamentConfigDraft(
+      final draft = TournamentConfigDraft(
         displayName: 'M1 Smoke RR',
         minParticipants: 4,
         maxParticipants: 4,
         setsToWin: 1,
         maxSets: 1,
+        // W1 required Stammdaten (Spasstournier = no club).
+        clubChoiceMade: true,
+        location: 'Esp',
+        venueAddress: 'Sportplatz Esp',
+        eventStartsAt: DateTime(2026, 8, 1, 10),
+        registrationClosesAt: DateTime(2026, 7, 25, 23, 59),
+        checkinUntil: DateTime(2026, 8, 1, 9, 30),
       );
       final tid = await actions.createTournament(draft);
 
@@ -238,11 +245,18 @@ void main() {
       final matchActions = c.read(tournamentActionsProvider);
 
       // Minimal 2-player tournament so a single match is enough.
-      const draft = TournamentConfigDraft(
+      final draft = TournamentConfigDraft(
         displayName: 'M1 Conflict',
         maxParticipants: 2,
         setsToWin: 1,
         maxSets: 1,
+        // W1 required Stammdaten (Spasstournier = no club).
+        clubChoiceMade: true,
+        location: 'Esp',
+        venueAddress: 'Sportplatz Esp',
+        eventStartsAt: DateTime(2026, 8, 1, 10),
+        registrationClosesAt: DateTime(2026, 7, 25, 23, 59),
+        checkinUntil: DateTime(2026, 8, 1, 9, 30),
       );
       final tid = await actions.createTournament(draft);
       await actions.publish(tid);

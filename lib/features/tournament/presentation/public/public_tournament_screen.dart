@@ -326,12 +326,20 @@ class _StandingsTab extends StatelessWidget {
         if (m.participantB != null) m.participantB!.value,
       ],
     }.toList(growable: false);
+    final scoring = detail.tournament.scoring;
     final results = <TournamentMatchResult>[
-      for (final m in finished) _resultFromMatch(m),
+      for (final m in finished) _resultFromMatch(m, scoring),
     ];
     final rows = computeStandings(
       participantIds: participantIds,
       results: results,
+      // FF2 / Finding A: the anon public envelope (`public_tournament_get`)
+      // now projects `tournaments.scoring`, so the spectator standings use
+      // the real mode (classic vs ekc) — a classic tournament no longer
+      // renders EKC-style totals here. Privacy-neutral: only the enum is
+      // exposed, no PII (ADR-0026). The authenticated path
+      // (tournamentStandingsProvider) reads the same mode from its header.
+      scoring: scoring,
       tiebreaker: const TiebreakerChain(<TiebreakerCriterion>[
         TiebreakerCriterion.totalPoints,
         TiebreakerCriterion.wins,
@@ -393,22 +401,23 @@ class _StandingsTab extends StatelessWidget {
         m.status == TournamentMatchStatus.overridden;
   }
 
-  TournamentMatchResult _resultFromMatch(PublicMatchDetail m) {
-    final a = m.participantA!.value;
-    final b = m.participantB?.value;
-    final sA = m.finalScoreA ?? 0;
-    final sB = m.finalScoreB ?? 0;
-    final winner = sA >= sB ? SetWinner.teamA : SetWinner.teamB;
-    return TournamentMatchResult(
-      participantA: a,
-      participantB: b,
-      score: MatchEkcScore(<SetScore>[
-        SetScore(
-          basekubbsKnockedByA: sA,
-          basekubbsKnockedByB: sB,
-          winner: winner,
-        ),
-      ]),
+  // FF2 / Finding B: in classic mode the public envelope now projects the
+  // real per-side set wins (sets_won_a/_b, same source as the server's
+  // tournament_pool_standings), so the synthesis reconstructs real set
+  // wins instead of a single match win — the anon classic standings now
+  // match the server for best-of-3. The EKC path is unchanged.
+  TournamentMatchResult _resultFromMatch(
+    PublicMatchDetail m,
+    TournamentScoring scoring,
+  ) {
+    return tournamentMatchResultFromFinalScore(
+      participantA: m.participantA!.value,
+      participantB: m.participantB?.value,
+      finalScoreA: m.finalScoreA ?? 0,
+      finalScoreB: m.finalScoreB ?? 0,
+      scoring: scoring,
+      setsWonA: m.setsWonA,
+      setsWonB: m.setsWonB,
     );
   }
 }

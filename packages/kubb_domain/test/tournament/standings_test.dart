@@ -228,4 +228,134 @@ void main() {
       expect(b.headToHeadLookup['a'], equals(0));
     });
   });
+
+  // CF2 / ChangeSpec K04: the scoring mode steers the point source.
+  group('computeStandings scoring mode (CF2)', () {
+    // Best-of-3 ending 2:1 for A, with arbitrary basekubbs per set.
+    MatchEkcScore boSomeKubbs({
+      required int kubbsA,
+      required int kubbsB,
+    }) =>
+        MatchEkcScore([
+          SetScore(
+            basekubbsKnockedByA: kubbsA,
+            basekubbsKnockedByB: kubbsB,
+            winner: SetWinner.teamA,
+          ),
+          SetScore(
+            basekubbsKnockedByA: kubbsB,
+            basekubbsKnockedByB: kubbsA,
+            winner: SetWinner.teamB,
+          ),
+          SetScore(
+            basekubbsKnockedByA: kubbsA,
+            basekubbsKnockedByB: kubbsB,
+            winner: SetWinner.teamA,
+          ),
+        ]);
+
+    test('scoring=ekc is the default and reproduces the historical total', () {
+      final m = boSomeKubbs(kubbsA: 4, kubbsB: 2);
+      final explicit = computeStandings(
+        participantIds: ['a', 'b'],
+        results: [res('a', 'b', m)],
+        tiebreaker: chain,
+        // explicitly asserting the ekc value equals the default is the point
+        // ignore: avoid_redundant_argument_values
+        scoring: TournamentScoring.ekc,
+      );
+      final defaulted = computeStandings(
+        participantIds: ['a', 'b'],
+        results: [res('a', 'b', m)],
+        tiebreaker: chain,
+      );
+      final a = explicit.firstWhere((s) => s.participantId == 'a');
+      final b = explicit.firstWhere((s) => s.participantId == 'b');
+      // EKC: A wins sets 1+3 (4 kubbs + 3 bonus each) and loses set 2 (2),
+      //      = 4+3 + 2 + 4+3 = 16. B = 2 + 4+3 + 2 = 11.
+      expect(a.totalPoints, equals(16));
+      expect(b.totalPoints, equals(11));
+      // Default param must match the explicit ekc result exactly.
+      expect(
+        defaulted.map((s) => (s.participantId, s.totalPoints)).toList(),
+        equals(explicit.map((s) => (s.participantId, s.totalPoints)).toList()),
+      );
+    });
+
+    test('scoring=classic counts only set wins, not basekubbs', () {
+      final out = computeStandings(
+        participantIds: ['a', 'b'],
+        results: [res('a', 'b', boSomeKubbs(kubbsA: 4, kubbsB: 2))],
+        tiebreaker: chain,
+        scoring: TournamentScoring.classic,
+      );
+      final a = out.firstWhere((s) => s.participantId == 'a');
+      final b = out.firstWhere((s) => s.participantId == 'b');
+      // 2:1 sets → A 2 points, B 1 point. Basekubbs do not contribute.
+      expect(a.totalPoints, equals(2));
+      expect(b.totalPoints, equals(1));
+    });
+
+    test('classic: varying basekubbs does not change the points', () {
+      final lowKubbs = computeStandings(
+        participantIds: ['a', 'b'],
+        results: [res('a', 'b', boSomeKubbs(kubbsA: 1, kubbsB: 0))],
+        tiebreaker: chain,
+        scoring: TournamentScoring.classic,
+      );
+      final highKubbs = computeStandings(
+        participantIds: ['a', 'b'],
+        results: [res('a', 'b', boSomeKubbs(kubbsA: 6, kubbsB: 5))],
+        tiebreaker: chain,
+        scoring: TournamentScoring.classic,
+      );
+      int pts(List<ParticipantStats> s, String id) =>
+          s.firstWhere((e) => e.participantId == id).totalPoints;
+      // Same set outcome (2:1), wildly different kubbs → identical points.
+      expect(pts(lowKubbs, 'a'), equals(pts(highKubbs, 'a')));
+      expect(pts(lowKubbs, 'b'), equals(pts(highKubbs, 'b')));
+      expect(pts(highKubbs, 'a'), equals(2));
+      expect(pts(highKubbs, 'b'), equals(1));
+      // kubbsScored still tracks the real kubbs for the tiebreak.
+      final aHigh = highKubbs.firstWhere((s) => s.participantId == 'a');
+      final aLow = lowKubbs.firstWhere((s) => s.participantId == 'a');
+      expect(aHigh.kubbsScored, isNot(equals(aLow.kubbsScored)));
+    });
+
+    test('classic: kubb-difference breaks a set-win tie without changing '
+        'totalPoints', () {
+      // a and b each win one match 1:0; c loses both. a beats c with more
+      // kubbs than b beats c, so a > b on kubbDifference at equal points.
+      MatchEkcScore winA({required int kA, required int kB}) => MatchEkcScore([
+            SetScore(
+              basekubbsKnockedByA: kA,
+              basekubbsKnockedByB: kB,
+              winner: SetWinner.teamA,
+            ),
+          ]);
+      final out = computeStandings(
+        participantIds: ['a', 'b', 'c'],
+        results: [
+          // a beats c with a wide kubb margin.
+          res('a', 'c', winA(kA: 6, kB: 0)),
+          // b beats c with a narrow kubb margin.
+          res('b', 'c', winA(kA: 6, kB: 5)),
+        ],
+        tiebreaker: const TiebreakerChain([
+          TiebreakerCriterion.totalPoints,
+          TiebreakerCriterion.kubbDifference,
+        ]),
+        scoring: TournamentScoring.classic,
+      );
+      final a = out.firstWhere((s) => s.participantId == 'a');
+      final b = out.firstWhere((s) => s.participantId == 'b');
+      // Equal set wins → equal points under classic, despite different kubbs.
+      expect(a.totalPoints, equals(1));
+      expect(b.totalPoints, equals(1));
+      expect(a.totalPoints, equals(b.totalPoints));
+      // kubbDifference tiebreak orders a ahead of b.
+      expect(out.indexWhere((s) => s.participantId == 'a'),
+          lessThan(out.indexWhere((s) => s.participantId == 'b')));
+    });
+  });
 }

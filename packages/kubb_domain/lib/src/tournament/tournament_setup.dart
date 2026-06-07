@@ -281,14 +281,18 @@ final class MatchFormatSpec {
 final class RuleVariants {
   const RuleVariants({
     this.sureshot = false,
-    this.diggy = false,
+    // K05: Diggy defaults to ON so new tournament drafts start with the
+    // double-award-kubb rule enabled (P6 wizard rework).
+    this.diggy = true,
     this.openingRule = '2-4-6',
     this.strafkubbOffBaseline = true,
   });
 
   factory RuleVariants.fromJson(Map<String, Object?> json) => RuleVariants(
         sureshot: json['sureshot'] as bool? ?? false,
-        diggy: json['diggy'] as bool? ?? false,
+        // K05: absent `diggy` falls back to ON (matches the constructor
+        // default), so a fresh draft round-trips with diggy = true.
+        diggy: json['diggy'] as bool? ?? true,
         openingRule: json['opening_rule'] as String? ?? '2-4-6',
         strafkubbOffBaseline: json['strafkubb_off_baseline'] as bool? ?? true,
       );

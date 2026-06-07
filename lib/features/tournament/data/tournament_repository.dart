@@ -118,6 +118,21 @@ class TieResolutionRequiredException implements Exception {
       '$message';
 }
 
+/// Thrown when the KO phase cannot start because the tournament is
+/// configured for MANUAL seeding (`ko_config.seeding_mode = 'manual'`)
+/// but the organizer has not yet committed a complete seed list. The
+/// server raises `ERRCODE 22023` with a `seeding_required` message prefix
+/// (CF6 / ChangeSpec K19); the UI catches this and routes the organizer
+/// to the seeding screen instead of showing a raw error.
+class SeedingRequiredException implements Exception {
+  const SeedingRequiredException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'SeedingRequiredException: $message';
+}
+
 /// Thrown when `tournament_organizer_override_pairing` rejects the call.
 /// The server raises one of a fixed set of token-prefixed exceptions
 /// (`MISSING_REASON:`, `MATCH_NOT_FOUND:`, `MATCH_ALREADY_STARTED:`,
@@ -569,6 +584,13 @@ class TournamentRepository implements TournamentRemote {
     } on PostgrestException catch (e) {
       final tieEx = _tieResolutionFromException(e);
       if (tieEx != null) throw tieEx;
+      // CF6 (K19): manual-seeding gate. ERRCODE 22023 + 'seeding_required'
+      // message prefix means the organizer must set a complete seed list
+      // before the KO can start. Surface a typed exception so the UI can
+      // route to the seeding screen rather than showing a raw error.
+      if (e.code == '22023' && e.message.startsWith('seeding_required')) {
+        throw SeedingRequiredException(e.message);
+      }
       if (e.code == '40001') {
         // Idempotent path: KO phase already initialised on the server.
         // Caller invalidates and re-fetches instead of bubbling an error.

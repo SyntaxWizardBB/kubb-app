@@ -127,10 +127,12 @@ class _MatchListBody extends StatelessWidget {
           for (final m in byRound[r]!) ...[
             TournamentMatchCard(
               match: m,
-              nameFor: (id) => id.value.substring(
-                0,
-                id.value.length < 6 ? id.value.length : 6,
-              ),
+              // CF3 / K08: the card prefers the server-projected
+              // display name (single -> nickname, team -> team name).
+              // This resolver is only the null/empty fallback, so it
+              // returns the localized placeholder instead of a UUID
+              // substring.
+              nameFor: (id) => l.tournamentParticipantUnknown,
               onTap: () => context.go(
                 TournamentRoutes.matchDetail(tournamentId, m.matchId.value),
               ),
