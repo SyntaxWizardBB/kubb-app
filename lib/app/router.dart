@@ -5,6 +5,7 @@ import 'package:kubb_app/app/public_router_shell.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_bottom_nav.dart';
 import 'package:kubb_app/features/achievements/presentation/achievements_screen.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
+import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/presentation/account_link_screen.dart';
 import 'package:kubb_app/features/auth/presentation/anonymous_signup_flow.dart';
@@ -19,6 +20,7 @@ import 'package:kubb_app/features/club/presentation/club_add_member_screen.dart'
 import 'package:kubb_app/features/club/presentation/club_create_screen.dart';
 import 'package:kubb_app/features/club/presentation/club_detail_screen.dart';
 import 'package:kubb_app/features/club/presentation/clubs_screen.dart';
+import 'package:kubb_app/features/inbox/application/inbox_controller.dart';
 import 'package:kubb_app/features/inbox/presentation/archive_screen.dart';
 import 'package:kubb_app/features/inbox/presentation/inbox_screen.dart';
 import 'package:kubb_app/features/legal/presentation/imprint_screen.dart';
@@ -592,13 +594,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 /// [KubbBottomNav]. Tab-Wechsel laufen ueber `navigationShell.goBranch`;
 /// ein Tap auf den aktiven Tab fuehrt zurueck auf den Branch-Root
 /// (`initialLocation: true`), analog zum Material-3-Standard.
-class _ShellScaffold extends StatelessWidget {
+class _ShellScaffold extends ConsumerWidget {
   const _ShellScaffold({required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Inbox CDC discovery (ADR-0029 §(e) C1-T2): the notification-spine
+    // subscription lives on the authenticated app shell so it stays durable
+    // across tab navigation and keeps the bell badge current — it no longer
+    // hangs off the inbox screen. Only opened while signed in.
+    if (ref.watch(currentUserIdProvider) != null) {
+      ref.watch(inboxCdcProvider);
+    }
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: KubbBottomNav(

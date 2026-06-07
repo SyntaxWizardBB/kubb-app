@@ -1,0 +1,13 @@
+-- SRV-01 (ADR-0029, messaging-framework-plan §(d)): the inbox is the durable
+-- notification spine. The client opens exactly one per-user CDC subscription on
+-- public.user_inbox_messages (user_id filter), so that table must be a member of
+-- the supabase_realtime publication for Postgres to emit row-level change events.
+--
+-- The supabase_realtime publication is NOT "FOR ALL TABLES" and is currently
+-- empty, so the explicit ADD TABLE below is required. REPLICA IDENTITY DEFAULT
+-- (the table default) is sufficient — the inbox CDC consumer only needs the new
+-- row to trigger a refresh and never inspects the old row, so no REPLICA IDENTITY
+-- FULL is set. The user_id row scope is already authorised by the existing
+-- user_inbox_messages_owner_read SELECT policy (user_id = auth.uid()); no new or
+-- changed RLS policy is needed for the CDC filter.
+ALTER PUBLICATION supabase_realtime ADD TABLE public.user_inbox_messages;

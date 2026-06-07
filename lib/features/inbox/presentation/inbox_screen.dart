@@ -33,7 +33,8 @@ class InboxScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    ref.watch(inboxPollingProvider);
+    // Discovery (refresh-on-CDC) now runs on the app shell via
+    // inboxCdcProvider; the screen only renders the drift-backed stream.
     final async = ref.watch(inboxMessagesProvider);
     final messageCount = async.maybeWhen(
       data: (m) => m.length,
