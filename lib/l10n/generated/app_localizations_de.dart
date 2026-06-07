@@ -2198,6 +2198,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentDetailActionGotoMatches => 'Zu den Matches';
 
   @override
+  String get tournamentDetailActionSetSeeding => 'Seeding festlegen';
+
+  @override
+  String get tournamentSeedingRequiredError =>
+      'Seeding erforderlich: Lege die Setzliste fest, bevor die KO-Phase startet.';
+
+  @override
   String get tournamentDetailActionStandings => 'Endrangliste';
 
   @override

@@ -7,6 +7,7 @@ import 'package:kubb_app/features/tournament/application/tournament_list_provide
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_seeding_controller.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_seeding_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -278,5 +279,74 @@ void main() {
     await _pump(tester, standings: <ParticipantStats>[]);
     expect(find.text('Noch keine qualifizierten Teilnehmer.'), findsOneWidget);
     expect(find.text('KO starten'), findsNothing);
+  });
+
+  // CF6-08(c): the seeding screen is reachable through the *new* GoRoute
+  // addressed via the TournamentRoutes.seeding(id) helper — i.e. the same
+  // path constant registered in lib/app/router.dart. We build a router that
+  // starts away from seeding, navigate via go(TournamentRoutes.seeding(id)),
+  // and assert the screen renders for the parsed tournamentId.
+  testWidgets('reachable via TournamentRoutes.seeding(id) GoRoute',
+      (tester) async {
+    tester.view.physicalSize = const Size(1080, 3200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final fake = _FakeRemote();
+    // Route path is '/tournament/:id/seeding'; seedingBase + the param
+    // segment must compose to exactly that, which TournamentRoutes.seeding
+    // guarantees ('$seedingBase/$id/seeding').
+    final router = GoRouter(
+      initialLocation: '/home',
+      routes: <RouteBase>[
+        GoRoute(
+          path: '/home',
+          builder: (_, _) => const Scaffold(body: Text('home-screen')),
+        ),
+        GoRoute(
+          path: '/tournament/:id/seeding',
+          builder: (_, s) =>
+              TournamentSeedingScreen(tournamentId: s.pathParameters['id']!),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          tournamentRemoteProvider.overrideWithValue(fake),
+          tournamentStandingsProvider(_tournamentId)
+              .overrideWith((_) async => _standings()),
+          tournamentDetailProvider(_tournamentId)
+              .overrideWith((_) async => _detail()),
+        ],
+        child: MaterialApp.router(
+          theme: KubbTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('home-screen'), findsOneWidget);
+
+    // Navigate through the new route via the TournamentRoutes helper.
+    expect(TournamentRoutes.seeding('t-1'), '/tournament/t-1/seeding');
+    router.go(TournamentRoutes.seeding('t-1'));
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 16));
+
+    expect(find.byType(TournamentSeedingScreen), findsOneWidget);
+    expect(
+      tester
+          .widget<TournamentSeedingScreen>(find.byType(TournamentSeedingScreen))
+          .tournamentId,
+      't-1',
+    );
+    // The seeding editor's primary action confirms it rendered.
+    expect(find.text('Seeding speichern'), findsOneWidget);
   });
 }

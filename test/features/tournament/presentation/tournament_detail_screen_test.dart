@@ -528,4 +528,49 @@ void main() {
     expect(find.text('Regelwerk (PDF)'), findsNothing);
     expect(find.text('Geländeplan (PDF)'), findsNothing);
   });
+
+  // CF6 (K19): the mandatory seeding step surfaces only for manual seeding
+  // when the tournament is live and the KO bracket hasn't been built yet.
+  testWidgets('CF6: live manual-seeding tournament shows "Seeding festlegen"',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(
+        status: TournamentStatus.live,
+        setup: const <String, Object?>{
+          'ko_config': <String, Object?>{
+            'qualifier_count': 4,
+            'seeding_mode': 'manual',
+          },
+        },
+      ),
+      callerUserId: _creator,
+      canManage: true,
+    );
+    // Action buttons sit at the bottom of the scroll view (below the fold
+    // at the default test window size), so include offstage candidates.
+    expect(
+      find.text('Seeding festlegen', skipOffstage: false),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('CF6: live auto-seeding tournament shows no seeding CTA',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(
+        status: TournamentStatus.live,
+        setup: const <String, Object?>{
+          'ko_config': <String, Object?>{
+            'qualifier_count': 4,
+            'seeding_mode': 'auto',
+          },
+        },
+      ),
+      callerUserId: _creator,
+      canManage: true,
+    );
+    expect(find.text('Seeding festlegen', skipOffstage: false), findsNothing);
+  });
 }

@@ -478,6 +478,19 @@ List<Widget> _metaCards(
   ];
 }
 
+/// CF6 (K19): the configured seeding mode, read from the
+/// `ko_config.seeding_mode` discriminator on the projected setup map.
+/// Defaults to [SeedingMode.auto] when absent or unrecognised, matching
+/// the wizard/server default — so only an explicit `manual` triggers the
+/// mandatory seeding step.
+SeedingMode _seedingMode(TournamentDetail detail) {
+  final ko = detail.tournament.setup['ko_config'];
+  if (ko is Map && ko['seeding_mode'] == 'manual') {
+    return SeedingMode.manual;
+  }
+  return SeedingMode.auto;
+}
+
 /// CF5/K17/K28: the configured consolation/Trostturnier name, read from the
 /// `consolation_bracket.name` jsonb (written by `toSetupConfig`). Null/blank
 /// when unset.
@@ -694,6 +707,16 @@ class _Actions extends ConsumerWidget {
       op(l.tournamentDetailActionStart, () => actions.startTournament(id));
     } else if (status == TournamentStatus.live) {
       if (canManage) {
+        // CF6 (K19): manual-seeding is a mandatory step on the Vorrunde->KO
+        // transition. When seeding_mode == manual and the KO bracket has not
+        // been built yet, the organizer must commit a seed list FIRST — the
+        // CTA routes to the seeding screen instead of starting the KO blind.
+        // Auto seeding keeps the existing flow (no extra step). The server
+        // re-enforces the gate (seeding_required) regardless.
+        if (!hasBracket && _seedingMode(detail) == SeedingMode.manual) {
+          nav(l.tournamentDetailActionSetSeeding,
+              TournamentRoutes.seeding(id.value));
+        }
         op(l.tournamentDetailActionFinalize,
             () => actions.finalizeTournament(id));
       }

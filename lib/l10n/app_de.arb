@@ -2907,6 +2907,14 @@
   "@tournamentDetailActionGotoMatches": {
     "description": "Action: navigate to matches screen"
   },
+  "tournamentDetailActionSetSeeding": "Seeding festlegen",
+  "@tournamentDetailActionSetSeeding": {
+    "description": "CF6 (K19): organizer CTA to open the manual seeding editor before the KO phase can start"
+  },
+  "tournamentSeedingRequiredError": "Seeding erforderlich: Lege die Setzliste fest, bevor die KO-Phase startet.",
+  "@tournamentSeedingRequiredError": {
+    "description": "CF6 (K19): error shown when the KO start is blocked because manual seeding has not been set yet"
+  },
   "tournamentDetailActionStandings": "Endrangliste",
   "@tournamentDetailActionStandings": {
     "description": "Action: navigate to final standings"

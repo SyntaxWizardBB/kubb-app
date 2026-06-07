@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:kubb_app/features/tournament/data/tournament_repository.dart'
+    show SeedingRequiredException;
 import 'package:kubb_domain/kubb_domain.dart';
 // Test_support sits under `lib/src/` and is not exported from the public
 // `kubb_domain` library — the test-double API stays out of production
@@ -756,6 +758,19 @@ class FakeTournamentRemote implements TournamentRemote {
         t.matchIds.map((mid) => _matches[mid]!).any(_isKoMatch);
     if (hasKo) {
       throw StateError('ALREADY_STARTED: ko phase already initialised');
+    }
+
+    // CF6 (K19): manual-seeding gate, mirroring the server. When manual
+    // seeding is configured but fewer than `qualifierCount` overrides have
+    // been set, the KO start is blocked with a typed SeedingRequiredException
+    // (the repository maps the server's 22023/seeding_required to this type).
+    if (config.seedingMode == SeedingMode.manual) {
+      final overrideCount = (_seedingOverrides[tournamentId] ?? const {}).length;
+      if (overrideCount < config.qualifierCount) {
+        throw const SeedingRequiredException(
+          'seeding_required: manual seeding must be set before KO start',
+        );
+      }
     }
 
     _koConfig[tournamentId] = config;

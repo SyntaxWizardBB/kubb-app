@@ -57,6 +57,14 @@ abstract final class TournamentRoutes {
   /// KO bracket view. Compose as `'$bracketBase/$tournamentId/bracket'`.
   static const bracketBase = '/tournament';
 
+  /// CF6 (K19): manual seeding editor for the KO transition. When a
+  /// tournament uses `SeedingMode.manual`, the organizer must commit a
+  /// seed list here before the KO phase can start. Compose via [seeding].
+  static const seedingBase = '/tournament';
+
+  static String seeding(String tournamentId) =>
+      '$seedingBase/$tournamentId/seeding';
+
   /// Live organizer dashboard. Compose via [liveDashboard].
   static const liveDashboardBase = '/tournament';
 

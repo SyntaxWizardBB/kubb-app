@@ -4120,6 +4120,18 @@ abstract class AppLocalizations {
   /// **'Zu den Matches'**
   String get tournamentDetailActionGotoMatches;
 
+  /// CF6 (K19): organizer CTA to open the manual seeding editor before the KO phase can start
+  ///
+  /// In de, this message translates to:
+  /// **'Seeding festlegen'**
+  String get tournamentDetailActionSetSeeding;
+
+  /// CF6 (K19): error shown when the KO start is blocked because manual seeding has not been set yet
+  ///
+  /// In de, this message translates to:
+  /// **'Seeding erforderlich: Lege die Setzliste fest, bevor die KO-Phase startet.'**
+  String get tournamentSeedingRequiredError;
+
   /// Action: navigate to final standings
   ///
   /// In de, this message translates to:
