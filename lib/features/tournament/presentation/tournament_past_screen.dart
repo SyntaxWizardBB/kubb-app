@@ -29,8 +29,9 @@ class TournamentPastScreen extends ConsumerWidget {
     // path. A null filter would mix in drafts/published rows, so we ask
     // the server for the finalized slice and additionally guard below.
     // Mirror the discovery list screen and keep the slice fresh while the
-    // screen is open, so a tournament finalized elsewhere appears here.
-    ref.watch(tournamentListPollingProvider(TournamentStatus.finalized));
+    // screen is open, so a tournament finalized elsewhere appears here. CDC
+    // discovery invalidates the finalized slice too (no periodic poll).
+    ref.watch(tournamentListCdcProvider);
     final async = ref.watch(tournamentListProvider(TournamentStatus.finalized));
 
     return Scaffold(

@@ -36,7 +36,9 @@ class TournamentListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
-    ref.watch(tournamentListPollingProvider(null));
+    // CDC discovery: refresh the list when a participant change lands on
+    // another device (no periodic poll). See [tournamentListCdcProvider].
+    ref.watch(tournamentListCdcProvider);
     final async = ref.watch(tournamentListProvider(null));
     // P6 L123: each registration-open tile carries a self-register /
     // self-withdraw toggle. Map the caller's registrations by tournament

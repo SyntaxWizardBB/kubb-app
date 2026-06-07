@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
-import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_bracket_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
@@ -30,7 +29,7 @@ final tournamentUrlOpenerProvider = Provider<TournamentUrlOpener>((ref) {
 /// Status-aware detail view for one tournament. Renders the header,
 /// Stammdaten card, participant list (filtered by caller role), an
 /// action area that adapts to lifecycle status, and a collapsible audit
-/// tail. Polling via [tournamentDetailPollingProvider].
+/// tail. Live updates via CDC ([tournamentDetailCdcProvider]).
 class TournamentDetailScreen extends ConsumerWidget {
   const TournamentDetailScreen({required this.tournamentId, super.key});
   final TournamentId tournamentId;
@@ -46,13 +45,10 @@ class TournamentDetailScreen extends ConsumerWidget {
     // invalidation chain (M4.1-T8).
     ref
       ..watch(tournamentMatchListRealtimeProvider(tournamentId))
-      ..watch(tournamentBracketRealtimeProvider(tournamentId));
-    final fallbackActive = ref
-        .watch(realtimeFallbackProvider(tournamentId))
-        .maybeWhen(data: (v) => v, orElse: () => false);
-    if (fallbackActive) {
-      ref.watch(tournamentDetailPollingProvider(tournamentId));
-    }
+      ..watch(tournamentBracketRealtimeProvider(tournamentId))
+      // C4-T3: tournament_matches CDC keeps the detail fresh (terminal-stop
+      // after finalized/aborted, gated 30 s fallback). Replaces the 5 s poll.
+      ..watch(tournamentDetailCdcProvider(tournamentId));
     final detailAsync = ref.watch(tournamentDetailProvider(tournamentId));
     final myUserId = ref.watch(currentUserIdProvider);
 
@@ -71,11 +67,12 @@ class TournamentDetailScreen extends ConsumerWidget {
           RealtimeStatusBanner(tournamentId: tournamentId),
           Expanded(
             child: detailAsync.when(
-              // The detail is invalidated every ~5s by the realtime-fallback
-              // polling provider; without this the whole body would flash a
-              // full-screen spinner on each poll ("spinning" detail screen).
-              // Keep the last data during background reloads — only show the
-              // spinner on the very first load (no value yet).
+              // The detail is invalidated by [tournamentDetailCdcProvider]
+              // (event-driven CDC, with a gated 30 s fallback); without this
+              // the whole body would flash a full-screen spinner on each
+              // reload ("spinning" detail screen). Keep the last data during
+              // background reloads — only show the spinner on the very first
+              // load (no value yet).
               skipLoadingOnReload: true,
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(
