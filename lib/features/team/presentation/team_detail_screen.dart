@@ -27,10 +27,10 @@ class TeamDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    // Keep the team detail fresh across devices: poll-invalidate while this
-    // screen is mounted so a change another member made on the server shows up
-    // without a manual refresh.
-    ref.watch(teamDetailPollingProvider(teamId));
+    // Keep the team detail fresh across devices: a CDC subscription while this
+    // screen is mounted invalidates the detail when another member changes the
+    // membership server-side (ADR-0029 §(e) C3-T2).
+    ref.watch(teamDetailCdcProvider(teamId));
     final detailAsync = ref.watch(teamDetailProvider(teamId));
     final myUserId = ref.watch(currentUserIdProvider);
     return Scaffold(

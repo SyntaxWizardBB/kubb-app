@@ -44,9 +44,9 @@ class _State extends ConsumerState<TeamListScreen> {
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    // Poll-refresh while the screen is open so teams accepted / changed on
-    // another device appear without a manual reload.
-    ref.watch(teamListPollingProvider);
+    // CDC subscription while the screen is open so teams accepted / changed on
+    // another device appear without a manual reload (ADR-0029 §(e) C3-T2).
+    ref.watch(myTeamsCdcProvider);
     return Scaffold(
       backgroundColor: tokens.bg,
       appBar: const KubbAppBar(eyebrow: 'Teams', title: 'Übersicht'),

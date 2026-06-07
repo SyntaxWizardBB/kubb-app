@@ -6,34 +6,147 @@ import 'package:kubb_app/features/team/application/team_detail_provider.dart';
 import 'package:kubb_app/features/team/application/team_list_provider.dart';
 import 'package:kubb_app/features/team/data/team_models.dart';
 import 'package:kubb_app/features/team/data/team_repository.dart';
+import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart'
+    show realtimeChannelProvider, realtimePollingFallbackProvider;
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Polling sentinel for the team detail screen. A screen that
-/// `ref.watch`es this keeps a Timer alive that invalidates
-/// [teamDetailProvider] for that team every few seconds, so a change made
-/// on another device (e.g. an invitee accepting) appears without a manual
-/// refresh. Auto-disposes when the screen unmounts. Mirrors
-/// `friendsPollingProvider` / `inboxPollingProvider`.
+/// Polling cadence used ONLY while the realtime fallback is active
+/// (channel ≥60 s errored or kill-switch on). Authenticated concerns poll
+/// at 30 s per ADR-0029 §(c) FC-6 — never the old 4 s discovery loop.
+const Duration _teamFallbackPollInterval = Duration(seconds: 30);
+
+/// My-teams CDC discovery (ADR-0029 §(e) C3-T2 / Phase P7): replaces the old
+/// 4 s `teamListPollingProvider`. A screen watches this while mounted so the
+/// "Meine Teams" list reflects a membership change made on another device
+/// (e.g. an invitee accepting) automatically — without any periodic poll.
+///
+/// The per-user channel is `team_memberships:user_id=<uid>` over the app-wide
+/// [realtimeChannelProvider] singleton (one WebSocket, multiplexed). On every
+/// row-level change it invalidates [teamListProvider]. This provider emits no
+/// data; it only drives the invalidation.
+///
+/// Fallback: when [realtimePollingFallbackProvider] reports the channel
+/// unhealthy for this key, a single 30 s re-arming timer takes over. It is
+/// gated strictly on that boolean — there is no unconditional `Timer.periodic`.
+//
+// Riverpod's autoDispose-provider type names are not part of the public API,
+// so the lint stays suppressed.
 // ignore: specify_nonobvious_property_types
-final teamDetailPollingProvider =
-    Provider.autoDispose.family<void, TeamId>((ref, teamId) {
-  final timer = Timer.periodic(
-    const Duration(seconds: 4),
-    (_) => ref.invalidate(teamDetailProvider(teamId)),
+final myTeamsCdcProvider = StreamProvider.autoDispose<void>((ref) {
+  final userIdValue = ref.watch(currentUserIdProvider);
+  if (userIdValue == null) {
+    // Signed out — no subscription, no fallback poll.
+    return const Stream<void>.empty();
+  }
+  final userId = UserId(userIdValue);
+  // Channel-key derived exclusively via the kubb_domain builder.
+  final channelKey = myTeamsRealtimeChannelKey(userId);
+
+  // CDC path: one row-level change → one list invalidation.
+  final channel = ref.watch(realtimeChannelProvider);
+  final cdcSub = channel
+      .subscribe(
+        table: 'team_memberships',
+        filterColumn: 'user_id',
+        filterValue: userIdValue,
+      )
+      .listen((_) => ref.invalidate(teamListProvider));
+
+  // Fallback path: only poll while the gate says the channel is down. A
+  // self-rearming one-shot Timer (NOT Timer.periodic) gives the 30 s cadence,
+  // cleanly stopped the moment the channel recovers.
+  Timer? fallbackTimer;
+  void armFallback() {
+    fallbackTimer = Timer(_teamFallbackPollInterval, () {
+      ref.invalidate(teamListProvider);
+      armFallback();
+    });
+  }
+
+  final fallbackSub = ref.listen<AsyncValue<bool>>(
+    realtimePollingFallbackProvider(channelKey),
+    (_, next) {
+      final polling = next.maybeWhen(data: (v) => v, orElse: () => false);
+      if (polling) {
+        if (fallbackTimer == null) armFallback();
+      } else {
+        fallbackTimer?.cancel();
+        fallbackTimer = null;
+      }
+    },
+    fireImmediately: true,
   );
-  ref.onDispose(timer.cancel);
+
+  ref.onDispose(() {
+    fallbackTimer?.cancel();
+    fallbackSub.close();
+    unawaited(cdcSub.cancel());
+    unawaited(channel.close(channelKey));
+  });
+
+  return const Stream<void>.empty();
 });
 
-/// Polling sentinel for the "Meine Teams" list — invalidates
-/// [teamListProvider] every few seconds while the list screen is mounted.
+/// Team-detail CDC discovery (ADR-0029 §(e) C3-T2 / Phase P7): replaces the old
+/// 4 s `teamDetailPollingProvider`. A detail screen watches this for its team
+/// so a change another member made on the server (roster, guests, dissolve)
+/// shows up without a manual refresh.
+///
+/// The per-team channel is `team_memberships:team_id=<tid>` over the app-wide
+/// [realtimeChannelProvider] singleton. On every row-level change it
+/// invalidates [teamDetailProvider] for that team. Emits no data.
+///
+/// Fallback identical to [myTeamsCdcProvider]: gated, self-rearming 30 s timer.
+// Riverpod's family-provider type names are not part of the public API, so the
+// lint stays suppressed.
 // ignore: specify_nonobvious_property_types
-final teamListPollingProvider = Provider.autoDispose<void>((ref) {
-  final timer = Timer.periodic(
-    const Duration(seconds: 4),
-    (_) => ref.invalidate(teamListProvider),
+final teamDetailCdcProvider =
+    StreamProvider.autoDispose.family<void, TeamId>((ref, teamId) {
+  // Channel-key derived exclusively via the kubb_domain builder.
+  final channelKey = teamRealtimeChannelKey(teamId);
+
+  // CDC path: one row-level change → one detail invalidation.
+  final channel = ref.watch(realtimeChannelProvider);
+  final cdcSub = channel
+      .subscribe(
+        table: 'team_memberships',
+        filterColumn: 'team_id',
+        filterValue: teamId.value,
+      )
+      .listen((_) => ref.invalidate(teamDetailProvider(teamId)));
+
+  // Fallback path: gated, self-rearming one-shot Timer (NOT Timer.periodic).
+  Timer? fallbackTimer;
+  void armFallback() {
+    fallbackTimer = Timer(_teamFallbackPollInterval, () {
+      ref.invalidate(teamDetailProvider(teamId));
+      armFallback();
+    });
+  }
+
+  final fallbackSub = ref.listen<AsyncValue<bool>>(
+    realtimePollingFallbackProvider(channelKey),
+    (_, next) {
+      final polling = next.maybeWhen(data: (v) => v, orElse: () => false);
+      if (polling) {
+        if (fallbackTimer == null) armFallback();
+      } else {
+        fallbackTimer?.cancel();
+        fallbackTimer = null;
+      }
+    },
+    fireImmediately: true,
   );
-  ref.onDispose(timer.cancel);
+
+  ref.onDispose(() {
+    fallbackTimer?.cancel();
+    fallbackSub.close();
+    unawaited(cdcSub.cancel());
+    unawaited(channel.close(channelKey));
+  });
+
+  return const Stream<void>.empty();
 });
 
 /// One pending team invitation joined with its team header, as needed by
