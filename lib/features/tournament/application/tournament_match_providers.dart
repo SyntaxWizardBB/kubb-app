@@ -1,8 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
+
+/// Fallback polling cadence used ONLY while the realtime channel is
+/// unhealthy (≥60 s errored or kill-switch off). 30 s per ADR-0029 §(c)
+/// FC-6; the per-tournament match CDC feed is the live source.
+const Duration _matchFallbackPollInterval = Duration(seconds: 30);
 
 /// All matches for one tournament, fetched via the
 /// `tournament_list_matches` RPC. Polled at the screen level via
@@ -26,39 +32,106 @@ final tournamentMatchDetailProvider =
   return ref.read(tournamentRemoteProvider).getMatch(id);
 });
 
-/// Side-effect provider keeping the detail provider fresh. Stops
-/// invalidating once the match enters a terminal lifecycle state
-/// (`finalized` / `overridden` / `voided`). 5s cadence per M1 spec.
+/// Side-effect provider keeping the detail provider fresh. The
+/// per-tournament match CDC feed is the live source (ADR-0029 §(c) FC-6);
+/// polling is ONLY a failure-mode, gated on [realtimeFallbackProvider] for
+/// the match's tournament. A single self-rearming 30 s timer runs while the
+/// channel is unhealthy and is cancelled on recovery — no unconditional
+/// `Timer.periodic`. The terminal-state stop (`finalized` / `overridden` /
+/// `voided` → no invalidate) is preserved and checked before each refresh.
 //
 // ignore: specify_nonobvious_property_types
 final tournamentMatchPollingProvider =
     Provider.autoDispose.family<void, TournamentMatchId>((ref, id) {
-  final timer = Timer.periodic(const Duration(seconds: 5), (_) {
-    final async = ref.read(tournamentMatchDetailProvider(id));
-    final status = async.maybeWhen<TournamentMatchStatus?>(
-      data: (m) => m?.status,
-      orElse: () => null,
-    );
-    if (status == TournamentMatchStatus.finalized ||
-        status == TournamentMatchStatus.overridden ||
-        status == TournamentMatchStatus.voided) {
-      return;
-    }
-    ref.invalidate(tournamentMatchDetailProvider(id));
+  // The fallback gate is keyed on the match's tournament — derive it from
+  // the loaded detail. Until the detail resolves there is no tournament to
+  // gate on, so no fallback timer is armed.
+  final tournamentId = ref
+      .watch(tournamentMatchDetailProvider(id))
+      .maybeWhen<TournamentId?>(
+        data: (m) => m?.tournamentId,
+        orElse: () => null,
+      );
+  if (tournamentId == null) return;
+
+  Timer? fallbackTimer;
+  void armFallback() {
+    fallbackTimer = Timer(_matchFallbackPollInterval, () {
+      fallbackTimer = null;
+      final status = ref.read(tournamentMatchDetailProvider(id)).maybeWhen<
+          TournamentMatchStatus?>(
+        data: (m) => m?.status,
+        orElse: () => null,
+      );
+      // Terminal-state stop: a finalised/overridden/voided match never
+      // changes again, so skip the invalidate AND stop re-arming — the
+      // fallback timer self-terminates instead of looping a perpetual
+      // no-op while the channel stays errored.
+      if (status == TournamentMatchStatus.finalized ||
+          status == TournamentMatchStatus.overridden ||
+          status == TournamentMatchStatus.voided) {
+        return;
+      }
+      ref.invalidate(tournamentMatchDetailProvider(id));
+      armFallback();
+    });
+  }
+
+  final fallbackSub = ref.listen<AsyncValue<bool>>(
+    realtimeFallbackProvider(tournamentId),
+    (_, next) {
+      final polling = next.maybeWhen(data: (v) => v, orElse: () => false);
+      if (polling) {
+        if (fallbackTimer == null) armFallback();
+      } else {
+        fallbackTimer?.cancel();
+        fallbackTimer = null;
+      }
+    },
+    fireImmediately: true,
+  );
+
+  ref.onDispose(() {
+    fallbackTimer?.cancel();
+    fallbackSub.close();
   });
-  ref.onDispose(timer.cancel);
 });
 
-/// List-level polling for the match list screen. Cheaper than detail
-/// polling for every row; 5s cadence.
+/// List-level polling for the match list screen. The per-tournament match
+/// CDC feed is the live source (ADR-0029 §(c) FC-6); polling is ONLY a
+/// failure-mode, gated on [realtimeFallbackProvider]. A single self-rearming
+/// 30 s timer runs while the channel is unhealthy and is cancelled on
+/// recovery — no unconditional `Timer.periodic`.
 //
 // ignore: specify_nonobvious_property_types
 final tournamentMatchListPollingProvider =
     Provider.autoDispose.family<void, TournamentId>((ref, id) {
-  final timer = Timer.periodic(const Duration(seconds: 5), (_) {
-    ref.invalidate(tournamentMatchListProvider(id));
+  Timer? fallbackTimer;
+  void armFallback() {
+    fallbackTimer = Timer(_matchFallbackPollInterval, () {
+      ref.invalidate(tournamentMatchListProvider(id));
+      armFallback();
+    });
+  }
+
+  final fallbackSub = ref.listen<AsyncValue<bool>>(
+    realtimeFallbackProvider(id),
+    (_, next) {
+      final polling = next.maybeWhen(data: (v) => v, orElse: () => false);
+      if (polling) {
+        if (fallbackTimer == null) armFallback();
+      } else {
+        fallbackTimer?.cancel();
+        fallbackTimer = null;
+      }
+    },
+    fireImmediately: true,
+  );
+
+  ref.onDispose(() {
+    fallbackTimer?.cancel();
+    fallbackSub.close();
   });
-  ref.onDispose(timer.cancel);
 });
 
 /// Client-side standings computation for M1. Uses

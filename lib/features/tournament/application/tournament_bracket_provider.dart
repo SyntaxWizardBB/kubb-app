@@ -1,12 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
+/// Polling cadence used ONLY while the realtime fallback is active
+/// (channel ≥60 s errored or kill-switch off). Authenticated tournament
+/// concerns poll at 30 s per ADR-0029 §(c) FC-6 — never the old 5 s loop.
+/// CDC (`tournamentBracketRealtimeProvider`) is the live source; this
+/// cadence only takes over while the channel is unhealthy.
+const Duration _tournamentFallbackPollInterval = Duration(seconds: 30);
+
 /// KO bracket for one tournament, fetched via `TournamentRemote.getBracket`.
 /// The remote composes the bracket server-side from `tournament_matches`
-/// (Architektur §3.3 Application). Polled at the screen level via
+/// (Architektur §3.3 Application). Kept fresh at the screen level via
 /// [tournamentBracketPollingProvider] so newly advanced winners surface
 /// without manual reloads.
 //
@@ -17,16 +25,41 @@ final tournamentBracketProvider =
 });
 
 /// Side-effect provider keeping the bracket fresh while the KO screen is
-/// mounted. 5s cadence per M1 polling spec (mirrors the match-list
-/// polling in `tournament_match_providers.dart`).
+/// mounted. Bracket CDC is the live source (ADR-0029 §(c) FC-6); polling is
+/// ONLY a failure-mode. It is gated on [realtimeFallbackProvider]: a single
+/// self-rearming 30 s timer runs while the channel is unhealthy (≥60 s
+/// errored or kill-switch off) and is cancelled the moment realtime
+/// recovers. No unconditional `Timer.periodic`.
 //
 // ignore: specify_nonobvious_property_types
 final tournamentBracketPollingProvider =
     Provider.autoDispose.family<void, TournamentId>((ref, id) {
-  final timer = Timer.periodic(const Duration(seconds: 5), (_) {
-    ref.invalidate(tournamentBracketProvider(id));
+  Timer? fallbackTimer;
+  void armFallback() {
+    fallbackTimer = Timer(_tournamentFallbackPollInterval, () {
+      ref.invalidate(tournamentBracketProvider(id));
+      armFallback();
+    });
+  }
+
+  final fallbackSub = ref.listen<AsyncValue<bool>>(
+    realtimeFallbackProvider(id),
+    (_, next) {
+      final polling = next.maybeWhen(data: (v) => v, orElse: () => false);
+      if (polling) {
+        if (fallbackTimer == null) armFallback();
+      } else {
+        fallbackTimer?.cancel();
+        fallbackTimer = null;
+      }
+    },
+    fireImmediately: true,
+  );
+
+  ref.onDispose(() {
+    fallbackTimer?.cancel();
+    fallbackSub.close();
   });
-  ref.onDispose(timer.cancel);
 });
 
 /// Per-group standings snapshot for the pool phase, fetched via
@@ -44,15 +77,39 @@ final tournamentPoolStandingsProvider =
 });
 
 /// Side-effect provider keeping the pool-standings snapshot fresh while
-/// the Gruppen tab is mounted. Same 5s cadence as the bracket polling so
-/// the two phases share an invalidation tick when both are surfaced on
-/// the detail screen.
+/// the Gruppen tab is mounted. Like the bracket poller, CDC is the live
+/// source and polling is ONLY a failure-mode (ADR-0029 §(c) FC-6): a single
+/// self-rearming 30 s timer runs gated on [realtimeFallbackProvider] while
+/// the channel is unhealthy, cancelled on recovery. No unconditional
+/// `Timer.periodic`.
 //
 // ignore: specify_nonobvious_property_types
 final tournamentPoolStandingsPollingProvider =
     Provider.autoDispose.family<void, TournamentId>((ref, id) {
-  final timer = Timer.periodic(const Duration(seconds: 5), (_) {
-    ref.invalidate(tournamentPoolStandingsProvider(id));
+  Timer? fallbackTimer;
+  void armFallback() {
+    fallbackTimer = Timer(_tournamentFallbackPollInterval, () {
+      ref.invalidate(tournamentPoolStandingsProvider(id));
+      armFallback();
+    });
+  }
+
+  final fallbackSub = ref.listen<AsyncValue<bool>>(
+    realtimeFallbackProvider(id),
+    (_, next) {
+      final polling = next.maybeWhen(data: (v) => v, orElse: () => false);
+      if (polling) {
+        if (fallbackTimer == null) armFallback();
+      } else {
+        fallbackTimer?.cancel();
+        fallbackTimer = null;
+      }
+    },
+    fireImmediately: true,
+  );
+
+  ref.onDispose(() {
+    fallbackTimer?.cancel();
+    fallbackSub.close();
   });
-  ref.onDispose(timer.cancel);
 });

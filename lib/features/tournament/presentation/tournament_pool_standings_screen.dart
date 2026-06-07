@@ -4,8 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
+
+/// Fallback polling cadence — only runs while the realtime channel is
+/// unhealthy (≥60 s errored or kill-switch off). 30 s per ADR-0029 §(c)
+/// FC-6; CDC is the live source.
+const Duration _poolStandingsFallbackPollInterval = Duration(seconds: 30);
 
 /// Reads `tournament_pool_standings(p_tournament_id)` via the remote port
 /// (Architektur §3.5). The RPC returns per-group `ParticipantStats` already
@@ -18,15 +24,41 @@ final tournamentPoolStandingsProvider =
   return ref.read(tournamentRemoteProvider).getPoolStandings(id);
 });
 
-/// 5s polling cadence, mirrors `tournamentBracketPollingProvider` (M2).
+/// Keeps the pool-standings fresh while the Gruppen tab is mounted. CDC is
+/// the live source (ADR-0029 §(c) FC-6); polling is ONLY a failure-mode,
+/// gated on [realtimeFallbackProvider]. A single self-rearming 30 s timer
+/// runs while the channel is unhealthy and is cancelled on recovery — no
+/// unconditional `Timer.periodic`.
 //
 // ignore: specify_nonobvious_property_types
 final tournamentPoolStandingsPollingProvider =
     Provider.autoDispose.family<void, TournamentId>((ref, id) {
-  final timer = Timer.periodic(const Duration(seconds: 5), (_) {
-    ref.invalidate(tournamentPoolStandingsProvider(id));
+  Timer? fallbackTimer;
+  void armFallback() {
+    fallbackTimer = Timer(_poolStandingsFallbackPollInterval, () {
+      ref.invalidate(tournamentPoolStandingsProvider(id));
+      armFallback();
+    });
+  }
+
+  final fallbackSub = ref.listen<AsyncValue<bool>>(
+    realtimeFallbackProvider(id),
+    (_, next) {
+      final polling = next.maybeWhen(data: (v) => v, orElse: () => false);
+      if (polling) {
+        if (fallbackTimer == null) armFallback();
+      } else {
+        fallbackTimer?.cancel();
+        fallbackTimer = null;
+      }
+    },
+    fireImmediately: true,
+  );
+
+  ref.onDispose(() {
+    fallbackTimer?.cancel();
+    fallbackSub.close();
   });
-  ref.onDispose(timer.cancel);
 });
 
 /// Pool-Phase standings view. Top section is a cross-pool overview limited to
