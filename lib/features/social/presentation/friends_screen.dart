@@ -51,10 +51,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    // Keep the polling timer alive while the screen is mounted so the
-    // friends list flips from pending→accepted automatically once the
-    // peer has responded server-side.
-    ref.watch(friendsPollingProvider);
+    // Keep the friends CDC subscription alive while the screen is mounted so
+    // the list flips from pending→accepted automatically once the peer has
+    // responded server-side (ADR-0029 SRV-05; replaces the old 1 s poller).
+    ref.watch(friendsCdcProvider);
     final friendsAsync = ref.watch(friendsListProvider);
     final callerId = ref.watch(currentUserIdProvider);
 
