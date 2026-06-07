@@ -23,10 +23,22 @@ const Duration kRealtimeFallbackErroredGrace = Duration(seconds: 60);
 String tournamentRealtimeChannelKey(TournamentId tournamentId) =>
     dom.tournamentRealtimeChannelKey(tournamentId);
 
-/// Adapter wiring for the realtime transport. Overridden at app
-/// bootstrap with the production `SupabaseRealtimeChannel` (or a fake in
-/// tests). Stays unimplemented by default so misconfigured containers
-/// surface loudly instead of silently swallowing channel state.
+/// App-wide CDC transport singleton (ADR-0029 §(c) FC-7). Overridden
+/// exactly once at app bootstrap with the production
+/// `SupabaseRealtimeChannel(Supabase.instance.client)` (or a fake in
+/// tests) so every CDC consumer — `tournamentRemoteProvider`, the Lamport
+/// binder, future feeds — multiplexes the SAME adapter instance over the
+/// single Supabase WebSocket. A plain (non-`family`, non-`autoDispose`)
+/// `Provider<RealtimeChannel>` guarantees one shared instance per
+/// `ProviderContainer`; reading it twice returns the `identical()` adapter.
+///
+/// Stays unimplemented by default so misconfigured containers surface
+/// loudly instead of silently swallowing channel state.
+//
+// TODO(realtime-sync): the broadcast transport (anon spectator topics)
+// gets its own `broadcastChannelProvider` singleton over a
+// `SupabaseBroadcastChannel` — deliberately NOT added here; it lands with
+// FC-4 in phase P2 (see ADR-0029 §(c)).
 final Provider<RealtimeChannel> realtimeChannelProvider =
     Provider<RealtimeChannel>((ref) {
   throw UnimplementedError(

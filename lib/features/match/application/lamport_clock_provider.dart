@@ -2,9 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/core/data/dao/score_submission_outbox_dao.dart';
 import 'package:kubb_app/core/data/device_id_provider.dart';
-import 'package:kubb_app/core/data/realtime/supabase_realtime_channel.dart';
+import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart'
+    show realtimeChannelProvider;
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// DAO that persists pending score-submission rows. Exposed here so the
 /// hydration provider can query `maxCounterFor` without re-instantiating
@@ -58,9 +58,12 @@ void bindLamportClockToRealtime(
   TournamentId tournamentId,
   String matchIdValue,
 ) {
-  final adapter = SupabaseRealtimeChannel(Supabase.instance.client);
-  final channelKey =
-      'tournament_matches:tournament_id=${tournamentId.value}';
+  // FC-7 (ADR-0029 §(c)): reuse the app-wide CDC singleton instead of
+  // opening a second `SupabaseRealtimeChannel` here — that would break the
+  // single-WebSocket / refcount invariant. The channel-key is derived via
+  // the `kubb_domain` builder, never hand-built.
+  final adapter = ref.read(realtimeChannelProvider);
+  final channelKey = tournamentRealtimeChannelKey(tournamentId);
   final serverCounters = adapter
       .subscribe(
         table: 'tournament_matches',

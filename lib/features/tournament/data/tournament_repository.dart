@@ -7,10 +7,11 @@ import 'package:kubb_app/core/application/outbox_flusher_provider.dart'
     show outboxFlusherProvider, scoreSubmissionOutboxDaoProvider;
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/device_id_provider.dart';
-import 'package:kubb_app/core/data/realtime/supabase_realtime_channel.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/match/application/lamport_clock_provider.dart'
     show lamportClockProvider;
+import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart'
+    show realtimeChannelProvider;
 import 'package:kubb_app/features/tournament/data/tournament_models.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide RealtimeChannel;
@@ -144,18 +145,20 @@ class OverrideKoPairingException implements Exception {
 class TournamentRepository implements TournamentRemote {
   TournamentRepository({
     required SupabaseClient client,
-    RealtimeChannel? realtime,
+    required RealtimeChannel realtime,
     Ref? ref,
   })  : _client = client,
-        _realtime = realtime ?? SupabaseRealtimeChannel(client),
+        _realtime = realtime,
         _ref = ref;
 
   final SupabaseClient _client;
 
-  /// Realtime adapter used by the `watch*` streams. Defaulted to a
-  /// `SupabaseRealtimeChannel` over [_client] so existing callers that
-  /// build the repository without the M4 wiring keep working; the
-  /// provider will inject the shared instance once T8 lands.
+  /// Realtime adapter used by the `watch*` streams. Injected by
+  /// `tournamentRemoteProvider` from the app-wide
+  /// `realtimeChannelProvider` singleton (ADR-0029 §(c) FC-7) so every CDC
+  /// consumer multiplexes the SAME adapter over one WebSocket. No inline
+  /// `SupabaseRealtimeChannel` construction here — that would open a second
+  /// socket and break the refcount invariant.
   final RealtimeChannel _realtime;
 
   /// Riverpod ref injected by [tournamentRemoteProvider]. Used by
@@ -1156,13 +1159,15 @@ class TournamentRepository implements TournamentRemote {
 }
 
 final tournamentRemoteProvider = Provider<TournamentRemote>((ref) {
-  // Realtime adapter is composed inline: M4.1-T8 will replace this with
-  // a dedicated `realtimeChannelProvider` so the same instance is
-  // shared across repositories and survives re-reads.
+  // FC-7 (ADR-0029 §(c)): the CDC adapter is the app-wide singleton from
+  // `realtimeChannelProvider`, NOT an inline `SupabaseRealtimeChannel`.
+  // Watching the singleton means every consumer of this provider shares
+  // the `identical()` adapter and multiplexes one WebSocket; re-reads
+  // return the same instance instead of opening a second socket.
   final client = Supabase.instance.client;
   return TournamentRepository(
     client: client,
-    realtime: SupabaseRealtimeChannel(client),
+    realtime: ref.watch(realtimeChannelProvider),
     ref: ref,
   );
 });

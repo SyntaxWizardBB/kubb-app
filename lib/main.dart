@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kubb_app/app/app.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
+import 'package:kubb_app/core/data/realtime/supabase_realtime_channel.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
+import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart'
+    show realtimeChannelProvider;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 const _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
@@ -35,12 +38,21 @@ Future<void> main() async {
     anonKey: _supabaseAnonKey,
   );
 
+  // FC-7 (ADR-0029 §(c)): construct the ONE production CDC adapter here,
+  // over the already-initialised `Supabase.instance.client` (no second
+  // client), and override the app-wide `realtimeChannelProvider` singleton
+  // with it. `overrideWithValue` hands every consumer the same instance so
+  // all CDC subscriptions multiplex one WebSocket.
+  // TODO(realtime-sync): add the broadcast singleton override (FC-4/P2).
+  final realtimeAdapter = SupabaseRealtimeChannel(Supabase.instance.client);
+
   runApp(
     ProviderScope(
       overrides: [
         cachedAuthSessionDaoProvider.overrideWith(
           (ref) => ref.watch(appDatabaseProvider).cachedAuthSessionDao,
         ),
+        realtimeChannelProvider.overrideWithValue(realtimeAdapter),
       ],
       child: const KubbApp(),
     ),
