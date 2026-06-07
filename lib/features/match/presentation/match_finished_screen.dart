@@ -20,7 +20,7 @@ class MatchFinishedScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    ref.watch(matchPollingProvider(matchId));
+    ref.watch(matchCdcProvider(matchId));
     final detailAsync = ref.watch(matchDetailProvider(matchId));
 
     final formatLabel = detailAsync.value != null

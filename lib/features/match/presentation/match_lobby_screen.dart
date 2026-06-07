@@ -18,7 +18,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 /// each in-app participant. Auto-redirects to the active screen once
 /// every invite has been accepted (status flips to `active`).
 ///
-/// Polling is kept alive by reading [matchPollingProvider] for its side
+/// CDC is kept alive by reading [matchCdcProvider] for its side
 /// effect — its value isn't otherwise consumed here.
 ///
 /// Sprint B / W5-T2: aligned with the mobile-kit `MatchScreen.jsx`
@@ -48,7 +48,7 @@ class _MatchLobbyScreenState extends ConsumerState<MatchLobbyScreen> {
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    ref.watch(matchPollingProvider(matchId));
+    ref.watch(matchCdcProvider(matchId));
     final detailAsync = ref.watch(matchDetailProvider(matchId));
     final myUserId = ref.watch(currentUserIdProvider);
 

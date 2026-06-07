@@ -189,7 +189,7 @@ class _MatchResultScreenState extends ConsumerState<MatchResultScreen> {
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    ref.watch(matchPollingProvider(widget.matchId));
+    ref.watch(matchCdcProvider(widget.matchId));
     final detailAsync = ref.watch(matchDetailProvider(widget.matchId));
 
     return Scaffold(

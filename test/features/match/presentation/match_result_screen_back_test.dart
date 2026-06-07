@@ -58,7 +58,7 @@ Future<void> _pump(WidgetTester tester) async {
     ProviderScope(
       overrides: [
         matchDetailProvider('m-1').overrideWith((_) async => _detail()),
-        matchPollingProvider('m-1').overrideWith((_) {}),
+        matchCdcProvider('m-1').overrideWith((_) => const Stream<void>.empty()),
       ],
       child: MaterialApp.router(
         theme: KubbTheme.light(),

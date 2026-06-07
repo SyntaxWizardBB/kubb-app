@@ -29,8 +29,6 @@ void main() {
     'lib/features/match/presentation/match_await_others_screen.dart',
     // Offline-banner label refresh — UI, keep-as-is (b.3).
     'lib/core/ui/widgets/kubb_offline_banner.dart',
-    // P7.
-    'lib/features/match/application/match_providers.dart',
     // P3.
     'lib/features/social/application/social_providers.dart',
     // P1.

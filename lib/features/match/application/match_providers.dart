@@ -6,6 +6,8 @@ import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/match/data/match_config_draft.dart';
 import 'package:kubb_app/features/match/data/match_models.dart';
 import 'package:kubb_app/features/match/data/match_repository.dart';
+import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart'
+    show realtimeChannelProvider, realtimePollingFallbackProvider;
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:logging/logging.dart';
 
@@ -30,33 +32,95 @@ final matchDetailProvider =
   return ref.read(matchRepositoryProvider).detail(matchId);
 });
 
-/// Side-effect provider: when a screen `watch`es it, a periodic timer
-/// starts refreshing [matchDetailProvider] for the given match id every
-/// second. The timer stops invalidating once the match reaches a
-/// terminal status (`finalized` / `voided`); the provider itself is
-/// disposed automatically when nobody listens, which cancels the timer.
+/// Polling cadence used ONLY while the realtime fallback is active
+/// (channel ≥60 s errored or kill-switch on). The standalone match detail
+/// polls at 30 s per ADR-0029 §(c) FC-6 — never the old 1 s loop.
+const Duration _matchFallbackPollInterval = Duration(seconds: 30);
+
+/// Standalone-1v1 match-detail CDC (ADR-0029 §(e) C5-T1 / Phase P7):
+/// replaces the retired 1 s match-detail poller. A match screen watches this
+/// while mounted so a round-result/status change made on another device shows
+/// up without any periodic poll.
+///
+/// The per-match channel is `matches:id=<mid>` (the standalone `public.matches`
+/// table, disjoint from `tournament_matches`) over the app-wide
+/// [realtimeChannelProvider] singleton. On every row-level change it
+/// invalidates [matchDetailProvider] for that match. Emits no data; it only
+/// drives the invalidation.
+///
+/// TERMINAL-STOP: once the match reaches a terminal status
+/// (`finalized` / `voided`, read from [matchDetailProvider]) neither the CDC
+/// listener nor the fallback invalidate any further — exactly what the old
+/// poller's no-op preserved.
+///
+/// Fallback: when [realtimePollingFallbackProvider] reports the channel
+/// unhealthy for this key, a single 30 s re-arming timer takes over. It is
+/// gated strictly on that boolean — there is no unconditional `Timer.periodic`.
 //
-// Riverpod's family-provider type names are not part of the public API,
-// so we suppress the lint here and rely on the generic args for inference.
+// Riverpod's family-provider type names are not part of the public API, so the
+// lint stays suppressed.
 // ignore: specify_nonobvious_property_types
-final matchPollingProvider =
-    Provider.family<void, String>((ref, matchId) {
-  final timer = Timer.periodic(const Duration(seconds: 1), (_) {
-    final asyncDetail = ref.read(matchDetailProvider(matchId));
-    final status = asyncDetail.maybeWhen<MatchStatus?>(
-      data: (detail) => detail?.match.status,
-      orElse: () => null,
-    );
-    // Stop polling once the match reaches a terminal state. We still
-    // leave the timer running (it will be cancelled by onDispose) so
-    // the listener teardown path stays simple.
-    if (status == MatchStatus.finalized ||
-        status == MatchStatus.voided) {
-      return;
-    }
+final matchCdcProvider =
+    StreamProvider.autoDispose.family<void, String>((ref, matchId) {
+  // Channel-key derived exclusively via the kubb_domain builder.
+  final channelKey = matchRealtimeChannelKey(MatchId(matchId));
+
+  // Terminal-stop guard: suppress invalidation once the match is
+  // finalized/voided, mirroring the retired poller's no-op.
+  bool isTerminal() {
+    final status = ref.read(matchDetailProvider(matchId)).maybeWhen(
+          data: (detail) => detail?.match.status,
+          orElse: () => null,
+        );
+    return status == MatchStatus.finalized || status == MatchStatus.voided;
+  }
+
+  void invalidateDetail() {
+    if (isTerminal()) return;
     ref.invalidate(matchDetailProvider(matchId));
+  }
+
+  // CDC path: one row-level change → one detail invalidation (unless terminal).
+  final channel = ref.watch(realtimeChannelProvider);
+  final cdcSub = channel
+      .subscribe(
+        table: 'matches',
+        filterColumn: 'id',
+        filterValue: matchId,
+      )
+      .listen((_) => invalidateDetail());
+
+  // Fallback path: gated, self-rearming one-shot Timer (NOT Timer.periodic).
+  Timer? fallbackTimer;
+  void armFallback() {
+    fallbackTimer = Timer(_matchFallbackPollInterval, () {
+      invalidateDetail();
+      armFallback();
+    });
+  }
+
+  final fallbackSub = ref.listen<AsyncValue<bool>>(
+    realtimePollingFallbackProvider(channelKey),
+    (_, next) {
+      final polling = next.maybeWhen(data: (v) => v, orElse: () => false);
+      if (polling) {
+        if (fallbackTimer == null) armFallback();
+      } else {
+        fallbackTimer?.cancel();
+        fallbackTimer = null;
+      }
+    },
+    fireImmediately: true,
+  );
+
+  ref.onDispose(() {
+    fallbackTimer?.cancel();
+    fallbackSub.close();
+    unawaited(cdcSub.cancel());
+    unawaited(channel.close(channelKey));
   });
-  ref.onDispose(timer.cancel);
+
+  return const Stream<void>.empty();
 });
 
 /// Imperative action surface so screen widgets do not need to repeat

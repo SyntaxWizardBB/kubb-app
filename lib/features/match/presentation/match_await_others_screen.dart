@@ -15,8 +15,9 @@ import 'package:kubb_app/features/match/presentation/widgets/match_stage_indicat
 
 /// "Warten auf andere Spieler" — shown after the caller has submitted
 /// their own round-result proposal but the rest of the in-app
-/// participants haven't yet. Polls [matchDetailProvider] and routes
-/// onward when the round is reconciled or the match is finalised.
+/// participants haven't yet. Watches [matchCdcProvider] to keep
+/// [matchDetailProvider] fresh and routes onward when the round is
+/// reconciled or the match is finalised.
 class MatchAwaitOthersScreen extends ConsumerStatefulWidget {
   const MatchAwaitOthersScreen({required this.matchId, super.key});
 
@@ -50,12 +51,12 @@ class _MatchAwaitOthersScreenState
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    ref.watch(matchPollingProvider(widget.matchId));
+    ref.watch(matchCdcProvider(widget.matchId));
     final detailAsync = ref.watch(matchDetailProvider(widget.matchId));
 
-    // Listen only on real transitions of (status, currentRound). The
-    // polling provider invalidates every second, so an unguarded
-    // `context.go` would re-fire forever.
+    // Listen only on real transitions of (status, currentRound). CDC can
+    // re-invalidate on every row change, so an unguarded `context.go`
+    // would re-fire forever.
     ref.listen<AsyncValue<MatchDetail?>>(
       matchDetailProvider(widget.matchId),
       (prev, next) {

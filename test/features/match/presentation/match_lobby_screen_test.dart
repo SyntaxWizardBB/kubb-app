@@ -123,9 +123,9 @@ Future<void> _pump(
     ProviderScope(
       overrides: [
         matchDetailProvider('m-1').overrideWith((_) async => detail),
-        // Polling provider runs a 1s Timer that would block pumpAndSettle
-        // forever — stub it out for the widget test.
-        matchPollingProvider('m-1').overrideWith((_) {}),
+        // CDC provider would subscribe to the realtime channel singleton —
+        // stub it out with an empty stream for the widget test.
+        matchCdcProvider('m-1').overrideWith((_) => const Stream<void>.empty()),
         currentUserIdProvider.overrideWith((_) => currentUserId),
         if (actionsFactory != null)
           matchActionsProvider.overrideWith(actionsFactory),
