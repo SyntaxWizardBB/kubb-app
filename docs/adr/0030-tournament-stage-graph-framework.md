@@ -119,35 +119,128 @@ Ereignisgesteuert, generalisiert `tournament_start_ko_phase` + Consolation-Seedi
 Server bleibt Autorität (Trigger/RPC wie ADR-0017 §5). Reihenfolge-/Atomaritäts-
 Garantien wie bei den bestehenden KO-Advance-Triggern.
 
-## Validierung (das eigentliche Herz)
+## Validierung & Spielbarkeits-Gate (das eigentliche Herz)
 
-Ein Graph ist nur **publizierbar/startbar**, wenn alle Invarianten halten:
+Die Konfiguration muss **vor Publikation/Start lückenlos geprüft** werden — ein
+freier Editor erlaubt sonst unspielbare Turniere (zu wenige/zu viele Spieler in
+einer Stufe, verwaiste Teilnehmer, nie endende Graphen). Die Validierung ist
+eine **reine Domain-Funktion** (pure Dart, deterministisch, voll testbar) und
+zugleich ein **harter Server-Gate** in den Publish-/Start-RPCs — Client und
+Server prüfen denselben Code-Pfad (analog der bestehenden Setup-Validierung).
+
+### Schweregrade
+
+- **ERROR** → blockiert Publish/Start. Der Graph ist nicht spielbar.
+- **WARNING** → erlaubt, aber sichtbarer Hinweis (z.B. Tagesplanbarkeit,
+  ungewöhnlich viele Runden). Veranstalter bestätigt bewusst.
+
+Jeder Befund trägt einen stabilen Code + die betroffene Node/Edge-Id, damit das
+UI direkt an der richtigen Stelle markieren kann (analog qualifier-count.md U3–U9).
+
+### Graph-Invarianten (ERROR)
 
 - **V1 Azyklisch**: kein Zyklus (sonst läuft der Runner nie terminal).
 - **V2 Mengen-Erhalt**: für jede Stufe gilt Σ(eingehende Selektoren) =
   Eingangs-Kapazität; kein Teilnehmer wird doppelt geroutet, keiner geht verloren
-  (`non_qualifiers` fängt den Rest).
+  (`non_qualifiers` fängt den Rest). Selektoren dürfen sich nicht überlappen.
 - **V3 Vollständige Platzierung**: jeder Teilnehmer erreicht genau ein
-  Terminal-Mapping → lückenlose, kollisionsfreie globale Rangliste.
-- **V4 Spielbarkeit**: jede Stufe bekommt eine für ihren Typ gültige
-  Teilnehmerzahl (z.B. Elim ≥2; Pools: Gruppen teilbar; Swiss ≥ Rundenzahl+1).
+  Terminal-Mapping → lückenlose, kollisionsfreie globale Rangliste (1..N).
+- **V4 Erreichbarkeit**: jede Stufe ist von einer Quell-Stufe (oder der
+  Teilnehmer-Liste) aus erreichbar; keine isolierten Knoten, keine toten Kanten.
 - **V5 Seeding auflösbar**: `from_prev_ranking` nur, wenn eine eingehende Kante
-  eine geordnete Quelle liefert.
-- **V6 Kapazität/Planbarkeit** (Warnung, nicht Block): geschätzte Match-/Feld-
-  Last; Hinweis auf Tagesplanbarkeit (analog qualifier-count.md U3/U7).
+  eine geordnete Quelle liefert; `manual` nur mit hinterlegter Seed-Liste.
+
+### Spieler-Anzahl-Constraints pro Stufen-Typ (ERROR)
+
+Jeder Node-Typ deklariert seine **gültige Eingangs-Kapazität**; die Validierung
+propagiert die Teilnehmerzahlen entlang der Kanten (Kapazitäts-Propagation:
+Output-Grösse jeder Stufe = Σ ihrer Selektoren) und prüft sie gegen:
+
+| Node-Typ | Min | Max / Teilbarkeit |
+|---|---|---|
+| `single_elim` / `double_elim` | 2 | — (Nicht-2er-Potenz via BYE, ADR-0017 §3) |
+| `pool` / `round_robin` | `groupCount × 2` | Teilnehmer durch `groupCount` aufteilbar; `qualifiersPerGroup < Gruppengrösse` |
+| `swiss` | `rounds + 1` | gerade Zahl bevorzugt (sonst BYE-Logik) |
+| `consolation` | 2 | speisende Quelle muss ≥ Min liefern |
+| `shootout_quali` | 2 | `slots < pool_size` (P6 §F) |
+
+Zusätzlich: jede Stufe muss **mindestens 2** Teilnehmer bekommen (sonst kein
+Match); `qualifierCount`/Selektor-Grenzen `2 ≤ K ≤ Quellgrösse`.
+
+### Kapazität / Planbarkeit (WARNING)
+
+- **V6 Match-/Feld-Last**: geschätzte Gesamt-Matchzahl + parallele Stufen vs.
+  verfügbare Felder (`tournament_assign_pitches`); Hinweis auf Tagesplanbarkeit.
+- **V7 Runden-Tiefe**: ungewöhnlich viele Stufen/Runden → Hinweis.
+
+### Gate-Punkte
+
+- **Im Editor**: Live-Validierung bei jeder Änderung; Publish-Button bleibt
+  gesperrt, solange ein ERROR offen ist.
+- **Server**: `tournament_publish` / `tournament_start_*` rufen dieselbe
+  Validierung als finale, nicht umgehbare Schranke auf.
 
 Validierung ist **gemeinsame Engine** für geführtes UI *und* freien Editor.
+
+## Templates / wiederverwendbare Konfigurationen
+
+Ein einmal gebauter Turnier-Graph (inkl. „lustiger" Mehrstufen-Formate, aller
+Rulesets, Seeding-Quellen und Routing-Kanten) muss **als Template gespeichert
+und wiederverwendet** werden können — sonst muss jeder Veranstalter sein Format
+jedes Mal neu zusammenstecken.
+
+### Modell
+
+```
+StageGraphTemplate {
+  id, name, description, owner_user_id, club_id?,
+  visibility:  private | club | public,
+  graph:       { nodes[], edges[], terminal_mapping }   // teilnehmer-AGNOSTISCH
+  created_at, updated_at
+}
+```
+
+- **Teilnehmer-agnostisch**: ein Template beschreibt **Struktur + Regeln**, nicht
+  konkrete Spieler/Seeds. Beim Anwenden wird es auf die aktuelle Teilnehmerliste
+  instanziiert (Seeding gemäss Node-Config aufgelöst).
+- **Parametrisierbar**: Felder wie `groupCount`, `qualifierCount`,
+  `rounds`, `slots` können beim Anwenden überschrieben werden (das Template hält
+  Defaults). So passt „Gruppen → KO + 2 Neben-Cups" auf 24 *und* 48 Teilnehmer.
+
+### Operationen
+
+- **Speichern**: aus dem aktuellen Setup („Als Vorlage speichern") → Template.
+- **Anwenden**: Template wählen → instanziiert den Graphen ins neue Turnier-Setup,
+  danach frei editierbar (Template bleibt unverändert — Kopie-Semantik).
+- **Validierung beim Anwenden**: dieselbe Validierungs-Engine läuft gegen die
+  konkrete Teilnehmerzahl (ein Template kann strukturell valide, aber für *diese*
+  Feldgrösse unspielbar sein → klare Fehlermeldung, z.B. „braucht ≥ 16 Teams").
+- **Mitgelieferte Presets**: die kanonischen Formate (Single-Elim, Pool→KO,
+  +Consolation, Schoch→KO, sowie eine „KubbMAIster-Style"-Vorlage Gruppen→KO+2
+  Cups) als **read-only System-Templates** als Startpunkt.
+
+### Persistenz
+
+Eigene Tabelle `tournament_stage_graph_templates` (RLS: `private` nur Owner,
+`club` für Club-Mitglieder, `public` für alle — analog der bestehenden
+Sichtbarkeits-Muster). Der `graph`-Body als validiertes JSONB. Ein konkretes
+Turnier referenziert beim Erstellen optional `source_template_id` (nur als
+Herkunfts-Hinweis; keine Live-Bindung — Kopie-Semantik).
 
 ## Bau-Lagen (auch innerhalb „Stufe 3")
 
 1. **Daten-Modell + Runner**: Persistenz (Stage-/Edge-Tabellen), Node-Typen aus
    bestehenden Algorithmen, Runner-Materialisierung. Bestehende Kombis als
    Preset-Graphen abbildbar.
-2. **Validierung** (V1–V6) als reine Domain-Funktion (pure Dart) + Server-Gate.
-3. **Visueller DAG-Editor** im Setup-Wizard (zuletzt). Davor: geführtes
+2. **Validierung & Spielbarkeits-Gate** (V1–V7 + Spieler-Anzahl-Constraints) als
+   reine Domain-Funktion (pure Dart) + nicht umgehbarer Server-Gate in
+   Publish/Start. **Vor** dem Editor, weil jede Komponier-UI darauf aufsetzt.
+3. **Templates**: Speichern/Anwenden teilnehmer-agnostischer Graphen +
+   System-Presets. Baut auf Modell (1) + Validierung (2) auf.
+4. **Visueller DAG-Editor** im Setup-Wizard (zuletzt). Davor: geführtes
    Komponieren über dieselbe Engine.
 
-Lagen 1–2 sind identisch zur „geführten" Variante; der freie Editor ist Lage 3.
+Lagen 1–3 sind identisch zur „geführten" Variante; der freie Editor ist Lage 4.
 
 ## Kompatibilität / Migration
 
