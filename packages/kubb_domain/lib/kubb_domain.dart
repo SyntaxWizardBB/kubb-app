@@ -12,10 +12,16 @@ export 'src/achievements/badge_session_summary.dart';
 export 'src/achievements/badge_trigger.dart';
 export 'src/match/match_event.dart';
 export 'src/match/match_state.dart';
+export 'src/ports/broadcast_channel.dart';
 export 'src/ports/match_event_repository.dart';
 export 'src/ports/realtime_channel.dart';
 export 'src/ports/tournament_remote.dart';
 export 'src/profile/profile_visibility.dart';
+// `publicTournamentRealtimeTopic` is the deprecated alias kept inside
+// channel_keys.dart only so the lib/ delegator can reference it; it stays out
+// of the public barrel to avoid colliding with the same-named lib/ delegator
+// at call-sites that import both. P0b removes the alias entirely.
+export 'src/realtime/channel_keys.dart' hide publicTournamentRealtimeTopic;
 export 'src/rules/opening_rule.dart';
 export 'src/rules/rule_set.dart';
 export 'src/season/season_standings.dart';
@@ -40,6 +46,7 @@ export 'src/tournament/standings.dart';
 export 'src/tournament/tiebreaker.dart';
 export 'src/tournament/tournament_points_award.dart';
 export 'src/tournament/tournament_setup.dart';
+export 'src/values/broadcast_message.dart';
 export 'src/values/ids.dart';
 export 'src/values/lamport_clock.dart';
 export 'src/values/league_membership.dart';

@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+// Der kanonische Topic-Builder (`tournamentBroadcastTopic`) lebt jetzt in
+// kubb_domain; dieses Modul exponiert den alten Namen weiter via duennem
+// Delegator (siehe publicTournamentRealtimeTopic).
 import 'package:kubb_domain/kubb_domain.dart';
 // `supabase_flutter` exportiert ein eigenes `RealtimeChannel` aus
 // `realtime_client`, das mit dem domain-eigenen Port-Typ kollidiert.
@@ -171,8 +174,12 @@ void assertPayloadColumnsWhitelisted(Map<String, dynamic> payload) {
 /// Topic-Name pro Turnier-ID. Spiegel der SQL-Funktion
 /// `public.public_tournament_realtime_topic(uuid)` — Drift wuerde von
 /// den Adapter-Tests sofort gemeldet.
+///
+/// Thin delegator: the canonical builder now lives in `kubb_domain`
+/// (`tournamentBroadcastTopic`). Kept here under the old name so existing
+/// call-sites keep compiling; P0b migrates them to the new name.
 String publicTournamentRealtimeTopic(TournamentId id) =>
-    'public_tournament_events:${id.value}';
+    tournamentBroadcastTopic(id);
 
 /// Adapter fuer das public Realtime-Topic. Die abstrakte Klasse erlaubt
 /// es Tests, einen Fake einzusetzen, ohne den `SupabaseClient` zu

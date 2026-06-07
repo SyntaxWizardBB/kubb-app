@@ -1,7 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kubb_domain/kubb_domain.dart';
+// The canonical key builder now lives in kubb_domain. Hide it from the
+// barrel import and re-expose it via a thin delegator below so existing
+// call-sites keep resolving against this library.
+import 'package:kubb_domain/kubb_domain.dart' hide tournamentRealtimeChannelKey;
+import 'package:kubb_domain/kubb_domain.dart' as dom
+    show tournamentRealtimeChannelKey;
 
 /// How long the channel must remain `errored` before the fallback flips
 /// to "polling active". OD-M4-02 Empfehlung A — short blips during a
@@ -9,11 +14,14 @@ import 'package:kubb_domain/kubb_domain.dart';
 const Duration kRealtimeFallbackErroredGrace = Duration(seconds: 60);
 
 /// Channel-key convention used by [RealtimeChannel] adapters for the
-/// per-tournament match feed (OD-M4-01). Must match the key derivation
-/// inside `SupabaseRealtimeChannel` so the `stateStream` lookup hits the
-/// same entry as the active subscription.
+/// per-tournament match feed (OD-M4-01).
+///
+/// Thin re-export alias: the canonical builder now lives in
+/// `kubb_domain` (`src/realtime/channel_keys.dart`) so the key derivation
+/// stays single-sourced with `SupabaseRealtimeChannel._keyFor`. Kept here so
+/// existing call-sites keep compiling; no own string logic remains.
 String tournamentRealtimeChannelKey(TournamentId tournamentId) =>
-    'tournament_matches:tournament_id=${tournamentId.value}';
+    dom.tournamentRealtimeChannelKey(tournamentId);
 
 /// Adapter wiring for the realtime transport. Overridden at app
 /// bootstrap with the production `SupabaseRealtimeChannel` (or a fake in
