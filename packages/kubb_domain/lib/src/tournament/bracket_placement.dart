@@ -407,3 +407,307 @@ import 'package:kubb_domain/src/tournament/bracket.dart';
 
   return (tiers: tiers, koRankCount: koRankCount);
 }
+
+/// Builds the ordered tier list for a COMPLETED consolation (Trostturnier,
+/// Model B) tournament (ADR-0028), ready to feed `computeFinalRanking`.
+///
+/// Reuses [KoMatchRow] and [BracketPhase] from `bracket.dart`. The result has
+/// the SAME shape as [singleElimFinalTiers] / [doubleElimFinalTiers] (a
+/// best-first `tiers` list plus `koRankCount`) and flows directly into
+/// `computeFinalRanking(tiers, koRankCount, ...)`. The rank/point math stays in
+/// `final_ranking.dart` — this function only builds the tier list.
+///
+/// A consolation tournament is structurally TWO single-elim trees (ADR-0028
+/// §6): the MAIN bracket (`winners` + `finals` + `thirdPlace`) decides ranks
+/// 1-4 with a mandatory third-place playoff, and the CONSOLATION bracket
+/// (`consolation` + `consolationThirdPlace`) re-ranks all earlier main-bracket
+/// losers from rank 5 downward.
+///
+/// ## Tier order (best first)
+/// 1. Main bracket — ranks 1-4 ONLY (ADR-0028 §1.1 / §6):
+///    * `finals` winner -> tier (rank 1), `finals` loser -> tier (rank 2);
+///    * `thirdPlace` winner -> tier (rank 3), `thirdPlace` loser -> tier
+///      (rank 4) — two separate singleton tiers.
+///    The main-bracket `winners` phase (quarterfinal and earlier) produces NO
+///    tiers here: the semifinal losers are already covered by `thirdPlace`, and
+///    every earlier `winners` loser is re-ranked in the consolation tree. There
+///    is NO "shared rank 3" fallback like [singleElimFinalTiers] without a
+///    `thirdPlace`, because the consolation main bracket ALWAYS carries a
+///    `thirdPlace` (ADR-0028 §1.1) — its absence is a validation error (B4).
+/// 2. Consolation bracket — ranks 5+ via the SAME single-elim mechanic as
+///    [singleElimFinalTiers], shifted down by four ranks and applied to the
+///    `consolation` / `consolationThirdPlace` phases:
+///    * the HIGHEST `consolation` `roundNumber` is the consolation FINAL ->
+///      winner tier (rank 5), loser tier (rank 6);
+///    * rank 7/8: if a `consolationThirdPlace` row exists, its winner -> tier
+///      (rank 7), its loser -> tier (rank 8); otherwise the losers of the
+///      SECOND-highest `consolation` round (the consolation semifinal) share
+///      ONE tier (shared rank 7) — exactly mirroring [singleElimFinalTiers]
+///      step 2;
+///    * deeper `consolation` rounds (`roundNumber < maxConsolationRound`),
+///      descending by `roundNumber`: the losers of each round form one tier
+///      each (ranks 9+). The highest `consolation` round (the final) is covered
+///      above and is NOT emitted again.
+/// 3. The preliminary tail: entries from [prelimRanking] that appear in NO
+///    `koMatch` as a real (non-null) participant, in `prelimRanking` order,
+///    each as its OWN tier, appended AFTER all KO tiers.
+///
+/// ## koRankCount
+/// `koRankCount` = number of distinct REAL participants across ALL matches
+/// (main `winners`/`finals`/`thirdPlace` AND consolation
+/// `consolation`/`consolationThirdPlace`), counted from all non-null
+/// `participantA`/`participantB` (BYE / null slots do not count). `N` (the whole
+/// field) = `prelimRanking.length`. The documented (NOT enforced) invariant is
+/// `4 <= koRankCount <= N`.
+///
+/// ## Loser determination (single-elim rules)
+/// Identical to [singleElimFinalTiers]: a played match yields a loser exactly
+/// when `isBye == false` AND both `participantA != null && participantB != null`
+/// AND `winnerParticipantId` is one of the two; the loser is the real
+/// participant that is NOT `winnerParticipantId`. No loser is produced for a
+/// BYE / walkover, a match without two real participants, or a null winner.
+/// Phase assignment runs SOLELY via `phase` — never via `roundNumber`. This
+/// disambiguates `thirdPlace` (main) from `consolationThirdPlace` (consolation)
+/// even when `consRounds == mainRounds` and the round numbers collide
+/// (ADR-0028 §7.2).
+///
+/// ## Determinism
+/// Within a multi-element tier (the shared consolation-semifinal tier and the
+/// per-round consolation tiers) the ids are sorted by their position in
+/// [prelimRanking] (best first). Identical input yields identical output,
+/// regardless of the order of [koMatches].
+///
+/// ## Validation
+/// Throws [ArgumentError] when [koMatches] is empty, when [prelimRanking]
+/// contains duplicates, when a real KO participant is not in [prelimRanking],
+/// when no `finals` match is present, when the `finals` match is incomplete,
+/// when no `thirdPlace` match is present or it is incomplete, when no
+/// `consolation` row is present, or when the consolation final (highest
+/// `consolation` round) is incomplete (and, when present, the
+/// `consolationThirdPlace` is incomplete). Validation runs fully before any tier
+/// is built (no partial result on error).
+({List<List<String>> tiers, int koRankCount}) consolationFinalTiers({
+  required List<KoMatchRow> koMatches,
+  required List<String> prelimRanking,
+}) {
+  // --- Validation: empty input. ---
+  if (koMatches.isEmpty) {
+    throw ArgumentError.value(koMatches, 'koMatches', 'must not be empty');
+  }
+
+  // --- Validation: prelimRanking duplicates + index map. ---
+  final prelimSeen = <String>{};
+  final prelimIndex = <String, int>{};
+  for (var i = 0; i < prelimRanking.length; i++) {
+    final id = prelimRanking[i];
+    if (!prelimSeen.add(id)) {
+      throw ArgumentError.value(
+        id,
+        'prelimRanking',
+        'contains duplicate participantId',
+      );
+    }
+    prelimIndex[id] = i;
+  }
+
+  // Collect distinct real KO participants across ALL matches (main+consolation).
+  final koParticipants = <String>{};
+  for (final m in koMatches) {
+    if (m.participantA != null) koParticipants.add(m.participantA!);
+    if (m.participantB != null) koParticipants.add(m.participantB!);
+  }
+  for (final id in koParticipants) {
+    if (!prelimSeen.contains(id)) {
+      throw ArgumentError.value(
+        id,
+        'koMatches',
+        'KO participant is missing from prelimRanking',
+      );
+    }
+  }
+  final koRankCount = koParticipants.length;
+
+  // --- Loser determination helper (mirrors the single-elim rule). ---
+  String? loserOf(KoMatchRow m) {
+    if (m.isBye) return null;
+    final a = m.participantA;
+    final b = m.participantB;
+    final w = m.winnerParticipantId;
+    if (a == null || b == null || w == null) return null;
+    if (w == a) return b;
+    if (w == b) return a;
+    return null; // winner is neither participant -> not a valid result
+  }
+
+  // Sort a set of ids by their preliminary rank (best first), deterministic.
+  // Every loser fed here is a real KO participant validated to exist in
+  // `prelimRanking` above, so `prelimIndex[...]` is always present.
+  List<String> sortedByPrelim(Iterable<String> ids) {
+    final list = ids.toList()
+      ..sort((x, y) => prelimIndex[x]!.compareTo(prelimIndex[y]!));
+    return list;
+  }
+
+  // --- Validation: main finals must exist and be complete. ---
+  final finalsMatch = koMatches.firstWhere(
+    (m) => m.phase == BracketPhase.finals,
+    orElse: () => throw ArgumentError.value(
+      koMatches,
+      'koMatches',
+      'no finals match found (expected a completed consolation main bracket)',
+    ),
+  );
+  final finalsWinner = finalsMatch.winnerParticipantId;
+  final finalsLoser = loserOf(finalsMatch);
+  if (finalsWinner == null || finalsLoser == null) {
+    throw ArgumentError.value(
+      finalsMatch,
+      'koMatches',
+      'finals match is not completed',
+    );
+  }
+
+  // --- Validation: main thirdPlace must exist (ADR-0028 §1.1) and complete. ---
+  final thirdPlaceRows =
+      koMatches.where((m) => m.phase == BracketPhase.thirdPlace).toList();
+  if (thirdPlaceRows.isEmpty) {
+    throw ArgumentError.value(
+      koMatches,
+      'koMatches',
+      'no thirdPlace match found (consolation main bracket always has one)',
+    );
+  }
+  final thirdPlaceMatch = thirdPlaceRows.first;
+  final tpWinner = thirdPlaceMatch.winnerParticipantId;
+  final tpLoser = loserOf(thirdPlaceMatch);
+  if (tpWinner == null || tpLoser == null) {
+    throw ArgumentError.value(
+      thirdPlaceMatch,
+      'koMatches',
+      'third-place match is not completed',
+    );
+  }
+
+  // --- Validation: consolation rows must exist. ---
+  final consolationMatches =
+      koMatches.where((m) => m.phase == BracketPhase.consolation).toList();
+  if (consolationMatches.isEmpty) {
+    throw ArgumentError.value(
+      koMatches,
+      'koMatches',
+      'no consolation rows found (a consolation tournament needs a '
+          'consolation bracket)',
+    );
+  }
+  final consolationRounds =
+      consolationMatches.map((m) => m.roundNumber).toSet();
+  final maxConsolationRound =
+      consolationRounds.reduce((a, b) => a > b ? a : b);
+
+  // Consolation losers for one consolation round (sorted by prelim), the
+  // direct analogue of `losersForRound` in [singleElimFinalTiers].
+  List<String> consolationLosersForRound(int round) {
+    final losers = <String>[];
+    for (final m in consolationMatches) {
+      if (m.roundNumber != round) continue;
+      final l = loserOf(m);
+      if (l != null) losers.add(l);
+    }
+    return sortedByPrelim(losers);
+  }
+
+  // The consolation final = the highest consolation round; it must yield a
+  // single match with a real winner and loser.
+  final consolationFinalRows = consolationMatches
+      .where((m) => m.roundNumber == maxConsolationRound)
+      .toList();
+  final consolationFinal = consolationFinalRows.first;
+  final consFinalWinner = consolationFinal.winnerParticipantId;
+  final consFinalLoser = loserOf(consolationFinal);
+  if (consFinalWinner == null || consFinalLoser == null) {
+    throw ArgumentError.value(
+      consolationFinal,
+      'koMatches',
+      'consolation final (highest consolation round) is not completed',
+    );
+  }
+
+  // --- Validation: consolation third-place, when present, must complete. ---
+  final consThirdRows = koMatches
+      .where((m) => m.phase == BracketPhase.consolationThirdPlace)
+      .toList();
+  final hasConsThird = consThirdRows.isNotEmpty;
+  String? consThirdWinner;
+  String? consThirdLoser;
+  if (hasConsThird) {
+    final consThird = consThirdRows.first;
+    consThirdWinner = consThird.winnerParticipantId;
+    consThirdLoser = loserOf(consThird);
+    if (consThirdWinner == null || consThirdLoser == null) {
+      throw ArgumentError.value(
+        consThird,
+        'koMatches',
+        'consolation third-place match is not completed',
+      );
+    }
+  }
+
+  // --- Tier building (all validation has passed). ---
+  // Step 1: main bracket -> ranks 1-4 (finals winner/loser, thirdPlace
+  // winner/loser). The `winners` phase is intentionally never inspected.
+  // Step 2: consolation final -> ranks 5/6.
+  final tiers = <List<String>>[
+    <String>[finalsWinner],
+    <String>[finalsLoser],
+    <String>[tpWinner],
+    <String>[tpLoser],
+    <String>[consFinalWinner],
+    <String>[consFinalLoser],
+  ];
+
+  // Step 2b: ranks 7/8 — mirrors [singleElimFinalTiers] step 2 on the
+  // consolation phases. With a consolation third-place playoff: its winner ->
+  // rank 7, loser -> rank 8. Without it: the consolation-semifinal losers (the
+  // second-highest consolation round) share one tier (shared rank 7).
+  if (hasConsThird) {
+    tiers
+      ..add(<String>[consThirdWinner!])
+      ..add(<String>[consThirdLoser!]);
+  } else {
+    final lowerRounds = consolationRounds.where((r) => r < maxConsolationRound);
+    if (lowerRounds.isNotEmpty) {
+      final semiRound = lowerRounds.reduce((a, b) => a > b ? a : b);
+      final semiLosers = consolationLosersForRound(semiRound);
+      if (semiLosers.isNotEmpty) tiers.add(semiLosers);
+    }
+  }
+
+  // Step 3: deeper consolation rounds, descending, below the consolation final.
+  // When a consolation third-place playoff exists the consolation semifinal
+  // (second-highest round) is ranked via it (step 2b), so it must NOT also be
+  // emitted as a round tier here — drop it. Without the playoff it was already
+  // consumed by step 2b. Either way the second-highest round is excluded.
+  final secondHighest =
+      consolationRounds.where((r) => r < maxConsolationRound).isEmpty
+          ? null
+          : consolationRounds
+              .where((r) => r < maxConsolationRound)
+              .reduce((a, b) => a > b ? a : b);
+  final deeperRounds = consolationRounds
+      .where((r) => r < maxConsolationRound && r != secondHighest)
+      .toList()
+    ..sort((a, b) => b.compareTo(a)); // descending
+  for (final round in deeperRounds) {
+    final losers = consolationLosersForRound(round);
+    if (losers.isNotEmpty) tiers.add(losers);
+  }
+
+  // Step 4: preliminary tail (non-qualified), one tier each, in order.
+  for (final id in prelimRanking) {
+    if (!koParticipants.contains(id)) {
+      tiers.add(<String>[id]);
+    }
+  }
+
+  return (tiers: tiers, koRankCount: koRankCount);
+}
