@@ -168,6 +168,63 @@ void main() {
     });
   });
 
+  test(
+    '(e) resumed -> re-sign BEFORE resume-refresher BEFORE reconnect; '
+    'reconnectKeys is exactly the prior snapshot',
+    () {
+      fakeAsync((async) {
+        final s = setup();
+
+        // Pause to capture a snapshot, then resume.
+        s.lifecycle.paused();
+        async
+          ..elapse(const Duration(seconds: 5))
+          ..flushMicrotasks();
+        s.recorder.clear();
+
+        s.lifecycle.resumed();
+        async.flushMicrotasks();
+
+        final reSignIdx = s.recorder.indexOf('re-sign');
+        final resumeRefresherIdx = s.recorder.indexOf('resume-refresher');
+        final firstReconnectIdx =
+            s.recorder.indexWhere((e) => e.startsWith('reconnect:'));
+
+        expect(reSignIdx, isNonNegative);
+        expect(resumeRefresherIdx, isNonNegative);
+        expect(firstReconnectIdx, isNonNegative);
+        // re-sign FIRST, then refresher resume, then reconnect — no Auth-Storm.
+        expect(reSignIdx, lessThan(resumeRefresherIdx));
+        expect(resumeRefresherIdx, lessThan(firstReconnectIdx));
+
+        // Only the keys live at pause came back — no extras.
+        expect(s.adapter.entries.keys.toSet(), equals({k1, k2}));
+        expect(s.controller.lastSnapshot.toSet(), equals({k1, k2}));
+
+        s.controller.dispose();
+      });
+    },
+  );
+
+  test('(f) hidden is treated like paused (5 s debounce -> teardown)', () {
+    fakeAsync((async) {
+      final s = setup();
+
+      s.lifecycle.drive(AppLifecycleState.hidden);
+      async.elapse(const Duration(seconds: 4, milliseconds: 999));
+      expect(s.adapter.entries.length, equals(2),
+          reason: 'hidden must honour the 5 s debounce like paused');
+
+      async
+        ..elapse(const Duration(milliseconds: 1))
+        ..flushMicrotasks();
+      expect(s.adapter.entries, isEmpty);
+      expect(async.pendingTimers, isEmpty);
+
+      s.controller.dispose();
+    });
+  });
+
   test('onLifecycleState routes paused + inactive', () {
     fakeAsync((async) {
       final s = setup(initialKeys: const [k1]);

@@ -3,16 +3,22 @@ import 'dart:async';
 import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/data/realtime/realtime_channel_lifecycle.dart';
+import 'package:kubb_app/features/auth/application/auth_controller.dart'
+    show forceReSignWireSessionProvider;
+import 'package:kubb_app/features/auth/application/keypair_session_refresher.dart'
+    show keypairSessionRefresherProvider;
+import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart'
+    show realtimeChannelProvider;
 
 /// Orchestrates the foreground/background Realtime lifecycle against the
 /// app-wide CDC adapter singleton (ADR-0029 §(c) TR-P0-3 / FC-8).
 ///
-/// SKELETON ONLY — the class, its seams and the [realtimeLifecycleControllerProvider]
-/// exist here so the resume/pause sequence can be unit-tested in isolation
-/// (Test class D). The controller is deliberately NOT live-wired into
-/// `lib/app/app.dart`; that happens with FC-9 in phase P5. Until then the
-/// existing `AppLifecycleListener` / `_reSignOnResume` in `KubbApp` stays
-/// the production path.
+/// LIVE-WIRED (FC-9 / phase P5): `KubbApp` watches
+/// [realtimeLifecycleControllerProvider] and routes EVERY [AppLifecycleState]
+/// into [onLifecycleState]; the controller owns the single production
+/// lifecycle path (the old `AppLifecycleListener` / `_reSignOnResume` is gone).
+/// The provider binds the real `realtimeChannelProvider` singleton (cast to
+/// its [RealtimeChannelLifecycle] mixin) plus the re-sign and refresher seams.
 ///
 /// Sequence (ADR-0029 §"battery lifecycle"):
 /// - `resumed`  → re-sign FIRST (seam), THEN [RealtimeChannelLifecycle.reconnectKeys]
@@ -50,12 +56,12 @@ class RealtimeLifecycleController {
 
   /// Re-sign seam (TR-P0-3). On `resumed` this runs BEFORE any reconnect so
   /// the keypair wire session is fresh before a subscription re-authorises.
-  /// Left null in the skeleton; FC-9 wires `forceReSignWireSessionProvider`.
+  /// Wired by FC-9 to `forceReSignWireSessionProvider`.
   final Future<void> Function()? _reSign;
 
   /// Refresher-pause seam (TR-P0-3). On `paused`/`detached` the keypair
-  /// session refresher should stop its timer; on `resumed` it resumes.
-  /// Defined as a seam only here — NOT live-wired until FC-9/P5.
+  /// session refresher stops its timer; on `resumed` it resumes after re-sign.
+  /// Wired by FC-9 to `KeypairSessionRefresher.pause`/`resume`.
   final void Function()? _pauseRefresher;
   final void Function()? _resumeRefresher;
 
@@ -137,18 +143,45 @@ class RealtimeLifecycleController {
   }
 }
 
-/// Provider for the lifecycle controller (TR-P0-3). Bound to the app-wide
-/// CDC adapter singleton via `realtimeChannelProvider`.
+/// Provider for the lifecycle controller (TR-P0-3 / FC-8 / FC-9). Bound to
+/// the app-wide CDC adapter singleton via `realtimeChannelProvider`.
 ///
-/// SKELETON: this provider is intentionally NOT watched anywhere in the
-/// widget tree — FC-9/P5 activates it from `KubbApp`. The re-sign and
-/// refresher seams stay null until then.
+/// LIVE: `KubbApp` watches this provider and feeds every [AppLifecycleState]
+/// into [RealtimeLifecycleController.onLifecycleState]. The adapter is the
+/// `realtimeChannelProvider` singleton (`SupabaseRealtimeChannel`), which
+/// mixes in [RealtimeChannelLifecycle]; we cast to that mixin at the wiring
+/// point so the snapshot/disconnect/reconnect mechanics run on the ONE shared
+/// adapter (FC-10(c): no second instantiation). When the wired adapter does
+/// not expose the mixin (a bare test fake), the controller is omitted so the
+/// app stays inert rather than crashing — KubbApp treats null as "no lifecycle
+/// management".
+///
+/// Seams:
+/// - re-sign  → `forceReSignWireSessionProvider` (runs FIRST on resume).
+/// - refresher pause/resume → `KeypairSessionRefresher.pause`/`resume`.
 final Provider<RealtimeLifecycleController?> realtimeLifecycleControllerProvider =
     Provider<RealtimeLifecycleController?>((ref) {
-  // The adapter is the `realtimeChannelProvider` singleton, which is a
-  // `RealtimeChannelLifecycle` in production (`SupabaseRealtimeChannel`).
-  // Returning null when the override does not expose the mixin keeps the
-  // skeleton inert in containers that have not wired the production adapter.
-  // FC-9 will read the real adapter + seams here.
-  return null;
+  final adapter = ref.watch(realtimeChannelProvider);
+  // The production singleton (`SupabaseRealtimeChannel`) mixes in
+  // `RealtimeChannelLifecycle`; the `RealtimeChannel` port itself does not
+  // expose those hooks, so reach the mixin via a checked cast here (FC-8/
+  // FC-10(c): one shared instance, no second instantiation).
+  if (adapter is! RealtimeChannelLifecycle) {
+    // The wired adapter does not expose the lifecycle mixin (e.g. a minimal
+    // test fake). Stay inert — no lifecycle teardown/restore happens.
+    return null;
+  }
+  // Reach the mixin on the ONE shared singleton via an explicit cast (FC-8/
+  // FC-10(c): no second instantiation). The guard above already proved the
+  // type; the cast keeps the strongly-typed adapter argument unambiguous.
+  final lifecycleAdapter = adapter as RealtimeChannelLifecycle;
+  final refresher = ref.read(keypairSessionRefresherProvider);
+  final controller = RealtimeLifecycleController(
+    adapter: lifecycleAdapter,
+    reSign: ref.read(forceReSignWireSessionProvider),
+    pauseRefresher: refresher.pause,
+    resumeRefresher: refresher.resume,
+  );
+  ref.onDispose(controller.dispose);
+  return controller;
 });

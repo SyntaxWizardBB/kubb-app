@@ -195,6 +195,72 @@ void main() {
     });
   });
 
+  test('pause disarms the timer; nothing fires while backgrounded (C7-T1)', () {
+    withHarness((h, async) {
+      final expiresAt = h.start.add(const Duration(hours: 1));
+      h.emitKeypair(expiresAt: expiresAt);
+      async.flushMicrotasks();
+      expect(h.refresher.isScheduled, isTrue);
+
+      // App backgrounded → controller pauses the refresher.
+      h.refresher.pause();
+      expect(h.refresher.isScheduled, isFalse,
+          reason: 'pause must disarm the one-shot timer');
+
+      // Elapse past the original refresh point — no re-sign while paused.
+      async
+        ..elapse(const Duration(hours: 1))
+        ..flushMicrotasks();
+      expect(h.reSignCount, 0, reason: 'paused refresher must not fire');
+    });
+  });
+
+  test('resume re-arms from the remembered target (C7-T1)', () {
+    withHarness((h, async) {
+      final expiresAt = h.start.add(const Duration(hours: 1));
+      h.emitKeypair(expiresAt: expiresAt);
+      async.flushMicrotasks();
+      final target = h.refresher.scheduledFor;
+
+      h.refresher.pause();
+      expect(h.refresher.isScheduled, isFalse);
+
+      // App foregrounded → controller resumes the refresher (after re-sign).
+      h.refresher.resume();
+      expect(h.refresher.isScheduled, isTrue,
+          reason: 'resume must re-arm the one-shot timer');
+      expect(h.refresher.scheduledFor, target,
+          reason: 'resume restores the pre-pause target');
+
+      // The re-armed timer still fires at the original refresh point.
+      async
+        ..elapse(const Duration(hours: 1) - margin)
+        ..flushMicrotasks();
+      expect(h.reSignCount, 1);
+    });
+  });
+
+  test('resume fires immediately when the target elapsed while paused (C7-T1)',
+      () {
+    withHarness((h, async) {
+      final expiresAt = h.start.add(const Duration(hours: 1));
+      h.emitKeypair(expiresAt: expiresAt);
+      async.flushMicrotasks();
+
+      h.refresher.pause();
+      // Token's refresh point passes while the app sits in the background.
+      async.elapse(const Duration(hours: 1));
+
+      h.refresher.resume();
+      async
+        ..flushMicrotasks()
+        ..elapse(const Duration(milliseconds: 1))
+        ..flushMicrotasks();
+      expect(h.reSignCount, 1,
+          reason: 'an already-due refresh re-mints right after resume');
+    });
+  });
+
   test('re-sign failure does not throw out of the timer callback', () {
     // A thrown error inside the timer callback would surface as an
     // uncaught async error and FakeAsync.run would forward it out of

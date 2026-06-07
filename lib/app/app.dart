@@ -1,14 +1,12 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/app/bootstrap.dart';
+import 'package:kubb_app/app/realtime_lifecycle_controller.dart';
 import 'package:kubb_app/app/router.dart';
 import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/theme/theme_choice.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_offline_banner.dart';
-import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:logging/logging.dart';
 
@@ -51,30 +49,30 @@ class _KubbAppState extends ConsumerState<KubbApp> {
   @override
   void initState() {
     super.initState();
-    // Proactive keypair re-sign on foreground. The Phase-1 keypair JWT
-    // has a fixed lifetime and no refresh token (ADR-0010); the
-    // KeypairSessionRefresher timer is paused while the app is
-    // backgrounded, so a token that expires during suspension stays
-    // stale on resume and the first authenticated RPC (e.g. "Meine
-    // Teams") fails with PGRST303. Re-signing on resume re-mints the
-    // wire session before the user navigates anywhere. `force: true`
-    // bypasses the `wireAccessToken != null` short-circuit because a
-    // stale-but-present token would otherwise be treated as live.
+    // Single production lifecycle path (FC-9 / ADR-0029 battery regime).
+    // EVERY AppLifecycleState is routed into the RealtimeLifecycleController,
+    // which owns the whole foreground/background sequence:
+    //   - resumed  → re-sign FIRST (forceReSignWireSession), THEN resume the
+    //                keypair refresher, THEN reconnect exactly the keys that
+    //                were live at the last pause (avoids the Auth-Storm of a
+    //                reconnect-before-resign).
+    //   - paused   → after a 5 s debounce: snapshot + disconnectAll (zero
+    //                sockets, zero timers) + pause the refresher.
+    //   - detached → immediate teardown (no debounce).
+    //   - inactive → no-op (transient OS overlay).
+    // The re-sign and refresher-pause logic that used to live here as a
+    // standalone onResume handler now flows through the controller's seams.
     _lifecycleListener = AppLifecycleListener(
-      onResume: () {
-        unawaited(_reSignOnResume());
-      },
+      onStateChange: _onLifecycleStateChange,
     );
   }
 
-  Future<void> _reSignOnResume() async {
-    try {
-      await ref.read(forceReSignWireSessionProvider)();
-    } on Object catch (e, st) {
-      // Best-effort: a failed re-sign must not crash the app. The
-      // per-RPC guard in TeamRepository remains the safety net.
-      _bootstrapLog.warning('resume re-sign failed', e, st);
-    }
+  void _onLifecycleStateChange(AppLifecycleState state) {
+    // The controller is null only when the wired adapter does not expose the
+    // lifecycle mixin (e.g. a minimal test fake) — then there is nothing to
+    // manage and we deliberately skip.
+    final controller = ref.read(realtimeLifecycleControllerProvider);
+    controller?.onLifecycleState(state);
   }
 
   @override

@@ -57,6 +57,11 @@ class KeypairSessionRefresher {
   DateTime? _scheduledFor;
   bool _disposed = false;
 
+  /// True while the refresher is paused (app backgrounded). While paused the
+  /// one-shot timer is held cancelled and no new timer is armed from incoming
+  /// auth-state emissions; [resume] re-arms from the remembered target.
+  bool _paused = false;
+
   static DateTime _systemNow() => DateTime.now().toUtc();
 
   /// Exposed for tests so they can assert the timer is armed for the
@@ -85,6 +90,14 @@ class KeypairSessionRefresher {
     // timer. We treat the scheduled wall-clock instant as the key —
     // two emissions with the same expiresAt are the same job.
     final target = expiresAt.subtract(kKeypairRefreshMargin);
+    if (_paused) {
+      // Backgrounded: remember WHEN to fire but keep the timer disarmed.
+      // resume() re-arms from this remembered target after the foreground
+      // re-sign, so a session expiring in the background is re-minted as
+      // soon as the app returns.
+      _scheduledFor = target;
+      return;
+    }
     if (_timer != null && _scheduledFor == target) {
       return;
     }
@@ -118,6 +131,39 @@ class KeypairSessionRefresher {
       // the user triggers another action. Logging gives us a trail.
       _log.warning('keypair refresh failed', e, st);
     }
+  }
+
+  /// Pauses the refresher while the app is backgrounded (battery regime,
+  /// ADR-0029 §C7-T1). The pending one-shot timer is cancelled so no
+  /// re-sign fires in the background, but the remembered [scheduledFor]
+  /// target is preserved so [resume] can re-arm it. No [Timer.periodic]
+  /// is involved — this is the same one-shot timer, simply held disarmed.
+  void pause() {
+    if (_disposed || _paused) return;
+    _paused = true;
+    // Drop the live timer but keep _scheduledFor so resume can re-arm.
+    final target = _scheduledFor;
+    _timer?.cancel();
+    _timer = null;
+    _scheduledFor = target;
+  }
+
+  /// Resumes the refresher on foreground after the lifecycle controller has
+  /// already re-signed the wire session. Re-arms the one-shot timer from the
+  /// target remembered at [pause]: if that instant has already passed it
+  /// fires immediately, otherwise it is scheduled for the remaining delay.
+  void resume() {
+    if (_disposed || !_paused) return;
+    _paused = false;
+    final target = _scheduledFor;
+    if (target == null) {
+      // Nothing was scheduled before the pause (no keypair session). The
+      // next auth-state emission will arm the timer normally.
+      return;
+    }
+    final delay = target.difference(_now());
+    _timer?.cancel();
+    _timer = Timer(delay <= Duration.zero ? Duration.zero : delay, _fire);
   }
 
   void _cancelTimer() {
