@@ -50,6 +50,78 @@ KoMatchRow thirdPlace({
       isBye: false,
     );
 
+/// Builds a `wb` (winner-bracket) KO match row. WB losses are NEVER an
+/// elimination (the loser drops into the loser bracket), so these rows never
+/// produce a tier on their own.
+KoMatchRow wb({
+  required int round,
+  required int position,
+  required String a,
+  required String b,
+  required String winner,
+}) =>
+    (
+      roundNumber: round,
+      bracketPosition: position,
+      phase: BracketPhase.wb,
+      participantA: a,
+      participantB: b,
+      winnerParticipantId: winner,
+      isBye: false,
+    );
+
+/// Builds an `lb` (loser-bracket) KO match row in [round]. The loser of an lb
+/// match is eliminated for real and forms part of that lb round's tier.
+KoMatchRow lb({
+  required int round,
+  required int position,
+  required String a,
+  required String b,
+  required String winner,
+}) =>
+    (
+      roundNumber: round,
+      bracketPosition: position,
+      phase: BracketPhase.lb,
+      participantA: a,
+      participantB: b,
+      winnerParticipantId: winner,
+      isBye: false,
+    );
+
+/// Builds the `grandFinal` match row (phase-local `roundNumber == 1`).
+KoMatchRow grandFinal({
+  required String a,
+  required String b,
+  required String winner,
+}) =>
+    (
+      roundNumber: 1,
+      bracketPosition: 1,
+      phase: BracketPhase.grandFinal,
+      participantA: a,
+      participantB: b,
+      winnerParticipantId: winner,
+      isBye: false,
+    );
+
+/// Builds the `grandFinalReset` match row (phase-local `roundNumber == 1`).
+/// Pass `winner: null` to model an incomplete reset.
+KoMatchRow grandFinalReset({
+  required String a,
+  required String b,
+  required String? winner,
+}) =>
+    (
+      roundNumber: 1,
+      bracketPosition: 1,
+      phase: BracketPhase.grandFinalReset,
+      participantA: a,
+      participantB: b,
+      winnerParticipantId: winner,
+      isBye: false,
+    );
+
 void main() {
   group('singleElimFinalTiers', () {
     // --- T1: 8er with third-place playoff, no tail. ---
@@ -431,6 +503,352 @@ void main() {
       // Shared rank 5 => identical points across all four.
       final r5 = placements.where((p) => p.rank == 5).map((p) => p.points);
       expect(r5.toSet().length, 1);
+    });
+  });
+
+  group('doubleElimFinalTiers', () {
+    // Shared 8-player double-elim fixture (WB 3 rounds, LB 4 rounds = 2*(3-1)).
+    //
+    // Bracket form (who loses where):
+    //   WB-R1 (4 matches): p1>p8, p2>p7, p3>p6, p4>p5
+    //     -> WB-R1 losers p8,p7,p6,p5 drop to LB-R1.
+    //   WB-R2 (2 matches): p1>p4, p2>p3
+    //     -> WB-R2 losers p4,p3 drop to LB-R2 (major).
+    //   WB-R3 / WB final (1 match): p1>p2  (p1 = WB champion)
+    //     -> WB-R3 loser p2 drops to LB-R4 (LB final).
+    //   LB-R1 (2 matches, minor): p5>p8, p6>p7  -> losers p8,p7.
+    //   LB-R2 (2 matches, major): p4>p5, p3>p6  -> losers p5,p6.
+    //   LB-R3 (1 match,  minor): p3>p4          -> loser p4.
+    //   LB-R4 (1 match,  LB final): p2>p3       -> loser p3 (p2 = LB champion).
+    //   Grand final: WB champ p1 vs LB champ p2.
+    //
+    // LB-round elimination order (descending round = better rank):
+    //   LB-R4 loser p3 -> rank 3
+    //   LB-R3 loser p4 -> rank 4
+    //   LB-R2 losers p5,p6 -> shared tier (rank 5)
+    //   LB-R1 losers p7,p8 -> shared tier (rank 7)
+    List<KoMatchRow> deWbAndLb() => <KoMatchRow>[
+          // WB.
+          wb(round: 1, position: 1, a: 'p1', b: 'p8', winner: 'p1'),
+          wb(round: 1, position: 2, a: 'p2', b: 'p7', winner: 'p2'),
+          wb(round: 1, position: 3, a: 'p3', b: 'p6', winner: 'p3'),
+          wb(round: 1, position: 4, a: 'p4', b: 'p5', winner: 'p4'),
+          wb(round: 2, position: 1, a: 'p1', b: 'p4', winner: 'p1'),
+          wb(round: 2, position: 2, a: 'p2', b: 'p3', winner: 'p2'),
+          wb(round: 3, position: 1, a: 'p1', b: 'p2', winner: 'p1'),
+          // LB.
+          lb(round: 1, position: 1, a: 'p5', b: 'p8', winner: 'p5'),
+          lb(round: 1, position: 2, a: 'p6', b: 'p7', winner: 'p6'),
+          lb(round: 2, position: 1, a: 'p4', b: 'p5', winner: 'p4'),
+          lb(round: 2, position: 2, a: 'p3', b: 'p6', winner: 'p3'),
+          lb(round: 3, position: 1, a: 'p3', b: 'p4', winner: 'p3'),
+          lb(round: 4, position: 1, a: 'p2', b: 'p3', winner: 'p2'),
+        ];
+
+    // --- D1: 8er double-elim WITHOUT reset (WB champ wins grand final). ---
+    test('D1: 8er without reset, decider=grandFinal, LB tiers descending', () {
+      final prelim = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'];
+      // No grandFinalReset: WB champ p1 beats LB champ p2 in the grand final.
+      final ko = <KoMatchRow>[
+        ...deWbAndLb(),
+        grandFinal(a: 'p1', b: 'p2', winner: 'p1'),
+      ];
+
+      final result = doubleElimFinalTiers(koMatches: ko, prelimRanking: prelim);
+
+      expect(result.koRankCount, 8);
+      // Decider = grandFinal: rank1=p1, rank2=p2; then LB rounds 4,3,2,1.
+      expect(result.tiers, [
+        ['p1'], // rank 1: GF winner
+        ['p2'], // rank 2: GF loser
+        ['p3'], // rank 3: LB-R4 (LB final) loser
+        ['p4'], // rank 4: LB-R3 loser
+        ['p5', 'p6'], // LB-R2 losers, shared
+        ['p7', 'p8'], // LB-R1 losers, shared
+      ]);
+
+      // WB matches produce NO tier: WB losers appear only via LB tiers, once.
+      final flat = result.tiers.expand((t) => t).toList();
+      expect(flat.toSet().length, flat.length, reason: 'no duplicate in tiers');
+      expect(flat.toSet(), prelim.toSet());
+
+      // Sum of tier sizes == 8.
+      expect(result.tiers.fold<int>(0, (s, t) => s + t.length), 8);
+
+      // --- End-to-end via computeFinalRanking. ---
+      const ctx = SkvTournamentContext(fieldSize: 8, league: SkvLeague.a);
+      final placements = computeFinalRanking(
+        ctx: ctx,
+        tiers: result.tiers,
+        koRankCount: result.koRankCount,
+      );
+      final ranks = placements.map((p) => p.rank).toList();
+      // Competition ranking: 1,2,3,4 then size-2 tier at 5, then size-2 at 7.
+      expect(ranks, [1, 2, 3, 4, 5, 5, 7, 7]);
+
+      final byId = {for (final p in placements) p.participantId: p};
+      // Shared LB-R2 rank => identical points.
+      expect(byId['p5']!.points, byId['p6']!.points);
+      // Shared LB-R1 rank => identical points.
+      expect(byId['p7']!.points, byId['p8']!.points);
+
+      // Monotone (non-increasing) points across the ranks.
+      final pointsByRank = <int, int>{
+        for (final p in placements) p.rank: p.points,
+      };
+      final orderedRanks = pointsByRank.keys.toList()..sort();
+      for (var i = 1; i < orderedRanks.length; i++) {
+        expect(
+          pointsByRank[orderedRanks[i]]! <= pointsByRank[orderedRanks[i - 1]]!,
+          isTrue,
+          reason: 'points must not increase down the ranking',
+        );
+      }
+      // Strictly decreasing across the singleton ranks 1->2->3->4.
+      expect(byId['p1']!.points > byId['p2']!.points, isTrue);
+      expect(byId['p2']!.points > byId['p3']!.points, isTrue);
+      expect(byId['p3']!.points > byId['p4']!.points, isTrue);
+    });
+
+    // --- D2: 8er double-elim WITH reset (grandFinalReset complete). ---
+    test('D2: 8er with complete reset, decider=reset, grandFinal ignored', () {
+      final prelim = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'];
+      // LB champ p2 wins the grand final first (forces the reset); the reset is
+      // then played out and is complete. We let p1 win the reset (title).
+      final ko = <KoMatchRow>[
+        ...deWbAndLb(),
+        grandFinal(a: 'p1', b: 'p2', winner: 'p2'), // p1 loses GF -> reset
+        grandFinalReset(a: 'p1', b: 'p2', winner: 'p1'), // decider
+      ];
+
+      final result = doubleElimFinalTiers(koMatches: ko, prelimRanking: prelim);
+
+      expect(result.koRankCount, 8);
+      // Decider = reset: rank1=p1 (reset winner), rank2=p2 (reset loser).
+      // The grandFinal match is IGNORED: its loser p1 gets NO separate tier.
+      expect(result.tiers, [
+        ['p1'], // rank 1: reset winner
+        ['p2'], // rank 2: reset loser
+        ['p3'],
+        ['p4'],
+        ['p5', 'p6'],
+        ['p7', 'p8'],
+      ]);
+
+      // No participant appears twice across tiers (grandFinal not re-emitted).
+      final flat = result.tiers.expand((t) => t).toList();
+      expect(flat.toSet().length, flat.length);
+      expect(result.tiers.fold<int>(0, (s, t) => s + t.length), 8);
+    });
+
+    // --- D3: LB-round grouping => two losers of one lb round share a rank. ---
+    test('D3: two losers of the same lb round form one shared-rank tier', () {
+      // Minimal-but-valid: the shared rank comes from LB-R2 (two real losers
+      // p5,p6). Asserted directly on the tier (one tier, size 2) and end-to-end
+      // (identical rank + identical points). Reuses the D1 fixture.
+      final prelim = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'];
+      final ko = <KoMatchRow>[
+        ...deWbAndLb(),
+        grandFinal(a: 'p1', b: 'p2', winner: 'p1'),
+      ];
+
+      final result = doubleElimFinalTiers(koMatches: ko, prelimRanking: prelim);
+
+      // LB-R2 losers p5,p6 fall into ONE tier (not two), sorted by prelim.
+      expect(result.tiers[4], ['p5', 'p6']);
+
+      const ctx = SkvTournamentContext(fieldSize: 8, league: SkvLeague.a);
+      final placements = computeFinalRanking(
+        ctx: ctx,
+        tiers: result.tiers,
+        koRankCount: result.koRankCount,
+      );
+      final byId = {for (final p in placements) p.participantId: p};
+      expect(byId['p5']!.rank, byId['p6']!.rank);
+      expect(byId['p5']!.points, byId['p6']!.points);
+    });
+
+    // --- D4: preliminary tail (8 KO + 2 non-qualified, N=10). ---
+    test('D4: prelim tail of 2 non-qualified gets ranks 9 and 10', () {
+      // Same 8-player KO as D1; prelim has two extra non-qualified t1,t2 that
+      // never appear in any match.
+      final prelim = [
+        'p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 't1', 't2', //
+      ];
+      final ko = <KoMatchRow>[
+        ...deWbAndLb(),
+        grandFinal(a: 'p1', b: 'p2', winner: 'p1'),
+      ];
+
+      final result = doubleElimFinalTiers(koMatches: ko, prelimRanking: prelim);
+
+      expect(result.koRankCount, 8);
+      // The two non-qualified are the last two singleton tiers, in prelim order.
+      expect(result.tiers.sublist(result.tiers.length - 2), [
+        ['t1'],
+        ['t2'],
+      ]);
+      expect(result.tiers.fold<int>(0, (s, t) => s + t.length), 10);
+
+      const ctx = SkvTournamentContext(fieldSize: 10, league: SkvLeague.a);
+      final placements = computeFinalRanking(
+        ctx: ctx,
+        tiers: result.tiers,
+        koRankCount: result.koRankCount,
+      );
+      final byId = {for (final p in placements) p.participantId: p.rank};
+      expect(byId['t1'], 9);
+      expect(byId['t2'], 10);
+    });
+
+    // --- D5: a BYE in LB-R1 produces no loser. ---
+    test('D5: a BYE LB-R1 match produces no loser entry', () {
+      // 8-player KO but the LB-R1 match that would feed p8 is a server-marked
+      // BYE (ADR-0027 §1.5): p5 passes through LB-R1 via BYE, p8 is not a real
+      // LB participant. To keep the field at 8 distinct KO participants, p8
+      // still loses its WB-R1 match (so it is a real participant overall) but
+      // never appears as an LB loser.
+      //
+      // Bracket form: identical to deWbAndLb() EXCEPT LB-R1 position 1 is a BYE
+      // (participantB == null, isBye == true) carrying p5 onward — so LB-R1 has
+      // only ONE real loser (p7 from position 2).
+      final prelim = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'];
+      final ko = <KoMatchRow>[
+        // WB unchanged (p8 loses WB-R1 -> real participant, counts for rank).
+        wb(round: 1, position: 1, a: 'p1', b: 'p8', winner: 'p1'),
+        wb(round: 1, position: 2, a: 'p2', b: 'p7', winner: 'p2'),
+        wb(round: 1, position: 3, a: 'p3', b: 'p6', winner: 'p3'),
+        wb(round: 1, position: 4, a: 'p4', b: 'p5', winner: 'p4'),
+        wb(round: 2, position: 1, a: 'p1', b: 'p4', winner: 'p1'),
+        wb(round: 2, position: 2, a: 'p2', b: 'p3', winner: 'p2'),
+        wb(round: 3, position: 1, a: 'p1', b: 'p2', winner: 'p1'),
+        // LB-R1 position 1: BYE (p5 advances, no loser produced).
+        (
+          roundNumber: 1,
+          bracketPosition: 1,
+          phase: BracketPhase.lb,
+          participantA: 'p5',
+          participantB: null,
+          winnerParticipantId: 'p5',
+          isBye: true,
+        ),
+        lb(round: 1, position: 2, a: 'p6', b: 'p7', winner: 'p6'),
+        lb(round: 2, position: 1, a: 'p4', b: 'p5', winner: 'p4'),
+        lb(round: 2, position: 2, a: 'p3', b: 'p6', winner: 'p3'),
+        lb(round: 3, position: 1, a: 'p3', b: 'p4', winner: 'p3'),
+        lb(round: 4, position: 1, a: 'p2', b: 'p3', winner: 'p2'),
+        grandFinal(a: 'p1', b: 'p2', winner: 'p1'),
+      ];
+
+      final result = doubleElimFinalTiers(koMatches: ko, prelimRanking: prelim);
+
+      expect(result.koRankCount, 8);
+      // LB-R1 now yields only p7 (the BYE produced no loser, p8 absent there).
+      expect(result.tiers, [
+        ['p1'],
+        ['p2'],
+        ['p3'],
+        ['p4'],
+        ['p5', 'p6'],
+        ['p7'], // only the single real LB-R1 loser
+      ]);
+      // p8 lost only its WB match (never an elimination) and never reaches LB,
+      // so it appears in NO tier despite being a real KO participant.
+      final flat = result.tiers.expand((t) => t).toSet();
+      expect(flat.contains('p8'), isFalse);
+    });
+
+    // --- D6: validation, no grandFinal. ---
+    test('D6: no grandFinal match throws ArgumentError', () {
+      final prelim = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'];
+      // wb/lb present but neither grandFinal nor reset.
+      final ko = deWbAndLb();
+      expect(
+        () => doubleElimFinalTiers(koMatches: ko, prelimRanking: prelim),
+        throwsArgumentError,
+      );
+    });
+
+    // --- D7: validation, KO participant missing from prelimRanking. ---
+    test('D7: a KO participant missing from prelimRanking throws', () {
+      final ko = <KoMatchRow>[
+        ...deWbAndLb(),
+        grandFinal(a: 'p1', b: 'p2', winner: 'p1'),
+      ];
+      expect(
+        () => doubleElimFinalTiers(
+          koMatches: ko,
+          prelimRanking: const ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7'],
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    // --- D8: validation, empty koMatches. ---
+    test('D8: empty koMatches throws ArgumentError', () {
+      expect(
+        () => doubleElimFinalTiers(
+          koMatches: const <KoMatchRow>[],
+          prelimRanking: const ['p1'],
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    // --- D9: validation, duplicate in prelimRanking. ---
+    test('D9: duplicate in prelimRanking throws', () {
+      final ko = <KoMatchRow>[
+        ...deWbAndLb(),
+        grandFinal(a: 'p1', b: 'p2', winner: 'p1'),
+      ];
+      expect(
+        () => doubleElimFinalTiers(
+          koMatches: ko,
+          prelimRanking: const [
+            'p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p1', //
+          ],
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    // --- D10: validation, decider incomplete (no fallback reset->grandFinal).
+    test('D10: present-but-incomplete reset throws (no fallback to GF)', () {
+      final prelim = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'];
+      // grandFinal is complete, but the reset exists WITHOUT a winner. The reset
+      // is the decider and is incomplete => error, NOT a fallback to grandFinal.
+      final ko = <KoMatchRow>[
+        ...deWbAndLb(),
+        grandFinal(a: 'p1', b: 'p2', winner: 'p2'),
+        grandFinalReset(a: 'p1', b: 'p2', winner: null),
+      ];
+      expect(
+        () => doubleElimFinalTiers(koMatches: ko, prelimRanking: prelim),
+        throwsArgumentError,
+      );
+    });
+
+    // --- D11: determinism under permutation of koMatches. ---
+    test('D11: identical output regardless of koMatches order', () {
+      final prelim = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'];
+      final ko = <KoMatchRow>[
+        ...deWbAndLb(),
+        grandFinal(a: 'p1', b: 'p2', winner: 'p1'),
+      ];
+
+      final base = doubleElimFinalTiers(koMatches: ko, prelimRanking: prelim);
+      final reversed = doubleElimFinalTiers(
+        koMatches: ko.reversed.toList(),
+        prelimRanking: prelim,
+      );
+      final shuffled = [...ko]..shuffle();
+      final permuted =
+          doubleElimFinalTiers(koMatches: shuffled, prelimRanking: prelim);
+
+      expect(reversed.tiers, base.tiers);
+      expect(reversed.koRankCount, base.koRankCount);
+      expect(permuted.tiers, base.tiers);
+      expect(permuted.koRankCount, base.koRankCount);
     });
   });
 }
