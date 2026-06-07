@@ -11,6 +11,13 @@ final badgeCatalogProvider = Provider<List<Badge>>((ref) {
 
 /// Live list of unlocks for the given user, sourced from the
 /// repository's broadcast stream. Used by the achievements screen.
+///
+/// ADR-0029 transport decision (P8): badge unlocks are computed and
+/// persisted locally (drift) from the user's own activity — there is no
+/// cross-device fan-out, so this stays **drift-only** and is intentionally
+/// NOT promoted to a Broadcast/CDC realtime channel. Should achievements
+/// ever gain a server-authored, cross-device unlock path, the transport
+/// rule applies (Broadcast for derived fan-out events).
 // Riverpod's family-provider type names are not part of the public API,
 // so we suppress the lint here and rely on the generic args for inference.
 // ignore: specify_nonobvious_property_types
