@@ -71,6 +71,12 @@ class RealtimeLifecycleController {
   /// before it fires. Never a periodic timer.
   Timer? _pauseTimer;
 
+  /// In-flight teardown ([RealtimeChannelLifecycle.disconnectAll]) future.
+  /// A resume that overlaps a still-running teardown must await this before
+  /// reconnecting, otherwise the teardown's terminal `entries.clear()` would
+  /// wipe the freshly reconnected channels and leak their transports.
+  Future<void>? _teardownInFlight;
+
   /// Keys captured at the last pause teardown, restored on the next resume.
   List<String> _snapshot = const <String>[];
 
@@ -124,6 +130,14 @@ class RealtimeLifecycleController {
     if (reSign != null) {
       await reSign();
     }
+    // If a teardown debounce fired just before this resume, its disconnectAll()
+    // may still be in flight; its terminal entries.clear() must complete BEFORE
+    // we reconnect, otherwise the clear() wipes the channels we are about to
+    // reopen (leaking their transports). Await it (ADR-0029 ordering).
+    final pendingTeardown = _teardownInFlight;
+    if (pendingTeardown != null) {
+      await pendingTeardown;
+    }
     _resumeRefresher?.call();
     _adapter.reconnectKeys(_snapshot);
   }
@@ -131,7 +145,11 @@ class RealtimeLifecycleController {
   void _teardown() {
     _pauseTimer = null;
     _snapshot = _adapter.snapshotActiveKeys();
-    unawaited(_adapter.disconnectAll());
+    final done = _adapter.disconnectAll();
+    _teardownInFlight = done;
+    unawaited(done.whenComplete(() {
+      if (identical(_teardownInFlight, done)) _teardownInFlight = null;
+    }));
     _pauseRefresher?.call();
   }
 
