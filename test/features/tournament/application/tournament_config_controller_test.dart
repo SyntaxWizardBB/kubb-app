@@ -272,6 +272,37 @@ void main() {
       );
       expect(state().koRoundFormats, before);
     });
+
+    // V2-A: the prelim "Sätze zum Sieg" field wires onto setSetsToWin.
+    group('setSetsToWin (prelim sets-to-win, V2-A)', () {
+      test('sets the prelim sets_to_win and emits it via toMatchFormatConfig',
+          () {
+        // Default draft starts at setsToWin 2 — the field must override it.
+        expect(state().setsToWin, 2);
+        controller.setSetsToWin(3);
+        expect(state().setsToWin, 3);
+        // It is no longer the silent default of 2 in the wire payload.
+        expect(state().toMatchFormatConfig()['sets_to_win'], 3);
+      });
+
+      test('auto-clamps maxSets to >= 2*setsToWin-1 (consistency)', () {
+        // From the default maxSets (2), choosing setsToWin 3 must lift maxSets
+        // to at least 2*3-1 = 5 so a series can actually be decided.
+        controller.setSetsToWin(3);
+        expect(state().setsToWin, 3);
+        expect(state().maxSets, greaterThanOrEqualTo(5));
+        // A pre-existing larger maxSets is preserved (not lowered).
+        controller.setMaxSets(7);
+        controller.setSetsToWin(2);
+        expect(state().maxSets, 7);
+      });
+
+      test('clamps to setsToWinMax (4)', () {
+        controller.setSetsToWin(99);
+        expect(state().setsToWin, TournamentConfigDraft.setsToWinMax);
+        expect(state().setsToWin, 4);
+      });
+    });
   });
 
   group('participant limits (K09/K10)', () {

@@ -150,12 +150,14 @@ void main() {
     expect(find.byType(ReorderableListView), findsNothing);
 
     // Switch to "Manuelle Reihenfolge" → editor appears.
+    await tester.ensureVisible(find.text('Manuelle Reihenfolge'));
     await tester.tap(find.text('Manuelle Reihenfolge'));
     await tester.pumpAndSettle();
     expect(find.byType(ReorderableListView), findsOneWidget);
     expect(find.text('Reihenfolge der Felder'), findsOneWidget);
 
     // Switch back to top seeds → editor gone again.
+    await tester.ensureVisible(find.text('Beste auf tiefsten Nummern'));
     await tester.tap(find.text('Beste auf tiefsten Nummern'));
     await tester.pumpAndSettle();
     expect(find.byType(ReorderableListView), findsNothing);
@@ -166,6 +168,7 @@ void main() {
     await _pump(tester);
     await _goToPitchStepWithRange(tester);
 
+    await tester.ensureVisible(find.text('Manuelle Reihenfolge'));
     await tester.tap(find.text('Manuelle Reihenfolge'));
     await tester.pumpAndSettle();
 
@@ -202,6 +205,7 @@ void main() {
     final container = await _pump(tester);
     await _goToPitchStepWithRange(tester);
 
+    await tester.ensureVisible(find.text('Manuelle Reihenfolge'));
     await tester.tap(find.text('Manuelle Reihenfolge'));
     await tester.pumpAndSettle();
 
@@ -226,6 +230,7 @@ void main() {
     final container = await _pump(tester);
     await _goToPitchStepWithRange(tester);
 
+    await tester.ensureVisible(find.text('Manuelle Reihenfolge'));
     await tester.tap(find.text('Manuelle Reihenfolge'));
     await tester.pumpAndSettle();
 
@@ -235,6 +240,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_draftPlan(container)!.order, isNotEmpty);
 
+    await tester.ensureVisible(find.text('Beste auf tiefsten Nummern'));
     await tester.tap(find.text('Beste auf tiefsten Nummern'));
     await tester.pumpAndSettle();
 

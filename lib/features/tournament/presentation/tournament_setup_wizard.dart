@@ -324,6 +324,7 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
           koBracketSize: _koBracketSize(draft),
           onVorrundeType: controller.setVorrundeType,
           onKoType: controller.setKoType,
+          onSetsToWin: controller.setSetsToWin,
           onMaxSets: controller.setMaxSets,
           onPoolGrouping: controller.setPoolGrouping,
           swissRounds: _swissRounds ??
@@ -1448,6 +1449,7 @@ class _StepFormat extends StatefulWidget {
     required this.koBracketSize,
     required this.onVorrundeType,
     required this.onKoType,
+    required this.onSetsToWin,
     required this.onMaxSets,
     required this.onPoolGrouping,
     required this.swissRounds,
@@ -1473,6 +1475,9 @@ class _StepFormat extends StatefulWidget {
   // derives the legacy `TournamentFormat` + `BracketType` from these axes.
   final ValueChanged<VorrundeType> onVorrundeType;
   final ValueChanged<KoType> onKoType;
+  // V2: prelim "sets to win". Maps onto the existing controller.setSetsToWin
+  // (no duplicated clamp logic in the widget).
+  final ValueChanged<int> onSetsToWin;
   final ValueChanged<int> onMaxSets;
 
   /// K12: pushes the group-phase grouping inputs (group count + strategy +
@@ -1604,6 +1609,7 @@ class _StepFormatState extends State<_StepFormat> {
     final draft = widget.draft;
     final onVorrundeType = widget.onVorrundeType;
     final onKoType = widget.onKoType;
+    final onSetsToWin = widget.onSetsToWin;
     final onMaxSets = widget.onMaxSets;
     final onRoundTime = widget.onRoundTime;
     final onBreakBetween = widget.onBreakBetween;
@@ -1699,7 +1705,18 @@ class _StepFormatState extends State<_StepFormat> {
         // (_wizard_ko_config_step.dart, _ConsolationKoSection). It is no longer
         // rendered here, so the main-bracket size is chosen exactly once.
         const SizedBox(height: KubbTokens.space5),
-        // ---- Vorrunde scoring: only "Max. Sätze" (P6 spec) ----
+        // ---- Vorrunde scoring: "Sätze zum Sieg" + "Max. Sätze" (V2 spec) ----
+        // The prelim sets-to-win field. onChanged maps onto the existing
+        // controller.setSetsToWin, which auto-clamps maxSets to >= 2*n-1, so
+        // sets_to_win <= max_sets stays consistent without extra widget logic.
+        WizardNumberField(
+          label: l10n.tournamentWizardSetsToWinPrelimLabel,
+          value: draft.setsToWin,
+          min: TournamentConfigDraft.setsToWinMin,
+          max: TournamentConfigDraft.setsToWinMax,
+          onChanged: onSetsToWin,
+        ),
+        const SizedBox(height: KubbTokens.space4),
         WizardNumberField(
           label: l10n.tournamentWizardMaxSetsLabel,
           value: draft.maxSets,

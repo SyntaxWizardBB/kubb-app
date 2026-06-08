@@ -4048,6 +4048,12 @@ abstract class AppLocalizations {
   /// **'Sätze zum Sieg'**
   String get tournamentWizardSetsToWinLabel;
 
+  /// Prelim sets-to-win field label in the format step
+  ///
+  /// In de, this message translates to:
+  /// **'Sätze zum Sieg (Vorrunde)'**
+  String get tournamentWizardSetsToWinPrelimLabel;
+
   /// Max-sets stepper label
   ///
   /// In de, this message translates to:
