@@ -147,7 +147,8 @@ class _MyMatchTab extends ConsumerWidget {
             for (final m in matches) ...[
               TournamentMatchCard(
                 match: m,
-                nameFor: (id) => l.tournamentParticipantUnknown,
+                // M1: the card resolves both sides through the central
+                // [ParticipantName] helper; no per-call-site name resolver.
                 onTap: () => context.push(
                   TournamentRoutes.matchDetail(
                     tournamentId,

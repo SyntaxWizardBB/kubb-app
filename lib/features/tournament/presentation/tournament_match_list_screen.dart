@@ -146,12 +146,9 @@ class _MatchListBody extends StatelessWidget {
           for (final m in byRound[r]!) ...[
             TournamentMatchCard(
               match: m,
-              // CF3 / K08: the card prefers the server-projected
-              // display name (single -> nickname, team -> team name).
-              // This resolver is only the null/empty fallback, so it
-              // returns the localized placeholder instead of a UUID
-              // substring.
-              nameFor: (id) => l.tournamentParticipantUnknown,
+              // M1: the card resolves both sides through the central
+              // [ParticipantName] helper (server display name, localized
+              // "Unbekannt" fallback, never 'A'/'B' or a raw UUID).
               onTap: () => context.go(
                 TournamentRoutes.matchDetail(tournamentId, m.matchId.value),
               ),

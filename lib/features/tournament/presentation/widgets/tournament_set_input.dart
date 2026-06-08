@@ -10,6 +10,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 class TournamentSetInput extends StatelessWidget {
   const TournamentSetInput({
     required this.setNumber,
+    required this.participantAName,
+    required this.participantBName,
     required this.basekubbsA,
     required this.basekubbsB,
     required this.king,
@@ -20,6 +22,17 @@ class TournamentSetInput extends StatelessWidget {
   });
 
   final int setNumber;
+
+  /// M1: the REAL resolved display names of the two duelling sides
+  /// (side A = `participantADisplayName`, side B = `participantBDisplayName`,
+  /// localized "Unbekannt" fallback). The detail screen resolves these via
+  /// the central `ParticipantName` helper and hands them in so the stepper
+  /// labels and the king tri-toggle show the real names instead of the
+  /// generic 'Team A'/'Team B'. Pure display — the stepper / touch-target /
+  /// SetWinner-emit logic is unchanged.
+  final String participantAName;
+  final String participantBName;
+
   final int basekubbsA;
   final int basekubbsB;
 
@@ -58,7 +71,9 @@ class TournamentSetInput extends StatelessWidget {
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(
             child: _Stepper(
-              label: l.tournamentMatchBasekubbsALabel,
+              // M1: real side-A name instead of the generic
+              // 'Basekubbs Team A' label.
+              label: participantAName,
               value: basekubbsA,
               accent: KubbTokens.meadow600,
               max: maxBasekubbs,
@@ -69,7 +84,9 @@ class TournamentSetInput extends StatelessWidget {
           const SizedBox(width: KubbTokens.space3),
           Expanded(
             child: _Stepper(
-              label: l.tournamentMatchBasekubbsBLabel,
+              // M1: real side-B name instead of the generic
+              // 'Basekubbs Team B' label.
+              label: participantBName,
               value: basekubbsB,
               accent: KubbTokens.wood400,
               max: maxBasekubbs,
@@ -93,7 +110,9 @@ class TournamentSetInput extends StatelessWidget {
         Row(children: [
           Expanded(
             child: _ToggleBtn(
-              label: l.setKingOutcomeTeamA,
+              // M1: real side-A name instead of 'Team A'. The emit
+              // logic (SetWinner.teamA) is unchanged.
+              label: participantAName,
               selected: king == SetWinner.teamA,
               accent: KubbTokens.meadow600,
               onPressed: enabled ? () => _emit(k: SetWinner.teamA, setKing: true) : null,
@@ -102,7 +121,9 @@ class TournamentSetInput extends StatelessWidget {
           const SizedBox(width: KubbTokens.space2),
           Expanded(
             child: _ToggleBtn(
-              label: l.setKingOutcomeTeamB,
+              // M1: real side-B name instead of 'Team B'. The emit
+              // logic (SetWinner.teamB) is unchanged.
+              label: participantBName,
               selected: king == SetWinner.teamB,
               accent: KubbTokens.wood400,
               onPressed: enabled ? () => _emit(k: SetWinner.teamB, setKing: true) : null,

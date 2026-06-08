@@ -18,6 +18,7 @@ import 'package:kubb_app/features/tournament/application/tournament_score_draft_
 import 'package:kubb_app/features/tournament/application/tournament_shootout_providers.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/match_countdown.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/participant_name.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/pitch_call_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_status_banner.dart';
@@ -531,6 +532,19 @@ class _TournamentMatchDetailScreenState
     final hasStaleConflict = outboxRows.any(
         (r) => r.lastErrorCode == 'STALE_CONSENSUS_ROUND');
 
+    // M1: resolve both sides' real display names once via the central
+    // [ParticipantName] helper and feed them into the set-input stepper /
+    // king toggle and the live-score preview, so no surface renders the
+    // generic 'Team A'/'Team B' anymore.
+    final aName = ParticipantName.resolve(
+      l,
+      displayName: match.participantADisplayName,
+    );
+    final bName = ParticipantName.resolve(
+      l,
+      displayName: match.participantBDisplayName,
+    );
+
     return ListView(
       padding: const EdgeInsets.all(KubbTokens.space4),
       children: [
@@ -570,6 +584,8 @@ class _TournamentMatchDetailScreenState
         for (var i = 0; i < drafts.length; i++) ...[
           TournamentSetInput(
             setNumber: i + 1,
+            participantAName: aName,
+            participantBName: bName,
             basekubbsA: drafts[i].basekubbsA,
             basekubbsB: drafts[i].basekubbsB,
             king: drafts[i].king,
@@ -617,7 +633,7 @@ class _TournamentMatchDetailScreenState
           ]),
           const SizedBox(height: KubbTokens.space4),
         ],
-        _LivePreview(ekc: ekc),
+        _LivePreview(ekc: ekc, participantAName: aName, participantBName: bName),
         const SizedBox(height: KubbTokens.space4),
         if (validationMessage != null && !readOnly)
           Padding(
@@ -724,35 +740,23 @@ class _Header extends ConsumerWidget {
   final TournamentId tournamentId;
   final bool showPending;
 
-  /// W3-T4 / R10-F-06: prefer the server-projected display name. The
-  /// `tournament_match_get` RPC now emits
-  /// `participant_{a,b}_display_name` per
-  /// `20260601000003_tournament_get_with_display_names`; the old UUID
-  /// substring fallback (`ba9c12…`) is gone. When the display_name is
-  /// genuinely absent (e.g. a row from before the migration landed, or
-  /// a participant with no nickname/team name), the localized
-  /// `tournamentParticipantUnknown` label is used so the header never
-  /// shows raw ids.
-  String _participantLabel(
-    AppLocalizations l,
-    TournamentParticipantId? pid,
-    String? displayName,
-  ) {
-    if (pid == null) return '?';
-    final name = displayName?.trim();
-    if (name == null || name.isEmpty) return l.tournamentParticipantUnknown;
-    return name;
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final isBye = match.participantB == null;
-    final aLabel = _participantLabel(
-        l, match.participantA, match.participantADisplayName);
-    final bLabel = _participantLabel(
-        l, match.participantB, match.participantBDisplayName);
+    // M1: both sides resolve through the single [ParticipantName] helper
+    // (server-projected display name, localized "Unbekannt" fallback,
+    // never 'A'/'B' or a raw UUID). BYE is handled below via the dedicated
+    // header label.
+    final aLabel = ParticipantName.resolve(
+      l,
+      displayName: match.participantADisplayName,
+    );
+    final bLabel = ParticipantName.resolve(
+      l,
+      displayName: match.participantBDisplayName,
+    );
     return Container(
       padding: const EdgeInsets.all(KubbTokens.space3),
       decoration: BoxDecoration(
@@ -796,8 +800,20 @@ class _Header extends ConsumerWidget {
 }
 
 class _LivePreview extends StatelessWidget {
-  const _LivePreview({required this.ekc});
+  const _LivePreview({
+    required this.ekc,
+    required this.participantAName,
+    required this.participantBName,
+  });
   final MatchEkcScore ekc;
+
+  /// M1: the real resolved display names of the two sides, so the
+  /// preliminary leader is named with the actual participant instead of
+  /// the generic 'Team A'/'Team B'. The EKC computation (computeEkc /
+  /// matchWinner) is untouched — only the rendered label changes.
+  final String participantAName;
+  final String participantBName;
+
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
@@ -806,7 +822,7 @@ class _LivePreview extends StatelessWidget {
     final score = l.tournamentMatchLivePreviewScore(ekc.setsWonA, ekc.setsWonB);
     final line = w == null
         ? '$score — ${l.tournamentMatchLivePreviewUndecided}'
-        : '$score — ${w == SetWinner.teamA ? l.tournamentMatchKingByA : l.tournamentMatchKingByB}';
+        : '$score — ${l.tournamentMatchLivePreviewLeader(w == SetWinner.teamA ? participantAName : participantBName)}';
     return Container(
       padding: const EdgeInsets.all(KubbTokens.space3),
       decoration: BoxDecoration(
@@ -857,18 +873,20 @@ class _KoFinisherPrompt extends StatelessWidget {
   final ValueChanged<SetWinner> onResolved;
   final VoidCallback onOpenShootout;
 
-  String _name(AppLocalizations l, String? displayName) {
-    final name = displayName?.trim();
-    if (name == null || name.isEmpty) return l.tournamentParticipantUnknown;
-    return name;
-  }
-
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
-    final aName = _name(l, match.participantADisplayName);
-    final bName = _name(l, match.participantBDisplayName);
+    // M1: route both sides through the central [ParticipantName] helper
+    // instead of a local copy of the trim/Unbekannt fallback.
+    final aName = ParticipantName.resolve(
+      l,
+      displayName: match.participantADisplayName,
+    );
+    final bName = ParticipantName.resolve(
+      l,
+      displayName: match.participantBDisplayName,
+    );
     final isShootout = method == KoTiebreakMethod.mightyFinisherShootout;
 
     return Container(

@@ -7,6 +7,7 @@ import 'package:kubb_app/features/tournament/application/tournament_list_provide
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_override_controller.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/participant_name.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_set_input.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -159,6 +160,17 @@ class _OverrideState extends ConsumerState<TournamentOverrideScreen> {
     required KubbTokens tokens,
   }) {
     final cfg = _config(detail);
+    // M1: resolve both sides' real display names via the central helper so
+    // the override screen's set-input stepper / king toggle show the real
+    // names instead of 'Team A'/'Team B'.
+    final aName = ParticipantName.resolve(
+      l,
+      displayName: match.participantADisplayName,
+    );
+    final bName = ParticipantName.resolve(
+      l,
+      displayName: match.participantBDisplayName,
+    );
     final draft = ref.watch(tournamentOverrideControllerProvider);
     final n = ref.read(tournamentOverrideControllerProvider.notifier);
     final scores = n.toSetScores();
@@ -179,6 +191,8 @@ class _OverrideState extends ConsumerState<TournamentOverrideScreen> {
         for (var i = 0; i < draft.sets.length; i++) ...[
           TournamentSetInput(
             setNumber: i + 1,
+            participantAName: aName,
+            participantBName: bName,
             basekubbsA: draft.sets[i].basekubbsA,
             basekubbsB: draft.sets[i].basekubbsB,
             king: draft.sets[i].king,
@@ -214,7 +228,7 @@ class _OverrideState extends ConsumerState<TournamentOverrideScreen> {
           ),
         ]),
         const SizedBox(height: KubbTokens.space4),
-        _livePreview(l, tokens, ekc, decisive),
+        _livePreview(l, tokens, ekc, decisive, aName, bName),
         const SizedBox(height: KubbTokens.space4),
         _sectionHeader(tokens, l.tournamentOverrideReasonHeader),
         const SizedBox(height: KubbTokens.space2),
@@ -359,13 +373,15 @@ class _OverrideState extends ConsumerState<TournamentOverrideScreen> {
     );
   }
 
-  Widget _livePreview(
-      AppLocalizations l, KubbTokens tokens, MatchEkcScore ekc, bool decisive) {
+  Widget _livePreview(AppLocalizations l, KubbTokens tokens, MatchEkcScore ekc,
+      bool decisive, String aName, String bName) {
     final w = ekc.matchWinner;
     final score = l.tournamentMatchLivePreviewScore(ekc.setsWonA, ekc.setsWonB);
+    // M1 consistency: name the preliminary leader with the real participant
+    // name (same as _LivePreview in the detail screen), not 'Team A'/'Team B'.
     final line = w == null
         ? '$score — ${l.tournamentMatchLivePreviewUndecided}'
-        : '$score — ${w == SetWinner.teamA ? l.tournamentMatchKingByA : l.tournamentMatchKingByB}';
+        : '$score — ${l.tournamentMatchLivePreviewLeader(w == SetWinner.teamA ? aName : bName)}';
     return Container(
       padding: const EdgeInsets.all(KubbTokens.space3),
       decoration: BoxDecoration(

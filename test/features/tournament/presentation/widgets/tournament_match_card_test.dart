@@ -37,9 +37,8 @@ Future<void> _pump(WidgetTester tester, TournamentMatchRef match) async {
       home: Scaffold(
         body: TournamentMatchCard(
           match: match,
-          // Fallback resolver returns a marker we can assert is NOT used
-          // when the server name is present.
-          nameFor: (id) => 'FALLBACK',
+          // M1: the card resolves both sides through the central
+          // [ParticipantName] helper — no per-call-site name resolver.
           onTap: () {},
         ),
       ),
@@ -55,8 +54,10 @@ void main() {
     await _pump(tester, _match(aName: 'SingleAlice', bName: 'CaptainBob'));
     expect(find.text('SingleAlice'), findsOneWidget);
     expect(find.text('CaptainBob'), findsOneWidget);
-    // The UUID-substring/fallback resolver must NOT be used.
-    expect(find.text('FALLBACK'), findsNothing);
+    // No generic 'A'/'B' placeholder and no raw id is rendered.
+    expect(find.text('A'), findsNothing);
+    expect(find.text('B'), findsNothing);
+    expect(find.text('aaaa1111'), findsNothing);
   });
 
   testWidgets('team tournament: shows the team name from the server name',
@@ -67,14 +68,19 @@ void main() {
     );
     expect(find.text('Die Kubb-Kanonen'), findsOneWidget);
     expect(find.text('Holzwürfel United'), findsOneWidget);
-    expect(find.text('FALLBACK'), findsNothing);
+    expect(find.text('Team A'), findsNothing);
+    expect(find.text('Team B'), findsNothing);
   });
 
-  testWidgets('falls back to nameFor only when the server name is absent',
+  testWidgets(
+      'falls back to the localized Unbekannt when the server name is absent',
       (tester) async {
     await _pump(tester, _match());
-    // Both server names null -> both resolve through the fallback.
-    expect(find.text('FALLBACK'), findsNWidgets(2));
+    // Both server names null -> both resolve to the localized "Unbekannt"
+    // fallback, never 'A'/'B' or a raw UUID substring.
+    expect(find.text('Unbekannt'), findsNWidgets(2));
+    expect(find.text('aaaa1111'), findsNothing);
+    expect(find.text('bbbb2222'), findsNothing);
   });
 
   testWidgets('bye row keeps the localized BYE label, side A uses the name',
@@ -92,6 +98,7 @@ void main() {
     );
     await _pump(tester, bye);
     expect(find.text('SingleAlice'), findsOneWidget);
-    expect(find.text('FALLBACK'), findsNothing);
+    // BYE side shows the localized BYE label, never a second placeholder.
+    expect(find.text('BYE'), findsOneWidget);
   });
 }

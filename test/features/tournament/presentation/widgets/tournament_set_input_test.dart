@@ -23,6 +23,10 @@ Future<void> _pump(
       home: Scaffold(
         body: TournamentSetInput(
           setNumber: 1,
+          // M1: the stepper labels and king tri-toggle now carry the REAL
+          // resolved side names instead of the generic 'Team A'/'Team B'.
+          participantAName: 'Alice',
+          participantBName: 'Bob',
           basekubbsA: basekubbsA,
           basekubbsB: basekubbsB,
           king: king,
@@ -86,7 +90,13 @@ void main() {
       king: null,
       onChanged: (v) => captured = v,
     );
-    await tester.tap(find.text('Team A'));
+    // M1: no generic 'Team A'/'Team B' labels anymore — the real side
+    // names are shown for both the stepper and the king toggle.
+    expect(find.text('Team A'), findsNothing);
+    expect(find.text('Team B'), findsNothing);
+    // The king toggle button carries the real side name; it is the second
+    // 'Alice' (the first is the stepper label).
+    await tester.tap(find.text('Alice').last);
     await tester.pumpAndSettle();
     expect(captured, isNotNull);
     expect(captured!.king, SetWinner.teamA);
@@ -108,7 +118,7 @@ void main() {
       king: null,
       onChanged: (v) => captured = v,
     );
-    await tester.tap(find.text('Team A'));
+    await tester.tap(find.text('Alice').last);
     await tester.pumpAndSettle();
     expect(captured?.king, SetWinner.teamA);
   });
@@ -123,7 +133,7 @@ void main() {
       king: SetWinner.teamA,
       onChanged: (v) => captured = v,
     );
-    await tester.tap(find.text('Team B'));
+    await tester.tap(find.text('Bob').last);
     await tester.pumpAndSettle();
     expect(captured?.king, SetWinner.teamB);
   });

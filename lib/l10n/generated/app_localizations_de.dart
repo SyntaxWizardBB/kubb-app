@@ -2933,6 +2933,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentMatchLivePreviewUndecided => 'Match noch offen';
 
   @override
+  String tournamentMatchLivePreviewLeader(String name) {
+    return '$name führt';
+  }
+
+  @override
   String get tournamentMatchSubmitButton => 'Einreichen';
 
   @override

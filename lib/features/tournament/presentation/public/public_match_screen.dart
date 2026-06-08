@@ -73,14 +73,16 @@ class _Body extends ConsumerWidget {
         ref.watch(publicTournamentDetailProvider(match.tournamentId));
     final detail = tournamentAsync.asData?.value;
 
+    // M1: Public-Roster-Lookup ueber `displayNameFor`; fehlt der Name
+    // (z.B. im Augenblick zwischen Match-Detail- und Tournament-Detail-
+    // Resolve), faellt das Label auf das lokalisierte
+    // `tournamentParticipantUnknown` ("Unbekannt") zurueck — niemals auf
+    // eine roh-/gekuerzte UUID oder 'A'/'B'.
     String label(TournamentParticipantId? id) {
-      if (id == null) return '?';
-      final name = detail?.displayNameFor(id);
-      if (name != null) return name;
-      // Fallback fuer den Augenblick zwischen Match-Detail-Resolve und
-      // Tournament-Detail-Resolve: zeige eine gekuerzte ID.
-      final v = id.value;
-      return v.length <= 6 ? v : v.substring(0, 6);
+      if (id == null) return l.tournamentParticipantUnknown;
+      final name = detail?.displayNameFor(id)?.trim();
+      if (name != null && name.isNotEmpty) return name;
+      return l.tournamentParticipantUnknown;
     }
 
     final isBye = match.participantB == null;

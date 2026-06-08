@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_status_chip.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/participant_name.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -10,13 +11,11 @@ import 'package:kubb_domain/kubb_domain.dart';
 class TournamentMatchCard extends StatelessWidget {
   const TournamentMatchCard({
     required this.match,
-    required this.nameFor,
     required this.onTap,
     super.key,
   });
 
   final TournamentMatchRef match;
-  final String Function(TournamentParticipantId id) nameFor;
   final VoidCallback onTap;
 
   @override
@@ -24,16 +23,19 @@ class TournamentMatchCard extends StatelessWidget {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final isBye = match.participantB == null;
-    // CF3 / K08: prefer the server-projected display name (team_id-driven:
-    // single -> nickname, team -> team name). Fall back to the [nameFor]
-    // resolver only when the server shipped no name (older RPC / pending
-    // slot), so the single player's name shows everywhere a match renders.
-    final aLabel = match.participantA == null
-        ? '?'
-        : _resolveLabel(match.participantADisplayName, match.participantA!);
+    // M1: both sides resolve through the single [ParticipantName] helper
+    // (server-projected display name, single -> nickname / team -> team
+    // name; localized "Unbekannt" fallback, never 'A'/'B' or a raw id).
+    final aLabel = ParticipantName.resolve(
+      l,
+      displayName: match.participantADisplayName,
+    );
     final bLabel = isBye
         ? l.tournamentMatchBye
-        : _resolveLabel(match.participantBDisplayName, match.participantB!);
+        : ParticipantName.resolve(
+            l,
+            displayName: match.participantBDisplayName,
+          );
     final scoreLabel = _scoreLabel(match);
 
     return Material(
@@ -117,15 +119,6 @@ class TournamentMatchCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  /// Server-projected display name when present, else the [nameFor]
-  /// resolver. Keeps the UUID/short-id fallback for rows an older RPC or a
-  /// not-yet-named slot returns without a `display_name`.
-  String _resolveLabel(String? serverName, TournamentParticipantId id) {
-    final trimmed = serverName?.trim();
-    if (trimmed != null && trimmed.isNotEmpty) return trimmed;
-    return nameFor(id);
   }
 
   String? _scoreLabel(TournamentMatchRef m) {

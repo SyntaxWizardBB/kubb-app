@@ -82,6 +82,8 @@ TournamentMatchRef _match({
       matchNumberInRound: 1,
       participantA: const TournamentParticipantId('alpha1'),
       participantB: const TournamentParticipantId('beta22'),
+      participantADisplayName: 'Anna',
+      participantBDisplayName: 'Bodo',
       status: status,
       consensusRound: 3,
     );
@@ -175,7 +177,7 @@ void main() {
       await tester.tap(plus.first);
       await tester.pump();
     }
-    await tester.tap(find.text('Team A').first);
+    await tester.tap(find.widgetWithText(InkWell, 'Anna').first);
     await tester.pump();
     // Add a second set, also won by A.
     await tester.tap(find.text('Satz +'));
@@ -184,7 +186,7 @@ void main() {
       await tester.tap(plus.first);
       await tester.pump();
     }
-    await tester.tap(find.text('Team A').first);
+    await tester.tap(find.widgetWithText(InkWell, 'Anna').first);
     await tester.pump();
     // Enter reason.
     await tester.enterText(find.byType(TextField), 'Schiedsrichter');

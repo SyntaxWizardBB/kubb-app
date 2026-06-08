@@ -59,6 +59,8 @@ class _FakeRemote implements TournamentRemote {
 TournamentMatchRef _match({
   TournamentMatchStatus status = TournamentMatchStatus.awaitingResults,
   int consensusRound = 1,
+  String? aName = 'Anna',
+  String? bName = 'Bodo',
 }) {
   return TournamentMatchRef(
     matchId: const TournamentMatchId('m-1'),
@@ -67,6 +69,8 @@ TournamentMatchRef _match({
     matchNumberInRound: 1,
     participantA: const TournamentParticipantId('alpha1'),
     participantB: const TournamentParticipantId('beta22'),
+    participantADisplayName: aName,
+    participantBDisplayName: bName,
     status: status,
     consensusRound: consensusRound,
   );
@@ -148,8 +152,38 @@ void main() {
     expect(find.text('Spiel-Eingabe'), findsOneWidget);
     expect(find.text('Satz 1'), findsOneWidget);
     expect(find.text('Einreichen'), findsOneWidget);
-    expect(find.text('Basekubbs Team A'), findsOneWidget);
-    expect(find.text('Basekubbs Team B'), findsOneWidget);
+    // M1: real names instead of the generic 'Basekubbs Team A'/'Team B'.
+    // 'Anna'/'Bodo' each appear twice (stepper label + king-toggle button)
+    // and in the versus header — never the generic 'Team A'/'Team B'.
+    expect(find.text('Basekubbs Team A'), findsNothing);
+    expect(find.text('Basekubbs Team B'), findsNothing);
+    expect(find.text('Team A'), findsNothing);
+    expect(find.text('Team B'), findsNothing);
+    expect(find.textContaining('Anna'), findsWidgets);
+    expect(find.textContaining('Bodo'), findsWidgets);
+    // Versus header shows the real names.
+    expect(find.text('Anna gegen Bodo'), findsOneWidget);
+  });
+
+  testWidgets('BYE match shows the real name + Freilos header, no placeholder',
+      (tester) async {
+    await _pump(
+      tester,
+      match: const TournamentMatchRef(
+        matchId: TournamentMatchId('m-1'),
+        tournamentId: TournamentId('t-1'),
+        roundNumber: 1,
+        matchNumberInRound: 1,
+        participantA: TournamentParticipantId('alpha1'),
+        participantB: null,
+        participantADisplayName: 'Anna',
+        status: TournamentMatchStatus.scheduled,
+        consensusRound: 1,
+      ),
+    );
+    expect(find.text('Freilos'), findsOneWidget);
+    expect(find.text('Team A'), findsNothing);
+    expect(find.text('Team B'), findsNothing);
   });
 
   testWidgets('consensus banner appears only on retry rounds',
@@ -166,7 +200,7 @@ void main() {
       await tester.tap(plus);
       await tester.pump();
     }
-    await tester.tap(find.text('Team A'));
+    await tester.tap(find.text('Anna').last);
     await tester.pump();
     // Submit.
     await tester.tap(find.text('Einreichen'));
@@ -191,7 +225,7 @@ void main() {
       await tester.tap(plus);
       await tester.pump();
     }
-    await tester.tap(find.text('Team A'));
+    await tester.tap(find.text('Anna').last);
     await tester.pump();
     await tester.tap(find.text('Einreichen'));
     await tester.pump();
@@ -279,7 +313,7 @@ void main() {
       await tester.tap(plus);
       await tester.pump();
     }
-    await tester.tap(find.text('Team A'));
+    await tester.tap(find.text('Anna').last);
     await tester.pump();
     await tester.tap(find.text('Einreichen'));
     await tester.pump();

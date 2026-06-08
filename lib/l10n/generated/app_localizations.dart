@@ -5452,6 +5452,12 @@ abstract class AppLocalizations {
   /// **'Match noch offen'**
   String get tournamentMatchLivePreviewUndecided;
 
+  /// Live-Vorschau line naming the leading side with the real participant name
+  ///
+  /// In de, this message translates to:
+  /// **'{name} führt'**
+  String tournamentMatchLivePreviewLeader(String name);
+
   /// Submit-score button
   ///
   /// In de, this message translates to:

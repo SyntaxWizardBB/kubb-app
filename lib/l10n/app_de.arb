@@ -3851,6 +3851,16 @@
   "@tournamentMatchLivePreviewUndecided": {
     "description": "Live-Vorschau hint when no winner yet"
   },
+  "tournamentMatchLivePreviewLeader": "{name} führt",
+  "@tournamentMatchLivePreviewLeader": {
+    "description": "Live-Vorschau line naming the leading side with the real participant name",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Alice"
+      }
+    }
+  },
   "tournamentMatchSubmitButton": "Einreichen",
   "@tournamentMatchSubmitButton": {
     "description": "Submit-score button"
