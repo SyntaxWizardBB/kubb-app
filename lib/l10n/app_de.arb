@@ -309,6 +309,10 @@
   "@stageGraphViewCanvas": { "description": "Toggle label for the visual canvas view of the stage-graph editor" },
   "stageGraphCanvasEmpty": "Noch keine Stufen. Füge eine Stufe hinzu, um den Graphen zu zeichnen.",
   "@stageGraphCanvasEmpty": { "description": "Empty-state hint shown on the canvas when the graph has no nodes" },
+  "stageGraphCanvasOutPort": "Kante ziehen",
+  "@stageGraphCanvasOutPort": { "description": "Tooltip on the output port handle of a stage-graph node card (drag to draw an edge)" },
+  "stageGraphCanvasInPort": "Eingang",
+  "@stageGraphCanvasInPort": { "description": "Tooltip on the input port handle of a stage-graph node card (edge drop target)" },
   "stageGraphCanvasDeleteEdge": "Kante „{from} → {to}“ löschen?",
   "@stageGraphCanvasDeleteEdge": {
     "description": "Confirmation body when deleting an edge by tapping it on the canvas",

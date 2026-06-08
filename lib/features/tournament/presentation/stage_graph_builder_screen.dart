@@ -1059,9 +1059,18 @@ enum _SelectorKind { topK, ranks, losersOfRounds, winners, nonQualifiers }
 
 /// Add dialog for a [StageEdge].
 class _EdgeDialog extends StatefulWidget {
-  const _EdgeDialog({required this.nodes});
+  const _EdgeDialog({required this.nodes, this.initialFrom, this.initialTo});
 
   final List<StageNode> nodes;
+
+  /// Optional pre-selected `from` node id (L4b-2 gesture seed). When null the
+  /// dialog keeps its original default (`nodes.first`). Additive & optional —
+  /// the toolbar / form-view call sites stay unchanged.
+  final String? initialFrom;
+
+  /// Optional pre-selected `to` node id (L4b-2 gesture seed). When null the
+  /// dialog keeps its original default (`nodes[1]` / `nodes.first`).
+  final String? initialTo;
 
   @override
   State<_EdgeDialog> createState() => _EdgeDialogState();
@@ -1081,8 +1090,19 @@ class _EdgeDialogState extends State<_EdgeDialog> {
   @override
   void initState() {
     super.initState();
-    _from = widget.nodes.first.id;
-    _to = widget.nodes.length > 1 ? widget.nodes[1].id : widget.nodes.first.id;
+    final ids = widget.nodes.map((n) => n.id).toSet();
+    // Use the optional gesture seed when it points at a known node; otherwise
+    // fall back to the UNCHANGED default selection (nodes.first / nodes[1]).
+    final seedFrom = widget.initialFrom;
+    final seedTo = widget.initialTo;
+    _from = (seedFrom != null && ids.contains(seedFrom))
+        ? seedFrom
+        : widget.nodes.first.id;
+    _to = (seedTo != null && ids.contains(seedTo))
+        ? seedTo
+        : (widget.nodes.length > 1
+            ? widget.nodes[1].id
+            : widget.nodes.first.id);
     _roundsController = TextEditingController(text: '1');
   }
 
@@ -1460,14 +1480,23 @@ Future<StageNode?> showStageNodeEditDialog(
     );
 
 /// Opens the existing add-edge dialog and returns the built [StageEdge], or
-/// `null` if cancelled.
+/// `null` if cancelled. [initialFrom]/[initialTo] are OPTIONAL gesture seeds
+/// (L4b-2 port->port drag): when given (and pointing at known nodes) the dialog
+/// pre-selects them; when omitted the dialog keeps its original default
+/// selection, so the toolbar/form-view call sites stay functionally identical.
 Future<StageEdge?> showStageEdgeAddDialog(
   BuildContext context, {
   required List<StageNode> nodes,
+  String? initialFrom,
+  String? initialTo,
 }) =>
     showDialog<StageEdge>(
       context: context,
-      builder: (_) => _EdgeDialog(nodes: nodes),
+      builder: (_) => _EdgeDialog(
+        nodes: nodes,
+        initialFrom: initialFrom,
+        initialTo: initialTo,
+      ),
     );
 
 /// Builds the existing validation panel for a given builder [state]. Reuses the

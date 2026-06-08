@@ -610,6 +610,18 @@ abstract class AppLocalizations {
   /// **'Noch keine Stufen. Füge eine Stufe hinzu, um den Graphen zu zeichnen.'**
   String get stageGraphCanvasEmpty;
 
+  /// Tooltip on the output port handle of a stage-graph node card (drag to draw an edge)
+  ///
+  /// In de, this message translates to:
+  /// **'Kante ziehen'**
+  String get stageGraphCanvasOutPort;
+
+  /// Tooltip on the input port handle of a stage-graph node card (edge drop target)
+  ///
+  /// In de, this message translates to:
+  /// **'Eingang'**
+  String get stageGraphCanvasInPort;
+
   /// Confirmation body when deleting an edge by tapping it on the canvas
   ///
   /// In de, this message translates to:

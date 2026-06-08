@@ -111,3 +111,71 @@ class StageGraphEdgePainter extends CustomPainter {
       old.lineColor != lineColor ||
       old.labelColor != labelColor;
 }
+
+/// Draws the TEMPORARY connection preview line while a port->port edge is being
+/// dragged (L4b-2). Additive, separate painter: it never touches the persistent
+/// [StageGraphEdgePainter] logic above and is mounted on its OWN overlay layer
+/// ABOVE the cards (the persistent edges stay UNDER the cards). When [start] or
+/// [end] is null nothing is drawn (no active drag).
+///
+/// The geometry mirrors [StageGraphEdgePainter] (line + arrow head) so the live
+/// preview is pixel-aligned with the edge that will finally be drawn once the
+/// drag is committed via the dialog.
+class StageGraphConnectionPreviewPainter extends CustomPainter {
+  StageGraphConnectionPreviewPainter({
+    required this.start,
+    required this.end,
+    required this.lineColor,
+  });
+
+  /// Source output-port anchor in canvas-local coordinates, or null if idle.
+  final Offset? start;
+
+  /// Current pointer position in canvas-local coordinates, or null if idle.
+  final Offset? end;
+
+  /// Stroke color (from tokens).
+  final Color lineColor;
+
+  static const double _arrowSize = 9;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final from = start;
+    final to = end;
+    if (from == null || to == null) return;
+
+    final stroke = Paint()
+      ..color = lineColor
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final fill = Paint()
+      ..color = lineColor
+      ..style = PaintingStyle.fill;
+
+    canvas.drawLine(from, to, stroke);
+
+    final angle = math.atan2(to.dy - from.dy, to.dx - from.dx);
+    final p1 = Offset(
+      to.dx - _arrowSize * math.cos(angle - math.pi / 6),
+      to.dy - _arrowSize * math.sin(angle - math.pi / 6),
+    );
+    final p2 = Offset(
+      to.dx - _arrowSize * math.cos(angle + math.pi / 6),
+      to.dy - _arrowSize * math.sin(angle + math.pi / 6),
+    );
+    canvas.drawPath(
+      Path()
+        ..moveTo(to.dx, to.dy)
+        ..lineTo(p1.dx, p1.dy)
+        ..lineTo(p2.dx, p2.dy)
+        ..close(),
+      fill,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant StageGraphConnectionPreviewPainter old) =>
+      old.start != start || old.end != end || old.lineColor != lineColor;
+}

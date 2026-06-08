@@ -287,6 +287,12 @@ class AppLocalizationsDe extends AppLocalizations {
       'Noch keine Stufen. Füge eine Stufe hinzu, um den Graphen zu zeichnen.';
 
   @override
+  String get stageGraphCanvasOutPort => 'Kante ziehen';
+
+  @override
+  String get stageGraphCanvasInPort => 'Eingang';
+
+  @override
   String stageGraphCanvasDeleteEdge(String from, String to) {
     return 'Kante „$from → $to“ löschen?';
   }
