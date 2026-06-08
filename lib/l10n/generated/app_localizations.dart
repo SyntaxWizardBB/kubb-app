@@ -5302,6 +5302,24 @@ abstract class AppLocalizations {
   /// **'Spiele konnten nicht geladen werden'**
   String get tournamentMatchLoadError;
 
+  /// Tooltip / label for the share action on the public match screen
+  ///
+  /// In de, this message translates to:
+  /// **'Spiel-Link teilen'**
+  String get publicMatchShareAction;
+
+  /// Subject line of the system share sheet for a public match link
+  ///
+  /// In de, this message translates to:
+  /// **'Kubb-Spiel verfolgen'**
+  String get publicMatchShareSubject;
+
+  /// Snackbar shown when the public match link was copied to the clipboard (no system share sheet)
+  ///
+  /// In de, this message translates to:
+  /// **'Link kopiert'**
+  String get publicMatchLinkCopied;
+
   /// Label for a BYE participant slot
   ///
   /// In de, this message translates to:

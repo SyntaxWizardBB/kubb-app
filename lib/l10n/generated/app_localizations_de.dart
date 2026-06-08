@@ -2848,6 +2848,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentMatchLoadError => 'Spiele konnten nicht geladen werden';
 
   @override
+  String get publicMatchShareAction => 'Spiel-Link teilen';
+
+  @override
+  String get publicMatchShareSubject => 'Kubb-Spiel verfolgen';
+
+  @override
+  String get publicMatchLinkCopied => 'Link kopiert';
+
+  @override
   String get tournamentMatchBye => 'BYE';
 
   @override

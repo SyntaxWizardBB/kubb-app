@@ -5,6 +5,7 @@ import 'package:kubb_app/features/tournament/application/public_tournament_provi
 import 'package:kubb_app/features/tournament/data/public_tournament_models.dart';
 import 'package:kubb_app/features/tournament/data/public_tournament_realtime.dart';
 import 'package:kubb_app/features/tournament/presentation/bracket/bracket_canvas.dart';
+import 'package:kubb_app/features/tournament/presentation/public/public_match_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_status_pill.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -296,6 +297,10 @@ class _PublicMatchTile extends StatelessWidget {
                 fontWeight: FontWeight.w800,
                 color: tokens.fg,
                 fontFeatures: const [FontFeature.tabularFigures()])),
+        // P1: per-match share entry from the 3-tab overview — shares the
+        // public /public/match/<id> link via the same SharePlus/clipboard
+        // path as the match detail screen.
+        PublicMatchShareButton(matchId: match.matchId.value),
       ]),
     );
   }

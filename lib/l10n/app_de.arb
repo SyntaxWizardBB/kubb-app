@@ -3705,6 +3705,18 @@
   "@tournamentMatchLoadError": {
     "description": "Error banner when match list / detail fails to load"
   },
+  "publicMatchShareAction": "Spiel-Link teilen",
+  "@publicMatchShareAction": {
+    "description": "Tooltip / label for the share action on the public match screen"
+  },
+  "publicMatchShareSubject": "Kubb-Spiel verfolgen",
+  "@publicMatchShareSubject": {
+    "description": "Subject line of the system share sheet for a public match link"
+  },
+  "publicMatchLinkCopied": "Link kopiert",
+  "@publicMatchLinkCopied": {
+    "description": "Snackbar shown when the public match link was copied to the clipboard (no system share sheet)"
+  },
   "tournamentMatchBye": "BYE",
   "@tournamentMatchBye": {
     "description": "Label for a BYE participant slot"
