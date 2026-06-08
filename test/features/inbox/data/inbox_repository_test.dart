@@ -185,4 +185,35 @@ void main() {
     expect(hydrated.single.kind, InboxMessageKind.tournamentShootout);
     expect(hydrated.single.actionPayload?['start_rank'], 2);
   });
+
+  test(
+      'N1/C2: cached tournament_finished row hydrates to tournamentFinished '
+      'with the round-time body intact (cache round-trip)', () async {
+    // The server (and _kindToWire) emit the distinct 'tournament_finished'
+    // wire kind. The offline-first cache path must map it back to the typed
+    // kind and preserve the configured round time the server put in the body.
+    await db.inboxMessagesDao.upsertMany([
+      InboxMessagesCompanion(
+        id: const Value('finished-1'),
+        userId: const Value('user-1'),
+        kind: const Value('tournament_finished'),
+        bodyJson: Value(jsonEncode(<String, dynamic>{
+          'subject': 'Turnier beendet',
+          'body': 'Turnier "ProbeCup" ist beendet. Danke fürs Mitspielen! '
+              '— Spielzeit 30 min',
+          'action_payload': <String, dynamic>{
+            'tournament_id': 't-1',
+            'phase': 'finished',
+          },
+        })),
+        createdAt: Value(DateTime.utc(2026, 6, 6, 10).millisecondsSinceEpoch),
+      ),
+    ]);
+
+    final hydrated = await repo.loadFromCache('user-1');
+    expect(hydrated, hasLength(1));
+    expect(hydrated.single.kind, InboxMessageKind.tournamentFinished);
+    expect(hydrated.single.body, contains('Spielzeit 30 min'));
+    expect(hydrated.single.actionPayload?['phase'], 'finished');
+  });
 }

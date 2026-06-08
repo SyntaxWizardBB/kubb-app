@@ -245,6 +245,8 @@ class InboxRepository {
         // 'tournament_round'; the shoot-out is disambiguated by the
         // action_payload, not a distinct wire kind (P6 D2a).
         return 'tournament_round';
+      case InboxMessageKind.tournamentFinished:
+        return 'tournament_finished';
     }
   }
 }

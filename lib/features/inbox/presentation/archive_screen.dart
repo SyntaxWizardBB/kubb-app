@@ -145,6 +145,8 @@ class _ArchivedTile extends StatelessWidget {
         return 'BEITRITTSANFRAGE';
       case InboxMessageKind.tournamentShootout:
         return 'SHOOT-OUT';
+      case InboxMessageKind.tournamentFinished:
+        return 'TURNIER BEENDET';
     }
   }
 }

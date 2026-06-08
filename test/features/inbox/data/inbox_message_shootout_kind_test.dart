@@ -42,6 +42,45 @@ void main() {
       expect(InboxMessageKind.fromWire('system'), InboxMessageKind.system);
     });
 
+    // N1: tournament-end kind.
+    test('tournament_finished -> tournamentFinished', () {
+      expect(
+        InboxMessageKind.fromWire('tournament_finished'),
+        InboxMessageKind.tournamentFinished,
+      );
+    });
+
+    test('tournament_finished is unaffected by an action_payload kind', () {
+      // Only 'tournament_round' is disambiguated on action_payload['kind'];
+      // a finished row keeps its own distinct wire kind regardless of payload.
+      expect(
+        InboxMessageKind.fromWire(
+          'tournament_finished',
+          actionPayload: const {'tournament_id': 't-1', 'phase': 'finished'},
+        ),
+        InboxMessageKind.tournamentFinished,
+      );
+    });
+
+    test('fromRow wires the finished kind and keeps the round-time body', () {
+      final msg = InboxMessage.fromRow(<String, dynamic>{
+        'id': 'm-fin',
+        'kind': 'tournament_finished',
+        'subject': 'Turnier beendet',
+        'body':
+            'Turnier "ProbeCup" ist beendet. Danke fürs Mitspielen! '
+                '— Spielzeit 30 min',
+        'sent_at': '2026-06-06T10:00:00Z',
+        'action_payload': <String, dynamic>{
+          'tournament_id': 't-1',
+          'phase': 'finished',
+        },
+      });
+      expect(msg.kind, InboxMessageKind.tournamentFinished);
+      expect(msg.body, contains('Spielzeit 30 min'));
+      expect(msg.awaitsReply, isFalse);
+    });
+
     test('fromRow wires the shoot-out kind via the row action_payload', () {
       final msg = InboxMessage.fromRow(<String, dynamic>{
         'id': 'm-1',

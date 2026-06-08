@@ -162,6 +162,10 @@ class _MessageTile extends ConsumerWidget {
       case InboxMessageKind.clubJoinRequest:
       case InboxMessageKind.tournamentShootout:
         return const Color(0xFFFBF2D6);
+      // N1: tournament-end is a positive, informational close — use the
+      // lightest meadow (success) tint from the design-system palette.
+      case InboxMessageKind.tournamentFinished:
+        return KubbTokens.meadow50;
     }
   }
 
@@ -189,6 +193,8 @@ class _MessageTile extends ConsumerWidget {
         return 'Beitrittsanfrage';
       case InboxMessageKind.tournamentShootout:
         return 'Shoot-Out';
+      case InboxMessageKind.tournamentFinished:
+        return 'Turnier beendet';
     }
   }
 

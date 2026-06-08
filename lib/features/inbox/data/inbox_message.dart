@@ -34,7 +34,14 @@ enum InboxMessageKind {
   /// `action_payload['kind'] == 'shootout'`; [fromWire] disambiguates on that
   /// so it routes to the dedicated report/confirm screen instead of the
   /// generic notice rendering.
-  tournamentShootout;
+  tournamentShootout,
+
+  /// N1 tournament-end notification: the tournament has been finalized. Sent
+  /// to every participant on the `tournaments.status -> finalized` transition
+  /// (migration `20261242000000_tournament_finished_inbox_round_time.sql`).
+  /// The body already carries the configured round time, so the UI renders it
+  /// as a plain informational message — no action panel.
+  tournamentFinished;
 
   /// Maps the wire `kind` plus the row's [actionPayload] onto a typed kind.
   ///
@@ -72,6 +79,8 @@ enum InboxMessageKind {
         return InboxMessageKind.clubMemberRemoved;
       case 'club_join_request':
         return InboxMessageKind.clubJoinRequest;
+      case 'tournament_finished':
+        return InboxMessageKind.tournamentFinished;
       default:
         return InboxMessageKind.notice;
     }
