@@ -1,5 +1,315 @@
 {
   "@@locale": "de",
+  "stageGraphEyebrow": "Turnier-Baukasten",
+  "@stageGraphEyebrow": {
+    "description": "AppBar eyebrow for the stage-graph builder screen"
+  },
+  "stageGraphTitle": "Stufen-Graph",
+  "@stageGraphTitle": {
+    "description": "AppBar title for the stage-graph builder screen"
+  },
+  "stageGraphHubTileTitle": "Stufen-Graph bauen",
+  "@stageGraphHubTileTitle": {
+    "description": "Tournament-hub tile title that opens the stage-graph builder"
+  },
+  "stageGraphHubTileSubtitle": "Stufen, Routing und Validierung komponieren",
+  "@stageGraphHubTileSubtitle": {
+    "description": "Tournament-hub tile subtitle for the stage-graph builder"
+  },
+  "stageGraphFieldSizeSection": "Feldgröße",
+  "@stageGraphFieldSizeSection": {
+    "description": "Section title for the field-size input"
+  },
+  "stageGraphFieldSizeLabel": "Anzahl Felder",
+  "@stageGraphFieldSizeLabel": {
+    "description": "Label for the field-size number field"
+  },
+  "stageGraphFieldSizeHint": "Die Feldgröße treibt die Kapazitäts- und Planbarkeits-Warnungen.",
+  "@stageGraphFieldSizeHint": {
+    "description": "Helper text explaining what the field size affects"
+  },
+  "stageGraphNodesSection": "Stufen",
+  "@stageGraphNodesSection": {
+    "description": "Section title for the nodes list"
+  },
+  "stageGraphAddNode": "Stufe hinzufügen",
+  "@stageGraphAddNode": {
+    "description": "Button to add a new stage node"
+  },
+  "stageGraphEditNode": "Stufe bearbeiten",
+  "@stageGraphEditNode": {
+    "description": "Action / dialog title to edit a stage node"
+  },
+  "stageGraphDeleteNode": "Stufe löschen",
+  "@stageGraphDeleteNode": {
+    "description": "Action to delete a stage node"
+  },
+  "stageGraphDeleteNodeConfirm": "Stufe „{id}“ und alle damit verbundenen Kanten löschen?",
+  "@stageGraphDeleteNodeConfirm": {
+    "description": "Confirmation body when deleting a node",
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  },
+  "stageGraphEdgesSection": "Kanten",
+  "@stageGraphEdgesSection": {
+    "description": "Section title for the edges list"
+  },
+  "stageGraphAddEdge": "Kante hinzufügen",
+  "@stageGraphAddEdge": {
+    "description": "Button to add a new routing edge"
+  },
+  "stageGraphDeleteEdge": "Kante löschen",
+  "@stageGraphDeleteEdge": {
+    "description": "Action to delete a routing edge"
+  },
+  "stageGraphEdgesEmpty": "Noch keine Kanten. Verbinde zwei Stufen, um Teilnehmer weiterzuleiten.",
+  "@stageGraphEdgesEmpty": {
+    "description": "Hint shown when the edges list is empty but nodes exist"
+  },
+  "stageGraphEdgesNeedNodes": "Mindestens zwei Stufen nötig, um eine Kante zu ziehen.",
+  "@stageGraphEdgesNeedNodes": {
+    "description": "Hint shown when there are fewer than two nodes for an edge"
+  },
+  "stageGraphValidationSection": "Validierung",
+  "@stageGraphValidationSection": {
+    "description": "Section title for the validation panel"
+  },
+  "stageGraphPlayable": "Spielbar",
+  "@stageGraphPlayable": {
+    "description": "Indicator that the graph has no blocking errors"
+  },
+  "stageGraphNotPlayable": "Nicht spielbar",
+  "@stageGraphNotPlayable": {
+    "description": "Indicator that the graph has blocking errors"
+  },
+  "stageGraphNoFindings": "Spielbar — keine Befunde.",
+  "@stageGraphNoFindings": {
+    "description": "Shown when the non-empty graph validates without findings"
+  },
+  "stageGraphSeverityError": "Fehler",
+  "@stageGraphSeverityError": {
+    "description": "Label for an error-severity finding"
+  },
+  "stageGraphSeverityWarning": "Warnung",
+  "@stageGraphSeverityWarning": {
+    "description": "Label for a warning-severity finding"
+  },
+  "stageGraphTemplatesSection": "Vorlagen",
+  "@stageGraphTemplatesSection": {
+    "description": "Section title for the template bar"
+  },
+  "stageGraphTemplateApply": "Anwenden",
+  "@stageGraphTemplateApply": {
+    "description": "Button to apply the selected template"
+  },
+  "stageGraphTemplateSave": "Als Vorlage speichern",
+  "@stageGraphTemplateSave": {
+    "description": "Button to save the current graph as a template"
+  },
+  "stageGraphTemplateSystemBadge": "Vorlage",
+  "@stageGraphTemplateSystemBadge": {
+    "description": "Badge marking a system-preset template"
+  },
+  "stageGraphTemplatesEmpty": "Keine Vorlagen verfügbar.",
+  "@stageGraphTemplatesEmpty": {
+    "description": "Shown when the template list is empty"
+  },
+  "stageGraphTemplatesError": "Vorlagen konnten nicht geladen werden.",
+  "@stageGraphTemplatesError": {
+    "description": "Error text when template loading fails"
+  },
+  "stageGraphRetry": "Erneut versuchen",
+  "@stageGraphRetry": {
+    "description": "Retry button after a load error"
+  },
+  "stageGraphTemplatePickerLabel": "Vorlage wählen",
+  "@stageGraphTemplatePickerLabel": {
+    "description": "Label for the template picker dropdown"
+  },
+  "stageGraphTemplateSaved": "Vorlage gespeichert.",
+  "@stageGraphTemplateSaved": {
+    "description": "Success snackbar after saving a template"
+  },
+  "stageGraphTemplateSaveError": "Vorlage konnte nicht gespeichert werden.",
+  "@stageGraphTemplateSaveError": {
+    "description": "Error snackbar after a failed template save"
+  },
+  "stageGraphTemplateApplied": "Vorlage angewendet.",
+  "@stageGraphTemplateApplied": {
+    "description": "Success snackbar after applying a template"
+  },
+  "stageGraphEmptyTitle": "Noch kein Stufen-Graph",
+  "@stageGraphEmptyTitle": {
+    "description": "Empty-state title when the graph has no nodes or edges"
+  },
+  "stageGraphEmptyBody": "Füge eine erste Stufe hinzu oder wende eine Vorlage an, um das Turnier zu komponieren.",
+  "@stageGraphEmptyBody": {
+    "description": "Empty-state body when the graph is empty"
+  },
+  "stageGraphFieldId": "Stufen-ID",
+  "@stageGraphFieldId": {
+    "description": "Label for the node id text field"
+  },
+  "stageGraphFieldIdLockedHint": "Die ID kann nicht geändert werden, solange Kanten daran hängen können.",
+  "@stageGraphFieldIdLockedHint": {
+    "description": "Helper text shown when the node id field is locked in edit mode"
+  },
+  "stageGraphFieldType": "Typ",
+  "@stageGraphFieldType": {
+    "description": "Label for the node type dropdown"
+  },
+  "stageGraphFieldSeeding": "Seeding",
+  "@stageGraphFieldSeeding": {
+    "description": "Label for the seeding-source dropdown"
+  },
+  "stageGraphConfigGroupCount": "Gruppen",
+  "@stageGraphConfigGroupCount": {
+    "description": "Config field label for groupCount"
+  },
+  "stageGraphConfigQualifierCount": "Qualifikanten",
+  "@stageGraphConfigQualifierCount": {
+    "description": "Config field label for qualifierCount"
+  },
+  "stageGraphConfigRounds": "Runden",
+  "@stageGraphConfigRounds": {
+    "description": "Config field label for rounds"
+  },
+  "stageGraphConfigSlots": "Plätze",
+  "@stageGraphConfigSlots": {
+    "description": "Config field label for slots"
+  },
+  "stageGraphErrorIdEmpty": "Die ID darf nicht leer sein.",
+  "@stageGraphErrorIdEmpty": {
+    "description": "Inline error when the node id is empty"
+  },
+  "stageGraphErrorIdDuplicate": "Diese ID existiert bereits.",
+  "@stageGraphErrorIdDuplicate": {
+    "description": "Inline error when the node id collides with an existing one"
+  },
+  "stageGraphEdgeFrom": "Von",
+  "@stageGraphEdgeFrom": {
+    "description": "Label for the source-node dropdown in the edge dialog"
+  },
+  "stageGraphEdgeTo": "Nach",
+  "@stageGraphEdgeTo": {
+    "description": "Label for the target-node dropdown in the edge dialog"
+  },
+  "stageGraphEdgeSelectorLabel": "Selektor",
+  "@stageGraphEdgeSelectorLabel": {
+    "description": "Label for the selector-type dropdown in the edge dialog"
+  },
+  "stageGraphEdgeSeedingInLabel": "Seeding-Modus",
+  "@stageGraphEdgeSeedingInLabel": {
+    "description": "Label for the seeding-in dropdown in the edge dialog"
+  },
+  "stageGraphErrorSameNode": "Quelle und Ziel müssen verschieden sein.",
+  "@stageGraphErrorSameNode": {
+    "description": "Inline error when from-node equals to-node"
+  },
+  "stageGraphErrorRankOrder": "„Von“ muss kleiner oder gleich „Nach“ sein.",
+  "@stageGraphErrorRankOrder": {
+    "description": "Inline error when ranks from > to"
+  },
+  "stageGraphErrorRoundsEmpty": "Bitte mindestens eine Runde angeben.",
+  "@stageGraphErrorRoundsEmpty": {
+    "description": "Inline error when the rounds set is empty"
+  },
+  "stageGraphSelectorRoundsLabel": "Runden (kommagetrennt)",
+  "@stageGraphSelectorRoundsLabel": {
+    "description": "Label for the losers-of-rounds set input"
+  },
+  "stageGraphSelectorRankFrom": "Rang von",
+  "@stageGraphSelectorRankFrom": {
+    "description": "Label for the ranks-from field"
+  },
+  "stageGraphSelectorRankTo": "Rang bis",
+  "@stageGraphSelectorRankTo": {
+    "description": "Label for the ranks-to field"
+  },
+  "stageGraphSelectorK": "Anzahl (Top K)",
+  "@stageGraphSelectorK": {
+    "description": "Label for the top-k field"
+  },
+  "stageGraphSelectorTopK": "Top {k}",
+  "@stageGraphSelectorTopK": {
+    "description": "Short label for a TopK selector",
+    "placeholders": {
+      "k": { "type": "int" }
+    }
+  },
+  "stageGraphSelectorRanks": "Ränge {from}–{to}",
+  "@stageGraphSelectorRanks": {
+    "description": "Short label for a Ranks selector",
+    "placeholders": {
+      "from": { "type": "int" },
+      "to": { "type": "int" }
+    }
+  },
+  "stageGraphSelectorLosers": "Verlierer Runden {rounds}",
+  "@stageGraphSelectorLosers": {
+    "description": "Short label for a LosersOfRounds selector",
+    "placeholders": {
+      "rounds": { "type": "String" }
+    }
+  },
+  "stageGraphSelectorWinners": "Sieger",
+  "@stageGraphSelectorWinners": {
+    "description": "Short label for a Winners selector"
+  },
+  "stageGraphSelectorNonQualifiers": "Übrige",
+  "@stageGraphSelectorNonQualifiers": {
+    "description": "Short label for a NonQualifiers selector"
+  },
+  "stageGraphNodeTypePool": "Gruppen",
+  "@stageGraphNodeTypePool": { "description": "Label for StageNodeType.pool" },
+  "stageGraphNodeTypeRoundRobin": "Jeder gegen jeden",
+  "@stageGraphNodeTypeRoundRobin": { "description": "Label for StageNodeType.roundRobin" },
+  "stageGraphNodeTypeSwiss": "Schweizer System",
+  "@stageGraphNodeTypeSwiss": { "description": "Label for StageNodeType.swiss" },
+  "stageGraphNodeTypeSingleElim": "K.-o. (einfach)",
+  "@stageGraphNodeTypeSingleElim": { "description": "Label for StageNodeType.singleElim" },
+  "stageGraphNodeTypeDoubleElim": "K.-o. (doppelt)",
+  "@stageGraphNodeTypeDoubleElim": { "description": "Label for StageNodeType.doubleElim" },
+  "stageGraphNodeTypeConsolation": "Trostrunde",
+  "@stageGraphNodeTypeConsolation": { "description": "Label for StageNodeType.consolation" },
+  "stageGraphNodeTypeShootoutQuali": "Shoot-out-Quali",
+  "@stageGraphNodeTypeShootoutQuali": { "description": "Label for StageNodeType.shootoutQuali" },
+  "stageGraphSeedingFromElo": "Aus ELO",
+  "@stageGraphSeedingFromElo": { "description": "Label for StageSeedingSource.fromElo" },
+  "stageGraphSeedingFromPrevRanking": "Aus Vorrangliste",
+  "@stageGraphSeedingFromPrevRanking": { "description": "Label for StageSeedingSource.fromPrevRanking" },
+  "stageGraphSeedingManual": "Manuell",
+  "@stageGraphSeedingManual": { "description": "Label for StageSeedingSource.manual" },
+  "stageGraphSeedingAsRouted": "Wie geroutet",
+  "@stageGraphSeedingAsRouted": { "description": "Label for StageSeedingSource.asRouted" },
+  "stageGraphSeedingInOrderPreserving": "Reihenfolge erhalten",
+  "@stageGraphSeedingInOrderPreserving": { "description": "Label for StageSeedingIn.orderPreserving" },
+  "stageGraphSeedingInReseedBySourceRank": "Neu nach Quell-Rang",
+  "@stageGraphSeedingInReseedBySourceRank": { "description": "Label for StageSeedingIn.reseedBySourceRank" },
+  "stageGraphSeedingInManual": "Manuell",
+  "@stageGraphSeedingInManual": { "description": "Label for StageSeedingIn.manual" },
+  "stageGraphSaveTemplateName": "Name",
+  "@stageGraphSaveTemplateName": { "description": "Label for the template name field" },
+  "stageGraphSaveTemplateVisibility": "Sichtbarkeit",
+  "@stageGraphSaveTemplateVisibility": { "description": "Label for the visibility dropdown" },
+  "stageGraphVisibilityPrivate": "Privat",
+  "@stageGraphVisibilityPrivate": { "description": "Label for TemplateVisibility.private" },
+  "stageGraphVisibilityClub": "Verein",
+  "@stageGraphVisibilityClub": { "description": "Label for TemplateVisibility.club" },
+  "stageGraphVisibilityPublic": "Öffentlich",
+  "@stageGraphVisibilityPublic": { "description": "Label for TemplateVisibility.public" },
+  "stageGraphConfirm": "Bestätigen",
+  "@stageGraphConfirm": { "description": "Generic confirm button in stage-graph dialogs" },
+  "stageGraphCancel": "Abbrechen",
+  "@stageGraphCancel": { "description": "Generic cancel button in stage-graph dialogs" },
+  "stageGraphSeedingFieldHint": "Seeding: {label}",
+  "@stageGraphSeedingFieldHint": {
+    "description": "Compact seeding label shown on a node tile",
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
   "appTitle": "Kubb",
   "@appTitle": {
     "description": "Application title"

@@ -40,6 +40,10 @@ abstract final class TournamentRoutes {
   /// `/tournament/:id` detail route.
   static const eloLeaderboard = '/tournament/elo';
 
+  /// Stage-graph builder (ADR-0030 §Editor, form-based variant). Static
+  /// prefix so it wins over the dynamic `/tournament/:id` detail route.
+  static const stageGraph = '/tournament/stage-graph';
+
   /// Single tournament overview. Append `/:id`.
   static const detail = '/tournament';
 

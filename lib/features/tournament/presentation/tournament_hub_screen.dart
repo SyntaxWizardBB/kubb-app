@@ -153,6 +153,15 @@ class TournamentHubScreen extends ConsumerWidget {
                   unawaited(context.push(TournamentRoutes.eloLeaderboard)),
             ),
             const SizedBox(height: KubbTokens.space3),
+            // ADR-0030 §Editor: form-based stage-graph builder entry.
+            KubbModeCard(
+              title: l.stageGraphHubTileTitle,
+              subtitle: l.stageGraphHubTileSubtitle,
+              icon: LucideIcons.gitBranch,
+              accentTone: KubbChipTone.tournamentWood,
+              onTap: () => unawaited(context.push(TournamentRoutes.stageGraph)),
+            ),
+            const SizedBox(height: KubbTokens.space3),
             KubbModeCard(
               title: l.tournamentHubStatsTitle,
               subtitle: l.tournamentHubStatsSubtitle,

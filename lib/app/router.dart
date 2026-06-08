@@ -45,6 +45,7 @@ import 'package:kubb_app/features/tournament/presentation/elo_leaderboard_screen
 import 'package:kubb_app/features/tournament/presentation/public/public_match_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/public/public_tournament_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/register_team_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/stage_graph_builder_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_bracket_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_conflict_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_detail_screen.dart';
@@ -490,6 +491,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: TournamentRoutes.newTournament,
                 builder: (_, _) => const TournamentSetupWizard(),
+              ),
+              GoRoute(
+                path: TournamentRoutes.stageGraph,
+                builder: (_, _) => const StageGraphBuilderScreen(),
               ),
               GoRoute(
                 path: '${TournamentRoutes.detail}/:id',

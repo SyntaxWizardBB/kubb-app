@@ -94,6 +94,510 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('de')];
 
+  /// AppBar eyebrow for the stage-graph builder screen
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier-Baukasten'**
+  String get stageGraphEyebrow;
+
+  /// AppBar title for the stage-graph builder screen
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen-Graph'**
+  String get stageGraphTitle;
+
+  /// Tournament-hub tile title that opens the stage-graph builder
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen-Graph bauen'**
+  String get stageGraphHubTileTitle;
+
+  /// Tournament-hub tile subtitle for the stage-graph builder
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen, Routing und Validierung komponieren'**
+  String get stageGraphHubTileSubtitle;
+
+  /// Section title for the field-size input
+  ///
+  /// In de, this message translates to:
+  /// **'Feldgröße'**
+  String get stageGraphFieldSizeSection;
+
+  /// Label for the field-size number field
+  ///
+  /// In de, this message translates to:
+  /// **'Anzahl Felder'**
+  String get stageGraphFieldSizeLabel;
+
+  /// Helper text explaining what the field size affects
+  ///
+  /// In de, this message translates to:
+  /// **'Die Feldgröße treibt die Kapazitäts- und Planbarkeits-Warnungen.'**
+  String get stageGraphFieldSizeHint;
+
+  /// Section title for the nodes list
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen'**
+  String get stageGraphNodesSection;
+
+  /// Button to add a new stage node
+  ///
+  /// In de, this message translates to:
+  /// **'Stufe hinzufügen'**
+  String get stageGraphAddNode;
+
+  /// Action / dialog title to edit a stage node
+  ///
+  /// In de, this message translates to:
+  /// **'Stufe bearbeiten'**
+  String get stageGraphEditNode;
+
+  /// Action to delete a stage node
+  ///
+  /// In de, this message translates to:
+  /// **'Stufe löschen'**
+  String get stageGraphDeleteNode;
+
+  /// Confirmation body when deleting a node
+  ///
+  /// In de, this message translates to:
+  /// **'Stufe „{id}“ und alle damit verbundenen Kanten löschen?'**
+  String stageGraphDeleteNodeConfirm(String id);
+
+  /// Section title for the edges list
+  ///
+  /// In de, this message translates to:
+  /// **'Kanten'**
+  String get stageGraphEdgesSection;
+
+  /// Button to add a new routing edge
+  ///
+  /// In de, this message translates to:
+  /// **'Kante hinzufügen'**
+  String get stageGraphAddEdge;
+
+  /// Action to delete a routing edge
+  ///
+  /// In de, this message translates to:
+  /// **'Kante löschen'**
+  String get stageGraphDeleteEdge;
+
+  /// Hint shown when the edges list is empty but nodes exist
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Kanten. Verbinde zwei Stufen, um Teilnehmer weiterzuleiten.'**
+  String get stageGraphEdgesEmpty;
+
+  /// Hint shown when there are fewer than two nodes for an edge
+  ///
+  /// In de, this message translates to:
+  /// **'Mindestens zwei Stufen nötig, um eine Kante zu ziehen.'**
+  String get stageGraphEdgesNeedNodes;
+
+  /// Section title for the validation panel
+  ///
+  /// In de, this message translates to:
+  /// **'Validierung'**
+  String get stageGraphValidationSection;
+
+  /// Indicator that the graph has no blocking errors
+  ///
+  /// In de, this message translates to:
+  /// **'Spielbar'**
+  String get stageGraphPlayable;
+
+  /// Indicator that the graph has blocking errors
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht spielbar'**
+  String get stageGraphNotPlayable;
+
+  /// Shown when the non-empty graph validates without findings
+  ///
+  /// In de, this message translates to:
+  /// **'Spielbar — keine Befunde.'**
+  String get stageGraphNoFindings;
+
+  /// Label for an error-severity finding
+  ///
+  /// In de, this message translates to:
+  /// **'Fehler'**
+  String get stageGraphSeverityError;
+
+  /// Label for a warning-severity finding
+  ///
+  /// In de, this message translates to:
+  /// **'Warnung'**
+  String get stageGraphSeverityWarning;
+
+  /// Section title for the template bar
+  ///
+  /// In de, this message translates to:
+  /// **'Vorlagen'**
+  String get stageGraphTemplatesSection;
+
+  /// Button to apply the selected template
+  ///
+  /// In de, this message translates to:
+  /// **'Anwenden'**
+  String get stageGraphTemplateApply;
+
+  /// Button to save the current graph as a template
+  ///
+  /// In de, this message translates to:
+  /// **'Als Vorlage speichern'**
+  String get stageGraphTemplateSave;
+
+  /// Badge marking a system-preset template
+  ///
+  /// In de, this message translates to:
+  /// **'Vorlage'**
+  String get stageGraphTemplateSystemBadge;
+
+  /// Shown when the template list is empty
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Vorlagen verfügbar.'**
+  String get stageGraphTemplatesEmpty;
+
+  /// Error text when template loading fails
+  ///
+  /// In de, this message translates to:
+  /// **'Vorlagen konnten nicht geladen werden.'**
+  String get stageGraphTemplatesError;
+
+  /// Retry button after a load error
+  ///
+  /// In de, this message translates to:
+  /// **'Erneut versuchen'**
+  String get stageGraphRetry;
+
+  /// Label for the template picker dropdown
+  ///
+  /// In de, this message translates to:
+  /// **'Vorlage wählen'**
+  String get stageGraphTemplatePickerLabel;
+
+  /// Success snackbar after saving a template
+  ///
+  /// In de, this message translates to:
+  /// **'Vorlage gespeichert.'**
+  String get stageGraphTemplateSaved;
+
+  /// Error snackbar after a failed template save
+  ///
+  /// In de, this message translates to:
+  /// **'Vorlage konnte nicht gespeichert werden.'**
+  String get stageGraphTemplateSaveError;
+
+  /// Success snackbar after applying a template
+  ///
+  /// In de, this message translates to:
+  /// **'Vorlage angewendet.'**
+  String get stageGraphTemplateApplied;
+
+  /// Empty-state title when the graph has no nodes or edges
+  ///
+  /// In de, this message translates to:
+  /// **'Noch kein Stufen-Graph'**
+  String get stageGraphEmptyTitle;
+
+  /// Empty-state body when the graph is empty
+  ///
+  /// In de, this message translates to:
+  /// **'Füge eine erste Stufe hinzu oder wende eine Vorlage an, um das Turnier zu komponieren.'**
+  String get stageGraphEmptyBody;
+
+  /// Label for the node id text field
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen-ID'**
+  String get stageGraphFieldId;
+
+  /// Helper text shown when the node id field is locked in edit mode
+  ///
+  /// In de, this message translates to:
+  /// **'Die ID kann nicht geändert werden, solange Kanten daran hängen können.'**
+  String get stageGraphFieldIdLockedHint;
+
+  /// Label for the node type dropdown
+  ///
+  /// In de, this message translates to:
+  /// **'Typ'**
+  String get stageGraphFieldType;
+
+  /// Label for the seeding-source dropdown
+  ///
+  /// In de, this message translates to:
+  /// **'Seeding'**
+  String get stageGraphFieldSeeding;
+
+  /// Config field label for groupCount
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppen'**
+  String get stageGraphConfigGroupCount;
+
+  /// Config field label for qualifierCount
+  ///
+  /// In de, this message translates to:
+  /// **'Qualifikanten'**
+  String get stageGraphConfigQualifierCount;
+
+  /// Config field label for rounds
+  ///
+  /// In de, this message translates to:
+  /// **'Runden'**
+  String get stageGraphConfigRounds;
+
+  /// Config field label for slots
+  ///
+  /// In de, this message translates to:
+  /// **'Plätze'**
+  String get stageGraphConfigSlots;
+
+  /// Inline error when the node id is empty
+  ///
+  /// In de, this message translates to:
+  /// **'Die ID darf nicht leer sein.'**
+  String get stageGraphErrorIdEmpty;
+
+  /// Inline error when the node id collides with an existing one
+  ///
+  /// In de, this message translates to:
+  /// **'Diese ID existiert bereits.'**
+  String get stageGraphErrorIdDuplicate;
+
+  /// Label for the source-node dropdown in the edge dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Von'**
+  String get stageGraphEdgeFrom;
+
+  /// Label for the target-node dropdown in the edge dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Nach'**
+  String get stageGraphEdgeTo;
+
+  /// Label for the selector-type dropdown in the edge dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Selektor'**
+  String get stageGraphEdgeSelectorLabel;
+
+  /// Label for the seeding-in dropdown in the edge dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Seeding-Modus'**
+  String get stageGraphEdgeSeedingInLabel;
+
+  /// Inline error when from-node equals to-node
+  ///
+  /// In de, this message translates to:
+  /// **'Quelle und Ziel müssen verschieden sein.'**
+  String get stageGraphErrorSameNode;
+
+  /// Inline error when ranks from > to
+  ///
+  /// In de, this message translates to:
+  /// **'„Von“ muss kleiner oder gleich „Nach“ sein.'**
+  String get stageGraphErrorRankOrder;
+
+  /// Inline error when the rounds set is empty
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte mindestens eine Runde angeben.'**
+  String get stageGraphErrorRoundsEmpty;
+
+  /// Label for the losers-of-rounds set input
+  ///
+  /// In de, this message translates to:
+  /// **'Runden (kommagetrennt)'**
+  String get stageGraphSelectorRoundsLabel;
+
+  /// Label for the ranks-from field
+  ///
+  /// In de, this message translates to:
+  /// **'Rang von'**
+  String get stageGraphSelectorRankFrom;
+
+  /// Label for the ranks-to field
+  ///
+  /// In de, this message translates to:
+  /// **'Rang bis'**
+  String get stageGraphSelectorRankTo;
+
+  /// Label for the top-k field
+  ///
+  /// In de, this message translates to:
+  /// **'Anzahl (Top K)'**
+  String get stageGraphSelectorK;
+
+  /// Short label for a TopK selector
+  ///
+  /// In de, this message translates to:
+  /// **'Top {k}'**
+  String stageGraphSelectorTopK(int k);
+
+  /// Short label for a Ranks selector
+  ///
+  /// In de, this message translates to:
+  /// **'Ränge {from}–{to}'**
+  String stageGraphSelectorRanks(int from, int to);
+
+  /// Short label for a LosersOfRounds selector
+  ///
+  /// In de, this message translates to:
+  /// **'Verlierer Runden {rounds}'**
+  String stageGraphSelectorLosers(String rounds);
+
+  /// Short label for a Winners selector
+  ///
+  /// In de, this message translates to:
+  /// **'Sieger'**
+  String get stageGraphSelectorWinners;
+
+  /// Short label for a NonQualifiers selector
+  ///
+  /// In de, this message translates to:
+  /// **'Übrige'**
+  String get stageGraphSelectorNonQualifiers;
+
+  /// Label for StageNodeType.pool
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppen'**
+  String get stageGraphNodeTypePool;
+
+  /// Label for StageNodeType.roundRobin
+  ///
+  /// In de, this message translates to:
+  /// **'Jeder gegen jeden'**
+  String get stageGraphNodeTypeRoundRobin;
+
+  /// Label for StageNodeType.swiss
+  ///
+  /// In de, this message translates to:
+  /// **'Schweizer System'**
+  String get stageGraphNodeTypeSwiss;
+
+  /// Label for StageNodeType.singleElim
+  ///
+  /// In de, this message translates to:
+  /// **'K.-o. (einfach)'**
+  String get stageGraphNodeTypeSingleElim;
+
+  /// Label for StageNodeType.doubleElim
+  ///
+  /// In de, this message translates to:
+  /// **'K.-o. (doppelt)'**
+  String get stageGraphNodeTypeDoubleElim;
+
+  /// Label for StageNodeType.consolation
+  ///
+  /// In de, this message translates to:
+  /// **'Trostrunde'**
+  String get stageGraphNodeTypeConsolation;
+
+  /// Label for StageNodeType.shootoutQuali
+  ///
+  /// In de, this message translates to:
+  /// **'Shoot-out-Quali'**
+  String get stageGraphNodeTypeShootoutQuali;
+
+  /// Label for StageSeedingSource.fromElo
+  ///
+  /// In de, this message translates to:
+  /// **'Aus ELO'**
+  String get stageGraphSeedingFromElo;
+
+  /// Label for StageSeedingSource.fromPrevRanking
+  ///
+  /// In de, this message translates to:
+  /// **'Aus Vorrangliste'**
+  String get stageGraphSeedingFromPrevRanking;
+
+  /// Label for StageSeedingSource.manual
+  ///
+  /// In de, this message translates to:
+  /// **'Manuell'**
+  String get stageGraphSeedingManual;
+
+  /// Label for StageSeedingSource.asRouted
+  ///
+  /// In de, this message translates to:
+  /// **'Wie geroutet'**
+  String get stageGraphSeedingAsRouted;
+
+  /// Label for StageSeedingIn.orderPreserving
+  ///
+  /// In de, this message translates to:
+  /// **'Reihenfolge erhalten'**
+  String get stageGraphSeedingInOrderPreserving;
+
+  /// Label for StageSeedingIn.reseedBySourceRank
+  ///
+  /// In de, this message translates to:
+  /// **'Neu nach Quell-Rang'**
+  String get stageGraphSeedingInReseedBySourceRank;
+
+  /// Label for StageSeedingIn.manual
+  ///
+  /// In de, this message translates to:
+  /// **'Manuell'**
+  String get stageGraphSeedingInManual;
+
+  /// Label for the template name field
+  ///
+  /// In de, this message translates to:
+  /// **'Name'**
+  String get stageGraphSaveTemplateName;
+
+  /// Label for the visibility dropdown
+  ///
+  /// In de, this message translates to:
+  /// **'Sichtbarkeit'**
+  String get stageGraphSaveTemplateVisibility;
+
+  /// Label for TemplateVisibility.private
+  ///
+  /// In de, this message translates to:
+  /// **'Privat'**
+  String get stageGraphVisibilityPrivate;
+
+  /// Label for TemplateVisibility.club
+  ///
+  /// In de, this message translates to:
+  /// **'Verein'**
+  String get stageGraphVisibilityClub;
+
+  /// Label for TemplateVisibility.public
+  ///
+  /// In de, this message translates to:
+  /// **'Öffentlich'**
+  String get stageGraphVisibilityPublic;
+
+  /// Generic confirm button in stage-graph dialogs
+  ///
+  /// In de, this message translates to:
+  /// **'Bestätigen'**
+  String get stageGraphConfirm;
+
+  /// Generic cancel button in stage-graph dialogs
+  ///
+  /// In de, this message translates to:
+  /// **'Abbrechen'**
+  String get stageGraphCancel;
+
+  /// Compact seeding label shown on a node tile
+  ///
+  /// In de, this message translates to:
+  /// **'Seeding: {label}'**
+  String stageGraphSeedingFieldHint(String label);
+
   /// Application title
   ///
   /// In de, this message translates to:

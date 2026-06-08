@@ -148,9 +148,10 @@ void main() {
     expect(find.text('mercenary-route'), findsOneWidget);
   });
 
-  testWidgets('hub renders exactly seven mode-card tiles', (tester) async {
+  testWidgets('hub renders exactly eight mode-card tiles', (tester) async {
     await _pump(tester);
-    // Registrations, Browse, Past, Mercenary, Rangliste, ELO best-list, Stats.
-    expect(find.byType(KubbModeCard), findsNWidgets(7));
+    // Registrations, Browse, Past, Mercenary, Rangliste, ELO best-list,
+    // Stufen-Graph (ADR-0030 §Editor), Stats.
+    expect(find.byType(KubbModeCard), findsNWidgets(8));
   });
 }
