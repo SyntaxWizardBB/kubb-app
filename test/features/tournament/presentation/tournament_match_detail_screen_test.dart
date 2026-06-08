@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_match_detail_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -20,13 +21,20 @@ class _FakeRemote implements TournamentRemote {
     this._detail, {
     TournamentMatchRef? afterPropose,
     Stream<TournamentMatchRef>? matchStream,
+    TournamentDetail? tournamentDetail,
   })  : _afterPropose = afterPropose,
-        _matchStream = matchStream;
+        _matchStream = matchStream,
+        _tournamentDetail = tournamentDetail;
 
   TournamentMatchRef _detail;
   final TournamentMatchRef? _afterPropose;
   final Stream<TournamentMatchRef>? _matchStream;
+  final TournamentDetail? _tournamentDetail;
   ({TournamentMatchId matchId, int round, List<SetScore> scores})? lastCall;
+
+  @override
+  Future<TournamentDetail?> getTournamentDetail(TournamentId id) async =>
+      _tournamentDetail;
 
   // Allow the test to mutate the snapshot that the next `getMatch`
   // call resolves to — used by the realtime-listen test where the
@@ -82,6 +90,8 @@ Future<_FakeRemote> _pump(
   TournamentMatchRef? afterPropose,
   Stream<TournamentMatchRef>? matchStream,
   AppDatabase? db,
+  TournamentDetail? tournamentDetail,
+  String? callerUserId,
 }) async {
   // Tall viewport so the bottom of the match-detail ListView (with
   // the submit button) is built without scrolling.
@@ -93,6 +103,7 @@ Future<_FakeRemote> _pump(
     match,
     afterPropose: afterPropose,
     matchStream: matchStream,
+    tournamentDetail: tournamentDetail,
   );
   final database = db ?? await openTestDatabase();
   if (db == null) addTearDown(database.close);
@@ -125,6 +136,8 @@ Future<_FakeRemote> _pump(
       overrides: [
         tournamentRemoteProvider.overrideWithValue(fake),
         appDatabaseProvider.overrideWithValue(database),
+        if (callerUserId != null)
+          currentUserIdProvider.overrideWithValue(callerUserId),
       ],
       child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -335,4 +348,57 @@ void main() {
       findsOneWidget,
     );
   });
+
+  // O1: the live-dashboard was removed; the organizer forfeit entry must
+  // still be reachable from the match-detail screen. Creator + live
+  // tournament + open match => the "Forfeit erklären" action is present.
+  testWidgets('organizer (creator) sees the forfeit action on a live match',
+      (tester) async {
+    await _pump(
+      tester,
+      match: _match(),
+      callerUserId: 'creator-1',
+      tournamentDetail: _liveDetailOwnedBy('creator-1'),
+    );
+    expect(find.text('Forfeit erklären'), findsOneWidget);
+  });
+
+  testWidgets('non-creator does not see the forfeit action', (tester) async {
+    await _pump(
+      tester,
+      match: _match(),
+      callerUserId: 'someone-else',
+      tournamentDetail: _liveDetailOwnedBy('creator-1'),
+    );
+    expect(find.text('Forfeit erklären'), findsNothing);
+  });
 }
+
+/// Minimal [TournamentDetail] whose header is `live` and was created by
+/// [creatorUserId] — enough to flip `canForfeit` in the match-detail
+/// screen (creator + live + both sides present).
+TournamentDetail _liveDetailOwnedBy(String creatorUserId) => TournamentDetail(
+      tournament: TournamentDetailHeader(
+        tournamentId: 't-1',
+        displayName: 'Test-Turnier',
+        createdByUserId: creatorUserId,
+        clubId: null,
+        teamSize: 1,
+        maxTeamSize: 1,
+        minParticipants: 2,
+        maxParticipants: 8,
+        format: TournamentFormat.swiss,
+        scoring: TournamentScoring.ekc,
+        matchFormatConfig: const <String, Object?>{},
+        tiebreakerOrder: const <String>[],
+        byePoints: null,
+        forfeitPoints: null,
+        status: TournamentStatus.live,
+        publishedAt: null,
+        startedAt: null,
+        completedAt: null,
+      ),
+      participants: const <TournamentParticipant>[],
+      matches: const <TournamentMatchRef>[],
+      auditTail: const <TournamentAuditEvent>[],
+    );

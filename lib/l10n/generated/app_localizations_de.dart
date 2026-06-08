@@ -2619,9 +2619,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentDetailActionBracket => 'Bracket anzeigen';
 
   @override
-  String get tournamentDetailActionLiveDashboard => 'Live-Dashboard öffnen';
-
-  @override
   String get tournamentDetailAborted => 'Turnier abgebrochen.';
 
   @override
@@ -3623,12 +3620,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get realtimeConnecting => 'Verbinde…';
-
-  @override
-  String get liveDashboardTitle => 'Live-Dashboard';
-
-  @override
-  String get liveDashboardOpenButton => 'Live-Dashboard öffnen';
 
   @override
   String get pitchStatusScheduled => 'Geplant';

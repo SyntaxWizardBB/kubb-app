@@ -3403,10 +3403,6 @@
   "@tournamentDetailActionBracket": {
     "description": "Action: navigate to KO bracket view"
   },
-  "tournamentDetailActionLiveDashboard": "Live-Dashboard öffnen",
-  "@tournamentDetailActionLiveDashboard": {
-    "description": "Action: organizer opens the live pitch dashboard"
-  },
   "tournamentDetailAborted": "Turnier abgebrochen.",
   "@tournamentDetailAborted": {
     "description": "Headline when status is aborted"
@@ -4721,14 +4717,6 @@
   "realtimeConnecting": "Verbinde…",
   "@realtimeConnecting": {
     "description": "Realtime banner state — websocket connection is being established"
-  },
-  "liveDashboardTitle": "Live-Dashboard",
-  "@liveDashboardTitle": {
-    "description": "Title of the live dashboard screen showing all pitches in real time (M4.2-T12)"
-  },
-  "liveDashboardOpenButton": "Live-Dashboard öffnen",
-  "@liveDashboardOpenButton": {
-    "description": "Button label to navigate to the live dashboard screen"
   },
   "pitchStatusScheduled": "Geplant",
   "@pitchStatusScheduled": {

@@ -54,7 +54,6 @@ import 'package:kubb_app/features/tournament/presentation/tournament_detail_scre
 import 'package:kubb_app/features/tournament/presentation/tournament_edit_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_hub_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_list_screen.dart';
-import 'package:kubb_app/features/tournament/presentation/tournament_live_dashboard_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_live_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_match_detail_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_match_list_screen.dart';
@@ -580,12 +579,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 // tournament screens so context.push keeps the stack.
                 path: '/tournament/:id/live',
                 builder: (_, state) => TournamentLiveScreen(
-                  tournamentId: state.pathParameters['id']!,
-                ),
-              ),
-              GoRoute(
-                path: '/tournament/:id/dashboard',
-                builder: (_, state) => TournamentLiveDashboardScreen(
                   tournamentId: state.pathParameters['id']!,
                 ),
               ),

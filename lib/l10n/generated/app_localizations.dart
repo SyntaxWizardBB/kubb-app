@@ -4882,12 +4882,6 @@ abstract class AppLocalizations {
   /// **'Bracket anzeigen'**
   String get tournamentDetailActionBracket;
 
-  /// Action: organizer opens the live pitch dashboard
-  ///
-  /// In de, this message translates to:
-  /// **'Live-Dashboard öffnen'**
-  String get tournamentDetailActionLiveDashboard;
-
   /// Headline when status is aborted
   ///
   /// In de, this message translates to:
@@ -6663,18 +6657,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Verbinde…'**
   String get realtimeConnecting;
-
-  /// Title of the live dashboard screen showing all pitches in real time (M4.2-T12)
-  ///
-  /// In de, this message translates to:
-  /// **'Live-Dashboard'**
-  String get liveDashboardTitle;
-
-  /// Button label to navigate to the live dashboard screen
-  ///
-  /// In de, this message translates to:
-  /// **'Live-Dashboard öffnen'**
-  String get liveDashboardOpenButton;
 
   /// Pitch status label — match is scheduled but not yet started
   ///

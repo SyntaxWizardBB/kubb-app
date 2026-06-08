@@ -78,9 +78,6 @@ abstract final class TournamentRoutes {
   /// Rangliste). Compose via [live].
   static const liveBase = '/tournament';
 
-  /// Live organizer dashboard. Compose via [liveDashboard].
-  static const liveDashboardBase = '/tournament';
-
   static String matchesFor(String tournamentId) =>
       '$matches/$tournamentId/matches';
 
@@ -104,10 +101,6 @@ abstract final class TournamentRoutes {
   /// H3 player-facing live view for a running tournament. Mirrors the
   /// `standings`/`bracket` composer shape: `/tournament/<id>/live`.
   static String live(String tournamentId) => '$liveBase/$tournamentId/live';
-
-  /// Organizer live dashboard for a running tournament (M4.2-T6).
-  static String liveDashboard(String tournamentId) =>
-      '$liveDashboardBase/$tournamentId/dashboard';
 
   /// P6 shoot-out report/confirm screen for one tie group. The group is
   /// addressed by its zero-based start rank (carried in the shoot-out inbox

@@ -452,14 +452,6 @@ class _Actions extends ConsumerWidget {
     if (hasBracket) {
       nav(l.tournamentDetailActionBracket, '$pathBase/bracket');
     }
-    // M4.2-T6: live dashboard entry-point is organizer-only. The screen
-    // itself ignores stale status (M4.2-T5 renders an empty grid when no
-    // pitches exist), so gating on `isCreator` alone keeps the surface
-    // discoverable from draft through finalized.
-    if (canManage) {
-      nav(l.tournamentDetailActionLiveDashboard,
-          TournamentRoutes.liveDashboard(id.value));
-    }
     if (canManage &&
         status != TournamentStatus.finalized &&
         status != TournamentStatus.aborted) {
