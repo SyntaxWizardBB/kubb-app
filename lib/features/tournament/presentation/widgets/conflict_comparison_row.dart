@@ -12,9 +12,13 @@ class ConflictComparisonRow extends StatelessWidget {
 
   final TournamentSetProposalPair pair;
 
-  String _winner(SetWinner? w, AppLocalizations l) => w == null
-      ? '—'
-      : (w == SetWinner.teamA ? l.tournamentMatchKingByA : l.tournamentMatchKingByB);
+  // M2a: SetWinner.none (no decisive winner) renders like the absent
+  // case ("—") so a king-less group set is not mislabelled as a B win.
+  String _winner(SetWinner? w, AppLocalizations l) => switch (w) {
+        SetWinner.teamA => l.tournamentMatchKingByA,
+        SetWinner.teamB => l.tournamentMatchKingByB,
+        SetWinner.none || null => '—',
+      };
 
   @override
   Widget build(BuildContext context) {

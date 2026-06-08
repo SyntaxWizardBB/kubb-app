@@ -1558,6 +1558,7 @@ class FakeTournamentRemote implements TournamentRemote {
         return m.participantA;
       case SetWinner.teamB:
         return m.participantB;
+      case SetWinner.none:
       case null:
         return null;
     }

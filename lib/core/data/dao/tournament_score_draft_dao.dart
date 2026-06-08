@@ -70,6 +70,9 @@ class TournamentScoreDraftDao extends DatabaseAccessor<AppDatabase>
         'winner': switch (s.winner) {
           SetWinner.teamA => 'teamA',
           SetWinner.teamB => 'teamB',
+          // M2a: a non-decisive set (no king in the group phase) is the
+          // canonical SetWinner.none; round-trip it through the draft store.
+          SetWinner.none => 'none',
         },
       };
 
@@ -79,6 +82,7 @@ class TournamentScoreDraftDao extends DatabaseAccessor<AppDatabase>
         winner: switch (json['winner'] as String) {
           'teamA' => SetWinner.teamA,
           'teamB' => SetWinner.teamB,
+          'none' => SetWinner.none,
           final v => throw FormatException('unknown SetWinner: $v'),
         },
       );

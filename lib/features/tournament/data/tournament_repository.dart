@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/application/outbox_flusher_provider.dart'
     show outboxFlusherProvider, scoreSubmissionOutboxDaoProvider;
@@ -1158,12 +1159,27 @@ class TournamentRepository implements TournamentRemote {
     );
   }
 
-  Map<String, dynamic> _setScoreToWire(int setNumber, SetScore s) {
+  Map<String, dynamic> _setScoreToWire(int setNumber, SetScore s) =>
+      setScoreToWireForTest(setNumber, s);
+
+  /// Wire mapping for one set proposal. Single source of truth for the
+  /// propose RPC payload; exposed `@visibleForTesting` so the A/B/none
+  /// winner projection (M2a / WIRE-1) can be asserted directly.
+  @visibleForTesting
+  static Map<String, dynamic> setScoreToWireForTest(int setNumber, SetScore s) {
     return <String, dynamic>{
       'set': setNumber,
       'basekubbs_a': s.basekubbsKnockedByA,
       'basekubbs_b': s.basekubbsKnockedByB,
-      'winner': s.winner == SetWinner.teamA ? 'A' : 'B',
+      // M2a: A/B/none — the server's set_winner CHECK accepts all three.
+      // A non-decisive set (group phase, no king) must travel as 'none'
+      // instead of being forced to 'B' by a 2-way ternary, otherwise two
+      // identical real inputs disagree and the match runs to disputed.
+      'winner': switch (s.winner) {
+        SetWinner.teamA => 'A',
+        SetWinner.teamB => 'B',
+        SetWinner.none => 'none',
+      },
       // Sprint A W3-T2 / R11-F-01: wire the per-set king-outcome alongside
       // the legacy fields. Server migration 20260601000002 adds the
       // matching column; older servers ignore the unknown key. The

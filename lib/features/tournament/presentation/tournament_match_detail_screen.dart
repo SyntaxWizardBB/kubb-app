@@ -131,15 +131,38 @@ class _TournamentMatchDetailScreenState
     return null;
   }
 
-  List<SetScore> _setScores(List<ScoreDraftSet> drafts) => <SetScore>[
+  /// M2a: build the [SetScore] list from the draft using the CANONICAL
+  /// phase-/scoring-dependent winner derivation
+  /// ([resolveSetWinnerForSide]), identical to the server.
+  ///
+  /// The old naive fallback (`d.king ?? (kubbsA >= kubbsB ? A : B)`)
+  /// FORCED a winner by kubb-majority whenever no king was selected. In
+  /// the group phase that fabricated an A/B winner the other side never
+  /// agreed on, so two identical real inputs were scored as disagreement
+  /// and the match ran to `disputed`. Now: king fell -> that side;
+  /// group + classic -> none; group + EKC -> by kubbs (draw allowed);
+  /// KO -> none (the decisive winner is the M2b finisher prompt, never an
+  /// auto kubb-majority fallback here).
+  List<SetScore> _setScores(
+    List<ScoreDraftSet> drafts,
+    SetScoring scoring,
+    MatchPhase phase,
+  ) =>
+      <SetScore>[
         for (final d in drafts)
           SetScore(
             basekubbsKnockedByA: d.basekubbsA,
             basekubbsKnockedByB: d.basekubbsB,
-            winner: d.king ??
-                (d.basekubbsA >= d.basekubbsB
-                    ? SetWinner.teamA
-                    : SetWinner.teamB),
+            // TODO(M2b): in the KO phase the decisive winner comes from the
+            // finisher prompt; until that UI lands the king-less KO set
+            // stays non-decisive (none) rather than guessing a winner.
+            winner: resolveSetWinnerForSide(
+              kingSide: d.king,
+              basekubbsA: d.basekubbsA,
+              basekubbsB: d.basekubbsB,
+              phase: phase,
+              scoring: scoring,
+            ),
             // R11-F-01: forward the tri-toggle's outcome into the score
             // payload so the EKC tally and the wire RPC see the
             // explicit `KingTimedOut` path instead of relying on the
@@ -147,6 +170,22 @@ class _TournamentMatchDetailScreenState
             kingOutcome: d.kingOutcome,
           ),
       ];
+
+  /// M2a: the canonical scoring mode for this tournament, read from the
+  /// detail header. Defaults to EKC (the historical wire default) when
+  /// the header has not loaded yet — only matters for the live preview,
+  /// since submit is gated behind a loaded screen.
+  SetScoring _scoringMode() {
+    final detail = ref
+        .read(tournamentDetailProvider(TournamentId(widget.tournamentId)))
+        .maybeWhen(
+          data: (d) => d?.tournament.scoring,
+          orElse: () => null,
+        );
+    return detail == TournamentScoring.classic
+        ? SetScoring.classic
+        : SetScoring.ekc;
+  }
 
   Future<void> _submit(TournamentMatchRef match) async {
     final l = AppLocalizations.of(context);
@@ -158,7 +197,7 @@ class _TournamentMatchDetailScreenState
       await ref.read(tournamentActionsProvider).proposeSetScores(
             matchId: match.matchId,
             consensusRound: prevConsensus,
-            setScores: _setScores(drafts),
+            setScores: _setScores(drafts, _scoringMode(), match.phase),
           );
       // DSCORE-21: drop the draft for the round we just submitted. The
       // outbox queues the propose RPC so this counts as "acknowledged".
@@ -301,7 +340,8 @@ class _TournamentMatchDetailScreenState
     final drafts =
         ref.watch(scoreDraftControllerProvider(_matchId)).sets;
     final validationMessage = _validate(l, drafts);
-    final ekc = computeEkc(_setScores(drafts));
+    final ekc =
+        computeEkc(_setScores(drafts, _scoringMode(), match.phase));
 
     // W3-T1: organizer-only Forfeit-Action. Visible while the
     // tournament is live, the match has two participants and is not yet

@@ -347,6 +347,8 @@ TournamentMatchRef tournamentMatchRefFromCdcRow(Map<String, Object?> row) {
         : TournamentParticipantId(row['winner_participant']! as String),
     finalScoreA: _asIntOrNull(row['final_score_a']),
     finalScoreB: _asIntOrNull(row['final_score_b']),
+    // M2a: raw CDC table column carries the phase token directly.
+    phase: matchPhaseFromWire(row['phase'] as String?),
   );
 }
 
@@ -380,6 +382,12 @@ TournamentMatchRef tournamentMatchRefFromRow(Map<String, dynamic> row) {
     // (null on older RPC revisions — synthesis falls back to single-set).
     setsWonA: _asIntOrNull(row['sets_won_a']),
     setsWonB: _asIntOrNull(row['sets_won_b']),
+    // M2a: 'phase' is projected by both tournament_list_matches
+    // (since 20261212000000) and tournament_match_get — the latter being
+    // the detail-screen path — since 20261239000000. Older RPC revisions
+    // and CDC rows omit it -> defaults to group (non-forcing, never
+    // fabricates a KO auto-winner).
+    phase: matchPhaseFromWire(row['phase'] as String?),
   );
 }
 

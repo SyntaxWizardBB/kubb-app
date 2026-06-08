@@ -150,6 +150,7 @@ class TournamentMatchRef {
     this.setsWonB,
     this.participantADisplayName,
     this.participantBDisplayName,
+    this.phase = MatchPhase.group,
   });
 
   final TournamentMatchId matchId;
@@ -185,6 +186,14 @@ class TournamentMatchRef {
   final String? participantADisplayName;
   final String? participantBDisplayName;
 
+  /// M2a: the match's phase, used by the canonical set-winner derivation
+  /// to decide whether a king-less set is non-decisive (group) or owned
+  /// by the KO finisher (M2b). Defaults to [MatchPhase.group] — the
+  /// safe, non-forcing default for wire rows / fakes that don't project
+  /// the column, so no caller ever fabricates an auto kubb-majority
+  /// winner.
+  final MatchPhase phase;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -205,7 +214,8 @@ class TournamentMatchRef {
           other.setsWonA == setsWonA &&
           other.setsWonB == setsWonB &&
           other.participantADisplayName == participantADisplayName &&
-          other.participantBDisplayName == participantBDisplayName;
+          other.participantBDisplayName == participantBDisplayName &&
+          other.phase == phase;
 
   @override
   int get hashCode => Object.hash(
@@ -226,6 +236,7 @@ class TournamentMatchRef {
         setsWonB,
         participantADisplayName,
         participantBDisplayName,
+        phase,
       );
 }
 
