@@ -402,6 +402,9 @@ TournamentSummaryRef tournamentSummaryRefFromRow(Map<String, dynamic> row) {
     startedAt: _asDateOrNull(row['started_at']),
     completedAt: _asDateOrNull(row['completed_at']),
     participantCount: _asInt(row['participant_count']),
+    // Additive projection (migration 20261240000000); null-tolerant for
+    // older RPC revisions / fakes that omit the column.
+    eventStartsAt: _asDateOrNull(row['event_starts_at']),
     createdBy: creator == null ? null : UserId(creator),
   );
 }

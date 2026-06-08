@@ -29,6 +29,27 @@ final myTournamentRegistrationsProvider =
   return ref.read(tournamentRemoteProvider).listMyRegistrations();
 });
 
+/// The caller's own LIVE tournaments (H1 Tournament-Hub "Live Turniere").
+///
+/// Derived purely from [myTournamentRegistrationsProvider] — the caller's
+/// active registrations intersected with `status == TournamentStatus.live`.
+/// Withdrawn registrations are excluded, matching the discovery list screen,
+/// so a user who pulled out of a tournament that later goes live is not
+/// auto-pushed into its H3 view. No new transport, no `Timer.periodic`
+/// polling (ADR-0029): it reuses the existing registrations source, which the
+/// CDC discovery layer already refreshes. The hub's "Live Turniere" tile
+/// watches this to decide whether to jump straight into the H3 live view,
+/// show a picker, or render an empty state.
+final myLiveTournamentsProvider =
+    FutureProvider<List<TournamentSummaryRef>>((ref) async {
+  final regs = await ref.watch(myTournamentRegistrationsProvider.future);
+  return regs
+      .where((r) => r.status != TournamentParticipantStatus.withdrawn)
+      .map((r) => r.tournament)
+      .where((t) => t.status == TournamentStatus.live)
+      .toList(growable: false);
+});
+
 /// Full detail payload for one tournament. Null when the caller has no
 /// read access on the row (RLS / RPC returns no record).
 // ignore: specify_nonobvious_property_types

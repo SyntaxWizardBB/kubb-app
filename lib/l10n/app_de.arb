@@ -2860,17 +2860,33 @@
   "@tournamentListNewButton": {
     "description": "FAB label opening the setup wizard"
   },
-  "tournamentHubRegisteredTitle": "Angemeldete Turniere",
-  "@tournamentHubRegisteredTitle": {
-    "description": "Hub tile: tournaments the user is registered for"
+  "tournamentHubLiveTitle": "Live Turniere",
+  "@tournamentHubLiveTitle": {
+    "description": "Hub tile: the caller's currently running (live) tournaments"
   },
-  "tournamentHubRegisteredSubtitle": "Deine Anmeldungen verwalten",
-  "@tournamentHubRegisteredSubtitle": {
-    "description": "Hub tile subtitle for registered tournaments"
+  "tournamentHubLiveSubtitle": "Deine laufenden Turniere",
+  "@tournamentHubLiveSubtitle": {
+    "description": "Hub tile subtitle for the caller's live tournaments"
   },
-  "tournamentHubBrowseSubtitle": "Ausgeschriebene Turniere stöbern",
-  "@tournamentHubBrowseSubtitle": {
-    "description": "Hub tile subtitle for the public tournament list"
+  "tournamentHubLivePickerTitle": "Live Turnier wählen",
+  "@tournamentHubLivePickerTitle": {
+    "description": "Title of the picker shown when the caller has multiple live tournaments"
+  },
+  "tournamentHubLiveEmptyTitle": "Kein laufendes Turnier",
+  "@tournamentHubLiveEmptyTitle": {
+    "description": "Empty-state title when the caller has no live tournament"
+  },
+  "tournamentHubLiveEmptyBody": "Sobald eines deiner Turniere startet, erscheint es hier.",
+  "@tournamentHubLiveEmptyBody": {
+    "description": "Empty-state body when the caller has no live tournament"
+  },
+  "tournamentHubUpcomingTitle": "Künftige Turniere",
+  "@tournamentHubUpcomingTitle": {
+    "description": "Hub tile: upcoming / future tournaments (discovery list)"
+  },
+  "tournamentHubUpcomingSubtitle": "Anstehende Turniere entdecken",
+  "@tournamentHubUpcomingSubtitle": {
+    "description": "Hub tile subtitle for the upcoming tournament discovery list"
   },
   "tournamentHubCreateTitle": "Turnier erstellen",
   "@tournamentHubCreateTitle": {

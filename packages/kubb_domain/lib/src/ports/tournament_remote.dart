@@ -55,6 +55,7 @@ class TournamentSummaryRef {
     required this.startedAt,
     required this.completedAt,
     required this.participantCount,
+    this.eventStartsAt,
     this.createdBy,
   });
 
@@ -65,6 +66,11 @@ class TournamentSummaryRef {
   final DateTime? startedAt;
   final DateTime? completedAt;
   final int participantCount;
+
+  /// Scheduled kickoff of the event (`tournaments.event_starts_at`). Null
+  /// when undated or when an older RPC projection omits the column. Drives
+  /// the hub's "Kuenftige Turniere" date filter (>= today OR null).
+  final DateTime? eventStartsAt;
 
   /// User-id of the row's creator. Null when the server-side projection
   /// hides the column (older RPCs) or the row pre-dates the migration
@@ -83,6 +89,7 @@ class TournamentSummaryRef {
           other.startedAt == startedAt &&
           other.completedAt == completedAt &&
           other.participantCount == participantCount &&
+          other.eventStartsAt == eventStartsAt &&
           other.createdBy == createdBy;
 
   @override
@@ -94,6 +101,7 @@ class TournamentSummaryRef {
         startedAt,
         completedAt,
         participantCount,
+        eventStartsAt,
         createdBy,
       );
 }

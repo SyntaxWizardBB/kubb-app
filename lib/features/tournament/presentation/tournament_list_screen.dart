@@ -15,21 +15,29 @@ import 'package:kubb_app/features/tournament/presentation/widgets/tournament_car
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
-/// Discovery list reached from the hub's "Aktuelle Turniere" tile.
+/// Discovery list reached from the hub's "Künftige Turniere" tile (H1).
 ///
-/// Shows every published (non-draft, not-yet-finished) tournament as a
-/// flat list — the per-caller "mine" view now lives behind the hub's
-/// "Angemeldete Turniere" tile, and creating is the organizer-gated hub
-/// tile, so this screen no longer needs tabs or a FAB.
+/// Shows published (non-draft, not-yet-finished) tournaments as a flat
+/// list, filtered to the upcoming window (kickoff today-or-later OR
+/// undated) and excluding live ones — running tournaments live behind the
+/// hub's "Live Turniere" tile. Creating is the organizer-gated hub tile,
+/// so this screen needs neither tabs nor a FAB.
 class TournamentListScreen extends ConsumerWidget {
-  const TournamentListScreen({super.key});
+  const TournamentListScreen({super.key, this.now});
+
+  /// Injectable "now" for deterministic tests. Production passes null and
+  /// the screen reads [DateTime.now]. Only the local calendar day matters
+  /// for the upcoming filter.
+  final DateTime? now;
 
   /// Lifecycle states that count as "published / currently listed".
+  ///
+  /// H1: `live` is intentionally NOT included — running tournaments live
+  /// under the hub's "Live Turniere" tile, not in this upcoming list.
   static const _published = <TournamentStatus>{
     TournamentStatus.published,
     TournamentStatus.registrationOpen,
     TournamentStatus.registrationClosed,
-    TournamentStatus.live,
   };
 
   @override
@@ -55,7 +63,7 @@ class TournamentListScreen extends ConsumerWidget {
       backgroundColor: tokens.bg,
       appBar: KubbAppBar(
         eyebrow: l.tournamentListEyebrow,
-        title: l.tournamentListTabPublic,
+        title: l.tournamentHubUpcomingTitle,
         actions: const [InboxBellAction()],
       ),
       body: async.when(
@@ -71,9 +79,18 @@ class TournamentListScreen extends ConsumerWidget {
           ),
         ),
         data: (rows) {
-          final published = rows
-              .where((t) => _published.contains(t.status))
-              .toList(growable: false);
+          // H1 "Künftige Turniere": keep the published statuses (live
+          // excluded above) AND restrict by date — only tournaments whose
+          // kickoff is today or later, plus undated ones (event_starts_at
+          // == null), which still count as upcoming/anstehend.
+          final nowLocal = now ?? DateTime.now();
+          final today = DateTime(nowLocal.year, nowLocal.month, nowLocal.day);
+          final published = rows.where((t) {
+            if (!_published.contains(t.status)) return false;
+            final at = t.eventStartsAt;
+            if (at == null) return true;
+            return !at.toLocal().isBefore(today);
+          }).toList(growable: false);
           if (published.isEmpty) {
             return KubbEmptyState(
               title: l.emptyTournamentsTitle,

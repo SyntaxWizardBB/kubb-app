@@ -18,6 +18,7 @@ TournamentSummaryRef _ref({
   TournamentFormat format = TournamentFormat.roundRobin,
   int participants = 4,
   String? createdBy,
+  DateTime? eventStartsAt,
 }) {
   return TournamentSummaryRef(
     tournamentId: TournamentId(id),
@@ -27,9 +28,13 @@ TournamentSummaryRef _ref({
     startedAt: null,
     completedAt: null,
     participantCount: participants,
+    eventStartsAt: eventStartsAt,
     createdBy: createdBy == null ? null : UserId(createdBy),
   );
 }
+
+/// Fixed "today" for deterministic date-filter tests.
+final _fixedNow = DateTime(2026, 6, 15, 10);
 
 Future<void> _pump(
   WidgetTester tester,
@@ -43,7 +48,7 @@ Future<void> _pump(
     routes: [
       GoRoute(
         path: '/tournament',
-        builder: (_, _) => const TournamentListScreen(),
+        builder: (_, _) => TournamentListScreen(now: _fixedNow),
       ),
       GoRoute(
         path: '/tournament/new',
@@ -115,9 +120,11 @@ void main() {
     expect(find.text('Mein Entwurf'), findsNothing);
   });
 
-  testWidgets('also lists live and registration-closed tournaments',
+  testWidgets(
+      'H1: lists registration-closed but hides live and finalized',
       (tester) async {
     await _pump(tester, [
+      // Live now lives under the hub's "Live Turniere" tile → excluded here.
       _ref(id: 'a', name: 'Live-Cup', status: TournamentStatus.live),
       _ref(
         id: 'b',
@@ -127,10 +134,54 @@ void main() {
       _ref(id: 'c', name: 'Done-Cup', status: TournamentStatus.finalized),
     ]);
 
-    expect(find.text('Live-Cup'), findsOneWidget);
+    expect(find.text('Live-Cup'), findsNothing);
     expect(find.text('Closed-Cup'), findsOneWidget);
     // Finalized tournaments are no longer "current" → hidden.
     expect(find.text('Done-Cup'), findsNothing);
+  });
+
+  testWidgets(
+      'H1: future-dated and undated tournaments appear, past ones vanish',
+      (tester) async {
+    await _pump(tester, [
+      _ref(
+        id: 'future',
+        name: 'Future-Cup',
+        status: TournamentStatus.registrationOpen,
+        eventStartsAt: _fixedNow.add(const Duration(days: 7)),
+      ),
+      _ref(
+        id: 'undated',
+        name: 'Undated-Cup',
+        status: TournamentStatus.published,
+      ),
+      _ref(
+        id: 'past',
+        name: 'Past-Cup',
+        status: TournamentStatus.registrationOpen,
+        eventStartsAt: _fixedNow.subtract(const Duration(days: 2)),
+      ),
+    ]);
+
+    expect(find.text('Future-Cup'), findsOneWidget);
+    expect(find.text('Undated-Cup'), findsOneWidget);
+    expect(find.text('Past-Cup'), findsNothing);
+  });
+
+  testWidgets('H1: a tournament starting earlier today still appears',
+      (tester) async {
+    await _pump(tester, [
+      _ref(
+        id: 'today',
+        name: 'Today-Cup',
+        status: TournamentStatus.registrationOpen,
+        // 09:00 on the fixed day — before "now" (10:00) but same calendar
+        // day, so the >= today-00:00 rule keeps it visible.
+        eventStartsAt: DateTime(2026, 6, 15, 9),
+      ),
+    ]);
+
+    expect(find.text('Today-Cup'), findsOneWidget);
   });
 
   testWidgets('tapping a card pushes the detail route', (tester) async {

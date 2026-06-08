@@ -5,17 +5,57 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_mode_card.dart';
 import 'package:kubb_app/features/club/application/club_providers.dart';
+import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_hub_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
+import 'package:kubb_domain/kubb_domain.dart';
 
-Future<void> _pump(WidgetTester tester) async {
+TournamentSummaryRef _ref({
+  required String id,
+  required String name,
+  TournamentStatus status = TournamentStatus.live,
+}) {
+  return TournamentSummaryRef(
+    tournamentId: TournamentId(id),
+    displayName: name,
+    format: TournamentFormat.roundRobin,
+    status: status,
+    startedAt: null,
+    completedAt: null,
+    participantCount: 4,
+  );
+}
+
+MyTournamentRegistration _reg(
+  TournamentSummaryRef t, {
+  TournamentParticipantStatus status = TournamentParticipantStatus.approved,
+}) =>
+    MyTournamentRegistration(
+      tournament: t,
+      participantId: TournamentParticipantId('p-${t.tournamentId.value}'),
+      status: status,
+    );
+
+Future<void> _pump(
+  WidgetTester tester, {
+  List<MyTournamentRegistration> myRegistrations = const [],
+}) async {
   final router = GoRouter(
     initialLocation: TournamentRoutes.hub,
     routes: [
       GoRoute(
         path: TournamentRoutes.hub,
         builder: (_, _) => const TournamentHubScreen(),
+      ),
+      GoRoute(
+        path: '/tournament/:id/live',
+        builder: (_, state) =>
+            Scaffold(body: Text('live-${state.pathParameters['id']}')),
+      ),
+      GoRoute(
+        path: TournamentRoutes.list,
+        builder: (_, _) => const Scaffold(body: Text('list-route')),
       ),
       GoRoute(
         path: TournamentRoutes.pastTournaments,
@@ -40,6 +80,8 @@ Future<void> _pump(WidgetTester tester) async {
     ProviderScope(
       overrides: [
         canPublishTournamentProvider.overrideWith((_) async => false),
+        myTournamentRegistrationsProvider
+            .overrideWith((_) async => myRegistrations),
       ],
       child: MaterialApp.router(
         theme: KubbTheme.light(),
@@ -53,46 +95,94 @@ Future<void> _pump(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('renders the two new tiles in order before the stats tile',
+  testWidgets('renders the live + upcoming tiles with the new titles',
       (tester) async {
     await _pump(tester);
+    expect(find.text('Live Turniere'), findsOneWidget);
+    expect(find.text('Künftige Turniere'), findsOneWidget);
+    // Old titles are gone.
+    expect(find.text('Angemeldete Turniere'), findsNothing);
+    expect(find.text('Aktuelle Turniere'), findsNothing);
+  });
 
-    final past = find.text('Vergangene Turniere');
-    final mercenary = find.text('Söldnermarkt');
-    final stats = find.text('Turnierstatistik');
-
-    expect(past, findsOneWidget);
-    expect(mercenary, findsOneWidget);
-    expect(stats, findsOneWidget);
-
-    // Vertical order: past tile sits above the mercenary tile, which
-    // sits above the stats tile.
-    final pastY = tester.getTopLeft(past).dy;
-    final mercenaryY = tester.getTopLeft(mercenary).dy;
-    final statsY = tester.getTopLeft(stats).dy;
-    expect(pastY, lessThan(mercenaryY));
-    expect(mercenaryY, lessThan(statsY));
+  testWidgets('upcoming tile pushes the discovery list route', (tester) async {
+    await _pump(tester);
+    await tester.tap(find.text('Künftige Turniere'));
+    await tester.pumpAndSettle();
+    expect(find.text('list-route'), findsOneWidget);
   });
 
   testWidgets(
-      'ranking tile sits between the mercenary and the stats tile',
+      'live tile with exactly one live tournament pushes the live view',
       (tester) async {
-    await _pump(tester);
+    await _pump(
+      tester,
+      myRegistrations: [_reg(_ref(id: 'only', name: 'Solo-Live'))],
+    );
+    await tester.tap(find.text('Live Turniere'));
+    await tester.pumpAndSettle();
+    expect(find.text('live-only'), findsOneWidget);
+  });
 
-    final mercenary = find.text('Söldnermarkt');
-    final ranking = find.text('Rangliste');
-    final stats = find.text('Turnierstatistik');
+  testWidgets(
+      'live tile with several live tournaments shows a picker that '
+      'routes to the chosen live view', (tester) async {
+    await _pump(
+      tester,
+      myRegistrations: [
+        _reg(_ref(id: 'a', name: 'Cup-A')),
+        _reg(_ref(id: 'b', name: 'Cup-B')),
+      ],
+    );
+    await tester.tap(find.text('Live Turniere'));
+    await tester.pumpAndSettle();
 
-    expect(mercenary, findsOneWidget);
-    expect(ranking, findsOneWidget);
-    expect(stats, findsOneWidget);
+    // Picker lists both live tournaments.
+    expect(find.text('Live Turnier wählen'), findsOneWidget);
+    expect(find.text('Cup-A'), findsOneWidget);
+    expect(find.text('Cup-B'), findsOneWidget);
 
-    // P8-Hub-B2: Söldnermarkt -> Rangliste -> Statistik.
-    final mercenaryY = tester.getTopLeft(mercenary).dy;
-    final rankingY = tester.getTopLeft(ranking).dy;
-    final statsY = tester.getTopLeft(stats).dy;
-    expect(mercenaryY, lessThan(rankingY));
-    expect(rankingY, lessThan(statsY));
+    await tester.tap(find.text('Cup-B'));
+    await tester.pumpAndSettle();
+    expect(find.text('live-b'), findsOneWidget);
+  });
+
+  testWidgets('live tile with no live tournament shows the empty state',
+      (tester) async {
+    // A non-live registration must NOT count as live.
+    await _pump(
+      tester,
+      myRegistrations: [
+        _reg(_ref(
+          id: 'reg',
+          name: 'Angemeldet',
+          status: TournamentStatus.registrationOpen,
+        )),
+      ],
+    );
+    await tester.tap(find.text('Live Turniere'));
+    await tester.pumpAndSettle();
+    expect(find.text('Kein laufendes Turnier'), findsOneWidget);
+  });
+
+  testWidgets(
+      'live tile ignores a withdrawn registration of a live tournament',
+      (tester) async {
+    // Withdrawn from a tournament that later went live: it must NOT be
+    // treated as live (no auto-push into the H3 view).
+    await _pump(
+      tester,
+      myRegistrations: [
+        _reg(
+          _ref(id: 'gone', name: 'Ausgestiegen'),
+          status: TournamentParticipantStatus.withdrawn,
+        ),
+      ],
+    );
+    await tester.tap(find.text('Live Turniere'));
+    await tester.pumpAndSettle();
+    expect(find.text('Kein laufendes Turnier'), findsOneWidget);
+    expect(find.text('live-gone'), findsNothing);
   });
 
   testWidgets('ranking tile pushes the ranking route', (tester) async {
@@ -102,55 +192,14 @@ void main() {
     expect(find.text('ranking-route'), findsOneWidget);
   });
 
-  testWidgets('elo best-list tile sits between the ranking and the stats tile',
-      (tester) async {
-    await _pump(tester);
-
-    final ranking = find.text('Rangliste');
-    final elo = find.text('ELO-Bestenliste');
-    final stats = find.text('Turnierstatistik');
-
-    expect(ranking, findsOneWidget);
-    expect(elo, findsOneWidget);
-    expect(stats, findsOneWidget);
-
-    // ELO_RATINGS §7: Rangliste -> ELO-Bestenliste -> Statistik.
-    final rankingY = tester.getTopLeft(ranking).dy;
-    final eloY = tester.getTopLeft(elo).dy;
-    final statsY = tester.getTopLeft(stats).dy;
-    expect(rankingY, lessThan(eloY));
-    expect(eloY, lessThan(statsY));
-  });
-
-  testWidgets('elo best-list tile pushes the elo route', (tester) async {
-    await _pump(tester);
-    await tester.tap(find.text('ELO-Bestenliste'));
-    await tester.pumpAndSettle();
-    expect(find.text('elo-route'), findsOneWidget);
-  });
-
   testWidgets('mercenary tile carries a Coming Soon marker', (tester) async {
     await _pump(tester);
     expect(find.text('Coming Soon'), findsOneWidget);
   });
 
-  testWidgets('past tile pushes the past-tournaments route', (tester) async {
-    await _pump(tester);
-    await tester.tap(find.text('Vergangene Turniere'));
-    await tester.pumpAndSettle();
-    expect(find.text('past-route'), findsOneWidget);
-  });
-
-  testWidgets('mercenary tile pushes the mercenary route', (tester) async {
-    await _pump(tester);
-    await tester.tap(find.text('Söldnermarkt'));
-    await tester.pumpAndSettle();
-    expect(find.text('mercenary-route'), findsOneWidget);
-  });
-
   testWidgets('hub renders exactly eight mode-card tiles', (tester) async {
     await _pump(tester);
-    // Registrations, Browse, Past, Mercenary, Rangliste, ELO best-list,
+    // Live, Upcoming, Past, Mercenary, Rangliste, ELO best-list,
     // Stufen-Graph (ADR-0030 §Editor), Stats.
     expect(find.byType(KubbModeCard), findsNWidgets(8));
   });

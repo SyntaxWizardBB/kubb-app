@@ -4126,23 +4126,47 @@ abstract class AppLocalizations {
   /// **'Neues Turnier'**
   String get tournamentListNewButton;
 
-  /// Hub tile: tournaments the user is registered for
+  /// Hub tile: the caller's currently running (live) tournaments
   ///
   /// In de, this message translates to:
-  /// **'Angemeldete Turniere'**
-  String get tournamentHubRegisteredTitle;
+  /// **'Live Turniere'**
+  String get tournamentHubLiveTitle;
 
-  /// Hub tile subtitle for registered tournaments
+  /// Hub tile subtitle for the caller's live tournaments
   ///
   /// In de, this message translates to:
-  /// **'Deine Anmeldungen verwalten'**
-  String get tournamentHubRegisteredSubtitle;
+  /// **'Deine laufenden Turniere'**
+  String get tournamentHubLiveSubtitle;
 
-  /// Hub tile subtitle for the public tournament list
+  /// Title of the picker shown when the caller has multiple live tournaments
   ///
   /// In de, this message translates to:
-  /// **'Ausgeschriebene Turniere stöbern'**
-  String get tournamentHubBrowseSubtitle;
+  /// **'Live Turnier wählen'**
+  String get tournamentHubLivePickerTitle;
+
+  /// Empty-state title when the caller has no live tournament
+  ///
+  /// In de, this message translates to:
+  /// **'Kein laufendes Turnier'**
+  String get tournamentHubLiveEmptyTitle;
+
+  /// Empty-state body when the caller has no live tournament
+  ///
+  /// In de, this message translates to:
+  /// **'Sobald eines deiner Turniere startet, erscheint es hier.'**
+  String get tournamentHubLiveEmptyBody;
+
+  /// Hub tile: upcoming / future tournaments (discovery list)
+  ///
+  /// In de, this message translates to:
+  /// **'Künftige Turniere'**
+  String get tournamentHubUpcomingTitle;
+
+  /// Hub tile subtitle for the upcoming tournament discovery list
+  ///
+  /// In de, this message translates to:
+  /// **'Anstehende Turniere entdecken'**
+  String get tournamentHubUpcomingSubtitle;
 
   /// Hub tile (organizer only): create/publish a tournament
   ///

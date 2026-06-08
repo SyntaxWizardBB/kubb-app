@@ -2210,13 +2210,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentListNewButton => 'Neues Turnier';
 
   @override
-  String get tournamentHubRegisteredTitle => 'Angemeldete Turniere';
+  String get tournamentHubLiveTitle => 'Live Turniere';
 
   @override
-  String get tournamentHubRegisteredSubtitle => 'Deine Anmeldungen verwalten';
+  String get tournamentHubLiveSubtitle => 'Deine laufenden Turniere';
 
   @override
-  String get tournamentHubBrowseSubtitle => 'Ausgeschriebene Turniere stöbern';
+  String get tournamentHubLivePickerTitle => 'Live Turnier wählen';
+
+  @override
+  String get tournamentHubLiveEmptyTitle => 'Kein laufendes Turnier';
+
+  @override
+  String get tournamentHubLiveEmptyBody =>
+      'Sobald eines deiner Turniere startet, erscheint es hier.';
+
+  @override
+  String get tournamentHubUpcomingTitle => 'Künftige Turniere';
+
+  @override
+  String get tournamentHubUpcomingSubtitle => 'Anstehende Turniere entdecken';
 
   @override
   String get tournamentHubCreateTitle => 'Turnier erstellen';
