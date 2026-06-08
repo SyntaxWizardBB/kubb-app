@@ -39,6 +39,7 @@ export 'src/tournament/roster_slot.dart';
 export 'src/tournament/seeding.dart';
 export 'src/tournament/shootout.dart';
 export 'src/tournament/skv_tour_points.dart';
+export 'src/tournament/stage_graph/stage_graph_model.dart';
 export 'src/tournament/standings.dart';
 export 'src/tournament/tiebreaker.dart';
 export 'src/tournament/tournament_points_award.dart';
