@@ -303,6 +303,20 @@
   "@stageGraphConfirm": { "description": "Generic confirm button in stage-graph dialogs" },
   "stageGraphCancel": "Abbrechen",
   "@stageGraphCancel": { "description": "Generic cancel button in stage-graph dialogs" },
+  "stageGraphViewForm": "Formular",
+  "@stageGraphViewForm": { "description": "Toggle label for the form view of the stage-graph editor" },
+  "stageGraphViewCanvas": "Canvas",
+  "@stageGraphViewCanvas": { "description": "Toggle label for the visual canvas view of the stage-graph editor" },
+  "stageGraphCanvasEmpty": "Noch keine Stufen. Füge eine Stufe hinzu, um den Graphen zu zeichnen.",
+  "@stageGraphCanvasEmpty": { "description": "Empty-state hint shown on the canvas when the graph has no nodes" },
+  "stageGraphCanvasDeleteEdge": "Kante „{from} → {to}“ löschen?",
+  "@stageGraphCanvasDeleteEdge": {
+    "description": "Confirmation body when deleting an edge by tapping it on the canvas",
+    "placeholders": {
+      "from": { "type": "String" },
+      "to": { "type": "String" }
+    }
+  },
   "stageGraphSeedingFieldHint": "Seeding: {label}",
   "@stageGraphSeedingFieldHint": {
     "description": "Compact seeding label shown on a node tile",

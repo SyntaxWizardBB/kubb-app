@@ -592,6 +592,30 @@ abstract class AppLocalizations {
   /// **'Abbrechen'**
   String get stageGraphCancel;
 
+  /// Toggle label for the form view of the stage-graph editor
+  ///
+  /// In de, this message translates to:
+  /// **'Formular'**
+  String get stageGraphViewForm;
+
+  /// Toggle label for the visual canvas view of the stage-graph editor
+  ///
+  /// In de, this message translates to:
+  /// **'Canvas'**
+  String get stageGraphViewCanvas;
+
+  /// Empty-state hint shown on the canvas when the graph has no nodes
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Stufen. Füge eine Stufe hinzu, um den Graphen zu zeichnen.'**
+  String get stageGraphCanvasEmpty;
+
+  /// Confirmation body when deleting an edge by tapping it on the canvas
+  ///
+  /// In de, this message translates to:
+  /// **'Kante „{from} → {to}“ löschen?'**
+  String stageGraphCanvasDeleteEdge(String from, String to);
+
   /// Compact seeding label shown on a node tile
   ///
   /// In de, this message translates to:

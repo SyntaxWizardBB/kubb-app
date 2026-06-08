@@ -10,6 +10,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/tournament/application/stage_graph_builder_controller.dart';
 import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart';
+import 'package:kubb_app/features/tournament/presentation/stage_graph_canvas.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -23,25 +24,82 @@ import 'package:lucide_icons/lucide_icons.dart';
 /// drives every mutation through [stageGraphBuilderProvider]. It deliberately
 /// holds NO graph state of its own and never re-implements validation —
 /// `state.findings` / `state.hasErrors` are the single source of truth.
-class StageGraphBuilderScreen extends ConsumerWidget {
+/// Editor view selector. Both views share the SAME `stageGraphBuilderProvider`.
+enum _EditorView { form, canvas }
+
+class StageGraphBuilderScreen extends StatefulWidget {
   const StageGraphBuilderScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  State<StageGraphBuilderScreen> createState() =>
+      _StageGraphBuilderScreenState();
+}
+
+class _StageGraphBuilderScreenState extends State<StageGraphBuilderScreen> {
+  _EditorView _view = _EditorView.form;
+
+  @override
+  Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
-    final s = ref.watch(stageGraphBuilderProvider);
-    final notifier = ref.read(stageGraphBuilderProvider.notifier);
-
-    final isEmpty = s.graph.nodes.isEmpty && s.graph.edges.isEmpty;
-
     return Scaffold(
       backgroundColor: tokens.bg,
       appBar: KubbAppBar(
         eyebrow: l.stageGraphEyebrow,
         title: l.stageGraphTitle,
       ),
-      body: SingleChildScrollView(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // The single additive entry point: form <-> canvas toggle.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              KubbTokens.space4,
+              KubbTokens.space4,
+              KubbTokens.space4,
+              0,
+            ),
+            child: SegmentedButton<_EditorView>(
+              segments: [
+                ButtonSegment(
+                  value: _EditorView.form,
+                  icon: const Icon(LucideIcons.list, size: 16),
+                  label: Text(l.stageGraphViewForm),
+                ),
+                ButtonSegment(
+                  value: _EditorView.canvas,
+                  icon: const Icon(LucideIcons.gitBranch, size: 16),
+                  label: Text(l.stageGraphViewCanvas),
+                ),
+              ],
+              selected: <_EditorView>{_view},
+              onSelectionChanged: (s) => setState(() => _view = s.first),
+            ),
+          ),
+          Expanded(
+            child: _view == _EditorView.form
+                ? const _StageGraphFormView()
+                : const StageGraphCanvas(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The original form-based editor body (unchanged behavior), now embedded under
+/// the form/canvas toggle. Reads/mutates only `stageGraphBuilderProvider`.
+class _StageGraphFormView extends ConsumerWidget {
+  const _StageGraphFormView();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(stageGraphBuilderProvider);
+    final notifier = ref.read(stageGraphBuilderProvider.notifier);
+
+    final isEmpty = s.graph.nodes.isEmpty && s.graph.edges.isEmpty;
+
+    return SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           KubbTokens.space4,
           KubbTokens.space5,
@@ -66,7 +124,6 @@ class StageGraphBuilderScreen extends ConsumerWidget {
             _ValidationPanel(state: s),
           ],
         ),
-      ),
     );
   }
 }
@@ -1370,6 +1427,53 @@ class _SaveTemplateDialogState extends State<_SaveTemplateDialog> {
     );
   }
 }
+
+// === Shared editor entry points (reused by the canvas view) ================
+//
+// Thin wrappers that expose the EXISTING dialogs and the existing validation
+// panel to the alternative canvas view (`stage_graph_canvas.dart`) WITHOUT
+// duplicating their behavior or signatures. The dialogs/panel themselves stay
+// private; these helpers are the single, additive seam (ADR-0030 §Editor).
+
+/// Opens the existing add-node dialog and returns the built [StageNode], or
+/// `null` if cancelled. [existingIds] are the ids already used by OTHER nodes.
+Future<StageNode?> showStageNodeAddDialog(
+  BuildContext context, {
+  required Set<String> existingIds,
+}) =>
+    showDialog<StageNode>(
+      context: context,
+      builder: (_) => _NodeDialog(existingIds: existingIds),
+    );
+
+/// Opens the existing edit-node dialog seeded with [initial] and returns the
+/// updated [StageNode], or `null` if cancelled. [existingIds] are the ids of
+/// the OTHER nodes (for duplicate detection); the id field stays locked on edit.
+Future<StageNode?> showStageNodeEditDialog(
+  BuildContext context, {
+  required StageNode initial,
+  required Set<String> existingIds,
+}) =>
+    showDialog<StageNode>(
+      context: context,
+      builder: (_) => _NodeDialog(existingIds: existingIds, initial: initial),
+    );
+
+/// Opens the existing add-edge dialog and returns the built [StageEdge], or
+/// `null` if cancelled.
+Future<StageEdge?> showStageEdgeAddDialog(
+  BuildContext context, {
+  required List<StageNode> nodes,
+}) =>
+    showDialog<StageEdge>(
+      context: context,
+      builder: (_) => _EdgeDialog(nodes: nodes),
+    );
+
+/// Builds the existing validation panel for a given builder [state]. Reuses the
+/// single findings renderer — no second formatter.
+Widget buildStageValidationPanel(StageGraphBuilderState state) =>
+    _ValidationPanel(state: state);
 
 // === Localized label mappers ==============================================
 

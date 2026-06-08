@@ -277,6 +277,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphCancel => 'Abbrechen';
 
   @override
+  String get stageGraphViewForm => 'Formular';
+
+  @override
+  String get stageGraphViewCanvas => 'Canvas';
+
+  @override
+  String get stageGraphCanvasEmpty =>
+      'Noch keine Stufen. Füge eine Stufe hinzu, um den Graphen zu zeichnen.';
+
+  @override
+  String stageGraphCanvasDeleteEdge(String from, String to) {
+    return 'Kante „$from → $to“ löschen?';
+  }
+
+  @override
   String stageGraphSeedingFieldHint(String label) {
     return 'Seeding: $label';
   }
