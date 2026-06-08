@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
+import 'package:kubb_app/features/player/application/player_ratings_provider.dart';
+import 'package:kubb_app/features/player/presentation/player_elo_summary.dart';
 import 'package:kubb_app/features/training/application/cloud_training_provider.dart';
 import 'package:kubb_app/features/training/data/cloud_training_repository.dart';
 
@@ -40,6 +42,7 @@ class FriendProfileScreen extends ConsumerWidget {
           children: [
             _ProfileHeader(name: name),
             const SizedBox(height: KubbTokens.space5),
+            _EloSection(userId: userId),
             async.when(
               data: (sessions) => _StatsBody(sessions: sessions),
               loading: () => const Padding(
@@ -118,6 +121,27 @@ class _ProfileHeader extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// ELO summary for a friend's profile. The personal ELO appears here only
+/// when the server (RLS) grants it — i.e. when this viewer is an accepted
+/// friend. There is no client-side friend check; we render whatever the query
+/// returned. Renders nothing while loading/erroring so the profile stays clean.
+class _EloSection extends ConsumerWidget {
+  const _EloSection({required this.userId});
+
+  final String userId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ref.watch(playerRatingsProvider(userId)).maybeWhen(
+          data: (ratings) => Padding(
+            padding: const EdgeInsets.only(bottom: KubbTokens.space5),
+            child: PlayerEloSummary(ratings: ratings),
+          ),
+          orElse: () => const SizedBox.shrink(),
+        );
   }
 }
 

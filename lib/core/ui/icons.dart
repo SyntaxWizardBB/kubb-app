@@ -18,6 +18,10 @@ class KubbIcons {
   static const IconData target = LucideIcons.target;
   static const IconData profile = LucideIcons.user;
 
+  /// Padlock — marks privacy-scoped content (e.g. the personal ELO that is
+  /// only visible to the owner and accepted friends).
+  static const IconData lock = LucideIcons.lock;
+
   /// Multi-figure glyph used for navigation entries that lead to the
   /// player hub (own profile + friends + groups). Distinct from
   /// [profile] so single-user contexts (avatar, details) keep the

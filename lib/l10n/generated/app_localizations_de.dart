@@ -9,6 +9,300 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get stageGraphEyebrow => 'Turnier-Baukasten';
+
+  @override
+  String get stageGraphTitle => 'Stufen-Graph';
+
+  @override
+  String get stageGraphHubTileTitle => 'Stufen-Graph bauen';
+
+  @override
+  String get stageGraphHubTileSubtitle =>
+      'Stufen, Routing und Validierung komponieren';
+
+  @override
+  String get stageGraphFieldSizeSection => 'Feldgröße';
+
+  @override
+  String get stageGraphFieldSizeLabel => 'Anzahl Felder';
+
+  @override
+  String get stageGraphFieldSizeHint =>
+      'Die Feldgröße treibt die Kapazitäts- und Planbarkeits-Warnungen.';
+
+  @override
+  String get stageGraphNodesSection => 'Stufen';
+
+  @override
+  String get stageGraphAddNode => 'Stufe hinzufügen';
+
+  @override
+  String get stageGraphEditNode => 'Stufe bearbeiten';
+
+  @override
+  String get stageGraphDeleteNode => 'Stufe löschen';
+
+  @override
+  String stageGraphDeleteNodeConfirm(String id) {
+    return 'Stufe „$id“ und alle damit verbundenen Kanten löschen?';
+  }
+
+  @override
+  String get stageGraphEdgesSection => 'Kanten';
+
+  @override
+  String get stageGraphAddEdge => 'Kante hinzufügen';
+
+  @override
+  String get stageGraphDeleteEdge => 'Kante löschen';
+
+  @override
+  String get stageGraphEdgesEmpty =>
+      'Noch keine Kanten. Verbinde zwei Stufen, um Teilnehmer weiterzuleiten.';
+
+  @override
+  String get stageGraphEdgesNeedNodes =>
+      'Mindestens zwei Stufen nötig, um eine Kante zu ziehen.';
+
+  @override
+  String get stageGraphValidationSection => 'Validierung';
+
+  @override
+  String get stageGraphPlayable => 'Spielbar';
+
+  @override
+  String get stageGraphNotPlayable => 'Nicht spielbar';
+
+  @override
+  String get stageGraphNoFindings => 'Spielbar — keine Befunde.';
+
+  @override
+  String get stageGraphSeverityError => 'Fehler';
+
+  @override
+  String get stageGraphSeverityWarning => 'Warnung';
+
+  @override
+  String get stageGraphTemplatesSection => 'Vorlagen';
+
+  @override
+  String get stageGraphTemplateApply => 'Anwenden';
+
+  @override
+  String get stageGraphTemplateSave => 'Als Vorlage speichern';
+
+  @override
+  String get stageGraphTemplateSystemBadge => 'Vorlage';
+
+  @override
+  String get stageGraphTemplatesEmpty => 'Keine Vorlagen verfügbar.';
+
+  @override
+  String get stageGraphTemplatesError =>
+      'Vorlagen konnten nicht geladen werden.';
+
+  @override
+  String get stageGraphRetry => 'Erneut versuchen';
+
+  @override
+  String get stageGraphTemplatePickerLabel => 'Vorlage wählen';
+
+  @override
+  String get stageGraphTemplateSaved => 'Vorlage gespeichert.';
+
+  @override
+  String get stageGraphTemplateSaveError =>
+      'Vorlage konnte nicht gespeichert werden.';
+
+  @override
+  String get stageGraphTemplateApplied => 'Vorlage angewendet.';
+
+  @override
+  String get stageGraphEmptyTitle => 'Noch kein Stufen-Graph';
+
+  @override
+  String get stageGraphEmptyBody =>
+      'Füge eine erste Stufe hinzu oder wende eine Vorlage an, um das Turnier zu komponieren.';
+
+  @override
+  String get stageGraphFieldId => 'Stufen-ID';
+
+  @override
+  String get stageGraphFieldIdLockedHint =>
+      'Die ID kann nicht geändert werden, solange Kanten daran hängen können.';
+
+  @override
+  String get stageGraphFieldType => 'Typ';
+
+  @override
+  String get stageGraphFieldSeeding => 'Seeding';
+
+  @override
+  String get stageGraphConfigGroupCount => 'Gruppen';
+
+  @override
+  String get stageGraphConfigQualifierCount => 'Qualifikanten';
+
+  @override
+  String get stageGraphConfigRounds => 'Runden';
+
+  @override
+  String get stageGraphConfigSlots => 'Plätze';
+
+  @override
+  String get stageGraphErrorIdEmpty => 'Die ID darf nicht leer sein.';
+
+  @override
+  String get stageGraphErrorIdDuplicate => 'Diese ID existiert bereits.';
+
+  @override
+  String get stageGraphEdgeFrom => 'Von';
+
+  @override
+  String get stageGraphEdgeTo => 'Nach';
+
+  @override
+  String get stageGraphEdgeSelectorLabel => 'Selektor';
+
+  @override
+  String get stageGraphEdgeSeedingInLabel => 'Seeding-Modus';
+
+  @override
+  String get stageGraphErrorSameNode =>
+      'Quelle und Ziel müssen verschieden sein.';
+
+  @override
+  String get stageGraphErrorRankOrder =>
+      '„Von“ muss kleiner oder gleich „Nach“ sein.';
+
+  @override
+  String get stageGraphErrorRoundsEmpty =>
+      'Bitte mindestens eine Runde angeben.';
+
+  @override
+  String get stageGraphSelectorRoundsLabel => 'Runden (kommagetrennt)';
+
+  @override
+  String get stageGraphSelectorRankFrom => 'Rang von';
+
+  @override
+  String get stageGraphSelectorRankTo => 'Rang bis';
+
+  @override
+  String get stageGraphSelectorK => 'Anzahl (Top K)';
+
+  @override
+  String stageGraphSelectorTopK(int k) {
+    return 'Top $k';
+  }
+
+  @override
+  String stageGraphSelectorRanks(int from, int to) {
+    return 'Ränge $from–$to';
+  }
+
+  @override
+  String stageGraphSelectorLosers(String rounds) {
+    return 'Verlierer Runden $rounds';
+  }
+
+  @override
+  String get stageGraphSelectorWinners => 'Sieger';
+
+  @override
+  String get stageGraphSelectorNonQualifiers => 'Übrige';
+
+  @override
+  String get stageGraphNodeTypePool => 'Gruppen';
+
+  @override
+  String get stageGraphNodeTypeRoundRobin => 'Jeder gegen jeden';
+
+  @override
+  String get stageGraphNodeTypeSwiss => 'Schweizer System';
+
+  @override
+  String get stageGraphNodeTypeSingleElim => 'K.-o. (einfach)';
+
+  @override
+  String get stageGraphNodeTypeDoubleElim => 'K.-o. (doppelt)';
+
+  @override
+  String get stageGraphNodeTypeConsolation => 'Trostrunde';
+
+  @override
+  String get stageGraphNodeTypeShootoutQuali => 'Shoot-out-Quali';
+
+  @override
+  String get stageGraphSeedingFromElo => 'Aus ELO';
+
+  @override
+  String get stageGraphSeedingFromPrevRanking => 'Aus Vorrangliste';
+
+  @override
+  String get stageGraphSeedingManual => 'Manuell';
+
+  @override
+  String get stageGraphSeedingAsRouted => 'Wie geroutet';
+
+  @override
+  String get stageGraphSeedingInOrderPreserving => 'Reihenfolge erhalten';
+
+  @override
+  String get stageGraphSeedingInReseedBySourceRank => 'Neu nach Quell-Rang';
+
+  @override
+  String get stageGraphSeedingInManual => 'Manuell';
+
+  @override
+  String get stageGraphSaveTemplateName => 'Name';
+
+  @override
+  String get stageGraphSaveTemplateVisibility => 'Sichtbarkeit';
+
+  @override
+  String get stageGraphVisibilityPrivate => 'Privat';
+
+  @override
+  String get stageGraphVisibilityClub => 'Verein';
+
+  @override
+  String get stageGraphVisibilityPublic => 'Öffentlich';
+
+  @override
+  String get stageGraphConfirm => 'Bestätigen';
+
+  @override
+  String get stageGraphCancel => 'Abbrechen';
+
+  @override
+  String get stageGraphViewForm => 'Formular';
+
+  @override
+  String get stageGraphViewCanvas => 'Canvas';
+
+  @override
+  String get stageGraphCanvasEmpty =>
+      'Noch keine Stufen. Füge eine Stufe hinzu, um den Graphen zu zeichnen.';
+
+  @override
+  String get stageGraphCanvasOutPort => 'Kante ziehen';
+
+  @override
+  String get stageGraphCanvasInPort => 'Eingang';
+
+  @override
+  String stageGraphCanvasDeleteEdge(String from, String to) {
+    return 'Kante „$from → $to“ löschen?';
+  }
+
+  @override
+  String stageGraphSeedingFieldHint(String label) {
+    return 'Seeding: $label';
+  }
+
+  @override
   String get appTitle => 'Kubb';
 
   @override
@@ -1986,6 +2280,40 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentRankingError => 'Rangliste konnte nicht geladen werden';
 
   @override
+  String get eloLeaderboardTitle => 'ELO-Bestenliste';
+
+  @override
+  String get eloLeaderboardEyebrow => 'Turniere';
+
+  @override
+  String get eloLeaderboardHubTitle => 'ELO-Bestenliste';
+
+  @override
+  String get eloLeaderboardHubSubtitle => 'Globale Turnier-ELO der Spieler';
+
+  @override
+  String get eloLeaderboardColName => 'Name';
+
+  @override
+  String get eloLeaderboardColElo => 'ELO';
+
+  @override
+  String get eloLeaderboardColGames => 'Spiele';
+
+  @override
+  String get eloLeaderboardProvisionalBadge => 'provisorisch';
+
+  @override
+  String get eloLeaderboardEmptyTitle => 'Noch keine Wertungen';
+
+  @override
+  String get eloLeaderboardEmptyBody =>
+      'Sobald die ersten Turnierspiele gewertet sind, erscheinen hier die Spieler mit ihrer ELO.';
+
+  @override
+  String get eloLeaderboardError => 'Bestenliste konnte nicht geladen werden';
+
+  @override
   String get tournamentPastEyebrow => 'Turniere';
 
   @override
@@ -3760,4 +4088,30 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get tournamentWizardSummaryConsolationDirectLabel =>
       'Direkt ins Trostturnier';
+
+  @override
+  String get eloSectionLabel => 'ELO-WERTUNG';
+
+  @override
+  String get eloTournamentLabel => 'Turnier-ELO';
+
+  @override
+  String get eloPersonalLabel => 'Persönlich';
+
+  @override
+  String get eloProvisionalBadge => 'provisorisch';
+
+  @override
+  String get eloNoRating => 'noch keine Wertung';
+
+  @override
+  String eloGamesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Spiele',
+      one: '1 Spiel',
+    );
+    return '$_temp0';
+  }
 }

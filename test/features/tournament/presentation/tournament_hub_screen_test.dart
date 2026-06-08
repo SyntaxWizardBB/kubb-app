@@ -29,6 +29,10 @@ Future<void> _pump(WidgetTester tester) async {
         path: TournamentRoutes.ranking,
         builder: (_, _) => const Scaffold(body: Text('ranking-route')),
       ),
+      GoRoute(
+        path: TournamentRoutes.eloLeaderboard,
+        builder: (_, _) => const Scaffold(body: Text('elo-route')),
+      ),
     ],
   );
 
@@ -98,6 +102,33 @@ void main() {
     expect(find.text('ranking-route'), findsOneWidget);
   });
 
+  testWidgets('elo best-list tile sits between the ranking and the stats tile',
+      (tester) async {
+    await _pump(tester);
+
+    final ranking = find.text('Rangliste');
+    final elo = find.text('ELO-Bestenliste');
+    final stats = find.text('Turnierstatistik');
+
+    expect(ranking, findsOneWidget);
+    expect(elo, findsOneWidget);
+    expect(stats, findsOneWidget);
+
+    // ELO_RATINGS §7: Rangliste -> ELO-Bestenliste -> Statistik.
+    final rankingY = tester.getTopLeft(ranking).dy;
+    final eloY = tester.getTopLeft(elo).dy;
+    final statsY = tester.getTopLeft(stats).dy;
+    expect(rankingY, lessThan(eloY));
+    expect(eloY, lessThan(statsY));
+  });
+
+  testWidgets('elo best-list tile pushes the elo route', (tester) async {
+    await _pump(tester);
+    await tester.tap(find.text('ELO-Bestenliste'));
+    await tester.pumpAndSettle();
+    expect(find.text('elo-route'), findsOneWidget);
+  });
+
   testWidgets('mercenary tile carries a Coming Soon marker', (tester) async {
     await _pump(tester);
     expect(find.text('Coming Soon'), findsOneWidget);
@@ -117,8 +148,10 @@ void main() {
     expect(find.text('mercenary-route'), findsOneWidget);
   });
 
-  testWidgets('hub renders exactly six mode-card tiles', (tester) async {
+  testWidgets('hub renders exactly eight mode-card tiles', (tester) async {
     await _pump(tester);
-    expect(find.byType(KubbModeCard), findsNWidgets(6));
+    // Registrations, Browse, Past, Mercenary, Rangliste, ELO best-list,
+    // Stufen-Graph (ADR-0030 §Editor), Stats.
+    expect(find.byType(KubbModeCard), findsNWidgets(8));
   });
 }
