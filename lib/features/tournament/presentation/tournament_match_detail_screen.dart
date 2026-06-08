@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/application/outbox_flusher.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_status_chip.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/application/outbox_pending_provider.dart';
@@ -14,6 +15,7 @@ import 'package:kubb_app/features/tournament/application/tournament_match_provid
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_score_draft_controller.dart';
+import 'package:kubb_app/features/tournament/application/tournament_shootout_providers.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/match_countdown.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/pitch_call_banner.dart';
@@ -53,9 +55,16 @@ class _TournamentMatchDetailScreenState
     extends ConsumerState<TournamentMatchDetailScreen> {
   bool _submitting = false;
 
-  /// Spec default per DSCORE-15. Wizard-configurable; threaded through
-  /// `TournamentMatchRef` once the detail RPC exposes it.
-  static const int _maxBasekubbs = 5;
+  /// M2b (F1): the KO finisher side resolved for a king-less set, keyed by
+  /// the set's index. A KO set with no king (the tri-toggle 'Keiner') is
+  /// non-decisive until the finisher is resolved; this map carries the
+  /// chosen side so [_setScores] / [_validate] can plumb it through the
+  /// canonical pipeline. Cleared per set whenever the king toggle changes.
+  final Map<int, SetWinner> _finisherWinners = <int, SetWinner>{};
+
+  /// B1 fallback default per DSCORE-15. The live value is read from the
+  /// tournament config (`basekubbs_per_side`) via [_maxBasekubbsFor].
+  static const int _defaultMaxBasekubbs = 5;
 
   /// Best-of-3 default; max-set cap from `matchFormatConfig` is wired
   /// through once the wizard surfaces it.
@@ -76,12 +85,21 @@ class _TournamentMatchDetailScreenState
 
   void _update(int i, int consensusRound, TournamentSetInputValue v,
       TournamentMatchRef match) {
+    // M2b (F1): only a king-toggle change invalidates a previously
+    // resolved finisher for this set — the user changed their mind about
+    // whether the king fell, so the finisher must be re-resolved. A pure
+    // base-kubb stepper bump leaves the resolved finisher intact so the
+    // submit button does not silently re-block (review finding).
+    final prevKing = i < _drafts.length ? _drafts[i].king : null;
+    if (v.king != prevKing) {
+      _finisherWinners.remove(i);
+    }
     final next = List<ScoreDraftSet>.of(_drafts);
     next[i] = ScoreDraftSet(
       basekubbsA: v.basekubbsA,
       basekubbsB: v.basekubbsB,
       king: v.king,
-      kingOutcome: _kingOutcomeFor(v.king, match),
+      kingOutcome: _kingOutcomeFor(v.king, match, finisher: null),
     );
     unawaited(_draftController.setSets(consensusRound, next));
   }
@@ -92,8 +110,19 @@ class _TournamentMatchDetailScreenState
   ///     (the toggle implies the king fell and was scored by that side).
   ///   * `null` (the "Keiner" option) → [KingTimedOut]; the EKC pipeline
   ///     then short-circuits the set to a 0:0 contribution.
-  KingOutcome _kingOutcomeFor(SetWinner? king, TournamentMatchRef match) {
-    return switch (king) {
+  ///
+  /// M2b (F4): when the set is king-less but a KO finisher has been
+  /// resolved ([finisher] non-null), the decisive winner is the finisher
+  /// side. We carry it as [KingHitBy] of that side's participant so the
+  /// set scores as a real win (not a stale [KingTimedOut] that would zero
+  /// the set) and never via an auto kubb-majority guess.
+  KingOutcome _kingOutcomeFor(
+    SetWinner? king,
+    TournamentMatchRef match, {
+    required SetWinner? finisher,
+  }) {
+    final effective = king ?? finisher;
+    return switch (effective) {
       SetWinner.teamA when match.participantA != null =>
         KingHitBy(match.participantA!),
       SetWinner.teamB when match.participantB != null =>
@@ -101,6 +130,37 @@ class _TournamentMatchDetailScreenState
       null => const KingTimedOut(),
       _ => const KingMissed(),
     };
+  }
+
+  /// B1: the per-side base-kubb cap, read from the tournament config
+  /// (`basekubbs_per_side`) rather than a hard-coded 5. Falls back to
+  /// [_defaultMaxBasekubbs] when the detail header has not loaded or the
+  /// key is absent (older RPC revisions / the test fake).
+  int _maxBasekubbsFor(AsyncValue<TournamentDetail?> detailAsync) {
+    return detailAsync.maybeWhen<int>(
+      data: (d) {
+        final cfg = d?.tournament.matchFormatConfig ?? const <String, Object?>{};
+        return (cfg['basekubbs_per_side'] as num?)?.toInt() ??
+            _defaultMaxBasekubbs;
+      },
+      orElse: () => _defaultMaxBasekubbs,
+    );
+  }
+
+  /// M2b (F2/F3): the configured KO tiebreak / finisher method, read from
+  /// the detail header's `setup` map. Defaults to the classic king-toss
+  /// removal (a simple two-way choice) when absent.
+  KoTiebreakMethod _koTiebreakMethod(
+      AsyncValue<TournamentDetail?> detailAsync) {
+    return detailAsync.maybeWhen<KoTiebreakMethod>(
+      data: (d) {
+        final wire = d?.tournament.setup['ko_tiebreak_method'];
+        return wire is String
+            ? KoTiebreakMethod.fromWire(wire)
+            : KoTiebreakMethod.classicKingtossRemoval;
+      },
+      orElse: () => KoTiebreakMethod.classicKingtossRemoval,
+    );
   }
 
   void _addSet(int consensusRound) {
@@ -115,17 +175,41 @@ class _TournamentMatchDetailScreenState
         consensusRound, _drafts.sublist(0, _drafts.length - 1)));
   }
 
-  String? _validate(AppLocalizations l, List<ScoreDraftSet> drafts) {
+  /// B2 / F1: validate the draft against the config-derived [maxBasekubbs]
+  /// and the KO finisher requirement. A king-side set must equal the
+  /// configured base-kubb max; a king-less KO set must have its finisher
+  /// resolved before submit is allowed.
+  String? _validate(
+    AppLocalizations l,
+    List<ScoreDraftSet> drafts, {
+    required int maxBasekubbs,
+    required MatchPhase phase,
+  }) {
     for (var i = 0; i < drafts.length; i++) {
       final d = drafts[i];
-      if (d.king == null && d.basekubbsA == 0 && d.basekubbsB == 0) {
+      // A resolved KO finisher makes the set decisive even at 0:0 kubbs, so
+      // it is not "empty" — the decisive side comes from the finisher.
+      final finisherResolved =
+          phase == MatchPhase.ko && _finisherWinners[i] != null;
+      if (d.king == null &&
+          d.basekubbsA == 0 &&
+          d.basekubbsB == 0 &&
+          !finisherResolved) {
         return l.tournamentMatchValidationEmpty(i + 1);
       }
-      if (d.king == SetWinner.teamA && d.basekubbsA != _maxBasekubbs) {
+      if (d.king == SetWinner.teamA && d.basekubbsA != maxBasekubbs) {
         return l.tournamentMatchValidationKingNeedsMax(i + 1);
       }
-      if (d.king == SetWinner.teamB && d.basekubbsB != _maxBasekubbs) {
+      if (d.king == SetWinner.teamB && d.basekubbsB != maxBasekubbs) {
         return l.tournamentMatchValidationKingNeedsMax(i + 1);
+      }
+      // F1: a KO set with no king ('Keiner') is non-decisive until the
+      // finisher is resolved. Block submit and prompt the user instead of
+      // silently leaving the set as SetWinner.none.
+      if (phase == MatchPhase.ko &&
+          d.king == null &&
+          _finisherWinners[i] == null) {
+        return l.tournamentMatchFinisherNeeded(i + 1);
       }
     }
     return null;
@@ -147,28 +231,38 @@ class _TournamentMatchDetailScreenState
     List<ScoreDraftSet> drafts,
     SetScoring scoring,
     MatchPhase phase,
+    TournamentMatchRef match,
   ) =>
       <SetScore>[
-        for (final d in drafts)
-          SetScore(
-            basekubbsKnockedByA: d.basekubbsA,
-            basekubbsKnockedByB: d.basekubbsB,
-            // TODO(M2b): in the KO phase the decisive winner comes from the
-            // finisher prompt; until that UI lands the king-less KO set
-            // stays non-decisive (none) rather than guessing a winner.
-            winner: resolveSetWinnerForSide(
-              kingSide: d.king,
-              basekubbsA: d.basekubbsA,
-              basekubbsB: d.basekubbsB,
-              phase: phase,
-              scoring: scoring,
-            ),
-            // R11-F-01: forward the tri-toggle's outcome into the score
-            // payload so the EKC tally and the wire RPC see the
-            // explicit `KingTimedOut` path instead of relying on the
-            // legacy `winner`-only shape.
-            kingOutcome: d.kingOutcome,
-          ),
+        for (var i = 0; i < drafts.length; i++)
+          () {
+            final d = drafts[i];
+            // F1/F4: in the KO phase a king-less set's decisive winner is
+            // the resolved finisher side (never a kubb-majority guess).
+            // The finisher side is fed as `kingSide` into the SAME
+            // canonical derivation as M2a, so the winner originates from
+            // the finisher prompt.
+            final finisher =
+                phase == MatchPhase.ko && d.king == null ? _finisherWinners[i] : null;
+            return SetScore(
+              basekubbsKnockedByA: d.basekubbsA,
+              basekubbsKnockedByB: d.basekubbsB,
+              winner: resolveSetWinnerForSide(
+                kingSide: d.king ?? finisher,
+                basekubbsA: d.basekubbsA,
+                basekubbsB: d.basekubbsB,
+                phase: phase,
+                scoring: scoring,
+              ),
+              // R11-F-01 / F4: forward the tri-toggle outcome — upgraded to
+              // the finisher-resolved [KingHitBy] for a KO set so the EKC
+              // tally credits the decisive winner instead of zeroing the
+              // set via a stale [KingTimedOut].
+              kingOutcome: finisher != null
+                  ? _kingOutcomeFor(null, match, finisher: finisher)
+                  : d.kingOutcome,
+            );
+          }(),
       ];
 
   /// M2a: the canonical scoring mode for this tournament, read from the
@@ -190,14 +284,25 @@ class _TournamentMatchDetailScreenState
   Future<void> _submit(TournamentMatchRef match) async {
     final l = AppLocalizations.of(context);
     final drafts = _drafts;
-    if (_submitting || _validate(l, drafts) != null) return;
+    final detailAsync =
+        ref.read(tournamentDetailProvider(TournamentId(widget.tournamentId)));
+    if (_submitting ||
+        _validate(
+              l,
+              drafts,
+              maxBasekubbs: _maxBasekubbsFor(detailAsync),
+              phase: match.phase,
+            ) !=
+            null) {
+      return;
+    }
     setState(() => _submitting = true);
     final prevConsensus = match.consensusRound;
     try {
       await ref.read(tournamentActionsProvider).proposeSetScores(
             matchId: match.matchId,
             consensusRound: prevConsensus,
-            setScores: _setScores(drafts, _scoringMode(), match.phase),
+            setScores: _setScores(drafts, _scoringMode(), match.phase, match),
           );
       // DSCORE-21: drop the draft for the round we just submitted. The
       // outbox queues the propose RPC so this counts as "acknowledged".
@@ -247,6 +352,48 @@ class _TournamentMatchDetailScreenState
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  /// M2b (F1/F4): records the finisher winner for a king-less KO set and
+  /// re-persists the draft so the resolved king-outcome (a [KingHitBy] of
+  /// the chosen side) survives a reload. The chosen side then flows into
+  /// the canonical submit pipeline as the set's decisive winner.
+  void _resolveFinisher(
+    int i,
+    SetWinner side,
+    int consensusRound,
+    TournamentMatchRef match,
+  ) {
+    setState(() => _finisherWinners[i] = side);
+    if (i >= _drafts.length) return;
+    final next = List<ScoreDraftSet>.of(_drafts);
+    final d = next[i];
+    next[i] = ScoreDraftSet(
+      basekubbsA: d.basekubbsA,
+      basekubbsB: d.basekubbsB,
+      // The set stays king-less in the toggle (the king never fell — the
+      // finisher decided it); only the persisted king-outcome is upgraded.
+      king: d.king,
+      kingOutcome: _kingOutcomeFor(null, match, finisher: side),
+    );
+    unawaited(_draftController.setSets(consensusRound, next));
+  }
+
+  /// M2b (F3): for the mighty-finisher-shoot-out method, delegate to the
+  /// EXISTING shoot-out infrastructure when an open group exists for this
+  /// tournament rather than reimplementing report/confirm. Navigates to
+  /// the shoot-out screen; its result resolves the tie server-side.
+  Future<void> _openShootout(TournamentMatchRef match) async {
+    final pending = await ref
+        .read(pendingShootoutsProvider(match.tournamentId).future);
+    if (!mounted) return;
+    if (pending.isEmpty) return;
+    unawaited(context.push<void>(
+      TournamentRoutes.shootout(
+        widget.tournamentId,
+        pending.first.startRank,
+      ),
+    ));
   }
 
   @override
@@ -339,9 +486,6 @@ class _TournamentMatchDetailScreenState
         match.status == TournamentMatchStatus.voided;
     final drafts =
         ref.watch(scoreDraftControllerProvider(_matchId)).sets;
-    final validationMessage = _validate(l, drafts);
-    final ekc =
-        computeEkc(_setScores(drafts, _scoringMode(), match.phase));
 
     // W3-T1: organizer-only Forfeit-Action. Visible while the
     // tournament is live, the match has two participants and is not yet
@@ -349,6 +493,17 @@ class _TournamentMatchDetailScreenState
     // server re-checks the role / status gate.
     final detailAsync =
         ref.watch(tournamentDetailProvider(TournamentId(widget.tournamentId)));
+    // B1/F2: config-derived per-side base-kubb cap + KO finisher method.
+    final maxBasekubbs = _maxBasekubbsFor(detailAsync);
+    final koMethod = _koTiebreakMethod(detailAsync);
+    final validationMessage = _validate(
+      l,
+      drafts,
+      maxBasekubbs: maxBasekubbs,
+      phase: match.phase,
+    );
+    final ekc =
+        computeEkc(_setScores(drafts, _scoringMode(), match.phase, match));
     final callerUserId = ref.watch(currentUserIdProvider);
     final isCreator = detailAsync
             .maybeWhen<bool>(
@@ -418,10 +573,24 @@ class _TournamentMatchDetailScreenState
             basekubbsA: drafts[i].basekubbsA,
             basekubbsB: drafts[i].basekubbsB,
             king: drafts[i].king,
-            maxBasekubbs: _maxBasekubbs,
+            maxBasekubbs: maxBasekubbs,
             enabled: !readOnly,
             onChanged: (v) => _update(i, match.consensusRound, v, match),
           ),
+          // F1: a KO set that ended without a king ('Keiner') needs the
+          // configured finisher resolved before it can be a decisive win.
+          if (!readOnly &&
+              match.phase == MatchPhase.ko &&
+              drafts[i].king == null)
+            _KoFinisherPrompt(
+              setIndex: i,
+              match: match,
+              method: koMethod,
+              resolved: _finisherWinners[i],
+              onResolved: (side) =>
+                  _resolveFinisher(i, side, match.consensusRound, match),
+              onOpenShootout: () => _openShootout(match),
+            ),
           const SizedBox(height: KubbTokens.space3),
         ],
         if (!readOnly) ...[
@@ -655,6 +824,125 @@ class _LivePreview extends StatelessWidget {
         Text(line,
             style: TextStyle(
                 fontSize: 18, fontWeight: FontWeight.w800, color: tokens.fg)),
+      ]),
+    );
+  }
+}
+
+/// M2b (F1-F3): the KO finisher prompt rendered under a king-less set in
+/// the knockout phase. Asks "Wer hat den Finisher gewonnen?" and lets the
+/// user pick the winning side using the REAL participant names.
+///
+/// * [KoTiebreakMethod.classicKingtossRemoval] -> a plain two-way choice
+///   whose result becomes the set's decisive [SetWinner].
+/// * [KoTiebreakMethod.mightyFinisherShootout] -> the same two-way choice
+///   PLUS a shortcut into the existing shoot-out infrastructure
+///   (the shoot-out screen) when an open group exists; the shoot-out
+///   resolves the tie server-side. No report/confirm logic is duplicated
+///   here.
+class _KoFinisherPrompt extends StatelessWidget {
+  const _KoFinisherPrompt({
+    required this.setIndex,
+    required this.match,
+    required this.method,
+    required this.resolved,
+    required this.onResolved,
+    required this.onOpenShootout,
+  });
+
+  final int setIndex;
+  final TournamentMatchRef match;
+  final KoTiebreakMethod method;
+  final SetWinner? resolved;
+  final ValueChanged<SetWinner> onResolved;
+  final VoidCallback onOpenShootout;
+
+  String _name(AppLocalizations l, String? displayName) {
+    final name = displayName?.trim();
+    if (name == null || name.isEmpty) return l.tournamentParticipantUnknown;
+    return name;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    final aName = _name(l, match.participantADisplayName);
+    final bName = _name(l, match.participantBDisplayName);
+    final isShootout = method == KoTiebreakMethod.mightyFinisherShootout;
+
+    return Container(
+      margin: const EdgeInsets.only(top: KubbTokens.space2),
+      padding: const EdgeInsets.all(KubbTokens.space3),
+      decoration: BoxDecoration(
+        color: tokens.bgRaised,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+        border: Border.all(color: KubbTokens.wood400, width: 1.5),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          const Icon(LucideIcons.flag, size: 18, color: KubbTokens.wood400),
+          const SizedBox(width: KubbTokens.space2),
+          Expanded(
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Surface which set is being resolved so the prompt is
+                  // unambiguous when several KO sets are stacked.
+                  Text(
+                    l.tournamentMatchFinisherSetLabel(setIndex + 1),
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: tokens.fgMuted),
+                  ),
+                  Text(
+                    l.tournamentMatchFinisherPrompt,
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: tokens.fg),
+                  ),
+                ]),
+          ),
+        ]),
+        const SizedBox(height: KubbTokens.space2),
+        Row(children: [
+          Expanded(
+            child: KubbButton(
+              variant: resolved == SetWinner.teamA
+                  ? KubbButtonVariant.primary
+                  : KubbButtonVariant.secondary,
+              onPressed: () => onResolved(SetWinner.teamA),
+              child: Text(aName,
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+          ),
+          const SizedBox(width: KubbTokens.space2),
+          Expanded(
+            child: KubbButton(
+              variant: resolved == SetWinner.teamB
+                  ? KubbButtonVariant.primary
+                  : KubbButtonVariant.secondary,
+              onPressed: () => onResolved(SetWinner.teamB),
+              child: Text(bName,
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+          ),
+        ]),
+        if (isShootout) ...[
+          const SizedBox(height: KubbTokens.space2),
+          Text(
+            l.tournamentMatchFinisherShootoutPending,
+            style: TextStyle(fontSize: 12, color: tokens.fgMuted),
+          ),
+          const SizedBox(height: KubbTokens.space2),
+          KubbButton(
+            variant: KubbButtonVariant.secondary,
+            onPressed: onOpenShootout,
+            child: Text(l.tournamentMatchFinisherShootoutOpenAction),
+          ),
+        ],
       ]),
     );
   }

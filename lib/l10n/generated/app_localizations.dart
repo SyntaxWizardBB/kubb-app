@@ -5338,6 +5338,36 @@ abstract class AppLocalizations {
   /// **'Dieses Spiel ist bereits abgeschlossen.'**
   String get tournamentMatchReadOnlyNotice;
 
+  /// M2b: title of the KO finisher prompt shown when a knockout set ended without a King
+  ///
+  /// In de, this message translates to:
+  /// **'Wer hat den Finisher gewonnen?'**
+  String get tournamentMatchFinisherPrompt;
+
+  /// M2b: which set the KO finisher prompt resolves
+  ///
+  /// In de, this message translates to:
+  /// **'Satz {set}'**
+  String tournamentMatchFinisherSetLabel(int set);
+
+  /// M2b: validation hint shown when a KO set has no King and the finisher is unresolved
+  ///
+  /// In de, this message translates to:
+  /// **'Satz {set}: KO ohne König — Finisher auflösen'**
+  String tournamentMatchFinisherNeeded(int set);
+
+  /// M2b: hint shown when an open shoot-out exists and the user is routed to the shoot-out screen
+  ///
+  /// In de, this message translates to:
+  /// **'Mighty-Finisher Shoot-out offen — im Shoot-out auflösen.'**
+  String get tournamentMatchFinisherShootoutPending;
+
+  /// M2b: action that navigates to the pending shoot-out screen
+  ///
+  /// In de, this message translates to:
+  /// **'Shoot-out öffnen'**
+  String get tournamentMatchFinisherShootoutOpenAction;
+
   /// Label above the live match countdown clock
   ///
   /// In de, this message translates to:

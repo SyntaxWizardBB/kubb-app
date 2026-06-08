@@ -55,6 +55,61 @@ void main() {
     expect(state.sets.single.king, isNull);
   });
 
+  test('M2b D1/D2: kingOutcome survives a container rebuild', () async {
+    final db = await openTestDatabase();
+    addTearDown(db.close);
+    final c1 = makeContainer(db);
+    await c1.read(provider.notifier).setSets(4, [
+      // A king-less / timed-out set (the KO-finisher-pending shape).
+      const ScoreDraftSet(
+        basekubbsA: 4,
+        basekubbsB: 4,
+        kingOutcome: KingTimedOut(),
+      ),
+      // A finisher-resolved set persisted as KingHitBy of the winning side.
+      const ScoreDraftSet(
+        basekubbsA: 6,
+        basekubbsB: 3,
+        king: SetWinner.teamA,
+        kingOutcome: KingHitBy(TournamentParticipantId('p-a')),
+      ),
+    ]);
+    // Fresh container against the same database simulates an app restart.
+    final c2 = makeContainer(db);
+    await c2.read(provider.notifier).init(4);
+    final state = c2.read(provider);
+    expect(state.sets, hasLength(2));
+    expect(state.sets[0].kingOutcome, const KingTimedOut());
+    expect(state.sets[0].king, isNull);
+    expect(
+      state.sets[1].kingOutcome,
+      const KingHitBy(TournamentParticipantId('p-a')),
+    );
+    expect(state.sets[1].king, SetWinner.teamA);
+    expect(state.sets[1].basekubbsA, 6);
+  });
+
+  test('M2b D3: clear then re-init on the same controller reloads fresh',
+      () async {
+    final db = await openTestDatabase();
+    addTearDown(db.close);
+    final c = makeContainer(db);
+    final notifier = c.read(provider.notifier);
+    await notifier.setSets(7, [
+      const ScoreDraftSet(basekubbsA: 5, basekubbsB: 2, king: SetWinner.teamA),
+    ]);
+    await notifier.clear(consensusRound: 7);
+    // Re-init for the SAME round on the SAME controller must read the
+    // freshly-deleted (empty/default) draft, not the stale pre-clear sets
+    // short-circuited by hydratedForRound == round.
+    await notifier.init(7);
+    final state = c.read(provider);
+    expect(state.sets, hasLength(1));
+    expect(state.sets.single.basekubbsA, 0);
+    expect(state.sets.single.basekubbsB, 0);
+    expect(state.sets.single.king, isNull);
+  });
+
   test('clear with consensusRound wipes only that row (DSCORE-21)', () async {
     final db = await openTestDatabase();
     addTearDown(db.close);

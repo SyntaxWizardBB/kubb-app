@@ -117,6 +117,40 @@ void main() {
     expect(b!.single.winner, SetWinner.teamB);
   });
 
+  test('M2b D1: round-trips the kingOutcome variants unchanged', () async {
+    final sets = [
+      // KingTimedOut: the 'Keiner' / KO-finisher-pending case.
+      SetScore(
+        basekubbsKnockedByA: 4,
+        basekubbsKnockedByB: 4,
+        winner: SetWinner.none,
+        kingOutcome: const KingTimedOut(),
+      ),
+      // KingHitBy: a real king-fall (also the shape a resolved KO finisher
+      // is persisted as).
+      SetScore(
+        basekubbsKnockedByA: 6,
+        basekubbsKnockedByB: 3,
+        winner: SetWinner.teamA,
+        kingOutcome: const KingHitBy(TournamentParticipantId('p-alpha')),
+      ),
+    ];
+
+    await db.tournamentScoreDraftDao.save(matchA, 3, sets);
+    final loaded = await db.tournamentScoreDraftDao.load(matchA, 3);
+
+    expect(loaded, isNotNull);
+    expect(loaded![0].kingOutcome, const KingTimedOut());
+    expect(loaded[0].winner, SetWinner.none);
+    expect(
+      loaded[1].kingOutcome,
+      const KingHitBy(TournamentParticipantId('p-alpha')),
+    );
+    // Full SetScore equality (incl. kingOutcome) survives the round-trip.
+    expect(loaded[0], sets[0]);
+    expect(loaded[1], sets[1]);
+  });
+
   test('round-trip preserves both teamA and teamB winners', () async {
     final sets = [
       set(6, 0, SetWinner.teamA),

@@ -3755,6 +3755,32 @@
   "@tournamentMatchReadOnlyNotice": {
     "description": "Hint shown when match status is terminal"
   },
+  "tournamentMatchFinisherPrompt": "Wer hat den Finisher gewonnen?",
+  "@tournamentMatchFinisherPrompt": {
+    "description": "M2b: title of the KO finisher prompt shown when a knockout set ended without a King"
+  },
+  "tournamentMatchFinisherSetLabel": "Satz {set}",
+  "@tournamentMatchFinisherSetLabel": {
+    "description": "M2b: which set the KO finisher prompt resolves",
+    "placeholders": {
+      "set": { "type": "int" }
+    }
+  },
+  "tournamentMatchFinisherNeeded": "Satz {set}: KO ohne König — Finisher auflösen",
+  "@tournamentMatchFinisherNeeded": {
+    "description": "M2b: validation hint shown when a KO set has no King and the finisher is unresolved",
+    "placeholders": {
+      "set": { "type": "int" }
+    }
+  },
+  "tournamentMatchFinisherShootoutPending": "Mighty-Finisher Shoot-out offen — im Shoot-out auflösen.",
+  "@tournamentMatchFinisherShootoutPending": {
+    "description": "M2b: hint shown when an open shoot-out exists and the user is routed to the shoot-out screen"
+  },
+  "tournamentMatchFinisherShootoutOpenAction": "Shoot-out öffnen",
+  "@tournamentMatchFinisherShootoutOpenAction": {
+    "description": "M2b: action that navigates to the pending shoot-out screen"
+  },
   "tournamentMatchTimerLabel": "Restzeit",
   "@tournamentMatchTimerLabel": {
     "description": "Label above the live match countdown clock"

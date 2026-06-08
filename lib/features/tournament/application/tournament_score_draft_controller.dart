@@ -81,7 +81,16 @@ class ScoreDraftController extends Notifier<ScoreDraftState> {
                 ScoreDraftSet(
                   basekubbsA: s.basekubbsKnockedByA,
                   basekubbsB: s.basekubbsKnockedByB,
-                  king: s.winner,
+                  // M2b (D2): the tri-toggle's 'Keiner' selection is
+                  // SetWinner.none on the wire but `null` (no king) in the
+                  // form. Restore it as null so the toggle re-renders the
+                  // prior selection; teamA/teamB map straight through.
+                  king: s.winner == SetWinner.none ? null : s.winner,
+                  // M2b (D2): restore the explicit king-outcome (incl. the
+                  // KingTimedOut / KingHitBy / finisher-resolved variants)
+                  // instead of defaulting to KingMissed, so a king /
+                  // finisher selection survives a screen-switch / reload.
+                  kingOutcome: s.kingOutcome,
                 ),
             ],
     );
@@ -97,10 +106,16 @@ class ScoreDraftController extends Notifier<ScoreDraftState> {
         SetScore(
           basekubbsKnockedByA: d.basekubbsA,
           basekubbsKnockedByB: d.basekubbsB,
-          winner: d.king ??
-              (d.basekubbsA >= d.basekubbsB
-                  ? SetWinner.teamA
-                  : SetWinner.teamB),
+          // M2b (D1): persist the explicit tri-toggle state. A king-less
+          // set is the canonical SetWinner.none — the legacy
+          // `basekubbsA >= basekubbsB` fallback forced an A/B winner and
+          // erased the 'Keiner' / timed-out distinction, which the KO
+          // finisher and the EKC 0:0 short-circuit both depend on.
+          winner: d.king ?? SetWinner.none,
+          // M2b (D1): persist the king-outcome alongside the score so the
+          // selection (incl. KingTimedOut / KingHitBy / finisher result)
+          // round-trips through the DAO.
+          kingOutcome: d.kingOutcome,
         ),
     ];
     await ref
@@ -112,7 +127,12 @@ class ScoreDraftController extends Notifier<ScoreDraftState> {
   /// submit to wipe only that round's row (DSCORE-21). Omit it to wipe
   /// every round for this match — used by terminal-status GC (DSCORE-22).
   Future<void> clear({int? consensusRound}) async {
-    state = ScoreDraftState(hydratedForRound: consensusRound);
+    // M2b (D3): leave [hydratedForRound] null so the NEXT init(round)
+    // genuinely reloads from the DAO. Previously this set
+    // hydratedForRound == consensusRound, which made a subsequent
+    // init(consensusRound) early-return the now-stale in-memory sets
+    // instead of reading the freshly-deleted (empty) row.
+    state = const ScoreDraftState();
     await ref
         .read(tournamentScoreDraftDaoProvider)
         .clear(_matchId, consensusRound: consensusRound);

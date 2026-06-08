@@ -2863,6 +2863,26 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dieses Spiel ist bereits abgeschlossen.';
 
   @override
+  String get tournamentMatchFinisherPrompt => 'Wer hat den Finisher gewonnen?';
+
+  @override
+  String tournamentMatchFinisherSetLabel(int set) {
+    return 'Satz $set';
+  }
+
+  @override
+  String tournamentMatchFinisherNeeded(int set) {
+    return 'Satz $set: KO ohne König — Finisher auflösen';
+  }
+
+  @override
+  String get tournamentMatchFinisherShootoutPending =>
+      'Mighty-Finisher Shoot-out offen — im Shoot-out auflösen.';
+
+  @override
+  String get tournamentMatchFinisherShootoutOpenAction => 'Shoot-out öffnen';
+
+  @override
   String get tournamentMatchTimerLabel => 'Restzeit';
 
   @override
