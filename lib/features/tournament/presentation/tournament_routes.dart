@@ -35,6 +35,11 @@ abstract final class TournamentRoutes {
   /// prefix so it wins over the dynamic `/tournament/:id` detail route.
   static const ranking = '/tournament/ranking';
 
+  /// Global tournament-ELO best-list ("ELO-Bestenliste",
+  /// `docs/ELO_RATINGS.md` §7). Static prefix so it wins over the dynamic
+  /// `/tournament/:id` detail route.
+  static const eloLeaderboard = '/tournament/elo';
+
   /// Single tournament overview. Append `/:id`.
   static const detail = '/tournament';
 

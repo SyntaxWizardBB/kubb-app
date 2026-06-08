@@ -1986,6 +1986,40 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentRankingError => 'Rangliste konnte nicht geladen werden';
 
   @override
+  String get eloLeaderboardTitle => 'ELO-Bestenliste';
+
+  @override
+  String get eloLeaderboardEyebrow => 'Turniere';
+
+  @override
+  String get eloLeaderboardHubTitle => 'ELO-Bestenliste';
+
+  @override
+  String get eloLeaderboardHubSubtitle => 'Globale Turnier-ELO der Spieler';
+
+  @override
+  String get eloLeaderboardColName => 'Name';
+
+  @override
+  String get eloLeaderboardColElo => 'ELO';
+
+  @override
+  String get eloLeaderboardColGames => 'Spiele';
+
+  @override
+  String get eloLeaderboardProvisionalBadge => 'provisorisch';
+
+  @override
+  String get eloLeaderboardEmptyTitle => 'Noch keine Wertungen';
+
+  @override
+  String get eloLeaderboardEmptyBody =>
+      'Sobald die ersten Turnierspiele gewertet sind, erscheinen hier die Spieler mit ihrer ELO.';
+
+  @override
+  String get eloLeaderboardError => 'Bestenliste konnte nicht geladen werden';
+
+  @override
   String get tournamentPastEyebrow => 'Turniere';
 
   @override

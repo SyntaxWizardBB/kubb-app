@@ -41,6 +41,7 @@ import 'package:kubb_app/features/team/presentation/team_detail_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_edit_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_invitation_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_list_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/elo_leaderboard_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/public/public_match_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/public/public_tournament_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/register_team_screen.dart';
@@ -481,6 +482,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: TournamentRoutes.ranking,
                 builder: (_, _) => const TournamentRankingScreen(),
+              ),
+              GoRoute(
+                path: TournamentRoutes.eloLeaderboard,
+                builder: (_, _) => const EloLeaderboardScreen(),
               ),
               GoRoute(
                 path: TournamentRoutes.newTournament,

@@ -2624,6 +2624,50 @@
   "@tournamentRankingError": {
     "description": "Error text when the ranking leaderboard fails to load"
   },
+  "eloLeaderboardTitle": "ELO-Bestenliste",
+  "@eloLeaderboardTitle": {
+    "description": "App-bar title for the global tournament-ELO best-list (ELO_RATINGS §7)"
+  },
+  "eloLeaderboardEyebrow": "Turniere",
+  "@eloLeaderboardEyebrow": {
+    "description": "App-bar eyebrow above the ELO best-list title"
+  },
+  "eloLeaderboardHubTitle": "ELO-Bestenliste",
+  "@eloLeaderboardHubTitle": {
+    "description": "Hub tile title for the global tournament-ELO best-list"
+  },
+  "eloLeaderboardHubSubtitle": "Globale Turnier-ELO der Spieler",
+  "@eloLeaderboardHubSubtitle": {
+    "description": "Hub tile subtitle for the global tournament-ELO best-list"
+  },
+  "eloLeaderboardColName": "Name",
+  "@eloLeaderboardColName": {
+    "description": "ELO best-list column header for the player nickname"
+  },
+  "eloLeaderboardColElo": "ELO",
+  "@eloLeaderboardColElo": {
+    "description": "ELO best-list column header for the ELO value"
+  },
+  "eloLeaderboardColGames": "Spiele",
+  "@eloLeaderboardColGames": {
+    "description": "ELO best-list column header for the games count"
+  },
+  "eloLeaderboardProvisionalBadge": "provisorisch",
+  "@eloLeaderboardProvisionalBadge": {
+    "description": "Badge label for provisional players (games < 10) in the ELO best-list"
+  },
+  "eloLeaderboardEmptyTitle": "Noch keine Wertungen",
+  "@eloLeaderboardEmptyTitle": {
+    "description": "Empty-state title when the ELO best-list has no entries yet"
+  },
+  "eloLeaderboardEmptyBody": "Sobald die ersten Turnierspiele gewertet sind, erscheinen hier die Spieler mit ihrer ELO.",
+  "@eloLeaderboardEmptyBody": {
+    "description": "Empty-state body when the ELO best-list has no entries yet"
+  },
+  "eloLeaderboardError": "Bestenliste konnte nicht geladen werden",
+  "@eloLeaderboardError": {
+    "description": "Error text when the ELO best-list fails to load"
+  },
   "tournamentPastEyebrow": "Turniere",
   "@tournamentPastEyebrow": {
     "description": "Eyebrow on the past tournaments screen"

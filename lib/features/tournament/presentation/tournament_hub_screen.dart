@@ -143,6 +143,16 @@ class TournamentHubScreen extends ConsumerWidget {
               onTap: () => unawaited(context.push(TournamentRoutes.ranking)),
             ),
             const SizedBox(height: KubbTokens.space3),
+            // ELO_RATINGS §7: global tournament-ELO best-list over players.
+            KubbModeCard(
+              title: l.eloLeaderboardHubTitle,
+              subtitle: l.eloLeaderboardHubSubtitle,
+              icon: LucideIcons.trophy,
+              accentTone: KubbChipTone.tournamentWood,
+              onTap: () =>
+                  unawaited(context.push(TournamentRoutes.eloLeaderboard)),
+            ),
+            const SizedBox(height: KubbTokens.space3),
             KubbModeCard(
               title: l.tournamentHubStatsTitle,
               subtitle: l.tournamentHubStatsSubtitle,

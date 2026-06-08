@@ -3724,6 +3724,72 @@ abstract class AppLocalizations {
   /// **'Rangliste konnte nicht geladen werden'**
   String get tournamentRankingError;
 
+  /// App-bar title for the global tournament-ELO best-list (ELO_RATINGS §7)
+  ///
+  /// In de, this message translates to:
+  /// **'ELO-Bestenliste'**
+  String get eloLeaderboardTitle;
+
+  /// App-bar eyebrow above the ELO best-list title
+  ///
+  /// In de, this message translates to:
+  /// **'Turniere'**
+  String get eloLeaderboardEyebrow;
+
+  /// Hub tile title for the global tournament-ELO best-list
+  ///
+  /// In de, this message translates to:
+  /// **'ELO-Bestenliste'**
+  String get eloLeaderboardHubTitle;
+
+  /// Hub tile subtitle for the global tournament-ELO best-list
+  ///
+  /// In de, this message translates to:
+  /// **'Globale Turnier-ELO der Spieler'**
+  String get eloLeaderboardHubSubtitle;
+
+  /// ELO best-list column header for the player nickname
+  ///
+  /// In de, this message translates to:
+  /// **'Name'**
+  String get eloLeaderboardColName;
+
+  /// ELO best-list column header for the ELO value
+  ///
+  /// In de, this message translates to:
+  /// **'ELO'**
+  String get eloLeaderboardColElo;
+
+  /// ELO best-list column header for the games count
+  ///
+  /// In de, this message translates to:
+  /// **'Spiele'**
+  String get eloLeaderboardColGames;
+
+  /// Badge label for provisional players (games < 10) in the ELO best-list
+  ///
+  /// In de, this message translates to:
+  /// **'provisorisch'**
+  String get eloLeaderboardProvisionalBadge;
+
+  /// Empty-state title when the ELO best-list has no entries yet
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Wertungen'**
+  String get eloLeaderboardEmptyTitle;
+
+  /// Empty-state body when the ELO best-list has no entries yet
+  ///
+  /// In de, this message translates to:
+  /// **'Sobald die ersten Turnierspiele gewertet sind, erscheinen hier die Spieler mit ihrer ELO.'**
+  String get eloLeaderboardEmptyBody;
+
+  /// Error text when the ELO best-list fails to load
+  ///
+  /// In de, this message translates to:
+  /// **'Bestenliste konnte nicht geladen werden'**
+  String get eloLeaderboardError;
+
   /// Eyebrow on the past tournaments screen
   ///
   /// In de, this message translates to:
