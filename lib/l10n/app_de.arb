@@ -4959,5 +4959,32 @@
   "tournamentWizardSummaryConsolationDirectLabel": "Direkt ins Trostturnier",
   "@tournamentWizardSummaryConsolationDirectLabel": {
     "description": "K26: summary label for the consolation direct-starter count"
+  },
+  "eloSectionLabel": "ELO-WERTUNG",
+  "@eloSectionLabel": {
+    "description": "Eyebrow section label above the ELO summary on profile screens"
+  },
+  "eloTournamentLabel": "Turnier-ELO",
+  "@eloTournamentLabel": {
+    "description": "Label for the public tournament ELO value on profile screens"
+  },
+  "eloPersonalLabel": "Persönlich",
+  "@eloPersonalLabel": {
+    "description": "Label for the private personal ELO value, shown next to a lock icon to signal it is not public"
+  },
+  "eloProvisionalBadge": "provisorisch",
+  "@eloProvisionalBadge": {
+    "description": "Chip badge shown next to a tournament ELO while the player is still provisional (fewer than 10 rated games)"
+  },
+  "eloNoRating": "noch keine Wertung",
+  "@eloNoRating": {
+    "description": "Muted hint shown when the player has no tournament ELO yet"
+  },
+  "eloGamesCount": "{count, plural, =1{1 Spiel} other{{count} Spiele}}",
+  "@eloGamesCount": {
+    "description": "Number of rated games behind an ELO value",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
   }
 }

@@ -11,7 +11,9 @@ import 'package:kubb_app/features/club/application/club_providers.dart';
 import 'package:kubb_app/features/club/data/club_models.dart';
 import 'package:kubb_app/features/club/presentation/club_routes.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
+import 'package:kubb_app/features/player/application/player_ratings_provider.dart';
 import 'package:kubb_app/features/player/presentation/avatar_color.dart';
+import 'package:kubb_app/features/player/presentation/player_elo_summary.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
 /// Read-only profile surface. Edit-mode lives in `EditProfileScreen` —
@@ -118,6 +120,7 @@ class _Body extends StatelessWidget {
           const SizedBox(height: KubbTokens.space3),
           Center(child: _ProviderBadge(label: providerLabel)),
           const SizedBox(height: KubbTokens.space8),
+          _EloSection(userId: profile.userId),
           const _ClubsSection(),
           SizedBox(
             height: KubbTokens.touchComfortable,
@@ -130,6 +133,27 @@ class _Body extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// ELO ratings of the current user. The personal ELO only appears when the
+/// server (RLS) returns a `personal` row — on the own profile that is always
+/// the owner case. Renders nothing while loading/erroring so the profile stays
+/// clean.
+class _EloSection extends ConsumerWidget {
+  const _EloSection({required this.userId});
+
+  final String userId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ref.watch(playerRatingsProvider(userId)).maybeWhen(
+          data: (ratings) => Padding(
+            padding: const EdgeInsets.only(bottom: KubbTokens.space8),
+            child: PlayerEloSummary(ratings: ratings),
+          ),
+          orElse: () => const SizedBox.shrink(),
+        );
   }
 }
 

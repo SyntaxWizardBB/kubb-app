@@ -6957,6 +6957,42 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Direkt ins Trostturnier'**
   String get tournamentWizardSummaryConsolationDirectLabel;
+
+  /// Eyebrow section label above the ELO summary on profile screens
+  ///
+  /// In de, this message translates to:
+  /// **'ELO-WERTUNG'**
+  String get eloSectionLabel;
+
+  /// Label for the public tournament ELO value on profile screens
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier-ELO'**
+  String get eloTournamentLabel;
+
+  /// Label for the private personal ELO value, shown next to a lock icon to signal it is not public
+  ///
+  /// In de, this message translates to:
+  /// **'Persönlich'**
+  String get eloPersonalLabel;
+
+  /// Chip badge shown next to a tournament ELO while the player is still provisional (fewer than 10 rated games)
+  ///
+  /// In de, this message translates to:
+  /// **'provisorisch'**
+  String get eloProvisionalBadge;
+
+  /// Muted hint shown when the player has no tournament ELO yet
+  ///
+  /// In de, this message translates to:
+  /// **'noch keine Wertung'**
+  String get eloNoRating;
+
+  /// Number of rated games behind an ELO value
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Spiel} other{{count} Spiele}}'**
+  String eloGamesCount(int count);
 }
 
 class _AppLocalizationsDelegate

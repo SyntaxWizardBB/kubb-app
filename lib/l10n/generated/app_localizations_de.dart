@@ -3794,4 +3794,30 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get tournamentWizardSummaryConsolationDirectLabel =>
       'Direkt ins Trostturnier';
+
+  @override
+  String get eloSectionLabel => 'ELO-WERTUNG';
+
+  @override
+  String get eloTournamentLabel => 'Turnier-ELO';
+
+  @override
+  String get eloPersonalLabel => 'Persönlich';
+
+  @override
+  String get eloProvisionalBadge => 'provisorisch';
+
+  @override
+  String get eloNoRating => 'noch keine Wertung';
+
+  @override
+  String eloGamesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Spiele',
+      one: '1 Spiel',
+    );
+    return '$_temp0';
+  }
 }
