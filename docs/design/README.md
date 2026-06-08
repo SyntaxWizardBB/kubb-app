@@ -46,6 +46,19 @@ The HTML/JSX prototypes are **specifications, not code to copy**. Flutter widget
 - **Heli counter** is opt-in via Settings. Players who don't track helicopter throws can hide that column entirely.
 - **High-contrast mode** (`.bk-hc` in CSS) becomes a Flutter `ThemeMode` variant or a Material 3 high-contrast surface tonal palette. Triggered manually in Settings; later optionally tied to system preference.
 
+## Binding UI rules
+
+These are versioned, team-wide rules (mirrored from the repo `CLAUDE.md`, which is
+local-only and not committed):
+
+- **Tournament detail always renders ALL configured master data** (no silent
+  dropping of configured fields). Configured master data (B3.1–B3.4: core match
+  format, KO/phase config, P6 metadata) is shown compactly via the shared widget
+  `TournamentStammdatenCard`
+  (`lib/features/tournament/presentation/widgets/tournament_stammdaten_card.dart`).
+  Only unset / NULL / blank fields may be omitted. New master-data fields belong in
+  that shared widget, not in a one-off view.
+
 ## When the design changes
 
 Edit the prototype, regenerate or replace the affected file in `ui_kits/app/`, update token values in `colors_and_type.css`, and adjust the corresponding Flutter files. The README mapping table above stays the contract.

@@ -11,7 +11,7 @@ import 'package:kubb_app/features/tournament/application/tournament_realtime_pro
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_status_banner.dart';
-import 'package:kubb_app/features/tournament/presentation/widgets/tournament_card.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/tournament_stammdaten_card.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_status_pill.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -161,22 +161,12 @@ class _Body extends ConsumerWidget {
           style: TextStyle(fontSize: 13, color: tokens.fgMuted),
         ),
         const SizedBox(height: KubbTokens.space5),
-        _card(context, l.tournamentDetailStammdaten, [
-          _row(context, l.tournamentDetailFormat, formatLabel(h.format, l)),
-          _row(context, l.tournamentDetailTeamSize, '${h.teamSize}'),
-          if (cfg['sets_to_win'] != null)
-            _row(context, l.tournamentDetailSetsToWin,
-                '${cfg['sets_to_win']}'),
-          if (cfg['max_sets'] != null)
-            _row(context, l.tournamentDetailMaxSets, '${cfg['max_sets']}'),
-          if (cfg['round_time_minutes'] != null)
-            _row(context, l.tournamentDetailRoundTime,
-                '${cfg['round_time_minutes']} min'),
-        ]),
-        // CF5/K28: all wizard-configured meta info, surfaced read-only. Each
-        // card and row is guarded so unset fields never render an empty line
-        // and an all-empty card disappears entirely.
-        ..._metaCards(context, ref, detail, l),
+        // H2: the shared Stammdaten card renders ALL configured master data
+        // (B3.1–B3.4) verbatim from the header (matchFormatConfig + setup),
+        // omitting unset fields. It replaces the former inline Stammdaten
+        // section + `_metaCards` so the detail (and the upcoming-tournaments
+        // detail, same route) always shows every configured field.
+        TournamentStammdatenCard(header: h),
         const SizedBox(height: KubbTokens.space5),
         _card(context, l.tournamentDetailParticipants, [
           if (confirmedParts.isEmpty)
@@ -234,21 +224,6 @@ class _Body extends ConsumerWidget {
   }
 }
 
-Widget _row(BuildContext context, String label, String value) {
-  final tokens = Theme.of(context).extension<KubbTokens>()!;
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: KubbTokens.space1),
-    child: Row(children: [
-      Expanded(
-          child: Text(label,
-              style: TextStyle(fontSize: 13, color: tokens.fgMuted))),
-      Text(value,
-          style: TextStyle(
-              fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg)),
-    ]),
-  );
-}
-
 Widget _card(BuildContext context, String heading, List<Widget> children) {
   final tokens = Theme.of(context).extension<KubbTokens>()!;
   return Container(
@@ -269,212 +244,6 @@ Widget _card(BuildContext context, String heading, List<Widget> children) {
   );
 }
 
-// ---- CF5/K28: read-only meta/setup cards --------------------------------
-
-String? _str(Object? v) {
-  if (v is! String) return null;
-  final t = v.trim();
-  return t.isEmpty ? null : t;
-}
-
-/// Formats an ISO-8601 timestamp string (as projected by `tournament_get`)
-/// into a compact `dd.MM.yyyy HH:mm` German label. Returns null on absent or
-/// unparseable input so the row is skipped.
-String? _dateTime(Object? raw) {
-  final s = _str(raw);
-  if (s == null) return null;
-  final dt = DateTime.tryParse(s)?.toLocal();
-  if (dt == null) return null;
-  String two(int n) => n.toString().padLeft(2, '0');
-  return '${two(dt.day)}.${two(dt.month)}.${dt.year} '
-      '${two(dt.hour)}:${two(dt.minute)}';
-}
-
-/// Formats an integer cents amount + currency into e.g. `CHF 10.00`.
-String _money(int cents, String currency) {
-  final major = (cents / 100).toStringAsFixed(2);
-  return '$currency $major';
-}
-
-/// Builds a card only when at least one of its rows is present; an empty list
-/// yields nothing (no empty header). Mirrors the existing `_card` chrome.
-Widget _cardIfAny(
-    BuildContext context, String heading, List<Widget> rows) {
-  if (rows.isEmpty) return const SizedBox.shrink();
-  return Padding(
-    padding: const EdgeInsets.only(top: KubbTokens.space5),
-    child: _card(context, heading, rows),
-  );
-}
-
-/// CF5/K28: assembles the read-only meta/setup cards from the
-/// `TournamentDetailHeader.setup` map (+ header fields). Every row is guarded
-/// behind a non-null / non-blank check so unset wizard fields stay hidden.
-List<Widget> _metaCards(
-  BuildContext context,
-  WidgetRef ref,
-  TournamentDetail detail,
-  AppLocalizations l,
-) {
-  final h = detail.tournament;
-  final s = h.setup;
-
-  // --- Veranstaltung (Ort / Adresse) ---
-  final location = _str(s['location']);
-  final address = _str(s['venue_address']);
-  final infoCard = _cardIfAny(context, l.tournamentDetailInfoHeading, [
-    if (location != null) _row(context, l.tournamentDetailLocation, location),
-    if (address != null)
-      _row(context, l.tournamentDetailVenueAddress, address),
-  ]);
-
-  // --- Termine ---
-  final eventStart = _dateTime(s['event_starts_at']);
-  final regCloses = _dateTime(s['registration_closes_at']);
-  final checkin = _dateTime(s['checkin_until']);
-  final datesCard = _cardIfAny(context, l.tournamentDetailDatesHeading, [
-    if (eventStart != null)
-      _row(context, l.tournamentDetailEventStart, eventStart),
-    if (regCloses != null)
-      _row(context, l.tournamentDetailRegistrationCloses, regCloses),
-    if (checkin != null)
-      _row(context, l.tournamentDetailCheckinUntil, checkin),
-  ]);
-
-  // --- Gebühr & Zahlung ---
-  final feeCents = s['entry_fee_cents'];
-  final currency = _str(s['currency']) ?? 'CHF';
-  final payments = (s['payment_methods'] is List)
-      ? (s['payment_methods']! as List)
-          .map((e) => e?.toString().trim() ?? '')
-          .where((e) => e.isNotEmpty)
-          .toList()
-      : const <String>[];
-  final feeCard = _cardIfAny(context, l.tournamentDetailFeeHeading, [
-    if (feeCents is num && feeCents > 0)
-      _row(context, l.tournamentDetailEntryFee,
-          _money(feeCents.toInt(), currency)),
-    if (payments.isNotEmpty)
-      _row(context, l.tournamentDetailPaymentMethods, payments.join(', ')),
-  ]);
-
-  // --- Kontakt ---
-  final contactName = _str(s['contact_name']);
-  final contactPhone = _str(s['contact_phone']);
-  final contactCard = _cardIfAny(context, l.tournamentDetailContactHeading, [
-    if (contactName != null)
-      _row(context, l.tournamentDetailContactName, contactName),
-    if (contactPhone != null)
-      _row(context, l.tournamentDetailContactPhone, contactPhone),
-  ]);
-
-  // --- Infos für Teilnehmer ---
-  final infoFood = _str(s['info_food']);
-  final infoTravel = _str(s['info_travel']);
-  final infoAccom = _str(s['info_accommodation']);
-  final weather = _str(s['weather_note']);
-  final infoTextsCard =
-      _cardIfAny(context, l.tournamentDetailInfoTextsHeading, [
-    if (infoFood != null) _row(context, l.tournamentDetailInfoFood, infoFood),
-    if (infoTravel != null)
-      _row(context, l.tournamentDetailInfoTravel, infoTravel),
-    if (infoAccom != null)
-      _row(context, l.tournamentDetailInfoAccommodation, infoAccom),
-    if (weather != null)
-      _row(context, l.tournamentDetailWeatherNote, weather),
-  ]);
-
-  // --- Regel-Varianten + Scoring ---
-  final rv = s['rule_variants'];
-  final rules = <Widget>[];
-  if (rv is Map) {
-    String onOff(Object? v) =>
-        v == true ? l.tournamentDetailRuleOn : l.tournamentDetailRuleOff;
-    rules
-      ..add(_row(context, l.tournamentDetailRuleDiggy, onOff(rv['diggy'])))
-      ..add(_row(
-          context, l.tournamentDetailRuleSureshot, onOff(rv['sureshot'])))
-      ..add(_row(context, l.tournamentDetailRuleStrafkubb,
-          onOff(rv['strafkubb_off_baseline'])));
-    final opening = _str(rv['opening_rule']);
-    if (opening != null) {
-      rules.add(_row(context, l.tournamentDetailRuleOpening, opening));
-    }
-  }
-  final scoringLabel = switch (h.scoring) {
-    TournamentScoring.ekc => l.tournamentDetailScoringEkc,
-    TournamentScoring.classic => l.tournamentDetailScoringClassic,
-  };
-  rules.add(_row(context, l.tournamentDetailScoring, scoringLabel));
-  final rulesCard = _cardIfAny(context, l.tournamentDetailRulesHeading, rules);
-
-  // --- Veranstalter & Liga + KO ---
-  // Guarded like every other meta card (K28-empty-fields-hidden): the club /
-  // fun-tournament row only renders when a club is actually set OR at least
-  // one other org field (leagues / KO / consolation) carries info, so the
-  // whole card disappears for a bare tournament. The Format is NOT repeated
-  // here — it already lives in the Stammdaten card above.
-  final orgRows = <Widget>[];
-  final clubId = _str(h.clubId);
-  final leagues = (s['league_categories'] is List)
-      ? (s['league_categories']! as List)
-          .map((e) => e?.toString().trim().toUpperCase() ?? '')
-          .where((e) => e.isNotEmpty)
-          .toList()
-      : const <String>[];
-  if (leagues.isNotEmpty) {
-    orgRows.add(_row(context, l.tournamentDetailLeagueCategories,
-        leagues.join(', ')));
-  }
-  final koConfig = s['ko_config'];
-  if (koConfig is Map && koConfig['qualifier_count'] is num) {
-    orgRows.add(_row(context, l.tournamentDetailKoSetup,
-        l.tournamentDetailKoQualifiers(
-            (koConfig['qualifier_count'] as num).toInt())));
-  }
-  final consolationName = _consolationName(s);
-  if (consolationName != null) {
-    orgRows.add(_row(
-        context, l.tournamentDetailConsolationLabel, consolationName));
-  }
-  // Prepend the organizer line: a concrete club when set, otherwise the
-  // "Spasstournier – ohne Wertung" marker — but only when the card carries
-  // any other org info (so a bare tournament keeps the card collapsed).
-  if (clubId != null) {
-    orgRows.insert(
-        0, _row(context, l.tournamentDetailClubLabel, clubId));
-  } else if (orgRows.isNotEmpty) {
-    orgRows.insert(0,
-        _row(context, l.tournamentDetailClubLabel, l.tournamentDetailFunTournament));
-  }
-  final orgCard =
-      _cardIfAny(context, l.tournamentDetailOrganizationHeading, orgRows);
-
-  // --- Dokumente (PDF-Download) ---
-  final rulesPdf = _str(s['rules_pdf_url']);
-  final siteMapPdf = _str(s['site_map_pdf_url']);
-  final docRows = <Widget>[
-    if (rulesPdf != null)
-      _PdfDownloadButton(label: l.tournamentDetailRulesPdf, url: rulesPdf),
-    if (siteMapPdf != null)
-      _PdfDownloadButton(
-          label: l.tournamentDetailSiteMapPdf, url: siteMapPdf),
-  ];
-  final docsCard =
-      _cardIfAny(context, l.tournamentDetailDocumentsHeading, docRows);
-
-  return [
-    infoCard,
-    datesCard,
-    feeCard,
-    contactCard,
-    infoTextsCard,
-    rulesCard,
-    orgCard,
-    docsCard,
-  ];
-}
-
 /// CF6 (K19): the configured seeding mode, read from the
 /// `ko_config.seeding_mode` discriminator on the projected setup map.
 /// Defaults to [SeedingMode.auto] when absent or unrecognised, matching
@@ -486,60 +255,6 @@ SeedingMode _seedingMode(TournamentDetail detail) {
     return SeedingMode.manual;
   }
   return SeedingMode.auto;
-}
-
-/// CF5/K17/K28: the configured consolation/Trostturnier name, read from the
-/// `consolation_bracket.name` jsonb (written by `toSetupConfig`). Null/blank
-/// when unset.
-String? _consolationName(Map<String, Object?> setup) {
-  final c = setup['consolation_bracket'];
-  if (c is! Map) return null;
-  return _str(c['name']);
-}
-
-/// CF5/K28: a touch-friendly download button that opens the public Storage URL
-/// of an uploaded tournament PDF via the injectable [tournamentUrlOpenerProvider].
-class _PdfDownloadButton extends ConsumerWidget {
-  const _PdfDownloadButton({required this.label, required this.url});
-
-  final String label;
-  final String url;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: KubbTokens.space1),
-      child: SizedBox(
-        height: KubbTokens.touchMin,
-        width: double.infinity,
-        child: OutlinedButton.icon(
-          icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-          label: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(label),
-          ),
-          onPressed: () async {
-            final open = ref.read(tournamentUrlOpenerProvider);
-            final l = AppLocalizations.of(context);
-            final uri = Uri.tryParse(url);
-            var ok = false;
-            if (uri != null) {
-              try {
-                ok = await open(uri);
-              } on Object {
-                ok = false;
-              }
-            }
-            if (!ok && context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(l.tournamentDetailPdfOpenError),
-                  backgroundColor: KubbTokens.miss));
-            }
-          },
-        ),
-      ),
-    );
-  }
 }
 
 Future<void> _safe(BuildContext context, Future<void> Function() op) async {

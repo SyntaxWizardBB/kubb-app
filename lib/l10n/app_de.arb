@@ -3197,6 +3197,98 @@
   "@tournamentDetailRoundTime": {
     "description": "Row label: round time"
   },
+  "tournamentDetailTeamSizeRange": "{min}–{max} Spieler",
+  "@tournamentDetailTeamSizeRange": {
+    "description": "H2: team-size shown as a min..max range",
+    "placeholders": {
+      "min": {"type": "int"},
+      "max": {"type": "int"}
+    }
+  },
+  "tournamentDetailTeamSizeFixed": "{size} Spieler",
+  "@tournamentDetailTeamSizeFixed": {
+    "description": "H2: team-size when fixed (min == max)",
+    "placeholders": {
+      "size": {"type": "int"}
+    }
+  },
+  "tournamentDetailBasekubbs": "Basiskubbs/Seite",
+  "@tournamentDetailBasekubbs": {
+    "description": "H2: base kubbs per side row label"
+  },
+  "tournamentDetailTiebreak": "Tiebreak-Satz",
+  "@tournamentDetailTiebreak": {
+    "description": "H2: tiebreak-set row label"
+  },
+  "tournamentDetailTiebreakAfter": "Tiebreak nach {minutes} min",
+  "@tournamentDetailTiebreakAfter": {
+    "description": "H2: tiebreak enabled with a time threshold",
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "tournamentDetailBreakBetween": "Pause zwischen Matches",
+  "@tournamentDetailBreakBetween": {
+    "description": "H2: break between matches row label"
+  },
+  "tournamentDetailMinutes": "{minutes} min",
+  "@tournamentDetailMinutes": {
+    "description": "H2: a value expressed in minutes",
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "tournamentDetailKoPhaseHeading": "KO-Phase",
+  "@tournamentDetailKoPhaseHeading": {
+    "description": "H2: section heading for KO/phase config"
+  },
+  "tournamentDetailBracketType": "KO-Modell",
+  "@tournamentDetailBracketType": {
+    "description": "H2: bracket type row label"
+  },
+  "tournamentDetailBracketSingle": "Single-Elimination",
+  "@tournamentDetailBracketSingle": {
+    "description": "H2: single-elimination bracket value"
+  },
+  "tournamentDetailBracketDouble": "Double-Elimination",
+  "@tournamentDetailBracketDouble": {
+    "description": "H2: double-elimination bracket value"
+  },
+  "tournamentDetailKoTiebreakMethod": "KO-Tiebreak",
+  "@tournamentDetailKoTiebreakMethod": {
+    "description": "H2: KO tiebreak method row label"
+  },
+  "tournamentDetailKoTiebreakClassic": "Classic (Kingtoss-Entfernung)",
+  "@tournamentDetailKoTiebreakClassic": {
+    "description": "H2: classic kingtoss-removal tiebreak value"
+  },
+  "tournamentDetailKoTiebreakMighty": "Mighty Finisher",
+  "@tournamentDetailKoTiebreakMighty": {
+    "description": "H2: mighty-finisher shootout tiebreak value"
+  },
+  "tournamentDetailMightyFinisher": "Mighty Finisher",
+  "@tournamentDetailMightyFinisher": {
+    "description": "H2: mighty-finisher qualification row label"
+  },
+  "tournamentDetailMightyFinisherSlots": "{slots} Plätze",
+  "@tournamentDetailMightyFinisherSlots": {
+    "description": "H2: mighty-finisher slot count",
+    "placeholders": {
+      "slots": {"type": "int"}
+    }
+  },
+  "tournamentDetailPoolConfig": "Gruppen-Aufteilung",
+  "@tournamentDetailPoolConfig": {
+    "description": "H2: pool phase config row label"
+  },
+  "tournamentDetailPoolConfigValue": "{groups} Gruppen, {qualifiers} qualifizieren",
+  "@tournamentDetailPoolConfigValue": {
+    "description": "H2: pool config summary (group count + qualifiers per group)",
+    "placeholders": {
+      "groups": {"type": "int"},
+      "qualifiers": {"type": "int"}
+    }
+  },
   "tournamentDetailParticipants": "Teilnehmer",
   "@tournamentDetailParticipants": {
     "description": "Section heading: participants"

@@ -511,6 +511,11 @@ void main() {
     expect(find.text('Regelwerk (PDF)'), findsOneWidget);
     expect(find.text('Geländeplan (PDF)'), findsOneWidget);
 
+    // H2: the Stammdaten card is now one tall ListView child, so make sure
+    // the button is fully on-screen before tapping (the minimal scroll above
+    // can leave it clipped at the viewport edge).
+    await tester.ensureVisible(find.text('Regelwerk (PDF)'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Regelwerk (PDF)'));
     await tester.pump();
     expect(opened, hasLength(1));

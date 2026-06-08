@@ -4612,6 +4612,114 @@ abstract class AppLocalizations {
   /// **'Runden-Zeit'**
   String get tournamentDetailRoundTime;
 
+  /// H2: team-size shown as a min..max range
+  ///
+  /// In de, this message translates to:
+  /// **'{min}–{max} Spieler'**
+  String tournamentDetailTeamSizeRange(int min, int max);
+
+  /// H2: team-size when fixed (min == max)
+  ///
+  /// In de, this message translates to:
+  /// **'{size} Spieler'**
+  String tournamentDetailTeamSizeFixed(int size);
+
+  /// H2: base kubbs per side row label
+  ///
+  /// In de, this message translates to:
+  /// **'Basiskubbs/Seite'**
+  String get tournamentDetailBasekubbs;
+
+  /// H2: tiebreak-set row label
+  ///
+  /// In de, this message translates to:
+  /// **'Tiebreak-Satz'**
+  String get tournamentDetailTiebreak;
+
+  /// H2: tiebreak enabled with a time threshold
+  ///
+  /// In de, this message translates to:
+  /// **'Tiebreak nach {minutes} min'**
+  String tournamentDetailTiebreakAfter(int minutes);
+
+  /// H2: break between matches row label
+  ///
+  /// In de, this message translates to:
+  /// **'Pause zwischen Matches'**
+  String get tournamentDetailBreakBetween;
+
+  /// H2: a value expressed in minutes
+  ///
+  /// In de, this message translates to:
+  /// **'{minutes} min'**
+  String tournamentDetailMinutes(int minutes);
+
+  /// H2: section heading for KO/phase config
+  ///
+  /// In de, this message translates to:
+  /// **'KO-Phase'**
+  String get tournamentDetailKoPhaseHeading;
+
+  /// H2: bracket type row label
+  ///
+  /// In de, this message translates to:
+  /// **'KO-Modell'**
+  String get tournamentDetailBracketType;
+
+  /// H2: single-elimination bracket value
+  ///
+  /// In de, this message translates to:
+  /// **'Single-Elimination'**
+  String get tournamentDetailBracketSingle;
+
+  /// H2: double-elimination bracket value
+  ///
+  /// In de, this message translates to:
+  /// **'Double-Elimination'**
+  String get tournamentDetailBracketDouble;
+
+  /// H2: KO tiebreak method row label
+  ///
+  /// In de, this message translates to:
+  /// **'KO-Tiebreak'**
+  String get tournamentDetailKoTiebreakMethod;
+
+  /// H2: classic kingtoss-removal tiebreak value
+  ///
+  /// In de, this message translates to:
+  /// **'Classic (Kingtoss-Entfernung)'**
+  String get tournamentDetailKoTiebreakClassic;
+
+  /// H2: mighty-finisher shootout tiebreak value
+  ///
+  /// In de, this message translates to:
+  /// **'Mighty Finisher'**
+  String get tournamentDetailKoTiebreakMighty;
+
+  /// H2: mighty-finisher qualification row label
+  ///
+  /// In de, this message translates to:
+  /// **'Mighty Finisher'**
+  String get tournamentDetailMightyFinisher;
+
+  /// H2: mighty-finisher slot count
+  ///
+  /// In de, this message translates to:
+  /// **'{slots} Plätze'**
+  String tournamentDetailMightyFinisherSlots(int slots);
+
+  /// H2: pool phase config row label
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppen-Aufteilung'**
+  String get tournamentDetailPoolConfig;
+
+  /// H2: pool config summary (group count + qualifiers per group)
+  ///
+  /// In de, this message translates to:
+  /// **'{groups} Gruppen, {qualifiers} qualifizieren'**
+  String tournamentDetailPoolConfigValue(int groups, int qualifiers);
+
   /// Section heading: participants
   ///
   /// In de, this message translates to:

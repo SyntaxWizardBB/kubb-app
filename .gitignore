@@ -42,6 +42,8 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+# Build artifacts in any sub-package (e.g. packages/kubb_domain/build/)
+**/build/
 /coverage/
 
 # Symbolication related

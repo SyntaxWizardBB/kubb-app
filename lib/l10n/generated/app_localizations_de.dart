@@ -2466,6 +2466,73 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentDetailRoundTime => 'Runden-Zeit';
 
   @override
+  String tournamentDetailTeamSizeRange(int min, int max) {
+    return '$min–$max Spieler';
+  }
+
+  @override
+  String tournamentDetailTeamSizeFixed(int size) {
+    return '$size Spieler';
+  }
+
+  @override
+  String get tournamentDetailBasekubbs => 'Basiskubbs/Seite';
+
+  @override
+  String get tournamentDetailTiebreak => 'Tiebreak-Satz';
+
+  @override
+  String tournamentDetailTiebreakAfter(int minutes) {
+    return 'Tiebreak nach $minutes min';
+  }
+
+  @override
+  String get tournamentDetailBreakBetween => 'Pause zwischen Matches';
+
+  @override
+  String tournamentDetailMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get tournamentDetailKoPhaseHeading => 'KO-Phase';
+
+  @override
+  String get tournamentDetailBracketType => 'KO-Modell';
+
+  @override
+  String get tournamentDetailBracketSingle => 'Single-Elimination';
+
+  @override
+  String get tournamentDetailBracketDouble => 'Double-Elimination';
+
+  @override
+  String get tournamentDetailKoTiebreakMethod => 'KO-Tiebreak';
+
+  @override
+  String get tournamentDetailKoTiebreakClassic =>
+      'Classic (Kingtoss-Entfernung)';
+
+  @override
+  String get tournamentDetailKoTiebreakMighty => 'Mighty Finisher';
+
+  @override
+  String get tournamentDetailMightyFinisher => 'Mighty Finisher';
+
+  @override
+  String tournamentDetailMightyFinisherSlots(int slots) {
+    return '$slots Plätze';
+  }
+
+  @override
+  String get tournamentDetailPoolConfig => 'Gruppen-Aufteilung';
+
+  @override
+  String tournamentDetailPoolConfigValue(int groups, int qualifiers) {
+    return '$groups Gruppen, $qualifiers qualifizieren';
+  }
+
+  @override
   String get tournamentDetailParticipants => 'Teilnehmer';
 
   @override
