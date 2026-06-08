@@ -55,6 +55,7 @@ import 'package:kubb_app/features/tournament/presentation/tournament_edit_screen
 import 'package:kubb_app/features/tournament/presentation/tournament_hub_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_list_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_live_dashboard_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_live_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_match_detail_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_match_list_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_mercenary_screen.dart';
@@ -570,6 +571,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 // the Vorrunde->KO transition when seeding_mode == manual.
                 path: '/tournament/:id/seeding',
                 builder: (_, state) => TournamentSeedingScreen(
+                  tournamentId: state.pathParameters['id']!,
+                ),
+              ),
+              GoRoute(
+                // H3 player-facing 3-tab live view (Mein Match / Uebersicht
+                // / Rangliste). Same tournament branch as the other
+                // tournament screens so context.push keeps the stack.
+                path: '/tournament/:id/live',
+                builder: (_, state) => TournamentLiveScreen(
                   tournamentId: state.pathParameters['id']!,
                 ),
               ),

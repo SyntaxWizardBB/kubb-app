@@ -18,6 +18,10 @@ class KubbIcons {
   static const IconData target = LucideIcons.target;
   static const IconData profile = LucideIcons.user;
 
+  /// Info glyph — opens master-data / details (e.g. the live view's
+  /// "Turnier-Infos" action that routes to the tournament detail).
+  static const IconData info = LucideIcons.info;
+
   /// Padlock — marks privacy-scoped content (e.g. the personal ELO that is
   /// only visible to the owner and accepted friends).
   static const IconData lock = LucideIcons.lock;

@@ -22,18 +22,7 @@ class TournamentMatchListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final id = TournamentId(tournamentId);
     final l = AppLocalizations.of(context);
-    // M4.1-T12: realtime first, polling only when the per-tournament
-    // channel has fallen back (M4.1-T10).
-    ref.watch(tournamentMatchListRealtimeProvider(id));
-    final fallbackActive = ref
-        .watch(realtimeFallbackProvider(id))
-        .maybeWhen(data: (v) => v, orElse: () => false);
-    if (fallbackActive) {
-      ref.watch(tournamentMatchListPollingProvider(id));
-    }
-    final async = ref.watch(tournamentMatchListProvider(id));
 
     return Scaffold(
       backgroundColor: tokens.bg,
@@ -52,31 +41,61 @@ class TournamentMatchListScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          RealtimeStateBanner(tournamentId: id),
-          RealtimeStatusBanner(tournamentId: id),
-          Expanded(
-            child: async.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(KubbTokens.space5),
-                  child: Text(
-                    '${l.tournamentMatchLoadError}: $e',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: KubbTokens.miss),
-                  ),
+      body: TournamentMatchListView(tournamentId: tournamentId),
+    );
+  }
+}
+
+/// Reusable match-list body: realtime banners + the round-grouped list.
+///
+/// Extracted from [TournamentMatchListScreen] so the H3 live-view
+/// "Uebersicht" tab can embed the exact same content (banners, providers,
+/// list renderer) without a duplicate Scaffold/AppBar or a copied list
+/// renderer. The screen wraps this view; the live screen embeds it.
+class TournamentMatchListView extends ConsumerWidget {
+  const TournamentMatchListView({required this.tournamentId, super.key});
+
+  final String tournamentId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final id = TournamentId(tournamentId);
+    // M4.1-T12: realtime first, polling only when the per-tournament
+    // channel has fallen back (M4.1-T10).
+    ref.watch(tournamentMatchListRealtimeProvider(id));
+    final fallbackActive = ref
+        .watch(realtimeFallbackProvider(id))
+        .maybeWhen(data: (v) => v, orElse: () => false);
+    if (fallbackActive) {
+      ref.watch(tournamentMatchListPollingProvider(id));
+    }
+    final async = ref.watch(tournamentMatchListProvider(id));
+
+    return Column(
+      children: [
+        RealtimeStateBanner(tournamentId: id),
+        RealtimeStatusBanner(tournamentId: id),
+        Expanded(
+          child: async.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(KubbTokens.space5),
+                child: Text(
+                  '${l.tournamentMatchLoadError}: $e',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: KubbTokens.miss),
                 ),
               ),
-              data: (matches) => _MatchListBody(
-                tournamentId: tournamentId,
-                matches: matches,
-              ),
+            ),
+            data: (matches) => _MatchListBody(
+              tournamentId: tournamentId,
+              matches: matches,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

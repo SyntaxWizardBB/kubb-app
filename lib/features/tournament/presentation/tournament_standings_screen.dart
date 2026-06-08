@@ -22,6 +22,39 @@ class TournamentStandingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
+
+    return Scaffold(
+      backgroundColor: tokens.bg,
+      // TODO(sprintB-followup): migrate to KubbAppBar
+      appBar: AppBar(
+        backgroundColor: tokens.bg,
+        elevation: 0,
+        leading: BackButton(
+          onPressed: () =>
+              context.go(TournamentRoutes.matchesFor(tournamentId)),
+        ),
+        title: Text(l.tournamentStandingsTitle),
+      ),
+      body: TournamentStandingsView(tournamentId: tournamentId),
+    );
+  }
+}
+
+/// Reusable standings body: header + ranked rows with the caller-highlight
+/// and the server-projected display-name lookup.
+///
+/// Extracted from [TournamentStandingsScreen] so the H3 live-view
+/// "Rangliste" tab embeds the same content (provider + table renderer)
+/// without duplicating the standings logic. The screen wraps this view in
+/// its Scaffold/AppBar; the live screen embeds it directly.
+class TournamentStandingsView extends ConsumerWidget {
+  const TournamentStandingsView({required this.tournamentId, super.key});
+
+  final String tournamentId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final id = TournamentId(tournamentId);
     final async = ref.watch(tournamentStandingsProvider(id));
     final detailAsync = ref.watch(tournamentDetailProvider(id));
@@ -40,36 +73,23 @@ class TournamentStandingsScreen extends ConsumerWidget {
           p.participantId: p.displayName!.trim(),
     };
 
-    return Scaffold(
-      backgroundColor: tokens.bg,
-      // TODO(sprintB-followup): migrate to KubbAppBar
-      appBar: AppBar(
-        backgroundColor: tokens.bg,
-        elevation: 0,
-        leading: BackButton(
-          onPressed: () =>
-              context.go(TournamentRoutes.matchesFor(tournamentId)),
-        ),
-        title: Text(l.tournamentStandingsTitle),
-      ),
-      body: async.when(
-        // AUDIT §4.3 — fuenf Skeleton-Tabellenzeilen statt Spinner.
-        loading: () => const _StandingsSkeleton(),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(KubbTokens.space5),
-            child: Text(
-              '${l.tournamentStandingsLoadError}: $e',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: KubbTokens.miss),
-            ),
+    return async.when(
+      // AUDIT §4.3 — fuenf Skeleton-Tabellenzeilen statt Spinner.
+      loading: () => const _StandingsSkeleton(),
+      error: (e, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(KubbTokens.space5),
+          child: Text(
+            '${l.tournamentStandingsLoadError}: $e',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: KubbTokens.miss),
           ),
         ),
-        data: (rows) => _Table(
-          rows: rows,
-          callerId: myId,
-          displayNameById: displayNameById,
-        ),
+      ),
+      data: (rows) => _Table(
+        rows: rows,
+        callerId: myId,
+        displayNameById: displayNameById,
       ),
     );
   }

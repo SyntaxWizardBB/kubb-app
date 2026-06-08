@@ -74,6 +74,10 @@ abstract final class TournamentRoutes {
   static String seeding(String tournamentId) =>
       '$seedingBase/$tournamentId/seeding';
 
+  /// H3 player-facing 3-tab live view (Mein Match / Uebersicht /
+  /// Rangliste). Compose via [live].
+  static const liveBase = '/tournament';
+
   /// Live organizer dashboard. Compose via [liveDashboard].
   static const liveDashboardBase = '/tournament';
 
@@ -96,6 +100,10 @@ abstract final class TournamentRoutes {
 
   static String bracket(String tournamentId) =>
       '$bracketBase/$tournamentId/bracket';
+
+  /// H3 player-facing live view for a running tournament. Mirrors the
+  /// `standings`/`bracket` composer shape: `/tournament/<id>/live`.
+  static String live(String tournamentId) => '$liveBase/$tournamentId/live';
 
   /// Organizer live dashboard for a running tournament (M4.2-T6).
   static String liveDashboard(String tournamentId) =>

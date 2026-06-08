@@ -85,9 +85,71 @@ final myActiveMatchProvider = Provider.autoDispose
   );
 });
 
+/// All of the caller's NON-terminal matches in `tournamentId`, ordered by
+/// urgency — the "Mein Match" tab of the H3 live view.
+///
+/// Filter (Plan A3): the caller participates (participant_a OR
+/// participant_b) AND the match status is one of {scheduled,
+/// awaitingResults, disputed}. Terminal matches (finalized / overridden /
+/// voided) and matches without caller involvement are excluded. Unlike
+/// [myActiveMatchProvider] this returns the full list (a player can have
+/// more than one open match across phases) and also surfaces `disputed`
+/// rows so the player can re-confirm a contested score.
+///
+/// Reuses the realtime match-list stream and the caller's participant ids
+/// from [myTournamentRegistrationsProvider] — no new source.
+//
+// ignore: specify_nonobvious_property_types
+final myActiveMatchesProvider = Provider.autoDispose
+    .family<AsyncValue<List<TournamentMatchRef>>, TournamentId>((
+  ref,
+  tournamentId,
+) {
+  // Keep the realtime channel alive so list invalidations land while the
+  // tab is mounted.
+  ref.watch(tournamentMatchListRealtimeProvider(tournamentId));
+
+  final regsAsync = ref.watch(myTournamentRegistrationsProvider);
+  final matchesAsync = ref.watch(tournamentMatchListProvider(tournamentId));
+
+  return regsAsync.when(
+    loading: () => const AsyncValue<List<TournamentMatchRef>>.loading(),
+    error: AsyncValue<List<TournamentMatchRef>>.error,
+    data: (regs) {
+      final myIds = <TournamentParticipantId>{
+        for (final r in regs)
+          if (r.tournament.tournamentId == tournamentId) r.participantId,
+      };
+      if (myIds.isEmpty) {
+        return const AsyncValue<List<TournamentMatchRef>>.data(
+          <TournamentMatchRef>[],
+        );
+      }
+
+      return matchesAsync.whenData((matches) {
+        return matches.where((m) {
+          if (!_isNonTerminal(m.status)) return false;
+          if (m.participantB == null) return false; // skip BYE
+          return myIds.contains(m.participantA) ||
+              myIds.contains(m.participantB);
+        }).toList()
+          ..sort(_byUrgency);
+      });
+    },
+  );
+});
+
 bool _isOpen(TournamentMatchStatus s) =>
     s == TournamentMatchStatus.scheduled ||
     s == TournamentMatchStatus.awaitingResults;
+
+/// Plan A3 filter: scheduled / awaitingResults / disputed are the
+/// non-terminal states a player can still act on; finalized / overridden /
+/// voided are terminal.
+bool _isNonTerminal(TournamentMatchStatus s) =>
+    s == TournamentMatchStatus.scheduled ||
+    s == TournamentMatchStatus.awaitingResults ||
+    s == TournamentMatchStatus.disputed;
 
 int _byUrgency(TournamentMatchRef a, TournamentMatchRef b) {
   final ra = _statusRank(a.status);
