@@ -4321,4 +4321,22 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get nicknameTakenError =>
+      'Dieser Name ist bereits vergeben — bitte wähle einen anderen.';
+
+  @override
+  String get nicknameCheckingHint => 'Name wird geprüft …';
+
+  @override
+  String get teamNameTakenError =>
+      'Dieser Teamname ist bereits vergeben — bitte wähle einen anderen.';
+
+  @override
+  String get clubNameTakenError =>
+      'Dieser Vereinsname ist bereits vergeben — bitte wähle einen anderen.';
+
+  @override
+  String get nameCheckingHint => 'Name wird geprüft …';
 }

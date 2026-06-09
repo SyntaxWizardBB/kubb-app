@@ -5,6 +5,8 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/application/cloud_profile_provider.dart';
+import 'package:kubb_app/features/auth/application/nickname_availability_provider.dart';
+import 'package:kubb_app/features/auth/data/cloud_profile_repository.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/auth_app_bar.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/auth_primary_button.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
@@ -44,6 +46,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   bool _saving = false;
   bool _hasError = false;
+  bool _duplicateName = false;
   bool _success = false;
 
   @override
@@ -92,6 +95,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     setState(() {
       _saving = true;
       _hasError = false;
+      _duplicateName = false;
       _success = false;
     });
     final session = ref.read(authControllerProvider).maybeWhen(
@@ -140,6 +144,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         _initialNick = savedNick;
         _initialColor = savedColor;
       });
+    } on DuplicateNicknameException {
+      // Live check normally blocks this; a race can still land here. Show the
+      // dedicated "name taken" banner instead of the generic save error.
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _duplicateName = true;
+      });
     } on Object catch (_) {
       if (!mounted) return;
       setState(() {
@@ -153,6 +165,25 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l10n = AppLocalizations.of(context);
+
+    // Live uniqueness check (BUG-2): only when the nickname actually changed
+    // and is format-valid. The RPC excludes the caller's own row, so an
+    // unchanged name always reads as available.
+    final nickChanged = _nick != _initialNick;
+    final availability = nickChanged && _validNickname
+        ? ref.watch(nicknameAvailabilityProvider(_nick.trim()))
+        : null;
+    final nameTaken = availability?.maybeWhen(
+          data: (a) => a == NicknameAvailability.taken,
+          orElse: () => false,
+        ) ??
+        false;
+    final nameChecking = availability?.isLoading ?? false;
+    // Block save only when the name is confirmed taken — not while the debounced
+    // check is still in flight (the server re-validates regardless). This keeps
+    // the button responsive and avoids gating on the loading window.
+    final canSave = _canSave && !nameTaken;
+
     final initialChar = _nick.isEmpty ? 'A' : _nick[0].toUpperCase();
     final hexToColor = int.parse(_color.replaceFirst('#', 'ff'), radix: 16);
     final avatarColor = Color(hexToColor);
@@ -248,10 +279,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  l10n.authEditProfileNicknameHelper,
+                  nameChecking
+                      ? l10n.nicknameCheckingHint
+                      : l10n.authEditProfileNicknameHelper,
                   style: TextStyle(fontSize: 12, color: tokens.fgMuted),
                 ),
               ),
+              if (nameTaken || _duplicateName) ...[
+                const SizedBox(height: KubbTokens.space3),
+                _Banner(
+                  tone: _BannerTone.error,
+                  message: l10n.nicknameTakenError,
+                ),
+              ],
               if (_hasError) ...[
                 const SizedBox(height: KubbTokens.space3),
                 _Banner(
@@ -271,7 +311,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 label: _saving
                     ? l10n.authEditProfileSubmitting
                     : l10n.authEditProfileSubmit,
-                onPressed: _canSave ? _save : null,
+                onPressed: canSave ? _save : null,
                 loading: _saving,
               ),
               const SizedBox(height: KubbTokens.space5),

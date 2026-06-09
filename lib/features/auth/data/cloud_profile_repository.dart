@@ -1,5 +1,15 @@
 import 'package:kubb_domain/kubb_domain.dart';
 
+/// Raised when a profile rename/create is rejected because another user
+/// already owns the chosen nickname (server SQLSTATE 23505 on the citext
+/// UNIQUE constraint). Lets the UI render a friendly "name taken" message
+/// even if the optimistic live availability check raced.
+class DuplicateNicknameException implements Exception {
+  const DuplicateNicknameException();
+  @override
+  String toString() => 'DuplicateNicknameException';
+}
+
 /// Snapshot of the cloud-side `user_profiles` row.
 class CloudProfile {
   const CloudProfile({
@@ -64,6 +74,11 @@ abstract class CloudProfileRepository {
 
   /// Reads the current row for [userId], or null if no row exists yet.
   Future<CloudProfile?> getProfile({required String userId});
+
+  /// Whether [nickname] is free to use. Case- and whitespace-insensitive;
+  /// excludes the caller's own current nickname server-side so re-saving an
+  /// unchanged name is allowed. Returns false for blank input.
+  Future<bool> isNicknameAvailable(String nickname);
 
   /// Patches the row with whatever non-null fields are passed in.
   /// Returns the post-update row.

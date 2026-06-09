@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kubb_app/features/auth/data/cloud_profile_repository.dart';
 
 import '../../../fixtures/auth/fake_cloud_profile_repository.dart';
 
@@ -131,5 +132,27 @@ void main() {
     await repo.updateProfile(userId: 'u1', avatarColor: '#3366FF');
 
     expect(repo.backupNicknameHashFor('u1'), 'lukas');
+  });
+
+  // BUG-2: nickname uniqueness contract.
+  test('isNicknameAvailable is case-insensitive and rejects taken/blank names',
+      () async {
+    repo.takenNicknames.add('taken');
+
+    expect(await repo.isNicknameAvailable('Frei'), isTrue);
+    expect(await repo.isNicknameAvailable('taken'), isFalse);
+    expect(await repo.isNicknameAvailable('  TAKEN '), isFalse);
+    expect(await repo.isNicknameAvailable('   '), isFalse);
+  });
+
+  test('updateProfile throws DuplicateNicknameException for a taken name',
+      () async {
+    await repo.ensureProfile(userId: 'u1', nickname: 'lukas');
+    repo.takenNicknames.add('taken');
+
+    expect(
+      () => repo.updateProfile(userId: 'u1', nickname: 'taken'),
+      throwsA(isA<DuplicateNicknameException>()),
+    );
   });
 }

@@ -7881,6 +7881,36 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{count, plural, =1{1 Spiel} other{{count} Spiele}}'**
   String eloGamesCount(int count);
+
+  /// Inline error shown when the chosen profile nickname is already taken (BUG-2)
+  ///
+  /// In de, this message translates to:
+  /// **'Dieser Name ist bereits vergeben — bitte wähle einen anderen.'**
+  String get nicknameTakenError;
+
+  /// Inline hint while the live nickname availability check runs (BUG-2)
+  ///
+  /// In de, this message translates to:
+  /// **'Name wird geprüft …'**
+  String get nicknameCheckingHint;
+
+  /// Inline / snackbar error shown when the chosen team name is already taken (BUG-2)
+  ///
+  /// In de, this message translates to:
+  /// **'Dieser Teamname ist bereits vergeben — bitte wähle einen anderen.'**
+  String get teamNameTakenError;
+
+  /// Inline / snackbar error shown when the chosen club name is already taken (BUG-2)
+  ///
+  /// In de, this message translates to:
+  /// **'Dieser Vereinsname ist bereits vergeben — bitte wähle einen anderen.'**
+  String get clubNameTakenError;
+
+  /// Inline hint while a live team/club name availability check runs (BUG-2)
+  ///
+  /// In de, this message translates to:
+  /// **'Name wird geprüft …'**
+  String get nameCheckingHint;
 }
 
 class _AppLocalizationsDelegate

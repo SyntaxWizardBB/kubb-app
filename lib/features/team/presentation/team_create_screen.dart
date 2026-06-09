@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/core/ui/widgets/name_availability_hint.dart';
 import 'package:kubb_app/features/team/application/team_membership_controller.dart';
+import 'package:kubb_app/features/team/application/team_name_availability_provider.dart';
 import 'package:kubb_app/features/team/data/team_repository.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -44,7 +46,17 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
   }
 
   bool get _canSubmit =>
-      _nameController.text.trim().isNotEmpty && _league != null && !_busy;
+      _nameController.text.trim().isNotEmpty &&
+      _league != null &&
+      !_busy &&
+      // Block while the name is taken (BUG-2). Idle/available/checking all
+      // permit submit; the server stays the final arbiter on a race.
+      ref.watch(teamNameAvailabilityProvider(
+            TeamNameQuery(_nameController.text.trim()),
+          )).maybeWhen(
+            data: (a) => a != NameAvailability.taken,
+            orElse: () => true,
+          );
 
   Future<void> _submit() async {
     final l = AppLocalizations.of(context);
@@ -73,9 +85,15 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
           // re-authenticate instead of blindly retrying.
           final isAuth = error is TeamActionExceptionError &&
               error.error is TeamPermissionException;
+          final isDuplicate = error is TeamActionExceptionError &&
+              error.error is TeamDuplicateNameException;
           messenger.showSnackBar(SnackBar(
             content: Text(
-              isAuth ? l.teamCreateErrorAuth : l.teamCreateErrorGeneric,
+              isDuplicate
+                  ? l.teamNameTakenError
+                  : isAuth
+                      ? l.teamCreateErrorAuth
+                      : l.teamCreateErrorGeneric,
             ),
             backgroundColor: KubbTokens.miss,
           ));
@@ -120,6 +138,21 @@ class _TeamCreateScreenState extends ConsumerState<TeamCreateScreen> {
                 counterText: '',
               ),
             ),
+            Builder(builder: (context) {
+              final avail = ref.watch(teamNameAvailabilityProvider(
+                TeamNameQuery(_nameController.text.trim()),
+              ));
+              return NameAvailabilityHint(
+                isTaken: avail.maybeWhen(
+                  data: (a) => a == NameAvailability.taken,
+                  orElse: () => false,
+                ),
+                isChecking: avail.isLoading &&
+                    _nameController.text.trim().isNotEmpty,
+                takenLabel: l.teamNameTakenError,
+                checkingLabel: l.nameCheckingHint,
+              );
+            }),
             const SizedBox(height: KubbTokens.space3),
             DropdownButtonFormField<LeagueMembership>(
               initialValue: _league,

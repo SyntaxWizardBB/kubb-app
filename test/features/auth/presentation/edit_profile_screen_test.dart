@@ -155,6 +155,37 @@ void main() {
     );
   });
 
+  testWidgets('a taken nickname blocks save and shows the name-taken banner '
+      '(BUG-2)', (tester) async {
+    final repo = FakeCloudProfileRepository()..takenNicknames.add('wiese-other');
+    await pump(tester, repo: repo, profile: seedProfile);
+
+    final saveButton = find.byType(ElevatedButton);
+
+    // Change the nickname to one that is taken by another user.
+    tester.state<EditableTextState>(find.byType(EditableText))
+        .updateEditingValue(
+      const TextEditingValue(
+        text: 'wiese-other',
+        selection: TextSelection.collapsed(offset: 11),
+      ),
+    );
+    await tester.pump();
+    // Let the 350 ms debounce fire and the availability future resolve.
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump();
+
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(EditProfileScreen)),
+    );
+    expect(find.text(l10n.nicknameTakenError), findsOneWidget);
+    expect(
+      tester.widget<ElevatedButton>(saveButton).onPressed,
+      isNull,
+      reason: 'save must be blocked while the nickname is taken',
+    );
+  });
+
   testWidgets('save fails gracefully when session is signed out mid-flow',
       (tester) async {
     final repo = FakeCloudProfileRepository();

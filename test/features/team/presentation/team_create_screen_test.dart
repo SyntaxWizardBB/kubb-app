@@ -24,6 +24,31 @@ class _FailingTeamRepo implements TeamRepository {
     throw const TeamPermissionException('not_authenticated');
   }
 
+  // The availability provider calls this; report "free" so it never gates
+  // this failure-path test.
+  @override
+  Future<bool> isNameAvailable(String displayName, {TeamId? excludeTeamId}) async =>
+      true;
+
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
+/// Reports every name as already taken so the screen blocks submit (BUG-2).
+class _NameTakenTeamRepo implements TeamRepository {
+  @override
+  Future<bool> isNameAvailable(String displayName, {TeamId? excludeTeamId}) async =>
+      false;
+
+  @override
+  Future<TeamId> createTeam({
+    required String displayName,
+    required LeagueMembership leagueMembership,
+    String? logoUrl,
+    String? country,
+  }) async =>
+      throw StateError('createTeam must not be called when the name is taken');
+
   @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
@@ -131,5 +156,36 @@ void main() {
     expect(entry.message, contains('team action failed'));
     expect(entry.error, 'rpc=team_create');
     expect(entry.stackTrace, isNotNull);
+  });
+
+  testWidgets(
+      'a taken team name blocks submit and shows the inline name-taken error '
+      '(BUG-2)', (tester) async {
+    await _pump(tester, _NameTakenTeamRepo());
+
+    await tester.enterText(find.byType(TextField).first, 'Schon Vergeben');
+    await tester.pump();
+    await tester.tap(find.byType(DropdownButtonFormField<LeagueMembership>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('B').last);
+    await tester.pumpAndSettle();
+
+    // Let the 350 ms debounce fire and the availability future resolve.
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump();
+
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(TeamCreateScreen)),
+    );
+    // Inline error is shown.
+    expect(find.text(l10n.teamNameTakenError), findsOneWidget);
+
+    // Submit is blocked.
+    final submitFinder = find.widgetWithText(FilledButton, 'Team anlegen');
+    expect(
+      tester.widget<FilledButton>(submitFinder).onPressed,
+      isNull,
+      reason: 'submit must be disabled while the name is taken',
+    );
   });
 }

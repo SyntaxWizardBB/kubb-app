@@ -4,6 +4,7 @@ import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/data/crypto_service.dart';
 import 'package:kubb_app/features/auth/data/keypair_storage.dart';
 import 'package:kubb_app/features/auth/data/secure_token_store.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'account_setup_controller.freezed.dart';
 
@@ -125,7 +126,16 @@ class AccountSetupController extends Notifier<AccountSetupState> {
         kind: 'keypair',
         reasonCode: error.runtimeType.toString(),
       );
-      state = AccountSetupState.failed(reason: error.toString());
+      // A duplicate nickname surfaces as the citext UNIQUE 23505 from
+      // keypair_register. The live availability check normally blocks this,
+      // but a race (two devices, same name) can still land here — show a
+      // clear German message instead of the raw SQL error. German literal is
+      // used because the controller has no l10n context (mirrors the other
+      // hard-coded German strings in this signup flow).
+      final reason = error is PostgrestException && error.code == '23505'
+          ? 'Dieser Name ist bereits vergeben — bitte wähle einen anderen.'
+          : error.toString();
+      state = AccountSetupState.failed(reason: reason);
     }
   }
 }

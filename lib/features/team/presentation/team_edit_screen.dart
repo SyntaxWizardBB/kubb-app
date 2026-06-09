@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/core/ui/widgets/name_availability_hint.dart';
 import 'package:kubb_app/features/team/application/team_detail_provider.dart';
 import 'package:kubb_app/features/team/application/team_membership_controller.dart';
+import 'package:kubb_app/features/team/application/team_name_availability_provider.dart';
 import 'package:kubb_app/features/team/application/team_providers.dart';
+import 'package:kubb_app/features/team/data/team_repository.dart';
+import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
 /// Edit a team's name/country and — inside the Oct–Feb transfer window — its
@@ -30,8 +34,22 @@ class _TeamEditScreenState extends ConsumerState<TeamEditScreen> {
   bool _busy = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Rebuild on name edits so the live availability check + submit gate track
+    // the field (BUG-2).
+    _nameCtrl.addListener(_onNameChanged);
+  }
+
+  void _onNameChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   void dispose() {
-    _nameCtrl.dispose();
+    _nameCtrl
+      ..removeListener(_onNameChanged)
+      ..dispose();
     _countryCtrl.dispose();
     super.dispose();
   }
@@ -64,8 +82,13 @@ class _TeamEditScreenState extends ConsumerState<TeamEditScreen> {
       );
       if (!mounted) return;
       if (upd is TeamActionFailure<bool>) {
-        messenger.showSnackBar(const SnackBar(
-            content: Text('Speichern fehlgeschlagen.'),
+        final isDuplicate = upd.error is TeamActionExceptionError &&
+            (upd.error as TeamActionExceptionError).error
+                is TeamDuplicateNameException;
+        messenger.showSnackBar(SnackBar(
+            content: Text(isDuplicate
+                ? AppLocalizations.of(context).teamNameTakenError
+                : 'Speichern fehlgeschlagen.'),
             backgroundColor: KubbTokens.miss));
         return;
       }
@@ -130,6 +153,24 @@ class _TeamEditScreenState extends ConsumerState<TeamEditScreen> {
                   decoration: const InputDecoration(
                       labelText: 'Team-Name', counterText: ''),
                 ),
+                Builder(builder: (context) {
+                  final avail = ref.watch(teamNameAvailabilityProvider(
+                    TeamNameQuery(
+                      _nameCtrl.text.trim(),
+                      excludeTeamId: widget.teamId,
+                    ),
+                  ));
+                  return NameAvailabilityHint(
+                    isTaken: avail.maybeWhen(
+                      data: (a) => a == NameAvailability.taken,
+                      orElse: () => false,
+                    ),
+                    isChecking:
+                        avail.isLoading && _nameCtrl.text.trim().isNotEmpty,
+                    takenLabel: AppLocalizations.of(context).teamNameTakenError,
+                    checkingLabel: AppLocalizations.of(context).nameCheckingHint,
+                  );
+                }),
                 const SizedBox(height: KubbTokens.space3),
                 DropdownButtonFormField<LeagueMembership>(
                   initialValue: _league,
@@ -164,7 +205,20 @@ class _TeamEditScreenState extends ConsumerState<TeamEditScreen> {
                 SizedBox(
                   height: KubbTokens.touchComfortable,
                   child: FilledButton(
-                    onPressed: _busy || _nameCtrl.text.trim().isEmpty
+                    onPressed: _busy ||
+                            _nameCtrl.text.trim().isEmpty ||
+                            ref
+                                    .watch(teamNameAvailabilityProvider(
+                                      TeamNameQuery(
+                                        _nameCtrl.text.trim(),
+                                        excludeTeamId: widget.teamId,
+                                      ),
+                                    ))
+                                    .maybeWhen(
+                                      data: (a) =>
+                                          a == NameAvailability.taken,
+                                      orElse: () => false,
+                                    )
                         ? null
                         : () => _save(windowOpen),
                     child: const Text('Speichern'),

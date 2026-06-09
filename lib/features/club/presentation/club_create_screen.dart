@@ -4,9 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
+import 'package:kubb_app/core/ui/widgets/name_availability_hint.dart';
 import 'package:kubb_app/features/club/application/club_membership_controller.dart';
+import 'package:kubb_app/features/club/application/club_name_availability_provider.dart';
 import 'package:kubb_app/features/club/data/club_repository.dart';
 import 'package:kubb_app/features/club/presentation/club_routes.dart';
+import 'package:kubb_app/features/team/application/team_name_availability_provider.dart'
+    show NameAvailability;
+import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
 /// Club founding form. The capability to found clubs is granted at sign-up via
@@ -35,7 +40,16 @@ class _ClubCreateScreenState extends ConsumerState<ClubCreateScreen> {
     super.dispose();
   }
 
-  bool get _canSubmit => _nameController.text.trim().isNotEmpty && !_busy;
+  bool get _canSubmit =>
+      _nameController.text.trim().isNotEmpty &&
+      !_busy &&
+      // Block while the name is taken (BUG-2). The server stays the final
+      // arbiter on a race.
+      ref.watch(clubNameAvailabilityProvider(_nameController.text.trim()))
+          .maybeWhen(
+            data: (a) => a != NameAvailability.taken,
+            orElse: () => true,
+          );
 
   Future<void> _submit() async {
     final messenger = ScaffoldMessenger.of(context);
@@ -52,12 +66,16 @@ class _ClubCreateScreenState extends ConsumerState<ClubCreateScreen> {
         case ClubActionFailure<ClubId>(:final error):
           final notAllowed = error is ClubActionExceptionError &&
               error.error is ClubPermissionException;
+          final isDuplicate = error is ClubActionExceptionError &&
+              error.error is ClubDuplicateNameException;
           messenger.showSnackBar(SnackBar(
             content: Text(
-              notAllowed
-                  ? 'Dein Zugang erlaubt kein Vereingründen.'
-                  : 'Verein konnte nicht gegründet werden — bitte erneut '
-                      'versuchen.',
+              isDuplicate
+                  ? AppLocalizations.of(context).clubNameTakenError
+                  : notAllowed
+                      ? 'Dein Zugang erlaubt kein Vereingründen.'
+                      : 'Verein konnte nicht gegründet werden — bitte erneut '
+                          'versuchen.',
             ),
             backgroundColor: KubbTokens.miss,
           ));
@@ -100,6 +118,21 @@ class _ClubCreateScreenState extends ConsumerState<ClubCreateScreen> {
               border: OutlineInputBorder(),
             ),
           ),
+          Builder(builder: (context) {
+            final avail = ref.watch(
+              clubNameAvailabilityProvider(_nameController.text.trim()),
+            );
+            return NameAvailabilityHint(
+              isTaken: avail.maybeWhen(
+                data: (a) => a == NameAvailability.taken,
+                orElse: () => false,
+              ),
+              isChecking:
+                  avail.isLoading && _nameController.text.trim().isNotEmpty,
+              takenLabel: AppLocalizations.of(context).clubNameTakenError,
+              checkingLabel: AppLocalizations.of(context).nameCheckingHint,
+            );
+          }),
           const SizedBox(height: KubbTokens.space4),
           KubbButton(
             variant: KubbButtonVariant.primary,

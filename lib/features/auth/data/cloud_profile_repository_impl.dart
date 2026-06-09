@@ -44,6 +44,15 @@ class CloudProfileRepositoryImpl implements CloudProfileRepository {
   }
 
   @override
+  Future<bool> isNicknameAvailable(String nickname) async {
+    final available = await _client.rpc<bool>(
+      'profile_nickname_available',
+      params: <String, dynamic>{'p_nickname': nickname},
+    );
+    return available;
+  }
+
+  @override
   Future<CloudProfile> updateProfile({
     required String userId,
     String? nickname,
@@ -55,14 +64,26 @@ class CloudProfileRepositoryImpl implements CloudProfileRepository {
     // recomputes user_keypair_backups.nickname_hash atomically. A plain
     // UPDATE on user_profiles would leave the hash stale and lock the
     // user out on a fresh install.
-    final response = await _client.rpc<Map<String, dynamic>>(
-      'fn_profile_update_with_hash',
-      params: <String, dynamic>{
-        'p_nickname': nickname,
-        'p_avatar_color': avatarColor,
-        'p_onboarding_done': onboardingCompleted,
-      },
-    );
+    final Map<String, dynamic> response;
+    try {
+      response = await _client.rpc<Map<String, dynamic>>(
+        'fn_profile_update_with_hash',
+        params: <String, dynamic>{
+          'p_nickname': nickname,
+          'p_avatar_color': avatarColor,
+          'p_onboarding_done': onboardingCompleted,
+        },
+      );
+    } on PostgrestException catch (e) {
+      // The citext UNIQUE on user_profiles.nickname surfaces as 23505 when
+      // the chosen name is already taken by another user. Map it to a typed
+      // exception so the UI shows a clear "name taken" message even if the
+      // live availability check raced.
+      if (e.code == '23505') {
+        throw const DuplicateNicknameException();
+      }
+      rethrow;
+    }
     var profile = _fromRow(response);
 
     // The visibility tier is intentionally not yet a parameter of the

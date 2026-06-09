@@ -34,6 +34,16 @@ class ClubUserNotFoundException implements Exception {
   String toString() => 'ClubUserNotFoundException';
 }
 
+/// Raised when `club_create` rejects the chosen name because another club
+/// already carries it (server SQLSTATE 23505, backed by
+/// `clubs_display_name_unique_idx`). Lets the UI show a clear "name taken"
+/// message even when the optimistic live availability check raced.
+class ClubDuplicateNameException implements Exception {
+  const ClubDuplicateNameException();
+  @override
+  String toString() => 'ClubDuplicateNameException';
+}
+
 /// Catch-all for the remaining token-prefixed club RPC errors.
 class ClubOperationException implements Exception {
   const ClubOperationException(this.message);
@@ -67,6 +77,19 @@ class ClubRepository {
           params: <String, dynamic>{'p_display_name': displayName},
         ));
     return id == null ? null : ClubId(id);
+  }
+
+  /// Whether [displayName] is free for a club. Case- and whitespace-
+  /// insensitive; pass [excludeClubId] for a future rename so the club's own
+  /// current name is not flagged. Returns false for blank input.
+  Future<bool> isNameAvailable(String displayName, {ClubId? excludeClubId}) {
+    return _guard(() => _client.rpc<bool>(
+          'club_name_available',
+          params: <String, dynamic>{
+            'p_display_name': displayName,
+            'p_exclude_club_id': excludeClubId?.value,
+          },
+        ));
   }
 
   Future<List<ClubWire>> listMyClubs() async {
@@ -242,6 +265,16 @@ class ClubRepository {
       return ClubPermissionException(e.message);
     }
     final message = e.message;
+    // Unique club-name violation. The create guard raises 23505 with a
+    // "a club named ... already exists" message; the bare
+    // clubs_display_name_unique_idx also reports 23505 referencing that index.
+    // Scope to those so the invite path's 23505 ("invitee already a member")
+    // is NOT misclassified as a name conflict.
+    if (e.code == '23505' &&
+        (message.contains('club named') ||
+            message.contains('clubs_display_name_unique_idx'))) {
+      return const ClubDuplicateNameException();
+    }
     if (message.startsWith('INVALID_FOUNDING_CODE')) {
       return const ClubInvalidCodeException();
     }

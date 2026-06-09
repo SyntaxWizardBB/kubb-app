@@ -37,6 +37,16 @@ class TeamDissolveNeedsConsentException implements Exception {
   String toString() => 'TeamDissolveNeedsConsentException: $message';
 }
 
+/// Raised when `team_create` / `team_update` reject the chosen name because
+/// another team already carries it (server SQLSTATE 23505, backed by
+/// `teams_display_name_unique_idx`). Lets the UI show a clear "name taken"
+/// message even when the optimistic live availability check raced.
+class TeamDuplicateNameException implements Exception {
+  const TeamDuplicateNameException();
+  @override
+  String toString() => 'TeamDuplicateNameException';
+}
+
 /// Catch-all for the remaining token-prefixed errors the team RPCs
 /// surface (`TARGET_NOT_MEMBER`, `TARGET_NOT_GUEST`, `TEAM_DISSOLVED`).
 /// Callers can switch on [code] to render a localized message.
@@ -93,6 +103,19 @@ class TeamRepository {
           },
         ));
     return id == null ? null : TeamId(id);
+  }
+
+  /// Whether [displayName] is free for a team. Case- and whitespace-
+  /// insensitive; pass [excludeTeamId] on rename so the team's own current
+  /// name is not flagged as a conflict. Returns false for blank input.
+  Future<bool> isNameAvailable(String displayName, {TeamId? excludeTeamId}) {
+    return _guard(() => _client.rpc<bool>(
+          'team_name_available',
+          params: <String, dynamic>{
+            'p_display_name': displayName,
+            'p_exclude_team_id': excludeTeamId?.value,
+          },
+        ));
   }
 
   /// Renames the team / sets its country. Admin-only.
@@ -303,6 +326,12 @@ class TeamRepository {
   Exception _mapException(PostgrestException e) {
     if (e.code == '42501') {
       return TeamPermissionException(e.message);
+    }
+    // Unique-name violation: either the explicit pre-insert guard in
+    // team_create/team_update (clear message, ERRCODE 23505) or the bare
+    // teams_display_name_unique_idx. Map both to the typed exception.
+    if (e.code == '23505') {
+      return const TeamDuplicateNameException();
     }
     final message = e.message;
     if (message.startsWith('INVITATION_ALREADY_PENDING')) {

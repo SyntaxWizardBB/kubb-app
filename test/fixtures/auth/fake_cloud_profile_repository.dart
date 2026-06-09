@@ -17,7 +17,18 @@ class FakeCloudProfileRepository implements CloudProfileRepository {
   int ensureCount = 0;
   int updateCount = 0;
 
+  /// Nicknames (lower-cased) that the fake reports as already taken by some
+  /// OTHER user. Tests add to this to drive the "name taken" block.
+  final Set<String> takenNicknames = <String>{};
+
   Iterable<String> get storedUserIds => _rows.keys;
+
+  @override
+  Future<bool> isNicknameAvailable(String nickname) async {
+    final norm = nickname.trim().toLowerCase();
+    if (norm.isEmpty) return false;
+    return !takenNicknames.contains(norm);
+  }
 
   String? backupNicknameHashFor(String userId) =>
       _backupNicknameHashes[userId];
@@ -63,6 +74,12 @@ class FakeCloudProfileRepository implements CloudProfileRepository {
     final existing = _rows[userId];
     if (existing == null) {
       throw StateError('updateProfile called before ensureProfile');
+    }
+    // Mirror the server citext UNIQUE: a rename onto another user's name is
+    // rejected with the typed duplicate exception.
+    if (nickname != null &&
+        takenNicknames.contains(nickname.trim().toLowerCase())) {
+      throw const DuplicateNicknameException();
     }
     final next = CloudProfile(
       userId: userId,

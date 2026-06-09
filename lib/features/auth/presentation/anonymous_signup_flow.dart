@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/auth/application/account_setup_controller.dart';
+import 'package:kubb_app/features/auth/application/nickname_availability_provider.dart';
 import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/auth_primary_button.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/wizard_header.dart';
@@ -178,16 +179,16 @@ class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
 
 enum _Step { nickname, mnemonic, success }
 
-class _NicknameStep extends StatefulWidget {
+class _NicknameStep extends ConsumerStatefulWidget {
   const _NicknameStep({required this.onContinue});
 
   final ValueChanged<String> onContinue;
 
   @override
-  State<_NicknameStep> createState() => _NicknameStepState();
+  ConsumerState<_NicknameStep> createState() => _NicknameStepState();
 }
 
-class _NicknameStepState extends State<_NicknameStep> {
+class _NicknameStepState extends ConsumerState<_NicknameStep> {
   String _nick = '';
 
   String? _validate(BuildContext context, String v) {
@@ -210,7 +211,21 @@ class _NicknameStepState extends State<_NicknameStep> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final err = _validate(context, _nick);
+    final formatErr = _validate(context, _nick);
+
+    // Live uniqueness check (BUG-2): only runs once the format is valid.
+    final availability = formatErr == null && _isValid()
+        ? ref.watch(nicknameAvailabilityProvider(_nick.trim()))
+        : null;
+    final isTaken = availability?.maybeWhen(
+          data: (a) => a == NicknameAvailability.taken,
+          orElse: () => false,
+        ) ??
+        false;
+    final isChecking = availability?.isLoading ?? false;
+    // Show the format error first; if the format is fine but the name is
+    // taken, show the taken error. Otherwise no error.
+    final err = formatErr ?? (isTaken ? l10n.nicknameTakenError : null);
 
     final hasName = _nick.trim().isNotEmpty;
     // Scrollable so the on-screen keyboard never overflows the step on short
@@ -270,6 +285,11 @@ class _NicknameStepState extends State<_NicknameStep> {
               fontWeight: FontWeight.w600,
             ),
           )
+        else if (isChecking)
+          Text(
+            l10n.nicknameCheckingHint,
+            style: TextStyle(fontSize: 12, color: tokens.fgMuted),
+          )
         else
           Text(
             l10n.authSignupNicknameHelper,
@@ -280,7 +300,12 @@ class _NicknameStepState extends State<_NicknameStep> {
         const SizedBox(height: KubbTokens.space8),
         AuthPrimaryButton(
           label: l10n.authCommonContinue,
-          onPressed: _isValid() ? () => widget.onContinue(_nick) : null,
+          // Block "Weiter" while the name is confirmed taken (BUG-2). The
+          // in-flight debounce window does not gate the button — the server
+          // re-validates in keypair_register regardless.
+          onPressed: _isValid() && !isTaken
+              ? () => widget.onContinue(_nick)
+              : null,
         ),
         const SizedBox(height: KubbTokens.space5),
       ],
