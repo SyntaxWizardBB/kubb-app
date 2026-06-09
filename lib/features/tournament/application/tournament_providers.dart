@@ -342,6 +342,54 @@ class TournamentActions {
     _ref.invalidate(tournamentMatchDetailProvider(matchId));
   }
 
+  /// ADR-0031 Phase B (Block B2c): tournament-wide pause. Calls the
+  /// `tournament_pause` control RPC via the port, then refreshes the
+  /// dashboard overview. See [_invalidateScheduleControlOverview] for why the
+  /// detail schedule is intentionally NOT invalidated here.
+  Future<void> pause(TournamentId id) async {
+    await _ref.read(tournamentRemoteProvider).pauseTournament(id);
+    _invalidateScheduleControlOverview();
+  }
+
+  /// ADR-0031 Phase B (Block B2c): resume from a tournament-wide pause.
+  Future<void> resume(TournamentId id) async {
+    await _ref.read(tournamentRemoteProvider).resumeTournament(id);
+    _invalidateScheduleControlOverview();
+  }
+
+  /// ADR-0031 Phase B (Block B2c): skip the active round's call/break window
+  /// forward (the round starts running now).
+  Future<void> skipForward(TournamentId id) async {
+    await _ref.read(tournamentRemoteProvider).skipScheduleForward(id);
+    _invalidateScheduleControlOverview();
+  }
+
+  /// ADR-0031 Phase B (Block B2c): re-call the active round's window (OE-B4 —
+  /// not a true rewind).
+  Future<void> skipBack(TournamentId id) async {
+    await _ref.read(tournamentRemoteProvider).skipScheduleBackward(id);
+    _invalidateScheduleControlOverview();
+  }
+
+  /// Refresh after a pause/resume/skip control action (ADR-0031 Block B2c).
+  ///
+  /// Only [administrableTournamentsProvider] is invalidated: the dashboard
+  /// overview is a plain `FutureProvider` with NO single-column CDC scope
+  /// (OE-B3), so it cannot self-refresh and must be re-read to pick up the
+  /// new schedule status / remaining seconds.
+  ///
+  /// The detail schedule is deliberately NOT invalidated. The B2s RPCs write
+  /// only `tournament_round_schedule`, which is in the realtime publication,
+  /// so the schedule CDC pushes the change for free ("Realtime gratis"). The
+  /// detail seam is the CDC-stream-fold `tournamentRoundScheduleProvider`,
+  /// whose doc-block in `tournament_realtime_provider.dart` (the
+  /// `tournamentRoundScheduleRealtimeProvider` comment) warns that a naive
+  /// `ref.invalidate` on it would RESET the accumulated round fold. We
+  /// respect that seam and let the CDC push reach the detail instead.
+  void _invalidateScheduleControlOverview() {
+    _ref.invalidate(administrableTournamentsProvider);
+  }
+
   /// W3-T1 / DSCORE-62..-66: organizer declares a no-show forfeit on
   /// behalf of the absent side. Server validates the status gate, the
   /// reason length and writes the audit-event hook. Refreshes the match

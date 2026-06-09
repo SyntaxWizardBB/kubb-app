@@ -873,10 +873,11 @@ class TournamentRepository implements TournamentRemote {
   }
 
   // Organizer dashboard (ADR-0031 Phase B). The domain port (Block B0)
-  // defines the contract; the list RPC is wired here (Block B1c) while the
-  // pause/resume/skip control calls land in Block B2c. The B2c stubs below
-  // keep the adapter conforming and the tree buildable in the meantime — no
-  // production call site reaches them before the control RPCs exist.
+  // defines the contract; the list RPC is wired here (Block B1c) and the
+  // pause/resume/skip control calls land in Block B2c (below). Each control
+  // RPC writes ONLY tournament_round_schedule on the server; realtime is free
+  // because that table is in the supabase_realtime publication, so the
+  // schedule CDC pushes the change — no client polling (ADR-0029).
   @override
   Future<List<TournamentAdminCardRef>> listAdministrableTournaments() async {
     final rows = await _client.rpc<List<dynamic>>(
@@ -890,25 +891,34 @@ class TournamentRepository implements TournamentRemote {
         .toList(growable: false);
   }
 
+  /// K5 tournament-wide pause: forwards to `tournament_pause(uuid)`
+  /// (migration `20261256000000`). The RPC freezes the active schedule row's
+  /// clock (`paused_at = now()` when not already paused); the uuid travels as
+  /// the `p_tournament_id` parameter named in the function signature.
   @override
-  Future<void> pauseTournament(TournamentId id) {
-    throw UnimplementedError('pauseTournament lands in Block B2c');
-  }
+  Future<void> pauseTournament(TournamentId id) =>
+      _voidRpc('tournament_pause', id);
 
+  /// Resume from a tournament-wide pause: forwards to
+  /// `tournament_resume(uuid)` (migration `20261256000000`), which
+  /// accumulates the frozen interval and clears `paused_at`.
   @override
-  Future<void> resumeTournament(TournamentId id) {
-    throw UnimplementedError('resumeTournament lands in Block B2c');
-  }
+  Future<void> resumeTournament(TournamentId id) =>
+      _voidRpc('tournament_resume', id);
 
+  /// Skip the call/break window forward: forwards to
+  /// `tournament_skip_forward(uuid)` (migration `20261256000000`), which sets
+  /// the active round to `running` starting now.
   @override
-  Future<void> skipScheduleForward(TournamentId id) {
-    throw UnimplementedError('skipScheduleForward lands in Block B2c');
-  }
+  Future<void> skipScheduleForward(TournamentId id) =>
+      _voidRpc('tournament_skip_forward', id);
 
+  /// Re-call the window (OE-B4 — not a true rewind): forwards to
+  /// `tournament_skip_back(uuid)` (migration `20261256000000`), which puts the
+  /// active round back into the `call` state.
   @override
-  Future<void> skipScheduleBackward(TournamentId id) {
-    throw UnimplementedError('skipScheduleBackward lands in Block B2c');
-  }
+  Future<void> skipScheduleBackward(TournamentId id) =>
+      _voidRpc('tournament_skip_back', id);
 
   @override
   Future<TournamentParticipantId> registerTeam({
