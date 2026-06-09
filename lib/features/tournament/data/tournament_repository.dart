@@ -873,15 +873,21 @@ class TournamentRepository implements TournamentRemote {
   }
 
   // Organizer dashboard (ADR-0031 Phase B). The domain port (Block B0)
-  // defines the contract; the concrete RPC wiring lands in Blocks B1c
-  // (list) and B2c (pause/resume/skip). These stubs keep the adapter
-  // conforming and the tree buildable in the meantime — no production
-  // call site reaches them before the dashboard providers exist.
+  // defines the contract; the list RPC is wired here (Block B1c) while the
+  // pause/resume/skip control calls land in Block B2c. The B2c stubs below
+  // keep the adapter conforming and the tree buildable in the meantime — no
+  // production call site reaches them before the control RPCs exist.
   @override
-  Future<List<TournamentAdminCardRef>> listAdministrableTournaments() {
-    throw UnimplementedError(
-      'listAdministrableTournaments lands in Block B1c',
+  Future<List<TournamentAdminCardRef>> listAdministrableTournaments() async {
+    final rows = await _client.rpc<List<dynamic>>(
+      'tournament_list_administrable',
+      // Mirror [listTournaments]: the default page limit travels as `p_limit`.
+      params: const <String, dynamic>{'p_limit': 50},
     );
+    return rows
+        .cast<Map<String, dynamic>>()
+        .map(tournamentAdminCardRefFromRow)
+        .toList(growable: false);
   }
 
   @override

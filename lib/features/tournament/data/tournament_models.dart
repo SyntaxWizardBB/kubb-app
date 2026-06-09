@@ -400,6 +400,39 @@ TournamentRoundScheduleRef tournamentRoundScheduleRefFromCdcRow(
   );
 }
 
+/// Decodes a `tournament_list_administrable` RPC row into a domain
+/// [TournamentAdminCardRef] (ADR-0031 Phase B, Block B1c).
+///
+/// The wire columns mirror the `jsonb_build_object` projection of migration
+/// `20261255000000_tournament_administrable_gate_and_list.sql`:
+/// `tournament_id`, `display_name`, `format`, `status`,
+/// `current_round`, `schedule_status`, `paused_at`, `remaining_seconds`,
+/// `open_match_count`, `disputed_match_count`.
+///
+/// The schedule-derived fields (`current_round`, `schedule_status`,
+/// `remaining_seconds`, `paused_at`) are nullable: the RPC LEFT-JOINs
+/// `tournament_round_schedule`, so a tournament without a schedule row
+/// surfaces with those columns NULL. They decode to `null` rather than
+/// throwing. `open_match_count` / `disputed_match_count` default to 0 when
+/// the wire value is NULL.
+TournamentAdminCardRef tournamentAdminCardRefFromRow(Map<String, dynamic> row) {
+  final scheduleStatusRaw = row['schedule_status'] as String?;
+  return TournamentAdminCardRef(
+    tournamentId: TournamentId(row['tournament_id'] as String),
+    displayName: row['display_name'] as String,
+    format: TournamentFormatWire.fromWire(row['format'] as String),
+    status: TournamentStatusWire.fromWire(row['status'] as String),
+    currentRound: _asIntOrNull(row['current_round']),
+    scheduleStatus: scheduleStatusRaw == null
+        ? null
+        : RoundStatusWire.fromWire(scheduleStatusRaw),
+    remainingSeconds: _asIntOrNull(row['remaining_seconds']),
+    openMatchCount: _asIntOrNull(row['open_match_count']) ?? 0,
+    disputedMatchCount: _asIntOrNull(row['disputed_match_count']) ?? 0,
+    pausedAt: _asDateOrNull(row['paused_at']),
+  );
+}
+
 /// Decodes a wire row into a domain [TournamentMatchRef].
 ///
 /// `participant_{a,b}_display_name` are the server-projected display

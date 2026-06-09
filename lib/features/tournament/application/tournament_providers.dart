@@ -48,6 +48,53 @@ final canManageTournamentClubProvider =
       );
 });
 
+/// Family key for [canAdministerTournamentProvider]: the tournament's
+/// organizing `clubId` (null when the tournament has no club) plus its
+/// `createdBy` user id (the creator). Both are carried on the
+/// [TournamentDetail] the dashboard already holds (the dashboard maps that
+/// detail to this key), so the gate needs no extra fetch. Note: the overview
+/// DTO [TournamentAdminCardRef] does NOT project these fields — they come
+/// from the detail read.
+typedef AdministrableGateKey = ({String? clubId, String? createdBy});
+
+/// True when the caller may ADMINISTER a tournament from the organizer
+/// dashboard (ADR-0031 Phase B, Block B1c — K4 gate).
+///
+/// Access = Creator OR an active club role in {owner, admin, organizer,
+/// referee}. This mirrors [canManageTournamentClubProvider] but ADDS
+/// `referee` to the role set (that provider only checks owner/admin/
+/// organizer) and ORs in the per-tournament creator check. The role set is
+/// exactly the server gate `tournament_caller_can_manage`
+/// (`ARRAY['owner','admin','organizer','referee']`, migration
+/// `20261255000000`), so the client mirrors the server 1:1.
+///
+/// Resolves to `false` when not authenticated, while the async club read is
+/// loading, and on error — a role-gated action only appears once the role is
+/// confirmed. The server stays the security boundary (every control RPC
+/// re-checks the gate); this provider only governs button / visibility.
+// ignore: specify_nonobvious_property_types
+final canAdministerTournamentProvider =
+    Provider.family<bool, AdministrableGateKey>((ref, key) {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return false;
+  // Creator branch: the tournament's creator may always administer it,
+  // independent of any club role (a personal tournament has no club).
+  if (key.createdBy != null && key.createdBy == userId) return true;
+  final clubId = key.clubId;
+  if (clubId == null) return false;
+  return ref.watch(clubDetailProvider(ClubId(clubId))).maybeWhen(
+        data: (detail) => detail.members.any(
+          (m) =>
+              m.userId == userId &&
+              (m.roles.contains('owner') ||
+                  m.roles.contains('admin') ||
+                  m.roles.contains('organizer') ||
+                  m.roles.contains('referee')),
+        ),
+        orElse: () => false,
+      );
+});
+
 /// One club the caller may pick as the organizing club in the setup
 /// wizard: `id` is the `club_id` persisted on the tournament, `name` the
 /// display label.
@@ -100,6 +147,20 @@ final NotifierProvider<TournamentConfigController, TournamentConfigDraft>
 final tournamentListProvider =
     FutureProvider<List<TournamentSummaryRef>>((ref) async {
   return ref.read(tournamentRemoteProvider).listTournaments();
+});
+
+/// Tournaments the caller may administer, backing the organizer dashboard
+/// overview (ADR-0031 Phase B, Block B1c). One `tournament_list_administrable`
+/// RPC (server-gated to Creator + {owner,admin,organizer,referee}); the
+/// projection carries phase/round/schedule status, remaining seconds and the
+/// open/disputed match counts.
+///
+/// NO `Timer.periodic` / polling for server-state discovery (ADR-0029 /
+/// OE-B3): this overview has no single-column user scope, so its realtime
+/// refresh is driven later by Inbox-CDC invalidation, not by a poll loop.
+final administrableTournamentsProvider =
+    FutureProvider<List<TournamentAdminCardRef>>((ref) async {
+  return ref.read(tournamentRemoteProvider).listAdministrableTournaments();
 });
 
 /// Imperative action surface mirroring `matchActionsProvider`: keeps the
