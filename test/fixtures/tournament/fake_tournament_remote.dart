@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:kubb_app/features/tournament/data/tournament_models.dart'
+    show tournamentParticipantFromCdcRow;
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart'
     show SeedingRequiredException;
 import 'package:kubb_domain/kubb_domain.dart';
@@ -87,6 +89,10 @@ class FakeTournamentRemote implements TournamentRemote {
   UserId currentUser;
   int _idSeq = 0;
 
+  /// Number of [getTournamentDetail] calls — lets invalidation tests assert a
+  /// re-read fired (e.g. the participant CDC realtime provider, ADR-0031 D3).
+  int detailFetchCount = 0;
+
   /// Realtime adapter the `watch*` streams subscribe through. Tests drive
   /// events with [FakeRealtimeChannel.emit] addressed by
   /// [fakeRealtimeChannelKey] (see [matchesChannelKeyFor]).
@@ -109,6 +115,16 @@ class FakeTournamentRemote implements TournamentRemote {
   static String roundScheduleChannelKeyFor(TournamentId tournamentId) =>
       fakeRealtimeChannelKey(
         table: 'tournament_round_schedule',
+        filterColumn: 'tournament_id',
+        filterValue: tournamentId.value,
+      );
+
+  /// Channel key for the `tournament_participants` slice of [tournamentId]
+  /// (ADR-0031 Phase D, Block D3). Tests address `realtime.emit` with this
+  /// key to drive [watchTournamentParticipants] events.
+  static String participantsChannelKeyFor(TournamentId tournamentId) =>
+      fakeRealtimeChannelKey(
+        table: 'tournament_participants',
         filterColumn: 'tournament_id',
         filterValue: tournamentId.value,
       );
@@ -196,6 +212,7 @@ class FakeTournamentRemote implements TournamentRemote {
 
   @override
   Future<TournamentDetail?> getTournamentDetail(TournamentId id) async {
+    detailFetchCount += 1;
     // Minimal Detail-Payload: reicht fuer Konsumenten, die die
     // Display-Name-Lookup ueber das Participant-Array machen (W3-T5
     // Standings, Tournament-Detail). Display-Name spiegelt die
@@ -214,6 +231,7 @@ class FakeTournamentRemote implements TournamentRemote {
           seed: null,
           registeredAt: DateTime.utc(2026),
           respondedAt: null,
+          checkedInAt: _participants[pid]?.checkedInAt,
         ),
     ];
     return TournamentDetail(
@@ -427,6 +445,14 @@ class FakeTournamentRemote implements TournamentRemote {
       _participants[pid]!.status = _PStatus.rejected;
 
   @override
+  Future<void> checkinParticipant(TournamentParticipantId pid) async =>
+      _participants[pid]!.checkedInAt ??= DateTime.now().toUtc();
+
+  @override
+  Future<void> undoCheckin(TournamentParticipantId pid) async =>
+      _participants[pid]!.checkedInAt = null;
+
+  @override
   Future<List<TournamentMatchRef>> listMatchesForTournament(
     TournamentId id,
   ) async =>
@@ -629,6 +655,20 @@ class FakeTournamentRemote implements TournamentRemote {
         .map((c) => _tournamentRoundScheduleRefFromCdcRow(c.newRow));
   }
 
+  @override
+  Stream<TournamentParticipant> watchTournamentParticipants(
+    TournamentId tournamentId,
+  ) {
+    return realtime
+        .subscribe(
+          table: 'tournament_participants',
+          filterColumn: 'tournament_id',
+          filterValue: tournamentId.value,
+        )
+        .where((c) => c.eventType != RealtimeEventType.delete)
+        .map((c) => _tournamentParticipantFromCdcRow(c.newRow));
+  }
+
   // Organizer dashboard (ADR-0031 Phase B). Contract defined by Block B0;
   // the dashboard providers/actions that exercise these land in B1c/B2c,
   // which will flesh out the fake's behaviour. For now they keep the fake
@@ -724,6 +764,14 @@ class FakeTournamentRemote implements TournamentRemote {
       pausedAccumSeconds: _asInt(row['paused_accum_seconds']),
     );
   }
+
+  // Reuse the production CDC parser so the fake mirrors the real status
+  // mapping (e.g. the DB wire value `confirmed` -> approved) instead of
+  // re-deriving it and drifting.
+  TournamentParticipant _tournamentParticipantFromCdcRow(
+    Map<String, Object?> row,
+  ) =>
+      tournamentParticipantFromCdcRow(row);
 
   RoundStatus _roundStatusFromWire(String raw) {
     switch (raw) {
@@ -1721,6 +1769,9 @@ class _Participant {
   final UserId userId;
   final TeamId? teamId;
   _PStatus status = _PStatus.pending;
+
+  /// On-site presence timestamp (ADR-0031 Phase D). NULL until checked in.
+  DateTime? checkedInAt;
 }
 
 /// In-memory mirror of one `tournament_roster_slots` row. Closed rows

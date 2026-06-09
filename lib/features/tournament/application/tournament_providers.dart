@@ -300,6 +300,33 @@ class TournamentActions {
     }
   }
 
+  /// On-site check-in (ADR-0031 Phase D, Block D3). Marks a confirmed
+  /// participant as physically present via the `tournament_checkin_participant`
+  /// RPC, then invalidates [tournamentDetailProvider] for [tournamentId] so the
+  /// participant list re-reads with the new `checked_in_at` — analogous to
+  /// [withdrawRegistration]. The server owns the manage gate / status window
+  /// (K4); this method does not duplicate that logic. The realtime CDC stream
+  /// also drives the same invalidation; this explicit re-read keeps the
+  /// initiating device responsive without waiting for the round-trip.
+  Future<void> checkin(
+    TournamentParticipantId id, {
+    required TournamentId tournamentId,
+  }) async {
+    await _ref.read(tournamentRemoteProvider).checkinParticipant(id);
+    _ref.invalidate(tournamentDetailProvider(tournamentId));
+  }
+
+  /// Reverts an on-site check-in (ADR-0031 Phase D, Block D3) via the
+  /// `tournament_undo_checkin` RPC, then invalidates [tournamentDetailProvider]
+  /// for [tournamentId]. Same server-authoritative gate as [checkin].
+  Future<void> undoCheckin(
+    TournamentParticipantId id, {
+    required TournamentId tournamentId,
+  }) async {
+    await _ref.read(tournamentRemoteProvider).undoCheckin(id);
+    _ref.invalidate(tournamentDetailProvider(tournamentId));
+  }
+
   Future<void> confirmRegistration(TournamentParticipantId id) async {
     await _ref.read(tournamentRemoteProvider).confirmRegistration(id);
     _ref.invalidate(tournamentListProvider);

@@ -129,6 +129,12 @@ class _FakeTournamentRemote implements TournamentRemote {
   Future<void> rejectRegistration(TournamentParticipantId participantId) async {}
 
   @override
+  Future<void> checkinParticipant(TournamentParticipantId participantId) async {}
+
+  @override
+  Future<void> undoCheckin(TournamentParticipantId participantId) async {}
+
+  @override
   Future<List<TournamentMatchRef>> listMatchesForTournament(
           TournamentId id) async =>
       const <TournamentMatchRef>[];
@@ -177,6 +183,12 @@ class _FakeTournamentRemote implements TournamentRemote {
   @override
   Stream<TournamentMatchRef> watchTournamentMatches(TournamentId tournamentId) =>
       const Stream<TournamentMatchRef>.empty();
+
+  @override
+  Stream<TournamentParticipant> watchTournamentParticipants(
+    TournamentId tournamentId,
+  ) =>
+      const Stream<TournamentParticipant>.empty();
 
   @override
   Stream<BracketAdvanceEvent> watchBracketAdvances(TournamentId tournamentId) =>

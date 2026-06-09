@@ -402,6 +402,19 @@ class TournamentRepository implements TournamentRemote {
         participantId,
       );
 
+  // On-site check-in (ADR-0031 Phase D, Block D3). Both calls forward to the
+  // D1 RPCs (migration 20261265000000); the server owns the manage gate (K4),
+  // the status window and the confirmed-precondition. No client-side
+  // permission/status re-implementation — gate (42501) / status (22023)
+  // errors propagate up as exceptions rather than being swallowed.
+  @override
+  Future<void> checkinParticipant(TournamentParticipantId participantId) =>
+      _voidParticipantRpc('tournament_checkin_participant', participantId);
+
+  @override
+  Future<void> undoCheckin(TournamentParticipantId participantId) =>
+      _voidParticipantRpc('tournament_undo_checkin', participantId);
+
   @override
   Future<List<TournamentMatchRef>> listMatchesForTournament(
       TournamentId id) async {
@@ -791,6 +804,28 @@ class TournamentRepository implements TournamentRemote {
         )
         .where((c) => c.eventType != RealtimeEventType.delete)
         .map((c) => tournamentMatchRefFromCdcRow(c.newRow));
+  }
+
+  @override
+  Stream<TournamentParticipant> watchTournamentParticipants(
+    TournamentId tournamentId,
+  ) {
+    // ADR-0031 Phase D, Block D3. Same subscribe signature as
+    // watchTournamentMatches/watchRoundSchedule: the existing per-tournament
+    // CDC channel filtered on the tournament_id column — no periodic poll,
+    // no extra WebSocket. tournament_participants is already in the realtime
+    // publication (20261236000000), so the channel multiplexes over the
+    // shared socket (ADR-0029). DELETE events are dropped; each insert/update
+    // row is projected through the shared participant parser, which reads
+    // checked_in_at null-tolerantly.
+    return _realtime
+        .subscribe(
+          table: 'tournament_participants',
+          filterColumn: 'tournament_id',
+          filterValue: tournamentId.value,
+        )
+        .where((c) => c.eventType != RealtimeEventType.delete)
+        .map((c) => tournamentParticipantFromCdcRow(c.newRow));
   }
 
   @override

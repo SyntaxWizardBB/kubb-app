@@ -40,6 +40,11 @@ Map<String, dynamic> _participantRow({
   Object? seed,
   String? respondedAt,
   Object? displayName = 'Alice',
+  // `true` -> include the key with a timestamp, `false` -> include with NULL,
+  // omitted (null sentinel via [includeCheckedIn]) -> drop the key entirely so
+  // old RPC/CDC payloads without the column can be exercised.
+  String? checkedInAt,
+  bool includeCheckedIn = true,
 }) =>
     <String, dynamic>{
       'participant_id': 'p-1',
@@ -50,6 +55,27 @@ Map<String, dynamic> _participantRow({
       'seed': seed,
       'registered_at': '2026-05-24T10:00:00.000Z',
       'responded_at': respondedAt,
+      if (includeCheckedIn) 'checked_in_at': checkedInAt,
+    };
+
+Map<String, Object?> _participantCdcRow({
+  String status = 'confirmed',
+  Object? seed,
+  String? respondedAt,
+  String? checkedInAt,
+  bool includeCheckedIn = true,
+}) =>
+    <String, Object?>{
+      // Raw `tournament_participants` table row: PK is `id`, and there are no
+      // joined nickname/display_name columns on the CDC wire.
+      'id': 'p-9',
+      'tournament_id': 't-1',
+      'user_id': 'u-9',
+      'registration_status': status,
+      'seed': seed,
+      'registered_at': '2026-05-24T10:00:00.000Z',
+      'responded_at': respondedAt,
+      if (includeCheckedIn) 'checked_in_at': checkedInAt,
     };
 
 Map<String, dynamic> _matchRow({
@@ -185,6 +211,56 @@ void main() {
       final p = tournamentParticipantFromRow(_participantRow(displayName: null));
       expect(p.displayName, isNull);
       expect(p.displayLabel, 'alice');
+    });
+
+    // ADR-0031 Phase D, Block D3: checked_in_at presence projection.
+    test('D3: parses checked_in_at into checkedInAt + isCheckedIn', () {
+      final p = tournamentParticipantFromRow(_participantRow(
+        checkedInAt: '2026-06-09T08:30:00.000Z',
+      ));
+      expect(p.checkedInAt, DateTime.utc(2026, 6, 9, 8, 30));
+      expect(p.isCheckedIn, isTrue);
+    });
+
+    test('D3: checked_in_at NULL decodes to null (not checked in)', () {
+      final p = tournamentParticipantFromRow(_participantRow());
+      expect(p.checkedInAt, isNull);
+      expect(p.isCheckedIn, isFalse);
+    });
+
+    test('D3: missing checked_in_at key decodes to null (older wire)', () {
+      final p = tournamentParticipantFromRow(
+        _participantRow(includeCheckedIn: false),
+      );
+      expect(p.checkedInAt, isNull);
+      expect(p.isCheckedIn, isFalse);
+    });
+  });
+
+  group('tournamentParticipantFromCdcRow (ADR-0031 Phase D, Block D3)', () {
+    test('maps raw table id -> participantId and parses checked_in_at', () {
+      final p = tournamentParticipantFromCdcRow(_participantCdcRow(
+        checkedInAt: '2026-06-09T08:30:00.000Z',
+      ));
+      expect(p.participantId, 'p-9');
+      expect(p.userId, 'u-9');
+      expect(p.registrationStatus, TournamentParticipantStatus.approved);
+      expect(p.checkedInAt, DateTime.utc(2026, 6, 9, 8, 30));
+      expect(p.isCheckedIn, isTrue);
+    });
+
+    test('checked_in_at NULL on the CDC wire decodes to null', () {
+      final p = tournamentParticipantFromCdcRow(_participantCdcRow());
+      expect(p.checkedInAt, isNull);
+      expect(p.isCheckedIn, isFalse);
+    });
+
+    test('missing checked_in_at key on CDC wire decodes to null', () {
+      final p = tournamentParticipantFromCdcRow(
+        _participantCdcRow(includeCheckedIn: false),
+      );
+      expect(p.checkedInAt, isNull);
+      expect(p.isCheckedIn, isFalse);
     });
   });
 

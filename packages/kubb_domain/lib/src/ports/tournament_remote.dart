@@ -414,6 +414,7 @@ class TournamentParticipant {
     required this.registeredAt,
     required this.respondedAt,
     this.displayName,
+    this.checkedInAt,
   });
 
   final String participantId;
@@ -434,6 +435,19 @@ class TournamentParticipant {
   final int? seed;
   final DateTime registeredAt;
   final DateTime? respondedAt;
+
+  /// On-site presence timestamp (ADR-0031 Phase D). NULL until an organizer
+  /// (Creator OR an active club role in {owner, admin, organizer, referee} —
+  /// K4) checks the participant in via `tournament_checkin_participant`, and
+  /// reset to NULL again by `tournament_undo_checkin`. Distinct from
+  /// [registrationStatus]: confirmed = pool membership, check-in = physical
+  /// attendance. Projected by `tournament_get` (`checked_in_at`) and pushed
+  /// over the `tournament_participants` CDC channel. Nullable and additive:
+  /// older RPC/CDC payloads that omit the column decode to `null`.
+  final DateTime? checkedInAt;
+
+  /// True once this participant has been marked physically present on site.
+  bool get isCheckedIn => checkedInAt != null;
 
   String get displayLabel => displayName ?? nickname ?? '?';
 }
@@ -780,6 +794,28 @@ abstract interface class TournamentRemote {
   Future<void> confirmRegistration(TournamentParticipantId participantId);
   Future<void> rejectRegistration(TournamentParticipantId participantId);
 
+  // On-site check-in (ADR-0031 Phase D)
+
+  /// Marks a confirmed participant as physically present on site
+  /// (ADR-0031 Phase D). Backed by the `tournament_checkin_participant`
+  /// RPC (migration `20261265000000`), which sets
+  /// `tournament_participants.checked_in_at = now()`. Server-authoritative:
+  /// the RPC enforces the manage gate (`tournament_caller_can_manage` — K4),
+  /// the tournament status window (`registration_open|registration_closed|
+  /// live`) and a `registration_status = 'confirmed'` precondition; the
+  /// client does NOT re-implement those checks. Idempotent — checking in an
+  /// already-checked-in participant is a server-side no-op. Throws the
+  /// underlying Postgres error (e.g. `42501` gate, `22023` status) rather
+  /// than swallowing it.
+  Future<void> checkinParticipant(TournamentParticipantId participantId);
+
+  /// Clears a participant's on-site presence (ADR-0031 Phase D). Backed by
+  /// the `tournament_undo_checkin` RPC (migration `20261265000000`), which
+  /// resets `tournament_participants.checked_in_at = NULL`. Same server-side
+  /// gate/status semantics as [checkinParticipant] and idempotent (undoing
+  /// an already-cleared participant is a no-op). Errors propagate.
+  Future<void> undoCheckin(TournamentParticipantId participantId);
+
   // Matches
   Future<List<TournamentMatchRef>> listMatchesForTournament(TournamentId id);
 
@@ -850,6 +886,20 @@ abstract interface class TournamentRemote {
   /// view; for the latter the underlying subscription runs with the
   /// anon role, so RLS gates visibility.
   Stream<TournamentMatchRef> watchTournamentMatches(TournamentId tournamentId);
+
+  /// Realtime-Subscribe for the participant list of a tournament (ADR-0031
+  /// Phase D). Fires on insert/update of any `tournament_participants` row
+  /// carrying the given [tournamentId] (the CDC filter column) — most
+  /// notably when `checked_in_at` flips on check-in / undo. Implementations
+  /// route through the shared per-tournament `RealtimeChannel` and translate
+  /// raw CDC payloads into a [TournamentParticipant]; DELETE events are
+  /// filtered out. The table already ships in the realtime publication
+  /// (migration `20261236000000`), so no new subscription/poll is needed —
+  /// CDC drives the push (ADR-0029). Signature mirrors
+  /// [watchTournamentMatches].
+  Stream<TournamentParticipant> watchTournamentParticipants(
+    TournamentId tournamentId,
+  );
 
   /// Realtime-Subscribe für Bracket-Advances. Fires whenever a KO row
   /// in [tournamentId] flips to `finalized` and the winner has been

@@ -224,6 +224,13 @@ DateTime? _asDateOrNull(Object? r) =>
 /// optional on the wire so wire-rows from older RPC versions still
 /// decode — callers fall back to the localized `tournamentParticipantUnknown`
 /// string in that case.
+///
+/// `checked_in_at` is the on-site presence timestamp projected by
+/// `tournament_get` since `20261266000000` (ADR-0031 Phase D, Block D2) and
+/// carried on the `tournament_participants` CDC channel. It is read through
+/// the null-tolerant `_asDateOrNull` helper: a NULL value, or a missing key
+/// on older RPC/CDC payloads, decodes to `null` (no hard cast that would
+/// throw) — same tolerant-decode convention as the `display_name` field.
 TournamentParticipant tournamentParticipantFromRow(Map<String, dynamic> row) {
   return TournamentParticipant(
     participantId: row['participant_id'] as String,
@@ -235,6 +242,7 @@ TournamentParticipant tournamentParticipantFromRow(Map<String, dynamic> row) {
     seed: _asIntOrNull(row['seed']),
     registeredAt: DateTime.parse(row['registered_at'] as String),
     respondedAt: _asDateOrNull(row['responded_at']),
+    checkedInAt: _asDateOrNull(row['checked_in_at']),
   );
 }
 
@@ -367,6 +375,34 @@ TournamentMatchRef tournamentMatchRefFromCdcRow(Map<String, Object?> row) {
     finalScoreB: _asIntOrNull(row['final_score_b']),
     // M2a: raw CDC table column carries the phase token directly.
     phase: matchPhaseFromWire(row['phase'] as String?),
+  );
+}
+
+/// Decodes a raw `tournament_participants` CDC row (column-name keyed, as
+/// delivered by `RealtimeChannel`) into a domain [TournamentParticipant]
+/// (ADR-0031 Phase D, Block D3).
+///
+/// The RPC-shaped wire used by [tournamentParticipantFromRow] renames the
+/// table's primary key `id` to `participant_id` and JOINs in `nickname` /
+/// `display_name`; raw CDC payloads ship only the `tournament_participants`
+/// table columns (`id`, `user_id`, `registration_status`, `seed`,
+/// `registered_at`, `responded_at`, `checked_in_at`). Keeping the two parsers
+/// separate avoids leaking the rename into the table schema. `nickname` /
+/// `display_name` are absent on the CDC wire and decode to `null`; the
+/// realtime provider only uses the row to invalidate the detail read, which
+/// re-projects the joined names.
+TournamentParticipant tournamentParticipantFromCdcRow(Map<String, Object?> row) {
+  return TournamentParticipant(
+    participantId: row['id']! as String,
+    userId: row['user_id'] as String?,
+    nickname: row['nickname'] as String?,
+    displayName: row['display_name'] as String?,
+    registrationStatus: TournamentParticipantStatusWire.fromWire(
+        row['registration_status']! as String),
+    seed: _asIntOrNull(row['seed']),
+    registeredAt: DateTime.parse(row['registered_at']! as String),
+    respondedAt: _asDateOrNull(row['responded_at']),
+    checkedInAt: _asDateOrNull(row['checked_in_at']),
   );
 }
 

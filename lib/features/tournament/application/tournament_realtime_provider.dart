@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/features/tournament/application/tournament_bracket_provider.dart';
+import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -69,6 +70,34 @@ final tournamentBracketRealtimeProvider = StreamProvider.autoDispose
   final stream = remote.watchBracketAdvances(tournamentId);
   return stream.map((event) {
     ref.invalidate(tournamentBracketProvider(tournamentId));
+    return event;
+  });
+});
+
+/// Realtime stream of a tournament's participant list (ADR-0031 Phase D,
+/// Block D3). Consumes [TournamentRemote.watchTournamentParticipants] and, on
+/// EVERY CDC event (in particular a `checked_in_at` flip from check-in/undo),
+/// invalidates [tournamentDetailProvider] so the regular read provider
+/// re-reads the fresh participant snapshot including the joined display
+/// names — exactly following the pattern of the three match/bracket realtime
+/// providers above.
+///
+/// Subscribes on the first watch; `autoDispose` tears the subscription down
+/// after the last listener (refcount in the realtime adapter). NO new polling:
+/// the `tournament_participants` CDC already exists (published since
+/// `20261236000000`); the push arrives over the existing per-tournament
+/// channel (ADR-0029) — no periodic poll timer.
+///
+/// The stream forwards the raw [TournamentParticipant] snapshots so the
+/// check-in UI (D4) can also consume individual events directly.
+//
+// ignore: specify_nonobvious_property_types
+final tournamentParticipantListRealtimeProvider = StreamProvider.autoDispose
+    .family<TournamentParticipant, TournamentId>((ref, tournamentId) {
+  final remote = ref.watch(tournamentRemoteProvider);
+  final stream = remote.watchTournamentParticipants(tournamentId);
+  return stream.map((event) {
+    ref.invalidate(tournamentDetailProvider(tournamentId));
     return event;
   });
 });
