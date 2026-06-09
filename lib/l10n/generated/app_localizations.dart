@@ -5362,6 +5362,30 @@ abstract class AppLocalizations {
   /// **'Entfernen'**
   String get tournamentDetailActionRemove;
 
+  /// Organizer action on a confirmed participant row: mark them physically present on site (ADR-0031 Phase D check-in)
+  ///
+  /// In de, this message translates to:
+  /// **'Einchecken'**
+  String get tournamentDetailCheckinAction;
+
+  /// State of a checked-in participant row (green); tapping it reverts the on-site check-in
+  ///
+  /// In de, this message translates to:
+  /// **'Anwesend'**
+  String get tournamentDetailCheckedInState;
+
+  /// Inline label showing when a participant was checked in on site
+  ///
+  /// In de, this message translates to:
+  /// **'Eingecheckt {time}'**
+  String tournamentDetailCheckedInAt(String time);
+
+  /// Header counter: how many of the confirmed participants are checked in on site
+  ///
+  /// In de, this message translates to:
+  /// **'{checkedIn}/{total} eingecheckt'**
+  String tournamentDetailCheckedInCount(int checkedIn, int total);
+
   /// Organizer button: approve registration
   ///
   /// In de, this message translates to:

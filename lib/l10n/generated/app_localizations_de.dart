@@ -2918,6 +2918,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentDetailActionRemove => 'Entfernen';
 
   @override
+  String get tournamentDetailCheckinAction => 'Einchecken';
+
+  @override
+  String get tournamentDetailCheckedInState => 'Anwesend';
+
+  @override
+  String tournamentDetailCheckedInAt(String time) {
+    return 'Eingecheckt $time';
+  }
+
+  @override
+  String tournamentDetailCheckedInCount(int checkedIn, int total) {
+    return '$checkedIn/$total eingecheckt';
+  }
+
+  @override
   String get tournamentDetailApprove => 'Bestätigen';
 
   @override

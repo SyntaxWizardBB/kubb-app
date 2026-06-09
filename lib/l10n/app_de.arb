@@ -3757,6 +3757,36 @@
   "@tournamentDetailActionRemove": {
     "description": "Optional organizer moderation action: remove a participant (not a required step)"
   },
+  "tournamentDetailCheckinAction": "Einchecken",
+  "@tournamentDetailCheckinAction": {
+    "description": "Organizer action on a confirmed participant row: mark them physically present on site (ADR-0031 Phase D check-in)"
+  },
+  "tournamentDetailCheckedInState": "Anwesend",
+  "@tournamentDetailCheckedInState": {
+    "description": "State of a checked-in participant row (green); tapping it reverts the on-site check-in"
+  },
+  "tournamentDetailCheckedInAt": "Eingecheckt {time}",
+  "@tournamentDetailCheckedInAt": {
+    "description": "Inline label showing when a participant was checked in on site",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "08.06.2026 14:32"
+      }
+    }
+  },
+  "tournamentDetailCheckedInCount": "{checkedIn}/{total} eingecheckt",
+  "@tournamentDetailCheckedInCount": {
+    "description": "Header counter: how many of the confirmed participants are checked in on site",
+    "placeholders": {
+      "checkedIn": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "tournamentDetailApprove": "Bestätigen",
   "@tournamentDetailApprove": {
     "description": "Organizer button: approve registration"
