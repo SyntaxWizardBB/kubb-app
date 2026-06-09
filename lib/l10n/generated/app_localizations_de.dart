@@ -3217,6 +3217,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentMatchTimerTiebreakActive => 'Tiebreak läuft';
 
   @override
+  String tournamentRoundCallCountdown(String time) {
+    return 'Nächste Runde in $time';
+  }
+
+  @override
+  String get tournamentRoundHold => 'Zeit angehalten — Resultat eintragen';
+
+  @override
+  String get tournamentRoundTiebreakHold => 'Tiebreak';
+
+  @override
   String tournamentMatchPitchCallTitle(String pitch) {
     return 'Dein Platz: Pitch $pitch — leg los!';
   }

@@ -4192,6 +4192,24 @@
   "@tournamentMatchTimerTiebreakActive": {
     "description": "Inline badge shown once the tiebreak window has opened"
   },
+  "tournamentRoundCallCountdown": "Nächste Runde in {time}",
+  "@tournamentRoundCallCountdown": {
+    "description": "Countdown until the next round starts, shown during the call/pause window (status published/call). {time} is mm:ss.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "02:30"
+      }
+    }
+  },
+  "tournamentRoundHold": "Zeit angehalten — Resultat eintragen",
+  "@tournamentRoundHold": {
+    "description": "Shown when a round is awaiting results: the clock is frozen until the result is entered (status awaiting_results)"
+  },
+  "tournamentRoundTiebreakHold": "Tiebreak",
+  "@tournamentRoundTiebreakHold": {
+    "description": "Shown on the held clock when the round awaits a tiebreak result"
+  },
   "tournamentMatchPitchCallTitle": "Dein Platz: Pitch {pitch} — leg los!",
   "@tournamentMatchPitchCallTitle": {
     "description": "Prominent call-to-play banner pointing the participant to their pitch",

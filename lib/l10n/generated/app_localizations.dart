@@ -5926,6 +5926,24 @@ abstract class AppLocalizations {
   /// **'Tiebreak läuft'**
   String get tournamentMatchTimerTiebreakActive;
 
+  /// Countdown until the next round starts, shown during the call/pause window (status published/call). {time} is mm:ss.
+  ///
+  /// In de, this message translates to:
+  /// **'Nächste Runde in {time}'**
+  String tournamentRoundCallCountdown(String time);
+
+  /// Shown when a round is awaiting results: the clock is frozen until the result is entered (status awaiting_results)
+  ///
+  /// In de, this message translates to:
+  /// **'Zeit angehalten — Resultat eintragen'**
+  String get tournamentRoundHold;
+
+  /// Shown on the held clock when the round awaits a tiebreak result
+  ///
+  /// In de, this message translates to:
+  /// **'Tiebreak'**
+  String get tournamentRoundTiebreakHold;
+
   /// Prominent call-to-play banner pointing the participant to their pitch
   ///
   /// In de, this message translates to:
