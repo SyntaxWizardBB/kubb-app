@@ -9,7 +9,6 @@ import 'package:kubb_app/features/tournament/application/tournament_list_provide
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
-import 'package:kubb_app/features/tournament/application/tournament_seeding_controller.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/organizer_dashboard_detail_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/schedule_control_bar.dart';
@@ -23,11 +22,17 @@ const _id = TournamentId('t-1');
 const _creator = 'u-creator';
 
 /// Records the schedule-control RPCs the control bar dispatches through the
-/// actions facade.
+/// actions facade, plus the KO-phase RPC the seeding controller fires (so the
+/// auto-seeding handover can be asserted end-to-end against the REAL
+/// controller, not a stub).
 class _SpyRemote extends FakeTournamentRemote {
   _SpyRemote() : super(initialUser: const UserId('u1'));
 
   final List<String> calls = <String>[];
+
+  /// The configs passed to `startKoPhase` (one per real RPC dispatch). Empty
+  /// when the controller no-ops (e.g. unprimed config==null guard).
+  final List<KoPhaseConfig> startKoConfigs = <KoPhaseConfig>[];
 
   @override
   Future<void> pauseTournament(TournamentId id) async => calls.add('pause');
@@ -41,18 +46,27 @@ class _SpyRemote extends FakeTournamentRemote {
       calls.add('skipBack');
   @override
   Future<void> startTournament(TournamentId id) async => calls.add('start');
-}
 
-/// Seeding controller stub that only records the `startKoPhase` invocation —
-/// used to assert the auto-seeding KO handover dispatches the EXISTING
-/// startKoPhase mechanic (B3 DOD-05) without touching the real RPC path.
-class _SpyController extends TournamentSeedingController {
-  _SpyController() : super(_id);
-
-  int startKoCalls = 0;
-
+  // Records the KO-phase RPC without requiring the tournament to be registered
+  // in the fake's store — the assertion is purely "did the existing mechanic
+  // reach the remote with a non-null config" (which only happens once the
+  // dashboard has primed the controller via seed(...)).
   @override
-  Future<void> startKoPhase() async => startKoCalls++;
+  Future<void> startKoPhase(TournamentId id, KoPhaseConfig config) async {
+    calls.add('startKoPhase');
+    startKoConfigs.add(config);
+  }
+
+  // The auto-seeding handover derives the seed order from the standings, which
+  // reads these two. Returning empties keeps the standings resolvable for an
+  // unregistered fixture tournament.
+  @override
+  Future<List<TournamentMatchRef>> listMatchesForTournament(
+    TournamentId id,
+  ) async =>
+      const <TournamentMatchRef>[];
+  @override
+  Future<TournamentDetail?> getTournamentDetail(TournamentId id) async => null;
 }
 
 TournamentDetail _detail({
@@ -140,7 +154,6 @@ Future<void> _pump(
   TournamentRoundScheduleRef? schedule,
   TournamentDetail? detail,
   Bracket? bracket,
-  TournamentSeedingController? seedingController,
   _RouteSpy? routeSpy,
 }) async {
   final spy = routeSpy ?? _RouteSpy();
@@ -189,9 +202,6 @@ Future<void> _pump(
         tournamentBracketProvider(_id).overrideWith(
           (_) async => bracket ?? (throw ArgumentError('no ko matches')),
         ),
-        if (seedingController != null)
-          tournamentSeedingControllerProvider(_id)
-              .overrideWith(() => seedingController),
         if (remote != null) tournamentRemoteProvider.overrideWithValue(remote),
       ],
       child: MaterialApp.router(
@@ -417,15 +427,19 @@ void main() {
   });
 
   testWidgets(
-      'DOD-05: KO handover (auto seeding) dispatches startKoPhase (no nav)',
+      'DOD-05: KO handover (auto seeding) fires the real startKoPhase RPC',
       (tester) async {
-    final controller = _SpyController();
+    // Uses the REAL TournamentSeedingController (no stub) plus a SpyRemote, so
+    // this exercises the production path: the dashboard must PRIME the
+    // controller (seed(...) → config != null) before startKoPhase() can reach
+    // the remote. A stubbed controller would mask the config==null guard.
+    final remote = _SpyRemote();
     final spy = _RouteSpy();
     await _pump(
       tester,
       canAdminister: true,
       routeSpy: spy,
-      seedingController: controller,
+      remote: remote,
       detail: _detail(), // live + no ko_config → auto seeding
       schedule: _schedule(RoundStatus.running),
     );
@@ -433,7 +447,11 @@ void main() {
     await tester.tap(find.text('KO-Phase starten'));
     await tester.pumpAndSettle();
 
-    expect(controller.startKoCalls, 1);
+    // The existing startKoPhase mechanic actually dispatched the RPC with a
+    // non-null config — proving the controller was primed, not a silent no-op.
+    expect(remote.calls, contains('startKoPhase'));
+    expect(remote.startKoConfigs, hasLength(1));
+    // No detour to the seeding editor for the auto case.
     expect(spy.pushed, isNot(contains('/tournament/:id/seeding')));
   });
 

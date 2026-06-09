@@ -497,9 +497,17 @@ class _Badge extends StatelessWidget {
 /// `tournament_detail_screen.dart`:
 ///   * manual seeding without a bracket -> navigate to the existing seeding
 ///     route (the organizer must commit a seed list first);
-///   * otherwise (auto seeding) -> trigger the existing `startKoPhase` on the
-///     shared seeding controller (which calls the `tournament_start_ko_phase`
-///     RPC). No new server/RPC logic is added here.
+///   * otherwise (auto seeding) -> prime the shared seeding controller with the
+///     auto-seeded standings order + `KoPhaseConfig` (exactly as
+///     `tournament_seeding_screen.dart` does in its post-frame `seed(...)`
+///     callback) and then trigger the existing `startKoPhase`, which calls the
+///     `tournament_start_ko_phase` RPC. No new server/RPC logic is added here.
+///
+/// The priming is REQUIRED: a freshly built `tournamentSeedingControllerProvider`
+/// returns `SeedingState.empty()` with `config == null`, and `startKoPhase()`
+/// no-ops (errors out, swallowed) until `seed(...)` has populated the config.
+/// The dashboard is a second entry-point into that controller, so it must run
+/// the same priming the seeding screen does before firing the RPC.
 ///
 /// Swiss/pairRound is intentionally NOT linked here (DOD-06): there is no
 /// existing client `pairRound` action/route in this branch (no
@@ -537,30 +545,58 @@ class _KoTransitionAction extends ConsumerWidget {
     // Once a bracket exists the KO phase is already running — no handover CTA.
     if (hasBracket) return const SizedBox.shrink();
 
+    final manual = _seedingMode(detail) == SeedingMode.manual;
+    // Auto seeding: derive the seed order from the live standings (same source
+    // the seeding screen uses) so the controller can be primed before the RPC.
+    final autoOrder = manual
+        ? const <TournamentParticipantId>[]
+        : ref.watch(tournamentStandingsProvider(tournamentId)).maybeWhen(
+              data: (standings) => <TournamentParticipantId>[
+                for (final s in standings)
+                  TournamentParticipantId(s.participantId),
+              ],
+              orElse: () => const <TournamentParticipantId>[],
+            );
+
     return SizedBox(
       height: KubbTokens.touchComfortable,
       child: FilledButton.icon(
         icon: const Icon(Icons.sports_kabaddi_outlined, size: 18),
         label: Text(l.organizerKoTransitionAction),
         onPressed: () {
-          if (_seedingMode(detail) == SeedingMode.manual) {
+          if (manual) {
             // Manual seeding: the organizer commits a seed list first via the
             // existing seeding editor (server re-enforces seeding_required).
             unawaited(
               context.push(TournamentRoutes.seeding(tournamentId.value)),
             );
           } else {
-            // Auto seeding: reuse the existing startKoPhase mechanic on the
-            // shared seeding controller (no extra step, no new RPC).
-            ref
+            // Auto seeding: prime the shared seeding controller with the
+            // standings-derived order + config (mirroring the seeding screen's
+            // post-frame seed(...) call), THEN reuse the existing startKoPhase
+            // mechanic. Without this priming startKoPhase() hits its
+            // config==null guard and silently no-ops (no extra step, no RPC).
+            final notifier = ref
                 .read(tournamentSeedingControllerProvider(tournamentId).notifier)
-                .startKoPhase()
-                .ignore();
+              ..seed(
+                auto: autoOrder,
+                config: _autoKoConfig(autoOrder.length),
+              );
+            notifier.startKoPhase().ignore();
           }
         },
       ),
     );
   }
+}
+
+/// Default "all qualified -> KO" config for the auto-seeding handover, matching
+/// `tournament_seeding_screen.dart`'s `_config`. The server re-validates and is
+/// the authority; this only satisfies the controller's `config != null`
+/// precondition for the existing `startKoPhase` mechanic.
+KoPhaseConfig _autoKoConfig(int participantCount) {
+  final n = participantCount < 2 ? 2 : participantCount;
+  return KoPhaseConfig(qualifierCount: n, participantCount: n);
 }
 
 /// CF6 (K19) seeding-mode discriminator — read from `ko_config.seeding_mode`
