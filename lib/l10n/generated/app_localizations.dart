@@ -286,6 +286,48 @@ abstract class AppLocalizations {
   /// **'Steuerung'**
   String get organizerControlSectionTitle;
 
+  /// Section title above the escalation badges on the dashboard detail screen (B3)
+  ///
+  /// In de, this message translates to:
+  /// **'Eingriffe'**
+  String get organizerEscalationSectionTitle;
+
+  /// Escalation badge showing the number of disputed matches needing an override
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, one{1 strittig} other{{count} strittig}}'**
+  String organizerEscalationDisputedBadge(int count);
+
+  /// Escalation badge showing the number of open/awaiting matches that can be forfeited
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, one{1 offen} other{{count} offen}}'**
+  String organizerEscalationOpenBadge(int count);
+
+  /// Shown when there are no disputed or open matches needing an intervention
+  ///
+  /// In de, this message translates to:
+  /// **'Keine offenen Eingriffe'**
+  String get organizerEscalationNone;
+
+  /// CTA on the dashboard detail screen that starts the KO phase (auto seeding) or opens the seeding editor (manual)
+  ///
+  /// In de, this message translates to:
+  /// **'KO-Phase starten'**
+  String get organizerKoTransitionAction;
+
+  /// Per-match CTA on a disputed match that routes to the organizer override screen
+  ///
+  /// In de, this message translates to:
+  /// **'Korrigieren'**
+  String get organizerMatchActionOverride;
+
+  /// Per-match CTA on an open/awaiting match that opens the forfeit sheet
+  ///
+  /// In de, this message translates to:
+  /// **'Forfait'**
+  String get organizerMatchActionForfeit;
+
   /// AppBar eyebrow for the stage-graph builder screen
   ///
   /// In de, this message translates to:

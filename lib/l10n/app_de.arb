@@ -143,6 +143,44 @@
   "@organizerControlSectionTitle": {
     "description": "Section title above the schedule control bar on the detail screen"
   },
+  "organizerEscalationSectionTitle": "Eingriffe",
+  "@organizerEscalationSectionTitle": {
+    "description": "Section title above the escalation badges on the dashboard detail screen (B3)"
+  },
+  "organizerEscalationDisputedBadge": "{count, plural, one{1 strittig} other{{count} strittig}}",
+  "@organizerEscalationDisputedBadge": {
+    "description": "Escalation badge showing the number of disputed matches needing an override",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "organizerEscalationOpenBadge": "{count, plural, one{1 offen} other{{count} offen}}",
+  "@organizerEscalationOpenBadge": {
+    "description": "Escalation badge showing the number of open/awaiting matches that can be forfeited",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "organizerEscalationNone": "Keine offenen Eingriffe",
+  "@organizerEscalationNone": {
+    "description": "Shown when there are no disputed or open matches needing an intervention"
+  },
+  "organizerKoTransitionAction": "KO-Phase starten",
+  "@organizerKoTransitionAction": {
+    "description": "CTA on the dashboard detail screen that starts the KO phase (auto seeding) or opens the seeding editor (manual)"
+  },
+  "organizerMatchActionOverride": "Korrigieren",
+  "@organizerMatchActionOverride": {
+    "description": "Per-match CTA on a disputed match that routes to the organizer override screen"
+  },
+  "organizerMatchActionForfeit": "Forfait",
+  "@organizerMatchActionForfeit": {
+    "description": "Per-match CTA on an open/awaiting match that opens the forfeit sheet"
+  },
   "stageGraphEyebrow": "Turnier-Baukasten",
   "@stageGraphEyebrow": {
     "description": "AppBar eyebrow for the stage-graph builder screen"

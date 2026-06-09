@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
+import 'package:kubb_app/features/tournament/application/tournament_bracket_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
+import 'package:kubb_app/features/tournament/application/tournament_seeding_controller.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/organizer_dashboard_detail_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/schedule_control_bar.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/tournament_forfeit_sheet.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -39,7 +43,25 @@ class _SpyRemote extends FakeTournamentRemote {
   Future<void> startTournament(TournamentId id) async => calls.add('start');
 }
 
-TournamentDetail _detail({String? clubId}) => TournamentDetail(
+/// Seeding controller stub that only records the `startKoPhase` invocation —
+/// used to assert the auto-seeding KO handover dispatches the EXISTING
+/// startKoPhase mechanic (B3 DOD-05) without touching the real RPC path.
+class _SpyController extends TournamentSeedingController {
+  _SpyController() : super(_id);
+
+  int startKoCalls = 0;
+
+  @override
+  Future<void> startKoPhase() async => startKoCalls++;
+}
+
+TournamentDetail _detail({
+  String? clubId,
+  TournamentStatus status = TournamentStatus.live,
+  TournamentFormat format = TournamentFormat.swiss,
+  Map<String, Object?> setup = const <String, Object?>{},
+}) =>
+    TournamentDetail(
       tournament: TournamentDetailHeader(
         tournamentId: 't-1',
         displayName: 'Sommer-Cup',
@@ -49,23 +71,28 @@ TournamentDetail _detail({String? clubId}) => TournamentDetail(
         maxTeamSize: 1,
         minParticipants: 2,
         maxParticipants: 8,
-        format: TournamentFormat.swiss,
+        format: format,
         scoring: TournamentScoring.ekc,
         matchFormatConfig: const <String, Object?>{},
         tiebreakerOrder: const ['pts'],
         byePoints: null,
         forfeitPoints: null,
-        status: TournamentStatus.live,
+        status: status,
         publishedAt: null,
         startedAt: null,
         completedAt: null,
+        setup: setup,
       ),
       participants: const [],
       matches: const [],
       auditTail: const [],
     );
 
-TournamentMatchRef _match(int round, int n, {bool disputed = false}) =>
+TournamentMatchRef _match(
+  int round,
+  int n, {
+  TournamentMatchStatus status = TournamentMatchStatus.scheduled,
+}) =>
     TournamentMatchRef(
       matchId: TournamentMatchId('m-$round-$n'),
       tournamentId: _id,
@@ -73,9 +100,7 @@ TournamentMatchRef _match(int round, int n, {bool disputed = false}) =>
       matchNumberInRound: n,
       participantA: TournamentParticipantId('a$n'),
       participantB: TournamentParticipantId('b$n'),
-      status: disputed
-          ? TournamentMatchStatus.disputed
-          : TournamentMatchStatus.scheduled,
+      status: status,
       consensusRound: 0,
       participantADisplayName: 'Team A$n',
       participantBDisplayName: 'Team B$n',
@@ -101,17 +126,50 @@ TournamentRoundScheduleRef _schedule(
       pausedAccumSeconds: 0,
     );
 
+/// Spy router: records every pushed location so the B3 link tests can assert
+/// the contextual actions navigate to the EXISTING override / seeding routes.
+class _RouteSpy {
+  final List<String> pushed = <String>[];
+}
+
 Future<void> _pump(
   WidgetTester tester, {
   required bool canAdminister,
   TournamentRemote? remote,
   List<TournamentMatchRef> matches = const [],
   TournamentRoundScheduleRef? schedule,
+  TournamentDetail? detail,
+  Bracket? bracket,
+  TournamentSeedingController? seedingController,
+  _RouteSpy? routeSpy,
 }) async {
+  final spy = routeSpy ?? _RouteSpy();
+  final router = GoRouter(
+    initialLocation: '/tournament/t-1/dashboard',
+    observers: [_PushObserver(spy)],
+    routes: [
+      GoRoute(
+        path: '/tournament/t-1/dashboard',
+        builder: (_, _) =>
+            const OrganizerDashboardDetailScreen(tournamentId: _id),
+      ),
+      // Destination stubs so the spy router can resolve the contextual links.
+      GoRoute(
+        path: '/tournament/:id/match/:mid/override',
+        builder: (_, _) => const Scaffold(body: Text('OVERRIDE')),
+      ),
+      GoRoute(
+        path: '/tournament/:id/seeding',
+        builder: (_, _) => const Scaffold(body: Text('SEEDING')),
+      ),
+    ],
+  );
+
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        tournamentDetailProvider(_id).overrideWith((_) async => _detail()),
+        tournamentDetailProvider(_id)
+            .overrideWith((_) async => detail ?? _detail()),
         canAdministerTournamentProvider((
           clubId: null,
           createdBy: _creator,
@@ -126,34 +184,65 @@ Future<void> _pump(
                   },
           ),
         ),
+        // Bracket: by default the group phase throws (no KO rows yet) →
+        // "no bracket". A provided bracket models the KO phase already running.
+        tournamentBracketProvider(_id).overrideWith(
+          (_) async => bracket ?? (throw ArgumentError('no ko matches')),
+        ),
+        if (seedingController != null)
+          tournamentSeedingControllerProvider(_id)
+              .overrideWith(() => seedingController),
         if (remote != null) tournamentRemoteProvider.overrideWithValue(remote),
       ],
-      child: MaterialApp(
+      child: MaterialApp.router(
         theme: KubbTheme.light(),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const OrganizerDashboardDetailScreen(tournamentId: _id),
+        routerConfig: router,
       ),
     ),
   );
   await tester.pumpAndSettle();
 }
 
+/// Captures pushed routes by mirroring GoRouter's location into the spy on
+/// every push (covers both `context.push` and `context.go`).
+class _PushObserver extends NavigatorObserver {
+  _PushObserver(this.spy);
+  final _RouteSpy spy;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    final name = route.settings.name;
+    if (name != null) spy.pushed.add(name);
+    super.didPush(route, previousRoute);
+  }
+}
+
 void main() {
+  // ─── Existing B4 behaviour (must stay green) ──────────────────────────
+
   testWidgets('renders round/match list with disputed highlight',
       (tester) async {
     await _pump(
       tester,
       canAdminister: true,
-      matches: [_match(1, 1), _match(1, 2, disputed: true), _match(2, 3)],
+      matches: [
+        _match(1, 1),
+        _match(1, 2, status: TournamentMatchStatus.disputed),
+        _match(2, 3),
+      ],
       schedule: _schedule(RoundStatus.running),
     );
 
-    expect(find.text('Runde 1'), findsOneWidget);
-    expect(find.text('Runde 2'), findsOneWidget);
-    expect(find.text('Team A1  vs  Team B1'), findsOneWidget);
-    expect(find.text('Team A3  vs  Team B3'), findsOneWidget);
     expect(find.byType(ScheduleControlBar), findsOneWidget);
+    expect(find.text('Runde 1'), findsOneWidget);
+    expect(find.text('Team A1  vs  Team B1'), findsOneWidget);
+    // The lower rounds sit below the new B3 escalation/KO sections — scroll
+    // them into the lazy list to assert they still render.
+    await tester.scrollUntilVisible(find.text('Team A3  vs  Team B3'), 200);
+    expect(find.text('Runde 2'), findsOneWidget);
+    expect(find.text('Team A3  vs  Team B3'), findsOneWidget);
   });
 
   testWidgets('control bar pause action dispatches pause', (tester) async {
@@ -166,7 +255,6 @@ void main() {
       schedule: _schedule(RoundStatus.running),
     );
 
-    // Running → primary toggle is "Pause".
     await tester.tap(find.text('Pause'));
     await tester.pump();
     expect(spy.calls, contains('pause'));
@@ -211,7 +299,6 @@ void main() {
       schedule: _schedule(RoundStatus.running),
     );
 
-    // A short press must NOT confirm the irreversible action.
     final shortTap =
         await tester.startGesture(tester.getCenter(find.text('Vorspulen')));
     await tester.pump(const Duration(milliseconds: 100));
@@ -219,7 +306,6 @@ void main() {
     await tester.pump();
     expect(spy.calls, isNot(contains('skipForward')));
 
-    // Holding past the hold duration confirms it once.
     final gesture =
         await tester.startGesture(tester.getCenter(find.text('Vorspulen')));
     await tester.pump();
@@ -245,5 +331,162 @@ void main() {
     await _pump(tester, canAdminister: false);
     expect(find.byType(KubbEmptyState), findsOneWidget);
     expect(find.byType(ScheduleControlBar), findsNothing);
+  });
+
+  // ─── B3 contextual intervention links ─────────────────────────────────
+
+  testWidgets('DOD-03: disputed match links to the existing override route',
+      (tester) async {
+    final spy = _RouteSpy();
+    await _pump(
+      tester,
+      canAdminister: true,
+      routeSpy: spy,
+      matches: [_match(1, 1, status: TournamentMatchStatus.disputed)],
+      schedule: _schedule(RoundStatus.running),
+    );
+
+    expect(find.text('Korrigieren'), findsOneWidget);
+    await tester.tap(find.text('Korrigieren'));
+    await tester.pumpAndSettle();
+
+    expect(spy.pushed, contains('/tournament/:id/match/:mid/override'));
+  });
+
+  testWidgets('DOD-03: non-disputed match shows NO override CTA',
+      (tester) async {
+    await _pump(
+      tester,
+      canAdminister: true,
+      matches: [_match(1, 1)], // scheduled
+      schedule: _schedule(RoundStatus.running),
+    );
+    expect(find.text('Korrigieren'), findsNothing);
+  });
+
+  testWidgets('DOD-04: open match opens the existing forfeit sheet',
+      (tester) async {
+    await _pump(
+      tester,
+      canAdminister: true,
+      matches: [_match(1, 1)], // scheduled → open
+      schedule: _schedule(RoundStatus.running),
+    );
+
+    expect(find.text('Forfait'), findsOneWidget);
+    await tester.tap(find.text('Forfait'));
+    await tester.pumpAndSettle();
+
+    // The EXISTING sheet surfaces — no new dialog class is introduced.
+    expect(find.byType(TournamentForfeitSheet), findsOneWidget);
+  });
+
+  testWidgets('DOD-04: finalized match shows neither forfeit nor override CTA',
+      (tester) async {
+    await _pump(
+      tester,
+      canAdminister: true,
+      matches: [_match(1, 1, status: TournamentMatchStatus.finalized)],
+      schedule: _schedule(RoundStatus.running),
+    );
+    expect(find.text('Forfait'), findsNothing);
+    expect(find.text('Korrigieren'), findsNothing);
+  });
+
+  testWidgets(
+      'DOD-05: KO handover (manual seeding, no bracket) routes to seeding',
+      (tester) async {
+    final spy = _RouteSpy();
+    await _pump(
+      tester,
+      canAdminister: true,
+      routeSpy: spy,
+      detail: _detail(
+        setup: const {
+          'ko_config': {'seeding_mode': 'manual'},
+        },
+      ),
+      schedule: _schedule(RoundStatus.running),
+    );
+
+    expect(find.text('KO-Phase starten'), findsOneWidget);
+    await tester.tap(find.text('KO-Phase starten'));
+    await tester.pumpAndSettle();
+
+    expect(spy.pushed, contains('/tournament/:id/seeding'));
+  });
+
+  testWidgets(
+      'DOD-05: KO handover (auto seeding) dispatches startKoPhase (no nav)',
+      (tester) async {
+    final controller = _SpyController();
+    final spy = _RouteSpy();
+    await _pump(
+      tester,
+      canAdminister: true,
+      routeSpy: spy,
+      seedingController: controller,
+      detail: _detail(), // live + no ko_config → auto seeding
+      schedule: _schedule(RoundStatus.running),
+    );
+
+    await tester.tap(find.text('KO-Phase starten'));
+    await tester.pumpAndSettle();
+
+    expect(controller.startKoCalls, 1);
+    expect(spy.pushed, isNot(contains('/tournament/:id/seeding')));
+  });
+
+  testWidgets('DOD-05: with a bracket already built, KO CTA is hidden',
+      (tester) async {
+    await _pump(
+      tester,
+      canAdminister: true,
+      detail: _detail(),
+      bracket: const SingleEliminationBracket(rounds: [
+        BracketRound(number: 1, pairings: []),
+      ]),
+      schedule: _schedule(RoundStatus.running),
+    );
+    expect(find.text('KO-Phase starten'), findsNothing);
+  });
+
+  testWidgets('DOD-07: escalation badges reflect disputed + open counts',
+      (tester) async {
+    await _pump(
+      tester,
+      canAdminister: true,
+      matches: [
+        _match(1, 1), // scheduled → open
+        _match(1, 2, status: TournamentMatchStatus.awaitingResults), // open
+        _match(1, 3, status: TournamentMatchStatus.disputed), // disputed
+        _match(2, 4, status: TournamentMatchStatus.finalized), // neither
+      ],
+      schedule: _schedule(RoundStatus.running),
+    );
+
+    // Badges live near the top of the list and are derived from the counts.
+    expect(find.text('1 strittig'), findsOneWidget);
+    expect(find.text('2 offen'), findsOneWidget);
+    // The associated interventions are reachable in the (scrollable) list —
+    // scroll the disputed override + a forfeit CTA into view to confirm.
+    await tester.scrollUntilVisible(find.text('Korrigieren'), 200);
+    expect(find.text('Korrigieren'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Forfait').first, 200);
+    expect(find.text('Forfait'), findsWidgets);
+  });
+
+  testWidgets('DOD-07: no escalations shows the quiet hint, no badges',
+      (tester) async {
+    await _pump(
+      tester,
+      canAdminister: true,
+      matches: [_match(1, 1, status: TournamentMatchStatus.finalized)],
+      schedule: _schedule(RoundStatus.running),
+    );
+    expect(find.text('Keine offenen Eingriffe'), findsOneWidget);
+    // No count badges rendered.
+    expect(find.textContaining('strittig'), findsNothing);
+    expect(find.textContaining(RegExp(r'\d+ offen')), findsNothing);
   });
 }

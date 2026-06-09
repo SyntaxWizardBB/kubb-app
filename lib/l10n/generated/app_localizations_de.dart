@@ -119,6 +119,43 @@ class AppLocalizationsDe extends AppLocalizations {
   String get organizerControlSectionTitle => 'Steuerung';
 
   @override
+  String get organizerEscalationSectionTitle => 'Eingriffe';
+
+  @override
+  String organizerEscalationDisputedBadge(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count strittig',
+      one: '1 strittig',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String organizerEscalationOpenBadge(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count offen',
+      one: '1 offen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get organizerEscalationNone => 'Keine offenen Eingriffe';
+
+  @override
+  String get organizerKoTransitionAction => 'KO-Phase starten';
+
+  @override
+  String get organizerMatchActionOverride => 'Korrigieren';
+
+  @override
+  String get organizerMatchActionForfeit => 'Forfait';
+
+  @override
   String get stageGraphEyebrow => 'Turnier-Baukasten';
 
   @override
