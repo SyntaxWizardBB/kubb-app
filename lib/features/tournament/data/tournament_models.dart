@@ -72,6 +72,18 @@ const Map<TournamentMatchStatus, String> _matchStatusWire = {
   TournamentMatchStatus.voided: 'voided',
 };
 
+/// Wire mapping for the `status` column on `tournament_round_schedule`
+/// (ADR-0031 Block A1). Mirrors EXACTLY the server CHECK constraint of the
+/// table (migration 20261251000000): published | call | running |
+/// awaiting_results | completed.
+const Map<RoundStatus, String> _roundStatusWire = {
+  RoundStatus.published: 'published',
+  RoundStatus.call: 'call',
+  RoundStatus.running: 'running',
+  RoundStatus.awaitingResults: 'awaiting_results',
+  RoundStatus.completed: 'completed',
+};
+
 /// Wire mapping for the `phase` column on `tournament_matches`. The
 /// `group` value sits outside the bracket — callers filter it out before
 /// projecting into a [BracketPhase].
@@ -191,6 +203,12 @@ extension TournamentStatusWire on TournamentStatus {
 extension TournamentMatchStatusWire on TournamentMatchStatus {
   static TournamentMatchStatus fromWire(String raw) =>
       _enumFromWire(_matchStatusWire, raw, 'TournamentMatchStatus');
+}
+
+extension RoundStatusWire on RoundStatus {
+  static RoundStatus fromWire(String raw) =>
+      _enumFromWire(_roundStatusWire, raw, 'RoundStatus');
+  String toWire() => _roundStatusWire[this]!;
 }
 
 int _asInt(Object? r) => r is int ? r : (r as num).toInt();
@@ -349,6 +367,36 @@ TournamentMatchRef tournamentMatchRefFromCdcRow(Map<String, Object?> row) {
     finalScoreB: _asIntOrNull(row['final_score_b']),
     // M2a: raw CDC table column carries the phase token directly.
     phase: matchPhaseFromWire(row['phase'] as String?),
+  );
+}
+
+/// Decodes a raw `tournament_round_schedule` CDC row (column-name keyed, as
+/// delivered by `RealtimeChannel`) into a domain [TournamentRoundScheduleRef]
+/// (ADR-0031 Block A1/A3c).
+///
+/// Reuses the file's established cast helpers ([_asInt] / [_asIntOrNull] /
+/// [_asDateOrNull]) instead of duplicating parsers. `starts_at`, `ends_at`
+/// and `published_at` are NOT NULL on the table, so they decode via
+/// `_asDateOrNull(...)!`; `stage_node_id`, `tiebreak_after_seconds` and
+/// `paused_at` are nullable. The `status` string is mapped through
+/// [RoundStatusWire.fromWire] (all five CHECK values).
+TournamentRoundScheduleRef tournamentRoundScheduleRefFromCdcRow(
+  Map<String, Object?> row,
+) {
+  return TournamentRoundScheduleRef(
+    tournamentId: TournamentId(row['tournament_id']! as String),
+    stageNodeId: row['stage_node_id'] as String?,
+    roundNumber: _asInt(row['round_number']),
+    phase: row['phase']! as String,
+    status: RoundStatusWire.fromWire(row['status']! as String),
+    publishedAt: _asDateOrNull(row['published_at'])!,
+    startsAt: _asDateOrNull(row['starts_at'])!,
+    endsAt: _asDateOrNull(row['ends_at'])!,
+    breakSeconds: _asInt(row['break_seconds']),
+    matchSeconds: _asInt(row['match_seconds']),
+    tiebreakAfterSeconds: _asIntOrNull(row['tiebreak_after_seconds']),
+    pausedAt: _asDateOrNull(row['paused_at']),
+    pausedAccumSeconds: _asInt(row['paused_accum_seconds']),
   );
 }
 

@@ -1,3 +1,6 @@
+// The explicit `null` arguments in the classic-path schedule test contrast
+// it against the stage / paused rows — that is intentional.
+// ignore_for_file: avoid_redundant_argument_values
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/features/tournament/data/tournament_models.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -360,6 +363,81 @@ void main() {
       expect(c.rounds, hasLength(2));
       expect(c.thirdPlace, isNotNull);
       expect(c.thirdPlace!.phase, BracketPhase.consolationThirdPlace);
+    });
+  });
+
+  // ADR-0031 Block A3c — tournament_round_schedule CDC parser.
+  group('tournamentRoundScheduleRefFromCdcRow', () {
+    Map<String, Object?> scheduleRow({
+      Object? stageNodeId,
+      String status = 'running',
+      Object? tiebreakAfterSeconds = 120,
+      Object? pausedAt,
+      Object? pausedAccumSeconds = 0,
+    }) =>
+        <String, Object?>{
+          'tournament_id': 't-1',
+          'stage_node_id': stageNodeId,
+          'round_number': 2,
+          'phase': 'ko',
+          'status': status,
+          'published_at': '2026-06-01T12:00:00.000Z',
+          'starts_at': '2026-06-01T12:05:00.000Z',
+          'ends_at': '2026-06-01T12:35:00.000Z',
+          'break_seconds': 300,
+          'match_seconds': 1800,
+          'tiebreak_after_seconds': tiebreakAfterSeconds,
+          'paused_at': pausedAt,
+          'paused_accum_seconds': pausedAccumSeconds,
+        };
+
+    test('maps all schedule fields from the raw CDC row', () {
+      final ref = tournamentRoundScheduleRefFromCdcRow(
+        scheduleRow(stageNodeId: 'node-7', pausedAt: '2026-06-01T12:10:00.000Z',
+            pausedAccumSeconds: 45),
+      );
+      expect(ref.tournamentId, const TournamentId('t-1'));
+      expect(ref.stageNodeId, 'node-7');
+      expect(ref.roundNumber, 2);
+      expect(ref.phase, 'ko');
+      expect(ref.status, RoundStatus.running);
+      expect(ref.publishedAt, DateTime.utc(2026, 6, 1, 12));
+      expect(ref.startsAt, DateTime.utc(2026, 6, 1, 12, 5));
+      expect(ref.endsAt, DateTime.utc(2026, 6, 1, 12, 35));
+      expect(ref.breakSeconds, 300);
+      expect(ref.matchSeconds, 1800);
+      expect(ref.tiebreakAfterSeconds, 120);
+      expect(ref.pausedAt, DateTime.utc(2026, 6, 1, 12, 10));
+      expect(ref.pausedAccumSeconds, 45);
+    });
+
+    test('classic path: NULL stage_node_id / paused_at / tiebreak decode', () {
+      final ref = tournamentRoundScheduleRefFromCdcRow(
+        scheduleRow(
+          stageNodeId: null,
+          tiebreakAfterSeconds: null,
+          pausedAt: null,
+        ),
+      );
+      expect(ref.stageNodeId, isNull);
+      expect(ref.tiebreakAfterSeconds, isNull);
+      expect(ref.pausedAt, isNull);
+      expect(ref.pausedAccumSeconds, 0);
+    });
+
+    test('maps every status string onto its RoundStatus value', () {
+      const expected = <String, RoundStatus>{
+        'published': RoundStatus.published,
+        'call': RoundStatus.call,
+        'running': RoundStatus.running,
+        'awaiting_results': RoundStatus.awaitingResults,
+        'completed': RoundStatus.completed,
+      };
+      for (final entry in expected.entries) {
+        final ref =
+            tournamentRoundScheduleRefFromCdcRow(scheduleRow(status: entry.key));
+        expect(ref.status, entry.value, reason: entry.key);
+      }
     });
   });
 }

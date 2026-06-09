@@ -6,6 +6,7 @@ import 'package:kubb_domain/src/tournament/ko_phase.dart';
 import 'package:kubb_domain/src/tournament/pool_group_standings.dart';
 import 'package:kubb_domain/src/tournament/pool_phase.dart';
 import 'package:kubb_domain/src/tournament/roster_slot.dart';
+import 'package:kubb_domain/src/tournament/round_schedule.dart';
 import 'package:kubb_domain/src/tournament/shootout.dart';
 import 'package:kubb_domain/src/values/ids.dart';
 import 'package:meta/meta.dart';
@@ -777,6 +778,29 @@ abstract interface class TournamentRemote {
   /// uses it to invalidate the bracket view without re-fetching the
   /// full match list.
   Stream<BracketAdvanceEvent> watchBracketAdvances(TournamentId tournamentId);
+
+  // Timed runner (ADR-0031 Block A3b/A3c)
+
+  /// Server-authoritative clock source (ADR-0031 §Uhr). Calls the
+  /// `app_server_now()` RPC and returns the server's `now()` as UTC. The
+  /// client derives a skew offset `offset = serverNow - DateTime.now().toUtc()`
+  /// once at app start / reconnect and renders `now = DateTime.now() + offset`
+  /// with a pure 1s UI ticker — a rare offset-sync, never a per-second poll
+  /// (ADR-0029).
+  Future<DateTime> fetchServerNow();
+
+  /// Realtime-Subscribe für die Runden-Schedule eines Turniers (ADR-0031
+  /// Block A1/A3c). Fires on insert/update of any
+  /// `tournament_round_schedule` row carrying the given [tournamentId]
+  /// (the CDC filter column). Each event carries the per-round timestamps
+  /// (`starts_at`/`ends_at`), the round [RoundStatus], and the pause anchors
+  /// (`paused_at`/`paused_accum_seconds`) the runner uses to drive the
+  /// server-/pause-corrected countdown. Implementations route through the
+  /// `RealtimeChannel` port and translate raw CDC payloads into a
+  /// [TournamentRoundScheduleRef]; DELETE events are filtered out.
+  Stream<TournamentRoundScheduleRef> watchRoundSchedule(
+    TournamentId tournamentId,
+  );
 
   // KO-Phase (M2.2 — see architecture.md §4 and ADR-0017)
 

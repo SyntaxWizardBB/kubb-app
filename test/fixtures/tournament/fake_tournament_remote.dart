@@ -103,6 +103,21 @@ class FakeTournamentRemote implements TournamentRemote {
         filterValue: tournamentId.value,
       );
 
+  /// Channel key for the `tournament_round_schedule` slice of [tournamentId]
+  /// (ADR-0031 Block A3c). Tests address `realtime.emit` with this key to
+  /// drive [watchRoundSchedule] events.
+  static String roundScheduleChannelKeyFor(TournamentId tournamentId) =>
+      fakeRealtimeChannelKey(
+        table: 'tournament_round_schedule',
+        filterColumn: 'tournament_id',
+        filterValue: tournamentId.value,
+      );
+
+  /// Server `now()` the [fetchServerNow] stub returns (ADR-0031 §Uhr).
+  /// Tests set this to a fixed UTC instant to assert the derived skew
+  /// offset. Defaults to the local UTC clock (zero nominal skew).
+  DateTime serverNow = DateTime.now().toUtc();
+
   final Map<TournamentId, _Tournament> _tournaments =
       <TournamentId, _Tournament>{};
   final Map<TournamentParticipantId, _Participant> _participants =
@@ -597,6 +612,23 @@ class FakeTournamentRemote implements TournamentRemote {
         .map(_bracketAdvanceFromChange);
   }
 
+  @override
+  Future<DateTime> fetchServerNow() async => serverNow;
+
+  @override
+  Stream<TournamentRoundScheduleRef> watchRoundSchedule(
+    TournamentId tournamentId,
+  ) {
+    return realtime
+        .subscribe(
+          table: 'tournament_round_schedule',
+          filterColumn: 'tournament_id',
+          filterValue: tournamentId.value,
+        )
+        .where((c) => c.eventType != RealtimeEventType.delete)
+        .map((c) => _tournamentRoundScheduleRefFromCdcRow(c.newRow));
+  }
+
   bool _isBracketAdvanceChange(RealtimeChange change) {
     if (change.eventType == RealtimeEventType.delete) return false;
     final status = change.newRow['status'];
@@ -651,6 +683,43 @@ class FakeTournamentRemote implements TournamentRemote {
       finalScoreA: _asIntOrNull(row['final_score_a']),
       finalScoreB: _asIntOrNull(row['final_score_b']),
     );
+  }
+
+  TournamentRoundScheduleRef _tournamentRoundScheduleRefFromCdcRow(
+    Map<String, Object?> row,
+  ) {
+    return TournamentRoundScheduleRef(
+      tournamentId: TournamentId(row['tournament_id']! as String),
+      stageNodeId: row['stage_node_id'] as String?,
+      roundNumber: _asInt(row['round_number']),
+      phase: row['phase']! as String,
+      status: _roundStatusFromWire(row['status']! as String),
+      publishedAt: _asDateOrNull(row['published_at'])!,
+      startsAt: _asDateOrNull(row['starts_at'])!,
+      endsAt: _asDateOrNull(row['ends_at'])!,
+      breakSeconds: _asInt(row['break_seconds']),
+      matchSeconds: _asInt(row['match_seconds']),
+      tiebreakAfterSeconds: _asIntOrNull(row['tiebreak_after_seconds']),
+      pausedAt: _asDateOrNull(row['paused_at']),
+      pausedAccumSeconds: _asInt(row['paused_accum_seconds']),
+    );
+  }
+
+  RoundStatus _roundStatusFromWire(String raw) {
+    switch (raw) {
+      case 'published':
+        return RoundStatus.published;
+      case 'call':
+        return RoundStatus.call;
+      case 'running':
+        return RoundStatus.running;
+      case 'awaiting_results':
+        return RoundStatus.awaitingResults;
+      case 'completed':
+        return RoundStatus.completed;
+      default:
+        throw ArgumentError.value(raw, 'raw', 'Unknown RoundStatus');
+    }
   }
 
   int _asInt(Object? r) {

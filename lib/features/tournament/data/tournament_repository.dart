@@ -845,6 +845,34 @@ class TournamentRepository implements TournamentRemote {
   }
 
   @override
+  Future<DateTime> fetchServerNow() async {
+    // ADR-0031 §Uhr (Block A3b): rare offset-sync source. The RPC returns
+    // the server's now() as `timestamptz`; supabase ships it as an ISO-8601
+    // string the client compares against DateTime.now().toUtc(). Normalise
+    // to UTC so the offset arithmetic is timezone-clean.
+    final raw = await _client.rpc<Object?>('app_server_now');
+    return DateTime.parse(raw! as String).toUtc();
+  }
+
+  @override
+  Stream<TournamentRoundScheduleRef> watchRoundSchedule(
+    TournamentId tournamentId,
+  ) {
+    // Same subscribe signature as watchTournamentMatches: the per-tournament
+    // CDC channel filtered on the tournament_id column. DELETE events are
+    // dropped (the consumer only reacts to inserts/updates) and the raw row
+    // is projected through the schedule CDC parser.
+    return _realtime
+        .subscribe(
+          table: 'tournament_round_schedule',
+          filterColumn: 'tournament_id',
+          filterValue: tournamentId.value,
+        )
+        .where((c) => c.eventType != RealtimeEventType.delete)
+        .map((c) => tournamentRoundScheduleRefFromCdcRow(c.newRow));
+  }
+
+  @override
   Future<TournamentParticipantId> registerTeam({
     required TournamentId tournamentId,
     required TeamId teamId,

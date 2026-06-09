@@ -10,6 +10,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_status_chip.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/application/outbox_pending_provider.dart';
 import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
+import 'package:kubb_app/features/tournament/application/server_clock_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
@@ -559,19 +560,51 @@ class _TournamentMatchDetailScreenState
         // and the tournament exposes a round time limit. Crossing expiry
         // vibrates once and flips to the result-entry CTA.
         if (!readOnly && match.startedAt != null)
-          Builder(builder: (context) {
+          Consumer(builder: (context, ref, _) {
             final cfg = detailAsync.maybeWhen<Map<String, Object?>>(
               data: (d) => d?.tournament.matchFormatConfig ?? const {},
               orElse: () => const {},
             );
             final duration = _roundTimeSeconds(cfg);
             if (duration <= 0) return const SizedBox.shrink();
+
+            // ADR-0031 §Uhr / Block A3c: feed the clock from the server skew
+            // offset and the matching tournament_round_schedule row. While
+            // the offset is loading, or the schedule has no row for this
+            // round (running legacy tournaments — OE-5/A4 fallback), the
+            // clock degrades to the plain started_at uhr (zero offset, no
+            // pause/hold) — no regression for existing tournaments.
+            final tid = TournamentId(widget.tournamentId);
+            final offset = ref
+                .watch(serverClockOffsetProvider)
+                .maybeWhen<Duration>(
+                  data: (d) => d,
+                  orElse: () => Duration.zero,
+                );
+            final schedule = ref
+                .watch(tournamentRoundScheduleProvider(tid))
+                .maybeWhen<TournamentRoundScheduleRef?>(
+                  data: (rows) => rows[(
+                    roundNumber: match.roundNumber,
+                    stageNodeId: null,
+                  )],
+                  orElse: () => null,
+                );
+            // Hold while the round is awaiting results (ADR-0031 §6: the clock
+            // freezes at the match end until the result is entered).
+            final onHold =
+                schedule?.status == RoundStatus.awaitingResults;
+
             return Padding(
               padding: const EdgeInsets.only(bottom: KubbTokens.space3),
               child: MatchCountdown(
                 startedAt: match.startedAt!,
                 durationSeconds: duration,
                 tiebreakAfterSeconds: _tiebreakAfterSeconds(cfg),
+                serverOffset: offset,
+                pausedAt: schedule?.pausedAt,
+                pausedAccumSeconds: schedule?.pausedAccumSeconds ?? 0,
+                onHold: onHold,
               ),
             );
           }),
