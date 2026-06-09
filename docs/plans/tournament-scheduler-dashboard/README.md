@@ -32,9 +32,17 @@ A  (Fundament: tournament_round_schedule, paused_at, app_server_now, MatchTimer,
   `referee`-Ergänzung (Phase B) re-bast auf **`…031`** (`ARRAY['owner','admin','organizer','referee']`).
 - **K2 — Notify-Helper-Body in `…242`.** `_tournament_notify_participants` + der kind-CHECK sind
   zuletzt in `20261242000000` definiert (16 kinds). Jedes Re-Base in Phase C darauf.
-- **K3 — Materialisierungs-RPC-Bodies in `…032` / `…247`.** Die 4 Lifecycle-RPCs in `20261201000032`,
-  `tournament_generate_stage_matches` in `20261247000000`. Phase A/C re-basen darauf (Stale-Body-Diff!).
-  Reihenfolge beachten: wer nach A kommt, re-bast auf die A-Version (mit Schedule-Zeile).
+- **K3 — Materialisierungs-RPC-Bodies: pro Funktion den ECHTEN letzten On-Disk-Body re-basen
+  (NICHT pauschal `…032`!).** Verifizierte letzte Definitionen (höchster Timestamp, committet):
+  `tournament_start` → **`20261201000040`** (Open-Registration-Modell: Start aus
+  `registration_open|registration_closed`); `tournament_start_ko_phase` → **`20261210000000`**
+  (CF6 Shootout-Gate/Resolve + `seeding_required`-Gate); `tournament_start_pool_phase` →
+  `20261201000032`; `tournament_pair_round` → `20261201000032`; `tournament_generate_stage_matches`
+  → `20261247000000`. **Vor jedem `CREATE OR REPLACE` per `grep -rl 'FUNCTION public.<fn>(' …` den
+  höchsten Timestamp ermitteln** — `…032` ist für `tournament_start`/`tournament_start_ko_phase`
+  VERALTET (es gibt spätere Redefinitionen). Body-Diff: nur die `PERFORM _tournament_upsert_round_
+  schedule(...)`-Zeile darf neu sein. Reihenfolge: wer nach A kommt (z.B. C1), re-bast auf die
+  A-Version (mit Schedule-Zeile).
 - **K4 — Rollenmenge (organizer-Divergenz).** ADR/Spec nennen `{owner,admin,referee}`; das Server-Gate
   hat zusätzlich `organizer`. **Entscheid: Zugang = Creator + {owner,admin,organizer,referee}** (Server-
   Gate ist Wahrheit; Client spiegelt exakt). Gilt für B (Dashboard), D (Check-in), und implizit alle

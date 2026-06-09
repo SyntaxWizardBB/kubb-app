@@ -13,12 +13,14 @@ nur auf aktueller Definition, Design-System verbindlich, Solo-Training TABU).
 > startet Phase A bei **`20261251000000`**. Vor dem Bau prüfen, ob T1 schon gemergt ist,
 > und ggf. fortlaufend anpassen.
 
-> **RE-BASE-PFLICHT (höchstes Risiko):** Die 5 Materialisierungs-RPCs (`tournament_start`,
-> `tournament_start_pool_phase`, `tournament_pair_round`, `tournament_start_ko_phase`)
-> sind zuletzt in **`20261201000032_tournament_per_tournament_manage_gate.sql`** definiert,
-> `tournament_generate_stage_matches` in **`20261247…`**. Jedes `CREATE OR REPLACE` MUSS
-> auf dem echten letzten On-Disk-Body re-basen (Diff!), sonst wird das Per-Tournament-Gate
-> `tournament_caller_can_manage` zurückgespielt. Nur die eingefügte
+> **RE-BASE-PFLICHT (höchstes Risiko — siehe README K3):** Pro Funktion den ECHTEN letzten
+> On-Disk-Body re-basen, NICHT pauschal `…032`. Verifiziert: `tournament_start` →
+> **`20261201000040`** (Open-Registration: Start aus `registration_open|registration_closed`);
+> `tournament_start_ko_phase` → **`20261210000000`** (Shootout-Gate/Resolve + `seeding_required`);
+> `tournament_start_pool_phase` → `20261201000032`; `tournament_pair_round` → `20261201000032`;
+> `tournament_generate_stage_matches` → `20261247000000`. Vor jedem `CREATE OR REPLACE` per
+> `grep -rl 'FUNCTION public.<fn>('` den höchsten Timestamp ermitteln. Sonst wird spätere Logik
+> (Per-Tournament-Gate, Open-Registration, CF6) stillschweigend zurückgespielt. Nur die eingefügte
 > `PERFORM _tournament_upsert_round_schedule(...)`-Zeile darf neu sein.
 
 ## Bau-Reihenfolge (Domain → Server → Client), je 1 Commit/Block
@@ -91,8 +93,9 @@ Config-Ableitung pro Phase (keine neuen Felder, E2 gelockt):
   `break_between_matches_seconds`, `tiebreak_after_seconds`, `final_no_tiebreak`) je Runde,
   Fallback `ko_match_format`.
 
-**Migration 2:** `20261252000000_round_schedule_materialize.sql` — re-basiert die 5 RPCs auf
-ihre `…032`/`…247`-Bodies und fügt je `PERFORM _tournament_upsert_round_schedule(...)` ein:
+**Migration 2:** `20261252000000_round_schedule_materialize.sql` — re-basiert die 5 RPCs auf ihre
+ECHTEN letzten Bodies (K3: start→…040, start_ko_phase→…210, pool_phase/pair_round→…032,
+generate_stage_matches→…247) und fügt je `PERFORM _tournament_upsert_round_schedule(...)` ein:
 1. `tournament_start` (Runde 1; nur aktive Runde, auch bei round_robin — OE-2).
 2. `tournament_start_pool_phase` (`phase='group'`, Runde 1).
 3. `tournament_pair_round` (swiss, neue Runde).
