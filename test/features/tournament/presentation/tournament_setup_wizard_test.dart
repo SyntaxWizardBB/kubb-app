@@ -192,6 +192,24 @@ class _FakeTournamentRemote implements TournamentRemote {
       const Stream<TournamentRoundScheduleRef>.empty();
 
   @override
+  Future<List<TournamentAdminCardRef>> listAdministrableTournaments() =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> pauseTournament(TournamentId id) => throw UnimplementedError();
+
+  @override
+  Future<void> resumeTournament(TournamentId id) => throw UnimplementedError();
+
+  @override
+  Future<void> skipScheduleForward(TournamentId id) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> skipScheduleBackward(TournamentId id) =>
+      throw UnimplementedError();
+
+  @override
   Future<void> setSeeding({
     required TournamentId tournamentId,
     required Map<TournamentParticipantId, int> seeds,

@@ -872,6 +872,38 @@ class TournamentRepository implements TournamentRemote {
         .map((c) => tournamentRoundScheduleRefFromCdcRow(c.newRow));
   }
 
+  // Organizer dashboard (ADR-0031 Phase B). The domain port (Block B0)
+  // defines the contract; the concrete RPC wiring lands in Blocks B1c
+  // (list) and B2c (pause/resume/skip). These stubs keep the adapter
+  // conforming and the tree buildable in the meantime — no production
+  // call site reaches them before the dashboard providers exist.
+  @override
+  Future<List<TournamentAdminCardRef>> listAdministrableTournaments() {
+    throw UnimplementedError(
+      'listAdministrableTournaments lands in Block B1c',
+    );
+  }
+
+  @override
+  Future<void> pauseTournament(TournamentId id) {
+    throw UnimplementedError('pauseTournament lands in Block B2c');
+  }
+
+  @override
+  Future<void> resumeTournament(TournamentId id) {
+    throw UnimplementedError('resumeTournament lands in Block B2c');
+  }
+
+  @override
+  Future<void> skipScheduleForward(TournamentId id) {
+    throw UnimplementedError('skipScheduleForward lands in Block B2c');
+  }
+
+  @override
+  Future<void> skipScheduleBackward(TournamentId id) {
+    throw UnimplementedError('skipScheduleBackward lands in Block B2c');
+  }
+
   @override
   Future<TournamentParticipantId> registerTeam({
     required TournamentId tournamentId,

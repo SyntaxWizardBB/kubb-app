@@ -629,6 +629,26 @@ class FakeTournamentRemote implements TournamentRemote {
         .map((c) => _tournamentRoundScheduleRefFromCdcRow(c.newRow));
   }
 
+  // Organizer dashboard (ADR-0031 Phase B). Contract defined by Block B0;
+  // the dashboard providers/actions that exercise these land in B1c/B2c,
+  // which will flesh out the fake's behaviour. For now they keep the fake
+  // conforming with benign defaults (no admin cards, no-op controls).
+  @override
+  Future<List<TournamentAdminCardRef>> listAdministrableTournaments() async =>
+      const <TournamentAdminCardRef>[];
+
+  @override
+  Future<void> pauseTournament(TournamentId id) async {}
+
+  @override
+  Future<void> resumeTournament(TournamentId id) async {}
+
+  @override
+  Future<void> skipScheduleForward(TournamentId id) async {}
+
+  @override
+  Future<void> skipScheduleBackward(TournamentId id) async {}
+
   bool _isBracketAdvanceChange(RealtimeChange change) {
     if (change.eventType == RealtimeEventType.delete) return false;
     final status = change.newRow['status'];

@@ -107,6 +107,86 @@ class TournamentSummaryRef {
       );
 }
 
+/// Read-side snapshot of one administrable tournament for the organizer
+/// dashboard / cockpit (ADR-0031 §Dashboard, Phase B). Pure data — no
+/// Flutter/Supabase imports. Backed by the `tournament_list_administrable`
+/// RPC, which LEFT JOINs `tournament_round_schedule`, so the schedule-side
+/// fields ([currentRound], [scheduleStatus], [remainingSeconds], [pausedAt])
+/// are all nullable: a published/live tournament with no schedule row yet
+/// (the LEFT-JOIN-NULL path) is fully constructible without them.
+@immutable
+class TournamentAdminCardRef {
+  const TournamentAdminCardRef({
+    required this.tournamentId,
+    required this.displayName,
+    required this.format,
+    required this.status,
+    this.currentRound,
+    this.scheduleStatus,
+    this.remainingSeconds,
+    this.openMatchCount = 0,
+    this.disputedMatchCount = 0,
+    this.pausedAt,
+  });
+
+  final TournamentId tournamentId;
+  final String displayName;
+  final TournamentFormat format;
+  final TournamentStatus status;
+
+  /// 1-based number of the currently active round, or `null` when the
+  /// tournament has no schedule row yet (LEFT-JOIN-NULL path).
+  final int? currentRound;
+
+  /// Status of the active round's schedule, or `null` when no schedule row
+  /// exists yet. Reuses the canonical [RoundStatus] from
+  /// `round_schedule.dart` for wire parity — no parallel enum.
+  final RoundStatus? scheduleStatus;
+
+  /// Server-computed remaining seconds of the active round window
+  /// (`app_server_now()`-based formula), or `null` without a schedule row.
+  final int? remainingSeconds;
+
+  /// Count of matches still open (`scheduled` | `awaiting_results`).
+  final int openMatchCount;
+
+  /// Count of matches currently disputed — drives the escalation badge.
+  final int disputedMatchCount;
+
+  /// Anchor of the tournament-wide pause on the active schedule row (K5),
+  /// or `null` when not paused / no schedule row exists.
+  final DateTime? pausedAt;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TournamentAdminCardRef &&
+          other.tournamentId == tournamentId &&
+          other.displayName == displayName &&
+          other.format == format &&
+          other.status == status &&
+          other.currentRound == currentRound &&
+          other.scheduleStatus == scheduleStatus &&
+          other.remainingSeconds == remainingSeconds &&
+          other.openMatchCount == openMatchCount &&
+          other.disputedMatchCount == disputedMatchCount &&
+          other.pausedAt == pausedAt;
+
+  @override
+  int get hashCode => Object.hash(
+        tournamentId,
+        displayName,
+        format,
+        status,
+        currentRound,
+        scheduleStatus,
+        remainingSeconds,
+        openMatchCount,
+        disputedMatchCount,
+        pausedAt,
+      );
+}
+
 /// One entry of "tournaments the caller is registered for" — a
 /// [TournamentSummaryRef] paired with the caller's own participant id and
 /// registration status. Lets the hub's registrations list render the row
@@ -801,6 +881,34 @@ abstract interface class TournamentRemote {
   Stream<TournamentRoundScheduleRef> watchRoundSchedule(
     TournamentId tournamentId,
   );
+
+  // Organizer dashboard (ADR-0031 Phase B — Veranstalter-Cockpit)
+
+  /// Lists the tournaments the caller may administer (Creator OR an active
+  /// club role in {owner, admin, organizer, referee} — K4). Backed by the
+  /// `tournament_list_administrable` RPC; each card carries the active
+  /// round's schedule status, remaining seconds, and open/disputed match
+  /// counts so the dashboard renders without an N+1 fan-out.
+  Future<List<TournamentAdminCardRef>> listAdministrableTournaments();
+
+  /// Tournament-wide pause (K5). Writes `paused_at = now()` on the active
+  /// `tournament_round_schedule` row when not already paused (idempotent);
+  /// the Restzeit-Formel then freezes the clock. Never touches
+  /// `tournament_matches`.
+  Future<void> pauseTournament(TournamentId id);
+
+  /// Resumes a paused tournament. Credits the elapsed pause back into
+  /// `paused_accum_seconds` and clears `paused_at` on the active schedule
+  /// row (idempotent).
+  Future<void> resumeTournament(TournamentId id);
+
+  /// Skips the active round's call window forward — starts play now
+  /// (`starts_at = now()`, status `running`). Writes only the schedule row.
+  Future<void> skipScheduleForward(TournamentId id);
+
+  /// Re-opens the active round's call window — re-announces the round
+  /// (status `call`, a fresh break window). Writes only the schedule row.
+  Future<void> skipScheduleBackward(TournamentId id);
 
   // KO-Phase (M2.2 — see architecture.md §4 and ADR-0017)
 
