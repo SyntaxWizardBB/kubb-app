@@ -1206,6 +1206,22 @@
   "@statsLongestStreakLabel": {
     "description": "Hero label for longest hit streak"
   },
+  "statsHitsLabel": "Treffer",
+  "@statsHitsLabel": {
+    "description": "Sniper metric label for total hits"
+  },
+  "statsMissesLabel": "Fehlwürfe",
+  "@statsMissesLabel": {
+    "description": "Sniper metric label for total misses"
+  },
+  "statsHeliLabel": "Helikopter",
+  "@statsHeliLabel": {
+    "description": "Sniper metric label for total heli count"
+  },
+  "statsHeliQuotaLabel": "Heli-Quote",
+  "@statsHeliQuotaLabel": {
+    "description": "Sniper metric label for heli quota as percentage of all sticks"
+  },
   "statsTrendTitle": "Verlauf",
   "@statsTrendTitle": {
     "description": "Trend chart section title"

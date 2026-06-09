@@ -26,6 +26,10 @@ class StatsAggregate {
     required this.totalSessions,
     required this.totalThrows,
     required this.hitRatePercent,
+    required this.totalHits,
+    required this.totalMisses,
+    required this.heliCount,
+    required this.heliQuotaPercent,
     required this.longestHitStreak,
     required this.bestHitRatePercent,
     required this.bestHitRateDistance,
@@ -38,6 +42,10 @@ class StatsAggregate {
         totalSessions: 0,
         totalThrows: 0,
         hitRatePercent: 0,
+        totalHits: 0,
+        totalMisses: 0,
+        heliCount: 0,
+        heliQuotaPercent: 0,
         longestHitStreak: 0,
         bestHitRatePercent: 0,
         bestHitRateDistance: null,
@@ -49,6 +57,17 @@ class StatsAggregate {
   final int totalSessions;
   final int totalThrows;
   final int hitRatePercent;
+  final int totalHits;
+  final int totalMisses;
+
+  /// Total helis thrown across the filtered sessions. Counted regardless of
+  /// the heli-tracking toggle's effect on the hit-rate denominator — this is a
+  /// pure display counter.
+  final int heliCount;
+
+  /// Helis as a share of all sticks thrown: helis / (hits + misses + helis),
+  /// rounded to whole percent. Guards divide-by-zero → 0.
+  final int heliQuotaPercent;
   final int longestHitStreak;
   final int bestHitRatePercent;
   final double? bestHitRateDistance;

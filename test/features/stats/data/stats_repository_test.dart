@@ -273,6 +273,41 @@ void main() {
     // With it off, helis leave the quota too, so the rate climbs.
     expect(on.hitRatePercent, 38); // 5 / (5 + 5 + 3) ≈ 38.46%
     expect(off.hitRatePercent, 50); // 5 / (5 + 5)
+    // Heli count and quota are pure display counters: the raw heli total and
+    // its share of all sticks (hits + misses + helis) stay the same whether or
+    // not heli tracking gates the hit-rate denominator.
+    expect(on.heliCount, 3);
+    expect(off.heliCount, 3);
+    expect(on.heliQuotaPercent, 23); // 3 / (5 + 5 + 3) ≈ 23.08%
+    expect(off.heliQuotaPercent, 23);
+    expect(on.totalHits, 5);
+    expect(on.totalMisses, 5);
+  });
+
+  test('heli count and quota aggregate across sessions and are zero without '
+      'helis', () async {
+    await insertSession('s1', hits: 6, misses: 2, helis: 2);
+    await insertSession('s2', hits: 4, misses: 4, helis: 2);
+
+    final agg = await repo.computeAggregate(
+      playerId: 'p1',
+      filter: const StatsFilter(),
+      heliTracking: true,
+    );
+
+    expect(agg.heliCount, 4); // 2 + 2
+    // 4 helis over 20 sticks (10 + 10) = 20%.
+    expect(agg.heliQuotaPercent, 20);
+
+    await insertSession('s3', hits: 5, misses: 5);
+    final agg2 = await repo.computeAggregate(
+      playerId: 'p1',
+      filter: const StatsFilter(),
+      heliTracking: true,
+    );
+    expect(agg2.heliCount, 4); // unchanged, s3 has no helis
+    // 4 helis over 30 sticks = 13.33% → 13.
+    expect(agg2.heliQuotaPercent, 13);
   });
 
   test('heli reduces hit-rate even with helis = 0 keeping the old result',

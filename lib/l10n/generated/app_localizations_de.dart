@@ -907,6 +907,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get statsLongestStreakLabel => 'Längste Serie';
 
   @override
+  String get statsHitsLabel => 'Treffer';
+
+  @override
+  String get statsMissesLabel => 'Fehlwürfe';
+
+  @override
+  String get statsHeliLabel => 'Helikopter';
+
+  @override
+  String get statsHeliQuotaLabel => 'Heli-Quote';
+
+  @override
   String get statsTrendTitle => 'Verlauf';
 
   @override

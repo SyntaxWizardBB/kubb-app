@@ -1744,6 +1744,30 @@ abstract class AppLocalizations {
   /// **'Längste Serie'**
   String get statsLongestStreakLabel;
 
+  /// Sniper metric label for total hits
+  ///
+  /// In de, this message translates to:
+  /// **'Treffer'**
+  String get statsHitsLabel;
+
+  /// Sniper metric label for total misses
+  ///
+  /// In de, this message translates to:
+  /// **'Fehlwürfe'**
+  String get statsMissesLabel;
+
+  /// Sniper metric label for total heli count
+  ///
+  /// In de, this message translates to:
+  /// **'Helikopter'**
+  String get statsHeliLabel;
+
+  /// Sniper metric label for heli quota as percentage of all sticks
+  ///
+  /// In de, this message translates to:
+  /// **'Heli-Quote'**
+  String get statsHeliQuotaLabel;
+
   /// Trend chart section title
   ///
   /// In de, this message translates to:

@@ -40,6 +40,10 @@ void main() {
         totalSessions: sessions,
         totalThrows: sessions * 10,
         hitRatePercent: 64,
+        totalHits: sessions * 6,
+        totalMisses: sessions * 3,
+        heliCount: sessions,
+        heliQuotaPercent: 10,
         longestHitStreak: 7,
         bestHitRatePercent: 88,
         bestHitRateDistance: 4.5,
@@ -75,6 +79,21 @@ void main() {
     expect(find.textContaining('88 %'), findsWidgets);
     // Session list rows.
     expect(find.text('8.0 m'), findsWidgets);
+  });
+
+  testWidgets('sniper tab shows heli quota and total sticks detail',
+      (tester) async {
+    await pump(tester, aggregate: makeAgg());
+
+    // Total sticks/throws mini-hero (3 sessions * 10).
+    expect(find.text('30'), findsWidgets);
+    expect(find.text('Würfe'.toUpperCase()), findsOneWidget);
+    // New detail rows: heli count + heli quota.
+    expect(find.text('Helikopter'), findsOneWidget);
+    expect(find.text('Heli-Quote'), findsOneWidget);
+    expect(find.text('10 %'), findsOneWidget);
+    expect(find.text('Treffer'), findsOneWidget);
+    expect(find.text('Fehlwürfe'), findsOneWidget);
   });
 
   testWidgets('changing distance range triggers a recompute', (tester) async {

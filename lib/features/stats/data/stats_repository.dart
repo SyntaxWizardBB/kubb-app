@@ -66,7 +66,16 @@ class StatsRepository {
       (a, x) => a + x.hits + x.misses + (heliTracking ? x.helis : 0),
     );
     final hitsTotal = stats.fold<int>(0, (a, x) => a + x.hits);
+    final missesTotal = stats.fold<int>(0, (a, x) => a + x.misses);
+    final helisTotal = stats.fold<int>(0, (a, x) => a + x.helis);
     final hitRate = divisor == 0 ? 0 : ((hitsTotal / divisor) * 100).round();
+
+    // Heli quota is a pure display counter over every stick thrown
+    // (hits + misses + helis), independent of the heli-tracking toggle's
+    // effect on the hit-rate denominator. Guards divide-by-zero → 0.
+    final stickTotal = hitsTotal + missesTotal + helisTotal;
+    final heliQuota =
+        stickTotal == 0 ? 0 : ((helisTotal / stickTotal) * 100).round();
 
     final best = stats.reduce(
       (a, b) => b.hitRatePercent > a.hitRatePercent ? b : a,
@@ -100,6 +109,10 @@ class StatsRepository {
       totalSessions: stats.length,
       totalThrows: totalThrows,
       hitRatePercent: hitRate,
+      totalHits: hitsTotal,
+      totalMisses: missesTotal,
+      heliCount: helisTotal,
+      heliQuotaPercent: heliQuota,
       longestHitStreak: longestStreak,
       bestHitRatePercent: best.hitRatePercent,
       bestHitRateDistance: best.distance,
