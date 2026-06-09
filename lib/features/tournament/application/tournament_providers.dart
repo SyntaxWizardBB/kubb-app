@@ -249,9 +249,13 @@ class TournamentActions {
     _ref.invalidate(tournamentListProvider);
   }
 
-  /// Organizer override for a disputed match. Persists the final score
-  /// and the mandatory reason via the `tournament_organizer_override`
-  /// RPC, then nudges the list so the row flips to `overridden`.
+  /// Organizer override for a match. Persists the final score and the
+  /// mandatory reason via the `tournament_organizer_override` RPC, then
+  /// refreshes the affected match detail so the acting device flips to
+  /// `overridden` immediately (mirrors [proposeSetScores] / [declareForfeit];
+  /// otherwise the organizer would keep seeing the pre-override status until
+  /// the realtime CDC event — or the 30s fallback poll — catches up). The
+  /// list is nudged too so its row reflects the finalised result.
   Future<void> organizerOverride({
     required TournamentMatchId matchId,
     required List<SetScore> finalSetScores,
@@ -262,7 +266,9 @@ class TournamentActions {
           finalSetScores: finalSetScores,
           reason: reason,
         );
-    _ref.invalidate(tournamentListProvider);
+    _ref
+      ..invalidate(tournamentMatchDetailProvider(matchId))
+      ..invalidate(tournamentListProvider);
   }
 
   /// Submits one team's proposal for the scores of all sets of a match

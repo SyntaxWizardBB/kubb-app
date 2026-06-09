@@ -372,6 +372,28 @@ void main() {
     );
     expect(find.text('Forfeit erklären'), findsNothing);
   });
+
+  testWidgets('T1: organizer (creator) sees the override-entry action',
+      (tester) async {
+    await _pump(
+      tester,
+      match: _match(),
+      callerUserId: 'creator-1',
+      tournamentDetail: _liveDetailOwnedBy('creator-1'),
+    );
+    expect(find.text('Als Veranstalter eintragen'), findsOneWidget);
+  });
+
+  testWidgets('T1: non-creator does not see the override-entry action',
+      (tester) async {
+    await _pump(
+      tester,
+      match: _match(),
+      callerUserId: 'someone-else',
+      tournamentDetail: _liveDetailOwnedBy('creator-1'),
+    );
+    expect(find.text('Als Veranstalter eintragen'), findsNothing);
+  });
 }
 
 /// Minimal [TournamentDetail] whose header is `live` and was created by

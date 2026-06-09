@@ -49,6 +49,32 @@ class _CountingRemote implements TournamentRemote {
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 
+/// T1: a successful [TournamentActions.organizerOverride] must invalidate the
+/// affected match-detail provider so the acting device flips to `overridden`
+/// without waiting for the realtime CDC echo / the 30 s fallback poll. We
+/// assert it by counting the `getMatch` reads the detail provider triggers.
+class _OverrideCountingRemote implements TournamentRemote {
+  int getMatchCalls = 0;
+
+  @override
+  Future<void> organizerOverride({
+    required TournamentMatchId matchId,
+    required List<SetScore> finalSetScores,
+    required String reason,
+  }) async {
+    // No-op: success path. Invalidation is the behaviour under test.
+  }
+
+  @override
+  Future<TournamentMatchRef?> getMatch(TournamentMatchId id) async {
+    getMatchCalls += 1;
+    return null;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
 void main() {
   test(
       'V2-B2: a successful updateTournament invalidates detail AND match list '
@@ -98,5 +124,36 @@ void main() {
         reason: 'detail provider must be invalidated after a live edit');
     expect(remote.listMatchesCalls, 2,
         reason: 'match list must be invalidated (server may have recomputed)');
+  });
+
+  test(
+      'T1: a successful organizerOverride invalidates the match detail '
+      '(provider re-fetches)', () async {
+    const matchId = TournamentMatchId('m-override');
+    final remote = _OverrideCountingRemote();
+    final container = ProviderContainer(
+      overrides: [
+        tournamentRemoteProvider.overrideWithValue(remote),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final detailSub =
+        container.listen(tournamentMatchDetailProvider(matchId), (_, _) {});
+    addTearDown(detailSub.close);
+
+    await container.read(tournamentMatchDetailProvider(matchId).future);
+    expect(remote.getMatchCalls, 1);
+
+    await container.read(tournamentActionsProvider).organizerOverride(
+          matchId: matchId,
+          finalSetScores: const <SetScore>[],
+          reason: 'no-show, entered on site',
+        );
+
+    // Invalidation forces a fresh read on next watch.
+    await container.read(tournamentMatchDetailProvider(matchId).future);
+    expect(remote.getMatchCalls, 2,
+        reason: 'match detail must be invalidated after an organizer override');
   });
 }

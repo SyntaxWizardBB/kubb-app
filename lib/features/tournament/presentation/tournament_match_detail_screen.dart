@@ -520,6 +520,10 @@ class _TournamentMatchDetailScreenState
         !readOnly &&
         match.participantA != null &&
         match.participantB != null;
+    // T1: the organizer (creator) needs a direct way to enter / correct a
+    // result without being a participant. Same gate as forfeit; routes to the
+    // organizer-override screen (server re-checks role + status).
+    final canOrganizerOverride = canForfeit;
 
     // TASK-M4.3-T11: drive pending / conflict markers off the outbox.
     final outboxAsync = ref.watch(outboxPendingProvider(match.matchId));
@@ -667,6 +671,20 @@ class _TournamentMatchDetailScreenState
             child: Text(l.tournamentMatchReadOnlyNotice,
                 style: TextStyle(color: tokens.fgMuted, fontSize: 13)),
           ),
+        if (canOrganizerOverride) ...[
+          const SizedBox(height: KubbTokens.space3),
+          SizedBox(
+            height: KubbTokens.touchComfortable,
+            child: OutlinedButton.icon(
+              onPressed: _submitting
+                  ? null
+                  : () => context.push<void>(TournamentRoutes.override(
+                      widget.tournamentId, match.matchId.value)),
+              icon: const Icon(LucideIcons.clipboardEdit),
+              label: Text(l.tournamentOverrideEntryAction),
+            ),
+          ),
+        ],
         if (canForfeit) ...[
           const SizedBox(height: KubbTokens.space3),
           SizedBox(
