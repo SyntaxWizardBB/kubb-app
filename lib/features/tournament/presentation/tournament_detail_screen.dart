@@ -11,6 +11,7 @@ import 'package:kubb_app/features/tournament/application/tournament_realtime_pro
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_status_banner.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/tournament_escalation_panel.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_stammdaten_card.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_status_pill.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -247,6 +248,18 @@ class _Body extends ConsumerWidget {
             canManage: canManage,
             me: me,
             id: id),
+        // D5: organizer escalation cockpit (disputed / overdue / not checked
+        // in) + No-Show→Forfait shortcut. Reads only from the already-loaded
+        // detail (no new fetch) and is reusable by the later B dashboard
+        // shell. Shown to managers only — it carries intervention actions.
+        if (canManage) ...[
+          const SizedBox(height: KubbTokens.space5),
+          TournamentEscalationPanel(
+            detail: detail,
+            tournamentId: id,
+            canManage: canManage,
+          ),
+        ],
         const SizedBox(height: KubbTokens.space5),
         _AuditTail(events: detail.auditTail),
       ],

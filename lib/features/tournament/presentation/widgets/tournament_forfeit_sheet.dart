@@ -20,9 +20,23 @@ class TournamentForfeitSheet extends ConsumerStatefulWidget {
   const TournamentForfeitSheet({
     required this.matchId,
     super.key,
+    this.initialAbsentSide,
+    this.initialReason,
   });
 
   final TournamentMatchId matchId;
+
+  /// D5: optional pre-selected absent side. The No-Show→Forfait shortcut in
+  /// the escalation panel passes the side the absent participant sits on so
+  /// the organizer doesn't re-pick it. `null` (default) keeps the legacy
+  /// behaviour where the radio group starts unselected — existing callers
+  /// (match-detail / dashboard-detail) are unaffected.
+  final ForfeitAbsentSide? initialAbsentSide;
+
+  /// D5: optional pre-filled reason. The No-Show shortcut seeds
+  /// "No-Show - nicht eingecheckt"; `null` (default) keeps the field empty
+  /// for the legacy callers.
+  final String? initialReason;
 
   /// Reason minimum per spec DSCORE-65. Mirrored on the server.
   static const int reasonMin = 10;
@@ -36,6 +50,8 @@ class TournamentForfeitSheet extends ConsumerStatefulWidget {
   static Future<bool?> show(
     BuildContext context, {
     required TournamentMatchId matchId,
+    ForfeitAbsentSide? initialAbsentSide,
+    String? initialReason,
   }) {
     return showModalBottomSheet<bool>(
       context: context,
@@ -44,7 +60,11 @@ class TournamentForfeitSheet extends ConsumerStatefulWidget {
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        child: TournamentForfeitSheet(matchId: matchId),
+        child: TournamentForfeitSheet(
+          matchId: matchId,
+          initialAbsentSide: initialAbsentSide,
+          initialReason: initialReason,
+        ),
       ),
     );
   }
@@ -64,7 +84,11 @@ class _TournamentForfeitSheetState
   @override
   void initState() {
     super.initState();
-    _reason = TextEditingController()
+    // D5: seed the radio group + reason from the optional pre-fill so the
+    // No-Show shortcut lands on a ready-to-submit sheet. Both default to the
+    // legacy empty state when the caller passes nothing.
+    _absentSide = widget.initialAbsentSide;
+    _reason = TextEditingController(text: widget.initialReason ?? '')
       ..addListener(() {
         if (mounted) setState(() {});
       });

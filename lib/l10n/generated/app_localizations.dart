@@ -6292,6 +6292,66 @@ abstract class AppLocalizations {
   /// **'Forfeit gespeichert — Match abgeschlossen.'**
   String get tournamentForfeitSuccessToast;
 
+  /// Heading of the organizer escalation panel (ADR-0031 Phase D5): disputed / overdue / not-checked-in lists
+  ///
+  /// In de, this message translates to:
+  /// **'Eskalationen'**
+  String get tournamentEscalationTitle;
+
+  /// Empty-state title shown when there are no escalations (no disputed, overdue or unchecked-in entries)
+  ///
+  /// In de, this message translates to:
+  /// **'Alles im grünen Bereich'**
+  String get tournamentEscalationEmptyTitle;
+
+  /// Empty-state body for the escalation panel when nothing needs attention
+  ///
+  /// In de, this message translates to:
+  /// **'Keine strittigen oder überfälligen Matches und keine fehlenden Check-ins.'**
+  String get tournamentEscalationEmptyBody;
+
+  /// Section heading for matches in disputed status that need an organizer override
+  ///
+  /// In de, this message translates to:
+  /// **'Strittig'**
+  String get tournamentEscalationDisputedHeading;
+
+  /// Section heading for matches whose results are overdue (awaiting_results)
+  ///
+  /// In de, this message translates to:
+  /// **'Überfällig'**
+  String get tournamentEscalationOverdueHeading;
+
+  /// Section heading for confirmed participants who have not yet checked in on site
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht eingecheckt'**
+  String get tournamentEscalationNotCheckedInHeading;
+
+  /// Subtitle identifying a match by round and match number within the round
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {round} · Match {match}'**
+  String tournamentEscalationMatchLabel(int round, int match);
+
+  /// Action button on a disputed match row that opens the organizer override screen
+  ///
+  /// In de, this message translates to:
+  /// **'Korrigieren'**
+  String get tournamentEscalationOverrideAction;
+
+  /// Action button on a not-checked-in participant row that opens the pre-filled forfeit sheet
+  ///
+  /// In de, this message translates to:
+  /// **'No-Show → Forfait'**
+  String get tournamentEscalationForfeitAction;
+
+  /// Pre-filled forfeit reason for the No-Show shortcut (must be >= 10 chars; mirrors the server reason rule)
+  ///
+  /// In de, this message translates to:
+  /// **'No-Show - nicht eingecheckt'**
+  String get tournamentEscalationNoShowReason;
+
   /// Validation error when a set has neither score nor king
   ///
   /// In de, this message translates to:

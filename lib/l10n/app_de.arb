@@ -4492,6 +4492,54 @@
   "@tournamentForfeitSuccessToast": {
     "description": "Confirmation snackbar after a successful forfeit declaration"
   },
+  "tournamentEscalationTitle": "Eskalationen",
+  "@tournamentEscalationTitle": {
+    "description": "Heading of the organizer escalation panel (ADR-0031 Phase D5): disputed / overdue / not-checked-in lists"
+  },
+  "tournamentEscalationEmptyTitle": "Alles im grünen Bereich",
+  "@tournamentEscalationEmptyTitle": {
+    "description": "Empty-state title shown when there are no escalations (no disputed, overdue or unchecked-in entries)"
+  },
+  "tournamentEscalationEmptyBody": "Keine strittigen oder überfälligen Matches und keine fehlenden Check-ins.",
+  "@tournamentEscalationEmptyBody": {
+    "description": "Empty-state body for the escalation panel when nothing needs attention"
+  },
+  "tournamentEscalationDisputedHeading": "Strittig",
+  "@tournamentEscalationDisputedHeading": {
+    "description": "Section heading for matches in disputed status that need an organizer override"
+  },
+  "tournamentEscalationOverdueHeading": "Überfällig",
+  "@tournamentEscalationOverdueHeading": {
+    "description": "Section heading for matches whose results are overdue (awaiting_results)"
+  },
+  "tournamentEscalationNotCheckedInHeading": "Nicht eingecheckt",
+  "@tournamentEscalationNotCheckedInHeading": {
+    "description": "Section heading for confirmed participants who have not yet checked in on site"
+  },
+  "tournamentEscalationMatchLabel": "Runde {round} · Match {match}",
+  "@tournamentEscalationMatchLabel": {
+    "description": "Subtitle identifying a match by round and match number within the round",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      },
+      "match": {
+        "type": "int"
+      }
+    }
+  },
+  "tournamentEscalationOverrideAction": "Korrigieren",
+  "@tournamentEscalationOverrideAction": {
+    "description": "Action button on a disputed match row that opens the organizer override screen"
+  },
+  "tournamentEscalationForfeitAction": "No-Show → Forfait",
+  "@tournamentEscalationForfeitAction": {
+    "description": "Action button on a not-checked-in participant row that opens the pre-filled forfeit sheet"
+  },
+  "tournamentEscalationNoShowReason": "No-Show - nicht eingecheckt",
+  "@tournamentEscalationNoShowReason": {
+    "description": "Pre-filled forfeit reason for the No-Show shortcut (must be >= 10 chars; mirrors the server reason rule)"
+  },
   "tournamentMatchValidationEmpty": "Satz {n}: Eingabe fehlt.",
   "@tournamentMatchValidationEmpty": {
     "description": "Validation error when a set has neither score nor king",

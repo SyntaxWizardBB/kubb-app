@@ -3446,6 +3446,39 @@ class AppLocalizationsDe extends AppLocalizations {
       'Forfeit gespeichert — Match abgeschlossen.';
 
   @override
+  String get tournamentEscalationTitle => 'Eskalationen';
+
+  @override
+  String get tournamentEscalationEmptyTitle => 'Alles im grünen Bereich';
+
+  @override
+  String get tournamentEscalationEmptyBody =>
+      'Keine strittigen oder überfälligen Matches und keine fehlenden Check-ins.';
+
+  @override
+  String get tournamentEscalationDisputedHeading => 'Strittig';
+
+  @override
+  String get tournamentEscalationOverdueHeading => 'Überfällig';
+
+  @override
+  String get tournamentEscalationNotCheckedInHeading => 'Nicht eingecheckt';
+
+  @override
+  String tournamentEscalationMatchLabel(int round, int match) {
+    return 'Runde $round · Match $match';
+  }
+
+  @override
+  String get tournamentEscalationOverrideAction => 'Korrigieren';
+
+  @override
+  String get tournamentEscalationForfeitAction => 'No-Show → Forfait';
+
+  @override
+  String get tournamentEscalationNoShowReason => 'No-Show - nicht eingecheckt';
+
+  @override
   String tournamentMatchValidationEmpty(int n) {
     return 'Satz $n: Eingabe fehlt.';
   }
