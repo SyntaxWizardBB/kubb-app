@@ -4726,6 +4726,120 @@ abstract class AppLocalizations {
   /// **'{slots} Plätze'**
   String tournamentDetailMightyFinisherSlots(int slots);
 
+  /// H2: KO row label — no tiebreak set in the late KO stage (final/semis)
+  ///
+  /// In de, this message translates to:
+  /// **'Finale ohne Tiebreak'**
+  String get tournamentDetailFinalNoTiebreak;
+
+  /// H2: mighty-finisher quali method row label
+  ///
+  /// In de, this message translates to:
+  /// **'Mighty-Finisher Methode'**
+  String get tournamentDetailMightyFinisherMethod;
+
+  /// H2: mighty-finisher quali method value (shootout)
+  ///
+  /// In de, this message translates to:
+  /// **'Shootout'**
+  String get tournamentDetailMightyFinisherMethodShootout;
+
+  /// H2: mighty-finisher quali pool row label
+  ///
+  /// In de, this message translates to:
+  /// **'Mighty-Finisher Pool'**
+  String get tournamentDetailMightyFinisherPool;
+
+  /// H2: mighty-finisher pool value (group runners-up)
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppenzweite'**
+  String get tournamentDetailMightyFinisherPoolRunnersUp;
+
+  /// H2: mighty-finisher pool value (prelim rank band)
+  ///
+  /// In de, this message translates to:
+  /// **'Rangband aus Vorrunde'**
+  String get tournamentDetailMightyFinisherPoolRankBand;
+
+  /// H2: mighty-finisher quali tiebreak row label
+  ///
+  /// In de, this message translates to:
+  /// **'Mighty-Finisher Tiebreak'**
+  String get tournamentDetailMightyFinisherTiebreak;
+
+  /// H2: mighty-finisher tiebreak value (8m sudden death)
+  ///
+  /// In de, this message translates to:
+  /// **'8m Sudden Death'**
+  String get tournamentDetailMightyFinisherTiebreakSudden;
+
+  /// H2: KO row label — third-place playoff toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Spiel um Platz 3'**
+  String get tournamentDetailThirdPlacePlayoff;
+
+  /// H2: KO row label — bracket seeding mode
+  ///
+  /// In de, this message translates to:
+  /// **'Seeding'**
+  String get tournamentDetailSeedingMode;
+
+  /// H2: seeding mode value (auto from prelim)
+  ///
+  /// In de, this message translates to:
+  /// **'Automatisch aus Vorrunde'**
+  String get tournamentDetailSeedingAuto;
+
+  /// H2: seeding mode value (manual)
+  ///
+  /// In de, this message translates to:
+  /// **'Manuell'**
+  String get tournamentDetailSeedingManual;
+
+  /// H2: KO row label — how qualified players are paired
+  ///
+  /// In de, this message translates to:
+  /// **'KO-Paarung'**
+  String get tournamentDetailKoMatchup;
+
+  /// H2: KO matchup value (seed high vs low)
+  ///
+  /// In de, this message translates to:
+  /// **'1 gegen n (Setzliste)'**
+  String get tournamentDetailKoMatchupSeed;
+
+  /// H2: KO matchup value (adjacent placements)
+  ///
+  /// In de, this message translates to:
+  /// **'1 gegen 2 (benachbart)'**
+  String get tournamentDetailKoMatchupOneVsTwo;
+
+  /// H2: pool phase row label — group distribution strategy
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppen-Verteilung'**
+  String get tournamentDetailPoolStrategy;
+
+  /// H2: pool strategy value (snake)
+  ///
+  /// In de, this message translates to:
+  /// **'Schlange (Snake)'**
+  String get tournamentDetailPoolStrategySnake;
+
+  /// H2: pool strategy value (random)
+  ///
+  /// In de, this message translates to:
+  /// **'Zufällig'**
+  String get tournamentDetailPoolStrategyRandom;
+
+  /// H2: pool strategy value (seeded block-fill)
+  ///
+  /// In de, this message translates to:
+  /// **'Gesetzt (Block)'**
+  String get tournamentDetailPoolStrategySeeded;
+
   /// H2: pool phase config row label
   ///
   /// In de, this message translates to:
@@ -5083,7 +5197,7 @@ abstract class AppLocalizations {
   /// CF5/K28: label for the penalty-kubb rule toggle
   ///
   /// In de, this message translates to:
-  /// **'Strafkubb hinter Grundlinie'**
+  /// **'Strafkubb Stocklänge Abstand zu König und Grundlinie'**
   String get tournamentDetailRuleStrafkubb;
 
   /// CF5/K28: label for the opening rule
@@ -5163,6 +5277,54 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Trostturnier'**
   String get tournamentDetailConsolationLabel;
+
+  /// H2: consolation bracket feed source row label
+  ///
+  /// In de, this message translates to:
+  /// **'Trostturnier-Quelle'**
+  String get tournamentDetailConsolationSource;
+
+  /// H2: consolation source value (early KO losers)
+  ///
+  /// In de, this message translates to:
+  /// **'Verlierer früher KO-Runden'**
+  String get tournamentDetailConsolationSourceKoLosers;
+
+  /// H2: consolation source value (prelim rank band)
+  ///
+  /// In de, this message translates to:
+  /// **'Rangband aus Vorrunde'**
+  String get tournamentDetailConsolationSourceRankBand;
+
+  /// H2: consolation bracket source-rounds row label
+  ///
+  /// In de, this message translates to:
+  /// **'Trostturnier Quell-Runden'**
+  String get tournamentDetailConsolationSourceRounds;
+
+  /// H2: consolation bracket prelim rank band row label
+  ///
+  /// In de, this message translates to:
+  /// **'Trostturnier Rangband'**
+  String get tournamentDetailConsolationRankBand;
+
+  /// H2: consolation rank band value (from–to)
+  ///
+  /// In de, this message translates to:
+  /// **'Rang {from}–{to}'**
+  String tournamentDetailConsolationRankBandValue(int from, int to);
+
+  /// H2: consolation bracket direct-seeded starter count row label
+  ///
+  /// In de, this message translates to:
+  /// **'Direkt-Starter Trostturnier'**
+  String get tournamentDetailConsolationDirectCount;
+
+  /// H2: consolation bracket main-bracket size row label
+  ///
+  /// In de, this message translates to:
+  /// **'Hauptfeld-Grösse'**
+  String get tournamentDetailConsolationMainBracketSize;
 
   /// CF5/K28: card heading for downloadable PDF documents
   ///

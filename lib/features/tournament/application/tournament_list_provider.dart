@@ -218,6 +218,21 @@ final tournamentDetailCdcProvider =
       )
       .listen((_) => invalidateDetail());
 
+  // BUG3/Task3: the roster CDC channel. A pure participant registration/
+  // withdrawal writes only `tournament_participants` (no `tournament_matches`
+  // row), so without this second subscription a watching organizer would not
+  // see a new participant until the 30 s fallback poll. The participants table
+  // is already in the supabase_realtime publication (migration 20261236) and
+  // its SELECT RLS gates on tournament_id, so this filtered subscription is
+  // authorised. One roster change → one detail invalidation (unless terminal).
+  final participantsSub = channel
+      .subscribe(
+        table: 'tournament_participants',
+        filterColumn: 'tournament_id',
+        filterValue: tournamentId.value,
+      )
+      .listen((_) => invalidateDetail());
+
   // Fallback path: gated, self-rearming one-shot Timer (NOT Timer.periodic).
   Timer? fallbackTimer;
   void armFallback() {
@@ -245,6 +260,7 @@ final tournamentDetailCdcProvider =
     fallbackTimer?.cancel();
     fallbackSub.close();
     unawaited(cdcSub.cancel());
+    unawaited(participantsSub.cancel());
     unawaited(channel.close(channelKey));
   });
 

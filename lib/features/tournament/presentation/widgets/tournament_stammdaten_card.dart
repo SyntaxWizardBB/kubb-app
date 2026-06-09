@@ -100,6 +100,7 @@ class TournamentStammdatenCard extends ConsumerWidget {
 
   List<Widget> _koPhaseCard(BuildContext context, AppLocalizations l) {
     final s = header.setup;
+    final cfg = header.matchFormatConfig;
     final rows = <Widget>[];
 
     final bracketType = _str(s['bracket_type']);
@@ -112,6 +113,17 @@ class TournamentStammdatenCard extends ConsumerWidget {
       rows.add(_row(context, l.tournamentDetailBracketType, label));
     }
 
+    // KO-Paarung (how qualified players are seeded against each other).
+    final koMatchup = _str(s['ko_matchup']);
+    if (koMatchup != null) {
+      final label = switch (koMatchup) {
+        'seed_high_vs_low' => l.tournamentDetailKoMatchupSeed,
+        'one_vs_two' => l.tournamentDetailKoMatchupOneVsTwo,
+        _ => koMatchup,
+      };
+      rows.add(_row(context, l.tournamentDetailKoMatchup, label));
+    }
+
     final koTiebreak = _str(s['ko_tiebreak_method']);
     if (koTiebreak != null) {
       final label = switch (koTiebreak) {
@@ -120,6 +132,13 @@ class TournamentStammdatenCard extends ConsumerWidget {
         _ => koTiebreak,
       };
       rows.add(_row(context, l.tournamentDetailKoTiebreakMethod, label));
+    }
+
+    // "Finale ohne Tiebreak" lives on the KO match-format (matchFormatConfig),
+    // not in the setup map. Only surfaced when explicitly enabled.
+    if (cfg['final_no_tiebreak'] == true) {
+      rows.add(_row(context, l.tournamentDetailFinalNoTiebreak,
+          l.tournamentDetailRuleOn));
     }
 
     final mighty = s['mighty_finisher_quali'];
@@ -131,12 +150,51 @@ class TournamentStammdatenCard extends ConsumerWidget {
           slots != null
               ? l.tournamentDetailMightyFinisherSlots(slots.toInt())
               : l.tournamentDetailRuleOn));
+      final pool = _str(mighty['pool']);
+      if (pool != null) {
+        final label = switch (pool) {
+          'group_runners_up' => l.tournamentDetailMightyFinisherPoolRunnersUp,
+          'rank_band' => l.tournamentDetailMightyFinisherPoolRankBand,
+          _ => pool,
+        };
+        rows.add(_row(context, l.tournamentDetailMightyFinisherPool, label));
+      }
+      final method = _str(mighty['method']);
+      if (method != null) {
+        final label = method == 'mighty_finisher_shootout'
+            ? l.tournamentDetailMightyFinisherMethodShootout
+            : method;
+        rows.add(_row(context, l.tournamentDetailMightyFinisherMethod, label));
+      }
+      final tiebreak = _str(mighty['tiebreak']);
+      if (tiebreak != null) {
+        final label = tiebreak == 'eight_meter_sudden_death'
+            ? l.tournamentDetailMightyFinisherTiebreakSudden
+            : tiebreak;
+        rows.add(
+            _row(context, l.tournamentDetailMightyFinisherTiebreak, label));
+      }
     }
 
     final ko = s['ko_config'];
     if (ko is Map && _num(ko['qualifier_count']) != null) {
       rows.add(_row(context, l.tournamentDetailKoSetup,
           l.tournamentDetailKoQualifiers((_num(ko['qualifier_count'])!).toInt())));
+    }
+    if (ko is Map) {
+      if (ko['with_third_place_playoff'] == true) {
+        rows.add(_row(context, l.tournamentDetailThirdPlacePlayoff,
+            l.tournamentDetailRuleOn));
+      }
+      final seeding = _str(ko['seeding_mode']);
+      if (seeding != null) {
+        final label = switch (seeding) {
+          'manual' => l.tournamentDetailSeedingManual,
+          'auto' => l.tournamentDetailSeedingAuto,
+          _ => seeding,
+        };
+        rows.add(_row(context, l.tournamentDetailSeedingMode, label));
+      }
     }
 
     final pool = s['pool_phase_config'];
@@ -150,9 +208,78 @@ class TournamentStammdatenCard extends ConsumerWidget {
             l.tournamentDetailPoolConfigValue(
                 groups.toInt(), perGroup.toInt())));
       }
+      final strategy = _str(pool['strategy']);
+      if (strategy != null) {
+        final label = switch (strategy) {
+          'snake' => l.tournamentDetailPoolStrategySnake,
+          'random' => l.tournamentDetailPoolStrategyRandom,
+          'seeded' => l.tournamentDetailPoolStrategySeeded,
+          _ => strategy,
+        };
+        rows.add(_row(context, l.tournamentDetailPoolStrategy, label));
+      }
     }
 
+    // Trostturnier (consolation) details, beyond just the name in the org card.
+    rows.addAll(_consolationRows(context, l, s));
+
     return [_cardIfAny(context, l.tournamentDetailKoPhaseHeading, rows)];
+  }
+
+  /// Consolation/Trostturnier configuration rows (KO-phase section). The name
+  /// itself stays in the "Veranstalter & Liga" card; here we surface the feed
+  /// source, source rounds / rank band and the Model-B sizing. Every row is
+  /// guarded so unset fields stay hidden.
+  List<Widget> _consolationRows(
+      BuildContext context, AppLocalizations l, Map<String, Object?> s) {
+    final c = s['consolation_bracket'];
+    if (c is! Map || c['enabled'] != true) return const [];
+    final rows = <Widget>[];
+
+    final source = _str(c['source']);
+    if (source != null) {
+      final label = switch (source) {
+        'early_ko_losers' => l.tournamentDetailConsolationSourceKoLosers,
+        'prelim_rank_band' => l.tournamentDetailConsolationSourceRankBand,
+        _ => source,
+      };
+      rows.add(_row(context, l.tournamentDetailConsolationSource, label));
+    }
+
+    final sourceRounds = (c['source_rounds'] is List)
+        ? (c['source_rounds']! as List)
+            .map((e) => _num(e)?.toInt())
+            .whereType<int>()
+            .toList()
+        : const <int>[];
+    if (sourceRounds.isNotEmpty) {
+      rows.add(_row(context, l.tournamentDetailConsolationSourceRounds,
+          sourceRounds.join(', ')));
+    }
+
+    final rankFrom = _num(c['rank_from']);
+    final rankTo = _num(c['rank_to']);
+    if (rankFrom != null && rankTo != null) {
+      rows.add(_row(
+          context,
+          l.tournamentDetailConsolationRankBand,
+          l.tournamentDetailConsolationRankBandValue(
+              rankFrom.toInt(), rankTo.toInt())));
+    }
+
+    final directCount = _num(c['direct_count']);
+    if (directCount != null && directCount > 0) {
+      rows.add(_row(context, l.tournamentDetailConsolationDirectCount,
+          '${directCount.toInt()}'));
+    }
+
+    final mainSize = _num(c['main_bracket_size']);
+    if (mainSize != null) {
+      rows.add(_row(context, l.tournamentDetailConsolationMainBracketSize,
+          '${mainSize.toInt()}'));
+    }
+
+    return rows;
   }
 
   // ---- P6-Metadaten (B3.4) ------------------------------------------------

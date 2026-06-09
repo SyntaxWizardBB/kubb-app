@@ -315,6 +315,14 @@ class _State extends ConsumerState<RegisterTeamScreen> {
             roster: _roster,
           );
       if (!mounted) return;
+      // BUG3/Task3: this screen calls `registerTeam` directly on the remote
+      // (not via TournamentActions), so unlike the single-registration path it
+      // never refreshed the detail. Invalidate the tournament detail so its
+      // participant list shows the new team immediately, instead of waiting for
+      // the gated 30 s realtime fallback poll.
+      ref
+        ..invalidate(tournamentDetailProvider(widget.tournamentId))
+        ..invalidate(myTournamentRegistrationsProvider);
       // P6 stage-3: flip into the confirmation view that reflects the
       // now-"angemeldet" roster instead of popping straight away.
       setState(() {

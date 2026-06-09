@@ -3289,6 +3289,82 @@
       "slots": {"type": "int"}
     }
   },
+  "tournamentDetailFinalNoTiebreak": "Finale ohne Tiebreak",
+  "@tournamentDetailFinalNoTiebreak": {
+    "description": "H2: KO row label — no tiebreak set in the late KO stage (final/semis)"
+  },
+  "tournamentDetailMightyFinisherMethod": "Mighty-Finisher Methode",
+  "@tournamentDetailMightyFinisherMethod": {
+    "description": "H2: mighty-finisher quali method row label"
+  },
+  "tournamentDetailMightyFinisherMethodShootout": "Shootout",
+  "@tournamentDetailMightyFinisherMethodShootout": {
+    "description": "H2: mighty-finisher quali method value (shootout)"
+  },
+  "tournamentDetailMightyFinisherPool": "Mighty-Finisher Pool",
+  "@tournamentDetailMightyFinisherPool": {
+    "description": "H2: mighty-finisher quali pool row label"
+  },
+  "tournamentDetailMightyFinisherPoolRunnersUp": "Gruppenzweite",
+  "@tournamentDetailMightyFinisherPoolRunnersUp": {
+    "description": "H2: mighty-finisher pool value (group runners-up)"
+  },
+  "tournamentDetailMightyFinisherPoolRankBand": "Rangband aus Vorrunde",
+  "@tournamentDetailMightyFinisherPoolRankBand": {
+    "description": "H2: mighty-finisher pool value (prelim rank band)"
+  },
+  "tournamentDetailMightyFinisherTiebreak": "Mighty-Finisher Tiebreak",
+  "@tournamentDetailMightyFinisherTiebreak": {
+    "description": "H2: mighty-finisher quali tiebreak row label"
+  },
+  "tournamentDetailMightyFinisherTiebreakSudden": "8m Sudden Death",
+  "@tournamentDetailMightyFinisherTiebreakSudden": {
+    "description": "H2: mighty-finisher tiebreak value (8m sudden death)"
+  },
+  "tournamentDetailThirdPlacePlayoff": "Spiel um Platz 3",
+  "@tournamentDetailThirdPlacePlayoff": {
+    "description": "H2: KO row label — third-place playoff toggle"
+  },
+  "tournamentDetailSeedingMode": "Seeding",
+  "@tournamentDetailSeedingMode": {
+    "description": "H2: KO row label — bracket seeding mode"
+  },
+  "tournamentDetailSeedingAuto": "Automatisch aus Vorrunde",
+  "@tournamentDetailSeedingAuto": {
+    "description": "H2: seeding mode value (auto from prelim)"
+  },
+  "tournamentDetailSeedingManual": "Manuell",
+  "@tournamentDetailSeedingManual": {
+    "description": "H2: seeding mode value (manual)"
+  },
+  "tournamentDetailKoMatchup": "KO-Paarung",
+  "@tournamentDetailKoMatchup": {
+    "description": "H2: KO row label — how qualified players are paired"
+  },
+  "tournamentDetailKoMatchupSeed": "1 gegen n (Setzliste)",
+  "@tournamentDetailKoMatchupSeed": {
+    "description": "H2: KO matchup value (seed high vs low)"
+  },
+  "tournamentDetailKoMatchupOneVsTwo": "1 gegen 2 (benachbart)",
+  "@tournamentDetailKoMatchupOneVsTwo": {
+    "description": "H2: KO matchup value (adjacent placements)"
+  },
+  "tournamentDetailPoolStrategy": "Gruppen-Verteilung",
+  "@tournamentDetailPoolStrategy": {
+    "description": "H2: pool phase row label — group distribution strategy"
+  },
+  "tournamentDetailPoolStrategySnake": "Schlange (Snake)",
+  "@tournamentDetailPoolStrategySnake": {
+    "description": "H2: pool strategy value (snake)"
+  },
+  "tournamentDetailPoolStrategyRandom": "Zufällig",
+  "@tournamentDetailPoolStrategyRandom": {
+    "description": "H2: pool strategy value (random)"
+  },
+  "tournamentDetailPoolStrategySeeded": "Gesetzt (Block)",
+  "@tournamentDetailPoolStrategySeeded": {
+    "description": "H2: pool strategy value (seeded block-fill)"
+  },
   "tournamentDetailPoolConfig": "Gruppen-Aufteilung",
   "@tournamentDetailPoolConfig": {
     "description": "H2: pool phase config row label"
@@ -3538,7 +3614,7 @@
   "@tournamentDetailRuleSureshot": {
     "description": "CF5/K28: label for the sureshot rule toggle"
   },
-  "tournamentDetailRuleStrafkubb": "Strafkubb hinter Grundlinie",
+  "tournamentDetailRuleStrafkubb": "Strafkubb Stocklänge Abstand zu König und Grundlinie",
   "@tournamentDetailRuleStrafkubb": {
     "description": "CF5/K28: label for the penalty-kubb rule toggle"
   },
@@ -3596,6 +3672,42 @@
   "tournamentDetailConsolationLabel": "Trostturnier",
   "@tournamentDetailConsolationLabel": {
     "description": "CF5/K28: label for the consolation/Trostturnier name row"
+  },
+  "tournamentDetailConsolationSource": "Trostturnier-Quelle",
+  "@tournamentDetailConsolationSource": {
+    "description": "H2: consolation bracket feed source row label"
+  },
+  "tournamentDetailConsolationSourceKoLosers": "Verlierer früher KO-Runden",
+  "@tournamentDetailConsolationSourceKoLosers": {
+    "description": "H2: consolation source value (early KO losers)"
+  },
+  "tournamentDetailConsolationSourceRankBand": "Rangband aus Vorrunde",
+  "@tournamentDetailConsolationSourceRankBand": {
+    "description": "H2: consolation source value (prelim rank band)"
+  },
+  "tournamentDetailConsolationSourceRounds": "Trostturnier Quell-Runden",
+  "@tournamentDetailConsolationSourceRounds": {
+    "description": "H2: consolation bracket source-rounds row label"
+  },
+  "tournamentDetailConsolationRankBand": "Trostturnier Rangband",
+  "@tournamentDetailConsolationRankBand": {
+    "description": "H2: consolation bracket prelim rank band row label"
+  },
+  "tournamentDetailConsolationRankBandValue": "Rang {from}–{to}",
+  "@tournamentDetailConsolationRankBandValue": {
+    "description": "H2: consolation rank band value (from–to)",
+    "placeholders": {
+      "from": { "type": "int" },
+      "to": { "type": "int" }
+    }
+  },
+  "tournamentDetailConsolationDirectCount": "Direkt-Starter Trostturnier",
+  "@tournamentDetailConsolationDirectCount": {
+    "description": "H2: consolation bracket direct-seeded starter count row label"
+  },
+  "tournamentDetailConsolationMainBracketSize": "Hauptfeld-Grösse",
+  "@tournamentDetailConsolationMainBracketSize": {
+    "description": "H2: consolation bracket main-bracket size row label"
   },
   "tournamentDetailDocumentsHeading": "Dokumente",
   "@tournamentDetailDocumentsHeading": {

@@ -2537,6 +2537,65 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get tournamentDetailFinalNoTiebreak => 'Finale ohne Tiebreak';
+
+  @override
+  String get tournamentDetailMightyFinisherMethod => 'Mighty-Finisher Methode';
+
+  @override
+  String get tournamentDetailMightyFinisherMethodShootout => 'Shootout';
+
+  @override
+  String get tournamentDetailMightyFinisherPool => 'Mighty-Finisher Pool';
+
+  @override
+  String get tournamentDetailMightyFinisherPoolRunnersUp => 'Gruppenzweite';
+
+  @override
+  String get tournamentDetailMightyFinisherPoolRankBand =>
+      'Rangband aus Vorrunde';
+
+  @override
+  String get tournamentDetailMightyFinisherTiebreak =>
+      'Mighty-Finisher Tiebreak';
+
+  @override
+  String get tournamentDetailMightyFinisherTiebreakSudden => '8m Sudden Death';
+
+  @override
+  String get tournamentDetailThirdPlacePlayoff => 'Spiel um Platz 3';
+
+  @override
+  String get tournamentDetailSeedingMode => 'Seeding';
+
+  @override
+  String get tournamentDetailSeedingAuto => 'Automatisch aus Vorrunde';
+
+  @override
+  String get tournamentDetailSeedingManual => 'Manuell';
+
+  @override
+  String get tournamentDetailKoMatchup => 'KO-Paarung';
+
+  @override
+  String get tournamentDetailKoMatchupSeed => '1 gegen n (Setzliste)';
+
+  @override
+  String get tournamentDetailKoMatchupOneVsTwo => '1 gegen 2 (benachbart)';
+
+  @override
+  String get tournamentDetailPoolStrategy => 'Gruppen-Verteilung';
+
+  @override
+  String get tournamentDetailPoolStrategySnake => 'Schlange (Snake)';
+
+  @override
+  String get tournamentDetailPoolStrategyRandom => 'Zufällig';
+
+  @override
+  String get tournamentDetailPoolStrategySeeded => 'Gesetzt (Block)';
+
+  @override
   String get tournamentDetailPoolConfig => 'Gruppen-Aufteilung';
 
   @override
@@ -2727,7 +2786,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentDetailRuleSureshot => 'Sureshot';
 
   @override
-  String get tournamentDetailRuleStrafkubb => 'Strafkubb hinter Grundlinie';
+  String get tournamentDetailRuleStrafkubb =>
+      'Strafkubb Stocklänge Abstand zu König und Grundlinie';
 
   @override
   String get tournamentDetailRuleOpening => 'Anspielregel';
@@ -2769,6 +2829,36 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentDetailConsolationLabel => 'Trostturnier';
+
+  @override
+  String get tournamentDetailConsolationSource => 'Trostturnier-Quelle';
+
+  @override
+  String get tournamentDetailConsolationSourceKoLosers =>
+      'Verlierer früher KO-Runden';
+
+  @override
+  String get tournamentDetailConsolationSourceRankBand =>
+      'Rangband aus Vorrunde';
+
+  @override
+  String get tournamentDetailConsolationSourceRounds =>
+      'Trostturnier Quell-Runden';
+
+  @override
+  String get tournamentDetailConsolationRankBand => 'Trostturnier Rangband';
+
+  @override
+  String tournamentDetailConsolationRankBandValue(int from, int to) {
+    return 'Rang $from–$to';
+  }
+
+  @override
+  String get tournamentDetailConsolationDirectCount =>
+      'Direkt-Starter Trostturnier';
+
+  @override
+  String get tournamentDetailConsolationMainBracketSize => 'Hauptfeld-Grösse';
 
   @override
   String get tournamentDetailDocumentsHeading => 'Dokumente';

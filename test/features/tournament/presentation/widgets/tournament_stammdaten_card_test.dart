@@ -83,17 +83,33 @@ Map<String, Object?> _fullSetup() => <String, Object?>{
       'consolation_bracket': <String, Object?>{
         'enabled': true,
         'name': 'Sieger der gebrochenen Herzen',
+        'source': 'early_ko_losers',
+        'source_rounds': <int>[1, 2],
+        'direct_count': 4,
+        'main_bracket_size': 16,
       },
       'rules_pdf_url': 'https://storage.example/tournament-pdfs/rules/x.pdf',
       'site_map_pdf_url': 'https://storage.example/tournament-pdfs/maps/y.pdf',
       // KO / phase config (B3.3)
       'bracket_type': 'double_elimination',
       'ko_tiebreak_method': 'mighty_finisher_shootout',
-      'mighty_finisher_quali': <String, Object?>{'enabled': true, 'slots': 4},
-      'ko_config': <String, Object?>{'qualifier_count': 8},
+      'ko_matchup': 'seed_high_vs_low',
+      'mighty_finisher_quali': <String, Object?>{
+        'enabled': true,
+        'slots': 4,
+        'pool': 'group_runners_up',
+        'method': 'mighty_finisher_shootout',
+        'tiebreak': 'eight_meter_sudden_death',
+      },
+      'ko_config': <String, Object?>{
+        'qualifier_count': 8,
+        'with_third_place_playoff': true,
+        'seeding_mode': 'manual',
+      },
       'pool_phase_config': <String, Object?>{
         'group_count': 4,
         'qualifiers_per_group': 2,
+        'strategy': 'snake',
       },
     };
 
@@ -106,6 +122,7 @@ Map<String, Object?> _fullCfg() => <String, Object?>{
       'tiebreak_enabled': true,
       'tiebreak_after_seconds': 600,
       'break_between_matches_seconds': 300,
+      'final_no_tiebreak': true,
     };
 
 void main() {
@@ -156,6 +173,28 @@ void main() {
     expect(find.text('Gruppen-Aufteilung'), findsOneWidget);
     expect(
         find.text('4 Gruppen, 2 qualifizieren'), findsOneWidget); // pool config
+
+    // Newly surfaced KO fields (H2 — no silent omission).
+    expect(find.text('Finale ohne Tiebreak'), findsOneWidget);
+    expect(find.text('KO-Paarung'), findsOneWidget);
+    expect(find.text('1 gegen n (Setzliste)'), findsOneWidget);
+    expect(find.text('Spiel um Platz 3'), findsOneWidget);
+    expect(find.text('Seeding'), findsOneWidget);
+    expect(find.text('Manuell'), findsOneWidget);
+    expect(find.text('Gruppen-Verteilung'), findsOneWidget);
+    expect(find.text('Schlange (Snake)'), findsOneWidget);
+    // Mighty-Finisher detail rows.
+    expect(find.text('Mighty-Finisher Pool'), findsOneWidget);
+    expect(find.text('Gruppenzweite'), findsOneWidget);
+    expect(find.text('Mighty-Finisher Methode'), findsOneWidget);
+    expect(find.text('Mighty-Finisher Tiebreak'), findsOneWidget);
+    // Consolation detail rows (beyond the name).
+    expect(find.text('Trostturnier-Quelle'), findsOneWidget);
+    expect(find.text('Verlierer früher KO-Runden'), findsOneWidget);
+    expect(find.text('Trostturnier Quell-Runden'), findsOneWidget);
+    expect(find.text('1, 2'), findsOneWidget);
+    expect(find.text('Direkt-Starter Trostturnier'), findsOneWidget);
+    expect(find.text('Hauptfeld-Grösse'), findsOneWidget);
   });
 
   testWidgets('renders all configured P6 metadata (B3.4)', (tester) async {
