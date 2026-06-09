@@ -94,6 +94,198 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('de')];
 
+  /// AppBar eyebrow for the organizer dashboard overview (ADR-0031 Phase B)
+  ///
+  /// In de, this message translates to:
+  /// **'Veranstalter · Cockpit'**
+  String get organizerDashboardEyebrow;
+
+  /// AppBar title for the organizer dashboard overview
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier-Steuerung'**
+  String get organizerDashboardTitle;
+
+  /// Empty-state title shown when the caller administers no live tournaments
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Turniere zu verwalten'**
+  String get organizerDashboardEmptyTitle;
+
+  /// Empty-state body for the organizer dashboard overview
+  ///
+  /// In de, this message translates to:
+  /// **'Sobald du ein Turnier veröffentlichst oder als Verein verwaltest, erscheint es hier im Cockpit.'**
+  String get organizerDashboardEmptyBody;
+
+  /// In-screen gate title shown when the caller may not administer the tournament
+  ///
+  /// In de, this message translates to:
+  /// **'Kein Zugriff'**
+  String get organizerDashboardGateTitle;
+
+  /// In-screen gate body for the organizer dashboard
+  ///
+  /// In de, this message translates to:
+  /// **'Du bist nicht berechtigt, dieses Turnier zu steuern. Wende dich an den Veranstalter oder den Verein.'**
+  String get organizerDashboardGateBody;
+
+  /// Error message shown when the administrable-tournaments list fails to load
+  ///
+  /// In de, this message translates to:
+  /// **'Cockpit konnte nicht geladen werden.'**
+  String get organizerDashboardError;
+
+  /// AppBar eyebrow for the per-tournament organizer dashboard detail
+  ///
+  /// In de, this message translates to:
+  /// **'Veranstalter · Ablauf'**
+  String get organizerDashboardDetailEyebrow;
+
+  /// Section title above the round/match list on the dashboard detail
+  ///
+  /// In de, this message translates to:
+  /// **'Runden & Begegnungen'**
+  String get organizerDashboardRoundsTitle;
+
+  /// Placeholder shown when a tournament has no materialized matches yet
+  ///
+  /// In de, this message translates to:
+  /// **'Für dieses Turnier liegen noch keine Begegnungen vor.'**
+  String get organizerDashboardNoMatches;
+
+  /// Round header on the dashboard detail round/match list
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {round}'**
+  String organizerDashboardRoundLabel(int round);
+
+  /// Card line showing the tournament's currently active round number
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {round}'**
+  String organizerDashboardCurrentRound(int round);
+
+  /// Card line shown when a tournament has no schedule/active round yet
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine aktive Runde'**
+  String get organizerDashboardNoRound;
+
+  /// Open-match badge on the overview card
+  ///
+  /// In de, this message translates to:
+  /// **'{count} offen'**
+  String organizerDashboardOpenMatches(int count);
+
+  /// Disputed-match badge on the overview card
+  ///
+  /// In de, this message translates to:
+  /// **'{count} strittig'**
+  String organizerDashboardDisputedMatches(int count);
+
+  /// Remaining-time line on the overview card (mm:ss)
+  ///
+  /// In de, this message translates to:
+  /// **'Restzeit {time}'**
+  String organizerDashboardRemaining(String time);
+
+  /// Remaining-time line when the round window has elapsed
+  ///
+  /// In de, this message translates to:
+  /// **'Zeit abgelaufen'**
+  String get organizerDashboardExpired;
+
+  /// Schedule-status label: round published / notified
+  ///
+  /// In de, this message translates to:
+  /// **'Veröffentlicht'**
+  String get organizerScheduleStatusPublished;
+
+  /// Schedule-status label: call/break window before play
+  ///
+  /// In de, this message translates to:
+  /// **'Aufruf'**
+  String get organizerScheduleStatusCall;
+
+  /// Schedule-status label: match clock running
+  ///
+  /// In de, this message translates to:
+  /// **'Läuft'**
+  String get organizerScheduleStatusRunning;
+
+  /// Schedule-status label: awaiting results / hold
+  ///
+  /// In de, this message translates to:
+  /// **'Wartet auf Ergebnis'**
+  String get organizerScheduleStatusAwaiting;
+
+  /// Schedule-status label: round completed
+  ///
+  /// In de, this message translates to:
+  /// **'Abgeschlossen'**
+  String get organizerScheduleStatusCompleted;
+
+  /// Schedule-status label shown when no schedule row exists yet
+  ///
+  /// In de, this message translates to:
+  /// **'Kein Zeitplan'**
+  String get organizerScheduleStatusNone;
+
+  /// Schedule-status label shown while the tournament-wide pause is active
+  ///
+  /// In de, this message translates to:
+  /// **'Pausiert'**
+  String get organizerScheduleStatusPaused;
+
+  /// Quick action: start the tournament
+  ///
+  /// In de, this message translates to:
+  /// **'Starten'**
+  String get organizerActionStart;
+
+  /// Quick action: pause the tournament-wide clock
+  ///
+  /// In de, this message translates to:
+  /// **'Pause'**
+  String get organizerActionPause;
+
+  /// Quick action: resume from the tournament-wide pause
+  ///
+  /// In de, this message translates to:
+  /// **'Fortsetzen'**
+  String get organizerActionResume;
+
+  /// Control bar: skip the call/break window forward (round starts now)
+  ///
+  /// In de, this message translates to:
+  /// **'Vorspulen'**
+  String get organizerActionSkipForward;
+
+  /// Control bar: re-call the active round window (OE-B4)
+  ///
+  /// In de, this message translates to:
+  /// **'Neu aufrufen'**
+  String get organizerActionSkipBack;
+
+  /// Hold-to-confirm hint on the irreversible skip-forward action
+  ///
+  /// In de, this message translates to:
+  /// **'Zum Vorspulen gedrückt halten'**
+  String get organizerActionSkipForwardHoldHint;
+
+  /// Overview card action: open the per-tournament dashboard detail
+  ///
+  /// In de, this message translates to:
+  /// **'Ablauf öffnen'**
+  String get organizerOpenDetail;
+
+  /// Section title above the schedule control bar on the detail screen
+  ///
+  /// In de, this message translates to:
+  /// **'Steuerung'**
+  String get organizerControlSectionTitle;
+
   /// AppBar eyebrow for the stage-graph builder screen
   ///
   /// In de, this message translates to:

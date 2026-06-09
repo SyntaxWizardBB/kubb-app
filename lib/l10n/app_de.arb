@@ -1,5 +1,148 @@
 {
   "@@locale": "de",
+  "organizerDashboardEyebrow": "Veranstalter · Cockpit",
+  "@organizerDashboardEyebrow": {
+    "description": "AppBar eyebrow for the organizer dashboard overview (ADR-0031 Phase B)"
+  },
+  "organizerDashboardTitle": "Turnier-Steuerung",
+  "@organizerDashboardTitle": {
+    "description": "AppBar title for the organizer dashboard overview"
+  },
+  "organizerDashboardEmptyTitle": "Keine Turniere zu verwalten",
+  "@organizerDashboardEmptyTitle": {
+    "description": "Empty-state title shown when the caller administers no live tournaments"
+  },
+  "organizerDashboardEmptyBody": "Sobald du ein Turnier veröffentlichst oder als Verein verwaltest, erscheint es hier im Cockpit.",
+  "@organizerDashboardEmptyBody": {
+    "description": "Empty-state body for the organizer dashboard overview"
+  },
+  "organizerDashboardGateTitle": "Kein Zugriff",
+  "@organizerDashboardGateTitle": {
+    "description": "In-screen gate title shown when the caller may not administer the tournament"
+  },
+  "organizerDashboardGateBody": "Du bist nicht berechtigt, dieses Turnier zu steuern. Wende dich an den Veranstalter oder den Verein.",
+  "@organizerDashboardGateBody": {
+    "description": "In-screen gate body for the organizer dashboard"
+  },
+  "organizerDashboardError": "Cockpit konnte nicht geladen werden.",
+  "@organizerDashboardError": {
+    "description": "Error message shown when the administrable-tournaments list fails to load"
+  },
+  "organizerDashboardDetailEyebrow": "Veranstalter · Ablauf",
+  "@organizerDashboardDetailEyebrow": {
+    "description": "AppBar eyebrow for the per-tournament organizer dashboard detail"
+  },
+  "organizerDashboardRoundsTitle": "Runden & Begegnungen",
+  "@organizerDashboardRoundsTitle": {
+    "description": "Section title above the round/match list on the dashboard detail"
+  },
+  "organizerDashboardNoMatches": "Für dieses Turnier liegen noch keine Begegnungen vor.",
+  "@organizerDashboardNoMatches": {
+    "description": "Placeholder shown when a tournament has no materialized matches yet"
+  },
+  "organizerDashboardRoundLabel": "Runde {round}",
+  "@organizerDashboardRoundLabel": {
+    "description": "Round header on the dashboard detail round/match list",
+    "placeholders": {
+      "round": { "type": "int" }
+    }
+  },
+  "organizerDashboardCurrentRound": "Runde {round}",
+  "@organizerDashboardCurrentRound": {
+    "description": "Card line showing the tournament's currently active round number",
+    "placeholders": {
+      "round": { "type": "int" }
+    }
+  },
+  "organizerDashboardNoRound": "Noch keine aktive Runde",
+  "@organizerDashboardNoRound": {
+    "description": "Card line shown when a tournament has no schedule/active round yet"
+  },
+  "organizerDashboardOpenMatches": "{count} offen",
+  "@organizerDashboardOpenMatches": {
+    "description": "Open-match badge on the overview card",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "organizerDashboardDisputedMatches": "{count} strittig",
+  "@organizerDashboardDisputedMatches": {
+    "description": "Disputed-match badge on the overview card",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "organizerDashboardRemaining": "Restzeit {time}",
+  "@organizerDashboardRemaining": {
+    "description": "Remaining-time line on the overview card (mm:ss)",
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "organizerDashboardExpired": "Zeit abgelaufen",
+  "@organizerDashboardExpired": {
+    "description": "Remaining-time line when the round window has elapsed"
+  },
+  "organizerScheduleStatusPublished": "Veröffentlicht",
+  "@organizerScheduleStatusPublished": {
+    "description": "Schedule-status label: round published / notified"
+  },
+  "organizerScheduleStatusCall": "Aufruf",
+  "@organizerScheduleStatusCall": {
+    "description": "Schedule-status label: call/break window before play"
+  },
+  "organizerScheduleStatusRunning": "Läuft",
+  "@organizerScheduleStatusRunning": {
+    "description": "Schedule-status label: match clock running"
+  },
+  "organizerScheduleStatusAwaiting": "Wartet auf Ergebnis",
+  "@organizerScheduleStatusAwaiting": {
+    "description": "Schedule-status label: awaiting results / hold"
+  },
+  "organizerScheduleStatusCompleted": "Abgeschlossen",
+  "@organizerScheduleStatusCompleted": {
+    "description": "Schedule-status label: round completed"
+  },
+  "organizerScheduleStatusNone": "Kein Zeitplan",
+  "@organizerScheduleStatusNone": {
+    "description": "Schedule-status label shown when no schedule row exists yet"
+  },
+  "organizerScheduleStatusPaused": "Pausiert",
+  "@organizerScheduleStatusPaused": {
+    "description": "Schedule-status label shown while the tournament-wide pause is active"
+  },
+  "organizerActionStart": "Starten",
+  "@organizerActionStart": {
+    "description": "Quick action: start the tournament"
+  },
+  "organizerActionPause": "Pause",
+  "@organizerActionPause": {
+    "description": "Quick action: pause the tournament-wide clock"
+  },
+  "organizerActionResume": "Fortsetzen",
+  "@organizerActionResume": {
+    "description": "Quick action: resume from the tournament-wide pause"
+  },
+  "organizerActionSkipForward": "Vorspulen",
+  "@organizerActionSkipForward": {
+    "description": "Control bar: skip the call/break window forward (round starts now)"
+  },
+  "organizerActionSkipBack": "Neu aufrufen",
+  "@organizerActionSkipBack": {
+    "description": "Control bar: re-call the active round window (OE-B4)"
+  },
+  "organizerActionSkipForwardHoldHint": "Zum Vorspulen gedrückt halten",
+  "@organizerActionSkipForwardHoldHint": {
+    "description": "Hold-to-confirm hint on the irreversible skip-forward action"
+  },
+  "organizerOpenDetail": "Ablauf öffnen",
+  "@organizerOpenDetail": {
+    "description": "Overview card action: open the per-tournament dashboard detail"
+  },
+  "organizerControlSectionTitle": "Steuerung",
+  "@organizerControlSectionTitle": {
+    "description": "Section title above the schedule control bar on the detail screen"
+  },
   "stageGraphEyebrow": "Turnier-Baukasten",
   "@stageGraphEyebrow": {
     "description": "AppBar eyebrow for the stage-graph builder screen"

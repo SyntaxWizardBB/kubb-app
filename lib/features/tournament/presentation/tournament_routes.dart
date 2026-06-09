@@ -49,6 +49,20 @@ abstract final class TournamentRoutes {
   /// prefix so it wins over the dynamic `/tournament/:id` detail route.
   static const stageGraph = '/tournament/stage-graph';
 
+  /// Organizer dashboard overview (ADR-0031 Phase B, Block B4) — the
+  /// veranstalter cockpit across every administrable tournament. STATIC
+  /// prefix on purpose: it MUST be registered BEFORE the dynamic
+  /// `/tournament/:id` detail route so that `'dashboard'` is never matched
+  /// as a tournament id (`:id == 'dashboard'`).
+  static const dashboard = '/tournament/dashboard';
+
+  /// Per-tournament organizer dashboard detail (ADR-0031 Phase B, Block B4):
+  /// the round/match list plus the schedule control bar for ONE tournament.
+  /// Composes `'/tournament/<id>/dashboard'`. The `:id` segment is concrete,
+  /// so this never collides with the static [dashboard] overview above.
+  static String dashboardDetail(String tournamentId) =>
+      '$detail/$tournamentId/dashboard';
+
   /// Single tournament overview. Append `/:id`.
   static const detail = '/tournament';
 

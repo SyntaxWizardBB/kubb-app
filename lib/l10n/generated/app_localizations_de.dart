@@ -9,6 +9,116 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get organizerDashboardEyebrow => 'Veranstalter · Cockpit';
+
+  @override
+  String get organizerDashboardTitle => 'Turnier-Steuerung';
+
+  @override
+  String get organizerDashboardEmptyTitle => 'Keine Turniere zu verwalten';
+
+  @override
+  String get organizerDashboardEmptyBody =>
+      'Sobald du ein Turnier veröffentlichst oder als Verein verwaltest, erscheint es hier im Cockpit.';
+
+  @override
+  String get organizerDashboardGateTitle => 'Kein Zugriff';
+
+  @override
+  String get organizerDashboardGateBody =>
+      'Du bist nicht berechtigt, dieses Turnier zu steuern. Wende dich an den Veranstalter oder den Verein.';
+
+  @override
+  String get organizerDashboardError => 'Cockpit konnte nicht geladen werden.';
+
+  @override
+  String get organizerDashboardDetailEyebrow => 'Veranstalter · Ablauf';
+
+  @override
+  String get organizerDashboardRoundsTitle => 'Runden & Begegnungen';
+
+  @override
+  String get organizerDashboardNoMatches =>
+      'Für dieses Turnier liegen noch keine Begegnungen vor.';
+
+  @override
+  String organizerDashboardRoundLabel(int round) {
+    return 'Runde $round';
+  }
+
+  @override
+  String organizerDashboardCurrentRound(int round) {
+    return 'Runde $round';
+  }
+
+  @override
+  String get organizerDashboardNoRound => 'Noch keine aktive Runde';
+
+  @override
+  String organizerDashboardOpenMatches(int count) {
+    return '$count offen';
+  }
+
+  @override
+  String organizerDashboardDisputedMatches(int count) {
+    return '$count strittig';
+  }
+
+  @override
+  String organizerDashboardRemaining(String time) {
+    return 'Restzeit $time';
+  }
+
+  @override
+  String get organizerDashboardExpired => 'Zeit abgelaufen';
+
+  @override
+  String get organizerScheduleStatusPublished => 'Veröffentlicht';
+
+  @override
+  String get organizerScheduleStatusCall => 'Aufruf';
+
+  @override
+  String get organizerScheduleStatusRunning => 'Läuft';
+
+  @override
+  String get organizerScheduleStatusAwaiting => 'Wartet auf Ergebnis';
+
+  @override
+  String get organizerScheduleStatusCompleted => 'Abgeschlossen';
+
+  @override
+  String get organizerScheduleStatusNone => 'Kein Zeitplan';
+
+  @override
+  String get organizerScheduleStatusPaused => 'Pausiert';
+
+  @override
+  String get organizerActionStart => 'Starten';
+
+  @override
+  String get organizerActionPause => 'Pause';
+
+  @override
+  String get organizerActionResume => 'Fortsetzen';
+
+  @override
+  String get organizerActionSkipForward => 'Vorspulen';
+
+  @override
+  String get organizerActionSkipBack => 'Neu aufrufen';
+
+  @override
+  String get organizerActionSkipForwardHoldHint =>
+      'Zum Vorspulen gedrückt halten';
+
+  @override
+  String get organizerOpenDetail => 'Ablauf öffnen';
+
+  @override
+  String get organizerControlSectionTitle => 'Steuerung';
+
+  @override
   String get stageGraphEyebrow => 'Turnier-Baukasten';
 
   @override

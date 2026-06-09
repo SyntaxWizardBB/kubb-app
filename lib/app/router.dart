@@ -45,6 +45,8 @@ import 'package:kubb_app/features/team/presentation/team_invitation_screen.dart'
 import 'package:kubb_app/features/team/presentation/team_list_screen.dart';
 import 'package:kubb_app/features/tournament/data/tournament_statistics_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/elo_leaderboard_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/organizer_dashboard_detail_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/organizer_dashboard_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/public/public_match_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/public/public_tournament_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/register_team_screen.dart';
@@ -513,8 +515,25 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 builder: (_, _) => const StageGraphBuilderScreen(),
               ),
               GoRoute(
+                // ADR-0031 Phase B (Block B4): organizer dashboard overview.
+                // MUST stay ABOVE the dynamic `/tournament/:id` route below so
+                // that `/tournament/dashboard` resolves to the overview screen
+                // and is NEVER matched as a tournament id (`:id == 'dashboard'`).
+                path: TournamentRoutes.dashboard,
+                builder: (_, _) => const OrganizerDashboardScreen(),
+              ),
+              GoRoute(
                 path: '${TournamentRoutes.detail}/:id',
                 builder: (_, state) => TournamentDetailScreen(
+                  tournamentId: TournamentId(state.pathParameters['id']!),
+                ),
+              ),
+              GoRoute(
+                // ADR-0031 Phase B (Block B4): per-tournament organizer
+                // dashboard detail. The `:id` segment is concrete, so this
+                // never collides with the static overview route above.
+                path: '/tournament/:id/dashboard',
+                builder: (_, state) => OrganizerDashboardDetailScreen(
                   tournamentId: TournamentId(state.pathParameters['id']!),
                 ),
               ),
