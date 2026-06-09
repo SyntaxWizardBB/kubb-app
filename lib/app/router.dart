@@ -43,6 +43,7 @@ import 'package:kubb_app/features/team/presentation/team_detail_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_edit_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_invitation_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_list_screen.dart';
+import 'package:kubb_app/features/tournament/data/tournament_statistics_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/elo_leaderboard_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/public/public_match_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/public/public_tournament_screen.dart';
@@ -65,6 +66,7 @@ import 'package:kubb_app/features/tournament/presentation/tournament_registratio
 import 'package:kubb_app/features/tournament/presentation/tournament_registrations_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_seeding_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_series_detail_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_setup_wizard.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_shootout_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_standings_screen.dart';
@@ -473,6 +475,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: TournamentRoutes.stats,
                 builder: (_, _) => const TournamentStatsScreen(),
+              ),
+              GoRoute(
+                path: TournamentRoutes.statsSeries,
+                builder: (_, state) {
+                  // The series is handed in via `extra`; without it the
+                  // route is meaningless, so fall back to the stats hub.
+                  final series = state.extra;
+                  if (series is! TournamentSeriesSummary) {
+                    return const TournamentStatsScreen();
+                  }
+                  return TournamentSeriesDetailScreen(series: series);
+                },
               ),
               GoRoute(
                 path: TournamentRoutes.pastTournaments,

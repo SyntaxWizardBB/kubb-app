@@ -18,9 +18,14 @@ abstract final class TournamentRoutes {
   /// Caller's own active registrations (P1 Tournament-Hub).
   static const registrations = '/tournament/registrations';
 
-  /// Tournament statistics — placeholder screen for now (P1; full screen
-  /// is a later task).
+  /// Tournament statistics hub (System 4): series overview + head-to-head.
   static const stats = '/tournament/stats';
+
+  /// Detail of one tournament series. The free-text series key/label is
+  /// passed via GoRouter `extra` (a `TournamentSeriesSummary`), not the
+  /// URL, because the key is arbitrary text. Static prefix so it wins over
+  /// the dynamic `/tournament/:id` detail route.
+  static const statsSeries = '/tournament/stats/series';
 
   /// Past tournaments (P8): every tournament whose final has been entered
   /// and confirmed (`TournamentStatus.finalized`). Static prefix so it

@@ -4498,6 +4498,186 @@ abstract class AppLocalizations {
   /// **'Hier siehst du künftig deine Turnier-Bilanz, Platzierungen und den Verlauf.'**
   String get tournamentStatsComingSoonBody;
 
+  /// Tab label: tournament series overview
+  ///
+  /// In de, this message translates to:
+  /// **'Serien'**
+  String get tournamentStatsTabSeries;
+
+  /// Tab label: head-to-head comparison between two participants
+  ///
+  /// In de, this message translates to:
+  /// **'Duell'**
+  String get tournamentStatsTabDuel;
+
+  /// Error state when the series list fails to load
+  ///
+  /// In de, this message translates to:
+  /// **'Serien konnten nicht geladen werden.'**
+  String get tournamentStatsSeriesError;
+
+  /// Empty-state title when no finalized tournament series exist
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Serien'**
+  String get tournamentStatsSeriesEmptyTitle;
+
+  /// Empty-state body for the series list
+  ///
+  /// In de, this message translates to:
+  /// **'Sobald Turniere abgeschlossen sind, erscheinen hier ihre Serien mit Verlauf und Platzierungen.'**
+  String get tournamentStatsSeriesEmptyBody;
+
+  /// Number of editions of a tournament series
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Austragung} other{{count} Austragungen}}'**
+  String tournamentStatsEditionsCount(int count);
+
+  /// Eyebrow on the series detail screen
+  ///
+  /// In de, this message translates to:
+  /// **'Serie'**
+  String get tournamentStatsSeriesDetailEyebrow;
+
+  /// Section header: list of editions in a series
+  ///
+  /// In de, this message translates to:
+  /// **'Austragungen'**
+  String get tournamentStatsSectionEditions;
+
+  /// Section header: placement distribution chart
+  ///
+  /// In de, this message translates to:
+  /// **'Platzierungs-Verteilung'**
+  String get tournamentStatsSectionPlacements;
+
+  /// Section header: the signed-in participant's own performance in the series
+  ///
+  /// In de, this message translates to:
+  /// **'Meine Bilanz'**
+  String get tournamentStatsSectionMine;
+
+  /// Field size (number of scored participants) of an edition
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Teilnehmer} other{{count} Teilnehmer}}'**
+  String tournamentStatsFieldSize(int count);
+
+  /// Short ordinal placement label, e.g. 1.
+  ///
+  /// In de, this message translates to:
+  /// **'{rank}.'**
+  String tournamentStatsPlacementShort(int rank);
+
+  /// Label marking the winner of an edition
+  ///
+  /// In de, this message translates to:
+  /// **'Sieger'**
+  String get tournamentStatsWinnerLabel;
+
+  /// Stat label: best placement achieved in the series
+  ///
+  /// In de, this message translates to:
+  /// **'Beste Platzierung'**
+  String get tournamentStatsBestPlacement;
+
+  /// Stat label: average placement in the series
+  ///
+  /// In de, this message translates to:
+  /// **'Ø Platzierung'**
+  String get tournamentStatsAvgPlacement;
+
+  /// Stat label: number of editions the participant played
+  ///
+  /// In de, this message translates to:
+  /// **'Teilnahmen'**
+  String get tournamentStatsEditionsPlayed;
+
+  /// Shown in the own-balance section when the user has no placements in the series
+  ///
+  /// In de, this message translates to:
+  /// **'Du hast in dieser Serie noch nicht gespielt.'**
+  String get tournamentStatsMineEmpty;
+
+  /// Button/slot label to pick the first head-to-head participant
+  ///
+  /// In de, this message translates to:
+  /// **'Erste Seite wählen'**
+  String get tournamentStatsDuelPickA;
+
+  /// Button/slot label to pick the second head-to-head participant
+  ///
+  /// In de, this message translates to:
+  /// **'Zweite Seite wählen'**
+  String get tournamentStatsDuelPickB;
+
+  /// Hint on the duel tab before both sides are picked
+  ///
+  /// In de, this message translates to:
+  /// **'Wähle zwei Teilnehmer, um ihre direkten Duelle aus allen abgeschlossenen Turnieren zu vergleichen.'**
+  String get tournamentStatsDuelHint;
+
+  /// Error when the head-to-head RPC fails
+  ///
+  /// In de, this message translates to:
+  /// **'Die Bilanz konnte nicht geladen werden.'**
+  String get tournamentStatsDuelError;
+
+  /// Empty-state when two participants never met
+  ///
+  /// In de, this message translates to:
+  /// **'Diese beiden hatten in abgeschlossenen Turnieren noch keine direkten Duelle.'**
+  String get tournamentStatsDuelEmpty;
+
+  /// Label: total number of head-to-head matches
+  ///
+  /// In de, this message translates to:
+  /// **'Duelle'**
+  String get tournamentStatsDuelTotal;
+
+  /// Label: number of head-to-head matches in KO phases
+  ///
+  /// In de, this message translates to:
+  /// **'davon K.o.'**
+  String get tournamentStatsDuelKo;
+
+  /// Label: win rate of side A in the head-to-head
+  ///
+  /// In de, this message translates to:
+  /// **'Siegquote'**
+  String get tournamentStatsDuelWinRate;
+
+  /// Label: head-to-head matches without a recorded winner
+  ///
+  /// In de, this message translates to:
+  /// **'Offen'**
+  String get tournamentStatsDuelDraws;
+
+  /// Title of the participant picker sheet
+  ///
+  /// In de, this message translates to:
+  /// **'Teilnehmer wählen'**
+  String get tournamentStatsPickerTitle;
+
+  /// Placeholder in the participant picker search field
+  ///
+  /// In de, this message translates to:
+  /// **'Name suchen …'**
+  String get tournamentStatsPickerSearchHint;
+
+  /// Empty state in the participant picker
+  ///
+  /// In de, this message translates to:
+  /// **'Keine passenden Teilnehmer gefunden.'**
+  String get tournamentStatsPickerEmpty;
+
+  /// Badge marking a participant entry as a team
+  ///
+  /// In de, this message translates to:
+  /// **'Team'**
+  String get tournamentStatsPickerTeamBadge;
+
   /// Empty state on Meine Turniere tab
   ///
   /// In de, this message translates to:

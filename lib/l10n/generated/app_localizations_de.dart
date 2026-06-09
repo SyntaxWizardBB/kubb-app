@@ -2408,6 +2408,121 @@ class AppLocalizationsDe extends AppLocalizations {
       'Hier siehst du künftig deine Turnier-Bilanz, Platzierungen und den Verlauf.';
 
   @override
+  String get tournamentStatsTabSeries => 'Serien';
+
+  @override
+  String get tournamentStatsTabDuel => 'Duell';
+
+  @override
+  String get tournamentStatsSeriesError =>
+      'Serien konnten nicht geladen werden.';
+
+  @override
+  String get tournamentStatsSeriesEmptyTitle => 'Noch keine Serien';
+
+  @override
+  String get tournamentStatsSeriesEmptyBody =>
+      'Sobald Turniere abgeschlossen sind, erscheinen hier ihre Serien mit Verlauf und Platzierungen.';
+
+  @override
+  String tournamentStatsEditionsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Austragungen',
+      one: '1 Austragung',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tournamentStatsSeriesDetailEyebrow => 'Serie';
+
+  @override
+  String get tournamentStatsSectionEditions => 'Austragungen';
+
+  @override
+  String get tournamentStatsSectionPlacements => 'Platzierungs-Verteilung';
+
+  @override
+  String get tournamentStatsSectionMine => 'Meine Bilanz';
+
+  @override
+  String tournamentStatsFieldSize(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Teilnehmer',
+      one: '1 Teilnehmer',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tournamentStatsPlacementShort(int rank) {
+    return '$rank.';
+  }
+
+  @override
+  String get tournamentStatsWinnerLabel => 'Sieger';
+
+  @override
+  String get tournamentStatsBestPlacement => 'Beste Platzierung';
+
+  @override
+  String get tournamentStatsAvgPlacement => 'Ø Platzierung';
+
+  @override
+  String get tournamentStatsEditionsPlayed => 'Teilnahmen';
+
+  @override
+  String get tournamentStatsMineEmpty =>
+      'Du hast in dieser Serie noch nicht gespielt.';
+
+  @override
+  String get tournamentStatsDuelPickA => 'Erste Seite wählen';
+
+  @override
+  String get tournamentStatsDuelPickB => 'Zweite Seite wählen';
+
+  @override
+  String get tournamentStatsDuelHint =>
+      'Wähle zwei Teilnehmer, um ihre direkten Duelle aus allen abgeschlossenen Turnieren zu vergleichen.';
+
+  @override
+  String get tournamentStatsDuelError =>
+      'Die Bilanz konnte nicht geladen werden.';
+
+  @override
+  String get tournamentStatsDuelEmpty =>
+      'Diese beiden hatten in abgeschlossenen Turnieren noch keine direkten Duelle.';
+
+  @override
+  String get tournamentStatsDuelTotal => 'Duelle';
+
+  @override
+  String get tournamentStatsDuelKo => 'davon K.o.';
+
+  @override
+  String get tournamentStatsDuelWinRate => 'Siegquote';
+
+  @override
+  String get tournamentStatsDuelDraws => 'Offen';
+
+  @override
+  String get tournamentStatsPickerTitle => 'Teilnehmer wählen';
+
+  @override
+  String get tournamentStatsPickerSearchHint => 'Name suchen …';
+
+  @override
+  String get tournamentStatsPickerEmpty =>
+      'Keine passenden Teilnehmer gefunden.';
+
+  @override
+  String get tournamentStatsPickerTeamBadge => 'Team';
+
+  @override
   String get tournamentListEmptyMine => 'Du hast noch keine Turniere erstellt.';
 
   @override

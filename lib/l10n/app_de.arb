@@ -3108,6 +3108,135 @@
   "@tournamentStatsComingSoonBody": {
     "description": "Placeholder body on the tournament stats screen"
   },
+  "tournamentStatsTabSeries": "Serien",
+  "@tournamentStatsTabSeries": {
+    "description": "Tab label: tournament series overview"
+  },
+  "tournamentStatsTabDuel": "Duell",
+  "@tournamentStatsTabDuel": {
+    "description": "Tab label: head-to-head comparison between two participants"
+  },
+  "tournamentStatsSeriesError": "Serien konnten nicht geladen werden.",
+  "@tournamentStatsSeriesError": {
+    "description": "Error state when the series list fails to load"
+  },
+  "tournamentStatsSeriesEmptyTitle": "Noch keine Serien",
+  "@tournamentStatsSeriesEmptyTitle": {
+    "description": "Empty-state title when no finalized tournament series exist"
+  },
+  "tournamentStatsSeriesEmptyBody": "Sobald Turniere abgeschlossen sind, erscheinen hier ihre Serien mit Verlauf und Platzierungen.",
+  "@tournamentStatsSeriesEmptyBody": {
+    "description": "Empty-state body for the series list"
+  },
+  "tournamentStatsEditionsCount": "{count, plural, =1{1 Austragung} other{{count} Austragungen}}",
+  "@tournamentStatsEditionsCount": {
+    "description": "Number of editions of a tournament series",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "tournamentStatsSeriesDetailEyebrow": "Serie",
+  "@tournamentStatsSeriesDetailEyebrow": {
+    "description": "Eyebrow on the series detail screen"
+  },
+  "tournamentStatsSectionEditions": "Austragungen",
+  "@tournamentStatsSectionEditions": {
+    "description": "Section header: list of editions in a series"
+  },
+  "tournamentStatsSectionPlacements": "Platzierungs-Verteilung",
+  "@tournamentStatsSectionPlacements": {
+    "description": "Section header: placement distribution chart"
+  },
+  "tournamentStatsSectionMine": "Meine Bilanz",
+  "@tournamentStatsSectionMine": {
+    "description": "Section header: the signed-in participant's own performance in the series"
+  },
+  "tournamentStatsFieldSize": "{count, plural, =1{1 Teilnehmer} other{{count} Teilnehmer}}",
+  "@tournamentStatsFieldSize": {
+    "description": "Field size (number of scored participants) of an edition",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "tournamentStatsPlacementShort": "{rank}.",
+  "@tournamentStatsPlacementShort": {
+    "description": "Short ordinal placement label, e.g. 1.",
+    "placeholders": {
+      "rank": { "type": "int" }
+    }
+  },
+  "tournamentStatsWinnerLabel": "Sieger",
+  "@tournamentStatsWinnerLabel": {
+    "description": "Label marking the winner of an edition"
+  },
+  "tournamentStatsBestPlacement": "Beste Platzierung",
+  "@tournamentStatsBestPlacement": {
+    "description": "Stat label: best placement achieved in the series"
+  },
+  "tournamentStatsAvgPlacement": "Ø Platzierung",
+  "@tournamentStatsAvgPlacement": {
+    "description": "Stat label: average placement in the series"
+  },
+  "tournamentStatsEditionsPlayed": "Teilnahmen",
+  "@tournamentStatsEditionsPlayed": {
+    "description": "Stat label: number of editions the participant played"
+  },
+  "tournamentStatsMineEmpty": "Du hast in dieser Serie noch nicht gespielt.",
+  "@tournamentStatsMineEmpty": {
+    "description": "Shown in the own-balance section when the user has no placements in the series"
+  },
+  "tournamentStatsDuelPickA": "Erste Seite wählen",
+  "@tournamentStatsDuelPickA": {
+    "description": "Button/slot label to pick the first head-to-head participant"
+  },
+  "tournamentStatsDuelPickB": "Zweite Seite wählen",
+  "@tournamentStatsDuelPickB": {
+    "description": "Button/slot label to pick the second head-to-head participant"
+  },
+  "tournamentStatsDuelHint": "Wähle zwei Teilnehmer, um ihre direkten Duelle aus allen abgeschlossenen Turnieren zu vergleichen.",
+  "@tournamentStatsDuelHint": {
+    "description": "Hint on the duel tab before both sides are picked"
+  },
+  "tournamentStatsDuelError": "Die Bilanz konnte nicht geladen werden.",
+  "@tournamentStatsDuelError": {
+    "description": "Error when the head-to-head RPC fails"
+  },
+  "tournamentStatsDuelEmpty": "Diese beiden hatten in abgeschlossenen Turnieren noch keine direkten Duelle.",
+  "@tournamentStatsDuelEmpty": {
+    "description": "Empty-state when two participants never met"
+  },
+  "tournamentStatsDuelTotal": "Duelle",
+  "@tournamentStatsDuelTotal": {
+    "description": "Label: total number of head-to-head matches"
+  },
+  "tournamentStatsDuelKo": "davon K.o.",
+  "@tournamentStatsDuelKo": {
+    "description": "Label: number of head-to-head matches in KO phases"
+  },
+  "tournamentStatsDuelWinRate": "Siegquote",
+  "@tournamentStatsDuelWinRate": {
+    "description": "Label: win rate of side A in the head-to-head"
+  },
+  "tournamentStatsDuelDraws": "Offen",
+  "@tournamentStatsDuelDraws": {
+    "description": "Label: head-to-head matches without a recorded winner"
+  },
+  "tournamentStatsPickerTitle": "Teilnehmer wählen",
+  "@tournamentStatsPickerTitle": {
+    "description": "Title of the participant picker sheet"
+  },
+  "tournamentStatsPickerSearchHint": "Name suchen …",
+  "@tournamentStatsPickerSearchHint": {
+    "description": "Placeholder in the participant picker search field"
+  },
+  "tournamentStatsPickerEmpty": "Keine passenden Teilnehmer gefunden.",
+  "@tournamentStatsPickerEmpty": {
+    "description": "Empty state in the participant picker"
+  },
+  "tournamentStatsPickerTeamBadge": "Team",
+  "@tournamentStatsPickerTeamBadge": {
+    "description": "Badge marking a participant entry as a team"
+  },
   "tournamentListEmptyMine": "Du hast noch keine Turniere erstellt.",
   "@tournamentListEmptyMine": {
     "description": "Empty state on Meine Turniere tab"
