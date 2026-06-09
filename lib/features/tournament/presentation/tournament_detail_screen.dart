@@ -367,15 +367,19 @@ class _Actions extends ConsumerWidget {
     void nav(String label, String path) =>
         buttons.add(mk(label, () => context.push(path)));
 
-    // P7 edit-after-publish: the organizer (creator) may edit the details
-    // while the tournament is still pre-start. The server re-checks both
-    // the creator and the status; once live/finalized/aborted the structure
-    // is frozen and the edit entry-point disappears.
+    // V2-B2 edit-after-publish (incl. live): the organizer (creator/admin)
+    // may edit the details across the pre-start statuses AND while the
+    // tournament is `live`. The server (migration 20261243000000) re-checks
+    // the manage gate and applies the field-safety classes / safe recompute;
+    // a structural change against an already-played phase is rejected with
+    // HINT STRUCTURE_LOCKED. Only `finalized` and `aborted` are frozen — for
+    // those two the edit entry-point is not rendered at all.
     final canEdit = canManage &&
         (status == TournamentStatus.draft ||
             status == TournamentStatus.published ||
             status == TournamentStatus.registrationOpen ||
-            status == TournamentStatus.registrationClosed);
+            status == TournamentStatus.registrationClosed ||
+            status == TournamentStatus.live);
     if (canEdit) {
       nav(l.tournamentDetailActionEdit, TournamentRoutes.edit(id.value));
     }

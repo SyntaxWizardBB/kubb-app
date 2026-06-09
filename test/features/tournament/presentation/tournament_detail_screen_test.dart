@@ -172,11 +172,31 @@ void main() {
     expect(find.text('Bearbeiten'), findsNothing);
   });
 
-  testWidgets('P7: Bearbeiten hidden once the tournament is live',
+  testWidgets('V2-B2: creator sees Bearbeiten while the tournament is live',
       (tester) async {
     await _pump(
       tester,
       _detail(status: TournamentStatus.live),
+      callerUserId: _creator,
+    );
+    expect(find.text('Bearbeiten'), findsOneWidget);
+  });
+
+  testWidgets('V2-B2: Bearbeiten hidden once the tournament is finalized',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(status: TournamentStatus.finalized),
+      callerUserId: _creator,
+    );
+    expect(find.text('Bearbeiten'), findsNothing);
+  });
+
+  testWidgets('V2-B2: Bearbeiten hidden once the tournament is aborted',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(status: TournamentStatus.aborted),
       callerUserId: _creator,
     );
     expect(find.text('Bearbeiten'), findsNothing);

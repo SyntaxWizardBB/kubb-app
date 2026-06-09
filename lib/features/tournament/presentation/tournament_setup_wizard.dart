@@ -9,6 +9,8 @@ import 'package:kubb_app/features/tournament/application/tournament_config_contr
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/data/tournament_pdf_uploader.dart';
+import 'package:kubb_app/features/tournament/data/tournament_repository.dart'
+    show StructureLockedException, TournamentLockedException;
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_model_explainer_sheet.dart';
@@ -198,6 +200,25 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
       }
       if (!mounted) return;
       context.go('${TournamentRoutes.detail}/${targetId.value}');
+    } on StructureLockedException {
+      // V2-B2: live edit rejected because it would alter a running phase.
+      // Show the rule-specific German message, not the raw error.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.tournamentEditStructureLocked),
+          backgroundColor: KubbTokens.miss,
+        ),
+      );
+    } on TournamentLockedException {
+      // V2-B2: tournament is finalized/aborted — no longer editable.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.tournamentEditTournamentLocked),
+          backgroundColor: KubbTokens.miss,
+        ),
+      );
     } on Object catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

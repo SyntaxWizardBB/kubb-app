@@ -4102,6 +4102,18 @@ abstract class AppLocalizations {
   /// **'Turnier konnte nicht erstellt werden: {error}'**
   String tournamentWizardSubmitError(String error);
 
+  /// Snackbar on a live edit rejected with HINT STRUCTURE_LOCKED (structural change against an already-running phase)
+  ///
+  /// In de, this message translates to:
+  /// **'Strukturänderung nicht möglich – die Phase läuft bereits. Metadaten und künftige Runden-Einstellungen bleiben änderbar.'**
+  String get tournamentEditStructureLocked;
+
+  /// Snackbar on an edit rejected with HINT TOURNAMENT_LOCKED (tournament finalized/aborted)
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier ist abgeschlossen oder abgebrochen – eine Bearbeitung ist nicht mehr möglich.'**
+  String get tournamentEditTournamentLocked;
+
   /// Eyebrow above tournament-list title
   ///
   /// In de, this message translates to:

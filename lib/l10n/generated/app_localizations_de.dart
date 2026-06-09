@@ -2199,6 +2199,14 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get tournamentEditStructureLocked =>
+      'Strukturänderung nicht möglich – die Phase läuft bereits. Metadaten und künftige Runden-Einstellungen bleiben änderbar.';
+
+  @override
+  String get tournamentEditTournamentLocked =>
+      'Turnier ist abgeschlossen oder abgebrochen – eine Bearbeitung ist nicht mehr möglich.';
+
+  @override
   String get tournamentListEyebrow => 'Turniere';
 
   @override

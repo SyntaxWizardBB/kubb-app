@@ -27,6 +27,10 @@ class _FakeTournamentRemote implements TournamentRemote {
   Map<String, Object?>? updatedSetup;
   int updateCallCount = 0;
 
+  // V2-B2: when set, updateTournament throws this instead of succeeding,
+  // simulating the server's typed live-edit rejections.
+  Exception? throwOnUpdate;
+
   @override
   Future<TournamentId> createTournament({
     required String displayName,
@@ -64,6 +68,9 @@ class _FakeTournamentRemote implements TournamentRemote {
     Map<String, Object?> setup = const <String, Object?>{},
   }) async {
     updateCallCount += 1;
+    if (throwOnUpdate != null) {
+      throw throwOnUpdate!;
+    }
     if (failNext) {
       failNext = false;
       throw StateError('boom');
@@ -404,13 +411,14 @@ Future<_FakeTournamentRemote> _pumpEditWizard(
   WidgetTester tester, {
   required TournamentId editId,
   required TournamentConfigDraft initialDraft,
+  Exception? throwOnUpdate,
 }) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 
-  final fake = _FakeTournamentRemote();
+  final fake = _FakeTournamentRemote()..throwOnUpdate = throwOnUpdate;
   final router = GoRouter(
     initialLocation: TournamentRoutes.edit(editId.value),
     routes: [
@@ -950,6 +958,74 @@ void main() {
     expect(fake.updatedDisplayName, 'Neuer-Name 2026');
     expect(fake.updatedSetup, isNotNull);
     expect(find.text('detail:t-edit-1'), findsOneWidget);
+  });
+
+  testWidgets(
+      'V2-B2: a live edit rejected with StructureLockedException shows the '
+      'clear German structure-lock message (not the raw error)', (tester) async {
+    const editId = TournamentId('t-edit-locked');
+    final initial =
+        _withStammdaten(const TournamentConfigDraft(displayName: 'Alt-Name'));
+    final fake = await _pumpEditWizard(
+      tester,
+      editId: editId,
+      initialDraft: initial,
+      throwOnUpdate: const StructureLockedException('Phase laeuft bereits'),
+    );
+
+    await _typeName(tester, 'Neuer-Name');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    await _tapNext(tester); // -> summary
+
+    await tester.tap(
+      find.widgetWithText(FilledButton, 'Änderungen speichern'),
+    );
+    await tester.pumpAndSettle();
+
+    // The save was attempted, navigation did NOT happen, and the rule-specific
+    // German message is shown instead of the generic raw-error snackbar.
+    expect(fake.updateCallCount, 1);
+    expect(find.text('detail:t-edit-locked'), findsNothing);
+    expect(
+      find.textContaining('Strukturänderung nicht möglich'),
+      findsOneWidget,
+    );
+    // The raw exception toString must NOT leak through the generic snackbar.
+    expect(find.textContaining('StructureLockedException'), findsNothing);
+  });
+
+  testWidgets(
+      'V2-B2: an edit rejected with TournamentLockedException shows the '
+      'finished/aborted message', (tester) async {
+    const editId = TournamentId('t-edit-final');
+    final initial =
+        _withStammdaten(const TournamentConfigDraft(displayName: 'Alt-Name'));
+    final fake = await _pumpEditWizard(
+      tester,
+      editId: editId,
+      initialDraft: initial,
+      throwOnUpdate: const TournamentLockedException('finalized'),
+    );
+
+    await _typeName(tester, 'Neuer-Name');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    await _tapNext(tester); // -> summary
+
+    await tester.tap(
+      find.widgetWithText(FilledButton, 'Änderungen speichern'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(fake.updateCallCount, 1);
+    expect(find.text('detail:t-edit-final'), findsNothing);
+    expect(
+      find.textContaining('Turnier ist abgeschlossen oder abgebrochen'),
+      findsOneWidget,
+    );
   });
 
   // ---- W1 wizard-rework Stammdaten UI ----

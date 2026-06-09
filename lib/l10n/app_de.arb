@@ -2844,6 +2844,14 @@
       }
     }
   },
+  "tournamentEditStructureLocked": "Strukturänderung nicht möglich – die Phase läuft bereits. Metadaten und künftige Runden-Einstellungen bleiben änderbar.",
+  "@tournamentEditStructureLocked": {
+    "description": "Snackbar on a live edit rejected with HINT STRUCTURE_LOCKED (structural change against an already-running phase)"
+  },
+  "tournamentEditTournamentLocked": "Turnier ist abgeschlossen oder abgebrochen – eine Bearbeitung ist nicht mehr möglich.",
+  "@tournamentEditTournamentLocked": {
+    "description": "Snackbar on an edit rejected with HINT TOURNAMENT_LOCKED (tournament finalized/aborted)"
+  },
   "tournamentListEyebrow": "Turniere",
   "@tournamentListEyebrow": {
     "description": "Eyebrow above tournament-list title"

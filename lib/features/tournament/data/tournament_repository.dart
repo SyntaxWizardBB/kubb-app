@@ -154,6 +154,38 @@ class OverrideKoPairingException implements Exception {
   String toString() => 'OverrideKoPairingException($code): $message';
 }
 
+/// Thrown when `tournament_update` rejects a live edit because the change
+/// would alter the STRUCTURE of a phase that is already running. The server
+/// (migration `20261243000000_tournament_update_live_edit_recompute`) raises
+/// `ERRCODE 22023` with `HINT 'STRUCTURE_LOCKED'` when a structural field
+/// (format / bracket_type / ko_matchup / pool_phase_config / ko_config)
+/// changes while the affected phase has a played/terminal match, or when a
+/// live format switch would cross phase families. Always-safe metadata and
+/// future-round formats stay editable; the UI surfaces the rule-specific
+/// message instead of a raw error.
+class StructureLockedException implements Exception {
+  const StructureLockedException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'StructureLockedException: $message';
+}
+
+/// Thrown when `tournament_update` rejects the call because the tournament is
+/// no longer editable at all — i.e. it is `finalized` or `aborted`. The server
+/// (migration `20261243000000_tournament_update_live_edit_recompute`) raises
+/// `ERRCODE 22023` with `HINT 'TOURNAMENT_LOCKED'`. The UI surfaces a clear
+/// "tournament is finished/aborted" message rather than a raw error.
+class TournamentLockedException implements Exception {
+  const TournamentLockedException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'TournamentLockedException: $message';
+}
+
 /// Wrapper around the tournament-* RPCs declared in the
 /// `tournament_*` migrations. Implements the [TournamentRemote] port
 /// from `kubb_domain`. Every call is authenticated; the
@@ -289,20 +321,34 @@ class TournamentRepository implements TournamentRemote {
     required List<String> tiebreakerOrder,
     Map<String, Object?> setup = const <String, Object?>{},
   }) async {
-    await _client.rpc<Map<String, dynamic>>(
-      'tournament_update',
-      params: <String, dynamic>{
-        'p_tournament_id': id.value,
-        'p_display_name': displayName,
-        'p_team_size': teamSize,
-        'p_min_participants': minParticipants,
-        'p_max_participants': maxParticipants,
-        'p_format': format.toWire(),
-        'p_match_format_config': matchFormatConfig,
-        'p_tiebreaker_order': tiebreakerOrder,
-        'p_setup': setup,
-      },
-    );
+    try {
+      await _client.rpc<Map<String, dynamic>>(
+        'tournament_update',
+        params: <String, dynamic>{
+          'p_tournament_id': id.value,
+          'p_display_name': displayName,
+          'p_team_size': teamSize,
+          'p_min_participants': minParticipants,
+          'p_max_participants': maxParticipants,
+          'p_format': format.toWire(),
+          'p_match_format_config': matchFormatConfig,
+          'p_tiebreaker_order': tiebreakerOrder,
+          'p_setup': setup,
+        },
+      );
+    } on PostgrestException catch (e) {
+      // V2-B1/B2: the server disambiguates live-edit rejections via `HINT`.
+      // Map them to typed exceptions so the UI can show the rule-specific
+      // German message; unknown errors propagate unchanged.
+      switch (e.hint) {
+        case 'STRUCTURE_LOCKED':
+          throw StructureLockedException(e.message);
+        case 'TOURNAMENT_LOCKED':
+          throw TournamentLockedException(e.message);
+        default:
+          rethrow;
+      }
+    }
   }
 
   @override

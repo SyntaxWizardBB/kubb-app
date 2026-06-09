@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/club/application/club_providers.dart';
+import 'package:kubb_app/features/tournament/application/tournament_bracket_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
@@ -134,10 +135,13 @@ class TournamentActions {
     return id;
   }
 
-  /// P7 edit-after-publish: persists the edited [draft] for an existing
-  /// tournament via `tournament_update`, then invalidates the list + the
-  /// detail so the screen reflects the new values. The server gates on the
-  /// creator and the pre-start status.
+  /// P7 / V2-B2 edit-after-publish (incl. live): persists the edited [draft]
+  /// for an existing tournament via `tournament_update`, then invalidates the
+  /// list + detail so the screen reflects the new values. Because a LIVE edit
+  /// can make the server re-generate the unplayed pairings/bracket of the
+  /// affected phase (migration 20261243000000), the match list, standings and
+  /// bracket providers are invalidated too so those views reload the
+  /// recomputed state. The server gates on the creator/admin and the status.
   Future<void> updateTournament(
     TournamentId id,
     TournamentConfigDraft draft,
@@ -160,7 +164,11 @@ class TournamentActions {
         );
     _ref
       ..invalidate(tournamentListProvider)
-      ..invalidate(tournamentDetailProvider(id));
+      ..invalidate(tournamentDetailProvider(id))
+      // A live structural edit may regenerate the unplayed pairings/bracket.
+      ..invalidate(tournamentMatchListProvider(id))
+      ..invalidate(tournamentStandingsProvider(id))
+      ..invalidate(tournamentBracketProvider(id));
   }
 
   Future<void> publish(TournamentId id) async {
