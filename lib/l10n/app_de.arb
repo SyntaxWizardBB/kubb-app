@@ -5745,6 +5745,38 @@
   "@shootoutOrderHintReadonly": {
     "description": "P6 shoot-out screen — read-only hint shown to the confirming side (order is locked)"
   },
+  "inboxScheduleLabelRoundPublished": "Neue Runde",
+  "@inboxScheduleLabelRoundPublished": {
+    "description": "Inbox badge label for a tournamentSchedule row tagged round_published (ADR-0031 Phase C / OD-1)"
+  },
+  "inboxScheduleLabelMatchRunning": "Match läuft",
+  "@inboxScheduleLabelMatchRunning": {
+    "description": "Inbox badge label for a tournamentSchedule row tagged match_running"
+  },
+  "inboxScheduleLabelPaused": "Turnier pausiert",
+  "@inboxScheduleLabelPaused": {
+    "description": "Inbox badge label for a tournamentSchedule row tagged paused"
+  },
+  "inboxScheduleLabelResumed": "Turnier läuft weiter",
+  "@inboxScheduleLabelResumed": {
+    "description": "Inbox badge label for a tournamentSchedule row tagged resumed"
+  },
+  "inboxScheduleLabelAwaitingResults": "Resultat fehlt",
+  "@inboxScheduleLabelAwaitingResults": {
+    "description": "Inbox badge label for a tournamentSchedule row tagged awaiting_results"
+  },
+  "inboxScheduleLabelTiebreakHold": "Tiebreak",
+  "@inboxScheduleLabelTiebreakHold": {
+    "description": "Inbox badge label for a tournamentSchedule row tagged tiebreak_hold"
+  },
+  "inboxScheduleLabelGeneric": "Turnier-Ablauf",
+  "@inboxScheduleLabelGeneric": {
+    "description": "Inbox badge fallback label for a tournamentSchedule row with an unrecognised payload tag"
+  },
+  "inboxScheduleOpenMatchAction": "Zum Match",
+  "@inboxScheduleOpenMatchAction": {
+    "description": "Inbox detail CTA that opens the caller's live active tournament match"
+  },
   "tournamentWizardSummaryPlaceholder": "—",
   "@tournamentWizardSummaryPlaceholder": {
     "description": "K26: placeholder shown for an empty/unset optional field in the summary review"

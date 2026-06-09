@@ -245,6 +245,11 @@ class InboxRepository {
         // 'tournament_round'; the shoot-out is disambiguated by the
         // action_payload, not a distinct wire kind (P6 D2a).
         return 'tournament_round';
+      case InboxMessageKind.tournamentSchedule:
+        // ADR-0031 Phase C (OD-1): every timed-schedule event also rides on
+        // the generic 'tournament_round' wire kind and is distinguished only
+        // by action_payload['kind'] — no distinct wire kind (DB CHECK stable).
+        return 'tournament_round';
       case InboxMessageKind.tournamentFinished:
         return 'tournament_finished';
     }

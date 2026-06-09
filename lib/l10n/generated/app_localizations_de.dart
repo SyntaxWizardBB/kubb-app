@@ -4462,6 +4462,30 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die gemeldete Reihenfolge bestätigen — bestes Team zuerst.';
 
   @override
+  String get inboxScheduleLabelRoundPublished => 'Neue Runde';
+
+  @override
+  String get inboxScheduleLabelMatchRunning => 'Match läuft';
+
+  @override
+  String get inboxScheduleLabelPaused => 'Turnier pausiert';
+
+  @override
+  String get inboxScheduleLabelResumed => 'Turnier läuft weiter';
+
+  @override
+  String get inboxScheduleLabelAwaitingResults => 'Resultat fehlt';
+
+  @override
+  String get inboxScheduleLabelTiebreakHold => 'Tiebreak';
+
+  @override
+  String get inboxScheduleLabelGeneric => 'Turnier-Ablauf';
+
+  @override
+  String get inboxScheduleOpenMatchAction => 'Zum Match';
+
+  @override
   String get tournamentWizardSummaryPlaceholder => '—';
 
   @override

@@ -8086,6 +8086,54 @@ abstract class AppLocalizations {
   /// **'Die gemeldete Reihenfolge bestätigen — bestes Team zuerst.'**
   String get shootoutOrderHintReadonly;
 
+  /// Inbox badge label for a tournamentSchedule row tagged round_published (ADR-0031 Phase C / OD-1)
+  ///
+  /// In de, this message translates to:
+  /// **'Neue Runde'**
+  String get inboxScheduleLabelRoundPublished;
+
+  /// Inbox badge label for a tournamentSchedule row tagged match_running
+  ///
+  /// In de, this message translates to:
+  /// **'Match läuft'**
+  String get inboxScheduleLabelMatchRunning;
+
+  /// Inbox badge label for a tournamentSchedule row tagged paused
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier pausiert'**
+  String get inboxScheduleLabelPaused;
+
+  /// Inbox badge label for a tournamentSchedule row tagged resumed
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier läuft weiter'**
+  String get inboxScheduleLabelResumed;
+
+  /// Inbox badge label for a tournamentSchedule row tagged awaiting_results
+  ///
+  /// In de, this message translates to:
+  /// **'Resultat fehlt'**
+  String get inboxScheduleLabelAwaitingResults;
+
+  /// Inbox badge label for a tournamentSchedule row tagged tiebreak_hold
+  ///
+  /// In de, this message translates to:
+  /// **'Tiebreak'**
+  String get inboxScheduleLabelTiebreakHold;
+
+  /// Inbox badge fallback label for a tournamentSchedule row with an unrecognised payload tag
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier-Ablauf'**
+  String get inboxScheduleLabelGeneric;
+
+  /// Inbox detail CTA that opens the caller's live active tournament match
+  ///
+  /// In de, this message translates to:
+  /// **'Zum Match'**
+  String get inboxScheduleOpenMatchAction;
+
   /// K26: placeholder shown for an empty/unset optional field in the summary review
   ///
   /// In de, this message translates to:

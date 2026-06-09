@@ -15,6 +15,7 @@ import 'package:kubb_app/features/social/application/social_providers.dart';
 import 'package:kubb_app/features/social/presentation/social_routes.dart';
 import 'package:kubb_app/features/team/application/team_list_provider.dart';
 import 'package:kubb_app/features/team/application/team_membership_controller.dart';
+import 'package:kubb_app/features/tournament/application/my_active_match_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -166,10 +167,19 @@ class _MessageTile extends ConsumerWidget {
       // lightest meadow (success) tint from the design-system palette.
       case InboxMessageKind.tournamentFinished:
         return KubbTokens.meadow50;
+      // ADR-0031 Phase C (OD-1): timed-schedule events share the meadow
+      // (active-tournament) tint from the design-system palette — they are
+      // running-tournament updates, not warnings.
+      case InboxMessageKind.tournamentSchedule:
+        return KubbTokens.meadow100;
     }
   }
 
-  String _kindLabel(InboxMessageKind kind) {
+  /// Badge label for [message]. Most kinds map 1:1, but the collective
+  /// [InboxMessageKind.tournamentSchedule] (OD-1) covers several events, so
+  /// its label is derived from the payload tag (`action_payload['kind']`).
+  String _kindLabel(BuildContext context, InboxMessage message) {
+    final kind = message.kind;
     switch (kind) {
       case InboxMessageKind.notice:
         return 'Hinweis';
@@ -195,6 +205,31 @@ class _MessageTile extends ConsumerWidget {
         return 'Shoot-Out';
       case InboxMessageKind.tournamentFinished:
         return 'Turnier beendet';
+      case InboxMessageKind.tournamentSchedule:
+        return _scheduleLabel(context, message);
+    }
+  }
+
+  /// Per-event label for a [InboxMessageKind.tournamentSchedule] row, derived
+  /// from the payload tag (OD-1: one kind, six events). Falls back to a
+  /// generic schedule label for an unrecognised tag.
+  String _scheduleLabel(BuildContext context, InboxMessage message) {
+    final l = AppLocalizations.of(context);
+    switch (message.actionPayload?['kind'] as String?) {
+      case 'round_published':
+        return l.inboxScheduleLabelRoundPublished;
+      case 'match_running':
+        return l.inboxScheduleLabelMatchRunning;
+      case 'paused':
+        return l.inboxScheduleLabelPaused;
+      case 'resumed':
+        return l.inboxScheduleLabelResumed;
+      case 'awaiting_results':
+        return l.inboxScheduleLabelAwaitingResults;
+      case 'tiebreak_hold':
+        return l.inboxScheduleLabelTiebreakHold;
+      default:
+        return l.inboxScheduleLabelGeneric;
     }
   }
 
@@ -256,7 +291,7 @@ class _MessageTile extends ConsumerWidget {
                             ),
                           ),
                           child: Text(
-                            _kindLabel(message.kind),
+                            _kindLabel(context, message),
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
@@ -355,6 +390,12 @@ class _MessageDetail extends ConsumerWidget {
         message.actionPayload?['tournament_id'] as String?;
     final shootoutStartRank =
         (message.actionPayload?['start_rank'] as num?)?.toInt() ?? 0;
+    // ADR-0031 Phase C: the schedule notification carries only the
+    // tournament id (payload stays PII-free — no opponent/user names). The
+    // pitch/opponent for the "Zum Match" CTA are resolved live at render time
+    // from myActiveMatchProvider (CDC-backed), never read from the payload.
+    final scheduleTournamentId =
+        message.actionPayload?['tournament_id'] as String?;
 
     return SafeArea(
       child: Padding(
@@ -475,6 +516,18 @@ class _MessageDetail extends ConsumerWidget {
                   child:
                       Text(AppLocalizations.of(context).shootoutInboxOpenAction),
                 ),
+              ),
+            ] else if (message.kind == InboxMessageKind.tournamentSchedule &&
+                scheduleTournamentId != null) ...[
+              // ADR-0031 Phase C (OD-1): a "Zum Match" CTA for schedule
+              // events. Pitch/opponent are NOT in the payload (PII-free) —
+              // they are resolved live from myActiveMatchProvider, so the CTA
+              // only shows up while the caller actually has an open match in
+              // this tournament. Uses the existing TournamentRoutes match
+              // detail entry, no handcrafted route string.
+              _ScheduleMatchCta(
+                tournamentId: TournamentId(scheduleTournamentId),
+                onClosed: () => Navigator.of(context).pop(),
               ),
             ] else if (message.kind == InboxMessageKind.teamInvitation &&
                 invitationId != null) ...[
@@ -764,6 +817,51 @@ class _MessageDetail extends ConsumerWidget {
         SnackBar(content: Text('Fehler: $e'), backgroundColor: KubbTokens.miss),
       );
     }
+  }
+}
+
+/// "Zum Match" CTA for a [InboxMessageKind.tournamentSchedule] detail sheet
+/// (ADR-0031 Phase C). Resolves the caller's live active match in
+/// [tournamentId] from [myActiveMatchProvider] (CDC-backed, no new polling)
+/// and navigates to the existing tournament match-detail route. Renders
+/// nothing while the caller has no open match — the schedule event then stays
+/// a plain informational message.
+class _ScheduleMatchCta extends ConsumerWidget {
+  const _ScheduleMatchCta({
+    required this.tournamentId,
+    required this.onClosed,
+  });
+
+  final TournamentId tournamentId;
+  final VoidCallback onClosed;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final active = ref.watch(myActiveMatchProvider(tournamentId)).maybeWhen(
+          data: (m) => m,
+          orElse: () => null,
+        );
+    if (active == null) return const SizedBox.shrink();
+
+    final l = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: KubbTokens.space5),
+      child: SizedBox(
+        width: double.infinity,
+        child: FilledButton(
+          onPressed: () {
+            onClosed();
+            context.go(
+              TournamentRoutes.matchDetail(
+                tournamentId.value,
+                active.match.matchId.value,
+              ),
+            );
+          },
+          child: Text(l.inboxScheduleOpenMatchAction),
+        ),
+      ),
+    );
   }
 }
 

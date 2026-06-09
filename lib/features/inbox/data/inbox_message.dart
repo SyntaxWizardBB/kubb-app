@@ -41,7 +41,30 @@ enum InboxMessageKind {
   /// (migration `20261242000000_tournament_finished_inbox_round_time.sql`).
   /// The body already carries the configured round time, so the UI renders it
   /// as a plain informational message — no action panel.
-  tournamentFinished;
+  tournamentFinished,
+
+  /// ADR-0031 Phase C (OD-1): a single *collective* client kind for every
+  /// timed-schedule event. The server ships them all on the existing
+  /// `tournament_round` wire kind (no new wire-kinds — like shoot-out) and
+  /// distinguishes the concrete event purely through
+  /// `action_payload['kind']`, one of the C-event sammel-tags
+  /// {round_published, match_running, paused, resumed, awaiting_results,
+  /// tiebreak_hold}. The per-event label/icon is derived from that payload
+  /// tag in the UI; the DB kind-CHECK stays stable (client-side
+  /// disambiguation only).
+  tournamentSchedule;
+
+  /// The C-event payload tags (`action_payload['kind']`) that all map onto
+  /// the collective [tournamentSchedule] kind (OD-1). Kept in one place so
+  /// [fromWire] and the UI label/icon helper stay in sync.
+  static const Set<String> scheduleEventTags = {
+    'round_published',
+    'match_running',
+    'paused',
+    'resumed',
+    'awaiting_results',
+    'tiebreak_hold',
+  };
 
   /// Maps the wire `kind` plus the row's [actionPayload] onto a typed kind.
   ///
@@ -59,6 +82,16 @@ enum InboxMessageKind {
     if (raw == 'tournament_round' &&
         actionPayload?['kind'] == 'shootout') {
       return InboxMessageKind.tournamentShootout;
+    }
+    // ADR-0031 Phase C (OD-1): every timed-schedule event also rides on the
+    // 'tournament_round' wire kind and is tagged via action_payload['kind']
+    // with one of the C-event sammel-tags. They collapse onto the single
+    // collective tournamentSchedule kind; the per-event label/icon is derived
+    // from the payload tag in the UI. An unknown/absent kind keeps the
+    // existing notice fallback below.
+    if (raw == 'tournament_round' &&
+        scheduleEventTags.contains(actionPayload?['kind'])) {
+      return InboxMessageKind.tournamentSchedule;
     }
     switch (raw) {
       case 'notice':
