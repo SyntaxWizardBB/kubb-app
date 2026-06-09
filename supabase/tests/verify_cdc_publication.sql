@@ -6,9 +6,12 @@
 -- This script is strictly read-only: no INSERT/UPDATE/DELETE/ALTER/DROP/TRUNCATE.
 --
 -- End-state contract:
---   * EXACTLY 6 tables are published on supabase_realtime:
+--   * EXACTLY 7 tables are published on supabase_realtime:
 --       user_inbox_messages, friend_edges, tournament_matches,
---       team_memberships, tournament_participants, matches
+--       team_memberships, tournament_participants, matches,
+--       tournament_round_schedule
+--     (tournament_round_schedule added by ADR-0031 Phase A Block A1
+--      migration 20261251000000 — the timed-runner per-round CDC channel.)
 --   * every published table has REPLICA IDENTITY DEFAULT ('d') — none is FULL
 --   * tournaments is NOT published (broadcast-only transport)
 DO $$
@@ -19,7 +22,8 @@ DECLARE
     'tournament_matches',
     'team_memberships',
     'tournament_participants',
-    'matches'
+    'matches',
+    'tournament_round_schedule'
   ];
   actual   text[];
   full_ri  text[];
@@ -37,8 +41,8 @@ BEGIN
    WHERE pubname = 'supabase_realtime'
      AND schemaname = 'public';
 
-  IF cnt <> 6 THEN
-    RAISE EXCEPTION 'supabase_realtime must publish exactly 6 tables, found %: %',
+  IF cnt <> 7 THEN
+    RAISE EXCEPTION 'supabase_realtime must publish exactly 7 tables, found %: %',
       cnt, actual;
   END IF;
 
@@ -72,5 +76,5 @@ BEGIN
       full_ri;
   END IF;
 
-  RAISE NOTICE 'verify_cdc_publication: OK — exactly 6 tables, all REPLICA IDENTITY DEFAULT, tournaments excluded';
+  RAISE NOTICE 'verify_cdc_publication: OK — exactly 7 tables, all REPLICA IDENTITY DEFAULT, tournaments excluded';
 END $$;
