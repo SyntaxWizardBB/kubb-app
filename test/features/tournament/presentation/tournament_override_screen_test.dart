@@ -144,15 +144,27 @@ void main() {
     expect(find.text('Entscheidung speichern'), findsNothing);
   });
 
-  testWidgets('non-disputed status surfaces the gate message',
+  testWidgets('T1: a non-terminal match (awaiting_results) renders the form',
       (tester) async {
     await _pump(
       tester,
       match: _match(status: TournamentMatchStatus.awaitingResults),
       callerUserId: _creator,
     );
+    // No gate — the organizer can override a non-disputed match now.
+    expect(find.textContaining('übersteuert werden'), findsNothing);
+    expect(find.text('Entscheidung speichern'), findsOneWidget);
+  });
+
+  testWidgets('a terminal match (finalized) surfaces the gate message',
+      (tester) async {
+    await _pump(
+      tester,
+      match: _match(status: TournamentMatchStatus.finalized),
+      callerUserId: _creator,
+    );
     expect(
-      find.textContaining('strittige Matches'),
+      find.textContaining('nicht mehr übersteuert werden'),
       findsOneWidget,
     );
     expect(find.text('Entscheidung speichern'), findsNothing);

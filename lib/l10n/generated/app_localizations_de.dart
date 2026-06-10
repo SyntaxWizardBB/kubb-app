@@ -3650,7 +3650,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentOverrideStatusGate =>
-      'Nur strittige Matches können übersteuert werden.';
+      'Dieses Match kann nicht mehr übersteuert werden.';
+
+  @override
+  String get tournamentOverrideEntryAction => 'Als Veranstalter eintragen';
 
   @override
   String get tournamentOverrideValidationReasonEmpty =>

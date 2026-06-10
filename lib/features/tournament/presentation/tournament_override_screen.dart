@@ -143,7 +143,15 @@ class _OverrideState extends ConsumerState<TournamentOverrideScreen> {
             }
             final isCreator = detail?.isCallerCreator(myUserId) ?? false;
             if (!isCreator) return gate(l.tournamentOverrideNotAuthorized);
-            if (match.status != TournamentMatchStatus.disputed) {
+            // T1: the organizer may enter/correct a result for any non-terminal
+            // match (scheduled / awaiting_results / disputed). Mirrors the
+            // server gate in tournament_organizer_override.
+            const overridable = {
+              TournamentMatchStatus.scheduled,
+              TournamentMatchStatus.awaitingResults,
+              TournamentMatchStatus.disputed,
+            };
+            if (!overridable.contains(match.status)) {
               return gate(l.tournamentOverrideStatusGate);
             }
             return _body(match: match, detail: detail, l: l, tokens: tokens);

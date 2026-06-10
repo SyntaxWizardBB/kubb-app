@@ -4737,7 +4737,11 @@
   "tournamentOverrideReasonCounter": "{current}/{max}",
   "tournamentOverrideSubmitButton": "Entscheidung speichern",
   "tournamentOverrideSubmitError": "Speichern fehlgeschlagen: {error}",
-  "tournamentOverrideStatusGate": "Nur strittige Matches können übersteuert werden.",
+  "tournamentOverrideStatusGate": "Dieses Match kann nicht mehr übersteuert werden.",
+  "tournamentOverrideEntryAction": "Als Veranstalter eintragen",
+  "@tournamentOverrideEntryAction": {
+    "description": "Organizer entry button on the match detail to enter/correct the result directly"
+  },
   "tournamentOverrideValidationReasonEmpty": "Begründung ist erforderlich",
   "tournamentOverrideValidationScoreNotDecisive": "Score muss eindeutig sein (ein Team erreicht die nötigen Sätze)",
   "tournamentOverrideNotAuthorized": "Nicht autorisiert",

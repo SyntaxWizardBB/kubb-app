@@ -6631,8 +6631,14 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentOverrideStatusGate.
   ///
   /// In de, this message translates to:
-  /// **'Nur strittige Matches können übersteuert werden.'**
+  /// **'Dieses Match kann nicht mehr übersteuert werden.'**
   String get tournamentOverrideStatusGate;
+
+  /// Organizer entry button on the match detail to enter/correct the result directly
+  ///
+  /// In de, this message translates to:
+  /// **'Als Veranstalter eintragen'**
+  String get tournamentOverrideEntryAction;
 
   /// No description provided for @tournamentOverrideValidationReasonEmpty.
   ///
