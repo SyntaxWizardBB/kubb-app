@@ -1,3 +1,6 @@
+// The explicit `null` arguments in the classic-path schedule test contrast
+// it against the stage / paused rows — that is intentional.
+// ignore_for_file: avoid_redundant_argument_values
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/features/tournament/data/tournament_models.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -37,6 +40,11 @@ Map<String, dynamic> _participantRow({
   Object? seed,
   String? respondedAt,
   Object? displayName = 'Alice',
+  // `true` -> include the key with a timestamp, `false` -> include with NULL,
+  // omitted (null sentinel via [includeCheckedIn]) -> drop the key entirely so
+  // old RPC/CDC payloads without the column can be exercised.
+  String? checkedInAt,
+  bool includeCheckedIn = true,
 }) =>
     <String, dynamic>{
       'participant_id': 'p-1',
@@ -47,6 +55,27 @@ Map<String, dynamic> _participantRow({
       'seed': seed,
       'registered_at': '2026-05-24T10:00:00.000Z',
       'responded_at': respondedAt,
+      if (includeCheckedIn) 'checked_in_at': checkedInAt,
+    };
+
+Map<String, Object?> _participantCdcRow({
+  String status = 'confirmed',
+  Object? seed,
+  String? respondedAt,
+  String? checkedInAt,
+  bool includeCheckedIn = true,
+}) =>
+    <String, Object?>{
+      // Raw `tournament_participants` table row: PK is `id`, and there are no
+      // joined nickname/display_name columns on the CDC wire.
+      'id': 'p-9',
+      'tournament_id': 't-1',
+      'user_id': 'u-9',
+      'registration_status': status,
+      'seed': seed,
+      'registered_at': '2026-05-24T10:00:00.000Z',
+      'responded_at': respondedAt,
+      if (includeCheckedIn) 'checked_in_at': checkedInAt,
     };
 
 Map<String, dynamic> _matchRow({
@@ -182,6 +211,56 @@ void main() {
       final p = tournamentParticipantFromRow(_participantRow(displayName: null));
       expect(p.displayName, isNull);
       expect(p.displayLabel, 'alice');
+    });
+
+    // ADR-0031 Phase D, Block D3: checked_in_at presence projection.
+    test('D3: parses checked_in_at into checkedInAt + isCheckedIn', () {
+      final p = tournamentParticipantFromRow(_participantRow(
+        checkedInAt: '2026-06-09T08:30:00.000Z',
+      ));
+      expect(p.checkedInAt, DateTime.utc(2026, 6, 9, 8, 30));
+      expect(p.isCheckedIn, isTrue);
+    });
+
+    test('D3: checked_in_at NULL decodes to null (not checked in)', () {
+      final p = tournamentParticipantFromRow(_participantRow());
+      expect(p.checkedInAt, isNull);
+      expect(p.isCheckedIn, isFalse);
+    });
+
+    test('D3: missing checked_in_at key decodes to null (older wire)', () {
+      final p = tournamentParticipantFromRow(
+        _participantRow(includeCheckedIn: false),
+      );
+      expect(p.checkedInAt, isNull);
+      expect(p.isCheckedIn, isFalse);
+    });
+  });
+
+  group('tournamentParticipantFromCdcRow (ADR-0031 Phase D, Block D3)', () {
+    test('maps raw table id -> participantId and parses checked_in_at', () {
+      final p = tournamentParticipantFromCdcRow(_participantCdcRow(
+        checkedInAt: '2026-06-09T08:30:00.000Z',
+      ));
+      expect(p.participantId, 'p-9');
+      expect(p.userId, 'u-9');
+      expect(p.registrationStatus, TournamentParticipantStatus.approved);
+      expect(p.checkedInAt, DateTime.utc(2026, 6, 9, 8, 30));
+      expect(p.isCheckedIn, isTrue);
+    });
+
+    test('checked_in_at NULL on the CDC wire decodes to null', () {
+      final p = tournamentParticipantFromCdcRow(_participantCdcRow());
+      expect(p.checkedInAt, isNull);
+      expect(p.isCheckedIn, isFalse);
+    });
+
+    test('missing checked_in_at key on CDC wire decodes to null', () {
+      final p = tournamentParticipantFromCdcRow(
+        _participantCdcRow(includeCheckedIn: false),
+      );
+      expect(p.checkedInAt, isNull);
+      expect(p.isCheckedIn, isFalse);
     });
   });
 
@@ -360,6 +439,81 @@ void main() {
       expect(c.rounds, hasLength(2));
       expect(c.thirdPlace, isNotNull);
       expect(c.thirdPlace!.phase, BracketPhase.consolationThirdPlace);
+    });
+  });
+
+  // ADR-0031 Block A3c — tournament_round_schedule CDC parser.
+  group('tournamentRoundScheduleRefFromCdcRow', () {
+    Map<String, Object?> scheduleRow({
+      Object? stageNodeId,
+      String status = 'running',
+      Object? tiebreakAfterSeconds = 120,
+      Object? pausedAt,
+      Object? pausedAccumSeconds = 0,
+    }) =>
+        <String, Object?>{
+          'tournament_id': 't-1',
+          'stage_node_id': stageNodeId,
+          'round_number': 2,
+          'phase': 'ko',
+          'status': status,
+          'published_at': '2026-06-01T12:00:00.000Z',
+          'starts_at': '2026-06-01T12:05:00.000Z',
+          'ends_at': '2026-06-01T12:35:00.000Z',
+          'break_seconds': 300,
+          'match_seconds': 1800,
+          'tiebreak_after_seconds': tiebreakAfterSeconds,
+          'paused_at': pausedAt,
+          'paused_accum_seconds': pausedAccumSeconds,
+        };
+
+    test('maps all schedule fields from the raw CDC row', () {
+      final ref = tournamentRoundScheduleRefFromCdcRow(
+        scheduleRow(stageNodeId: 'node-7', pausedAt: '2026-06-01T12:10:00.000Z',
+            pausedAccumSeconds: 45),
+      );
+      expect(ref.tournamentId, const TournamentId('t-1'));
+      expect(ref.stageNodeId, 'node-7');
+      expect(ref.roundNumber, 2);
+      expect(ref.phase, 'ko');
+      expect(ref.status, RoundStatus.running);
+      expect(ref.publishedAt, DateTime.utc(2026, 6, 1, 12));
+      expect(ref.startsAt, DateTime.utc(2026, 6, 1, 12, 5));
+      expect(ref.endsAt, DateTime.utc(2026, 6, 1, 12, 35));
+      expect(ref.breakSeconds, 300);
+      expect(ref.matchSeconds, 1800);
+      expect(ref.tiebreakAfterSeconds, 120);
+      expect(ref.pausedAt, DateTime.utc(2026, 6, 1, 12, 10));
+      expect(ref.pausedAccumSeconds, 45);
+    });
+
+    test('classic path: NULL stage_node_id / paused_at / tiebreak decode', () {
+      final ref = tournamentRoundScheduleRefFromCdcRow(
+        scheduleRow(
+          stageNodeId: null,
+          tiebreakAfterSeconds: null,
+          pausedAt: null,
+        ),
+      );
+      expect(ref.stageNodeId, isNull);
+      expect(ref.tiebreakAfterSeconds, isNull);
+      expect(ref.pausedAt, isNull);
+      expect(ref.pausedAccumSeconds, 0);
+    });
+
+    test('maps every status string onto its RoundStatus value', () {
+      const expected = <String, RoundStatus>{
+        'published': RoundStatus.published,
+        'call': RoundStatus.call,
+        'running': RoundStatus.running,
+        'awaiting_results': RoundStatus.awaitingResults,
+        'completed': RoundStatus.completed,
+      };
+      for (final entry in expected.entries) {
+        final ref =
+            tournamentRoundScheduleRefFromCdcRow(scheduleRow(status: entry.key));
+        expect(ref.status, entry.value, reason: entry.key);
+      }
     });
   });
 }

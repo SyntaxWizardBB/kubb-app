@@ -94,6 +94,240 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('de')];
 
+  /// AppBar eyebrow for the organizer dashboard overview (ADR-0031 Phase B)
+  ///
+  /// In de, this message translates to:
+  /// **'Veranstalter · Cockpit'**
+  String get organizerDashboardEyebrow;
+
+  /// AppBar title for the organizer dashboard overview
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier-Steuerung'**
+  String get organizerDashboardTitle;
+
+  /// Empty-state title shown when the caller administers no live tournaments
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Turniere zu verwalten'**
+  String get organizerDashboardEmptyTitle;
+
+  /// Empty-state body for the organizer dashboard overview
+  ///
+  /// In de, this message translates to:
+  /// **'Sobald du ein Turnier veröffentlichst oder als Verein verwaltest, erscheint es hier im Cockpit.'**
+  String get organizerDashboardEmptyBody;
+
+  /// In-screen gate title shown when the caller may not administer the tournament
+  ///
+  /// In de, this message translates to:
+  /// **'Kein Zugriff'**
+  String get organizerDashboardGateTitle;
+
+  /// In-screen gate body for the organizer dashboard
+  ///
+  /// In de, this message translates to:
+  /// **'Du bist nicht berechtigt, dieses Turnier zu steuern. Wende dich an den Veranstalter oder den Verein.'**
+  String get organizerDashboardGateBody;
+
+  /// Error message shown when the administrable-tournaments list fails to load
+  ///
+  /// In de, this message translates to:
+  /// **'Cockpit konnte nicht geladen werden.'**
+  String get organizerDashboardError;
+
+  /// AppBar eyebrow for the per-tournament organizer dashboard detail
+  ///
+  /// In de, this message translates to:
+  /// **'Veranstalter · Ablauf'**
+  String get organizerDashboardDetailEyebrow;
+
+  /// Section title above the round/match list on the dashboard detail
+  ///
+  /// In de, this message translates to:
+  /// **'Runden & Begegnungen'**
+  String get organizerDashboardRoundsTitle;
+
+  /// Placeholder shown when a tournament has no materialized matches yet
+  ///
+  /// In de, this message translates to:
+  /// **'Für dieses Turnier liegen noch keine Begegnungen vor.'**
+  String get organizerDashboardNoMatches;
+
+  /// Round header on the dashboard detail round/match list
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {round}'**
+  String organizerDashboardRoundLabel(int round);
+
+  /// Card line showing the tournament's currently active round number
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {round}'**
+  String organizerDashboardCurrentRound(int round);
+
+  /// Card line shown when a tournament has no schedule/active round yet
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine aktive Runde'**
+  String get organizerDashboardNoRound;
+
+  /// Open-match badge on the overview card
+  ///
+  /// In de, this message translates to:
+  /// **'{count} offen'**
+  String organizerDashboardOpenMatches(int count);
+
+  /// Disputed-match badge on the overview card
+  ///
+  /// In de, this message translates to:
+  /// **'{count} strittig'**
+  String organizerDashboardDisputedMatches(int count);
+
+  /// Remaining-time line on the overview card (mm:ss)
+  ///
+  /// In de, this message translates to:
+  /// **'Restzeit {time}'**
+  String organizerDashboardRemaining(String time);
+
+  /// Remaining-time line when the round window has elapsed
+  ///
+  /// In de, this message translates to:
+  /// **'Zeit abgelaufen'**
+  String get organizerDashboardExpired;
+
+  /// Schedule-status label: round published / notified
+  ///
+  /// In de, this message translates to:
+  /// **'Veröffentlicht'**
+  String get organizerScheduleStatusPublished;
+
+  /// Schedule-status label: call/break window before play
+  ///
+  /// In de, this message translates to:
+  /// **'Aufruf'**
+  String get organizerScheduleStatusCall;
+
+  /// Schedule-status label: match clock running
+  ///
+  /// In de, this message translates to:
+  /// **'Läuft'**
+  String get organizerScheduleStatusRunning;
+
+  /// Schedule-status label: awaiting results / hold
+  ///
+  /// In de, this message translates to:
+  /// **'Wartet auf Ergebnis'**
+  String get organizerScheduleStatusAwaiting;
+
+  /// Schedule-status label: round completed
+  ///
+  /// In de, this message translates to:
+  /// **'Abgeschlossen'**
+  String get organizerScheduleStatusCompleted;
+
+  /// Schedule-status label shown when no schedule row exists yet
+  ///
+  /// In de, this message translates to:
+  /// **'Kein Zeitplan'**
+  String get organizerScheduleStatusNone;
+
+  /// Schedule-status label shown while the tournament-wide pause is active
+  ///
+  /// In de, this message translates to:
+  /// **'Pausiert'**
+  String get organizerScheduleStatusPaused;
+
+  /// Quick action: start the tournament
+  ///
+  /// In de, this message translates to:
+  /// **'Starten'**
+  String get organizerActionStart;
+
+  /// Quick action: pause the tournament-wide clock
+  ///
+  /// In de, this message translates to:
+  /// **'Pause'**
+  String get organizerActionPause;
+
+  /// Quick action: resume from the tournament-wide pause
+  ///
+  /// In de, this message translates to:
+  /// **'Fortsetzen'**
+  String get organizerActionResume;
+
+  /// Control bar: skip the call/break window forward (round starts now)
+  ///
+  /// In de, this message translates to:
+  /// **'Vorspulen'**
+  String get organizerActionSkipForward;
+
+  /// Control bar: re-call the active round window (OE-B4)
+  ///
+  /// In de, this message translates to:
+  /// **'Neu aufrufen'**
+  String get organizerActionSkipBack;
+
+  /// Hold-to-confirm hint on the irreversible skip-forward action
+  ///
+  /// In de, this message translates to:
+  /// **'Zum Vorspulen gedrückt halten'**
+  String get organizerActionSkipForwardHoldHint;
+
+  /// Overview card action: open the per-tournament dashboard detail
+  ///
+  /// In de, this message translates to:
+  /// **'Ablauf öffnen'**
+  String get organizerOpenDetail;
+
+  /// Section title above the schedule control bar on the detail screen
+  ///
+  /// In de, this message translates to:
+  /// **'Steuerung'**
+  String get organizerControlSectionTitle;
+
+  /// Section title above the escalation badges on the dashboard detail screen (B3)
+  ///
+  /// In de, this message translates to:
+  /// **'Eingriffe'**
+  String get organizerEscalationSectionTitle;
+
+  /// Escalation badge showing the number of disputed matches needing an override
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, one{1 strittig} other{{count} strittig}}'**
+  String organizerEscalationDisputedBadge(int count);
+
+  /// Escalation badge showing the number of open/awaiting matches that can be forfeited
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, one{1 offen} other{{count} offen}}'**
+  String organizerEscalationOpenBadge(int count);
+
+  /// Shown when there are no disputed or open matches needing an intervention
+  ///
+  /// In de, this message translates to:
+  /// **'Keine offenen Eingriffe'**
+  String get organizerEscalationNone;
+
+  /// CTA on the dashboard detail screen that starts the KO phase (auto seeding) or opens the seeding editor (manual)
+  ///
+  /// In de, this message translates to:
+  /// **'KO-Phase starten'**
+  String get organizerKoTransitionAction;
+
+  /// Per-match CTA on a disputed match that routes to the organizer override screen
+  ///
+  /// In de, this message translates to:
+  /// **'Korrigieren'**
+  String get organizerMatchActionOverride;
+
+  /// Per-match CTA on an open/awaiting match that opens the forfeit sheet
+  ///
+  /// In de, this message translates to:
+  /// **'Forfait'**
+  String get organizerMatchActionForfeit;
+
   /// AppBar eyebrow for the stage-graph builder screen
   ///
   /// In de, this message translates to:
@@ -5176,6 +5410,30 @@ abstract class AppLocalizations {
   /// **'Entfernen'**
   String get tournamentDetailActionRemove;
 
+  /// Organizer action on a confirmed participant row: mark them physically present on site (ADR-0031 Phase D check-in)
+  ///
+  /// In de, this message translates to:
+  /// **'Einchecken'**
+  String get tournamentDetailCheckinAction;
+
+  /// State of a checked-in participant row (green); tapping it reverts the on-site check-in
+  ///
+  /// In de, this message translates to:
+  /// **'Anwesend'**
+  String get tournamentDetailCheckedInState;
+
+  /// Inline label showing when a participant was checked in on site
+  ///
+  /// In de, this message translates to:
+  /// **'Eingecheckt {time}'**
+  String tournamentDetailCheckedInAt(String time);
+
+  /// Header counter: how many of the confirmed participants are checked in on site
+  ///
+  /// In de, this message translates to:
+  /// **'{checkedIn}/{total} eingecheckt'**
+  String tournamentDetailCheckedInCount(int checkedIn, int total);
+
   /// Organizer button: approve registration
   ///
   /// In de, this message translates to:
@@ -5980,6 +6238,24 @@ abstract class AppLocalizations {
   /// **'Tiebreak läuft'**
   String get tournamentMatchTimerTiebreakActive;
 
+  /// Countdown until the next round starts, shown during the call/pause window (status published/call). {time} is mm:ss.
+  ///
+  /// In de, this message translates to:
+  /// **'Nächste Runde in {time}'**
+  String tournamentRoundCallCountdown(String time);
+
+  /// Shown when a round is awaiting results: the clock is frozen until the result is entered (status awaiting_results)
+  ///
+  /// In de, this message translates to:
+  /// **'Zeit angehalten — Resultat eintragen'**
+  String get tournamentRoundHold;
+
+  /// Shown on the held clock when the round awaits a tiebreak result
+  ///
+  /// In de, this message translates to:
+  /// **'Tiebreak'**
+  String get tournamentRoundTiebreakHold;
+
   /// Prominent call-to-play banner pointing the participant to their pitch
   ///
   /// In de, this message translates to:
@@ -6069,6 +6345,66 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Forfeit gespeichert — Match abgeschlossen.'**
   String get tournamentForfeitSuccessToast;
+
+  /// Heading of the organizer escalation panel (ADR-0031 Phase D5): disputed / overdue / not-checked-in lists
+  ///
+  /// In de, this message translates to:
+  /// **'Eskalationen'**
+  String get tournamentEscalationTitle;
+
+  /// Empty-state title shown when there are no escalations (no disputed, overdue or unchecked-in entries)
+  ///
+  /// In de, this message translates to:
+  /// **'Alles im grünen Bereich'**
+  String get tournamentEscalationEmptyTitle;
+
+  /// Empty-state body for the escalation panel when nothing needs attention
+  ///
+  /// In de, this message translates to:
+  /// **'Keine strittigen oder überfälligen Matches und keine fehlenden Check-ins.'**
+  String get tournamentEscalationEmptyBody;
+
+  /// Section heading for matches in disputed status that need an organizer override
+  ///
+  /// In de, this message translates to:
+  /// **'Strittig'**
+  String get tournamentEscalationDisputedHeading;
+
+  /// Section heading for matches whose results are overdue (awaiting_results)
+  ///
+  /// In de, this message translates to:
+  /// **'Überfällig'**
+  String get tournamentEscalationOverdueHeading;
+
+  /// Section heading for confirmed participants who have not yet checked in on site
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht eingecheckt'**
+  String get tournamentEscalationNotCheckedInHeading;
+
+  /// Subtitle identifying a match by round and match number within the round
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {round} · Match {match}'**
+  String tournamentEscalationMatchLabel(int round, int match);
+
+  /// Action button on a disputed match row that opens the organizer override screen
+  ///
+  /// In de, this message translates to:
+  /// **'Korrigieren'**
+  String get tournamentEscalationOverrideAction;
+
+  /// Action button on a not-checked-in participant row that opens the pre-filled forfeit sheet
+  ///
+  /// In de, this message translates to:
+  /// **'No-Show → Forfait'**
+  String get tournamentEscalationForfeitAction;
+
+  /// Pre-filled forfeit reason for the No-Show shortcut (must be >= 10 chars; mirrors the server reason rule)
+  ///
+  /// In de, this message translates to:
+  /// **'No-Show - nicht eingecheckt'**
+  String get tournamentEscalationNoShowReason;
 
   /// Validation error when a set has neither score nor king
   ///
@@ -7887,6 +8223,54 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Die gemeldete Reihenfolge bestätigen — bestes Team zuerst.'**
   String get shootoutOrderHintReadonly;
+
+  /// Inbox badge label for a tournamentSchedule row tagged round_published (ADR-0031 Phase C / OD-1)
+  ///
+  /// In de, this message translates to:
+  /// **'Neue Runde'**
+  String get inboxScheduleLabelRoundPublished;
+
+  /// Inbox badge label for a tournamentSchedule row tagged match_running
+  ///
+  /// In de, this message translates to:
+  /// **'Match läuft'**
+  String get inboxScheduleLabelMatchRunning;
+
+  /// Inbox badge label for a tournamentSchedule row tagged paused
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier pausiert'**
+  String get inboxScheduleLabelPaused;
+
+  /// Inbox badge label for a tournamentSchedule row tagged resumed
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier läuft weiter'**
+  String get inboxScheduleLabelResumed;
+
+  /// Inbox badge label for a tournamentSchedule row tagged awaiting_results
+  ///
+  /// In de, this message translates to:
+  /// **'Resultat fehlt'**
+  String get inboxScheduleLabelAwaitingResults;
+
+  /// Inbox badge label for a tournamentSchedule row tagged tiebreak_hold
+  ///
+  /// In de, this message translates to:
+  /// **'Tiebreak'**
+  String get inboxScheduleLabelTiebreakHold;
+
+  /// Inbox badge fallback label for a tournamentSchedule row with an unrecognised payload tag
+  ///
+  /// In de, this message translates to:
+  /// **'Turnier-Ablauf'**
+  String get inboxScheduleLabelGeneric;
+
+  /// Inbox detail CTA that opens the caller's live active tournament match
+  ///
+  /// In de, this message translates to:
+  /// **'Zum Match'**
+  String get inboxScheduleOpenMatchAction;
 
   /// K26: placeholder shown for an empty/unset optional field in the summary review
   ///

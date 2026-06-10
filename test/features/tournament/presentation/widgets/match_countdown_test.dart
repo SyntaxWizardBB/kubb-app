@@ -28,6 +28,10 @@ Future<void> _pump(
   required ManualCountdownTicker ticker,
   required CountdownHaptics haptics,
   int? tiebreakAfterSeconds,
+  Duration serverOffset = Duration.zero,
+  DateTime? pausedAt,
+  int pausedAccumSeconds = 0,
+  bool onHold = false,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -39,6 +43,10 @@ Future<void> _pump(
           startedAt: startedAt,
           durationSeconds: durationSeconds,
           tiebreakAfterSeconds: tiebreakAfterSeconds,
+          serverOffset: serverOffset,
+          pausedAt: pausedAt,
+          pausedAccumSeconds: pausedAccumSeconds,
+          onHold: onHold,
           ticker: ticker,
           haptics: haptics,
           now: clock.now,
@@ -155,5 +163,58 @@ void main() {
     expect(find.byKey(const ValueKey('match-countdown-expired')),
         findsOneWidget);
     expect(haptics.calls, 1);
+  });
+
+  // A3c (ADR-0031 §Uhr): the server skew offset is added to the local clock,
+  // so the remaining time is computed against `now + serverOffset`.
+  testWidgets('serverOffset shifts the remaining time', (tester) async {
+    // Local clock is at the start, but the server is 20s ahead — the match
+    // has effectively been running 20s, so 01:30 - 20s = 01:10 remaining.
+    final clock = _Clock(start);
+    final ticker = ManualCountdownTicker();
+    final haptics = _SpyHaptics();
+    await _pump(
+      tester,
+      startedAt: start,
+      durationSeconds: 90, // 01:30
+      serverOffset: const Duration(seconds: 20),
+      clock: clock,
+      ticker: ticker,
+      haptics: haptics,
+    );
+
+    expect(find.text('01:10'), findsOneWidget);
+    // Without the offset the same inputs would read 01:30.
+    expect(find.text('01:30'), findsNothing);
+  });
+
+  // A3c: a set pausedAt freezes `remaining` — advancing the clock past it
+  // does not reduce the displayed time.
+  testWidgets('pausedAt freezes the remaining time', (tester) async {
+    final clock = _Clock(start.add(const Duration(seconds: 30)));
+    final ticker = ManualCountdownTicker();
+    final haptics = _SpyHaptics();
+    // Paused 30s in: elapsed is pinned at 30s -> 90 - 30 = 60s remaining.
+    await _pump(
+      tester,
+      startedAt: start,
+      durationSeconds: 90,
+      pausedAt: start.add(const Duration(seconds: 30)),
+      clock: clock,
+      ticker: ticker,
+      haptics: haptics,
+    );
+
+    expect(find.text('01:00'), findsOneWidget);
+
+    // Advance the clock 40s further; while paused the remaining time stays
+    // frozen at 01:00 (the live pause slice cancels the clock advance).
+    clock.value = start.add(const Duration(seconds: 70));
+    ticker.fire();
+    await tester.pump();
+    expect(find.text('01:00'), findsOneWidget);
+    // Not expired and no haptic while frozen.
+    expect(find.byKey(const ValueKey('match-countdown-expired')), findsNothing);
+    expect(haptics.calls, 0);
   });
 }

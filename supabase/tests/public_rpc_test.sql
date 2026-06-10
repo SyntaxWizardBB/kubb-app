@@ -229,3 +229,59 @@ SELECT ok(
 SELECT * FROM finish();
 
 ROLLBACK;
+
+-- =====================================================================
+-- Phase A / Block A3b: app_server_now() — server-authoritative clock.
+--
+-- Independent BEGIN...ROLLBACK transaction so no schema/data changes
+-- leak out of the test. Asserts:
+--   1. function exists with the expected signature.
+--   2. return type is timestamptz.
+--   3. volatility is STABLE (so it inlines but stays a clock source).
+--   4. EXECUTE granted to `authenticated`.
+--   5. EXECUTE granted to `anon`.
+--   6. return value is within 1s of now() (UTC-consistent offset source).
+-- =====================================================================
+
+BEGIN;
+
+SELECT plan(6);
+
+-- 1. Function exists with the zero-argument signature.
+SELECT has_function(
+  'public', 'app_server_now', ARRAY[]::text[],
+  'app_server_now() exists with no arguments');
+
+-- 2. Return type is timestamptz.
+SELECT function_returns(
+  'public', 'app_server_now', ARRAY[]::text[], 'timestamp with time zone',
+  'app_server_now() returns timestamptz');
+
+-- 3. Volatility is STABLE.
+SELECT is(
+  (SELECT provolatile
+     FROM pg_proc
+     JOIN pg_namespace n ON n.oid = pronamespace
+    WHERE proname = 'app_server_now'
+      AND n.nspname = 'public'),
+  's'::"char",
+  'app_server_now() is STABLE');
+
+-- 4. EXECUTE granted to authenticated.
+SELECT ok(
+  has_function_privilege('authenticated', 'public.app_server_now()', 'EXECUTE'),
+  'app_server_now() is EXECUTE-able by authenticated');
+
+-- 5. EXECUTE granted to anon.
+SELECT ok(
+  has_function_privilege('anon', 'public.app_server_now()', 'EXECUTE'),
+  'app_server_now() is EXECUTE-able by anon');
+
+-- 6. Return value is within 1s of now() (UTC-consistent offset source).
+SELECT ok(
+  abs(extract(epoch FROM (public.app_server_now() - now()))) < 1,
+  'app_server_now() is within 1s of server now()');
+
+SELECT * FROM finish();
+
+ROLLBACK;

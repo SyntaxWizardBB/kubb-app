@@ -48,6 +48,53 @@ final canManageTournamentClubProvider =
       );
 });
 
+/// Family key for [canAdministerTournamentProvider]: the tournament's
+/// organizing `clubId` (null when the tournament has no club) plus its
+/// `createdBy` user id (the creator). Both are carried on the
+/// [TournamentDetail] the dashboard already holds (the dashboard maps that
+/// detail to this key), so the gate needs no extra fetch. Note: the overview
+/// DTO [TournamentAdminCardRef] does NOT project these fields — they come
+/// from the detail read.
+typedef AdministrableGateKey = ({String? clubId, String? createdBy});
+
+/// True when the caller may ADMINISTER a tournament from the organizer
+/// dashboard (ADR-0031 Phase B, Block B1c — K4 gate).
+///
+/// Access = Creator OR an active club role in {owner, admin, organizer,
+/// referee}. This mirrors [canManageTournamentClubProvider] but ADDS
+/// `referee` to the role set (that provider only checks owner/admin/
+/// organizer) and ORs in the per-tournament creator check. The role set is
+/// exactly the server gate `tournament_caller_can_manage`
+/// (`ARRAY['owner','admin','organizer','referee']`, migration
+/// `20261255000000`), so the client mirrors the server 1:1.
+///
+/// Resolves to `false` when not authenticated, while the async club read is
+/// loading, and on error — a role-gated action only appears once the role is
+/// confirmed. The server stays the security boundary (every control RPC
+/// re-checks the gate); this provider only governs button / visibility.
+// ignore: specify_nonobvious_property_types
+final canAdministerTournamentProvider =
+    Provider.family<bool, AdministrableGateKey>((ref, key) {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return false;
+  // Creator branch: the tournament's creator may always administer it,
+  // independent of any club role (a personal tournament has no club).
+  if (key.createdBy != null && key.createdBy == userId) return true;
+  final clubId = key.clubId;
+  if (clubId == null) return false;
+  return ref.watch(clubDetailProvider(ClubId(clubId))).maybeWhen(
+        data: (detail) => detail.members.any(
+          (m) =>
+              m.userId == userId &&
+              (m.roles.contains('owner') ||
+                  m.roles.contains('admin') ||
+                  m.roles.contains('organizer') ||
+                  m.roles.contains('referee')),
+        ),
+        orElse: () => false,
+      );
+});
+
 /// One club the caller may pick as the organizing club in the setup
 /// wizard: `id` is the `club_id` persisted on the tournament, `name` the
 /// display label.
@@ -100,6 +147,20 @@ final NotifierProvider<TournamentConfigController, TournamentConfigDraft>
 final tournamentListProvider =
     FutureProvider<List<TournamentSummaryRef>>((ref) async {
   return ref.read(tournamentRemoteProvider).listTournaments();
+});
+
+/// Tournaments the caller may administer, backing the organizer dashboard
+/// overview (ADR-0031 Phase B, Block B1c). One `tournament_list_administrable`
+/// RPC (server-gated to Creator + {owner,admin,organizer,referee}); the
+/// projection carries phase/round/schedule status, remaining seconds and the
+/// open/disputed match counts.
+///
+/// NO `Timer.periodic` / polling for server-state discovery (ADR-0029 /
+/// OE-B3): this overview has no single-column user scope, so its realtime
+/// refresh is driven later by Inbox-CDC invalidation, not by a poll loop.
+final administrableTournamentsProvider =
+    FutureProvider<List<TournamentAdminCardRef>>((ref) async {
+  return ref.read(tournamentRemoteProvider).listAdministrableTournaments();
 });
 
 /// Imperative action surface mirroring `matchActionsProvider`: keeps the
@@ -239,6 +300,33 @@ class TournamentActions {
     }
   }
 
+  /// On-site check-in (ADR-0031 Phase D, Block D3). Marks a confirmed
+  /// participant as physically present via the `tournament_checkin_participant`
+  /// RPC, then invalidates [tournamentDetailProvider] for [tournamentId] so the
+  /// participant list re-reads with the new `checked_in_at` — analogous to
+  /// [withdrawRegistration]. The server owns the manage gate / status window
+  /// (K4); this method does not duplicate that logic. The realtime CDC stream
+  /// also drives the same invalidation; this explicit re-read keeps the
+  /// initiating device responsive without waiting for the round-trip.
+  Future<void> checkin(
+    TournamentParticipantId id, {
+    required TournamentId tournamentId,
+  }) async {
+    await _ref.read(tournamentRemoteProvider).checkinParticipant(id);
+    _ref.invalidate(tournamentDetailProvider(tournamentId));
+  }
+
+  /// Reverts an on-site check-in (ADR-0031 Phase D, Block D3) via the
+  /// `tournament_undo_checkin` RPC, then invalidates [tournamentDetailProvider]
+  /// for [tournamentId]. Same server-authoritative gate as [checkin].
+  Future<void> undoCheckin(
+    TournamentParticipantId id, {
+    required TournamentId tournamentId,
+  }) async {
+    await _ref.read(tournamentRemoteProvider).undoCheckin(id);
+    _ref.invalidate(tournamentDetailProvider(tournamentId));
+  }
+
   Future<void> confirmRegistration(TournamentParticipantId id) async {
     await _ref.read(tournamentRemoteProvider).confirmRegistration(id);
     _ref.invalidate(tournamentListProvider);
@@ -279,6 +367,54 @@ class TournamentActions {
           setScores: setScores,
         );
     _ref.invalidate(tournamentMatchDetailProvider(matchId));
+  }
+
+  /// ADR-0031 Phase B (Block B2c): tournament-wide pause. Calls the
+  /// `tournament_pause` control RPC via the port, then refreshes the
+  /// dashboard overview. See [_invalidateScheduleControlOverview] for why the
+  /// detail schedule is intentionally NOT invalidated here.
+  Future<void> pause(TournamentId id) async {
+    await _ref.read(tournamentRemoteProvider).pauseTournament(id);
+    _invalidateScheduleControlOverview();
+  }
+
+  /// ADR-0031 Phase B (Block B2c): resume from a tournament-wide pause.
+  Future<void> resume(TournamentId id) async {
+    await _ref.read(tournamentRemoteProvider).resumeTournament(id);
+    _invalidateScheduleControlOverview();
+  }
+
+  /// ADR-0031 Phase B (Block B2c): skip the active round's call/break window
+  /// forward (the round starts running now).
+  Future<void> skipForward(TournamentId id) async {
+    await _ref.read(tournamentRemoteProvider).skipScheduleForward(id);
+    _invalidateScheduleControlOverview();
+  }
+
+  /// ADR-0031 Phase B (Block B2c): re-call the active round's window (OE-B4 —
+  /// not a true rewind).
+  Future<void> skipBack(TournamentId id) async {
+    await _ref.read(tournamentRemoteProvider).skipScheduleBackward(id);
+    _invalidateScheduleControlOverview();
+  }
+
+  /// Refresh after a pause/resume/skip control action (ADR-0031 Block B2c).
+  ///
+  /// Only [administrableTournamentsProvider] is invalidated: the dashboard
+  /// overview is a plain `FutureProvider` with NO single-column CDC scope
+  /// (OE-B3), so it cannot self-refresh and must be re-read to pick up the
+  /// new schedule status / remaining seconds.
+  ///
+  /// The detail schedule is deliberately NOT invalidated. The B2s RPCs write
+  /// only `tournament_round_schedule`, which is in the realtime publication,
+  /// so the schedule CDC pushes the change for free ("Realtime gratis"). The
+  /// detail seam is the CDC-stream-fold `tournamentRoundScheduleProvider`,
+  /// whose doc-block in `tournament_realtime_provider.dart` (the
+  /// `tournamentRoundScheduleRealtimeProvider` comment) warns that a naive
+  /// `ref.invalidate` on it would RESET the accumulated round fold. We
+  /// respect that seam and let the CDC push reach the detail instead.
+  void _invalidateScheduleControlOverview() {
+    _ref.invalidate(administrableTournamentsProvider);
   }
 
   /// W3-T1 / DSCORE-62..-66: organizer declares a no-show forfeit on

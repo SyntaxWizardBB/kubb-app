@@ -9,6 +9,153 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get organizerDashboardEyebrow => 'Veranstalter · Cockpit';
+
+  @override
+  String get organizerDashboardTitle => 'Turnier-Steuerung';
+
+  @override
+  String get organizerDashboardEmptyTitle => 'Keine Turniere zu verwalten';
+
+  @override
+  String get organizerDashboardEmptyBody =>
+      'Sobald du ein Turnier veröffentlichst oder als Verein verwaltest, erscheint es hier im Cockpit.';
+
+  @override
+  String get organizerDashboardGateTitle => 'Kein Zugriff';
+
+  @override
+  String get organizerDashboardGateBody =>
+      'Du bist nicht berechtigt, dieses Turnier zu steuern. Wende dich an den Veranstalter oder den Verein.';
+
+  @override
+  String get organizerDashboardError => 'Cockpit konnte nicht geladen werden.';
+
+  @override
+  String get organizerDashboardDetailEyebrow => 'Veranstalter · Ablauf';
+
+  @override
+  String get organizerDashboardRoundsTitle => 'Runden & Begegnungen';
+
+  @override
+  String get organizerDashboardNoMatches =>
+      'Für dieses Turnier liegen noch keine Begegnungen vor.';
+
+  @override
+  String organizerDashboardRoundLabel(int round) {
+    return 'Runde $round';
+  }
+
+  @override
+  String organizerDashboardCurrentRound(int round) {
+    return 'Runde $round';
+  }
+
+  @override
+  String get organizerDashboardNoRound => 'Noch keine aktive Runde';
+
+  @override
+  String organizerDashboardOpenMatches(int count) {
+    return '$count offen';
+  }
+
+  @override
+  String organizerDashboardDisputedMatches(int count) {
+    return '$count strittig';
+  }
+
+  @override
+  String organizerDashboardRemaining(String time) {
+    return 'Restzeit $time';
+  }
+
+  @override
+  String get organizerDashboardExpired => 'Zeit abgelaufen';
+
+  @override
+  String get organizerScheduleStatusPublished => 'Veröffentlicht';
+
+  @override
+  String get organizerScheduleStatusCall => 'Aufruf';
+
+  @override
+  String get organizerScheduleStatusRunning => 'Läuft';
+
+  @override
+  String get organizerScheduleStatusAwaiting => 'Wartet auf Ergebnis';
+
+  @override
+  String get organizerScheduleStatusCompleted => 'Abgeschlossen';
+
+  @override
+  String get organizerScheduleStatusNone => 'Kein Zeitplan';
+
+  @override
+  String get organizerScheduleStatusPaused => 'Pausiert';
+
+  @override
+  String get organizerActionStart => 'Starten';
+
+  @override
+  String get organizerActionPause => 'Pause';
+
+  @override
+  String get organizerActionResume => 'Fortsetzen';
+
+  @override
+  String get organizerActionSkipForward => 'Vorspulen';
+
+  @override
+  String get organizerActionSkipBack => 'Neu aufrufen';
+
+  @override
+  String get organizerActionSkipForwardHoldHint =>
+      'Zum Vorspulen gedrückt halten';
+
+  @override
+  String get organizerOpenDetail => 'Ablauf öffnen';
+
+  @override
+  String get organizerControlSectionTitle => 'Steuerung';
+
+  @override
+  String get organizerEscalationSectionTitle => 'Eingriffe';
+
+  @override
+  String organizerEscalationDisputedBadge(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count strittig',
+      one: '1 strittig',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String organizerEscalationOpenBadge(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count offen',
+      one: '1 offen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get organizerEscalationNone => 'Keine offenen Eingriffe';
+
+  @override
+  String get organizerKoTransitionAction => 'KO-Phase starten';
+
+  @override
+  String get organizerMatchActionOverride => 'Korrigieren';
+
+  @override
+  String get organizerMatchActionForfeit => 'Forfait';
+
+  @override
   String get stageGraphEyebrow => 'Turnier-Baukasten';
 
   @override
@@ -2808,6 +2955,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentDetailActionRemove => 'Entfernen';
 
   @override
+  String get tournamentDetailCheckinAction => 'Einchecken';
+
+  @override
+  String get tournamentDetailCheckedInState => 'Anwesend';
+
+  @override
+  String tournamentDetailCheckedInAt(String time) {
+    return 'Eingecheckt $time';
+  }
+
+  @override
+  String tournamentDetailCheckedInCount(int checkedIn, int total) {
+    return '$checkedIn/$total eingecheckt';
+  }
+
+  @override
   String get tournamentDetailApprove => 'Bestätigen';
 
   @override
@@ -3257,6 +3420,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentMatchTimerTiebreakActive => 'Tiebreak läuft';
 
   @override
+  String tournamentRoundCallCountdown(String time) {
+    return 'Nächste Runde in $time';
+  }
+
+  @override
+  String get tournamentRoundHold => 'Zeit angehalten — Resultat eintragen';
+
+  @override
+  String get tournamentRoundTiebreakHold => 'Tiebreak';
+
+  @override
   String tournamentMatchPitchCallTitle(String pitch) {
     return 'Dein Platz: Pitch $pitch — leg los!';
   }
@@ -3310,6 +3484,39 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get tournamentForfeitSuccessToast =>
       'Forfeit gespeichert — Match abgeschlossen.';
+
+  @override
+  String get tournamentEscalationTitle => 'Eskalationen';
+
+  @override
+  String get tournamentEscalationEmptyTitle => 'Alles im grünen Bereich';
+
+  @override
+  String get tournamentEscalationEmptyBody =>
+      'Keine strittigen oder überfälligen Matches und keine fehlenden Check-ins.';
+
+  @override
+  String get tournamentEscalationDisputedHeading => 'Strittig';
+
+  @override
+  String get tournamentEscalationOverdueHeading => 'Überfällig';
+
+  @override
+  String get tournamentEscalationNotCheckedInHeading => 'Nicht eingecheckt';
+
+  @override
+  String tournamentEscalationMatchLabel(int round, int match) {
+    return 'Runde $round · Match $match';
+  }
+
+  @override
+  String get tournamentEscalationOverrideAction => 'Korrigieren';
+
+  @override
+  String get tournamentEscalationForfeitAction => 'No-Show → Forfait';
+
+  @override
+  String get tournamentEscalationNoShowReason => 'No-Show - nicht eingecheckt';
 
   @override
   String tournamentMatchValidationEmpty(int n) {
@@ -4342,6 +4549,30 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get shootoutOrderHintReadonly =>
       'Die gemeldete Reihenfolge bestätigen — bestes Team zuerst.';
+
+  @override
+  String get inboxScheduleLabelRoundPublished => 'Neue Runde';
+
+  @override
+  String get inboxScheduleLabelMatchRunning => 'Match läuft';
+
+  @override
+  String get inboxScheduleLabelPaused => 'Turnier pausiert';
+
+  @override
+  String get inboxScheduleLabelResumed => 'Turnier läuft weiter';
+
+  @override
+  String get inboxScheduleLabelAwaitingResults => 'Resultat fehlt';
+
+  @override
+  String get inboxScheduleLabelTiebreakHold => 'Tiebreak';
+
+  @override
+  String get inboxScheduleLabelGeneric => 'Turnier-Ablauf';
+
+  @override
+  String get inboxScheduleOpenMatchAction => 'Zum Match';
 
   @override
   String get tournamentWizardSummaryPlaceholder => '—';

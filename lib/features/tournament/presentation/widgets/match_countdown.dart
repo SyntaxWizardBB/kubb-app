@@ -86,6 +86,10 @@ class MatchCountdown extends StatefulWidget {
     required this.startedAt,
     required this.durationSeconds,
     this.tiebreakAfterSeconds,
+    this.serverOffset = Duration.zero,
+    this.pausedAt,
+    this.pausedAccumSeconds = 0,
+    this.onHold = false,
     this.ticker,
     this.haptics = const HapticFeedbackCountdownHaptics(),
     this.now,
@@ -101,6 +105,26 @@ class MatchCountdown extends StatefulWidget {
   /// Optional tiebreak trigger offset. When set and reached, the expiry
   /// state offers the Mighty-Finisher path instead of plain result entry.
   final int? tiebreakAfterSeconds;
+
+  /// Skew offset between server and device clock (ADR-0031 §Uhr). The
+  /// current time is read as `DateTime.now().toUtc() + serverOffset`, so all
+  /// devices agree on the remaining time regardless of local clock drift.
+  /// Defaults to [Duration.zero] — backward-compatible with the local-clock
+  /// behaviour for tournaments without a schedule / before the offset syncs.
+  final Duration serverOffset;
+
+  /// Anchor of the currently-running pause (schedule `paused_at`), or null
+  /// when not paused. Passed through to [MatchTimer.pausedAt] so the
+  /// pause-corrected Restzeit-Formel (ADR-0031) freezes the remaining time.
+  final DateTime? pausedAt;
+
+  /// Accumulated seconds of finished pauses (schedule `paused_accum_seconds`).
+  /// Credited back to the clock via [MatchTimer.pausedAccumSeconds].
+  final int pausedAccumSeconds;
+
+  /// Whether the clock is held (round `awaiting_results` / tiebreak). Passed
+  /// to [MatchTimer.onHold] to freeze an expired clock at its end.
+  final bool onHold;
 
   /// Ticker driving the 1s re-evaluation. Defaults to a wall-clock timer;
   /// widget tests inject a [ManualCountdownTicker].
@@ -137,13 +161,21 @@ class _MatchCountdownState extends State<MatchCountdown> {
     super.dispose();
   }
 
-  DateTime _nowValue() => (widget.now ?? DateTime.now)();
+  /// Server-corrected current time (ADR-0031 §Uhr): the injected/local clock
+  /// in UTC plus the skew [MatchCountdown.serverOffset]. With the default
+  /// zero offset this is the plain local clock, so existing call sites are
+  /// unaffected.
+  DateTime _nowValue() =>
+      (widget.now ?? DateTime.now)().toUtc().add(widget.serverOffset);
 
   MatchTimer _buildTimer() => MatchTimer(
         startedAt: widget.startedAt,
         durationSeconds: widget.durationSeconds,
         now: _nowValue(),
         tiebreakAfterSeconds: widget.tiebreakAfterSeconds,
+        pausedAt: widget.pausedAt,
+        pausedAccumSeconds: widget.pausedAccumSeconds,
+        onHold: widget.onHold,
       );
 
   void _onTick() {

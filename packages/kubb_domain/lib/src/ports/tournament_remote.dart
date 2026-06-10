@@ -6,6 +6,7 @@ import 'package:kubb_domain/src/tournament/ko_phase.dart';
 import 'package:kubb_domain/src/tournament/pool_group_standings.dart';
 import 'package:kubb_domain/src/tournament/pool_phase.dart';
 import 'package:kubb_domain/src/tournament/roster_slot.dart';
+import 'package:kubb_domain/src/tournament/round_schedule.dart';
 import 'package:kubb_domain/src/tournament/shootout.dart';
 import 'package:kubb_domain/src/values/ids.dart';
 import 'package:meta/meta.dart';
@@ -103,6 +104,86 @@ class TournamentSummaryRef {
         participantCount,
         eventStartsAt,
         createdBy,
+      );
+}
+
+/// Read-side snapshot of one administrable tournament for the organizer
+/// dashboard / cockpit (ADR-0031 §Dashboard, Phase B). Pure data — no
+/// Flutter/Supabase imports. Backed by the `tournament_list_administrable`
+/// RPC, which LEFT JOINs `tournament_round_schedule`, so the schedule-side
+/// fields ([currentRound], [scheduleStatus], [remainingSeconds], [pausedAt])
+/// are all nullable: a published/live tournament with no schedule row yet
+/// (the LEFT-JOIN-NULL path) is fully constructible without them.
+@immutable
+class TournamentAdminCardRef {
+  const TournamentAdminCardRef({
+    required this.tournamentId,
+    required this.displayName,
+    required this.format,
+    required this.status,
+    this.currentRound,
+    this.scheduleStatus,
+    this.remainingSeconds,
+    this.openMatchCount = 0,
+    this.disputedMatchCount = 0,
+    this.pausedAt,
+  });
+
+  final TournamentId tournamentId;
+  final String displayName;
+  final TournamentFormat format;
+  final TournamentStatus status;
+
+  /// 1-based number of the currently active round, or `null` when the
+  /// tournament has no schedule row yet (LEFT-JOIN-NULL path).
+  final int? currentRound;
+
+  /// Status of the active round's schedule, or `null` when no schedule row
+  /// exists yet. Reuses the canonical [RoundStatus] from
+  /// `round_schedule.dart` for wire parity — no parallel enum.
+  final RoundStatus? scheduleStatus;
+
+  /// Server-computed remaining seconds of the active round window
+  /// (`app_server_now()`-based formula), or `null` without a schedule row.
+  final int? remainingSeconds;
+
+  /// Count of matches still open (`scheduled` | `awaiting_results`).
+  final int openMatchCount;
+
+  /// Count of matches currently disputed — drives the escalation badge.
+  final int disputedMatchCount;
+
+  /// Anchor of the tournament-wide pause on the active schedule row (K5),
+  /// or `null` when not paused / no schedule row exists.
+  final DateTime? pausedAt;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TournamentAdminCardRef &&
+          other.tournamentId == tournamentId &&
+          other.displayName == displayName &&
+          other.format == format &&
+          other.status == status &&
+          other.currentRound == currentRound &&
+          other.scheduleStatus == scheduleStatus &&
+          other.remainingSeconds == remainingSeconds &&
+          other.openMatchCount == openMatchCount &&
+          other.disputedMatchCount == disputedMatchCount &&
+          other.pausedAt == pausedAt;
+
+  @override
+  int get hashCode => Object.hash(
+        tournamentId,
+        displayName,
+        format,
+        status,
+        currentRound,
+        scheduleStatus,
+        remainingSeconds,
+        openMatchCount,
+        disputedMatchCount,
+        pausedAt,
       );
 }
 
@@ -333,6 +414,7 @@ class TournamentParticipant {
     required this.registeredAt,
     required this.respondedAt,
     this.displayName,
+    this.checkedInAt,
   });
 
   final String participantId;
@@ -353,6 +435,19 @@ class TournamentParticipant {
   final int? seed;
   final DateTime registeredAt;
   final DateTime? respondedAt;
+
+  /// On-site presence timestamp (ADR-0031 Phase D). NULL until an organizer
+  /// (Creator OR an active club role in {owner, admin, organizer, referee} —
+  /// K4) checks the participant in via `tournament_checkin_participant`, and
+  /// reset to NULL again by `tournament_undo_checkin`. Distinct from
+  /// [registrationStatus]: confirmed = pool membership, check-in = physical
+  /// attendance. Projected by `tournament_get` (`checked_in_at`) and pushed
+  /// over the `tournament_participants` CDC channel. Nullable and additive:
+  /// older RPC/CDC payloads that omit the column decode to `null`.
+  final DateTime? checkedInAt;
+
+  /// True once this participant has been marked physically present on site.
+  bool get isCheckedIn => checkedInAt != null;
 
   String get displayLabel => displayName ?? nickname ?? '?';
 }
@@ -727,6 +822,28 @@ abstract interface class TournamentRemote {
   Future<void> confirmRegistration(TournamentParticipantId participantId);
   Future<void> rejectRegistration(TournamentParticipantId participantId);
 
+  // On-site check-in (ADR-0031 Phase D)
+
+  /// Marks a confirmed participant as physically present on site
+  /// (ADR-0031 Phase D). Backed by the `tournament_checkin_participant`
+  /// RPC (migration `20261265000000`), which sets
+  /// `tournament_participants.checked_in_at = now()`. Server-authoritative:
+  /// the RPC enforces the manage gate (`tournament_caller_can_manage` — K4),
+  /// the tournament status window (`registration_open|registration_closed|
+  /// live`) and a `registration_status = 'confirmed'` precondition; the
+  /// client does NOT re-implement those checks. Idempotent — checking in an
+  /// already-checked-in participant is a server-side no-op. Throws the
+  /// underlying Postgres error (e.g. `42501` gate, `22023` status) rather
+  /// than swallowing it.
+  Future<void> checkinParticipant(TournamentParticipantId participantId);
+
+  /// Clears a participant's on-site presence (ADR-0031 Phase D). Backed by
+  /// the `tournament_undo_checkin` RPC (migration `20261265000000`), which
+  /// resets `tournament_participants.checked_in_at = NULL`. Same server-side
+  /// gate/status semantics as [checkinParticipant] and idempotent (undoing
+  /// an already-cleared participant is a no-op). Errors propagate.
+  Future<void> undoCheckin(TournamentParticipantId participantId);
+
   // Matches
   Future<List<TournamentMatchRef>> listMatchesForTournament(TournamentId id);
 
@@ -798,6 +915,20 @@ abstract interface class TournamentRemote {
   /// anon role, so RLS gates visibility.
   Stream<TournamentMatchRef> watchTournamentMatches(TournamentId tournamentId);
 
+  /// Realtime-Subscribe for the participant list of a tournament (ADR-0031
+  /// Phase D). Fires on insert/update of any `tournament_participants` row
+  /// carrying the given [tournamentId] (the CDC filter column) — most
+  /// notably when `checked_in_at` flips on check-in / undo. Implementations
+  /// route through the shared per-tournament `RealtimeChannel` and translate
+  /// raw CDC payloads into a [TournamentParticipant]; DELETE events are
+  /// filtered out. The table already ships in the realtime publication
+  /// (migration `20261236000000`), so no new subscription/poll is needed —
+  /// CDC drives the push (ADR-0029). Signature mirrors
+  /// [watchTournamentMatches].
+  Stream<TournamentParticipant> watchTournamentParticipants(
+    TournamentId tournamentId,
+  );
+
   /// Realtime-Subscribe für Bracket-Advances. Fires whenever a KO row
   /// in [tournamentId] flips to `finalized` and the winner has been
   /// propagated into the parent bracket slot. Convenience over
@@ -805,6 +936,57 @@ abstract interface class TournamentRemote {
   /// uses it to invalidate the bracket view without re-fetching the
   /// full match list.
   Stream<BracketAdvanceEvent> watchBracketAdvances(TournamentId tournamentId);
+
+  // Timed runner (ADR-0031 Block A3b/A3c)
+
+  /// Server-authoritative clock source (ADR-0031 §Uhr). Calls the
+  /// `app_server_now()` RPC and returns the server's `now()` as UTC. The
+  /// client derives a skew offset `offset = serverNow - DateTime.now().toUtc()`
+  /// once at app start / reconnect and renders `now = DateTime.now() + offset`
+  /// with a pure 1s UI ticker — a rare offset-sync, never a per-second poll
+  /// (ADR-0029).
+  Future<DateTime> fetchServerNow();
+
+  /// Realtime-Subscribe für die Runden-Schedule eines Turniers (ADR-0031
+  /// Block A1/A3c). Fires on insert/update of any
+  /// `tournament_round_schedule` row carrying the given [tournamentId]
+  /// (the CDC filter column). Each event carries the per-round timestamps
+  /// (`starts_at`/`ends_at`), the round [RoundStatus], and the pause anchors
+  /// (`paused_at`/`paused_accum_seconds`) the runner uses to drive the
+  /// server-/pause-corrected countdown. Implementations route through the
+  /// `RealtimeChannel` port and translate raw CDC payloads into a
+  /// [TournamentRoundScheduleRef]; DELETE events are filtered out.
+  Stream<TournamentRoundScheduleRef> watchRoundSchedule(
+    TournamentId tournamentId,
+  );
+
+  // Organizer dashboard (ADR-0031 Phase B — Veranstalter-Cockpit)
+
+  /// Lists the tournaments the caller may administer (Creator OR an active
+  /// club role in {owner, admin, organizer, referee} — K4). Backed by the
+  /// `tournament_list_administrable` RPC; each card carries the active
+  /// round's schedule status, remaining seconds, and open/disputed match
+  /// counts so the dashboard renders without an N+1 fan-out.
+  Future<List<TournamentAdminCardRef>> listAdministrableTournaments();
+
+  /// Tournament-wide pause (K5). Writes `paused_at = now()` on the active
+  /// `tournament_round_schedule` row when not already paused (idempotent);
+  /// the Restzeit-Formel then freezes the clock. Never touches
+  /// `tournament_matches`.
+  Future<void> pauseTournament(TournamentId id);
+
+  /// Resumes a paused tournament. Credits the elapsed pause back into
+  /// `paused_accum_seconds` and clears `paused_at` on the active schedule
+  /// row (idempotent).
+  Future<void> resumeTournament(TournamentId id);
+
+  /// Skips the active round's call window forward — starts play now
+  /// (`starts_at = now()`, status `running`). Writes only the schedule row.
+  Future<void> skipScheduleForward(TournamentId id);
+
+  /// Re-opens the active round's call window — re-announces the round
+  /// (status `call`, a fresh break window). Writes only the schedule row.
+  Future<void> skipScheduleBackward(TournamentId id);
 
   // KO-Phase (M2.2 — see architecture.md §4 and ADR-0017)
 

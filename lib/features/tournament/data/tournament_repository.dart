@@ -439,6 +439,19 @@ class TournamentRepository implements TournamentRemote {
         participantId,
       );
 
+  // On-site check-in (ADR-0031 Phase D, Block D3). Both calls forward to the
+  // D1 RPCs (migration 20261265000000); the server owns the manage gate (K4),
+  // the status window and the confirmed-precondition. No client-side
+  // permission/status re-implementation — gate (42501) / status (22023)
+  // errors propagate up as exceptions rather than being swallowed.
+  @override
+  Future<void> checkinParticipant(TournamentParticipantId participantId) =>
+      _voidParticipantRpc('tournament_checkin_participant', participantId);
+
+  @override
+  Future<void> undoCheckin(TournamentParticipantId participantId) =>
+      _voidParticipantRpc('tournament_undo_checkin', participantId);
+
   @override
   Future<List<TournamentMatchRef>> listMatchesForTournament(
       TournamentId id) async {
@@ -831,6 +844,28 @@ class TournamentRepository implements TournamentRemote {
   }
 
   @override
+  Stream<TournamentParticipant> watchTournamentParticipants(
+    TournamentId tournamentId,
+  ) {
+    // ADR-0031 Phase D, Block D3. Same subscribe signature as
+    // watchTournamentMatches/watchRoundSchedule: the existing per-tournament
+    // CDC channel filtered on the tournament_id column — no periodic poll,
+    // no extra WebSocket. tournament_participants is already in the realtime
+    // publication (20261236000000), so the channel multiplexes over the
+    // shared socket (ADR-0029). DELETE events are dropped; each insert/update
+    // row is projected through the shared participant parser, which reads
+    // checked_in_at null-tolerantly.
+    return _realtime
+        .subscribe(
+          table: 'tournament_participants',
+          filterColumn: 'tournament_id',
+          filterValue: tournamentId.value,
+        )
+        .where((c) => c.eventType != RealtimeEventType.delete)
+        .map((c) => tournamentParticipantFromCdcRow(c.newRow));
+  }
+
+  @override
   Stream<BracketAdvanceEvent> watchBracketAdvances(TournamentId tournamentId) {
     // KO-advance signal: a row in [tournamentId] flips to `finalized`
     // (or `overridden`) and carries a winner. The trigger that copies
@@ -880,6 +915,82 @@ class TournamentRepository implements TournamentRemote {
       at: change.receivedAt,
     );
   }
+
+  @override
+  Future<DateTime> fetchServerNow() async {
+    // ADR-0031 §Uhr (Block A3b): rare offset-sync source. The RPC returns
+    // the server's now() as `timestamptz`; supabase ships it as an ISO-8601
+    // string the client compares against DateTime.now().toUtc(). Normalise
+    // to UTC so the offset arithmetic is timezone-clean.
+    final raw = await _client.rpc<Object?>('app_server_now');
+    return DateTime.parse(raw! as String).toUtc();
+  }
+
+  @override
+  Stream<TournamentRoundScheduleRef> watchRoundSchedule(
+    TournamentId tournamentId,
+  ) {
+    // Same subscribe signature as watchTournamentMatches: the per-tournament
+    // CDC channel filtered on the tournament_id column. DELETE events are
+    // dropped (the consumer only reacts to inserts/updates) and the raw row
+    // is projected through the schedule CDC parser.
+    return _realtime
+        .subscribe(
+          table: 'tournament_round_schedule',
+          filterColumn: 'tournament_id',
+          filterValue: tournamentId.value,
+        )
+        .where((c) => c.eventType != RealtimeEventType.delete)
+        .map((c) => tournamentRoundScheduleRefFromCdcRow(c.newRow));
+  }
+
+  // Organizer dashboard (ADR-0031 Phase B). The domain port (Block B0)
+  // defines the contract; the list RPC is wired here (Block B1c) and the
+  // pause/resume/skip control calls land in Block B2c (below). Each control
+  // RPC writes ONLY tournament_round_schedule on the server; realtime is free
+  // because that table is in the supabase_realtime publication, so the
+  // schedule CDC pushes the change — no client polling (ADR-0029).
+  @override
+  Future<List<TournamentAdminCardRef>> listAdministrableTournaments() async {
+    final rows = await _client.rpc<List<dynamic>>(
+      'tournament_list_administrable',
+      // Mirror [listTournaments]: the default page limit travels as `p_limit`.
+      params: const <String, dynamic>{'p_limit': 50},
+    );
+    return rows
+        .cast<Map<String, dynamic>>()
+        .map(tournamentAdminCardRefFromRow)
+        .toList(growable: false);
+  }
+
+  /// K5 tournament-wide pause: forwards to `tournament_pause(uuid)`
+  /// (migration `20261256000000`). The RPC freezes the active schedule row's
+  /// clock (`paused_at = now()` when not already paused); the uuid travels as
+  /// the `p_tournament_id` parameter named in the function signature.
+  @override
+  Future<void> pauseTournament(TournamentId id) =>
+      _voidRpc('tournament_pause', id);
+
+  /// Resume from a tournament-wide pause: forwards to
+  /// `tournament_resume(uuid)` (migration `20261256000000`), which
+  /// accumulates the frozen interval and clears `paused_at`.
+  @override
+  Future<void> resumeTournament(TournamentId id) =>
+      _voidRpc('tournament_resume', id);
+
+  /// Skip the call/break window forward: forwards to
+  /// `tournament_skip_forward(uuid)` (migration `20261256000000`), which sets
+  /// the active round to `running` starting now.
+  @override
+  Future<void> skipScheduleForward(TournamentId id) =>
+      _voidRpc('tournament_skip_forward', id);
+
+  /// Re-call the window (OE-B4 — not a true rewind): forwards to
+  /// `tournament_skip_back(uuid)` (migration `20261256000000`), which puts the
+  /// active round back into the `call` state.
+  @override
+  Future<void> skipScheduleBackward(TournamentId id) =>
+      _voidRpc('tournament_skip_back', id);
 
   @override
   Future<TournamentParticipantId> registerTeam({

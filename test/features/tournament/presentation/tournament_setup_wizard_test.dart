@@ -146,6 +146,12 @@ class _FakeTournamentRemote implements TournamentRemote {
   Future<void> rejectRegistration(TournamentParticipantId participantId) async {}
 
   @override
+  Future<void> checkinParticipant(TournamentParticipantId participantId) async {}
+
+  @override
+  Future<void> undoCheckin(TournamentParticipantId participantId) async {}
+
+  @override
   Future<List<TournamentMatchRef>> listMatchesForTournament(
           TournamentId id) async =>
       const <TournamentMatchRef>[];
@@ -196,8 +202,41 @@ class _FakeTournamentRemote implements TournamentRemote {
       const Stream<TournamentMatchRef>.empty();
 
   @override
+  Stream<TournamentParticipant> watchTournamentParticipants(
+    TournamentId tournamentId,
+  ) =>
+      const Stream<TournamentParticipant>.empty();
+
+  @override
   Stream<BracketAdvanceEvent> watchBracketAdvances(TournamentId tournamentId) =>
       const Stream<BracketAdvanceEvent>.empty();
+
+  @override
+  Future<DateTime> fetchServerNow() async => DateTime.now().toUtc();
+
+  @override
+  Stream<TournamentRoundScheduleRef> watchRoundSchedule(
+    TournamentId tournamentId,
+  ) =>
+      const Stream<TournamentRoundScheduleRef>.empty();
+
+  @override
+  Future<List<TournamentAdminCardRef>> listAdministrableTournaments() =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> pauseTournament(TournamentId id) => throw UnimplementedError();
+
+  @override
+  Future<void> resumeTournament(TournamentId id) => throw UnimplementedError();
+
+  @override
+  Future<void> skipScheduleForward(TournamentId id) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> skipScheduleBackward(TournamentId id) =>
+      throw UnimplementedError();
 
   @override
   Future<void> setSeeding({

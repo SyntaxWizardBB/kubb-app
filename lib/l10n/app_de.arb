@@ -1,5 +1,186 @@
 {
   "@@locale": "de",
+  "organizerDashboardEyebrow": "Veranstalter · Cockpit",
+  "@organizerDashboardEyebrow": {
+    "description": "AppBar eyebrow for the organizer dashboard overview (ADR-0031 Phase B)"
+  },
+  "organizerDashboardTitle": "Turnier-Steuerung",
+  "@organizerDashboardTitle": {
+    "description": "AppBar title for the organizer dashboard overview"
+  },
+  "organizerDashboardEmptyTitle": "Keine Turniere zu verwalten",
+  "@organizerDashboardEmptyTitle": {
+    "description": "Empty-state title shown when the caller administers no live tournaments"
+  },
+  "organizerDashboardEmptyBody": "Sobald du ein Turnier veröffentlichst oder als Verein verwaltest, erscheint es hier im Cockpit.",
+  "@organizerDashboardEmptyBody": {
+    "description": "Empty-state body for the organizer dashboard overview"
+  },
+  "organizerDashboardGateTitle": "Kein Zugriff",
+  "@organizerDashboardGateTitle": {
+    "description": "In-screen gate title shown when the caller may not administer the tournament"
+  },
+  "organizerDashboardGateBody": "Du bist nicht berechtigt, dieses Turnier zu steuern. Wende dich an den Veranstalter oder den Verein.",
+  "@organizerDashboardGateBody": {
+    "description": "In-screen gate body for the organizer dashboard"
+  },
+  "organizerDashboardError": "Cockpit konnte nicht geladen werden.",
+  "@organizerDashboardError": {
+    "description": "Error message shown when the administrable-tournaments list fails to load"
+  },
+  "organizerDashboardDetailEyebrow": "Veranstalter · Ablauf",
+  "@organizerDashboardDetailEyebrow": {
+    "description": "AppBar eyebrow for the per-tournament organizer dashboard detail"
+  },
+  "organizerDashboardRoundsTitle": "Runden & Begegnungen",
+  "@organizerDashboardRoundsTitle": {
+    "description": "Section title above the round/match list on the dashboard detail"
+  },
+  "organizerDashboardNoMatches": "Für dieses Turnier liegen noch keine Begegnungen vor.",
+  "@organizerDashboardNoMatches": {
+    "description": "Placeholder shown when a tournament has no materialized matches yet"
+  },
+  "organizerDashboardRoundLabel": "Runde {round}",
+  "@organizerDashboardRoundLabel": {
+    "description": "Round header on the dashboard detail round/match list",
+    "placeholders": {
+      "round": { "type": "int" }
+    }
+  },
+  "organizerDashboardCurrentRound": "Runde {round}",
+  "@organizerDashboardCurrentRound": {
+    "description": "Card line showing the tournament's currently active round number",
+    "placeholders": {
+      "round": { "type": "int" }
+    }
+  },
+  "organizerDashboardNoRound": "Noch keine aktive Runde",
+  "@organizerDashboardNoRound": {
+    "description": "Card line shown when a tournament has no schedule/active round yet"
+  },
+  "organizerDashboardOpenMatches": "{count} offen",
+  "@organizerDashboardOpenMatches": {
+    "description": "Open-match badge on the overview card",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "organizerDashboardDisputedMatches": "{count} strittig",
+  "@organizerDashboardDisputedMatches": {
+    "description": "Disputed-match badge on the overview card",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "organizerDashboardRemaining": "Restzeit {time}",
+  "@organizerDashboardRemaining": {
+    "description": "Remaining-time line on the overview card (mm:ss)",
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "organizerDashboardExpired": "Zeit abgelaufen",
+  "@organizerDashboardExpired": {
+    "description": "Remaining-time line when the round window has elapsed"
+  },
+  "organizerScheduleStatusPublished": "Veröffentlicht",
+  "@organizerScheduleStatusPublished": {
+    "description": "Schedule-status label: round published / notified"
+  },
+  "organizerScheduleStatusCall": "Aufruf",
+  "@organizerScheduleStatusCall": {
+    "description": "Schedule-status label: call/break window before play"
+  },
+  "organizerScheduleStatusRunning": "Läuft",
+  "@organizerScheduleStatusRunning": {
+    "description": "Schedule-status label: match clock running"
+  },
+  "organizerScheduleStatusAwaiting": "Wartet auf Ergebnis",
+  "@organizerScheduleStatusAwaiting": {
+    "description": "Schedule-status label: awaiting results / hold"
+  },
+  "organizerScheduleStatusCompleted": "Abgeschlossen",
+  "@organizerScheduleStatusCompleted": {
+    "description": "Schedule-status label: round completed"
+  },
+  "organizerScheduleStatusNone": "Kein Zeitplan",
+  "@organizerScheduleStatusNone": {
+    "description": "Schedule-status label shown when no schedule row exists yet"
+  },
+  "organizerScheduleStatusPaused": "Pausiert",
+  "@organizerScheduleStatusPaused": {
+    "description": "Schedule-status label shown while the tournament-wide pause is active"
+  },
+  "organizerActionStart": "Starten",
+  "@organizerActionStart": {
+    "description": "Quick action: start the tournament"
+  },
+  "organizerActionPause": "Pause",
+  "@organizerActionPause": {
+    "description": "Quick action: pause the tournament-wide clock"
+  },
+  "organizerActionResume": "Fortsetzen",
+  "@organizerActionResume": {
+    "description": "Quick action: resume from the tournament-wide pause"
+  },
+  "organizerActionSkipForward": "Vorspulen",
+  "@organizerActionSkipForward": {
+    "description": "Control bar: skip the call/break window forward (round starts now)"
+  },
+  "organizerActionSkipBack": "Neu aufrufen",
+  "@organizerActionSkipBack": {
+    "description": "Control bar: re-call the active round window (OE-B4)"
+  },
+  "organizerActionSkipForwardHoldHint": "Zum Vorspulen gedrückt halten",
+  "@organizerActionSkipForwardHoldHint": {
+    "description": "Hold-to-confirm hint on the irreversible skip-forward action"
+  },
+  "organizerOpenDetail": "Ablauf öffnen",
+  "@organizerOpenDetail": {
+    "description": "Overview card action: open the per-tournament dashboard detail"
+  },
+  "organizerControlSectionTitle": "Steuerung",
+  "@organizerControlSectionTitle": {
+    "description": "Section title above the schedule control bar on the detail screen"
+  },
+  "organizerEscalationSectionTitle": "Eingriffe",
+  "@organizerEscalationSectionTitle": {
+    "description": "Section title above the escalation badges on the dashboard detail screen (B3)"
+  },
+  "organizerEscalationDisputedBadge": "{count, plural, one{1 strittig} other{{count} strittig}}",
+  "@organizerEscalationDisputedBadge": {
+    "description": "Escalation badge showing the number of disputed matches needing an override",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "organizerEscalationOpenBadge": "{count, plural, one{1 offen} other{{count} offen}}",
+  "@organizerEscalationOpenBadge": {
+    "description": "Escalation badge showing the number of open/awaiting matches that can be forfeited",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "organizerEscalationNone": "Keine offenen Eingriffe",
+  "@organizerEscalationNone": {
+    "description": "Shown when there are no disputed or open matches needing an intervention"
+  },
+  "organizerKoTransitionAction": "KO-Phase starten",
+  "@organizerKoTransitionAction": {
+    "description": "CTA on the dashboard detail screen that starts the KO phase (auto seeding) or opens the seeding editor (manual)"
+  },
+  "organizerMatchActionOverride": "Korrigieren",
+  "@organizerMatchActionOverride": {
+    "description": "Per-match CTA on a disputed match that routes to the organizer override screen"
+  },
+  "organizerMatchActionForfeit": "Forfait",
+  "@organizerMatchActionForfeit": {
+    "description": "Per-match CTA on an open/awaiting match that opens the forfeit sheet"
+  },
   "stageGraphEyebrow": "Turnier-Baukasten",
   "@stageGraphEyebrow": {
     "description": "AppBar eyebrow for the stage-graph builder screen"
@@ -3617,6 +3798,36 @@
   "@tournamentDetailActionRemove": {
     "description": "Optional organizer moderation action: remove a participant (not a required step)"
   },
+  "tournamentDetailCheckinAction": "Einchecken",
+  "@tournamentDetailCheckinAction": {
+    "description": "Organizer action on a confirmed participant row: mark them physically present on site (ADR-0031 Phase D check-in)"
+  },
+  "tournamentDetailCheckedInState": "Anwesend",
+  "@tournamentDetailCheckedInState": {
+    "description": "State of a checked-in participant row (green); tapping it reverts the on-site check-in"
+  },
+  "tournamentDetailCheckedInAt": "Eingecheckt {time}",
+  "@tournamentDetailCheckedInAt": {
+    "description": "Inline label showing when a participant was checked in on site",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "08.06.2026 14:32"
+      }
+    }
+  },
+  "tournamentDetailCheckedInCount": "{checkedIn}/{total} eingecheckt",
+  "@tournamentDetailCheckedInCount": {
+    "description": "Header counter: how many of the confirmed participants are checked in on site",
+    "placeholders": {
+      "checkedIn": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "tournamentDetailApprove": "Bestätigen",
   "@tournamentDetailApprove": {
     "description": "Organizer button: approve registration"
@@ -4237,6 +4448,24 @@
   "@tournamentMatchTimerTiebreakActive": {
     "description": "Inline badge shown once the tiebreak window has opened"
   },
+  "tournamentRoundCallCountdown": "Nächste Runde in {time}",
+  "@tournamentRoundCallCountdown": {
+    "description": "Countdown until the next round starts, shown during the call/pause window (status published/call). {time} is mm:ss.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "02:30"
+      }
+    }
+  },
+  "tournamentRoundHold": "Zeit angehalten — Resultat eintragen",
+  "@tournamentRoundHold": {
+    "description": "Shown when a round is awaiting results: the clock is frozen until the result is entered (status awaiting_results)"
+  },
+  "tournamentRoundTiebreakHold": "Tiebreak",
+  "@tournamentRoundTiebreakHold": {
+    "description": "Shown on the held clock when the round awaits a tiebreak result"
+  },
   "tournamentMatchPitchCallTitle": "Dein Platz: Pitch {pitch} — leg los!",
   "@tournamentMatchPitchCallTitle": {
     "description": "Prominent call-to-play banner pointing the participant to their pitch",
@@ -4307,6 +4536,54 @@
   "tournamentForfeitSuccessToast": "Forfeit gespeichert — Match abgeschlossen.",
   "@tournamentForfeitSuccessToast": {
     "description": "Confirmation snackbar after a successful forfeit declaration"
+  },
+  "tournamentEscalationTitle": "Eskalationen",
+  "@tournamentEscalationTitle": {
+    "description": "Heading of the organizer escalation panel (ADR-0031 Phase D5): disputed / overdue / not-checked-in lists"
+  },
+  "tournamentEscalationEmptyTitle": "Alles im grünen Bereich",
+  "@tournamentEscalationEmptyTitle": {
+    "description": "Empty-state title shown when there are no escalations (no disputed, overdue or unchecked-in entries)"
+  },
+  "tournamentEscalationEmptyBody": "Keine strittigen oder überfälligen Matches und keine fehlenden Check-ins.",
+  "@tournamentEscalationEmptyBody": {
+    "description": "Empty-state body for the escalation panel when nothing needs attention"
+  },
+  "tournamentEscalationDisputedHeading": "Strittig",
+  "@tournamentEscalationDisputedHeading": {
+    "description": "Section heading for matches in disputed status that need an organizer override"
+  },
+  "tournamentEscalationOverdueHeading": "Überfällig",
+  "@tournamentEscalationOverdueHeading": {
+    "description": "Section heading for matches whose results are overdue (awaiting_results)"
+  },
+  "tournamentEscalationNotCheckedInHeading": "Nicht eingecheckt",
+  "@tournamentEscalationNotCheckedInHeading": {
+    "description": "Section heading for confirmed participants who have not yet checked in on site"
+  },
+  "tournamentEscalationMatchLabel": "Runde {round} · Match {match}",
+  "@tournamentEscalationMatchLabel": {
+    "description": "Subtitle identifying a match by round and match number within the round",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      },
+      "match": {
+        "type": "int"
+      }
+    }
+  },
+  "tournamentEscalationOverrideAction": "Korrigieren",
+  "@tournamentEscalationOverrideAction": {
+    "description": "Action button on a disputed match row that opens the organizer override screen"
+  },
+  "tournamentEscalationForfeitAction": "No-Show → Forfait",
+  "@tournamentEscalationForfeitAction": {
+    "description": "Action button on a not-checked-in participant row that opens the pre-filled forfeit sheet"
+  },
+  "tournamentEscalationNoShowReason": "No-Show - nicht eingecheckt",
+  "@tournamentEscalationNoShowReason": {
+    "description": "Pre-filled forfeit reason for the No-Show shortcut (must be >= 10 chars; mirrors the server reason rule)"
   },
   "tournamentMatchValidationEmpty": "Satz {n}: Eingabe fehlt.",
   "@tournamentMatchValidationEmpty": {
@@ -5590,6 +5867,38 @@
   "shootoutOrderHintReadonly": "Die gemeldete Reihenfolge bestätigen — bestes Team zuerst.",
   "@shootoutOrderHintReadonly": {
     "description": "P6 shoot-out screen — read-only hint shown to the confirming side (order is locked)"
+  },
+  "inboxScheduleLabelRoundPublished": "Neue Runde",
+  "@inboxScheduleLabelRoundPublished": {
+    "description": "Inbox badge label for a tournamentSchedule row tagged round_published (ADR-0031 Phase C / OD-1)"
+  },
+  "inboxScheduleLabelMatchRunning": "Match läuft",
+  "@inboxScheduleLabelMatchRunning": {
+    "description": "Inbox badge label for a tournamentSchedule row tagged match_running"
+  },
+  "inboxScheduleLabelPaused": "Turnier pausiert",
+  "@inboxScheduleLabelPaused": {
+    "description": "Inbox badge label for a tournamentSchedule row tagged paused"
+  },
+  "inboxScheduleLabelResumed": "Turnier läuft weiter",
+  "@inboxScheduleLabelResumed": {
+    "description": "Inbox badge label for a tournamentSchedule row tagged resumed"
+  },
+  "inboxScheduleLabelAwaitingResults": "Resultat fehlt",
+  "@inboxScheduleLabelAwaitingResults": {
+    "description": "Inbox badge label for a tournamentSchedule row tagged awaiting_results"
+  },
+  "inboxScheduleLabelTiebreakHold": "Tiebreak",
+  "@inboxScheduleLabelTiebreakHold": {
+    "description": "Inbox badge label for a tournamentSchedule row tagged tiebreak_hold"
+  },
+  "inboxScheduleLabelGeneric": "Turnier-Ablauf",
+  "@inboxScheduleLabelGeneric": {
+    "description": "Inbox badge fallback label for a tournamentSchedule row with an unrecognised payload tag"
+  },
+  "inboxScheduleOpenMatchAction": "Zum Match",
+  "@inboxScheduleOpenMatchAction": {
+    "description": "Inbox detail CTA that opens the caller's live active tournament match"
   },
   "tournamentWizardSummaryPlaceholder": "—",
   "@tournamentWizardSummaryPlaceholder": {

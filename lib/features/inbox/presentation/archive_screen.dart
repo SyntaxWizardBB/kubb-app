@@ -147,6 +147,11 @@ class _ArchivedTile extends StatelessWidget {
         return 'TURNIER-EINLADUNG';
       case InboxMessageKind.tournamentShootout:
         return 'SHOOT-OUT';
+      case InboxMessageKind.tournamentSchedule:
+        // ADR-0031 Phase C (OD-1): the archive list shows a single generic
+        // label for the collective schedule kind (the per-event distinction
+        // lives in the active inbox; the archive is historical context only).
+        return 'TURNIER-ABLAUF';
       case InboxMessageKind.tournamentFinished:
         return 'TURNIER BEENDET';
     }

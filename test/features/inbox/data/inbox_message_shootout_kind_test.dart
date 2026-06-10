@@ -81,6 +81,80 @@ void main() {
       expect(msg.awaitsReply, isFalse);
     });
 
+    // ADR-0031 Phase C (OD-1): every timed-schedule event rides on the
+    // 'tournament_round' wire kind and is tagged via action_payload['kind'].
+    // All six sammel-tags collapse onto the single collective
+    // tournamentSchedule client kind.
+    group('tournamentSchedule collective kind (ADR-0031 Phase C)', () {
+      for (final tag in const [
+        'round_published',
+        'match_running',
+        'paused',
+        'resumed',
+        'awaiting_results',
+        'tiebreak_hold',
+      ]) {
+        test('tournament_round + payload kind $tag -> tournamentSchedule', () {
+          final kind = InboxMessageKind.fromWire(
+            'tournament_round',
+            actionPayload: {
+              'tournament_id': 't-1',
+              'round_number': 2,
+              'phase': 'pool',
+              'kind': tag,
+            },
+          );
+          expect(kind, InboxMessageKind.tournamentSchedule);
+        });
+      }
+
+      test('shootout is NOT folded into tournamentSchedule', () {
+        final kind = InboxMessageKind.fromWire(
+          'tournament_round',
+          actionPayload: const {'tournament_id': 't-1', 'kind': 'shootout'},
+        );
+        expect(kind, InboxMessageKind.tournamentShootout);
+        expect(kind, isNot(InboxMessageKind.tournamentSchedule));
+      });
+
+      test('unknown payload kind on tournament_round falls back to notice', () {
+        final kind = InboxMessageKind.fromWire(
+          'tournament_round',
+          actionPayload: const {'tournament_id': 't-1', 'kind': 'mystery'},
+        );
+        expect(kind, InboxMessageKind.notice);
+      });
+
+      test('no payload kind on tournament_round falls back to notice', () {
+        expect(
+          InboxMessageKind.fromWire(
+            'tournament_round',
+            actionPayload: const {'tournament_id': 't-1', 'phase': 'pool'},
+          ),
+          InboxMessageKind.notice,
+        );
+      });
+
+      test('fromRow wires the schedule kind via the row action_payload', () {
+        final msg = InboxMessage.fromRow(<String, dynamic>{
+          'id': 'm-sched',
+          'kind': 'tournament_round',
+          'subject': 'Runde 2 — Pitch 3',
+          'body': 'Deine nächste Runde ist veröffentlicht. — Pitch 3',
+          'sent_at': '2026-06-09T10:00:00Z',
+          'action_payload': <String, dynamic>{
+            'tournament_id': 't-1',
+            'round_number': 2,
+            'phase': 'pool',
+            'pitch_number': 3,
+            'kind': 'round_published',
+          },
+        });
+        expect(msg.kind, InboxMessageKind.tournamentSchedule);
+        expect(msg.awaitsReply, isFalse);
+      });
+    });
+
     test('fromRow wires the shoot-out kind via the row action_payload', () {
       final msg = InboxMessage.fromRow(<String, dynamic>{
         'id': 'm-1',

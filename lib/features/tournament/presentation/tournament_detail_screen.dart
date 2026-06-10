@@ -11,6 +11,7 @@ import 'package:kubb_app/features/tournament/application/tournament_realtime_pro
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_status_banner.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/tournament_escalation_panel.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_stammdaten_card.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_status_pill.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -48,7 +49,11 @@ class TournamentDetailScreen extends ConsumerWidget {
       ..watch(tournamentBracketRealtimeProvider(tournamentId))
       // C4-T3: tournament_matches CDC keeps the detail fresh (terminal-stop
       // after finalized/aborted, gated 30 s fallback). Replaces the 5 s poll.
-      ..watch(tournamentDetailCdcProvider(tournamentId));
+      ..watch(tournamentDetailCdcProvider(tournamentId))
+      // D4: tournament_participants CDC (D3 provider) pushes check-in flips
+      // from other devices and invalidates tournamentDetailProvider — no new
+      // polling (ADR-0029). Subscribe on first watch, autoDispose teardown.
+      ..watch(tournamentParticipantListRealtimeProvider(tournamentId));
     final detailAsync = ref.watch(tournamentDetailProvider(tournamentId));
     final myUserId = ref.watch(currentUserIdProvider);
 
@@ -114,6 +119,14 @@ class _Body extends ConsumerWidget {
     // lifecycle/update RPC, so this only governs button visibility.
     final canManage = isCreator ||
         ref.watch(canManageTournamentClubProvider(detail.tournament.clubId));
+    // D4: on-site check-in window (OE-D1 + K4). The toggle is offered only
+    // while the tournament accepts/runs play; draft/finalized/aborted never
+    // show it. The server re-checks the same gate + status window, so this
+    // only governs button visibility.
+    final checkinWindowOpen =
+        detail.tournament.status == TournamentStatus.registrationOpen ||
+            detail.tournament.status == TournamentStatus.registrationClosed ||
+            detail.tournament.status == TournamentStatus.live;
     TournamentParticipant? me;
     if (myUserId != null) {
       for (final p in detail.participants) {
@@ -169,11 +182,27 @@ class _Body extends ConsumerWidget {
         TournamentStammdatenCard(header: h),
         const SizedBox(height: KubbTokens.space5),
         _card(context, l.tournamentDetailParticipants, [
+          // D4 (optional header counter): while the check-in window is open and
+          // the caller can manage, show "X/Y eingecheckt" over the confirmed
+          // pool so the organizer sees attendance at a glance.
+          if (canManage && checkinWindowOpen && confirmedParts.isNotEmpty) ...[
+            Text(
+              l.tournamentDetailCheckedInCount(
+                confirmedParts.where((p) => p.isCheckedIn).length,
+                confirmedParts.length,
+              ),
+              style: TextStyle(fontSize: 12, color: tokens.fgMuted),
+            ),
+            const SizedBox(height: KubbTokens.space1),
+          ],
           if (confirmedParts.isEmpty)
             Text(l.tournamentDetailParticipantsEmpty,
                 style: TextStyle(fontSize: 13, color: tokens.fgMuted)),
           for (final p in confirmedParts)
-            _participantRow(context, ref, p, isCreator, l, tokens),
+            _participantRow(context, ref, p, isCreator, l, tokens,
+                tournamentId: id,
+                canManage: canManage,
+                checkinWindowOpen: checkinWindowOpen),
           // Waitlist overview (in registration order). Visible to everyone
           // so registrants understand the queue; the organizer additionally
           // gets the optional (non-required) moderation remove on each row.
@@ -186,6 +215,8 @@ class _Body extends ConsumerWidget {
                     letterSpacing: 0.88,
                     color: tokens.fgMuted)),
             const SizedBox(height: KubbTokens.space1),
+            // Waitlisted rows never get a check-in toggle (check-in is for
+            // confirmed pool members only — Phase-D spec, check-in ≠ confirm).
             for (final p in waitlistParts)
               _participantRow(context, ref, p, isCreator, l, tokens),
           ],
@@ -217,6 +248,18 @@ class _Body extends ConsumerWidget {
             canManage: canManage,
             me: me,
             id: id),
+        // D5: organizer escalation cockpit (disputed / overdue / not checked
+        // in) + No-Show→Forfait shortcut. Reads only from the already-loaded
+        // detail (no new fetch) and is reusable by the later B dashboard
+        // shell. Shown to managers only — it carries intervention actions.
+        if (canManage) ...[
+          const SizedBox(height: KubbTokens.space5),
+          TournamentEscalationPanel(
+            detail: detail,
+            tournamentId: id,
+            canManage: canManage,
+          ),
+        ],
         const SizedBox(height: KubbTokens.space5),
         _AuditTail(events: detail.auditTail),
       ],
@@ -273,8 +316,16 @@ Widget _participantRow(
   TournamentParticipant p,
   bool isOrganizer,
   AppLocalizations l,
-  KubbTokens tokens,
-) {
+  KubbTokens tokens, {
+  // D4: on-site check-in gate. The toggle is rendered ONLY for confirmed rows
+  // when [canManage] is true AND the tournament status is inside the check-in
+  // window ([checkinWindowOpen], OE-D1 + K4). Both default to off so waitlist
+  // rows and non-manager views never see it. The server re-checks the same
+  // gate/status/idempotency; this is visibility only.
+  TournamentId? tournamentId,
+  bool canManage = false,
+  bool checkinWindowOpen = false,
+}) {
   // New model: registrations are auto-confirmed; the only non-confirmed
   // pool state shown here is `waitlist`. Approve/reject is gone (no row is
   // ever `pending` anymore); the organizer keeps an OPTIONAL moderation
@@ -283,24 +334,57 @@ Widget _participantRow(
       p.registrationStatus == TournamentParticipantStatus.waitlist;
   final pid = TournamentParticipantId(p.participantId);
   final actions = ref.read(tournamentActionsProvider);
+  // Check-in is for confirmed pool members only (check-in ≠ confirm).
+  final showCheckin =
+      !isWaitlist && canManage && checkinWindowOpen && tournamentId != null;
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: KubbTokens.space1),
     child: Row(children: [
       Expanded(
-        child: Text(p.displayLabel,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(p.displayLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.fg)),
+            // D4-3: check-in timestamp label on an already-checked-in row.
+            if (showCheckin && p.isCheckedIn && p.checkedInAt != null)
+              Text(
+                l.tournamentDetailCheckedInAt(
+                    _formatCheckedInAt(p.checkedInAt!)),
+                style: TextStyle(fontSize: 11, color: tokens.fgMuted),
+              ),
+          ],
+        ),
       ),
-      Padding(
-        padding: const EdgeInsets.only(right: KubbTokens.space2),
-        child: Text(
-            isWaitlist
-                ? l.tournamentDetailStatusWaitlist
-                : l.tournamentDetailStatusConfirmed,
-            style: TextStyle(fontSize: 11, color: tokens.fgMuted)),
-      ),
+      if (showCheckin)
+        ParticipantCheckinToggle(
+          isCheckedIn: p.isCheckedIn,
+          onCheckin: () => _safe(
+              context,
+              () => ref
+                  .read(tournamentActionsProvider)
+                  .checkin(pid, tournamentId: tournamentId)),
+          onUndoCheckin: () => _safe(
+              context,
+              () => ref
+                  .read(tournamentActionsProvider)
+                  .undoCheckin(pid, tournamentId: tournamentId)),
+        )
+      else
+        Padding(
+          padding: const EdgeInsets.only(right: KubbTokens.space2),
+          child: Text(
+              isWaitlist
+                  ? l.tournamentDetailStatusWaitlist
+                  : l.tournamentDetailStatusConfirmed,
+              style: TextStyle(fontSize: 11, color: tokens.fgMuted)),
+        ),
       if (isOrganizer)
         TextButton(
             onPressed: () =>
@@ -308,6 +392,99 @@ Widget _participantRow(
             child: Text(l.tournamentDetailActionRemove)),
     ]),
   );
+}
+
+/// Formats a check-in timestamp for the inline row label (D4-3). The stored
+/// [checkedInAt] is already an absolute server instant (timestamptz projected
+/// by `tournament_get`), so it needs no Phase-A skew correction — the offset
+/// only matters for live countdowns against the local wall clock, not for
+/// rendering a fixed past instant. It is simply shown in the device's local
+/// time, which also degrades gracefully when Phase A is absent.
+String _formatCheckedInAt(DateTime checkedInAt) {
+  final dt = checkedInAt.toLocal();
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '${two(dt.day)}.${two(dt.month)}.${dt.year} '
+      '${two(dt.hour)}:${two(dt.minute)}';
+}
+
+/// Reusable on-site check-in toggle for a confirmed participant row (ADR-0031
+/// Phase D, Block D4 / OE-D5). Deliberately decoupled from the detail-screen
+/// internals so the upcoming B-dashboard shell can embed it 1:1: it takes only
+/// the derived [isCheckedIn] state (from the D3 domain `checkedInAt`, never
+/// client-tracked) and the two callbacks. Two states:
+///   • not checked in → tappable "Einchecken" action.
+///   • checked in     → green "Anwesend" state; tapping reverts the check-in.
+/// The server owns gate/status/idempotency; this widget never re-implements
+/// those checks. Touch target ≥ 48 dp; colours come from KubbTokens only.
+class ParticipantCheckinToggle extends StatelessWidget {
+  const ParticipantCheckinToggle({
+    required this.isCheckedIn,
+    required this.onCheckin,
+    required this.onUndoCheckin,
+    super.key,
+  });
+
+  final bool isCheckedIn;
+  final VoidCallback onCheckin;
+  final VoidCallback onUndoCheckin;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    if (isCheckedIn) {
+      // Checked-in state: green "Anwesend"; tap reverts. KubbTokens.hit is the
+      // design-system green (= meadow600), not a raw Color literal.
+      return InkWell(
+        onTap: onUndoCheckin,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusSm),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: KubbTokens.space2, vertical: KubbTokens.space2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_circle,
+                    size: 18, color: KubbTokens.hit),
+                const SizedBox(width: KubbTokens.space1),
+                Text(
+                  l.tournamentDetailCheckedInState,
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: KubbTokens.hit),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    // Not checked in: "Einchecken" action.
+    return InkWell(
+      onTap: onCheckin,
+      borderRadius: BorderRadius.circular(KubbTokens.radiusSm),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: KubbTokens.space2, vertical: KubbTokens.space2),
+          child: Center(
+            widthFactor: 1,
+            child: Text(
+              l.tournamentDetailCheckinAction,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: tokens.primary),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _Actions extends ConsumerWidget {

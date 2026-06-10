@@ -10,6 +10,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_status_chip.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/application/outbox_pending_provider.dart';
 import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
+import 'package:kubb_app/features/tournament/application/server_clock_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
@@ -17,11 +18,11 @@ import 'package:kubb_app/features/tournament/application/tournament_realtime_pro
 import 'package:kubb_app/features/tournament/application/tournament_score_draft_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_shootout_providers.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
-import 'package:kubb_app/features/tournament/presentation/widgets/match_countdown.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/participant_name.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/pitch_call_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_status_banner.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/round_phase_countdown.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/score_consensus_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/score_pending_indicator.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_forfeit_sheet.dart';
@@ -559,19 +560,49 @@ class _TournamentMatchDetailScreenState
         // and the tournament exposes a round time limit. Crossing expiry
         // vibrates once and flips to the result-entry CTA.
         if (!readOnly && match.startedAt != null)
-          Builder(builder: (context) {
+          Consumer(builder: (context, ref, _) {
             final cfg = detailAsync.maybeWhen<Map<String, Object?>>(
               data: (d) => d?.tournament.matchFormatConfig ?? const {},
               orElse: () => const {},
             );
             final duration = _roundTimeSeconds(cfg);
             if (duration <= 0) return const SizedBox.shrink();
+
+            // ADR-0031 §Uhr / Block A3c: feed the clock from the server skew
+            // offset and the matching tournament_round_schedule row. While
+            // the offset is loading, or the schedule has no row for this
+            // round (running legacy tournaments — OE-5/A4 fallback), the
+            // clock degrades to the plain started_at uhr (zero offset, no
+            // pause/hold) — no regression for existing tournaments.
+            final tid = TournamentId(widget.tournamentId);
+            final offset = ref
+                .watch(serverClockOffsetProvider)
+                .maybeWhen<Duration>(
+                  data: (d) => d,
+                  orElse: () => Duration.zero,
+                );
+            final schedule = ref
+                .watch(tournamentRoundScheduleProvider(tid))
+                .maybeWhen<TournamentRoundScheduleRef?>(
+                  data: (rows) => rows[(
+                    roundNumber: match.roundNumber,
+                    stageNodeId: null,
+                  )],
+                  orElse: () => null,
+                );
+            // RoundPhaseCountdown (Block A4) renders the right clock for the
+            // round phase off the schedule status: call/pause countdown,
+            // running match clock, or held clock (awaiting_results / tiebreak;
+            // ADR-0031 §6). With schedule == null it falls back to the plain
+            // started_at clock (running legacy tournaments — OE-5).
             return Padding(
               padding: const EdgeInsets.only(bottom: KubbTokens.space3),
-              child: MatchCountdown(
+              child: RoundPhaseCountdown(
+                schedule: schedule,
                 startedAt: match.startedAt!,
                 durationSeconds: duration,
                 tiebreakAfterSeconds: _tiebreakAfterSeconds(cfg),
+                serverOffset: offset,
               ),
             );
           }),

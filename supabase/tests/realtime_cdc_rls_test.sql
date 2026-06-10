@@ -10,6 +10,7 @@
 --   tournament_participants  | user_id        | tournament_participants_self_read
 --   tournament_matches       | tournament_id  | tournament_matches_read
 --   matches                  | id             | matches_participant_read
+--   tournament_round_schedule| tournament_id  | tournament_round_schedule_read (ADR-0031 A1)
 --
 -- ============================ EXECUTION NOTE ============================
 -- pgTAP is AVAILABLE in the local Supabase stack but NOT pre-installed
@@ -33,7 +34,7 @@
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap;
 
-SELECT plan(7);
+SELECT plan(9);
 
 -- ---- team_memberships: user_id -> self_read ----
 SELECT policy_cmd_is(
@@ -81,6 +82,24 @@ SELECT ok(
     WHERE schemaname='public' AND tablename='matches'
       AND policyname='matches_participant_read') LIKE '%matches.id%',
   'matches_participant_read USING references matches.id (CDC id filter)'
+);
+
+-- ---- tournament_round_schedule: tournament_id -> read (ADR-0031 A1) ----
+-- Publication membership (CDC target) + filter-column parity: the SELECT
+-- policy must gate on the same tournament_id the client filters the
+-- subscription on, mirroring tournament_matches.
+SELECT ok(
+  EXISTS (SELECT 1 FROM pg_publication_tables
+           WHERE pubname='supabase_realtime'
+             AND schemaname='public'
+             AND tablename='tournament_round_schedule'),
+  'tournament_round_schedule is a member of supabase_realtime (CDC target)'
+);
+SELECT ok(
+  (SELECT qual FROM pg_policies
+    WHERE schemaname='public' AND tablename='tournament_round_schedule'
+      AND policyname='tournament_round_schedule_read') LIKE '%tournament_id%',
+  'tournament_round_schedule_read USING references tournament_id (CDC tournament_id filter)'
 );
 
 SELECT * FROM finish();

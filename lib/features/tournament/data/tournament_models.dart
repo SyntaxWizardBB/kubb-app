@@ -72,6 +72,18 @@ const Map<TournamentMatchStatus, String> _matchStatusWire = {
   TournamentMatchStatus.voided: 'voided',
 };
 
+/// Wire mapping for the `status` column on `tournament_round_schedule`
+/// (ADR-0031 Block A1). Mirrors EXACTLY the server CHECK constraint of the
+/// table (migration 20261251000000): published | call | running |
+/// awaiting_results | completed.
+const Map<RoundStatus, String> _roundStatusWire = {
+  RoundStatus.published: 'published',
+  RoundStatus.call: 'call',
+  RoundStatus.running: 'running',
+  RoundStatus.awaitingResults: 'awaiting_results',
+  RoundStatus.completed: 'completed',
+};
+
 /// Wire mapping for the `phase` column on `tournament_matches`. The
 /// `group` value sits outside the bracket — callers filter it out before
 /// projecting into a [BracketPhase].
@@ -193,6 +205,12 @@ extension TournamentMatchStatusWire on TournamentMatchStatus {
       _enumFromWire(_matchStatusWire, raw, 'TournamentMatchStatus');
 }
 
+extension RoundStatusWire on RoundStatus {
+  static RoundStatus fromWire(String raw) =>
+      _enumFromWire(_roundStatusWire, raw, 'RoundStatus');
+  String toWire() => _roundStatusWire[this]!;
+}
+
 int _asInt(Object? r) => r is int ? r : (r as num).toInt();
 int? _asIntOrNull(Object? r) => r == null ? null : _asInt(r);
 DateTime? _asDateOrNull(Object? r) =>
@@ -206,6 +224,13 @@ DateTime? _asDateOrNull(Object? r) =>
 /// optional on the wire so wire-rows from older RPC versions still
 /// decode — callers fall back to the localized `tournamentParticipantUnknown`
 /// string in that case.
+///
+/// `checked_in_at` is the on-site presence timestamp projected by
+/// `tournament_get` since `20261266000000` (ADR-0031 Phase D, Block D2) and
+/// carried on the `tournament_participants` CDC channel. It is read through
+/// the null-tolerant `_asDateOrNull` helper: a NULL value, or a missing key
+/// on older RPC/CDC payloads, decodes to `null` (no hard cast that would
+/// throw) — same tolerant-decode convention as the `display_name` field.
 TournamentParticipant tournamentParticipantFromRow(Map<String, dynamic> row) {
   return TournamentParticipant(
     participantId: row['participant_id'] as String,
@@ -217,6 +242,7 @@ TournamentParticipant tournamentParticipantFromRow(Map<String, dynamic> row) {
     seed: _asIntOrNull(row['seed']),
     registeredAt: DateTime.parse(row['registered_at'] as String),
     respondedAt: _asDateOrNull(row['responded_at']),
+    checkedInAt: _asDateOrNull(row['checked_in_at']),
   );
 }
 
@@ -349,6 +375,97 @@ TournamentMatchRef tournamentMatchRefFromCdcRow(Map<String, Object?> row) {
     finalScoreB: _asIntOrNull(row['final_score_b']),
     // M2a: raw CDC table column carries the phase token directly.
     phase: matchPhaseFromWire(row['phase'] as String?),
+  );
+}
+
+/// Decodes a raw `tournament_participants` CDC row (column-name keyed, as
+/// delivered by `RealtimeChannel`) into a domain [TournamentParticipant]
+/// (ADR-0031 Phase D, Block D3).
+///
+/// The RPC-shaped wire used by [tournamentParticipantFromRow] renames the
+/// table's primary key `id` to `participant_id` and JOINs in `nickname` /
+/// `display_name`; raw CDC payloads ship only the `tournament_participants`
+/// table columns (`id`, `user_id`, `registration_status`, `seed`,
+/// `registered_at`, `responded_at`, `checked_in_at`). Keeping the two parsers
+/// separate avoids leaking the rename into the table schema. `nickname` /
+/// `display_name` are absent on the CDC wire and decode to `null`; the
+/// realtime provider only uses the row to invalidate the detail read, which
+/// re-projects the joined names.
+TournamentParticipant tournamentParticipantFromCdcRow(Map<String, Object?> row) {
+  return TournamentParticipant(
+    participantId: row['id']! as String,
+    userId: row['user_id'] as String?,
+    nickname: row['nickname'] as String?,
+    displayName: row['display_name'] as String?,
+    registrationStatus: TournamentParticipantStatusWire.fromWire(
+        row['registration_status']! as String),
+    seed: _asIntOrNull(row['seed']),
+    registeredAt: DateTime.parse(row['registered_at']! as String),
+    respondedAt: _asDateOrNull(row['responded_at']),
+    checkedInAt: _asDateOrNull(row['checked_in_at']),
+  );
+}
+
+/// Decodes a raw `tournament_round_schedule` CDC row (column-name keyed, as
+/// delivered by `RealtimeChannel`) into a domain [TournamentRoundScheduleRef]
+/// (ADR-0031 Block A1/A3c).
+///
+/// Reuses the file's established cast helpers ([_asInt] / [_asIntOrNull] /
+/// [_asDateOrNull]) instead of duplicating parsers. `starts_at`, `ends_at`
+/// and `published_at` are NOT NULL on the table, so they decode via
+/// `_asDateOrNull(...)!`; `stage_node_id`, `tiebreak_after_seconds` and
+/// `paused_at` are nullable. The `status` string is mapped through
+/// [RoundStatusWire.fromWire] (all five CHECK values).
+TournamentRoundScheduleRef tournamentRoundScheduleRefFromCdcRow(
+  Map<String, Object?> row,
+) {
+  return TournamentRoundScheduleRef(
+    tournamentId: TournamentId(row['tournament_id']! as String),
+    stageNodeId: row['stage_node_id'] as String?,
+    roundNumber: _asInt(row['round_number']),
+    phase: row['phase']! as String,
+    status: RoundStatusWire.fromWire(row['status']! as String),
+    publishedAt: _asDateOrNull(row['published_at'])!,
+    startsAt: _asDateOrNull(row['starts_at'])!,
+    endsAt: _asDateOrNull(row['ends_at'])!,
+    breakSeconds: _asInt(row['break_seconds']),
+    matchSeconds: _asInt(row['match_seconds']),
+    tiebreakAfterSeconds: _asIntOrNull(row['tiebreak_after_seconds']),
+    pausedAt: _asDateOrNull(row['paused_at']),
+    pausedAccumSeconds: _asInt(row['paused_accum_seconds']),
+  );
+}
+
+/// Decodes a `tournament_list_administrable` RPC row into a domain
+/// [TournamentAdminCardRef] (ADR-0031 Phase B, Block B1c).
+///
+/// The wire columns mirror the `jsonb_build_object` projection of migration
+/// `20261255000000_tournament_administrable_gate_and_list.sql`:
+/// `tournament_id`, `display_name`, `format`, `status`,
+/// `current_round`, `schedule_status`, `paused_at`, `remaining_seconds`,
+/// `open_match_count`, `disputed_match_count`.
+///
+/// The schedule-derived fields (`current_round`, `schedule_status`,
+/// `remaining_seconds`, `paused_at`) are nullable: the RPC LEFT-JOINs
+/// `tournament_round_schedule`, so a tournament without a schedule row
+/// surfaces with those columns NULL. They decode to `null` rather than
+/// throwing. `open_match_count` / `disputed_match_count` default to 0 when
+/// the wire value is NULL.
+TournamentAdminCardRef tournamentAdminCardRefFromRow(Map<String, dynamic> row) {
+  final scheduleStatusRaw = row['schedule_status'] as String?;
+  return TournamentAdminCardRef(
+    tournamentId: TournamentId(row['tournament_id'] as String),
+    displayName: row['display_name'] as String,
+    format: TournamentFormatWire.fromWire(row['format'] as String),
+    status: TournamentStatusWire.fromWire(row['status'] as String),
+    currentRound: _asIntOrNull(row['current_round']),
+    scheduleStatus: scheduleStatusRaw == null
+        ? null
+        : RoundStatusWire.fromWire(scheduleStatusRaw),
+    remainingSeconds: _asIntOrNull(row['remaining_seconds']),
+    openMatchCount: _asIntOrNull(row['open_match_count']) ?? 0,
+    disputedMatchCount: _asIntOrNull(row['disputed_match_count']) ?? 0,
+    pausedAt: _asDateOrNull(row['paused_at']),
   );
 }
 
