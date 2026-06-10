@@ -73,7 +73,47 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
             clubChoiceMade: true,
             leagueCategories: const <LeagueCategory>[],
           )
-        : state.copyWith(clubId: clubId, clubChoiceMade: true);
+        // Picking a club makes the tournament a rated league event, where the
+        // "auf Einladung" option does not apply (invite-only is Spaßturnier-
+        // only). Reset the flag + any pending invitees so a stale selection
+        // can't leak into a club tournament.
+        : state.copyWith(
+            clubId: clubId,
+            clubChoiceMade: true,
+            inviteOnly: false,
+            invitedUsers: const <InvitedUser>[],
+          );
+  }
+
+  /// Toggles the Spaßturnier "auf Einladung" flag. Turning it off also clears
+  /// any already-picked invitees so they are not silently sent if the organizer
+  /// re-enables the toggle later.
+  void setInviteOnly(bool value) {
+    state = value
+        ? state.copyWith(inviteOnly: true)
+        : state.copyWith(
+            inviteOnly: false,
+            invitedUsers: const <InvitedUser>[],
+          );
+  }
+
+  /// Adds a player to the invite list. No-op when the same [InvitedUser.userId]
+  /// is already present (dedupe by user id).
+  void addInvitee(InvitedUser invitee) {
+    if (state.invitedUsers.any((u) => u.userId == invitee.userId)) return;
+    state = state.copyWith(
+      invitedUsers: <InvitedUser>[...state.invitedUsers, invitee],
+    );
+  }
+
+  /// Removes the invitee with [userId] from the invite list.
+  void removeInvitee(String userId) {
+    state = state.copyWith(
+      invitedUsers: <InvitedUser>[
+        for (final u in state.invitedUsers)
+          if (u.userId != userId) u,
+      ],
+    );
   }
 
   void setMinParticipants(int value) {

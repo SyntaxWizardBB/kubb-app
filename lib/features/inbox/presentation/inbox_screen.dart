@@ -15,6 +15,11 @@ import 'package:kubb_app/features/social/application/social_providers.dart';
 import 'package:kubb_app/features/social/presentation/social_routes.dart';
 import 'package:kubb_app/features/team/application/team_list_provider.dart';
 import 'package:kubb_app/features/team/application/team_membership_controller.dart';
+import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart'
+    show myTournamentRegistrationsProvider;
+import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
+import 'package:kubb_app/features/tournament/data/tournament_repository.dart'
+    show tournamentRemoteProvider;
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -161,6 +166,7 @@ class _MessageTile extends ConsumerWidget {
       case InboxMessageKind.clubMemberRemoved:
       case InboxMessageKind.clubJoinRequest:
       case InboxMessageKind.tournamentShootout:
+      case InboxMessageKind.tournamentInvitation:
         return const Color(0xFFFBF2D6);
       // N1: tournament-end is a positive, informational close — use the
       // lightest meadow (success) tint from the design-system palette.
@@ -195,6 +201,8 @@ class _MessageTile extends ConsumerWidget {
         return 'Shoot-Out';
       case InboxMessageKind.tournamentFinished:
         return 'Turnier beendet';
+      case InboxMessageKind.tournamentInvitation:
+        return 'Turnier-Einladung';
     }
   }
 
@@ -494,6 +502,16 @@ class _MessageDetail extends ConsumerWidget {
                 onDecline: () => _handleClubInvitation(context, ref,
                     invitationId: invitationId, accept: false),
               ),
+            ] else if (message.kind ==
+                    InboxMessageKind.tournamentInvitation &&
+                invitationId != null) ...[
+              const SizedBox(height: KubbTokens.space5),
+              _AcceptDeclineRow(
+                onAccept: () => _handleTournamentInvitation(context, ref,
+                    invitationId: invitationId, accept: true),
+                onDecline: () => _handleTournamentInvitation(context, ref,
+                    invitationId: invitationId, accept: false),
+              ),
             ] else if (message.kind == InboxMessageKind.clubJoinRequest &&
                 joinRequestId != null &&
                 clubId != null) ...[
@@ -710,6 +728,31 @@ class _MessageDetail extends ConsumerWidget {
           .read(clubMembershipControllerProvider.notifier)
           .respondInvitation(ClubInvitationId(invitationId), accept: accept),
       invalidate: () => ref.invalidate(clubListProvider),
+    );
+  }
+
+  Future<void> _handleTournamentInvitation(
+    BuildContext context,
+    WidgetRef ref, {
+    required String invitationId,
+    required bool accept,
+  }) async {
+    await _respondRequest(
+      context,
+      ref,
+      accept: accept,
+      // Accepting registers the user as `pending` for the tournament
+      // (Owner-Entscheid: organizer confirms final), so the label reflects a
+      // registration request, not a confirmed slot.
+      acceptedLabel: 'Anmeldung gesendet',
+      run: () => ref
+          .read(tournamentRemoteProvider)
+          .respondInvitation(invitationId, accept: accept),
+      // Refresh both the discovery list (the tournament may newly surface) and
+      // the caller's own registrations (a new pending entry on accept).
+      invalidate: () => ref
+        ..invalidate(tournamentListProvider)
+        ..invalidate(myTournamentRegistrationsProvider),
     );
   }
 

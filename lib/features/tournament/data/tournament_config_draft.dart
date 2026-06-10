@@ -7,6 +7,30 @@ import 'package:kubb_domain/kubb_domain.dart';
 /// the same `isValid` / `issues` access pattern.
 typedef TournamentConfigValidation = ({bool isValid, List<String> issues});
 
+/// A player the organizer has invited to an `invite_only` fun tournament.
+/// Carried as wizard-only state: the invitees are NOT persisted in the
+/// tournament's `p_setup` (only the `invite_only` flag is) — each invitee is
+/// sent through the `tournament_invite_user` RPC after the tournament is
+/// created/updated. Holds the [nickname] purely so the wizard can render the
+/// invitation chips without a second lookup.
+@immutable
+class InvitedUser {
+  const InvitedUser({required this.userId, required this.nickname});
+
+  final String userId;
+  final String nickname;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is InvitedUser &&
+          other.userId == userId &&
+          other.nickname == nickname;
+
+  @override
+  int get hashCode => Object.hash(userId, nickname);
+}
+
 /// Returns null for a null/blank string, otherwise the trimmed value.
 /// Keeps the setup payload free of empty-string columns.
 String? _blankToNull(String? value) {
@@ -30,6 +54,8 @@ class TournamentConfigDraft {
     this.displayName,
     this.clubId,
     this.clubChoiceMade = false,
+    this.inviteOnly = false,
+    this.invitedUsers = const <InvitedUser>[],
     this.teamSize = 1,
     this.maxTeamSize = 1,
     this.minParticipants = 2,
@@ -150,6 +176,10 @@ class TournamentConfigDraft {
       // EDIT mode: the club choice was already made when the tournament was
       // created, so the Stammdaten step is valid without re-picking (K03).
       clubChoiceMade: true,
+      // Invite-only flag round-trips for the EDIT prefill. The invitee list is
+      // NOT re-hydrated (the server holds the authoritative invitations); it
+      // stays empty so an edit doesn't accidentally re-invite anyone.
+      inviteOnly: setup['invite_only'] as bool? ?? false,
       teamSize: header.teamSize,
       maxTeamSize: maxTeamSize < header.teamSize ? header.teamSize : maxTeamSize,
       minParticipants: header.minParticipants,
@@ -411,6 +441,18 @@ class TournamentConfigDraft {
   /// needs the resulting [clubId]; this is wizard-validation state.
   final bool clubChoiceMade;
 
+  /// Spaßturnier "auf Einladung" (invite-only). Only meaningful for a personal
+  /// tournament ([clubId] == null) — the wizard shows the toggle solely in that
+  /// case. Persisted into `p_setup` as `invite_only`; `tournament_update` reads
+  /// it back via coalesce. When a club is selected this is forced back to false
+  /// (see `TournamentConfigController.setClubId`).
+  final bool inviteOnly;
+
+  /// Players the organizer has invited (only relevant while [inviteOnly]).
+  /// Wizard-only state: NOT emitted in [toSetupConfig]; the wizard sends each
+  /// entry through `tournament_invite_user` after create/update.
+  final List<InvitedUser> invitedUsers;
+
   /// K02: a tournament is rating-/league-relevant only when an organizing
   /// club is selected. "Spasstournier – ohne Wertung" ([clubId] == null) is
   /// never rated — the points/league system must skip it. Derived from
@@ -589,6 +631,8 @@ class TournamentConfigDraft {
     String? clubId,
     bool clearClubId = false,
     bool? clubChoiceMade,
+    bool? inviteOnly,
+    List<InvitedUser>? invitedUsers,
     int? teamSize,
     int? maxTeamSize,
     int? minParticipants,
@@ -652,6 +696,8 @@ class TournamentConfigDraft {
       displayName: displayName ?? this.displayName,
       clubId: clearClubId ? null : (clubId ?? this.clubId),
       clubChoiceMade: clubChoiceMade ?? this.clubChoiceMade,
+      inviteOnly: inviteOnly ?? this.inviteOnly,
+      invitedUsers: invitedUsers ?? this.invitedUsers,
       teamSize: teamSize ?? this.teamSize,
       maxTeamSize: maxTeamSize ?? this.maxTeamSize,
       minParticipants: minParticipants ?? this.minParticipants,
@@ -993,6 +1039,10 @@ class TournamentConfigDraft {
   Map<String, Object?> toSetupConfig() {
     return <String, Object?>{
       'club_id': _blankToNull(clubId),
+      // Invite-only is a Spaßturnier-only option (P6 invite SPEC §3). Defense-
+      // in-depth, mirroring league_categories: never emit invite_only:true when
+      // a club is selected, even if a stale toggle lingers in the draft.
+      'invite_only': _blankToNull(clubId) == null && inviteOnly,
       'location': _blankToNull(location),
       'venue_address': _blankToNull(venueAddress),
       'event_starts_at': eventStartsAt?.toUtc().toIso8601String(),
@@ -1079,6 +1129,8 @@ class TournamentConfigDraft {
           other.displayName == displayName &&
           other.clubId == clubId &&
           other.clubChoiceMade == clubChoiceMade &&
+          other.inviteOnly == inviteOnly &&
+          listEquals(other.invitedUsers, invitedUsers) &&
           other.teamSize == teamSize &&
           other.maxTeamSize == maxTeamSize &&
           other.minParticipants == minParticipants &&
@@ -1133,6 +1185,8 @@ class TournamentConfigDraft {
         displayName,
         clubId,
         clubChoiceMade,
+        inviteOnly,
+        Object.hashAll(invitedUsers),
         teamSize,
         maxTeamSize,
         minParticipants,

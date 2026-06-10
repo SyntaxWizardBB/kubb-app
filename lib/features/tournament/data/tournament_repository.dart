@@ -355,6 +355,43 @@ class TournamentRepository implements TournamentRemote {
   Future<void> publish(TournamentId id) =>
       _voidRpc('tournament_publish', id);
 
+  // ---- Invite-only fun tournaments (Spaßturnier "auf Einladung") ----
+
+  @override
+  Future<void> inviteUser(TournamentId tournamentId, UserId userId) {
+    return _client.rpc<void>(
+      'tournament_invite_user',
+      params: <String, dynamic>{
+        'p_tournament_id': tournamentId.value,
+        'p_user_id': userId.value,
+      },
+    );
+  }
+
+  @override
+  Future<void> respondInvitation(
+    String invitationId, {
+    required bool accept,
+  }) {
+    return _client.rpc<void>(
+      'tournament_invitation_respond',
+      params: <String, dynamic>{
+        'p_invitation_id': invitationId,
+        'p_accept': accept,
+      },
+    );
+  }
+
+  @override
+  Future<void> revokeInvitation(String invitationId) {
+    return _client.rpc<void>(
+      'tournament_revoke_invitation',
+      params: <String, dynamic>{
+        'p_invitation_id': invitationId,
+      },
+    );
+  }
+
   @override
   Future<void> openRegistration(TournamentId id) =>
       _voidRpc('tournament_open_registration', id);

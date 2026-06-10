@@ -685,6 +685,34 @@ abstract interface class TournamentRemote {
   });
 
   Future<void> publish(TournamentId id);
+
+  // Invite-only fun tournaments (Spaßturnier "auf Einladung")
+  //
+  // Backed by the SECURITY DEFINER RPCs from migration `20261272…`:
+  // - `tournament_invite_user(p_tournament_id, p_user_id)` — organizer invites
+  //   a user to an `invite_only` tournament; writes an inbox message.
+  // - `tournament_invitation_respond(p_invitation_id, p_accept)` — invitee
+  //   accepts (→ registered `pending`) or declines.
+  // - `tournament_revoke_invitation(p_invitation_id)` — organizer revokes a
+  //   pending invitation.
+  //
+  // The invitation id travels as a plain String (the inbox `action_payload`
+  // carries it); there is no dedicated value object since the respond path
+  // runs through the generic inbox surface.
+
+  /// Invites [userId] to the `invite_only` tournament [tournamentId]. The
+  /// server gates on the organizer and requires the tournament to be
+  /// invite-only. Idempotent per (tournament, user): a re-invite after
+  /// revoke/decline re-activates the invitation.
+  Future<void> inviteUser(TournamentId tournamentId, UserId userId);
+
+  /// Invitee response to a tournament invitation. [accept] true registers the
+  /// caller as `pending` for the tournament; false declines it.
+  Future<void> respondInvitation(String invitationId, {required bool accept});
+
+  /// Organizer revokes a pending tournament invitation.
+  Future<void> revokeInvitation(String invitationId);
+
   Future<void> openRegistration(TournamentId id);
   Future<void> closeRegistration(TournamentId id);
   Future<void> startTournament(TournamentId id);

@@ -100,6 +100,23 @@ class _FakeTournamentRemote implements TournamentRemote {
   @override
   Future<void> publish(TournamentId id) async {}
 
+  // Invite-only Spaßturnier capture.
+  final List<({TournamentId tournamentId, UserId userId})> sentInvites =
+      <({TournamentId tournamentId, UserId userId})>[];
+
+  @override
+  Future<void> inviteUser(TournamentId tournamentId, UserId userId) async =>
+      sentInvites.add((tournamentId: tournamentId, userId: userId));
+
+  @override
+  Future<void> respondInvitation(
+    String invitationId, {
+    required bool accept,
+  }) async {}
+
+  @override
+  Future<void> revokeInvitation(String invitationId) async {}
+
   @override
   Future<void> openRegistration(TournamentId id) async {}
 
@@ -347,6 +364,21 @@ class _InvalidDraftSeededController extends TournamentConfigController {
           format: TournamentFormat.swissThenKo,
           vorrundeType: VorrundeType.schoch,
           setsToWin: 9,
+        ),
+      );
+}
+
+/// Spaßturnier draft that already has invite-only ON and one invitee, so a
+/// submit must fan the invite out through `inviteUser` after create. Stays a
+/// Spaßturnier (no club) so the invite-only toggle is eligible.
+class _InviteSeededController extends TournamentConfigController {
+  @override
+  TournamentConfigDraft build() => _withStammdaten(
+        super.build().copyWith(
+          inviteOnly: true,
+          invitedUsers: const <InvitedUser>[
+            InvitedUser(userId: 'u-guest-1', nickname: 'Gast Eins'),
+          ],
         ),
       );
 }
@@ -763,6 +795,71 @@ void main() {
     // Every tournament has a KO stage now → hybrid round-robin-then-KO.
     expect(fake.createdFormat, TournamentFormat.roundRobinThenKo);
     expect(find.text('detail:t-fake-1'), findsOneWidget);
+  });
+
+  testWidgets(
+      'invite-only toggle shows for a Spaßturnier and hides once a club is host',
+      (tester) async {
+    await _pumpWizard(
+      tester,
+      extraOverrides: <Object>[
+        manageableClubsProvider.overrideWith(
+          (_) async => const <ManageableClub>[
+            (id: 'c-1', name: 'Kubb Club Aarau'),
+          ],
+        ),
+      ],
+    );
+    await _typeName(tester, 'Cup');
+    // Spaßturnier (no club): the invite-only toggle is offered.
+    expect(find.byKey(const Key('wizardInviteOnlyToggle')), findsOneWidget);
+
+    // Pick a club → the tournament is no longer a Spaßturnier → toggle gone.
+    await tester.tap(find.byKey(const Key('wizardClubPicker')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Kubb Club Aarau').last);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('wizardInviteOnlyToggle')), findsNothing);
+  });
+
+  testWidgets('toggling invite-only on reveals the player search field',
+      (tester) async {
+    await _pumpWizard(tester);
+    await _typeName(tester, 'Cup');
+    expect(find.byKey(const Key('wizardInviteSearchField')), findsNothing);
+
+    // Only the inner Switch of _ToggleRow is interactive, so tap that.
+    final toggleSwitch = find.descendant(
+      of: find.byKey(const Key('wizardInviteOnlyToggle')),
+      matching: find.byType(Switch),
+    );
+    await tester.ensureVisible(toggleSwitch);
+    await tester.pumpAndSettle();
+    await tester.tap(toggleSwitch);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('wizardInviteSearchField')), findsOneWidget);
+  });
+
+  testWidgets('submitting an invite-only draft fans invites out via inviteUser',
+      (tester) async {
+    final fake = await _pumpWizard(
+      tester,
+      controllerOverride: _InviteSeededController.new,
+    );
+    await _typeName(tester, 'Geheim-Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> KO config
+    await _tapNext(tester); // -> summary
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
+    await tester.pumpAndSettle();
+
+    // Create happened, then the seeded invitee was sent to the new tournament.
+    expect(fake.callCount, 1);
+    expect(fake.sentInvites, hasLength(1));
+    expect(fake.sentInvites.single.userId.value, 'u-guest-1');
+    expect(fake.sentInvites.single.tournamentId.value, 't-fake-1');
   });
 
   testWidgets(

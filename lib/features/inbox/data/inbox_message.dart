@@ -41,7 +41,13 @@ enum InboxMessageKind {
   /// (migration `20261242000000_tournament_finished_inbox_round_time.sql`).
   /// The body already carries the configured round time, so the UI renders it
   /// as a plain informational message — no action panel.
-  tournamentFinished;
+  tournamentFinished,
+
+  /// Invite-only fun-tournament invitation: the organizer invited this user to
+  /// a `invite_only` tournament. Routed to an accept/decline panel; accepting
+  /// registers the user as `pending` for that tournament. The action_payload
+  /// carries `{tournament_id, invitation_id, tournament_name}`.
+  tournamentInvitation;
 
   /// Maps the wire `kind` plus the row's [actionPayload] onto a typed kind.
   ///
@@ -81,6 +87,8 @@ enum InboxMessageKind {
         return InboxMessageKind.clubJoinRequest;
       case 'tournament_finished':
         return InboxMessageKind.tournamentFinished;
+      case 'tournament_invitation':
+        return InboxMessageKind.tournamentInvitation;
       default:
         return InboxMessageKind.notice;
     }

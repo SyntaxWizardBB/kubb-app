@@ -315,6 +315,34 @@ class FakeTournamentRemote implements TournamentRemote {
   Future<void> publish(TournamentId id) async =>
       _tournaments[id]!.status = TournamentStatus.published;
 
+  /// Records of invite-only tournament invitations sent through this fake,
+  /// so wizard/integration tests can assert the invite calls happened with
+  /// the right (tournament, user) pairs.
+  final List<({TournamentId tournamentId, UserId userId})> sentInvites =
+      <({TournamentId tournamentId, UserId userId})>[];
+
+  /// Records of (invitationId, accept) responses processed by this fake.
+  final List<({String invitationId, bool accept})> invitationResponses =
+      <({String invitationId, bool accept})>[];
+
+  /// Records of revoked invitation ids.
+  final List<String> revokedInvitations = <String>[];
+
+  @override
+  Future<void> inviteUser(TournamentId tournamentId, UserId userId) async =>
+      sentInvites.add((tournamentId: tournamentId, userId: userId));
+
+  @override
+  Future<void> respondInvitation(
+    String invitationId, {
+    required bool accept,
+  }) async =>
+      invitationResponses.add((invitationId: invitationId, accept: accept));
+
+  @override
+  Future<void> revokeInvitation(String invitationId) async =>
+      revokedInvitations.add(invitationId);
+
   @override
   Future<void> openRegistration(TournamentId id) async =>
       _tournaments[id]!.status = TournamentStatus.registrationOpen;

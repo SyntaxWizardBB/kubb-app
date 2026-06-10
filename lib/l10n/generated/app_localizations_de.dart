@@ -1717,6 +1717,43 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardClubChoosePrompt => 'Bitte wählen';
 
   @override
+  String get tournamentWizardInviteOnlyLabel => 'Auf Einladung';
+
+  @override
+  String get tournamentWizardInviteOnlyHint =>
+      'Nur eingeladene Spieler sehen dieses Turnier und können sich anmelden.';
+
+  @override
+  String get tournamentWizardInviteSearchHint => 'Spielername suchen…';
+
+  @override
+  String tournamentWizardInviteNoResults(String query) {
+    return 'Niemand gefunden für „$query\".';
+  }
+
+  @override
+  String tournamentWizardInviteSearchError(String error) {
+    return 'Suche fehlgeschlagen: $error';
+  }
+
+  @override
+  String get tournamentWizardInviteAddAction => 'Einladen';
+
+  @override
+  String get tournamentWizardInviteRemoveTooltip => 'Einladung entfernen';
+
+  @override
+  String tournamentWizardInvitePartialError(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Einladungen konnten nicht gesendet werden.',
+      one: 'Eine Einladung konnte nicht gesendet werden.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get tournamentWizardLocationLabel => 'Ort';
 
   @override
@@ -2927,6 +2964,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentDetailScoring => 'Wertung';
+
+  @override
+  String get tournamentDetailInviteOnly => 'Auf Einladung';
 
   @override
   String get tournamentDetailScoringEkc => 'EKC';

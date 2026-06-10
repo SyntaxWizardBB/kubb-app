@@ -2265,6 +2265,47 @@
   "@tournamentWizardClubChoosePrompt": {
     "description": "Hint shown in the club picker until the organizer actively picks (K03)"
   },
+  "tournamentWizardInviteOnlyLabel": "Auf Einladung",
+  "@tournamentWizardInviteOnlyLabel": {
+    "description": "Toggle title for an invite-only fun tournament (Spaßturnier)"
+  },
+  "tournamentWizardInviteOnlyHint": "Nur eingeladene Spieler sehen dieses Turnier und können sich anmelden.",
+  "@tournamentWizardInviteOnlyHint": {
+    "description": "Helper text under the invite-only toggle"
+  },
+  "tournamentWizardInviteSearchHint": "Spielername suchen…",
+  "@tournamentWizardInviteSearchHint": {
+    "description": "Hint text in the invite player search field"
+  },
+  "tournamentWizardInviteNoResults": "Niemand gefunden für „{query}\".",
+  "@tournamentWizardInviteNoResults": {
+    "description": "Empty-result message in the invite player search",
+    "placeholders": {
+      "query": { "type": "String" }
+    }
+  },
+  "tournamentWizardInviteSearchError": "Suche fehlgeschlagen: {error}",
+  "@tournamentWizardInviteSearchError": {
+    "description": "Error message when the invite player search fails",
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "tournamentWizardInviteAddAction": "Einladen",
+  "@tournamentWizardInviteAddAction": {
+    "description": "Action button to add a player to the invite list"
+  },
+  "tournamentWizardInviteRemoveTooltip": "Einladung entfernen",
+  "@tournamentWizardInviteRemoveTooltip": {
+    "description": "Tooltip on the delete icon of an invited-player chip"
+  },
+  "tournamentWizardInvitePartialError": "{count, plural, =1{Eine Einladung konnte nicht gesendet werden.} other{{count} Einladungen konnten nicht gesendet werden.}}",
+  "@tournamentWizardInvitePartialError": {
+    "description": "Snackbar shown when some invite calls failed after creating the tournament",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "tournamentWizardLocationLabel": "Ort",
   "@tournamentWizardLocationLabel": {
     "description": "Venue / town input label on the Stammdaten step"
@@ -3778,6 +3819,10 @@
   "tournamentDetailScoring": "Wertung",
   "@tournamentDetailScoring": {
     "description": "CF5/K28: label for the scoring system"
+  },
+  "tournamentDetailInviteOnly": "Auf Einladung",
+  "@tournamentDetailInviteOnly": {
+    "description": "Stammdaten row label marking an invite-only fun tournament"
   },
   "tournamentDetailScoringEkc": "EKC",
   "@tournamentDetailScoringEkc": {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,12 +7,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/features/social/application/social_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/data/tournament_pdf_uploader.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart'
-    show StructureLockedException, TournamentLockedException;
+    show
+        StructureLockedException,
+        TournamentLockedException,
+        tournamentRemoteProvider;
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_model_explainer_sheet.dart';
@@ -198,6 +204,22 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
         targetId =
             await ref.read(tournamentActionsProvider).createTournament(draft);
       }
+      // Invite-only Spaßturnier: send each picked invitation AFTER the
+      // tournament exists / its invite_only flag is persisted. Failures are
+      // tolerated per invitee so one bad call doesn't abort the whole flow —
+      // we surface a soft hint and still navigate to the detail screen.
+      final inviteFailures = await _sendInvites(targetId, draft);
+      if (!mounted) return;
+      if (inviteFailures > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.tournamentWizardInvitePartialError(
+              inviteFailures,
+            )),
+            backgroundColor: KubbTokens.miss,
+          ),
+        );
+      }
       if (!mounted) return;
       context.go('${TournamentRoutes.detail}/${targetId.value}');
     } on StructureLockedException {
@@ -230,6 +252,30 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  /// Sends one `tournament_invite_user` call per picked invitee for an
+  /// invite-only Spaßturnier. Each call is guarded independently so a single
+  /// failure (e.g. a user that vanished) does not abort the rest; returns the
+  /// number of invitations that failed so the caller can hint at it. A no-op
+  /// (returns 0) when the tournament is not invite-only or has a club.
+  Future<int> _sendInvites(
+    TournamentId tournamentId,
+    TournamentConfigDraft draft,
+  ) async {
+    if (draft.clubId != null || !draft.inviteOnly) return 0;
+    final remote = ref.read(tournamentRemoteProvider);
+    var failures = 0;
+    for (final invitee in draft.invitedUsers) {
+      try {
+        await remote.inviteUser(tournamentId, UserId(invitee.userId));
+      } on Object {
+        // Tolerate per-invitee failures — the tournament itself is already
+        // created; the organizer can re-invite from the detail screen later.
+        failures++;
+      }
+    }
+    return failures;
   }
 
   @override
@@ -631,6 +677,28 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           const SizedBox(height: KubbTokens.space1half),
           _HelperText(l10n.tournamentWizardLeagueCategoriesHint),
         ],
+        // Spaßturnier "auf Einladung": only a personal tournament (no club)
+        // can be invite-only — a club tournament is a rated league event. The
+        // toggle + player picker therefore appear solely when clubId == null
+        // (P6 invite SPEC §3).
+        if (draft.clubId == null) ...[
+          const SizedBox(height: KubbTokens.space5),
+          _ToggleRow(
+            key: const Key('wizardInviteOnlyToggle'),
+            title: l10n.tournamentWizardInviteOnlyLabel,
+            subtitle: l10n.tournamentWizardInviteOnlyHint,
+            value: draft.inviteOnly,
+            onChanged: controller.setInviteOnly,
+          ),
+          if (draft.inviteOnly) ...[
+            const SizedBox(height: KubbTokens.space2),
+            _InviteOnlySection(
+              invitedUsers: draft.invitedUsers,
+              onAdd: controller.addInvitee,
+              onRemove: controller.removeInvitee,
+            ),
+          ],
+        ],
         const SizedBox(height: KubbTokens.space5),
         _FieldLabel(l10n.tournamentWizardLocationLabel),
         const SizedBox(height: KubbTokens.space2),
@@ -902,6 +970,7 @@ class _ToggleRow extends StatelessWidget {
     required this.subtitle,
     required this.value,
     required this.onChanged,
+    super.key,
   });
 
   final String title;
@@ -1238,6 +1307,214 @@ class _ClubPickerField extends ConsumerWidget {
           ),
       ],
       onChanged: clubs.isLoading ? null : onChanged,
+    );
+  }
+}
+
+/// Player picker for an invite-only Spaßturnier. Debounced directory search
+/// (`friendSearchProvider`, ≥2 chars / 250 ms — mirrors
+/// `team_add_player_screen`) feeds a tappable result list; chosen players show
+/// as removable chips. Selection state lives in the draft (the parent passes
+/// [invitedUsers] + [onAdd]/[onRemove]); this widget only holds the transient
+/// query.
+class _InviteOnlySection extends ConsumerStatefulWidget {
+  const _InviteOnlySection({
+    required this.invitedUsers,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  final List<InvitedUser> invitedUsers;
+  final void Function(InvitedUser) onAdd;
+  final void Function(String userId) onRemove;
+
+  @override
+  ConsumerState<_InviteOnlySection> createState() => _InviteOnlySectionState();
+}
+
+class _InviteOnlySectionState extends ConsumerState<_InviteOnlySection> {
+  final TextEditingController _queryCtrl = TextEditingController();
+  String _query = '';
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _queryCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 250), () {
+      if (!mounted) return;
+      setState(() => _query = value.trim().toLowerCase());
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    final results = ref.watch(friendSearchProvider(_query));
+    final invitedIds =
+        widget.invitedUsers.map((u) => u.userId).toSet();
+
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+      borderSide: BorderSide(color: tokens.lineStrong, width: 1.5),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          key: const Key('wizardInviteSearchField'),
+          controller: _queryCtrl,
+          autocorrect: false,
+          onChanged: _onChanged,
+          decoration: InputDecoration(
+            counterText: '',
+            hintText: l10n.tournamentWizardInviteSearchHint,
+            prefixIcon: const Icon(LucideIcons.search, size: 18),
+            border: border,
+            enabledBorder: border,
+          ),
+        ),
+        // Already-invited players as removable chips.
+        if (widget.invitedUsers.isNotEmpty) ...[
+          const SizedBox(height: KubbTokens.space2),
+          Wrap(
+            spacing: KubbTokens.space2,
+            runSpacing: KubbTokens.space2,
+            children: [
+              for (final u in widget.invitedUsers)
+                InputChip(
+                  label: Text(u.nickname),
+                  onDeleted: () => widget.onRemove(u.userId),
+                  // No oversized deleteIconBoxConstraints here: forcing the
+                  // delete-icon box taller than the chip breaks the chip's
+                  // internal centerLayout. The chip keeps its default hit area.
+                  deleteButtonTooltipMessage:
+                      l10n.tournamentWizardInviteRemoveTooltip,
+                ),
+            ],
+          ),
+        ],
+        // Search results (only once the query is long enough).
+        if (_query.length >= 2) ...[
+          const SizedBox(height: KubbTokens.space2),
+          results.when(
+            data: (list) {
+              if (list.isEmpty) {
+                return _HelperText(
+                  l10n.tournamentWizardInviteNoResults(_query),
+                );
+              }
+              return Column(
+                children: [
+                  for (final c in list)
+                    _InviteCandidateRow(
+                      nickname: c.nickname,
+                      alreadyInvited: invitedIds.contains(c.userId),
+                      onAdd: () => widget.onAdd(
+                        InvitedUser(userId: c.userId, nickname: c.nickname),
+                      ),
+                    ),
+                ],
+              );
+            },
+            loading: () => const Padding(
+              padding: EdgeInsets.all(KubbTokens.space3),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (e, _) => _HelperText(
+              l10n.tournamentWizardInviteSearchError(e.toString()),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// One search-result row in the invite picker. Mirrors the team add-player
+/// candidate row: avatar initial + nickname + an "Einladen" action that flips
+/// to a done-state once the player is on the invite list.
+class _InviteCandidateRow extends StatelessWidget {
+  const _InviteCandidateRow({
+    required this.nickname,
+    required this.alreadyInvited,
+    required this.onAdd,
+  });
+
+  final String nickname;
+  final bool alreadyInvited;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    final initial = nickname.isEmpty ? '?' : nickname[0].toUpperCase();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: KubbTokens.space2),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: KubbTokens.space3,
+          vertical: KubbTokens.space2,
+        ),
+        decoration: BoxDecoration(
+          color: tokens.bgRaised,
+          border: Border.all(color: tokens.line),
+          borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                color: KubbTokens.meadow600,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                initial,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const SizedBox(width: KubbTokens.space3),
+            Expanded(
+              child: Text(
+                nickname,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: tokens.fg,
+                ),
+              ),
+            ),
+            if (alreadyInvited)
+              Icon(LucideIcons.check, size: 20, color: tokens.primary)
+            else
+              FilledButton(
+                onPressed: onAdd,
+                // Design-System: keep the tap target >= 48dp (touch-min).
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, KubbTokens.touchMin),
+                ),
+                child: Text(l10n.tournamentWizardInviteAddAction),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -3232,6 +3232,54 @@ abstract class AppLocalizations {
   /// **'Bitte wählen'**
   String get tournamentWizardClubChoosePrompt;
 
+  /// Toggle title for an invite-only fun tournament (Spaßturnier)
+  ///
+  /// In de, this message translates to:
+  /// **'Auf Einladung'**
+  String get tournamentWizardInviteOnlyLabel;
+
+  /// Helper text under the invite-only toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Nur eingeladene Spieler sehen dieses Turnier und können sich anmelden.'**
+  String get tournamentWizardInviteOnlyHint;
+
+  /// Hint text in the invite player search field
+  ///
+  /// In de, this message translates to:
+  /// **'Spielername suchen…'**
+  String get tournamentWizardInviteSearchHint;
+
+  /// Empty-result message in the invite player search
+  ///
+  /// In de, this message translates to:
+  /// **'Niemand gefunden für „{query}\".'**
+  String tournamentWizardInviteNoResults(String query);
+
+  /// Error message when the invite player search fails
+  ///
+  /// In de, this message translates to:
+  /// **'Suche fehlgeschlagen: {error}'**
+  String tournamentWizardInviteSearchError(String error);
+
+  /// Action button to add a player to the invite list
+  ///
+  /// In de, this message translates to:
+  /// **'Einladen'**
+  String get tournamentWizardInviteAddAction;
+
+  /// Tooltip on the delete icon of an invited-player chip
+  ///
+  /// In de, this message translates to:
+  /// **'Einladung entfernen'**
+  String get tournamentWizardInviteRemoveTooltip;
+
+  /// Snackbar shown when some invite calls failed after creating the tournament
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{Eine Einladung konnte nicht gesendet werden.} other{{count} Einladungen konnten nicht gesendet werden.}}'**
+  String tournamentWizardInvitePartialError(int count);
+
   /// Venue / town input label on the Stammdaten step
   ///
   /// In de, this message translates to:
@@ -5427,6 +5475,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Wertung'**
   String get tournamentDetailScoring;
+
+  /// Stammdaten row label marking an invite-only fun tournament
+  ///
+  /// In de, this message translates to:
+  /// **'Auf Einladung'**
+  String get tournamentDetailInviteOnly;
 
   /// CF5/K28: value for the EKC scoring system
   ///

@@ -247,6 +247,8 @@ class InboxRepository {
         return 'tournament_round';
       case InboxMessageKind.tournamentFinished:
         return 'tournament_finished';
+      case InboxMessageKind.tournamentInvitation:
+        return 'tournament_invitation';
     }
   }
 }

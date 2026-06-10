@@ -143,6 +143,8 @@ class _ArchivedTile extends StatelessWidget {
         return 'VEREINS-ÄNDERUNG';
       case InboxMessageKind.clubJoinRequest:
         return 'BEITRITTSANFRAGE';
+      case InboxMessageKind.tournamentInvitation:
+        return 'TURNIER-EINLADUNG';
       case InboxMessageKind.tournamentShootout:
         return 'SHOOT-OUT';
       case InboxMessageKind.tournamentFinished:

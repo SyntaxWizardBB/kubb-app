@@ -63,6 +63,11 @@ class TournamentStammdatenCard extends ConsumerWidget {
       _row(context, l.tournamentDetailFormat, formatLabel(h.format, l)),
       _row(context, l.tournamentDetailTeamSize, teamSizeLabel),
       _row(context, l.tournamentDetailScoring, scoringLabel),
+      // Invite-only Spaßturnier marker: only surfaced when set (NULL/false is
+      // omitted per H2). The server already hides the tournament from / blocks
+      // non-invited users; this is a purely informational badge.
+      if (h.setup['invite_only'] == true)
+        _row(context, l.tournamentDetailInviteOnly, l.tournamentDetailRuleOn),
       if (_num(cfg['sets_to_win']) != null)
         _row(context, l.tournamentDetailSetsToWin, '${_num(cfg['sets_to_win'])}'),
       if (_num(cfg['max_sets']) != null)
