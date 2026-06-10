@@ -1,8 +1,9 @@
 // Widget tests for the round-phase countdown (Phase-A Block A4, ADR-0031).
 //
-// Covers the three states (call/pause countdown, running match clock,
-// awaiting-results hold), the hold freeze, the published->call->running
-// transition, and the schedule == null fallback to the plain started_at clock.
+// Covers the four states (call/pause countdown, running match clock, the
+// completed (non-held) match clock, and awaiting-results hold), the hold
+// freeze, the published->call->running transition, and the schedule == null
+// fallback to the plain started_at clock.
 // Time is injected deterministically via a controllable clock + a
 // ManualCountdownTicker — no real timers.
 
@@ -194,6 +195,35 @@ void main() {
       ticker.fire();
       await tester.pump();
       expect(find.text('00:30'), findsOneWidget);
+    });
+  });
+
+  group('completed', () {
+    testWidgets(
+        'completed renders the (non-held) match clock — no call/hold view',
+        (tester) async {
+      // The fifth RoundStatus wire value. Its switch arm in the widget renders
+      // the plain match clock (the detail screen drops the clock once the match
+      // itself is terminal), so it must look exactly like the running arm: a
+      // MatchCountdown, never the call countdown or the hold banner.
+      final clock = _Clock(_start.add(const Duration(seconds: 30)));
+      final ticker = ManualCountdownTicker();
+      final haptics = _SpyHaptics();
+      await _pump(
+        tester,
+        schedule: _schedule(status: RoundStatus.completed, startsAt: _start),
+        startedAt: _start,
+        durationSeconds: 90,
+        clock: clock,
+        ticker: ticker,
+        haptics: haptics,
+      );
+
+      expect(find.byType(MatchCountdown), findsOneWidget);
+      expect(find.byKey(const ValueKey('round-call-countdown')), findsNothing);
+      expect(find.byKey(const ValueKey('round-hold')), findsNothing);
+      // 90 - 30 = 60s remaining, counting like a normal (non-held) clock.
+      expect(find.text('01:00'), findsOneWidget);
     });
   });
 
