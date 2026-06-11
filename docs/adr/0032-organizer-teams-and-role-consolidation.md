@@ -55,7 +55,7 @@ Zugangs-Gate, **Rollenwahl beim Einladen**, und eine **Ongoing-Match-Kachel**.
 | Team gründen | — | nur mit `can_found_clubs` (Veranstalter-Legitimierung); Ersteller = owner |
 | Team editieren / Mitglieder einladen+Rolle / entfernen / Rollen ändern | — | owner, admin |
 | Turnier erstellen | Ersteller | owner, admin |
-| **Turnier-Config editieren** (`tournament_update`) | Ersteller | **owner, admin** (NEU — war creator-only; referee NEIN) |
+| **Turnier-Config editieren** (`tournament_update`) | Ersteller | **owner, admin** (referee NEIN — heute läuft update bereits übers Manage-Gate inkl. referee; wird auf das Setup-Gate **verengt**) |
 | Publish / Start / Seeding | Ersteller | owner, admin |
 | **Live administrieren** (Override, Forfait, Pause/Resume/Skip, Check-in) | Ersteller | owner, admin, **referee** |
 | Finalisieren | Ersteller | owner, admin |
