@@ -2,9 +2,11 @@
 --
 -- Covers (B1s-DoD-12/13):
 --   * Gate referee-regression: a caller whose ONLY club role is 'referee'
---     (not owner/admin/organizer, not creator) gets tournament_caller_can_manage
---     = true and sees the tournament in tournament_list_administrable; a pure
---     'member'/'guest' caller stays false / excluded.
+--     (not owner/admin, not creator) gets tournament_caller_can_manage
+--     = true and sees the tournament in tournament_list_administrable; a
+--     non-member caller stays false / excluded. (Role consolidation
+--     20261280000000 removed 'member'/'guest'; the non-managing case is now
+--     "no club membership at all".)
 --   * Status filter: draft- and finalized-tournaments do NOT appear in the list.
 --   * LEFT-JOIN fallback: an administrable published/live tournament WITHOUT a
 --     schedule row appears, schedule-derived fields NULL.
@@ -57,7 +59,7 @@ END;
 $$;
 
 -- ====================================================================
--- Fixture (as postgres): one club with a referee + a member; a creator;
+-- Fixture (as postgres): one club with a referee; a non-member; a creator;
 -- a published club tournament + a live no-schedule tournament + a draft +
 -- a finalized one. Plus matches for the counts.
 -- ====================================================================
@@ -67,7 +69,7 @@ DO $fixture$
 DECLARE
   v_creator  uuid := '33333333-3333-3333-3333-333333333301';
   v_referee  uuid := '33333333-3333-3333-3333-333333333302';
-  v_member   uuid := '33333333-3333-3333-3333-333333333303';
+  v_nonmember uuid := '33333333-3333-3333-3333-333333333303';
   v_club     uuid := '44444444-4444-4444-4444-444444444401';
   v_pub      uuid := '55555555-5555-5555-5555-555555555501'; -- published, club, has schedule
   v_live     uuid := '55555555-5555-5555-5555-555555555502'; -- live, club, NO schedule
@@ -78,17 +80,17 @@ DECLARE
 BEGIN
   PERFORM _adm_mk_user(v_creator);
   PERFORM _adm_mk_user(v_referee);
-  PERFORM _adm_mk_user(v_member);
+  PERFORM _adm_mk_user(v_nonmember);
 
   INSERT INTO public.clubs(id, display_name, created_by)
     VALUES (v_club, 'Adm-Club', v_creator);
 
-  -- referee: ONLY the 'referee' role (no owner/admin/organizer).
+  -- referee: ONLY the 'referee' role (no owner/admin).
   INSERT INTO public.club_memberships(club_id, user_id, roles)
     VALUES (v_club, v_referee, ARRAY['referee']::text[]);
-  -- member: a pure non-managing role.
-  INSERT INTO public.club_memberships(club_id, user_id, roles)
-    VALUES (v_club, v_member, ARRAY['member']::text[]);
+  -- v_nonmember intentionally gets NO club_memberships row: since the role
+  -- consolidation (20261280000000) every club role {owner,admin,referee} can
+  -- administer, so the non-managing case is a user without any membership.
 
   -- Four tournaments, all linked to the club, creator = v_creator.
   INSERT INTO public.tournaments(
@@ -123,7 +125,7 @@ BEGIN
   INSERT INTO public.tournament_participants(id, tournament_id, user_id, registration_status)
     VALUES (gen_random_uuid(), v_pub, v_referee, 'confirmed') RETURNING id INTO v_pa;
   INSERT INTO public.tournament_participants(id, tournament_id, user_id, registration_status)
-    VALUES (gen_random_uuid(), v_pub, v_member, 'confirmed') RETURNING id INTO v_pb;
+    VALUES (gen_random_uuid(), v_pub, v_nonmember, 'confirmed') RETURNING id INTO v_pb;
 
   INSERT INTO public.tournament_matches(
       tournament_id, round_number, match_number_in_round, participant_a, participant_b, status)
@@ -143,10 +145,10 @@ SELECT ok(
   public.tournament_caller_can_manage('55555555-5555-5555-5555-555555555501'),
   'referee-only club role CAN manage the club tournament (gate true)');
 
-SELECT _adm_as('33333333-3333-3333-3333-333333333303'); -- member
+SELECT _adm_as('33333333-3333-3333-3333-333333333303'); -- non-member
 SELECT ok(
   NOT public.tournament_caller_can_manage('55555555-5555-5555-5555-555555555501'),
-  'member-only club role CANNOT manage (gate false)');
+  'non-member (mere participant) CANNOT manage (gate false)');
 
 SELECT _adm_as('33333333-3333-3333-3333-333333333301'); -- creator
 SELECT ok(
