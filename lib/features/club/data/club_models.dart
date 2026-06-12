@@ -35,8 +35,7 @@ class ClubWire {
 }
 
 /// One member of a club, from the `members` array of `club_get`. `roles` is a
-/// set drawn from {owner, admin, member, referee, timemaster, organizer,
-/// scorekeeper, treasurer}.
+/// set drawn from {owner, admin, referee}.
 class ClubMemberWire {
   const ClubMemberWire({
     required this.membershipId,
@@ -112,10 +111,5 @@ class ClubJoinRequestWire {
 const clubRoles = <String>[
   'owner',
   'admin',
-  'member',
   'referee',
-  'timemaster',
-  'organizer',
-  'scorekeeper',
-  'treasurer',
 ];

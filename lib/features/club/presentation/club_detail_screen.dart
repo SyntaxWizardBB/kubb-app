@@ -346,18 +346,8 @@ String _roleLabel(String role) {
       return 'Owner (Vereinsleitung)';
     case 'admin':
       return 'Admin';
-    case 'member':
-      return 'Mitglied';
     case 'referee':
       return 'Schiedsrichter';
-    case 'timemaster':
-      return 'Timemaster';
-    case 'organizer':
-      return 'Organisator';
-    case 'scorekeeper':
-      return 'Anschreiber';
-    case 'treasurer':
-      return 'Kassier';
     default:
       return role;
   }
