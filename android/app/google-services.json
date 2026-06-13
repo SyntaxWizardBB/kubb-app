@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "106001380567",
+    "project_id": "kubbclubapp",
+    "storage_bucket": "kubbclubapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:106001380567:android:72f4f1f0989d54b996ac92",
+        "android_client_info": {
+          "package_name": "ch.kubbclub.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrKnn5zQOZ50zk1ezAlCmBX124WlZibqs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
