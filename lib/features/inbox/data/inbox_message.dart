@@ -27,6 +27,10 @@ enum InboxMessageKind {
   clubMemberRemoved,
   clubJoinRequest,
 
+  /// Berechtigungskonzept (P7): a manager changed this member's role in an
+  /// organizer team. Informational; the wire kind stays `club_role_changed`.
+  clubRoleChanged,
+
   /// P6 shoot-out tiebreak task: the involved teams must report and confirm
   /// the shoot-out winner ordering. The D2a server (migration
   /// `20261202000000_tournament_shootout_server.sql`) ships this on the
@@ -118,6 +122,8 @@ enum InboxMessageKind {
         return InboxMessageKind.clubMemberRemoved;
       case 'club_join_request':
         return InboxMessageKind.clubJoinRequest;
+      case 'club_role_changed':
+        return InboxMessageKind.clubRoleChanged;
       case 'tournament_finished':
         return InboxMessageKind.tournamentFinished;
       case 'tournament_invitation':

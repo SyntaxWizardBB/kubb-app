@@ -166,6 +166,7 @@ class _MessageTile extends ConsumerWidget {
       case InboxMessageKind.clubInvitation:
       case InboxMessageKind.clubMemberRemoved:
       case InboxMessageKind.clubJoinRequest:
+      case InboxMessageKind.clubRoleChanged:
       case InboxMessageKind.tournamentShootout:
       case InboxMessageKind.tournamentInvitation:
         return const Color(0xFFFBF2D6);
@@ -202,11 +203,13 @@ class _MessageTile extends ConsumerWidget {
       case InboxMessageKind.teamDissolved:
         return 'Team aufgelöst';
       case InboxMessageKind.clubInvitation:
-        return 'Vereins-Einladung';
+        return 'Veranstalterteam-Einladung';
       case InboxMessageKind.clubMemberRemoved:
-        return 'Vereins-Änderung';
+        return 'Veranstalterteam-Änderung';
       case InboxMessageKind.clubJoinRequest:
         return 'Beitrittsanfrage';
+      case InboxMessageKind.clubRoleChanged:
+        return 'Rolle geändert';
       case InboxMessageKind.tournamentShootout:
         return 'Shoot-Out';
       case InboxMessageKind.tournamentFinished:
