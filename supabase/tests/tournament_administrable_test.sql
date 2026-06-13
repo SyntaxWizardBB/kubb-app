@@ -82,11 +82,11 @@ BEGIN
   PERFORM _adm_mk_user(v_referee);
   PERFORM _adm_mk_user(v_nonmember);
 
-  INSERT INTO public.clubs(id, display_name, created_by)
+  INSERT INTO public.organizer_teams(id, display_name, created_by)
     VALUES (v_club, 'Adm-Club', v_creator);
 
   -- referee: ONLY the 'referee' role (no owner/admin).
-  INSERT INTO public.club_memberships(club_id, user_id, roles)
+  INSERT INTO public.team_members(organizer_team_id, user_id, roles)
     VALUES (v_club, v_referee, ARRAY['referee']::text[]);
   -- v_nonmember intentionally gets NO club_memberships row: since the role
   -- consolidation (20261280000000) every club role {owner,admin,referee} can
@@ -94,7 +94,7 @@ BEGIN
 
   -- Four tournaments, all linked to the club, creator = v_creator.
   INSERT INTO public.tournaments(
-      id, created_by, club_id, display_name, team_size, min_participants,
+      id, created_by, organizer_team_id, display_name, team_size, min_participants,
       max_participants, format, scoring, match_format, status, public)
     VALUES
       (v_pub,   v_creator, v_club, 'Pub-Sched', 1, 2, 16, 'swiss', 'ekc',

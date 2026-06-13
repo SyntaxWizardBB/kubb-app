@@ -12,7 +12,9 @@ import 'package:kubb_app/core/ui/widgets/kubb_drawer.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_mode_card.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_providers.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
+import 'package:kubb_app/features/tournament/application/my_active_match_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
@@ -47,6 +49,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
     // Skeleton greift nur fuer den allerersten Load (kein data verfuegbar).
     final showRecentSkeleton = recentAsync.isLoading && !recentAsync.hasValue;
+    // P4-C: organizer tile gate. Fail-closed — loading and error states
+    // both resolve to false so the tile never flashes for non-organizers.
+    final organizerVisible = ref.watch(organizerTileVisibleProvider).maybeWhen(
+          data: (visible) => visible,
+          orElse: () => false,
+        );
+    // P5-C (ADR-0032 §7): cross-tournament ongoing match. Fail-closed —
+    // loading/error/null all hide the tile completely (no placeholder).
+    final ongoingMatch =
+        ref.watch(myActiveTournamentMatchProvider).maybeWhen(
+              data: (m) => m,
+              orElse: () => null,
+            );
 
     ref.listen(crashRecoveryProvider, (_, next) {
       next.whenData((session) {
@@ -98,6 +113,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             HomeGreeting(eyebrow: l.homeEyebrow, greeting: greeting),
             const SizedBox(height: KubbTokens.space5),
+            // P5-C (ADR-0032 §7): ongoing TOURNAMENT match tile. Rendered
+            // only when the cross-tournament provider yields a match; tap
+            // opens the existing tournament match-detail screen. The 1vs1
+            // "Match Modus" tile in the training hub is a separate feature
+            // and stays untouched.
+            if (ongoingMatch != null) ...[
+              _OngoingMatchCard(ongoing: ongoingMatch),
+              const SizedBox(height: KubbTokens.space3),
+            ],
             TournierCard(
               eyebrow: l.homeTournierEyebrow,
               title: l.homeTournierTitle,
@@ -112,14 +136,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               accentTone: KubbChipTone.sniperMeadow,
               onTap: () => unawaited(context.push('/teams')),
             ),
-            const SizedBox(height: KubbTokens.space3),
-            KubbModeCard(
-              title: 'Meine Vereine',
-              subtitle: 'Vereine gründen und beitreten',
-              icon: LucideIcons.shield,
-              accentTone: KubbChipTone.tournamentWood,
-              onTap: () => unawaited(context.push('/clubs')),
-            ),
+            // P4-C (ADR-0032 §4): organizer tile — server-gated via the
+            // `organizer_team_caller_is_organizer` RPC. Fail-closed:
+            // loading/error hide the tile (incl. its spacer, so the layout
+            // stays tight).
+            if (organizerVisible) ...[
+              const SizedBox(height: KubbTokens.space3),
+              KubbModeCard(
+                title: l.organizerTileTitle,
+                subtitle: l.organizerTileSubtitle,
+                icon: LucideIcons.shield,
+                accentTone: KubbChipTone.tournamentWood,
+                onTap: () =>
+                    unawaited(context.push(TournamentRoutes.dashboard)),
+              ),
+            ],
             const SizedBox(height: KubbTokens.space3),
             NewsCard(
               eyebrow: l.homeNewsEyebrow,
@@ -159,6 +190,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _openNews() async {
     await launchUrl(Uri.parse(_newsUrl), mode: LaunchMode.externalApplication);
+  }
+}
+
+/// P5-C (ADR-0032 §7): Home tile for the caller's most urgent open
+/// tournament match across all registered tournaments. Pure presentation —
+/// visibility is decided by the caller (the tile only exists when a match
+/// is present), so there is never a placeholder/skeleton state. Reuses the
+/// `KubbModeCard` building block (design-system tokens, ≥48 dp target).
+class _OngoingMatchCard extends StatelessWidget {
+  const _OngoingMatchCard({required this.ongoing});
+
+  final MyActiveTournamentMatch ongoing;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final opponent = ongoing.active.opponentName?.trim();
+    final opponentLabel = (opponent == null || opponent.isEmpty)
+        ? l.tournamentParticipantUnknown
+        : opponent;
+
+    return KubbModeCard(
+      key: const ValueKey('home.ongoingMatch'),
+      title: l.homeOngoingMatchTitle,
+      subtitle: l.homeOngoingMatchSubtitle(
+        ongoing.tournament.displayName,
+        opponentLabel,
+      ),
+      icon: LucideIcons.swords,
+      accentTone: KubbChipTone.matchWood,
+      onTap: () => unawaited(
+        context.push(
+          TournamentRoutes.matchDetail(
+            ongoing.tournament.tournamentId.value,
+            ongoing.active.match.matchId.value,
+          ),
+        ),
+      ),
+    );
   }
 }
 

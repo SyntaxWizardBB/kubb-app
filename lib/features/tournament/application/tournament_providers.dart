@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
-import 'package:kubb_app/features/club/application/club_providers.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_bracket_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
@@ -9,40 +9,39 @@ import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
-/// True when the caller may manage a tournament on the strength of its
+/// True when the caller may SET UP a tournament on the strength of its
 /// *organizing club* rather than per-tournament ownership.
 ///
-/// PER-TOURNAMENT (USER DECISION): authority is the tournament's CREATOR OR
-/// an active owner/admin/organizer of THAT tournament's `club_id`. The old
-/// global organizer capability (profile `is_organizer` OR owner/admin/
-/// organizer of ANY club) is no longer used here — it gated almost
-/// everyone, because `user_profiles.is_organizer` defaults true.
+/// SETUP-GATE MIRROR (gate split, migration `20261281000000`): the club-role
+/// half of the server gate `tournament_caller_can_setup` = Creator OR an
+/// active club role in exactly {owner, admin}. Referees are deliberately NOT
+/// in this set — they may administer a live tournament (see
+/// [canAdministerTournamentProvider]) but never change its structure or
+/// lifecycle (update/publish/start/registration/seeding).
 ///
 /// The family key is the tournament's `club_id` (null when the tournament
 /// has no club). The detail screen ORs the result with the per-tournament
 /// creator check, so a tournament with no club is manageable by the creator
 /// only. The server is the security boundary — every lifecycle/update RPC
-/// re-checks `tournament_caller_can_manage(p_tournament_id)` — so this
+/// re-checks `tournament_caller_can_setup(p_tournament_id)` — so this
 /// provider only governs which buttons render, never authority.
 ///
 /// Implementation: for a non-null club the caller's roles come from
-/// [clubDetailProvider] (RLS only exposes membership rows to members, so a
-/// non-member organizer correctly resolves to `false`). Resolves to `false`
-/// while the async club read is loading or errors, so role-gated actions
-/// only appear once the role is confirmed.
+/// [organizerTeamDetailProvider] (RLS only exposes membership rows to members, so a
+/// non-member correctly resolves to `false`). Resolves to `false` while the
+/// async club read is loading or errors, so role-gated actions only appear
+/// once the role is confirmed.
 // ignore: specify_nonobvious_property_types
 final canManageTournamentClubProvider =
     Provider.family<bool, String?>((ref, clubId) {
   if (clubId == null) return false;
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return false;
-  return ref.watch(clubDetailProvider(ClubId(clubId))).maybeWhen(
+  return ref.watch(organizerTeamDetailProvider(OrganizerTeamId(clubId))).maybeWhen(
         data: (detail) => detail.members.any(
           (m) =>
               m.userId == userId &&
-              (m.roles.contains('owner') ||
-                  m.roles.contains('admin') ||
-                  m.roles.contains('organizer')),
+              (m.roles.contains('owner') || m.roles.contains('admin')),
         ),
         orElse: () => false,
       );
@@ -60,13 +59,13 @@ typedef AdministrableGateKey = ({String? clubId, String? createdBy});
 /// True when the caller may ADMINISTER a tournament from the organizer
 /// dashboard (ADR-0031 Phase B, Block B1c — K4 gate).
 ///
-/// Access = Creator OR an active club role in {owner, admin, organizer,
-/// referee}. This mirrors [canManageTournamentClubProvider] but ADDS
-/// `referee` to the role set (that provider only checks owner/admin/
-/// organizer) and ORs in the per-tournament creator check. The role set is
-/// exactly the server gate `tournament_caller_can_manage`
-/// (`ARRAY['owner','admin','organizer','referee']`, migration
-/// `20261255000000`), so the client mirrors the server 1:1.
+/// Access = Creator OR an active club role in {owner, admin, referee}.
+/// This mirrors [canManageTournamentClubProvider] but ADDS `referee` to the
+/// role set (that provider only checks owner/admin) and ORs in the
+/// per-tournament creator check. The role set is exactly the server gate
+/// `tournament_caller_can_administer` (`ARRAY['owner','admin','referee']`,
+/// gate split migration `20261281000000`), so the client mirrors the
+/// server 1:1.
 ///
 /// Resolves to `false` when not authenticated, while the async club read is
 /// loading, and on error — a role-gated action only appears once the role is
@@ -82,13 +81,12 @@ final canAdministerTournamentProvider =
   if (key.createdBy != null && key.createdBy == userId) return true;
   final clubId = key.clubId;
   if (clubId == null) return false;
-  return ref.watch(clubDetailProvider(ClubId(clubId))).maybeWhen(
+  return ref.watch(organizerTeamDetailProvider(OrganizerTeamId(clubId))).maybeWhen(
         data: (detail) => detail.members.any(
           (m) =>
               m.userId == userId &&
               (m.roles.contains('owner') ||
                   m.roles.contains('admin') ||
-                  m.roles.contains('organizer') ||
                   m.roles.contains('referee')),
         ),
         orElse: () => false,
@@ -101,31 +99,33 @@ final canAdministerTournamentProvider =
 typedef ManageableClub = ({String id, String name});
 
 /// The caller's clubs filtered to those they may run a tournament under,
-/// i.e. where they hold an active owner/admin/organizer role. Backs the
+/// i.e. where they hold an active role in exactly {owner, admin}. Backs the
 /// optional "Ausrichtender Verein" picker in the setup wizard.
 ///
-/// Built from [clubListProvider] (the caller's own clubs) cross-referenced
-/// with each club's membership roles via [clubDetailProvider]; a club where
-/// the caller is only a plain member is excluded. Empty (not an error) when
-/// signed out or when the caller manages no club, so the picker simply
-/// offers no clubs and the tournament stays personal. Mirrors the
-/// owner/admin/organizer predicate the server's `tournament_create` enforces
-/// when a `club_id` is supplied, so the picker never offers a club the RPC
-/// would reject.
+/// Referee-only clubs are deliberately EXCLUDED: a referee may administer a
+/// live tournament but never set one up (setup gate, migration
+/// `20261281000000`), so the picker must not offer such a club.
+///
+/// Built from [organizerTeamListProvider] (the caller's own clubs) cross-referenced
+/// with each club's membership roles via [organizerTeamDetailProvider]; a club where
+/// the caller is only a plain member or only a referee is excluded. Empty
+/// (not an error) when signed out or when the caller manages no club, so
+/// the picker simply offers no clubs and the tournament stays personal.
+/// Mirrors the owner/admin predicate the server's `tournament_create`
+/// effectively enforces when a `club_id` is supplied, so the picker never
+/// offers a club the RPC would reject.
 final manageableClubsProvider =
     FutureProvider<List<ManageableClub>>((ref) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const <ManageableClub>[];
-  final clubs = await ref.watch(clubListProvider.future);
+  final clubs = await ref.watch(organizerTeamListProvider.future);
   final result = <ManageableClub>[];
   for (final club in clubs) {
-    final detail = await ref.watch(clubDetailProvider(ClubId(club.id)).future);
+    final detail = await ref.watch(organizerTeamDetailProvider(OrganizerTeamId(club.id)).future);
     final manages = detail.members.any(
       (m) =>
           m.userId == userId &&
-          (m.roles.contains('owner') ||
-              m.roles.contains('admin') ||
-              m.roles.contains('organizer')),
+          (m.roles.contains('owner') || m.roles.contains('admin')),
     );
     if (manages) {
       result.add((id: club.id, name: club.displayName));
@@ -151,7 +151,7 @@ final tournamentListProvider =
 
 /// Tournaments the caller may administer, backing the organizer dashboard
 /// overview (ADR-0031 Phase B, Block B1c). One `tournament_list_administrable`
-/// RPC (server-gated to Creator + {owner,admin,organizer,referee}); the
+/// RPC (server-gated to Creator + {owner,admin,referee}); the
 /// projection carries phase/round/schedule status, remaining seconds and the
 /// open/disputed match counts.
 ///

@@ -12,7 +12,7 @@
   "@organizerDashboardEmptyTitle": {
     "description": "Empty-state title shown when the caller administers no live tournaments"
   },
-  "organizerDashboardEmptyBody": "Sobald du ein Turnier veröffentlichst oder als Verein verwaltest, erscheint es hier im Cockpit.",
+  "organizerDashboardEmptyBody": "Sobald du ein Turnier veröffentlichst oder als Veranstalterteam verwaltest, erscheint es hier im Cockpit.",
   "@organizerDashboardEmptyBody": {
     "description": "Empty-state body for the organizer dashboard overview"
   },
@@ -20,7 +20,7 @@
   "@organizerDashboardGateTitle": {
     "description": "In-screen gate title shown when the caller may not administer the tournament"
   },
-  "organizerDashboardGateBody": "Du bist nicht berechtigt, dieses Turnier zu steuern. Wende dich an den Veranstalter oder den Verein.",
+  "organizerDashboardGateBody": "Du bist nicht berechtigt, dieses Turnier zu steuern. Wende dich an den Veranstalter oder das Veranstalterteam.",
   "@organizerDashboardGateBody": {
     "description": "In-screen gate body for the organizer dashboard"
   },
@@ -476,7 +476,7 @@
   "@stageGraphSaveTemplateVisibility": { "description": "Label for the visibility dropdown" },
   "stageGraphVisibilityPrivate": "Privat",
   "@stageGraphVisibilityPrivate": { "description": "Label for TemplateVisibility.private" },
-  "stageGraphVisibilityClub": "Verein",
+  "stageGraphVisibilityClub": "Veranstalterteam",
   "@stageGraphVisibilityClub": { "description": "Label for TemplateVisibility.club" },
   "stageGraphVisibilityPublic": "Öffentlich",
   "@stageGraphVisibilityPublic": { "description": "Label for TemplateVisibility.public" },
@@ -2430,11 +2430,11 @@
   "@tournamentWizardDisplayNameYearHint": {
     "description": "Helper text explaining the auto-appended year suffix (K01)"
   },
-  "tournamentWizardClubLabel": "Ausrichtender Verein",
+  "tournamentWizardClubLabel": "Ausrichtendes Veranstalterteam",
   "@tournamentWizardClubLabel": {
     "description": "Optional organizing-club picker label on the Stammdaten step"
   },
-  "tournamentWizardClubHint": "Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten. Ohne Verein (Spasstournier) zählt das Turnier nicht für die Wertung.",
+  "tournamentWizardClubHint": "Veranstalterteams, die du verwalten kannst, können dieses Turnier ebenfalls verwalten. Ohne Veranstalterteam (Spasstournier) zählt das Turnier nicht für die Wertung.",
   "@tournamentWizardClubHint": {
     "description": "Helper text under the organizing-club picker"
   },
@@ -4047,7 +4047,7 @@
   "@tournamentDetailOrganizationHeading": {
     "description": "CF5/K28: card heading for club / fun-tournament / league info"
   },
-  "tournamentDetailClubLabel": "Verein",
+  "tournamentDetailClubLabel": "Veranstalterteam",
   "@tournamentDetailClubLabel": {
     "description": "CF5/K28: label for the organizing club"
   },
@@ -6098,12 +6098,40 @@
   "@teamNameTakenError": {
     "description": "Inline / snackbar error shown when the chosen team name is already taken (BUG-2)"
   },
-  "clubNameTakenError": "Dieser Vereinsname ist bereits vergeben — bitte wähle einen anderen.",
+  "clubNameTakenError": "Dieser Veranstalterteam-Name ist bereits vergeben — bitte wähle einen anderen.",
   "@clubNameTakenError": {
     "description": "Inline / snackbar error shown when the chosen club name is already taken (BUG-2)"
   },
   "nameCheckingHint": "Name wird geprüft …",
   "@nameCheckingHint": {
     "description": "Inline hint while a live team/club name availability check runs (BUG-2)"
+  },
+  "organizerTileTitle": "Veranstalter",
+  "@organizerTileTitle": {
+    "description": "Home screen organizer tile title — replaces the former 'Meine Vereine' tile (P4-C, ADR-0032 §4)"
+  },
+  "organizerTileSubtitle": "Dashboard & Veranstalterteams",
+  "@organizerTileSubtitle": {
+    "description": "Home screen organizer tile subtitle, pointing to the organizer dashboard and the caller's organizer teams (P4-C, ADR-0032 §4)"
+  },
+  "organizerDashboardTeamsTitle": "Meine Veranstalterteams",
+  "@organizerDashboardTeamsTitle": {
+    "description": "Section title on the organizer dashboard listing the caller's organizer teams (P4-C, ADR-0032 §4)"
+  },
+  "homeOngoingMatchTitle": "Laufendes Match",
+  "@homeOngoingMatchTitle": {
+    "description": "Home screen ongoing tournament match tile title (P5-C, ADR-0032 §7)"
+  },
+  "homeOngoingMatchSubtitle": "{tournament} · gegen {opponent}",
+  "@homeOngoingMatchSubtitle": {
+    "description": "Home screen ongoing match tile subtitle: tournament name plus opponent (P5-C, ADR-0032 §7)",
+    "placeholders": {
+      "tournament": {
+        "type": "String"
+      },
+      "opponent": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -74,16 +74,16 @@ BEGIN
   PERFORM _gs_mk_user(v_referee);
   PERFORM _gs_mk_user(v_outsider);
 
-  INSERT INTO public.clubs(id, display_name, created_by)
+  INSERT INTO public.organizer_teams(id, display_name, created_by)
     VALUES (v_club, 'GateSplit-Club', v_owner);
 
-  INSERT INTO public.club_memberships(club_id, user_id, roles)
+  INSERT INTO public.team_members(organizer_team_id, user_id, roles)
     VALUES (v_club, v_owner,   ARRAY['owner']::text[]),
            (v_club, v_admin,   ARRAY['admin']::text[]),
            (v_club, v_referee, ARRAY['referee']::text[]);
 
   INSERT INTO public.tournaments(
-      id, created_by, club_id, display_name, team_size, min_participants,
+      id, created_by, organizer_team_id, display_name, team_size, min_participants,
       max_participants, format, scoring, match_format, status, public)
     VALUES
       (v_t, v_creator, v_club, 'GateSplit-T', 1, 2, 16, 'swiss', 'ekc',

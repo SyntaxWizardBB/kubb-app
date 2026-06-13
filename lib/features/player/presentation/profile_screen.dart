@@ -7,9 +7,9 @@ import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
-import 'package:kubb_app/features/club/application/club_providers.dart';
-import 'package:kubb_app/features/club/data/club_models.dart';
-import 'package:kubb_app/features/club/presentation/club_routes.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_providers.dart';
+import 'package:kubb_app/features/organizer_team/data/organizer_team_models.dart';
+import 'package:kubb_app/features/organizer_team/presentation/organizer_team_routes.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:kubb_app/features/player/application/player_ratings_provider.dart';
 import 'package:kubb_app/features/player/presentation/avatar_color.dart';
@@ -166,9 +166,9 @@ class _ClubsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final clubs = ref.watch(clubListProvider).maybeWhen(
+    final clubs = ref.watch(organizerTeamListProvider).maybeWhen(
           data: (c) => c,
-          orElse: () => const <ClubWire>[],
+          orElse: () => const <OrganizerTeamWire>[],
         );
     if (clubs.isEmpty) return const SizedBox.shrink();
     return Column(
@@ -191,7 +191,7 @@ class _ClubsSection extends ConsumerWidget {
             for (final club in clubs)
               ActionChip(
                 label: Text(club.displayName),
-                onPressed: () => context.push(ClubRoutes.detailFor(club.id)),
+                onPressed: () => context.push(OrganizerTeamRoutes.detailFor(club.id)),
               ),
           ],
         ),

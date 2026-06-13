@@ -1038,7 +1038,7 @@ class TournamentConfigDraft {
   /// RPC casts to `timestamptz`.
   Map<String, Object?> toSetupConfig() {
     return <String, Object?>{
-      'club_id': _blankToNull(clubId),
+      'organizer_team_id': _blankToNull(clubId),
       // Invite-only is a Spaßturnier-only option (P6 invite SPEC §3). Defense-
       // in-depth, mirroring league_categories: never emit invite_only:true when
       // a club is selected, even if a stale toggle lingers in the draft.

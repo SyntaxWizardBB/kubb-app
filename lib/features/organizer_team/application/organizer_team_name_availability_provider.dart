@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kubb_app/features/club/data/club_repository.dart';
+import 'package:kubb_app/features/organizer_team/data/organizer_team_repository.dart';
 import 'package:kubb_app/features/team/application/team_name_availability_provider.dart'
     show NameAvailability;
 
@@ -10,7 +10,7 @@ import 'package:kubb_app/features/team/application/team_name_availability_provid
 /// rename feature does not exist yet, so there is no exclude-id query — this
 /// only serves club CREATE. Uses a 350 ms debounce, not polling.
 // ignore: specify_nonobvious_property_types
-final clubNameAvailabilityProvider =
+final organizerTeamNameAvailabilityProvider =
     FutureProvider.autoDispose.family<NameAvailability, String>(
   (ref, raw) async {
     final name = raw.trim();
@@ -25,7 +25,7 @@ final clubNameAvailabilityProvider =
     await completer.future;
 
     final available =
-        await ref.read(clubRepositoryProvider).isNameAvailable(name);
+        await ref.read(organizerTeamRepositoryProvider).isNameAvailable(name);
     return available ? NameAvailability.available : NameAvailability.taken;
   },
 );

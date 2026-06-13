@@ -262,7 +262,7 @@ TournamentDetailHeader tournamentDetailHeaderFromRow(
     tournamentId: row['tournament_id'] as String,
     displayName: row['display_name'] as String,
     createdByUserId: row['created_by'] as String?,
-    clubId: row['club_id'] as String?,
+    clubId: row['organizer_team_id'] as String?,
     teamSize: teamSize,
     maxTeamSize: maxTeamSize < teamSize ? teamSize : maxTeamSize,
     minParticipants: _asInt(row['min_participants']),

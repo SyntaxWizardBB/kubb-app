@@ -115,7 +115,7 @@ abstract class AppLocalizations {
   /// Empty-state body for the organizer dashboard overview
   ///
   /// In de, this message translates to:
-  /// **'Sobald du ein Turnier veröffentlichst oder als Verein verwaltest, erscheint es hier im Cockpit.'**
+  /// **'Sobald du ein Turnier veröffentlichst oder als Veranstalterteam verwaltest, erscheint es hier im Cockpit.'**
   String get organizerDashboardEmptyBody;
 
   /// In-screen gate title shown when the caller may not administer the tournament
@@ -127,7 +127,7 @@ abstract class AppLocalizations {
   /// In-screen gate body for the organizer dashboard
   ///
   /// In de, this message translates to:
-  /// **'Du bist nicht berechtigt, dieses Turnier zu steuern. Wende dich an den Veranstalter oder den Verein.'**
+  /// **'Du bist nicht berechtigt, dieses Turnier zu steuern. Wende dich an den Veranstalter oder das Veranstalterteam.'**
   String get organizerDashboardGateBody;
 
   /// Error message shown when the administrable-tournaments list fails to load
@@ -805,7 +805,7 @@ abstract class AppLocalizations {
   /// Label for TemplateVisibility.club
   ///
   /// In de, this message translates to:
-  /// **'Verein'**
+  /// **'Veranstalterteam'**
   String get stageGraphVisibilityClub;
 
   /// Label for TemplateVisibility.public
@@ -3445,13 +3445,13 @@ abstract class AppLocalizations {
   /// Optional organizing-club picker label on the Stammdaten step
   ///
   /// In de, this message translates to:
-  /// **'Ausrichtender Verein'**
+  /// **'Ausrichtendes Veranstalterteam'**
   String get tournamentWizardClubLabel;
 
   /// Helper text under the organizing-club picker
   ///
   /// In de, this message translates to:
-  /// **'Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten. Ohne Verein (Spasstournier) zählt das Turnier nicht für die Wertung.'**
+  /// **'Veranstalterteams, die du verwalten kannst, können dieses Turnier ebenfalls verwalten. Ohne Veranstalterteam (Spasstournier) zählt das Turnier nicht für die Wertung.'**
   String get tournamentWizardClubHint;
 
   /// Dropdown option for no organizing club; a non-rated fun tournament (K02)
@@ -5761,7 +5761,7 @@ abstract class AppLocalizations {
   /// CF5/K28: label for the organizing club
   ///
   /// In de, this message translates to:
-  /// **'Verein'**
+  /// **'Veranstalterteam'**
   String get tournamentDetailClubLabel;
 
   /// CF5/K28: value shown when no club is set (fun tournament)
@@ -8551,7 +8551,7 @@ abstract class AppLocalizations {
   /// Inline / snackbar error shown when the chosen club name is already taken (BUG-2)
   ///
   /// In de, this message translates to:
-  /// **'Dieser Vereinsname ist bereits vergeben — bitte wähle einen anderen.'**
+  /// **'Dieser Veranstalterteam-Name ist bereits vergeben — bitte wähle einen anderen.'**
   String get clubNameTakenError;
 
   /// Inline hint while a live team/club name availability check runs (BUG-2)
@@ -8559,6 +8559,36 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Name wird geprüft …'**
   String get nameCheckingHint;
+
+  /// Home screen organizer tile title — replaces the former 'Meine Vereine' tile (P4-C, ADR-0032 §4)
+  ///
+  /// In de, this message translates to:
+  /// **'Veranstalter'**
+  String get organizerTileTitle;
+
+  /// Home screen organizer tile subtitle, pointing to the organizer dashboard and the caller's organizer teams (P4-C, ADR-0032 §4)
+  ///
+  /// In de, this message translates to:
+  /// **'Dashboard & Veranstalterteams'**
+  String get organizerTileSubtitle;
+
+  /// Section title on the organizer dashboard listing the caller's organizer teams (P4-C, ADR-0032 §4)
+  ///
+  /// In de, this message translates to:
+  /// **'Meine Veranstalterteams'**
+  String get organizerDashboardTeamsTitle;
+
+  /// Home screen ongoing tournament match tile title (P5-C, ADR-0032 §7)
+  ///
+  /// In de, this message translates to:
+  /// **'Laufendes Match'**
+  String get homeOngoingMatchTitle;
+
+  /// Home screen ongoing match tile subtitle: tournament name plus opponent (P5-C, ADR-0032 §7)
+  ///
+  /// In de, this message translates to:
+  /// **'{tournament} · gegen {opponent}'**
+  String homeOngoingMatchSubtitle(String tournament, String opponent);
 }
 
 class _AppLocalizationsDelegate

@@ -1,63 +1,63 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
-import 'package:kubb_app/features/club/data/club_models.dart';
+import 'package:kubb_app/features/organizer_team/data/organizer_team_models.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// The caller lacks authentication or club-management rights (SQLSTATE 42501).
-class ClubPermissionException implements Exception {
-  const ClubPermissionException(this.message);
+class OrganizerTeamPermissionException implements Exception {
+  const OrganizerTeamPermissionException(this.message);
   final String message;
   @override
-  String toString() => 'ClubPermissionException: $message';
+  String toString() => 'OrganizerTeamPermissionException: $message';
 }
 
 /// The founding code did not match the global code.
-class ClubInvalidCodeException implements Exception {
-  const ClubInvalidCodeException();
+class OrganizerTeamInvalidCodeException implements Exception {
+  const OrganizerTeamInvalidCodeException();
   @override
-  String toString() => 'ClubInvalidCodeException';
+  String toString() => 'OrganizerTeamInvalidCodeException';
 }
 
 /// A pending invitation already exists for that invitee.
-class ClubInvitationDuplicateException implements Exception {
-  const ClubInvitationDuplicateException(this.message);
+class OrganizerTeamInvitationDuplicateException implements Exception {
+  const OrganizerTeamInvitationDuplicateException(this.message);
   final String message;
   @override
-  String toString() => 'ClubInvitationDuplicateException: $message';
+  String toString() => 'OrganizerTeamInvitationDuplicateException: $message';
 }
 
 /// The nickname did not resolve to a known player.
-class ClubUserNotFoundException implements Exception {
-  const ClubUserNotFoundException();
+class OrganizerTeamUserNotFoundException implements Exception {
+  const OrganizerTeamUserNotFoundException();
   @override
-  String toString() => 'ClubUserNotFoundException';
+  String toString() => 'OrganizerTeamUserNotFoundException';
 }
 
-/// Raised when `club_create` rejects the chosen name because another club
+/// Raised when `organizer_team_create` rejects the chosen name because another club
 /// already carries it (server SQLSTATE 23505, backed by
 /// `clubs_display_name_unique_idx`). Lets the UI show a clear "name taken"
 /// message even when the optimistic live availability check raced.
-class ClubDuplicateNameException implements Exception {
-  const ClubDuplicateNameException();
+class OrganizerTeamDuplicateNameException implements Exception {
+  const OrganizerTeamDuplicateNameException();
   @override
-  String toString() => 'ClubDuplicateNameException';
+  String toString() => 'OrganizerTeamDuplicateNameException';
 }
 
 /// Catch-all for the remaining token-prefixed club RPC errors.
-class ClubOperationException implements Exception {
-  const ClubOperationException(this.message);
+class OrganizerTeamOperationException implements Exception {
+  const OrganizerTeamOperationException(this.message);
   final String message;
   @override
-  String toString() => 'ClubOperationException: $message';
+  String toString() => 'OrganizerTeamOperationException: $message';
 }
 
 /// Data access for the club (Verein) feature. All writes go through the
 /// SECURITY DEFINER RPCs in migration 20260901000013; reads use
-/// `club_list_for_caller` / `club_get`. Error mapping and the expired-JWT
+/// `organizer_team_list_for_caller` / `organizer_team_get`. Error mapping and the expired-JWT
 /// self-heal mirror [team feature]'s repository.
-class ClubRepository {
-  ClubRepository({
+class OrganizerTeamRepository {
+  OrganizerTeamRepository({
     required SupabaseClient client,
     Future<WireSessionOutcome> Function()? reSignWireSession,
   })  : _client = client,
@@ -68,23 +68,23 @@ class ClubRepository {
 
   /// Founds a club. Returns null only if the RPC succeeds yet yields no id
   /// (treated as a recoverable failure upstream). Throws
-  /// [ClubInvalidCodeException] when the code is wrong.
-  Future<ClubId?> createClub({required String displayName}) async {
+  /// [OrganizerTeamInvalidCodeException] when the code is wrong.
+  Future<OrganizerTeamId?> createClub({required String displayName}) async {
     // Founding is gated server-side on the profile's can_found_clubs flag
     // (set from the early-access organizer code) — no per-create code anymore.
     final id = await _guard(() => _client.rpc<String?>(
-          'club_create',
+          'organizer_team_create',
           params: <String, dynamic>{'p_display_name': displayName},
         ));
-    return id == null ? null : ClubId(id);
+    return id == null ? null : OrganizerTeamId(id);
   }
 
   /// Whether [displayName] is free for a club. Case- and whitespace-
   /// insensitive; pass [excludeClubId] for a future rename so the club's own
   /// current name is not flagged. Returns false for blank input.
-  Future<bool> isNameAvailable(String displayName, {ClubId? excludeClubId}) {
+  Future<bool> isNameAvailable(String displayName, {OrganizerTeamId? excludeClubId}) {
     return _guard(() => _client.rpc<bool>(
-          'club_name_available',
+          'organizer_team_name_available',
           params: <String, dynamic>{
             'p_display_name': displayName,
             'p_exclude_club_id': excludeClubId?.value,
@@ -92,56 +92,65 @@ class ClubRepository {
         ));
   }
 
-  Future<List<ClubWire>> listMyClubs() async {
+  Future<List<OrganizerTeamWire>> listMyClubs() async {
     final rows = await _guard(
-      () => _client.rpc<List<dynamic>>('club_list_for_caller'),
+      () => _client.rpc<List<dynamic>>('organizer_team_list_for_caller'),
     );
     return rows
         .cast<Map<String, dynamic>>()
-        .map(ClubWire.fromJson)
+        .map(OrganizerTeamWire.fromJson)
         .toList(growable: false);
   }
 
-  Future<ClubDetail> getClub(ClubId id) async {
+  Future<OrganizerTeamDetail> getClub(OrganizerTeamId id) async {
     final json = await _guard(() => _client.rpc<Map<String, dynamic>>(
-          'club_get',
+          'organizer_team_get',
           params: <String, dynamic>{'p_club_id': id.value},
         ));
-    return ClubDetail.fromJson(json);
+    return OrganizerTeamDetail.fromJson(json);
   }
 
   /// Invites a player by user id — the search-based path (mirrors team add).
-  Future<ClubInvitationId?> invite(ClubId clubId, UserId inviteeUserId) async {
+  /// [role] is the club role granted on accept (server CHECK:
+  /// owner/admin/referee, migration 20261282000000).
+  Future<OrganizerTeamInvitationId?> invite(
+    OrganizerTeamId clubId,
+    UserId inviteeUserId, {
+    String role = 'admin',
+  }) async {
     final id = await _guard(() => _client.rpc<String?>(
-          'club_invite',
+          'organizer_team_invite',
           params: <String, dynamic>{
             'p_club_id': clubId.value,
             'p_invitee_user_id': inviteeUserId.value,
+            'p_role': role,
           },
         ));
-    return id == null ? null : ClubInvitationId(id);
+    return id == null ? null : OrganizerTeamInvitationId(id);
   }
 
-  Future<ClubInvitationId?> inviteByNickname(
-    ClubId clubId,
-    String nickname,
-  ) async {
+  Future<OrganizerTeamInvitationId?> inviteByNickname(
+    OrganizerTeamId clubId,
+    String nickname, {
+    String role = 'admin',
+  }) async {
     final id = await _guard(() => _client.rpc<String?>(
-          'club_invite_by_nickname',
+          'organizer_team_invite_by_nickname',
           params: <String, dynamic>{
             'p_club_id': clubId.value,
             'p_nickname': nickname,
+            'p_role': role,
           },
         ));
-    return id == null ? null : ClubInvitationId(id);
+    return id == null ? null : OrganizerTeamInvitationId(id);
   }
 
   Future<void> respondInvitation(
-    ClubInvitationId invitationId, {
+    OrganizerTeamInvitationId invitationId, {
     required bool accept,
   }) async {
     await _guard(() => _client.rpc<void>(
-          'club_invitation_respond',
+          'organizer_team_invitation_respond',
           params: <String, dynamic>{
             'p_invitation_id': invitationId.value,
             'p_accept': accept,
@@ -150,12 +159,12 @@ class ClubRepository {
   }
 
   Future<void> setMemberRoles(
-    ClubId clubId,
+    OrganizerTeamId clubId,
     UserId memberUserId,
     List<String> roles,
   ) async {
     await _guard(() => _client.rpc<void>(
-          'club_set_member_roles',
+          'organizer_team_set_member_roles',
           params: <String, dynamic>{
             'p_club_id': clubId.value,
             'p_member_user_id': memberUserId.value,
@@ -164,9 +173,9 @@ class ClubRepository {
         ));
   }
 
-  Future<void> removeMember(ClubId clubId, UserId memberUserId) async {
+  Future<void> removeMember(OrganizerTeamId clubId, UserId memberUserId) async {
     await _guard(() => _client.rpc<void>(
-          'club_remove_member',
+          'organizer_team_remove_member',
           params: <String, dynamic>{
             'p_club_id': clubId.value,
             'p_member_user_id': memberUserId.value,
@@ -174,28 +183,28 @@ class ClubRepository {
         ));
   }
 
-  Future<void> leave(ClubId clubId) async {
+  Future<void> leave(OrganizerTeamId clubId) async {
     await _guard(() => _client.rpc<void>(
-          'club_leave',
+          'organizer_team_leave',
           params: <String, dynamic>{'p_club_id': clubId.value},
         ));
   }
 
-  Future<void> requestJoin(ClubId clubId) async {
+  Future<void> requestJoin(OrganizerTeamId clubId) async {
     await _guard(() => _client.rpc<void>(
-          'club_request_join',
+          'organizer_team_request_join',
           params: <String, dynamic>{'p_club_id': clubId.value},
         ));
   }
 
-  Future<List<ClubJoinRequestWire>> listJoinRequests(ClubId clubId) async {
+  Future<List<OrganizerTeamJoinRequestWire>> listJoinRequests(OrganizerTeamId clubId) async {
     final out = await _guard(() => _client.rpc<List<dynamic>>(
-          'club_list_join_requests',
+          'organizer_team_list_join_requests',
           params: <String, dynamic>{'p_club_id': clubId.value},
         ));
     return out
         .cast<Map<String, dynamic>>()
-        .map(ClubJoinRequestWire.fromJson)
+        .map(OrganizerTeamJoinRequestWire.fromJson)
         .toList(growable: false);
   }
 
@@ -204,7 +213,7 @@ class ClubRepository {
     required bool accept,
   }) async {
     await _guard(() => _client.rpc<void>(
-          'club_respond_join_request',
+          'organizer_team_respond_join_request',
           params: <String, dynamic>{
             'p_request_id': requestId,
             'p_accept': accept,
@@ -214,16 +223,29 @@ class ClubRepository {
 
   Future<bool> callerCanPublish() async {
     final result = await _guard(
-      () => _client.rpc<bool>('club_caller_can_publish'),
+      () => _client.rpc<bool>('organizer_team_caller_can_publish'),
     );
     return result;
   }
 
-  /// Searches public clubs by name prefix/substring for the join flow. Reads
-  /// the `clubs` table directly (public-read RLS); excludes dissolved clubs.
-  Future<List<ClubWire>> searchClubs(String query) async {
+  /// Whether the caller may act as an organizer (P4-C, ADR-0032 §4): true
+  /// when the profile carries `can_found_clubs` OR any active club
+  /// membership holds a role overlapping {owner, admin, referee}. Delegates
+  /// entirely to the `organizer_team_caller_is_organizer` RPC (migration
+  /// 20261282500000) — never decided client-side.
+  Future<bool> callerIsOrganizer() async {
+    final result = await _guard(
+      () => _client.rpc<bool>('organizer_team_caller_is_organizer'),
+    );
+    return result;
+  }
+
+  /// Searches public organizer teams by name prefix/substring for the join
+  /// flow. Reads the `organizer_teams` table directly (public-read RLS);
+  /// excludes dissolved teams.
+  Future<List<OrganizerTeamWire>> searchClubs(String query) async {
     final rows = await _guard(() => _client
-        .from('clubs')
+        .from('organizer_teams')
         .select()
         .isFilter('dissolved_at', null)
         .ilike('display_name', '%$query%')
@@ -231,7 +253,7 @@ class ClubRepository {
         .limit(30));
     return rows
         .cast<Map<String, dynamic>>()
-        .map(ClubWire.fromJson)
+        .map(OrganizerTeamWire.fromJson)
         .toList(growable: false);
   }
 
@@ -262,7 +284,7 @@ class ClubRepository {
 
   Exception _mapException(PostgrestException e) {
     if (e.code == '42501') {
-      return ClubPermissionException(e.message);
+      return OrganizerTeamPermissionException(e.message);
     }
     final message = e.message;
     // Unique club-name violation. The create guard raises 23505 with a
@@ -273,23 +295,23 @@ class ClubRepository {
     if (e.code == '23505' &&
         (message.contains('club named') ||
             message.contains('clubs_display_name_unique_idx'))) {
-      return const ClubDuplicateNameException();
+      return const OrganizerTeamDuplicateNameException();
     }
     if (message.startsWith('INVALID_FOUNDING_CODE')) {
-      return const ClubInvalidCodeException();
+      return const OrganizerTeamInvalidCodeException();
     }
     if (message.startsWith('USER_NOT_FOUND')) {
-      return const ClubUserNotFoundException();
+      return const OrganizerTeamUserNotFoundException();
     }
     if (message.startsWith('INVITATION_ALREADY_PENDING')) {
-      return ClubInvitationDuplicateException(message);
+      return OrganizerTeamInvitationDuplicateException(message);
     }
-    return ClubOperationException(message);
+    return OrganizerTeamOperationException(message);
   }
 }
 
-final clubRepositoryProvider = Provider<ClubRepository>((ref) {
-  return ClubRepository(
+final organizerTeamRepositoryProvider = Provider<OrganizerTeamRepository>((ref) {
+  return OrganizerTeamRepository(
     client: Supabase.instance.client,
     reSignWireSession: () => ensureWireSession(ref, force: true),
   );

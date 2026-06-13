@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_providers.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
+import 'package:kubb_app/features/tournament/application/my_active_match_provider.dart';
 import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
 import 'package:kubb_app/features/training/presentation/home_screen.dart';
@@ -13,6 +15,7 @@ void main() {
     WidgetTester tester, {
     DisplayProfile? profile,
     List<RecentSessionView> recent = const [],
+    bool organizerVisible = false,
   }) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -20,6 +23,14 @@ void main() {
           displayProfileProvider.overrideWithValue(profile),
           recentActivityProvider.overrideWith((ref) async => recent),
           crashRecoveryProvider.overrideWith((ref) async => null),
+          // P4-C: organizer tile gate — overridden so no Supabase call runs.
+          organizerTileVisibleProvider
+              .overrideWith((ref) async => organizerVisible),
+          // P5-C: ongoing-match tile source — overridden (null = hidden) so
+          // no registration/match fetch runs in these layout tests.
+          myActiveTournamentMatchProvider.overrideWith(
+            (ref) => const AsyncValue<MyActiveTournamentMatch?>.data(null),
+          ),
         ],
         child: MaterialApp(
           theme: KubbTheme.light(),
@@ -70,13 +81,28 @@ void main() {
     expect(find.text('64 %'), findsOneWidget);
   });
 
-  // P7: the home FAB + TrainingSheet were removed — training now starts from
-  // the Training tab. The home screen shows the "Meine Vereine" tile instead.
-  testWidgets('shows the Meine Vereine tile', (tester) async {
+  // P4-C (ADR-0032 §4): the former "Meine Vereine" tile is now the
+  // organizer tile, gated by organizerTileVisibleProvider.
+  testWidgets('shows the Veranstalter tile when the gate is true',
+      (tester) async {
+    await pump(tester, profile: profileNamed('Lukas'), organizerVisible: true);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Veranstalter'), findsOneWidget);
+    expect(find.text('Dashboard & Veranstalterteams'), findsOneWidget);
+  });
+
+  testWidgets('hides the Veranstalter tile when the gate is false',
+      (tester) async {
     await pump(tester, profile: profileNamed('Lukas'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Meine Vereine'), findsOneWidget);
+    expect(find.text('Veranstalter'), findsNothing);
+    expect(find.text('Dashboard & Veranstalterteams'), findsNothing);
+    // The remaining home tiles stay in place (fail-closed gate only
+    // removes the organizer tile, never breaks the rest of the layout).
+    expect(find.text('Meine Teams'), findsOneWidget);
+    expect(find.text('Match-Modus'), findsOneWidget);
   });
 
   testWidgets('falls back to greeting without name when no profile',
@@ -89,11 +115,11 @@ void main() {
 
   testWidgets('renders home scaffold without throwing when profile is null',
       (tester) async {
-    await pump(tester);
+    await pump(tester, organizerVisible: true);
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
     expect(find.byType(HomeScreen), findsOneWidget);
-    expect(find.text('Meine Vereine'), findsOneWidget);
+    expect(find.text('Veranstalter'), findsOneWidget);
   });
 }

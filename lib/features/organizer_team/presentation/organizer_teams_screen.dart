@@ -7,10 +7,10 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
-import 'package:kubb_app/features/club/application/club_membership_controller.dart';
-import 'package:kubb_app/features/club/application/club_providers.dart';
-import 'package:kubb_app/features/club/data/club_models.dart';
-import 'package:kubb_app/features/club/presentation/club_routes.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_membership_controller.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_providers.dart';
+import 'package:kubb_app/features/organizer_team/data/organizer_team_models.dart';
+import 'package:kubb_app/features/organizer_team/presentation/organizer_team_routes.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -18,14 +18,14 @@ import 'package:lucide_icons/lucide_icons.dart';
 /// With a query it searches ALL clubs and lets you request to join from the
 /// results; empty, it shows the clubs you belong to. The FAB founds a new club
 /// (gated server-side on the early-access organizer capability).
-class ClubsScreen extends ConsumerStatefulWidget {
-  const ClubsScreen({super.key});
+class OrganizerTeamsScreen extends ConsumerStatefulWidget {
+  const OrganizerTeamsScreen({super.key});
 
   @override
-  ConsumerState<ClubsScreen> createState() => _ClubsScreenState();
+  ConsumerState<OrganizerTeamsScreen> createState() => _OrganizerTeamsScreenState();
 }
 
-class _ClubsScreenState extends ConsumerState<ClubsScreen> {
+class _OrganizerTeamsScreenState extends ConsumerState<OrganizerTeamsScreen> {
   final TextEditingController _queryCtrl = TextEditingController();
   Timer? _debounce;
   String _query = '';
@@ -46,13 +46,13 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen> {
     });
   }
 
-  Future<void> _request(ClubWire club) async {
+  Future<void> _request(OrganizerTeamWire club) async {
     final messenger = ScaffoldMessenger.of(context);
     await ref
-        .read(clubMembershipControllerProvider.notifier)
-        .requestJoin(ClubId(club.id));
+        .read(organizerTeamMembershipControllerProvider.notifier)
+        .requestJoin(OrganizerTeamId(club.id));
     if (!mounted) return;
-    final failed = ref.read(clubMembershipControllerProvider).hasError;
+    final failed = ref.read(organizerTeamMembershipControllerProvider).hasError;
     setState(() {
       if (!failed) _requested.add(club.id);
     });
@@ -70,7 +70,7 @@ class _ClubsScreenState extends ConsumerState<ClubsScreen> {
       backgroundColor: tokens.bg,
       appBar: const KubbAppBar(title: 'Meine Vereine'),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(ClubRoutes.create),
+        onPressed: () => context.push(OrganizerTeamRoutes.create),
         icon: const Icon(LucideIcons.plus),
         label: const Text('Verein gründen'),
       ),
@@ -116,9 +116,9 @@ class _MyClubs extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(clubListProvider);
+    final async = ref.watch(organizerTeamListProvider);
     return RefreshIndicator(
-      onRefresh: () async => ref.invalidate(clubListProvider),
+      onRefresh: () async => ref.invalidate(organizerTeamListProvider),
       child: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ListView(children: [
@@ -144,9 +144,9 @@ class _MyClubs extends ConsumerWidget {
             itemCount: clubs.length,
             separatorBuilder: (_, _) =>
                 const SizedBox(height: KubbTokens.space2),
-            itemBuilder: (context, i) => _ClubRow(
+            itemBuilder: (context, i) => _OrganizerTeamRow(
               club: clubs[i],
-              onTap: () => context.push(ClubRoutes.detailFor(clubs[i].id)),
+              onTap: () => context.push(OrganizerTeamRoutes.detailFor(clubs[i].id)),
             ),
           );
         },
@@ -165,12 +165,12 @@ class _SearchResults extends ConsumerWidget {
 
   final String query;
   final Set<String> requested;
-  final Future<void> Function(ClubWire) onRequest;
+  final Future<void> Function(OrganizerTeamWire) onRequest;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final async = ref.watch(clubSearchProvider(query));
+    final async = ref.watch(organizerTeamSearchProvider(query));
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
@@ -190,7 +190,7 @@ class _SearchResults extends ConsumerWidget {
           separatorBuilder: (_, _) => const SizedBox(height: KubbTokens.space2),
           itemBuilder: (context, i) {
             final club = clubs[i];
-            return _ClubRow(
+            return _OrganizerTeamRow(
               club: club,
               trailing: requested.contains(club.id)
                   ? Text('Angefragt',
@@ -209,10 +209,10 @@ class _SearchResults extends ConsumerWidget {
   }
 }
 
-class _ClubRow extends StatelessWidget {
-  const _ClubRow({required this.club, this.onTap, this.trailing});
+class _OrganizerTeamRow extends StatelessWidget {
+  const _OrganizerTeamRow({required this.club, this.onTap, this.trailing});
 
-  final ClubWire club;
+  final OrganizerTeamWire club;
   final VoidCallback? onTap;
   final Widget? trailing;
 

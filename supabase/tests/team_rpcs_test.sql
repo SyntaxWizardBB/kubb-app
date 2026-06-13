@@ -42,6 +42,19 @@ BEGIN
 END;
 $$;
 
+-- Back to superuser for direct seeding (bypasses RLS / auth.users grants).
+-- Needed after _team_as_anon(): set_config(..., true) is transaction-local,
+-- so the anon role would otherwise leak into the next fixture DO block and
+-- its auth.users INSERT (permission denied). Pattern as in
+-- role_consolidation_test.sql (_rc_su).
+CREATE OR REPLACE FUNCTION _team_su() RETURNS void
+LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM set_config('request.jwt.claims', '', true);
+  PERFORM set_config('role', 'postgres', true);
+END;
+$$;
+
 -- Auth-User minimal viable shape (FK-Pflicht fuer team_memberships,
 -- team_invitations etc.). Idempotent ueber ON CONFLICT.
 CREATE OR REPLACE FUNCTION _team_mk_user(p_uid uuid) RETURNS uuid
@@ -119,6 +132,10 @@ SELECT throws_ok(
   '42501', NULL,
   'team_create: anonymer Caller → 42501');
 
+-- Reset to superuser: the anon role set above is transaction-local and
+-- would break the auth.users seeding in the next fixture block.
+SELECT _team_su();
+
 -- ---------------------------------------------------------------------
 -- 3. team_invite — Happy-Path + Inbox + Duplicate-Guard.
 -- ---------------------------------------------------------------------
@@ -144,6 +161,9 @@ SELECT is(
     WHERE id = (SELECT invitation_id FROM _t7_inv_ctx)),
   'pending',
   'team_invite: Einladung im Zustand pending');
+
+-- Inbox rows of OTHER users are invisible under RLS — assert as superuser.
+SELECT _team_su();
 
 SELECT is(
   (SELECT count(*)::int FROM public.user_inbox_messages
@@ -186,6 +206,8 @@ SELECT is(
 -- 5. team_invitation_respond — Non-Invitee → ERRCODE 42501.
 -- ---------------------------------------------------------------------
 
+SELECT _team_su();
+
 DO $$
 DECLARE
   v_creator uuid := gen_random_uuid();
@@ -215,6 +237,8 @@ SELECT throws_ok(
 -- 6. team_add_guest — Happy-Path.
 -- ---------------------------------------------------------------------
 
+SELECT _team_su();
+
 DO $$
 DECLARE
   v_creator uuid := gen_random_uuid();
@@ -238,6 +262,8 @@ SELECT is(
 -- ---------------------------------------------------------------------
 -- 7. team_remove_member — A entfernt B; C bekommt Inbox-Item; Audit.
 -- ---------------------------------------------------------------------
+
+SELECT _team_su();
 
 DO $$
 DECLARE
@@ -271,6 +297,9 @@ SELECT is(
   1,
   'team_remove_member: member_removed Audit-Event geschrieben');
 
+-- Inbox rows of OTHER users are invisible under RLS — assert as superuser.
+SELECT _team_su();
+
 SELECT is(
   (SELECT count(*)::int FROM public.user_inbox_messages
     WHERE user_id = (SELECT c FROM _t7_remove_ctx)
@@ -281,6 +310,8 @@ SELECT is(
 -- ---------------------------------------------------------------------
 -- 8. team_remove_member — Non-Member-Aktor → ERRCODE 42501.
 -- ---------------------------------------------------------------------
+
+SELECT _team_su();
 
 DO $$
 DECLARE
@@ -294,6 +325,10 @@ BEGIN
     SELECT v_creator AS creator, v_other AS other, v_team_id AS team_id;
 END $$;
 
+-- Fixture block above ran as postgres, so the temp table is postgres-owned;
+-- it is read below while acting as 'authenticated'.
+GRANT SELECT ON _t7_guard_ctx TO authenticated;
+
 SELECT _team_as((SELECT other FROM _t7_guard_ctx));
 SELECT throws_ok(
   format($$
@@ -306,6 +341,8 @@ SELECT throws_ok(
 -- ---------------------------------------------------------------------
 -- 9. team_leave — letztes Mitglied → Auto-Dissolve (FR-TEAM-19).
 -- ---------------------------------------------------------------------
+
+SELECT _team_su();
 
 DO $$
 DECLARE
@@ -329,6 +366,8 @@ SELECT isnt(
 -- 10. team_dissolve ohne Consent aller → DISSOLVE_NEEDS_CONSENT.
 -- ---------------------------------------------------------------------
 
+SELECT _team_su();
+
 DO $$
 DECLARE
   v_a uuid := gen_random_uuid();
@@ -343,6 +382,10 @@ BEGIN
     SELECT v_a AS a, v_b AS b, v_team_id AS team_id;
 END $$;
 
+-- Fixture block above ran as postgres, so the temp table is postgres-owned;
+-- it is read below while acting as 'authenticated'.
+GRANT SELECT ON _t7_dn_ctx TO authenticated;
+
 SELECT _team_as((SELECT a FROM _t7_dn_ctx));
 SELECT throws_ok(
   format($$
@@ -354,6 +397,8 @@ SELECT throws_ok(
 -- ---------------------------------------------------------------------
 -- 11. team_dissolve mit Consent aller → erfolgreich, dissolved_at gesetzt.
 -- ---------------------------------------------------------------------
+
+SELECT _team_su();
 
 DO $$
 DECLARE
@@ -379,6 +424,9 @@ SELECT isnt(
     WHERE id = (SELECT team_id FROM _t7_do_ctx)),
   NULL,
   'team_dissolve: mit Consent aller → dissolved_at gesetzt');
+
+-- Inbox rows of OTHER users are invisible under RLS — assert as superuser.
+SELECT _team_su();
 
 SELECT is(
   (SELECT count(*)::int FROM public.user_inbox_messages

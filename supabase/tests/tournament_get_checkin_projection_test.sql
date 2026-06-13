@@ -70,13 +70,13 @@ BEGIN
     VALUES (v_creator, 'CheckinHero')
     ON CONFLICT (user_id) DO UPDATE SET nickname = EXCLUDED.nickname;
 
-  -- A club so tournament.club_id is non-NULL (CF5 regression target).
-  INSERT INTO public.clubs(id, display_name, created_by)
+  -- A club so tournament.organizer_team_id is non-NULL (CF5 regression target).
+  INSERT INTO public.organizer_teams(id, display_name, created_by)
     VALUES (v_club, 'CI-Club-D2', v_creator)
     ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.tournaments(
-      id, created_by, club_id, display_name, team_size, min_participants,
+      id, created_by, organizer_team_id, display_name, team_size, min_participants,
       max_participants, format, scoring, match_format, status)
     VALUES
       (v_tour, v_creator, v_club, 'D2-Get-Live', 1, 2, 16, 'swiss', 'ekc',
@@ -151,18 +151,18 @@ SELECT is(
   'D2-06(c): participants[].display_name still projected (no body swallow)');
 
 -- ====================================================================
--- (c) regression: tournament.club_id key still present + correct.
+-- (c) regression: tournament.organizer_team_id key still present + correct.
 -- ====================================================================
 SELECT ok(
   (public.tournament_get('55555555-5555-5555-5555-555555555501')
-     -> 'tournament') ? 'club_id',
-  'D2-06(c): tournament.club_id key still present in the tournament block');
+     -> 'tournament') ? 'organizer_team_id',
+  'D2-06(c): tournament.organizer_team_id key still present in the tournament block');
 
 SELECT is(
   (public.tournament_get('55555555-5555-5555-5555-555555555501')
-     -> 'tournament' ->> 'club_id'),
+     -> 'tournament' ->> 'organizer_team_id'),
   '66666666-6666-6666-6666-666666666601',
-  'D2-06(c): tournament.club_id projects the correct club');
+  'D2-06(c): tournament.organizer_team_id projects the correct club');
 
 SELECT * FROM finish();
 ROLLBACK;

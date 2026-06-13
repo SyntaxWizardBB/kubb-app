@@ -75,9 +75,9 @@ DECLARE
   v_request  uuid := _rc_mk_user(gen_random_uuid());
   v_club     uuid := gen_random_uuid();
 BEGIN
-  INSERT INTO public.clubs(id, display_name, created_by)
+  INSERT INTO public.organizer_teams(id, display_name, created_by)
     VALUES (v_club, 'Konsolidierungs-Club', v_owner);
-  INSERT INTO public.club_memberships(club_id, user_id, roles)
+  INSERT INTO public.team_members(organizer_team_id, user_id, roles)
     VALUES (v_club, v_owner, ARRAY['owner']::text[]),
            (v_club, v_admin, ARRAY['admin']::text[]);
 
@@ -99,7 +99,7 @@ GRANT SELECT ON _rc_ctx TO authenticated;
 
 SELECT throws_ok(
   format($$
-    INSERT INTO public.club_memberships(club_id, user_id, roles)
+    INSERT INTO public.team_members(organizer_team_id, user_id, roles)
       VALUES (%L::uuid, %L::uuid, ARRAY['member']::text[])
   $$, (SELECT club FROM _rc_ctx), (SELECT member_user FROM _rc_ctx)),
   '23514', NULL,
@@ -107,7 +107,7 @@ SELECT throws_ok(
 
 SELECT lives_ok(
   format($$
-    INSERT INTO public.club_memberships(club_id, user_id, roles)
+    INSERT INTO public.team_members(organizer_team_id, user_id, roles)
       VALUES (%L::uuid, %L::uuid, ARRAY['referee']::text[])
   $$, (SELECT club FROM _rc_ctx), (SELECT ref_user FROM _rc_ctx)),
   'CHECK: roles = [referee] is accepted');
@@ -120,13 +120,13 @@ SELECT ok(
   (SELECT column_default IS NULL
      FROM information_schema.columns
     WHERE table_schema = 'public'
-      AND table_name = 'club_memberships'
+      AND table_name = 'team_members'
       AND column_name = 'roles'),
-  'DEFAULT: club_memberships.roles has no default anymore');
+  'DEFAULT: team_members.roles has no default anymore');
 
 SELECT throws_ok(
   format($$
-    INSERT INTO public.club_memberships(club_id, user_id)
+    INSERT INTO public.team_members(organizer_team_id, user_id)
       VALUES (%L::uuid, %L::uuid)
   $$, (SELECT club FROM _rc_ctx), (SELECT noroles_user FROM _rc_ctx)),
   '23502', NULL,
@@ -140,7 +140,7 @@ SELECT _rc_as((SELECT owner FROM _rc_ctx));
 
 SELECT throws_ok(
   format($$
-    SELECT public.club_set_member_roles(%L::uuid, %L::uuid,
+    SELECT public.organizer_team_set_member_roles(%L::uuid, %L::uuid,
                                         ARRAY['member']::text[])
   $$, (SELECT club FROM _rc_ctx), (SELECT admin_member FROM _rc_ctx)),
   'P0001', 'INVALID_ROLE',
@@ -148,7 +148,7 @@ SELECT throws_ok(
 
 SELECT throws_ok(
   format($$
-    SELECT public.club_set_member_roles(%L::uuid, %L::uuid,
+    SELECT public.organizer_team_set_member_roles(%L::uuid, %L::uuid,
                                         ARRAY['organizer']::text[])
   $$, (SELECT club FROM _rc_ctx), (SELECT admin_member FROM _rc_ctx)),
   'P0001', 'INVALID_ROLE',
@@ -156,7 +156,7 @@ SELECT throws_ok(
 
 SELECT lives_ok(
   format($$
-    SELECT public.club_set_member_roles(%L::uuid, %L::uuid,
+    SELECT public.organizer_team_set_member_roles(%L::uuid, %L::uuid,
                                         ARRAY['referee']::text[])
   $$, (SELECT club FROM _rc_ctx), (SELECT admin_member FROM _rc_ctx)),
   'club_set_member_roles: [referee] is accepted');
@@ -164,8 +164,8 @@ SELECT lives_ok(
 SELECT _rc_su();
 
 SELECT is(
-  (SELECT roles FROM public.club_memberships
-    WHERE club_id = (SELECT club FROM _rc_ctx)
+  (SELECT roles FROM public.team_members
+    WHERE organizer_team_id = (SELECT club FROM _rc_ctx)
       AND user_id = (SELECT admin_member FROM _rc_ctx)
       AND removed_at IS NULL),
   ARRAY['referee']::text[],
@@ -191,19 +191,19 @@ GRANT SELECT ON _rc_inv_ctx TO authenticated;
 SELECT _rc_as((SELECT invitee FROM _rc_ctx));
 
 SELECT lives_ok(
-  format($$ SELECT public.club_invitation_respond(%L::uuid, true) $$,
+  format($$ SELECT public.organizer_team_invitation_respond(%L::uuid, true) $$,
          (SELECT inv FROM _rc_inv_ctx)),
-  'club_invitation_respond: accept succeeds');
+  'organizer_team_invitation_respond: accept succeeds');
 
 SELECT _rc_su();
 
 SELECT is(
-  (SELECT roles FROM public.club_memberships
-    WHERE club_id = (SELECT club FROM _rc_ctx)
+  (SELECT roles FROM public.team_members
+    WHERE organizer_team_id = (SELECT club FROM _rc_ctx)
       AND user_id = (SELECT invitee FROM _rc_ctx)
       AND removed_at IS NULL),
   ARRAY['admin']::text[],
-  'club_invitation_respond: accept creates membership with roles = [admin]');
+  'organizer_team_invitation_respond: accept creates membership with roles = [admin]');
 
 -- ---------------------------------------------------------------------
 -- 11+12. Join-request accept -> membership with roles = [admin].
@@ -224,19 +224,19 @@ GRANT SELECT ON _rc_req_ctx TO authenticated;
 SELECT _rc_as((SELECT owner FROM _rc_ctx));
 
 SELECT lives_ok(
-  format($$ SELECT public.club_respond_join_request(%L::uuid, true) $$,
+  format($$ SELECT public.organizer_team_respond_join_request(%L::uuid, true) $$,
          (SELECT req FROM _rc_req_ctx)),
-  'club_respond_join_request: accept succeeds');
+  'organizer_team_respond_join_request: accept succeeds');
 
 SELECT _rc_su();
 
 SELECT is(
-  (SELECT roles FROM public.club_memberships
-    WHERE club_id = (SELECT club FROM _rc_ctx)
+  (SELECT roles FROM public.team_members
+    WHERE organizer_team_id = (SELECT club FROM _rc_ctx)
       AND user_id = (SELECT requester FROM _rc_ctx)
       AND removed_at IS NULL),
   ARRAY['admin']::text[],
-  'club_respond_join_request: accept creates membership with roles = [admin]');
+  'organizer_team_respond_join_request: accept creates membership with roles = [admin]');
 
 -- ---------------------------------------------------------------------
 -- 13-20. Legacy remap simulation (in-transaction, rolled back):
@@ -244,7 +244,9 @@ SELECT is(
 -- audit INSERT + remap UPDATE verbatim, and assert the outcome.
 -- ---------------------------------------------------------------------
 
-ALTER TABLE public.club_memberships
+-- Constraint name is unchanged by the P6a table rename (PostgreSQL keeps
+-- constraint names on ALTER TABLE ... RENAME).
+ALTER TABLE public.team_members
   DROP CONSTRAINT club_memberships_roles_check;
 
 DO $$
@@ -256,9 +258,9 @@ DECLARE
   v_l5 uuid := _rc_mk_user(gen_random_uuid()); -- soft-deleted ['member']
   v_club uuid := gen_random_uuid();
 BEGIN
-  INSERT INTO public.clubs(id, display_name, created_by)
+  INSERT INTO public.organizer_teams(id, display_name, created_by)
     VALUES (v_club, 'Legacy-Club', v_l4);
-  INSERT INTO public.club_memberships(club_id, user_id, roles, removed_at)
+  INSERT INTO public.team_members(organizer_team_id, user_id, roles, removed_at)
     VALUES (v_club, v_l1, ARRAY['organizer']::text[], NULL),
            (v_club, v_l2, ARRAY['member','scorekeeper']::text[], NULL),
            (v_club, v_l3, ARRAY['admin','organizer','timemaster']::text[], NULL),
@@ -270,16 +272,17 @@ BEGIN
            v_l4 AS l4, v_l5 AS l5;
 END $$;
 
--- Migration statement 1 (verbatim copy): audit insert before remap.
+-- Migration statement 1 (verbatim copy, identifiers updated to the P6a
+-- names; club_audit_events keeps its club_id column):
 INSERT INTO public.club_audit_events (club_id, kind, actor_user_id, payload)
-SELECT m.club_id,
+SELECT m.organizer_team_id,
        'roles_consolidated',
        NULL,
        jsonb_build_object(
          'user_id', m.user_id,
          'roles',   to_jsonb(m.roles)
        )
-  FROM public.club_memberships m
+  FROM public.team_members m
  WHERE NOT (m.roles <@ ARRAY['owner','admin','referee']::text[]);
 
 SELECT is(
@@ -297,8 +300,9 @@ SELECT is(
   '["organizer"]'::jsonb,
   'remap audit: payload carries the OLD roles array');
 
--- Migration statement 2 (verbatim copy): remap update before CHECK.
-UPDATE public.club_memberships
+-- Migration statement 2 (verbatim copy, identifiers updated): remap update
+-- before CHECK.
+UPDATE public.team_members
    SET roles = COALESCE(
          (SELECT array_agg(DISTINCT
                    CASE WHEN r = 'organizer' THEN 'admin' ELSE r END)
@@ -308,22 +312,22 @@ UPDATE public.club_memberships
  WHERE NOT (roles <@ ARRAY['owner','admin','referee']::text[]);
 
 SELECT is(
-  (SELECT roles FROM public.club_memberships
-    WHERE club_id = (SELECT club FROM _rc_legacy_ctx)
+  (SELECT roles FROM public.team_members
+    WHERE organizer_team_id = (SELECT club FROM _rc_legacy_ctx)
       AND user_id = (SELECT l1 FROM _rc_legacy_ctx)),
   ARRAY['admin']::text[],
   'remap: [organizer] -> [admin]');
 
 SELECT is(
-  (SELECT roles FROM public.club_memberships
-    WHERE club_id = (SELECT club FROM _rc_legacy_ctx)
+  (SELECT roles FROM public.team_members
+    WHERE organizer_team_id = (SELECT club FROM _rc_legacy_ctx)
       AND user_id = (SELECT l2 FROM _rc_legacy_ctx)),
   ARRAY['admin']::text[],
   'remap: [member, scorekeeper] -> stripped empty -> fallback [admin]');
 
 SELECT is(
-  (SELECT roles FROM public.club_memberships
-    WHERE club_id = (SELECT club FROM _rc_legacy_ctx)
+  (SELECT roles FROM public.team_members
+    WHERE organizer_team_id = (SELECT club FROM _rc_legacy_ctx)
       AND user_id = (SELECT l3 FROM _rc_legacy_ctx)),
   ARRAY['admin']::text[],
   'remap: [admin, organizer, timemaster] -> deduped [admin]');
@@ -332,21 +336,21 @@ SELECT is(
 -- element order, so sort before asserting.
 SELECT is(
   (SELECT (SELECT array_agg(r ORDER BY r) FROM unnest(m.roles) AS r)
-     FROM public.club_memberships m
-    WHERE m.club_id = (SELECT club FROM _rc_legacy_ctx)
+     FROM public.team_members m
+    WHERE m.organizer_team_id = (SELECT club FROM _rc_legacy_ctx)
       AND m.user_id = (SELECT l4 FROM _rc_legacy_ctx)),
   ARRAY['admin','owner']::text[],
   'remap: [owner, organizer] -> {admin, owner} (owner kept, organizer mapped)');
 
 SELECT is(
-  (SELECT roles FROM public.club_memberships
-    WHERE club_id = (SELECT club FROM _rc_legacy_ctx)
+  (SELECT roles FROM public.team_members
+    WHERE organizer_team_id = (SELECT club FROM _rc_legacy_ctx)
       AND user_id = (SELECT l5 FROM _rc_legacy_ctx)),
   ARRAY['admin']::text[],
   'remap: soft-deleted row is remapped too (no removed_at filter)');
 
 SELECT is(
-  (SELECT count(*)::int FROM public.club_memberships
+  (SELECT count(*)::int FROM public.team_members
     WHERE NOT (roles <@ ARRAY['owner','admin','referee']::text[])),
   0,
   'remap invariant: no row (incl. removed) violates the narrowed role set');
