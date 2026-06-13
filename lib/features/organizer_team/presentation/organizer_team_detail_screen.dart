@@ -7,23 +7,23 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
-import 'package:kubb_app/features/club/application/club_membership_controller.dart';
-import 'package:kubb_app/features/club/application/club_providers.dart';
-import 'package:kubb_app/features/club/data/club_models.dart';
-import 'package:kubb_app/features/club/presentation/club_routes.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_membership_controller.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_providers.dart';
+import 'package:kubb_app/features/organizer_team/data/organizer_team_models.dart';
+import 'package:kubb_app/features/organizer_team/presentation/organizer_team_routes.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
 /// Club detail: header, member roster with role chips, and — for owners /
 /// admins — invite-by-nickname plus per-member role editing.
-class ClubDetailScreen extends ConsumerWidget {
-  const ClubDetailScreen({required this.clubId, super.key});
+class OrganizerTeamDetailScreen extends ConsumerWidget {
+  const OrganizerTeamDetailScreen({required this.clubId, super.key});
 
-  final ClubId clubId;
+  final OrganizerTeamId clubId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final async = ref.watch(clubDetailProvider(clubId));
+    final async = ref.watch(organizerTeamDetailProvider(clubId));
     final myUserId = ref.watch(currentUserIdProvider);
 
     return Scaffold(
@@ -50,7 +50,7 @@ class ClubDetailScreen extends ConsumerWidget {
               .toList(growable: false);
           final isManager = me.isNotEmpty && me.first.isManager;
           return RefreshIndicator(
-            onRefresh: () async => ref.invalidate(clubDetailProvider(clubId)),
+            onRefresh: () async => ref.invalidate(organizerTeamDetailProvider(clubId)),
             child: ListView(
               padding: const EdgeInsets.all(KubbTokens.space4),
               children: [
@@ -70,7 +70,7 @@ class ClubDetailScreen extends ConsumerWidget {
                   KubbButton(
                     variant: KubbButtonVariant.secondary,
                     onPressed: () =>
-                        context.push(ClubRoutes.addMemberFor(clubId.value)),
+                        context.push(OrganizerTeamRoutes.addMemberFor(clubId.value)),
                     child: const Text('Mitglied einladen'),
                   ),
                   const SizedBox(height: KubbTokens.space6),
@@ -115,10 +115,10 @@ class ClubDetailScreen extends ConsumerWidget {
     );
     if (confirm != true || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
-    final notifier = ref.read(clubMembershipControllerProvider.notifier);
+    final notifier = ref.read(organizerTeamMembershipControllerProvider.notifier);
     await notifier.leave(clubId);
     if (!context.mounted) return;
-    if (ref.read(clubMembershipControllerProvider).hasError) {
+    if (ref.read(organizerTeamMembershipControllerProvider).hasError) {
       messenger.showSnackBar(const SnackBar(
         content: Text('Verlassen nicht möglich (z. B. letzter Owner).'),
       ));
@@ -131,7 +131,7 @@ class ClubDetailScreen extends ConsumerWidget {
   Future<void> _editRoles(
     BuildContext context,
     WidgetRef ref,
-    ClubMemberWire member,
+    OrganizerTeamMemberWire member,
   ) async {
     final isSelf = ref.read(currentUserIdProvider) == member.userId;
     final selected = {...member.roles};
@@ -144,7 +144,7 @@ class ClubDetailScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                for (final role in clubRoles)
+                for (final role in teamRoles)
                   CheckboxListTile(
                     dense: true,
                     title: Text(_roleLabel(role)),
@@ -192,9 +192,9 @@ class ClubDetailScreen extends ConsumerWidget {
     );
     if (saved == null || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
-    final notifier = ref.read(clubMembershipControllerProvider.notifier);
+    final notifier = ref.read(organizerTeamMembershipControllerProvider.notifier);
     await notifier.setRoles(clubId, UserId(member.userId), saved.toList());
-    final failed = ref.read(clubMembershipControllerProvider).hasError;
+    final failed = ref.read(organizerTeamMembershipControllerProvider).hasError;
     messenger.showSnackBar(SnackBar(
       content: Text(
         failed
@@ -207,7 +207,7 @@ class ClubDetailScreen extends ConsumerWidget {
   Future<void> _removeMember(
     BuildContext context,
     WidgetRef ref,
-    ClubMemberWire member,
+    OrganizerTeamMemberWire member,
   ) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -228,9 +228,9 @@ class ClubDetailScreen extends ConsumerWidget {
     );
     if (confirm != true || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
-    final notifier = ref.read(clubMembershipControllerProvider.notifier);
+    final notifier = ref.read(organizerTeamMembershipControllerProvider.notifier);
     await notifier.removeMember(clubId, UserId(member.userId));
-    final failed = ref.read(clubMembershipControllerProvider).hasError;
+    final failed = ref.read(organizerTeamMembershipControllerProvider).hasError;
     messenger.showSnackBar(SnackBar(
       content: Text(
         failed
@@ -246,12 +246,12 @@ class ClubDetailScreen extends ConsumerWidget {
 class _JoinRequests extends ConsumerWidget {
   const _JoinRequests({required this.clubId});
 
-  final ClubId clubId;
+  final OrganizerTeamId clubId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final async = ref.watch(clubJoinRequestsProvider(clubId));
+    final async = ref.watch(organizerTeamJoinRequestsProvider(clubId));
     return async.maybeWhen(
       data: (requests) {
         if (requests.isEmpty) return const SizedBox.shrink();
@@ -268,7 +268,7 @@ class _JoinRequests extends ConsumerWidget {
                 onRespond: (accept) => unawaited(() async {
                   final messenger = ScaffoldMessenger.of(context);
                   await ref
-                      .read(clubMembershipControllerProvider.notifier)
+                      .read(organizerTeamMembershipControllerProvider.notifier)
                       .respondJoinRequest(clubId, r.requestId, accept: accept);
                   messenger.showSnackBar(SnackBar(
                     content: Text(accept
@@ -294,7 +294,7 @@ class _JoinRequestRow extends StatelessWidget {
     required this.onRespond,
   });
 
-  final ClubJoinRequestWire request;
+  final OrganizerTeamJoinRequestWire request;
   final KubbTokens tokens;
   final ValueChanged<bool> onRespond;
 
@@ -346,18 +346,8 @@ String _roleLabel(String role) {
       return 'Owner (Vereinsleitung)';
     case 'admin':
       return 'Admin';
-    case 'member':
-      return 'Mitglied';
     case 'referee':
       return 'Schiedsrichter';
-    case 'timemaster':
-      return 'Timemaster';
-    case 'organizer':
-      return 'Organisator';
-    case 'scorekeeper':
-      return 'Anschreiber';
-    case 'treasurer':
-      return 'Kassier';
     default:
       return role;
   }
@@ -370,7 +360,7 @@ class _MemberRow extends StatelessWidget {
     required this.onEdit,
   });
 
-  final ClubMemberWire member;
+  final OrganizerTeamMemberWire member;
   final bool canEdit;
   final VoidCallback onEdit;
 

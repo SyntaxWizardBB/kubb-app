@@ -5,10 +5,10 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/name_availability_hint.dart';
-import 'package:kubb_app/features/club/application/club_membership_controller.dart';
-import 'package:kubb_app/features/club/application/club_name_availability_provider.dart';
-import 'package:kubb_app/features/club/data/club_repository.dart';
-import 'package:kubb_app/features/club/presentation/club_routes.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_membership_controller.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_name_availability_provider.dart';
+import 'package:kubb_app/features/organizer_team/data/organizer_team_repository.dart';
+import 'package:kubb_app/features/organizer_team/presentation/organizer_team_routes.dart';
 import 'package:kubb_app/features/team/application/team_name_availability_provider.dart'
     show NameAvailability;
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -16,15 +16,15 @@ import 'package:kubb_domain/kubb_domain.dart';
 
 /// Club founding form. The capability to found clubs is granted at sign-up via
 /// the early-access organizer code (P7) and checked server-side in
-/// `club_create` — so this screen only asks for a name.
-class ClubCreateScreen extends ConsumerStatefulWidget {
-  const ClubCreateScreen({super.key});
+/// `organizer_team_create` — so this screen only asks for a name.
+class OrganizerTeamCreateScreen extends ConsumerStatefulWidget {
+  const OrganizerTeamCreateScreen({super.key});
 
   @override
-  ConsumerState<ClubCreateScreen> createState() => _ClubCreateScreenState();
+  ConsumerState<OrganizerTeamCreateScreen> createState() => _OrganizerTeamCreateScreenState();
 }
 
-class _ClubCreateScreenState extends ConsumerState<ClubCreateScreen> {
+class _OrganizerTeamCreateScreenState extends ConsumerState<OrganizerTeamCreateScreen> {
   final _nameController = TextEditingController();
   bool _busy = false;
 
@@ -45,7 +45,7 @@ class _ClubCreateScreenState extends ConsumerState<ClubCreateScreen> {
       !_busy &&
       // Block while the name is taken (BUG-2). The server stays the final
       // arbiter on a race.
-      ref.watch(clubNameAvailabilityProvider(_nameController.text.trim()))
+      ref.watch(organizerTeamNameAvailabilityProvider(_nameController.text.trim()))
           .maybeWhen(
             data: (a) => a != NameAvailability.taken,
             orElse: () => true,
@@ -56,18 +56,18 @@ class _ClubCreateScreenState extends ConsumerState<ClubCreateScreen> {
     setState(() => _busy = true);
     try {
       final result =
-          await ref.read(clubMembershipControllerProvider.notifier).create(
+          await ref.read(organizerTeamMembershipControllerProvider.notifier).create(
                 displayName: _nameController.text.trim(),
               );
       if (!mounted) return;
       switch (result) {
-        case ClubActionSuccess<ClubId>(:final value):
-          context.pushReplacement(ClubRoutes.detailFor(value.value));
-        case ClubActionFailure<ClubId>(:final error):
-          final notAllowed = error is ClubActionExceptionError &&
-              error.error is ClubPermissionException;
-          final isDuplicate = error is ClubActionExceptionError &&
-              error.error is ClubDuplicateNameException;
+        case OrganizerTeamActionSuccess<OrganizerTeamId>(:final value):
+          context.pushReplacement(OrganizerTeamRoutes.detailFor(value.value));
+        case OrganizerTeamActionFailure<OrganizerTeamId>(:final error):
+          final notAllowed = error is OrganizerTeamActionExceptionError &&
+              error.error is OrganizerTeamPermissionException;
+          final isDuplicate = error is OrganizerTeamActionExceptionError &&
+              error.error is OrganizerTeamDuplicateNameException;
           messenger.showSnackBar(SnackBar(
             content: Text(
               isDuplicate
@@ -120,7 +120,7 @@ class _ClubCreateScreenState extends ConsumerState<ClubCreateScreen> {
           ),
           Builder(builder: (context) {
             final avail = ref.watch(
-              clubNameAvailabilityProvider(_nameController.text.trim()),
+              organizerTeamNameAvailabilityProvider(_nameController.text.trim()),
             );
             return NameAvailabilityHint(
               isTaken: avail.maybeWhen(

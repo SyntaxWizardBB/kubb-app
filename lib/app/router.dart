@@ -16,10 +16,6 @@ import 'package:kubb_app/features/auth/presentation/edit_profile_screen.dart';
 import 'package:kubb_app/features/auth/presentation/onboarding_tour.dart';
 import 'package:kubb_app/features/auth/presentation/restore_flow.dart';
 import 'package:kubb_app/features/auth/presentation/sign_in_screen.dart';
-import 'package:kubb_app/features/club/presentation/club_add_member_screen.dart';
-import 'package:kubb_app/features/club/presentation/club_create_screen.dart';
-import 'package:kubb_app/features/club/presentation/club_detail_screen.dart';
-import 'package:kubb_app/features/club/presentation/clubs_screen.dart';
 import 'package:kubb_app/features/inbox/application/inbox_controller.dart';
 import 'package:kubb_app/features/inbox/presentation/archive_screen.dart';
 import 'package:kubb_app/features/inbox/presentation/inbox_screen.dart';
@@ -31,6 +27,10 @@ import 'package:kubb_app/features/match/presentation/match_finished_screen.dart'
 import 'package:kubb_app/features/match/presentation/match_lobby_screen.dart';
 import 'package:kubb_app/features/match/presentation/match_result_screen.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
+import 'package:kubb_app/features/organizer_team/presentation/organizer_team_add_member_screen.dart';
+import 'package:kubb_app/features/organizer_team/presentation/organizer_team_create_screen.dart';
+import 'package:kubb_app/features/organizer_team/presentation/organizer_team_detail_screen.dart';
+import 'package:kubb_app/features/organizer_team/presentation/organizer_teams_screen.dart';
 import 'package:kubb_app/features/player/presentation/profile_screen.dart';
 import 'package:kubb_app/features/settings/presentation/settings_screen.dart';
 import 'package:kubb_app/features/social/presentation/friend_profile_screen.dart';
@@ -385,21 +385,21 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 // Meine Vereine (P5): Liste, Gründen (Code-gated) und Detail.
                 path: '/clubs',
-                builder: (_, _) => const ClubsScreen(),
+                builder: (_, _) => const OrganizerTeamsScreen(),
               ),
               GoRoute(
                 path: '/clubs/create',
-                builder: (_, _) => const ClubCreateScreen(),
+                builder: (_, _) => const OrganizerTeamCreateScreen(),
               ),
               GoRoute(
                 path: '/clubs/:id',
                 builder: (_, state) =>
-                    ClubDetailScreen(clubId: ClubId(state.pathParameters['id']!)),
+                    OrganizerTeamDetailScreen(clubId: OrganizerTeamId(state.pathParameters['id']!)),
               ),
               GoRoute(
                 path: '/clubs/:id/add',
-                builder: (_, state) => ClubAddMemberScreen(
-                  clubId: ClubId(state.pathParameters['id']!),
+                builder: (_, state) => OrganizerTeamAddMemberScreen(
+                  clubId: OrganizerTeamId(state.pathParameters['id']!),
                 ),
               ),
               GoRoute(

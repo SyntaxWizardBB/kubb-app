@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_providers.dart';
+import 'package:kubb_app/features/organizer_team/data/organizer_team_models.dart';
 import 'package:kubb_app/features/tournament/application/server_clock_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
@@ -65,12 +67,15 @@ Future<void> _pump(
   WidgetTester tester, {
   required List<TournamentAdminCardRef> cards,
   TournamentRemote? remote,
+  List<OrganizerTeamWire> teams = const <OrganizerTeamWire>[],
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         administrableTournamentsProvider.overrideWith((_) async => cards),
         serverClockOffsetProvider.overrideWith((_) async => Duration.zero),
+        // P4-C: the teams section source — overridden so no Supabase runs.
+        organizerTeamListProvider.overrideWith((_) async => teams),
         // Suppress the real 1s periodic so no timer leaks past the test.
         dashboardCountdownTickerProvider
             .overrideWithValue(const Stream<void>.empty()),
@@ -149,5 +154,34 @@ void main() {
     await _pump(tester, cards: const []);
     expect(find.byType(KubbEmptyState), findsOneWidget);
     expect(find.byType(OrganizerTournamentCard), findsNothing);
+  });
+
+  // P4-C (ADR-0032 §4): "Meine Veranstalterteams" section fed from
+  // organizerTeamListProvider, trailing the tournament cards.
+  testWidgets('renders the organizer teams section with team names',
+      (tester) async {
+    await _pump(
+      tester,
+      cards: [_card()],
+      teams: [
+        OrganizerTeamWire(
+          id: 'c-1',
+          displayName: 'Kubb Bären Bern',
+          createdAt: DateTime.utc(2026),
+        ),
+      ],
+    );
+
+    expect(find.text('MEINE VERANSTALTERTEAMS'), findsOneWidget);
+    expect(find.text('Kubb Bären Bern'), findsOneWidget);
+    // The existing dashboard content stays intact next to the section.
+    expect(find.byType(OrganizerTournamentCard), findsOneWidget);
+  });
+
+  testWidgets('hides the teams section when the caller has no teams',
+      (tester) async {
+    await _pump(tester, cards: [_card()]);
+
+    expect(find.text('MEINE VERANSTALTERTEAMS'), findsNothing);
   });
 }

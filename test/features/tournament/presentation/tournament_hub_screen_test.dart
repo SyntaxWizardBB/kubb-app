@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_mode_card.dart';
-import 'package:kubb_app/features/club/application/club_providers.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_hub_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';

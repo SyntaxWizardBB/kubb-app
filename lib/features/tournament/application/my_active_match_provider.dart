@@ -139,6 +139,111 @@ final myActiveMatchesProvider = Provider.autoDispose
   );
 });
 
+/// One cross-tournament "ongoing match" pick: the per-tournament selection
+/// plus the tournament summary, so the Home tile can render tournament
+/// context and compose the match-detail route (P5-C, ADR-0032 §7).
+@immutable
+class MyActiveTournamentMatch {
+  const MyActiveTournamentMatch({
+    required this.tournament,
+    required this.active,
+  });
+
+  /// Summary of the tournament the match belongs to.
+  final TournamentSummaryRef tournament;
+
+  /// The per-tournament pick from [myActiveMatchProvider].
+  final MyActiveMatch active;
+}
+
+/// The caller's most urgent open TOURNAMENT match across all registered
+/// tournaments — source of the Home-screen "Laufendes Match" tile (P5-C,
+/// ADR-0032 §7).
+///
+/// Pure client-side fold (OE-6): reads [myTournamentRegistrationsProvider]
+/// and watches the existing per-tournament [myActiveMatchProvider] for each
+/// candidate tournament — no new transport, no polling (ADR-0029); liveness
+/// comes from the realtime match-list channel each per-tournament provider
+/// already keeps alive. Only tournament matches are considered (the 1vs1
+/// `matches` feature is a separate context and stays untouched).
+///
+/// Candidates are the caller's non-withdrawn registrations in LIVE
+/// tournaments — matches only exist between start and finalization, so this
+/// keeps the per-tournament fan-out minimal. Urgency follows [_byUrgency]
+/// (awaitingResults before scheduled, then earliest round / match number);
+/// ties across tournaments break deterministically on the match id. `null`
+/// when the caller has no candidate registration or no open match anywhere.
+/// Loading/error anywhere propagates, so the tile stays hidden instead of
+/// flashing a less urgent match while another source resolves.
+//
+// ignore: specify_nonobvious_property_types
+final myActiveTournamentMatchProvider =
+    Provider.autoDispose<AsyncValue<MyActiveTournamentMatch?>>((ref) {
+  final regsAsync = ref.watch(myTournamentRegistrationsProvider);
+
+  return regsAsync.when(
+    loading: () => const AsyncValue<MyActiveTournamentMatch?>.loading(),
+    error: AsyncValue<MyActiveTournamentMatch?>.error,
+    data: (regs) {
+      // De-duplicate tournaments (a caller can hold more than one
+      // registration row per tournament across roster changes).
+      final candidates = <String, TournamentSummaryRef>{};
+      for (final r in regs) {
+        if (r.status == TournamentParticipantStatus.withdrawn) continue;
+        if (r.tournament.status != TournamentStatus.live) continue;
+        candidates[r.tournament.tournamentId.value] = r.tournament;
+      }
+      if (candidates.isEmpty) {
+        return const AsyncValue<MyActiveTournamentMatch?>.data(null);
+      }
+
+      MyActiveTournamentMatch? best;
+      var anyLoading = false;
+      for (final tournament in candidates.values) {
+        final activeAsync =
+            ref.watch(myActiveMatchProvider(tournament.tournamentId));
+        if (activeAsync is AsyncError<MyActiveMatch?>) {
+          return AsyncValue<MyActiveTournamentMatch?>.error(
+            activeAsync.error,
+            activeAsync.stackTrace,
+          );
+        }
+        if (!activeAsync.hasValue) {
+          // First load of this tournament's match list; previous data (kept
+          // across realtime invalidations) is reused to avoid flicker.
+          anyLoading = true;
+          continue;
+        }
+        final active = activeAsync.value;
+        if (active == null) continue;
+        final pick = MyActiveTournamentMatch(
+          tournament: tournament,
+          active: active,
+        );
+        if (best == null || _byCrossTournamentUrgency(pick, best) < 0) {
+          best = pick;
+        }
+      }
+      if (anyLoading) {
+        return const AsyncValue<MyActiveTournamentMatch?>.loading();
+      }
+      return AsyncValue<MyActiveTournamentMatch?>.data(best);
+    },
+  );
+});
+
+/// Same urgency ordering as [_byUrgency]; equal-urgency picks from
+/// different tournaments fall back to the lexicographic match id so the
+/// fold is deterministic regardless of registration order.
+int _byCrossTournamentUrgency(
+  MyActiveTournamentMatch a,
+  MyActiveTournamentMatch b,
+) {
+  final byUrgency = _byUrgency(a.active.match, b.active.match);
+  if (byUrgency != 0) return byUrgency;
+  return a.active.match.matchId.value.compareTo(b.active.match.matchId.value);
+}
+
 bool _isOpen(TournamentMatchStatus s) =>
     s == TournamentMatchStatus.scheduled ||
     s == TournamentMatchStatus.awaitingResults;

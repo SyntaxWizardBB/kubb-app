@@ -1,6 +1,6 @@
 /// Path constants for the club (Verein) feature. Registered in the Home
 /// branch of the shell router next to the team routes.
-abstract final class ClubRoutes {
+abstract final class OrganizerTeamRoutes {
   static const list = '/clubs';
   static const create = '/clubs/create';
 

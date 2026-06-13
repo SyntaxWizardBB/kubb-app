@@ -989,7 +989,8 @@ void main() {
     expect(find.text('Kubb Club Zürich'), findsNothing);
   });
 
-  testWidgets('selecting an organizing club flows club_id into the create call',
+  testWidgets(
+      'selecting an organizing club flows organizer_team_id into the create call',
       (tester) async {
     final fake = await _pumpWizard(
       tester,
@@ -1019,7 +1020,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
     await tester.pumpAndSettle();
 
-    expect(fake.createdSetup?['club_id'], 'c-1');
+    expect(fake.createdSetup?['organizer_team_id'], 'c-1');
   });
 
   testWidgets('team size and pitch range flow into the create call',
@@ -1513,9 +1514,10 @@ void main() {
     expect(find.text('Übersicht'), findsOneWidget);
 
     // The summary value is the resolved club name, NOT the field label
-    // "Ausrichtender Verein" (which only appears once, as the row label).
+    // "Ausrichtendes Veranstalterteam" (which only appears once, as the row
+    // label).
     expect(find.text('Kubb Club Aarau'), findsOneWidget);
-    expect(find.text('Ausrichtender Verein'), findsOneWidget);
+    expect(find.text('Ausrichtendes Veranstalterteam'), findsOneWidget);
   });
 
   testWidgets(

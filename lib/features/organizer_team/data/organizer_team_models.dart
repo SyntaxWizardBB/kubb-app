@@ -1,11 +1,12 @@
-// Wire models for the club RPCs. Plain classes with manual parsing (no
-// codegen) — the payloads are small and mirror the snake_case keys returned
-// by `club_list_for_caller` / `club_get` (migration 20260901000013).
+// Wire models for the organizer-team RPCs. Plain classes with manual parsing
+// (no codegen) — the payloads are small and mirror the snake_case keys returned
+// by `organizer_team_list_for_caller` / `organizer_team_get`.
 
-/// Club header, from a `club_list_for_caller` row (raw `clubs` row keyed by
-/// `id`) or the `club_get` header block (keyed by `club_id`).
-class ClubWire {
-  const ClubWire({
+/// Organizer-team header, from an `organizer_team_list_for_caller` row (raw
+/// `organizer_teams` row keyed by `id`) or the `organizer_team_get` header
+/// block (keyed by `organizer_team_id`).
+class OrganizerTeamWire {
+  const OrganizerTeamWire({
     required this.id,
     required this.displayName,
     required this.createdAt,
@@ -13,11 +14,12 @@ class ClubWire {
     this.dissolvedAt,
   });
 
-  factory ClubWire.fromJson(Map<String, dynamic> json) {
+  factory OrganizerTeamWire.fromJson(Map<String, dynamic> json) {
     DateTime ts(Object? v) => DateTime.parse(v! as String).toUtc();
-    return ClubWire(
-      // `club_list_for_caller` returns `id`; `club_get` returns `club_id`.
-      id: (json['club_id'] ?? json['id']) as String,
+    return OrganizerTeamWire(
+      // `organizer_team_list_for_caller` returns `id`; `organizer_team_get`
+      // returns `organizer_team_id`.
+      id: (json['organizer_team_id'] ?? json['id']) as String,
       displayName: json['display_name'] as String,
       createdBy: json['created_by'] as String?,
       dissolvedAt: json['dissolved_at'] == null
@@ -34,11 +36,10 @@ class ClubWire {
   final DateTime createdAt;
 }
 
-/// One member of a club, from the `members` array of `club_get`. `roles` is a
-/// set drawn from {owner, admin, member, referee, timemaster, organizer,
-/// scorekeeper, treasurer}.
-class ClubMemberWire {
-  const ClubMemberWire({
+/// One member of a club, from the `members` array of `organizer_team_get`. `roles` is a
+/// set drawn from {owner, admin, referee}.
+class OrganizerTeamMemberWire {
+  const OrganizerTeamMemberWire({
     required this.membershipId,
     required this.userId,
     required this.roles,
@@ -46,8 +47,8 @@ class ClubMemberWire {
     this.displayName,
   });
 
-  factory ClubMemberWire.fromJson(Map<String, dynamic> json) {
-    return ClubMemberWire(
+  factory OrganizerTeamMemberWire.fromJson(Map<String, dynamic> json) {
+    return OrganizerTeamMemberWire(
       membershipId: json['membership_id'] as String,
       userId: json['user_id'] as String,
       displayName: json['display_name'] as String?,
@@ -67,34 +68,34 @@ class ClubMemberWire {
   bool get isManager => roles.contains('owner') || roles.contains('admin');
 }
 
-/// Full club detail: header + members, from `club_get`.
-class ClubDetail {
-  const ClubDetail({required this.club, required this.members});
+/// Full club detail: header + members, from `organizer_team_get`.
+class OrganizerTeamDetail {
+  const OrganizerTeamDetail({required this.club, required this.members});
 
-  factory ClubDetail.fromJson(Map<String, dynamic> json) {
-    return ClubDetail(
-      club: ClubWire.fromJson(json),
+  factory OrganizerTeamDetail.fromJson(Map<String, dynamic> json) {
+    return OrganizerTeamDetail(
+      club: OrganizerTeamWire.fromJson(json),
       members: (json['members'] as List<dynamic>? ?? const <dynamic>[])
-          .map((e) => ClubMemberWire.fromJson(e as Map<String, dynamic>))
+          .map((e) => OrganizerTeamMemberWire.fromJson(e as Map<String, dynamic>))
           .toList(growable: false),
     );
   }
 
-  final ClubWire club;
-  final List<ClubMemberWire> members;
+  final OrganizerTeamWire club;
+  final List<OrganizerTeamMemberWire> members;
 }
 
-/// A pending join request, from `club_list_join_requests` (manager view).
-class ClubJoinRequestWire {
-  const ClubJoinRequestWire({
+/// A pending join request, from `organizer_team_list_join_requests` (manager view).
+class OrganizerTeamJoinRequestWire {
+  const OrganizerTeamJoinRequestWire({
     required this.requestId,
     required this.userId,
     required this.createdAt,
     this.displayName,
   });
 
-  factory ClubJoinRequestWire.fromJson(Map<String, dynamic> json) {
-    return ClubJoinRequestWire(
+  factory OrganizerTeamJoinRequestWire.fromJson(Map<String, dynamic> json) {
+    return OrganizerTeamJoinRequestWire(
       requestId: json['request_id'] as String,
       userId: json['user_id'] as String,
       displayName: json['display_name'] as String?,
@@ -109,13 +110,8 @@ class ClubJoinRequestWire {
 }
 
 /// The full set of assignable club roles, in display order.
-const clubRoles = <String>[
+const teamRoles = <String>[
   'owner',
   'admin',
-  'member',
   'referee',
-  'timemaster',
-  'organizer',
-  'scorekeeper',
-  'treasurer',
 ];

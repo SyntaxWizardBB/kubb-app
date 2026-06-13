@@ -19,14 +19,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get organizerDashboardEmptyBody =>
-      'Sobald du ein Turnier veröffentlichst oder als Verein verwaltest, erscheint es hier im Cockpit.';
+      'Sobald du ein Turnier veröffentlichst oder als Veranstalterteam verwaltest, erscheint es hier im Cockpit.';
 
   @override
   String get organizerDashboardGateTitle => 'Kein Zugriff';
 
   @override
   String get organizerDashboardGateBody =>
-      'Du bist nicht berechtigt, dieses Turnier zu steuern. Wende dich an den Veranstalter oder den Verein.';
+      'Du bist nicht berechtigt, dieses Turnier zu steuern. Wende dich an den Veranstalter oder das Veranstalterteam.';
 
   @override
   String get organizerDashboardError => 'Cockpit konnte nicht geladen werden.';
@@ -412,7 +412,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphVisibilityPrivate => 'Privat';
 
   @override
-  String get stageGraphVisibilityClub => 'Verein';
+  String get stageGraphVisibilityClub => 'Veranstalterteam';
 
   @override
   String get stageGraphVisibilityPublic => 'Öffentlich';
@@ -1851,11 +1851,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die Jahreszahl wird automatisch angehängt (z.B. 2026).';
 
   @override
-  String get tournamentWizardClubLabel => 'Ausrichtender Verein';
+  String get tournamentWizardClubLabel => 'Ausrichtendes Veranstalterteam';
 
   @override
   String get tournamentWizardClubHint =>
-      'Vereine, die du verwalten kannst, können dieses Turnier ebenfalls verwalten. Ohne Verein (Spasstournier) zählt das Turnier nicht für die Wertung.';
+      'Veranstalterteams, die du verwalten kannst, können dieses Turnier ebenfalls verwalten. Ohne Veranstalterteam (Spasstournier) zählt das Turnier nicht für die Wertung.';
 
   @override
   String get tournamentWizardClubNone => 'Spasstournier – ohne Wertung';
@@ -3141,7 +3141,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentDetailOrganizationHeading => 'Veranstalter & Liga';
 
   @override
-  String get tournamentDetailClubLabel => 'Verein';
+  String get tournamentDetailClubLabel => 'Veranstalterteam';
 
   @override
   String get tournamentDetailFunTournament => 'Spasstournier – ohne Wertung';
@@ -4736,8 +4736,25 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get clubNameTakenError =>
-      'Dieser Vereinsname ist bereits vergeben — bitte wähle einen anderen.';
+      'Dieser Veranstalterteam-Name ist bereits vergeben — bitte wähle einen anderen.';
 
   @override
   String get nameCheckingHint => 'Name wird geprüft …';
+
+  @override
+  String get organizerTileTitle => 'Veranstalter';
+
+  @override
+  String get organizerTileSubtitle => 'Dashboard & Veranstalterteams';
+
+  @override
+  String get organizerDashboardTeamsTitle => 'Meine Veranstalterteams';
+
+  @override
+  String get homeOngoingMatchTitle => 'Laufendes Match';
+
+  @override
+  String homeOngoingMatchSubtitle(String tournament, String opponent) {
+    return '$tournament · gegen $opponent';
+  }
 }

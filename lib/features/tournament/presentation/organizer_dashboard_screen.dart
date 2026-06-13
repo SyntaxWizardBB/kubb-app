@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kubb_app/core/ui/icons.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_providers.dart';
+import 'package:kubb_app/features/organizer_team/data/organizer_team_models.dart';
 import 'package:kubb_app/features/tournament/application/server_clock_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/organizer_tournament_card.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 /// Organizer dashboard OVERVIEW (ADR-0031 Phase B, Block B4) — the
 /// multi-tournament veranstalter cockpit.
@@ -45,6 +49,15 @@ class OrganizerDashboardScreen extends ConsumerWidget {
     // DoD-14: rendering only, no server fetch). Injectable so widget tests can
     // drive (or suppress) the tick without leaking real timers.
     final ticker = ref.watch(dashboardCountdownTickerProvider);
+    // P4-C (ADR-0032 §4): the caller's organizer teams for the
+    // "Meine Veranstalterteams" section below the tournament cards.
+    // Fail-closed: loading/error collapse to an empty list, which hides
+    // the section entirely (no placeholder). One-shot Future read, no
+    // polling (ADR-0029).
+    final teams = ref.watch(organizerTeamListProvider).maybeWhen(
+          data: (clubs) => clubs,
+          orElse: () => const <OrganizerTeamWire>[],
+        );
 
     return Scaffold(
       backgroundColor: tokens.bg,
@@ -66,7 +79,7 @@ class OrganizerDashboardScreen extends ConsumerWidget {
           ),
         ),
         data: (cards) {
-          if (cards.isEmpty) {
+          if (cards.isEmpty && teams.isEmpty) {
             // In-screen gate (OE-B5) for the overview: the source RPC
             // `tournament_list_administrable` is itself server-gated by
             // `tournament_caller_can_manage` (Creator OR club
@@ -82,24 +95,41 @@ class OrganizerDashboardScreen extends ConsumerWidget {
               body: l.organizerDashboardEmptyBody,
             );
           }
-          return ListView.separated(
+          // P4-C: plain ListView (was ListView.separated) so the teams
+          // section can trail the tournament cards in the same scroll.
+          return ListView(
             padding: const EdgeInsets.all(KubbTokens.space4),
-            itemCount: cards.length,
-            separatorBuilder: (_, _) =>
-                const SizedBox(height: KubbTokens.space3),
-            itemBuilder: (context, index) {
-              final card = cards[index];
-              return OrganizerTournamentCard(
-                card: card,
-                serverOffset: offset,
-                ticker: ticker,
-                onOpenDetail: () => context.push(
-                  TournamentRoutes.dashboardDetail(card.tournamentId.value),
+            children: [
+              if (cards.isEmpty)
+                // Teams exist but no administrable tournament yet — keep
+                // the established empty state above the teams section.
+                KubbEmptyState(
+                  title: l.organizerDashboardEmptyTitle,
+                  body: l.organizerDashboardEmptyBody,
+                )
+              else
+                for (var i = 0; i < cards.length; i++) ...[
+                  if (i > 0) const SizedBox(height: KubbTokens.space3),
+                  OrganizerTournamentCard(
+                    card: cards[i],
+                    serverOffset: offset,
+                    ticker: ticker,
+                    onOpenDetail: () => context.push(
+                      TournamentRoutes.dashboardDetail(
+                        cards[i].tournamentId.value,
+                      ),
+                    ),
+                    onPrimaryAction: () => _runPrimaryAction(ref, cards[i]),
+                  ),
+                ],
+              if (teams.isNotEmpty) ...[
+                const SizedBox(height: KubbTokens.space5),
+                _OrganizerTeamsSection(
+                  title: l.organizerDashboardTeamsTitle,
+                  teams: teams,
                 ),
-                onPrimaryAction: () =>
-                    _runPrimaryAction(ref, card),
-              );
-            },
+              ],
+            ],
           );
         },
       ),
@@ -122,6 +152,81 @@ class OrganizerDashboardScreen extends ConsumerWidget {
       return;
     }
     ref.read(_dashboardActionRunner)(actions.startTournament(id));
+  }
+}
+
+/// P4-C (ADR-0032 §4): "Meine Veranstalterteams" — the caller's organizer
+/// teams as a trailing section of the dashboard scroll. Visual pattern
+/// mirrors the home screen's RecentSection (uppercase label + raised card
+/// with divider rows); tokens exclusively via [KubbTokens]. The parent only
+/// renders this with a non-empty [teams] list (empty state = hidden).
+class _OrganizerTeamsSection extends StatelessWidget {
+  const _OrganizerTeamsSection({required this.title, required this.teams});
+
+  final String title;
+  final List<OrganizerTeamWire> teams;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final t = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title.toUpperCase(),
+          style: t.labelSmall?.copyWith(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.88,
+            color: tokens.fgMuted,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        Container(
+          decoration: BoxDecoration(
+            color: tokens.bgRaised,
+            borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space3),
+          child: Column(
+            children: [
+              for (var i = 0; i < teams.length; i++)
+                Container(
+                  decoration: BoxDecoration(
+                    border: i < teams.length - 1
+                        ? Border(bottom: BorderSide(color: tokens.line))
+                        : null,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: KubbTokens.space3,
+                  ),
+                  child: Row(
+                    children: [
+                      KubbIcon(
+                        LucideIcons.shield,
+                        size: 20,
+                        color: tokens.fgMuted,
+                      ),
+                      const SizedBox(width: KubbTokens.space3),
+                      Expanded(
+                        child: Text(
+                          teams[i].displayName,
+                          style: t.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: tokens.fg,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 

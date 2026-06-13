@@ -5,12 +5,12 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
-import 'package:kubb_app/features/club/application/club_membership_controller.dart';
-import 'package:kubb_app/features/club/application/club_providers.dart';
 import 'package:kubb_app/features/inbox/application/inbox_controller.dart';
 import 'package:kubb_app/features/inbox/data/inbox_message.dart';
 import 'package:kubb_app/features/match/application/match_providers.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_membership_controller.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_providers.dart';
 import 'package:kubb_app/features/social/application/social_providers.dart';
 import 'package:kubb_app/features/social/presentation/social_routes.dart';
 import 'package:kubb_app/features/team/application/team_list_provider.dart';
@@ -166,6 +166,7 @@ class _MessageTile extends ConsumerWidget {
       case InboxMessageKind.clubInvitation:
       case InboxMessageKind.clubMemberRemoved:
       case InboxMessageKind.clubJoinRequest:
+      case InboxMessageKind.clubRoleChanged:
       case InboxMessageKind.tournamentShootout:
       case InboxMessageKind.tournamentInvitation:
         return const Color(0xFFFBF2D6);
@@ -202,11 +203,13 @@ class _MessageTile extends ConsumerWidget {
       case InboxMessageKind.teamDissolved:
         return 'Team aufgelöst';
       case InboxMessageKind.clubInvitation:
-        return 'Vereins-Einladung';
+        return 'Veranstalterteam-Einladung';
       case InboxMessageKind.clubMemberRemoved:
-        return 'Vereins-Änderung';
+        return 'Veranstalterteam-Änderung';
       case InboxMessageKind.clubJoinRequest:
         return 'Beitrittsanfrage';
+      case InboxMessageKind.clubRoleChanged:
+        return 'Rolle geändert';
       case InboxMessageKind.tournamentShootout:
         return 'Shoot-Out';
       case InboxMessageKind.tournamentFinished:
@@ -391,7 +394,7 @@ class _MessageDetail extends ConsumerWidget {
     // 'request_id'. message.kind disambiguates which controller responds.
     final invitationId = message.actionPayload?['invitation_id'] as String?;
     final joinRequestId = message.actionPayload?['request_id'] as String?;
-    final clubId = message.actionPayload?['club_id'] as String?;
+    final clubId = message.actionPayload?['organizer_team_id'] as String?;
     // P6 shoot-out task payload (action_payload.kind == 'shootout'): carries
     // the tournament id + the tie group's zero-based start_rank.
     final shootoutTournamentId =
@@ -778,9 +781,9 @@ class _MessageDetail extends ConsumerWidget {
       accept: accept,
       acceptedLabel: 'Vereins-Einladung angenommen',
       run: () => ref
-          .read(clubMembershipControllerProvider.notifier)
-          .respondInvitation(ClubInvitationId(invitationId), accept: accept),
-      invalidate: () => ref.invalidate(clubListProvider),
+          .read(organizerTeamMembershipControllerProvider.notifier)
+          .respondInvitation(OrganizerTeamInvitationId(invitationId), accept: accept),
+      invalidate: () => ref.invalidate(organizerTeamListProvider),
     );
   }
 
@@ -822,10 +825,10 @@ class _MessageDetail extends ConsumerWidget {
       accept: accept,
       acceptedLabel: 'Beitritt aufgenommen',
       run: () => ref
-          .read(clubMembershipControllerProvider.notifier)
-          .respondJoinRequest(ClubId(clubId), requestId, accept: accept),
+          .read(organizerTeamMembershipControllerProvider.notifier)
+          .respondJoinRequest(OrganizerTeamId(clubId), requestId, accept: accept),
       invalidate: () =>
-          ref.invalidate(clubJoinRequestsProvider(ClubId(clubId))),
+          ref.invalidate(organizerTeamJoinRequestsProvider(OrganizerTeamId(clubId))),
     );
   }
 

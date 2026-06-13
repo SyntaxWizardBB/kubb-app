@@ -620,12 +620,12 @@ void main() {
       expect(setup['ko_round_formats'], isEmpty);
     });
 
-    test('club_id is null by default and round-trips when set', () {
+    test('organizer_team_id is null by default and round-trips when set', () {
       const none = TournamentConfigDraft();
-      expect(none.toSetupConfig()['club_id'], isNull);
+      expect(none.toSetupConfig()['organizer_team_id'], isNull);
 
       const linked = TournamentConfigDraft(clubId: 'club-1');
-      expect(linked.toSetupConfig()['club_id'], 'club-1');
+      expect(linked.toSetupConfig()['organizer_team_id'], 'club-1');
 
       // copyWith carries it; clearClubId resets to a personal tournament.
       expect(none.copyWith(clubId: 'club-2').clubId, 'club-2');

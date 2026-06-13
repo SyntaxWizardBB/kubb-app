@@ -1,7 +1,9 @@
 // ADR-0031 Phase B, Block B1c — canAdministerTournamentProvider (K4 gate).
+// Updated for the gate split (ADR-0032 P2-C, migration 20261281000000):
 //
-// Access = Creator OR active club role in {owner, admin, organizer, referee}.
-// Mirrors canManageTournamentClubProvider but ADDS `referee` and ORs in the
+// Access = Creator OR active club role in {owner, admin, referee} — the
+// client mirror of `tournament_caller_can_administer`. Mirrors
+// canManageTournamentClubProvider but ADDS `referee` and ORs in the
 // per-tournament creator check. Resolves false when signed-out, while the
 // club read is loading, and on error. The server stays the security boundary.
 
@@ -10,23 +12,23 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
-import 'package:kubb_app/features/club/application/club_providers.dart';
-import 'package:kubb_app/features/club/data/club_models.dart';
+import 'package:kubb_app/features/organizer_team/application/organizer_team_providers.dart';
+import 'package:kubb_app/features/organizer_team/data/organizer_team_models.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
 const _userId = 'user-1';
 const _clubId = 'club-1';
 
-ClubDetail _clubWith(List<String> rolesForUser1) {
-  return ClubDetail(
-    club: ClubWire(
+OrganizerTeamDetail _clubWith(List<String> rolesForUser1) {
+  return OrganizerTeamDetail(
+    club: OrganizerTeamWire(
       id: _clubId,
       displayName: 'Club 1',
       createdAt: DateTime.utc(2026),
     ),
-    members: <ClubMemberWire>[
-      ClubMemberWire(
+    members: <OrganizerTeamMemberWire>[
+      OrganizerTeamMemberWire(
         membershipId: 'm-1',
         userId: _userId,
         roles: rolesForUser1,
@@ -40,17 +42,17 @@ ClubDetail _clubWith(List<String> rolesForUser1) {
 /// for `_clubId` resolves to [club] (or stays loading / errors).
 ProviderContainer _container({
   required String? userId,
-  ClubDetail? club,
+  OrganizerTeamDetail? club,
   bool loading = false,
   bool error = false,
 }) {
   return ProviderContainer(
     overrides: [
       currentUserIdProvider.overrideWithValue(userId),
-      clubDetailProvider.overrideWith((ref, clubId) async {
+      organizerTeamDetailProvider.overrideWith((ref, clubId) async {
         if (loading) {
           // Never completes — keeps the FutureProvider in AsyncLoading.
-          return Completer<ClubDetail>().future;
+          return Completer<OrganizerTeamDetail>().future;
         }
         if (error) {
           throw StateError('club read failed');
@@ -63,7 +65,7 @@ ProviderContainer _container({
 
 /// Reads the gate once, after letting any async club read settle.
 ///
-/// The gate Provider watches `clubDetailProvider` (a FutureProvider). We must
+/// The gate Provider watches `organizerTeamDetailProvider` (a FutureProvider). We must
 /// keep that future provider subscribed and await it so it transitions out of
 /// AsyncLoading before we read the gate — a bare `read` would start the future
 /// and observe it still loading. `loading` tests skip the await on purpose.
@@ -75,12 +77,12 @@ Future<bool> _read(
 }) async {
   if (clubId != null && awaitClub) {
     final sub = c.listen(
-      clubDetailProvider(ClubId(clubId)),
+      organizerTeamDetailProvider(OrganizerTeamId(clubId)),
       (_, _) {},
     );
     addTearDown(sub.close);
     try {
-      await c.read(clubDetailProvider(ClubId(clubId)).future);
+      await c.read(organizerTeamDetailProvider(OrganizerTeamId(clubId)).future);
     } on Object {
       // Error path: the gate must resolve false on a failed club read.
     }
@@ -97,10 +99,11 @@ void main() {
     expect(await _read(c, clubId: null, createdBy: _userId), isTrue);
   });
 
-  test('club referee -> true (the K4 addition)', () async {
+  test('club referee (non-creator) -> true (the K4 addition)', () async {
     final c = _container(userId: _userId, club: _clubWith(const ['referee']));
     addTearDown(c.dispose);
-    expect(await _read(c), isTrue);
+    // Explicit non-creator: authority comes from the referee role alone.
+    expect(await _read(c, createdBy: 'someone-else'), isTrue);
   });
 
   test('club owner -> true', () async {
@@ -115,10 +118,12 @@ void main() {
     expect(await _read(c), isTrue);
   });
 
-  test('club organizer -> true', () async {
+  test('legacy organizer role -> false (gate split removed it)', () async {
+    // The organizer role was consolidated away (P1) and dropped from the
+    // administer predicate (P2-C); a stale row must not grant access.
     final c = _container(userId: _userId, club: _clubWith(const ['organizer']));
     addTearDown(c.dispose);
-    expect(await _read(c), isTrue);
+    expect(await _read(c, createdBy: 'someone-else'), isFalse);
   });
 
   test('plain member -> false', () async {

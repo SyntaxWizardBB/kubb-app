@@ -63,7 +63,7 @@ BEGIN
     VALUES ('Wiesen Kubbler', 'B', v_owner)
     RETURNING id INTO v_team_id;
 
-  INSERT INTO public.clubs(display_name, created_by)
+  INSERT INTO public.organizer_teams(display_name, created_by)
     VALUES ('Meadow Club', v_owner)
     RETURNING id INTO v_club_id;
 
@@ -117,32 +117,32 @@ SELECT is(
   true,
   'team: excluding the team''s own id makes its name available (rename)');
 
--- ---- 8. club_name_available ------------------------------------------
+-- ---- 8. organizer_team_name_available ---------------------------------
 
-SELECT is(public.club_name_available('Anderer Verein'), true,
+SELECT is(public.organizer_team_name_available('Anderer Verein'), true,
   'club: a free name is available');
 
-SELECT is(public.club_name_available('  MEADOW club '), false,
+SELECT is(public.organizer_team_name_available('  MEADOW club '), false,
   'club: an existing name is not available (ci/ws-insensitive)');
 
 SELECT is(
-  public.club_name_available('Meadow Club',
+  public.organizer_team_name_available('Meadow Club',
                              (SELECT club_id FROM _nameuniq_ctx)),
   true,
   'club: excluding the club''s own id makes its name available');
 
--- ---- 9. club_create raises 23505 on a duplicate name -----------------
+-- ---- 9. organizer_team_create raises 23505 on a duplicate name --------
 
 SELECT throws_ok(
-  $$ SELECT public.club_create('meadow club') $$,
+  $$ SELECT public.organizer_team_create('meadow club') $$,
   '23505',
   NULL,
-  'club_create: a duplicate name raises ERRCODE 23505');
+  'organizer_team_create: a duplicate name raises ERRCODE 23505');
 
 -- A fresh name still succeeds for an allowed founder.
 SELECT lives_ok(
-  $$ SELECT public.club_create('Totally Fresh Club') $$,
-  'club_create: a fresh unique name succeeds');
+  $$ SELECT public.organizer_team_create('Totally Fresh Club') $$,
+  'organizer_team_create: a fresh unique name succeeds');
 
 SELECT * FROM finish();
 
