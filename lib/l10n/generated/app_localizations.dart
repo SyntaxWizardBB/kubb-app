@@ -106,6 +106,18 @@ abstract class AppLocalizations {
   /// **'Turnier-Steuerung'**
   String get organizerDashboardTitle;
 
+  /// Tab label for the administrable-tournaments tab of the organizer dashboard
+  ///
+  /// In de, this message translates to:
+  /// **'Turniere'**
+  String get organizerDashboardTabTournaments;
+
+  /// Tab label for the organizer-teams tab of the organizer dashboard
+  ///
+  /// In de, this message translates to:
+  /// **'Veranstalterteams'**
+  String get organizerDashboardTabTeams;
+
   /// Empty-state title shown when the caller administers no live tournaments
   ///
   /// In de, this message translates to:
@@ -340,17 +352,17 @@ abstract class AppLocalizations {
   /// **'Stufen-Graph'**
   String get stageGraphTitle;
 
-  /// Tournament-hub tile title that opens the stage-graph builder
+  /// Setup-wizard entry-point button label that opens the stage-graph builder
   ///
   /// In de, this message translates to:
-  /// **'Stufen-Graph bauen'**
-  String get stageGraphHubTileTitle;
+  /// **'Stufengraph bauen'**
+  String get tournamentSetupStageGraphEntry;
 
-  /// Tournament-hub tile subtitle for the stage-graph builder
+  /// Helper text under the stage-graph builder entry-point in the setup wizard
   ///
   /// In de, this message translates to:
   /// **'Stufen, Routing und Validierung komponieren'**
-  String get stageGraphHubTileSubtitle;
+  String get tournamentSetupStageGraphEntryHint;
 
   /// Section title for the field-size input
   ///
@@ -4528,24 +4540,6 @@ abstract class AppLocalizations {
   /// **'Abgeschlossene Turniere ansehen'**
   String get tournamentHubPastSubtitle;
 
-  /// Hub tile: mercenary market (coming soon)
-  ///
-  /// In de, this message translates to:
-  /// **'Söldnermarkt'**
-  String get tournamentHubMercenaryTitle;
-
-  /// Hub tile subtitle for the mercenary market, includes the coming-soon hint
-  ///
-  /// In de, this message translates to:
-  /// **'Bald verfügbar – Mitspieler für Turniere finden'**
-  String get tournamentHubMercenarySubtitle;
-
-  /// Coming-soon marker shown on not-yet-available hub tiles
-  ///
-  /// In de, this message translates to:
-  /// **'Coming Soon'**
-  String get tournamentHubComingSoonBadge;
-
   /// Hub tile title and app-bar title for the all-time tournament leaderboard
   ///
   /// In de, this message translates to:
@@ -4701,30 +4695,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Sobald ein Turnier abgeschlossen ist, erscheint es hier.'**
   String get tournamentPastEmptyBody;
-
-  /// Eyebrow on the mercenary market screen
-  ///
-  /// In de, this message translates to:
-  /// **'Turniere'**
-  String get tournamentMercenaryEyebrow;
-
-  /// Screen title: mercenary market
-  ///
-  /// In de, this message translates to:
-  /// **'Söldnermarkt'**
-  String get tournamentMercenaryTitle;
-
-  /// Coming-soon placeholder title on the mercenary market screen
-  ///
-  /// In de, this message translates to:
-  /// **'Bald verfügbar'**
-  String get tournamentMercenaryComingSoonTitle;
-
-  /// Coming-soon placeholder body on the mercenary market screen
-  ///
-  /// In de, this message translates to:
-  /// **'Der Söldnermarkt ist noch in Arbeit. Bald kannst du hier Mitspieler für Turniere finden und dich selbst als Söldner anbieten.'**
-  String get tournamentMercenaryComingSoonBody;
 
   /// Screen title: my tournament registrations
   ///

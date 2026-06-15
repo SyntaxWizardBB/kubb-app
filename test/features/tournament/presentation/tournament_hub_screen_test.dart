@@ -62,10 +62,6 @@ Future<void> _pump(
         builder: (_, _) => const Scaffold(body: Text('past-route')),
       ),
       GoRoute(
-        path: TournamentRoutes.mercenaryMarket,
-        builder: (_, _) => const Scaffold(body: Text('mercenary-route')),
-      ),
-      GoRoute(
         path: TournamentRoutes.ranking,
         builder: (_, _) => const Scaffold(body: Text('ranking-route')),
       ),
@@ -192,15 +188,24 @@ void main() {
     expect(find.text('ranking-route'), findsOneWidget);
   });
 
-  testWidgets('mercenary tile carries a Coming Soon marker', (tester) async {
+  // hub-cleanup-cockpit-tabs: the mercenary (Söldnermarkt) feature was
+  // deleted and the stage-graph builder moved into the tournament setup,
+  // so neither the "Coming Soon" marker nor a stage-graph tile exists here.
+  testWidgets('hub no longer renders the mercenary Coming Soon marker',
+      (tester) async {
     await _pump(tester);
-    expect(find.text('Coming Soon'), findsOneWidget);
+    expect(find.text('Coming Soon'), findsNothing);
+    expect(find.text('Söldnermarkt'), findsNothing);
   });
 
-  testWidgets('hub renders exactly eight mode-card tiles', (tester) async {
+  testWidgets('hub no longer renders the stage-graph tile', (tester) async {
     await _pump(tester);
-    // Live, Upcoming, Past, Mercenary, Rangliste, ELO best-list,
-    // Stufen-Graph (ADR-0030 §Editor), Stats.
-    expect(find.byType(KubbModeCard), findsNWidgets(8));
+    expect(find.text('Stufen-Graph bauen'), findsNothing);
+  });
+
+  testWidgets('hub renders exactly six mode-card tiles', (tester) async {
+    await _pump(tester);
+    // Live, Upcoming, Past, Rangliste, ELO best-list, Stats.
+    expect(find.byType(KubbModeCard), findsNWidgets(6));
   });
 }

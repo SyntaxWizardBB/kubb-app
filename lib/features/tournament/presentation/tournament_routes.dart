@@ -32,10 +32,6 @@ abstract final class TournamentRoutes {
   /// wins over the dynamic `/tournament/:id` detail route.
   static const pastTournaments = '/tournament/past';
 
-  /// Mercenary market (P8, "Söldnermarkt") — Coming-Soon placeholder.
-  /// Static prefix so it wins over the dynamic `/tournament/:id` route.
-  static const mercenaryMarket = '/tournament/mercenaries';
-
   /// All-time tournament leaderboard (P8-Hub-B2, "Rangliste"). Static
   /// prefix so it wins over the dynamic `/tournament/:id` detail route.
   static const ranking = '/tournament/ranking';

@@ -125,23 +125,7 @@ class TournamentHubScreen extends ConsumerWidget {
                   unawaited(context.push(TournamentRoutes.pastTournaments)),
             ),
             const SizedBox(height: KubbTokens.space3),
-            // P8: mercenary market — Coming-Soon. The tile carries a
-            // visible "Coming Soon" badge while staying tappable to the
-            // placeholder screen.
-            _ComingSoonBadge(
-              label: l.tournamentHubComingSoonBadge,
-              child: KubbModeCard(
-                title: l.tournamentHubMercenaryTitle,
-                subtitle: l.tournamentHubMercenarySubtitle,
-                icon: LucideIcons.swords,
-                accentTone: KubbChipTone.matchWood,
-                onTap: () =>
-                    unawaited(context.push(TournamentRoutes.mercenaryMarket)),
-              ),
-            ),
-            const SizedBox(height: KubbTokens.space3),
-            // P8-Hub-B2: all-time tournament leaderboard. Sits between the
-            // mercenary market and the stats tile.
+            // P8-Hub-B2: all-time tournament leaderboard.
             KubbModeCard(
               title: l.tournamentHubRankingTitle,
               subtitle: l.tournamentHubRankingSubtitle,
@@ -158,15 +142,6 @@ class TournamentHubScreen extends ConsumerWidget {
               accentTone: KubbChipTone.tournamentWood,
               onTap: () =>
                   unawaited(context.push(TournamentRoutes.eloLeaderboard)),
-            ),
-            const SizedBox(height: KubbTokens.space3),
-            // ADR-0030 §Editor: form-based stage-graph builder entry.
-            KubbModeCard(
-              title: l.stageGraphHubTileTitle,
-              subtitle: l.stageGraphHubTileSubtitle,
-              icon: LucideIcons.gitBranch,
-              accentTone: KubbChipTone.tournamentWood,
-              onTap: () => unawaited(context.push(TournamentRoutes.stageGraph)),
             ),
             const SizedBox(height: KubbTokens.space3),
             KubbModeCard(
@@ -276,52 +251,6 @@ class TournamentHubScreen extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Overlays a small "Coming Soon" pill on the top-right corner of a hub
-/// tile. Kept local to the hub since it is the only Coming-Soon entry for
-/// now; the underlying tile stays fully tappable (the badge ignores
-/// pointer events).
-class _ComingSoonBadge extends StatelessWidget {
-  const _ComingSoonBadge({required this.label, required this.child});
-
-  final String label;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return Stack(
-      children: [
-        child,
-        Positioned(
-          top: KubbTokens.space2,
-          right: KubbTokens.space2,
-          child: IgnorePointer(
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: KubbTokens.space2,
-                vertical: 2,
-              ),
-              decoration: BoxDecoration(
-                color: KubbTokens.wood500,
-                borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-              ),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.4,
-                  color: tokens.bgRaised,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

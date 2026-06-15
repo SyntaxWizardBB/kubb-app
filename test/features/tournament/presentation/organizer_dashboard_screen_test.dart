@@ -202,32 +202,44 @@ void main() {
     expect(spy.calls, contains('start:t-1'));
   });
 
-  testWidgets('empty administrable list shows the empty/gate state',
-      (tester) async {
+  testWidgets('empty administrable list shows the empty/gate state in the '
+      'Turniere tab', (tester) async {
     await _pump(tester, cards: const []);
+    // hub-cleanup-cockpit-tabs: the Turniere tab is the default tab and shows
+    // the empty/gate state (informational, no CTA — the founding CTA lives in
+    // the Veranstalterteams tab now).
     expect(find.byType(KubbEmptyState), findsOneWidget);
     expect(find.byType(OrganizerTournamentCard), findsNothing);
   });
 
-  // fix/organizer-found-club-entry: the full-screen empty state (no cards,
-  // no teams) carries a primary CTA into the clubs/founding flow.
-  testWidgets('empty state CTA navigates to /clubs', (tester) async {
-    final router = await _pumpRouter(
-      tester,
-      cards: const <TournamentAdminCardRef>[],
-    );
+  // hub-cleanup-cockpit-tabs: top tabs split the cockpit. Both tabs render and
+  // switching to "Veranstalterteams" reveals the teams section + founding
+  // entry point.
+  testWidgets('renders two top tabs and switches between them', (tester) async {
+    await _pump(tester, cards: [_card()]);
 
-    await tester.tap(find.text('Veranstalterteam gründen'));
+    expect(find.text('Turniere'), findsOneWidget);
+    expect(find.text('Veranstalterteams'), findsOneWidget);
+    // Default tab: tournament cards visible, teams section not.
+    expect(find.byType(OrganizerTournamentCard), findsOneWidget);
+    expect(find.text('MEINE VERANSTALTERTEAMS'), findsNothing);
+
+    await tester.tap(find.text('Veranstalterteams'));
     await tester.pumpAndSettle();
-    expect(router.lastPushed, '/clubs');
+
+    expect(find.text('MEINE VERANSTALTERTEAMS'), findsOneWidget);
+    expect(find.byType(OrganizerTournamentCard), findsNothing);
   });
 
-  // fix/organizer-found-club-entry: the teams section now renders ALWAYS and
-  // its "gründen" entry point reaches the clubs/founding flow even with 0
+  // fix/organizer-found-club-entry: the founding "gründen" entry point lives in
+  // the Veranstalterteams tab and reaches the clubs/founding flow even with 0
   // clubs.
-  testWidgets('teams section gründen button navigates to /clubs even with '
-      'no teams', (tester) async {
+  testWidgets('teams tab gründen button navigates to /clubs even with no '
+      'teams', (tester) async {
     final router = await _pumpRouter(tester, cards: [_card()]);
+
+    await tester.tap(find.text('Veranstalterteams'));
+    await tester.pumpAndSettle();
 
     expect(find.text('Noch kein Veranstalterteam'), findsOneWidget);
     await tester.tap(find.text('Veranstalterteam gründen'));
@@ -235,10 +247,10 @@ void main() {
     expect(router.lastPushed, '/clubs');
   });
 
-  // P4-C (ADR-0032 §4): "Meine Veranstalterteams" section fed from
-  // organizerTeamListProvider, trailing the tournament cards.
-  testWidgets('renders the organizer teams section with team names',
-      (tester) async {
+  // P4-C (ADR-0032 §4): "Meine Veranstalterteams" section in the teams tab,
+  // fed from organizerTeamListProvider.
+  testWidgets('renders the organizer teams section with team names in the '
+      'teams tab', (tester) async {
     await _pump(
       tester,
       cards: [_card()],
@@ -251,18 +263,22 @@ void main() {
       ],
     );
 
+    await tester.tap(find.text('Veranstalterteams'));
+    await tester.pumpAndSettle();
+
     expect(find.text('MEINE VERANSTALTERTEAMS'), findsOneWidget);
     expect(find.text('Kubb Bären Bern'), findsOneWidget);
-    // The existing dashboard content stays intact next to the section.
-    expect(find.byType(OrganizerTournamentCard), findsOneWidget);
   });
 
-  // fix/organizer-found-club-entry: the section is no longer gated on having
-  // teams — it always renders so the founding entry point stays reachable.
-  // With no teams it shows the muted hint plus the "gründen" action.
+  // fix/organizer-found-club-entry: the section always renders so the founding
+  // entry point stays reachable. With no teams it shows the muted hint plus the
+  // "gründen" action.
   testWidgets('shows the teams section with a hint when the caller has no '
       'teams', (tester) async {
     await _pump(tester, cards: [_card()]);
+
+    await tester.tap(find.text('Veranstalterteams'));
+    await tester.pumpAndSettle();
 
     expect(find.text('MEINE VERANSTALTERTEAMS'), findsOneWidget);
     expect(find.text('Noch kein Veranstalterteam'), findsOneWidget);

@@ -61,88 +61,58 @@ class OrganizerDashboardScreen extends ConsumerWidget {
           orElse: () => const <OrganizerTeamWire>[],
         );
 
-    return Scaffold(
-      backgroundColor: tokens.bg,
-      appBar: KubbAppBar(
-        eyebrow: l.organizerDashboardEyebrow,
-        title: l.organizerDashboardTitle,
-      ),
-      body: cardsAsync.when(
-        skipLoadingOnReload: true,
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(KubbTokens.space5),
-            child: Text(
-              l.organizerDashboardError,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: KubbTokens.miss),
-            ),
-          ),
+    // hub-cleanup-cockpit-tabs: split the cockpit into two top tabs so the
+    // running-tournament management and the organizer-teams section never mix
+    // in one scroll. Tab styling mirrors the live-screen TabBar (KubbTokens
+    // colors). The TabBar sits under the app bar inside the body Column.
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: tokens.bg,
+        appBar: KubbAppBar(
+          eyebrow: l.organizerDashboardEyebrow,
+          title: l.organizerDashboardTitle,
         ),
-        data: (cards) {
-          if (cards.isEmpty && teams.isEmpty) {
-            // In-screen gate (OE-B5) for the overview: the source RPC
-            // `tournament_list_administrable` is itself server-gated by
-            // `tournament_caller_can_manage` (Creator OR club
-            // {owner,admin,organizer,referee} — K4). An unauthorised caller
-            // therefore receives an EMPTY list and sees this KubbEmptyState
-            // instead of any action UI — same gate spirit as the detail
-            // screen, but the per-tournament `canAdministerTournamentProvider`
-            // is not consulted here because the overview DTO
-            // (`TournamentAdminCardRef`) carries no clubId/createdBy to feed
-            // it. The server stays the security boundary; this is UX only.
-            return KubbEmptyState(
-              title: l.organizerDashboardEmptyTitle,
-              body: l.organizerDashboardEmptyBody,
-              // fix/organizer-found-club-entry: always offer the founding
-              // flow so a fresh organizer-code account (0 clubs) can reach
-              // the "Verein gründen" FAB on the clubs screen (ADR-0032 §4).
-              cta: KubbButton(
-                variant: KubbButtonVariant.primary,
-                onPressed: () => context.push(OrganizerTeamRoutes.list),
-                child: Text(l.organizerDashboardFoundTeam),
-              ),
-            );
-          }
-          // P4-C: plain ListView (was ListView.separated) so the teams
-          // section can trail the tournament cards in the same scroll.
-          return ListView(
-            padding: const EdgeInsets.all(KubbTokens.space4),
-            children: [
-              if (cards.isEmpty)
-                // Teams exist but no administrable tournament yet — keep
-                // the established empty state above the teams section.
-                KubbEmptyState(
-                  title: l.organizerDashboardEmptyTitle,
-                  body: l.organizerDashboardEmptyBody,
-                )
-              else
-                for (var i = 0; i < cards.length; i++) ...[
-                  if (i > 0) const SizedBox(height: KubbTokens.space3),
-                  OrganizerTournamentCard(
-                    card: cards[i],
-                    serverOffset: offset,
+        body: Column(
+          children: [
+            TabBar(
+              labelColor: tokens.fg,
+              unselectedLabelColor: tokens.fgMuted,
+              indicatorColor: tokens.primary,
+              tabs: [
+                Tab(text: l.organizerDashboardTabTournaments),
+                Tab(text: l.organizerDashboardTabTeams),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  // Tab 1 "Turniere": the administrable-tournament cards plus
+                  // their empty state — the existing cockpit, minus the teams
+                  // section.
+                  _TournamentsTab(
+                    cardsAsync: cardsAsync,
+                    offset: offset,
                     ticker: ticker,
-                    onOpenDetail: () => context.push(
-                      TournamentRoutes.dashboardDetail(
-                        cards[i].tournamentId.value,
-                      ),
+                    onOpenDetail: (card) => context.push(
+                      TournamentRoutes.dashboardDetail(card.tournamentId.value),
                     ),
-                    onPrimaryAction: () => _runPrimaryAction(ref, cards[i]),
+                    onPrimaryAction: (card) => _runPrimaryAction(ref, card),
+                  ),
+                  // Tab 2 "Veranstalterteams": the teams list + the always-
+                  // reachable "Veranstalterteam gründen" entry point.
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(KubbTokens.space4),
+                    child: _OrganizerTeamsSection(
+                      title: l.organizerDashboardTeamsTitle,
+                      teams: teams,
+                    ),
                   ),
                 ],
-              // fix/organizer-found-club-entry: render the teams section
-              // ALWAYS (was gated on `teams.isNotEmpty`) so the "gründen"
-              // entry point is reachable even with 0 clubs (ADR-0032 §4).
-              const SizedBox(height: KubbTokens.space5),
-              _OrganizerTeamsSection(
-                title: l.organizerDashboardTeamsTitle,
-                teams: teams,
               ),
-            ],
-          );
-        },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -163,6 +133,84 @@ class OrganizerDashboardScreen extends ConsumerWidget {
       return;
     }
     ref.read(_dashboardActionRunner)(actions.startTournament(id));
+  }
+}
+
+/// hub-cleanup-cockpit-tabs: "Turniere" tab body — the administrable-
+/// tournament cards (one [OrganizerTournamentCard] per card) plus the
+/// loading/error/empty states. This is the former single-scroll cockpit
+/// minus the teams section, which now lives in its own tab. All card
+/// behavior (open detail, the start/pause/resume quick action, the countdown
+/// ticker) is preserved — the callbacks are threaded through from the parent.
+class _TournamentsTab extends StatelessWidget {
+  const _TournamentsTab({
+    required this.cardsAsync,
+    required this.offset,
+    required this.ticker,
+    required this.onOpenDetail,
+    required this.onPrimaryAction,
+  });
+
+  final AsyncValue<List<TournamentAdminCardRef>> cardsAsync;
+  final Duration offset;
+  final Stream<void>? ticker;
+  final void Function(TournamentAdminCardRef) onOpenDetail;
+  final void Function(TournamentAdminCardRef) onPrimaryAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return cardsAsync.when(
+      skipLoadingOnReload: true,
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(KubbTokens.space5),
+          child: Text(
+            l.organizerDashboardError,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: KubbTokens.miss),
+          ),
+        ),
+      ),
+      data: (cards) {
+        if (cards.isEmpty) {
+          // In-screen gate (OE-B5) for the overview: the source RPC
+          // `tournament_list_administrable` is itself server-gated by
+          // `tournament_caller_can_manage` (Creator OR club
+          // {owner,admin,organizer,referee} — K4). An unauthorised caller
+          // therefore receives an EMPTY list and sees this KubbEmptyState
+          // instead of any action UI — same gate spirit as the detail
+          // screen. The server stays the security boundary; this is UX only.
+          // The founding CTA now lives in the Veranstalterteams tab, so the
+          // empty Turniere tab is informational only.
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(KubbTokens.space4),
+              child: KubbEmptyState(
+                title: l.organizerDashboardEmptyTitle,
+                body: l.organizerDashboardEmptyBody,
+              ),
+            ),
+          );
+        }
+        return ListView(
+          padding: const EdgeInsets.all(KubbTokens.space4),
+          children: [
+            for (var i = 0; i < cards.length; i++) ...[
+              if (i > 0) const SizedBox(height: KubbTokens.space3),
+              OrganizerTournamentCard(
+                card: cards[i],
+                serverOffset: offset,
+                ticker: ticker,
+                onOpenDetail: () => onOpenDetail(cards[i]),
+                onPrimaryAction: () => onPrimaryAction(cards[i]),
+              ),
+            ],
+          ],
+        );
+      },
+    );
   }
 }
 
