@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/features/organizer_team/application/organizer_team_providers.dart';
@@ -93,6 +94,58 @@ Future<void> _pump(
   await tester.pump();
 }
 
+/// Captures the last path the dashboard pushes so the navigation tests can
+/// assert the founding entry points reach `OrganizerTeamRoutes.list` ('/clubs').
+class _RecordingRouter {
+  String? lastPushed;
+}
+
+/// Pumps the dashboard inside a real [GoRouter] whose '/clubs' route just
+/// records the visit. Mirrors [_pump]'s provider overrides.
+Future<_RecordingRouter> _pumpRouter(
+  WidgetTester tester, {
+  required List<TournamentAdminCardRef> cards,
+  List<OrganizerTeamWire> teams = const <OrganizerTeamWire>[],
+}) async {
+  final recorder = _RecordingRouter();
+  final router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (_, _) => const OrganizerDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/clubs',
+        builder: (_, state) {
+          recorder.lastPushed = state.uri.toString();
+          return const Scaffold(body: Text('clubs-stub'));
+        },
+      ),
+    ],
+  );
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        administrableTournamentsProvider.overrideWith((_) async => cards),
+        serverClockOffsetProvider.overrideWith((_) async => Duration.zero),
+        organizerTeamListProvider.overrideWith((_) async => teams),
+        dashboardCountdownTickerProvider
+            .overrideWithValue(const Stream<void>.empty()),
+      ],
+      child: MaterialApp.router(
+        theme: KubbTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router,
+      ),
+    ),
+  );
+  await tester.pump();
+  await tester.pump();
+  return recorder;
+}
+
 void main() {
   testWidgets('renders a card per administrable tournament with badges',
       (tester) async {
@@ -156,6 +209,32 @@ void main() {
     expect(find.byType(OrganizerTournamentCard), findsNothing);
   });
 
+  // fix/organizer-found-club-entry: the full-screen empty state (no cards,
+  // no teams) carries a primary CTA into the clubs/founding flow.
+  testWidgets('empty state CTA navigates to /clubs', (tester) async {
+    final router = await _pumpRouter(
+      tester,
+      cards: const <TournamentAdminCardRef>[],
+    );
+
+    await tester.tap(find.text('Veranstalterteam gründen'));
+    await tester.pumpAndSettle();
+    expect(router.lastPushed, '/clubs');
+  });
+
+  // fix/organizer-found-club-entry: the teams section now renders ALWAYS and
+  // its "gründen" entry point reaches the clubs/founding flow even with 0
+  // clubs.
+  testWidgets('teams section gründen button navigates to /clubs even with '
+      'no teams', (tester) async {
+    final router = await _pumpRouter(tester, cards: [_card()]);
+
+    expect(find.text('Noch kein Veranstalterteam'), findsOneWidget);
+    await tester.tap(find.text('Veranstalterteam gründen'));
+    await tester.pumpAndSettle();
+    expect(router.lastPushed, '/clubs');
+  });
+
   // P4-C (ADR-0032 §4): "Meine Veranstalterteams" section fed from
   // organizerTeamListProvider, trailing the tournament cards.
   testWidgets('renders the organizer teams section with team names',
@@ -178,10 +257,15 @@ void main() {
     expect(find.byType(OrganizerTournamentCard), findsOneWidget);
   });
 
-  testWidgets('hides the teams section when the caller has no teams',
-      (tester) async {
+  // fix/organizer-found-club-entry: the section is no longer gated on having
+  // teams — it always renders so the founding entry point stays reachable.
+  // With no teams it shows the muted hint plus the "gründen" action.
+  testWidgets('shows the teams section with a hint when the caller has no '
+      'teams', (tester) async {
     await _pump(tester, cards: [_card()]);
 
-    expect(find.text('MEINE VERANSTALTERTEAMS'), findsNothing);
+    expect(find.text('MEINE VERANSTALTERTEAMS'), findsOneWidget);
+    expect(find.text('Noch kein Veranstalterteam'), findsOneWidget);
+    expect(find.text('Veranstalterteam gründen'), findsOneWidget);
   });
 }

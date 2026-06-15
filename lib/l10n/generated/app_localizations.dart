@@ -8578,6 +8578,18 @@ abstract class AppLocalizations {
   /// **'Meine Veranstalterteams'**
   String get organizerDashboardTeamsTitle;
 
+  /// Organizer dashboard call-to-action that opens the club (Verein) list/founding flow (fix/organizer-found-club-entry, ADR-0032 §4)
+  ///
+  /// In de, this message translates to:
+  /// **'Veranstalterteam gründen'**
+  String get organizerDashboardFoundTeam;
+
+  /// Muted hint shown in the organizer dashboard teams section when the caller has no organizer team yet (fix/organizer-found-club-entry, ADR-0032 §4)
+  ///
+  /// In de, this message translates to:
+  /// **'Noch kein Veranstalterteam'**
+  String get organizerDashboardNoTeams;
+
   /// Home screen ongoing tournament match tile title (P5-C, ADR-0032 §7)
   ///
   /// In de, this message translates to:

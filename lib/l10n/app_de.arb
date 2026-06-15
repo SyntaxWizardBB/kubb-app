@@ -6118,6 +6118,14 @@
   "@organizerDashboardTeamsTitle": {
     "description": "Section title on the organizer dashboard listing the caller's organizer teams (P4-C, ADR-0032 §4)"
   },
+  "organizerDashboardFoundTeam": "Veranstalterteam gründen",
+  "@organizerDashboardFoundTeam": {
+    "description": "Organizer dashboard call-to-action that opens the club (Verein) list/founding flow (fix/organizer-found-club-entry, ADR-0032 §4)"
+  },
+  "organizerDashboardNoTeams": "Noch kein Veranstalterteam",
+  "@organizerDashboardNoTeams": {
+    "description": "Muted hint shown in the organizer dashboard teams section when the caller has no organizer team yet (fix/organizer-found-club-entry, ADR-0032 §4)"
+  },
   "homeOngoingMatchTitle": "Laufendes Match",
   "@homeOngoingMatchTitle": {
     "description": "Home screen ongoing tournament match tile title (P5-C, ADR-0032 §7)"

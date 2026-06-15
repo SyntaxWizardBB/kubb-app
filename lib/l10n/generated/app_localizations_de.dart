@@ -4751,6 +4751,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get organizerDashboardTeamsTitle => 'Meine Veranstalterteams';
 
   @override
+  String get organizerDashboardFoundTeam => 'Veranstalterteam gründen';
+
+  @override
+  String get organizerDashboardNoTeams => 'Noch kein Veranstalterteam';
+
+  @override
   String get homeOngoingMatchTitle => 'Laufendes Match';
 
   @override
