@@ -3,10 +3,13 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Reads android/app/google-services.json (Firebase project config for
+    // ch.kubbclub.app). NOTE: the build FAILS if that file is missing.
+    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "com.lukasbrosi.kubb_app"
+    namespace = "ch.kubbclub.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,8 +23,10 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.lukasbrosi.kubb_app"
+        // Reverse-domain application id for the owned domain kubbclub.ch.
+        // IMMUTABLE once published to the Play Store — registered as-is in
+        // Firebase (FCM) too.
+        applicationId = "ch.kubbclub.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

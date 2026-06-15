@@ -1,4 +1,4 @@
-package com.lukasbrosi.kubb_app
+package ch.kubbclub.app
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/features/social/application/social_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
@@ -2050,6 +2051,21 @@ class _StepFormatState extends State<_StepFormat> {
         // on group phase + a pitch plan with available pitches.
         if (draft.vorrundeType == VorrundeType.groupPhase)
           ..._pitchAssignmentSection(tokens, l10n),
+        // ADR-0030 §Editor: advanced entry point into the form-based
+        // stage-graph builder. Moved off the tournament hub — it belongs to
+        // setup, so the staged-format authoring sits next to the format/phase
+        // configuration. The builder owns its own screen/route/controller; this
+        // only navigates there.
+        _SectionHeaderText(l10n.stageGraphTitle),
+        const SizedBox(height: KubbTokens.space2),
+        _HelperText(l10n.tournamentSetupStageGraphEntryHint),
+        const SizedBox(height: KubbTokens.space3),
+        KubbButton(
+          key: const Key('wizardStageGraphEntry'),
+          variant: KubbButtonVariant.secondary,
+          onPressed: () => context.push(TournamentRoutes.stageGraph),
+          child: Text(l10n.tournamentSetupStageGraphEntry),
+        ),
       ],
     );
   }

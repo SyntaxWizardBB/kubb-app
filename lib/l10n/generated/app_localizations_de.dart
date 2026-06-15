@@ -15,6 +15,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get organizerDashboardTitle => 'Turnier-Steuerung';
 
   @override
+  String get organizerDashboardTabTournaments => 'Turniere';
+
+  @override
+  String get organizerDashboardTabTeams => 'Veranstalterteams';
+
+  @override
   String get organizerDashboardEmptyTitle => 'Keine Turniere zu verwalten';
 
   @override
@@ -162,10 +168,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphTitle => 'Stufen-Graph';
 
   @override
-  String get stageGraphHubTileTitle => 'Stufen-Graph bauen';
+  String get tournamentSetupStageGraphEntry => 'Stufengraph bauen';
 
   @override
-  String get stageGraphHubTileSubtitle =>
+  String get tournamentSetupStageGraphEntryHint =>
       'Stufen, Routing und Validierung komponieren';
 
   @override
@@ -2458,16 +2464,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentHubPastSubtitle => 'Abgeschlossene Turniere ansehen';
 
   @override
-  String get tournamentHubMercenaryTitle => 'Söldnermarkt';
-
-  @override
-  String get tournamentHubMercenarySubtitle =>
-      'Bald verfügbar – Mitspieler für Turniere finden';
-
-  @override
-  String get tournamentHubComingSoonBadge => 'Coming Soon';
-
-  @override
   String get tournamentHubRankingTitle => 'Rangliste';
 
   @override
@@ -2546,19 +2542,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get tournamentPastEmptyBody =>
       'Sobald ein Turnier abgeschlossen ist, erscheint es hier.';
-
-  @override
-  String get tournamentMercenaryEyebrow => 'Turniere';
-
-  @override
-  String get tournamentMercenaryTitle => 'Söldnermarkt';
-
-  @override
-  String get tournamentMercenaryComingSoonTitle => 'Bald verfügbar';
-
-  @override
-  String get tournamentMercenaryComingSoonBody =>
-      'Der Söldnermarkt ist noch in Arbeit. Bald kannst du hier Mitspieler für Turniere finden und dich selbst als Söldner anbieten.';
 
   @override
   String get tournamentRegistrationsTitle => 'Angemeldet';
@@ -4749,6 +4732,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get organizerDashboardTeamsTitle => 'Meine Veranstalterteams';
+
+  @override
+  String get organizerDashboardFoundTeam => 'Veranstalterteam gründen';
+
+  @override
+  String get organizerDashboardNoTeams => 'Noch kein Veranstalterteam';
 
   @override
   String get homeOngoingMatchTitle => 'Laufendes Match';

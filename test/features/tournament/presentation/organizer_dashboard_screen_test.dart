@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/features/organizer_team/application/organizer_team_providers.dart';
@@ -93,6 +94,58 @@ Future<void> _pump(
   await tester.pump();
 }
 
+/// Captures the last path the dashboard pushes so the navigation tests can
+/// assert the founding entry points reach `OrganizerTeamRoutes.list` ('/clubs').
+class _RecordingRouter {
+  String? lastPushed;
+}
+
+/// Pumps the dashboard inside a real [GoRouter] whose '/clubs' route just
+/// records the visit. Mirrors [_pump]'s provider overrides.
+Future<_RecordingRouter> _pumpRouter(
+  WidgetTester tester, {
+  required List<TournamentAdminCardRef> cards,
+  List<OrganizerTeamWire> teams = const <OrganizerTeamWire>[],
+}) async {
+  final recorder = _RecordingRouter();
+  final router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (_, _) => const OrganizerDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/clubs',
+        builder: (_, state) {
+          recorder.lastPushed = state.uri.toString();
+          return const Scaffold(body: Text('clubs-stub'));
+        },
+      ),
+    ],
+  );
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        administrableTournamentsProvider.overrideWith((_) async => cards),
+        serverClockOffsetProvider.overrideWith((_) async => Duration.zero),
+        organizerTeamListProvider.overrideWith((_) async => teams),
+        dashboardCountdownTickerProvider
+            .overrideWithValue(const Stream<void>.empty()),
+      ],
+      child: MaterialApp.router(
+        theme: KubbTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router,
+      ),
+    ),
+  );
+  await tester.pump();
+  await tester.pump();
+  return recorder;
+}
+
 void main() {
   testWidgets('renders a card per administrable tournament with badges',
       (tester) async {
@@ -149,17 +202,55 @@ void main() {
     expect(spy.calls, contains('start:t-1'));
   });
 
-  testWidgets('empty administrable list shows the empty/gate state',
-      (tester) async {
+  testWidgets('empty administrable list shows the empty/gate state in the '
+      'Turniere tab', (tester) async {
     await _pump(tester, cards: const []);
+    // hub-cleanup-cockpit-tabs: the Turniere tab is the default tab and shows
+    // the empty/gate state (informational, no CTA — the founding CTA lives in
+    // the Veranstalterteams tab now).
     expect(find.byType(KubbEmptyState), findsOneWidget);
     expect(find.byType(OrganizerTournamentCard), findsNothing);
   });
 
-  // P4-C (ADR-0032 §4): "Meine Veranstalterteams" section fed from
-  // organizerTeamListProvider, trailing the tournament cards.
-  testWidgets('renders the organizer teams section with team names',
-      (tester) async {
+  // hub-cleanup-cockpit-tabs: top tabs split the cockpit. Both tabs render and
+  // switching to "Veranstalterteams" reveals the teams section + founding
+  // entry point.
+  testWidgets('renders two top tabs and switches between them', (tester) async {
+    await _pump(tester, cards: [_card()]);
+
+    expect(find.text('Turniere'), findsOneWidget);
+    expect(find.text('Veranstalterteams'), findsOneWidget);
+    // Default tab: tournament cards visible, teams section not.
+    expect(find.byType(OrganizerTournamentCard), findsOneWidget);
+    expect(find.text('MEINE VERANSTALTERTEAMS'), findsNothing);
+
+    await tester.tap(find.text('Veranstalterteams'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('MEINE VERANSTALTERTEAMS'), findsOneWidget);
+    expect(find.byType(OrganizerTournamentCard), findsNothing);
+  });
+
+  // fix/organizer-found-club-entry: the founding "gründen" entry point lives in
+  // the Veranstalterteams tab and reaches the clubs/founding flow even with 0
+  // clubs.
+  testWidgets('teams tab gründen button navigates to /clubs even with no '
+      'teams', (tester) async {
+    final router = await _pumpRouter(tester, cards: [_card()]);
+
+    await tester.tap(find.text('Veranstalterteams'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Noch kein Veranstalterteam'), findsOneWidget);
+    await tester.tap(find.text('Veranstalterteam gründen'));
+    await tester.pumpAndSettle();
+    expect(router.lastPushed, '/clubs');
+  });
+
+  // P4-C (ADR-0032 §4): "Meine Veranstalterteams" section in the teams tab,
+  // fed from organizerTeamListProvider.
+  testWidgets('renders the organizer teams section with team names in the '
+      'teams tab', (tester) async {
     await _pump(
       tester,
       cards: [_card()],
@@ -172,16 +263,25 @@ void main() {
       ],
     );
 
+    await tester.tap(find.text('Veranstalterteams'));
+    await tester.pumpAndSettle();
+
     expect(find.text('MEINE VERANSTALTERTEAMS'), findsOneWidget);
     expect(find.text('Kubb Bären Bern'), findsOneWidget);
-    // The existing dashboard content stays intact next to the section.
-    expect(find.byType(OrganizerTournamentCard), findsOneWidget);
   });
 
-  testWidgets('hides the teams section when the caller has no teams',
-      (tester) async {
+  // fix/organizer-found-club-entry: the section always renders so the founding
+  // entry point stays reachable. With no teams it shows the muted hint plus the
+  // "gründen" action.
+  testWidgets('shows the teams section with a hint when the caller has no '
+      'teams', (tester) async {
     await _pump(tester, cards: [_card()]);
 
-    expect(find.text('MEINE VERANSTALTERTEAMS'), findsNothing);
+    await tester.tap(find.text('Veranstalterteams'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('MEINE VERANSTALTERTEAMS'), findsOneWidget);
+    expect(find.text('Noch kein Veranstalterteam'), findsOneWidget);
+    expect(find.text('Veranstalterteam gründen'), findsOneWidget);
   });
 }
