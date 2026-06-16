@@ -352,18 +352,6 @@ abstract class AppLocalizations {
   /// **'Stufen-Graph'**
   String get stageGraphTitle;
 
-  /// Setup-wizard entry-point button label that opens the stage-graph builder
-  ///
-  /// In de, this message translates to:
-  /// **'Stufengraph bauen'**
-  String get tournamentSetupStageGraphEntry;
-
-  /// Helper text under the stage-graph builder entry-point in the setup wizard
-  ///
-  /// In de, this message translates to:
-  /// **'Stufen, Routing und Validierung komponieren'**
-  String get tournamentSetupStageGraphEntryHint;
-
   /// Section title for the field-size input
   ///
   /// In de, this message translates to:
@@ -4281,12 +4269,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Stufen, Routing und Validierung direkt hier komponieren.'**
   String get tournamentWizardStageGraphEmbedHint;
-
-  /// Embedded stage-graph node/edge inventory summary
-  ///
-  /// In de, this message translates to:
-  /// **'{nodeCount} Stufen · {edgeCount} Kanten'**
-  String tournamentWizardStageGraphInventory(int nodeCount, int edgeCount);
 
   /// Preliminary stage selector label
   ///

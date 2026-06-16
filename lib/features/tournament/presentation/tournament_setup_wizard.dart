@@ -25,7 +25,13 @@ import 'package:kubb_app/features/tournament/data/tournament_repository.dart'
         TournamentLockedException,
         tournamentRemoteProvider;
 import 'package:kubb_app/features/tournament/presentation/stage_graph_builder_screen.dart'
-    show stageNodeTypeLabel;
+    show
+        edgeSelectorLabel,
+        showStageEdgeAddDialog,
+        showStageNodeAddDialog,
+        showStageNodeEditDialog,
+        stageNodeTypeLabel,
+        stageSeedingInLabel;
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_model_explainer_sheet.dart';
@@ -2061,10 +2067,12 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
         const SizedBox(height: KubbTokens.space5),
       ],
       // Inline embedded builder body. Hosted in the wizard flow (no separate
-      // screen); P2.3 swaps this for the extracted, reusable builder body.
-      _EmbeddedStageGraphBuilder(
-        key: const Key('wizardStageGraphBuilder'),
-        state: state,
+      // screen). Fully interactive: add/edit/delete nodes and edges via the
+      // SAME dialog seams the standalone editor uses (no duplicated dialogs),
+      // mutating ONLY `stageGraphBuilderProvider`. P2.3 will swap this host for
+      // the extracted, reusable builder body widget.
+      const _EmbeddedStageGraphBuilder(
+        key: Key('wizardStageGraphBuilder'),
       ),
       const SizedBox(height: KubbTokens.space3),
       // Live, builder-sourced validation status (the same gate `_stepValid`
@@ -2340,20 +2348,23 @@ class _StageGraphTemplateBarState
   }
 }
 
-/// P2.2: compact inline host for the embedded stage-graph builder body. Shows
-/// the live node/edge inventory from [stageGraphBuilderProvider] plus a guided
-/// hint. The full add/edit node & edge dialogs ship with the extracted reusable
-/// builder body (P2.3); this inline host keeps the wizard flow self-contained
-/// without re-implementing the editor, and holds NO graph state of its own.
-class _EmbeddedStageGraphBuilder extends StatelessWidget {
-  const _EmbeddedStageGraphBuilder({required this.state, super.key});
-
-  final StageGraphBuilderState state;
+/// P2.2: the inline, interactive embedded stage-graph builder body hosted in
+/// the wizard flow (no separate jump screen). It reads/mutates ONLY
+/// [stageGraphBuilderProvider] (single source of truth, no doubled graph
+/// state) and authors the graph through the SAME dialog seams the standalone
+/// editor uses (`showStageNodeAddDialog`/`showStageNodeEditDialog`/
+/// `showStageEdgeAddDialog`) so there is no duplicated dialog logic. The
+/// organizer can add, edit and delete nodes and edges right here — the
+/// "Neu erstellen" path is fully buildable inside the wizard. P2.3 will swap
+/// this host for the extracted, reusable builder-body widget.
+class _EmbeddedStageGraphBuilder extends ConsumerWidget {
+  const _EmbeddedStageGraphBuilder({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final state = ref.watch(stageGraphBuilderProvider);
+    final notifier = ref.read(stageGraphBuilderProvider.notifier);
     final graph = state.graph;
     final isEmpty = graph.nodes.isEmpty && graph.edges.isEmpty;
     return Column(
@@ -2362,51 +2373,397 @@ class _EmbeddedStageGraphBuilder extends StatelessWidget {
         _SectionHeaderText(l10n.stageGraphTitle),
         const SizedBox(height: KubbTokens.space2),
         _HelperText(l10n.tournamentWizardStageGraphEmbedHint),
-        const SizedBox(height: KubbTokens.space3),
-        Container(
-          padding: const EdgeInsets.all(KubbTokens.space4),
-          decoration: BoxDecoration(
-            color: tokens.bgRaised,
-            border: Border.all(color: tokens.line),
-            borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+        const SizedBox(height: KubbTokens.space4),
+        if (isEmpty)
+          _EmbeddedGraphEmptyState(
+            onAddNode: () => _addNode(context, ref, graph),
+          )
+        else ...[
+          _EmbeddedNodesSection(
+            graph: graph,
+            onAddNode: () => _addNode(context, ref, graph),
+            onEditNode: (node) => _editNode(context, ref, graph, node),
+            onDeleteNode: (node) => _deleteNode(context, notifier, node),
           ),
-          child: isEmpty
-              ? Text(
-                  l10n.stageGraphEmptyBody,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: tokens.fgMuted,
-                    height: 1.4,
+          const SizedBox(height: KubbTokens.space5),
+          _EmbeddedEdgesSection(
+            graph: graph,
+            onAddEdge: () => _addEdge(context, ref, graph),
+            onDeleteEdge: notifier.removeEdge,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Future<void> _addNode(
+    BuildContext context,
+    WidgetRef ref,
+    StageGraph graph,
+  ) async {
+    final existing = graph.nodes.map((n) => n.id).toSet();
+    final node = await showStageNodeAddDialog(context, existingIds: existing);
+    if (node != null) {
+      ref.read(stageGraphBuilderProvider.notifier).addNode(node);
+    }
+  }
+
+  Future<void> _editNode(
+    BuildContext context,
+    WidgetRef ref,
+    StageGraph graph,
+    StageNode node,
+  ) async {
+    final existing =
+        graph.nodes.map((n) => n.id).where((id) => id != node.id).toSet();
+    final updated = await showStageNodeEditDialog(
+      context,
+      initial: node,
+      existingIds: existing,
+    );
+    if (updated != null) {
+      ref.read(stageGraphBuilderProvider.notifier).updateNode(node.id, updated);
+    }
+  }
+
+  Future<void> _deleteNode(
+    BuildContext context,
+    StageGraphBuilderController notifier,
+    StageNode node,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.stageGraphDeleteNode),
+        content: Text(l10n.stageGraphDeleteNodeConfirm(node.id)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.stageGraphCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.stageGraphDeleteNode),
+          ),
+        ],
+      ),
+    );
+    if (ok ?? false) notifier.removeNode(node.id);
+  }
+
+  Future<void> _addEdge(
+    BuildContext context,
+    WidgetRef ref,
+    StageGraph graph,
+  ) async {
+    final edge = await showStageEdgeAddDialog(context, nodes: graph.nodes);
+    if (edge != null) {
+      ref.read(stageGraphBuilderProvider.notifier).addEdge(edge);
+    }
+  }
+}
+
+/// Empty-state for the inline builder when the graph has no nodes yet, with a
+/// primary CTA that opens the (shared) add-node dialog.
+class _EmbeddedGraphEmptyState extends StatelessWidget {
+  const _EmbeddedGraphEmptyState({required this.onAddNode});
+
+  final VoidCallback onAddNode;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.all(KubbTokens.space4),
+      decoration: BoxDecoration(
+        color: tokens.bgRaised,
+        border: Border.all(color: tokens.line),
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.stageGraphEmptyBody,
+            style: TextStyle(
+              fontSize: 13,
+              color: tokens.fgMuted,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: KubbTokens.space3),
+          SizedBox(
+            height: KubbTokens.touchComfortable,
+            child: KubbButton(
+              key: const Key('wizardStageGraphAddNode'),
+              variant: KubbButtonVariant.primary,
+              size: KubbButtonSize.large,
+              onPressed: onAddNode,
+              child: Text(l10n.stageGraphAddNode),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Inline node list with add / edit / delete affordances. Mirrors the
+/// standalone editor's `_NodesSection` but routes everything through the
+/// wizard-hosted callbacks (which mutate `stageGraphBuilderProvider`).
+class _EmbeddedNodesSection extends StatelessWidget {
+  const _EmbeddedNodesSection({
+    required this.graph,
+    required this.onAddNode,
+    required this.onEditNode,
+    required this.onDeleteNode,
+  });
+
+  final StageGraph graph;
+  final VoidCallback onAddNode;
+  final ValueChanged<StageNode> onEditNode;
+  final ValueChanged<StageNode> onDeleteNode;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(child: _SectionHeaderText(l10n.stageGraphNodesSection)),
+            IconButton(
+              key: const Key('wizardStageGraphAddNode'),
+              tooltip: l10n.stageGraphAddNode,
+              icon: const Icon(LucideIcons.plus, size: 20),
+              color: tokens.fg,
+              constraints: const BoxConstraints.tightFor(
+                width: KubbTokens.touchMin,
+                height: KubbTokens.touchMin,
+              ),
+              onPressed: onAddNode,
+            ),
+          ],
+        ),
+        const SizedBox(height: KubbTokens.space3),
+        for (final node in graph.nodes) ...[
+          _EmbeddedNodeTile(
+            node: node,
+            onEdit: () => onEditNode(node),
+            onDelete: () => onDeleteNode(node),
+          ),
+          const SizedBox(height: KubbTokens.space2),
+        ],
+      ],
+    );
+  }
+}
+
+class _EmbeddedNodeTile extends StatelessWidget {
+  const _EmbeddedNodeTile({
+    required this.node,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final StageNode node;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: tokens.bgRaised,
+        border: Border.all(color: tokens.line),
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+      ),
+      padding: const EdgeInsets.fromLTRB(
+        KubbTokens.space3,
+        KubbTokens.space3,
+        KubbTokens.space2,
+        KubbTokens.space3,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    node.id,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: tokens.fg,
+                    ),
                   ),
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                ),
+                const SizedBox(width: KubbTokens.space2),
+                KubbChip(
+                  tone: KubbChipTone.neutral,
+                  label: stageNodeTypeLabel(l10n, node.type),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: l10n.stageGraphEditNode,
+            icon: const Icon(LucideIcons.pencil, size: 18),
+            constraints: const BoxConstraints.tightFor(
+              width: KubbTokens.touchMin,
+              height: KubbTokens.touchMin,
+            ),
+            onPressed: onEdit,
+          ),
+          IconButton(
+            tooltip: l10n.stageGraphDeleteNode,
+            icon: const Icon(LucideIcons.trash2, size: 18),
+            color: KubbTokens.miss,
+            constraints: const BoxConstraints.tightFor(
+              width: KubbTokens.touchMin,
+              height: KubbTokens.touchMin,
+            ),
+            onPressed: onDelete,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Inline edge list with add / delete affordances. Mirrors the standalone
+/// editor's `_EdgesSection`; an edge needs at least two nodes.
+class _EmbeddedEdgesSection extends StatelessWidget {
+  const _EmbeddedEdgesSection({
+    required this.graph,
+    required this.onAddEdge,
+    required this.onDeleteEdge,
+  });
+
+  final StageGraph graph;
+  final VoidCallback onAddEdge;
+  final ValueChanged<int> onDeleteEdge;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    final edges = graph.edges;
+    final canAddEdge = graph.nodes.length >= 2;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(child: _SectionHeaderText(l10n.stageGraphEdgesSection)),
+            IconButton(
+              key: const Key('wizardStageGraphAddEdge'),
+              tooltip: l10n.stageGraphAddEdge,
+              icon: const Icon(LucideIcons.plus, size: 20),
+              color: tokens.fg,
+              constraints: const BoxConstraints.tightFor(
+                width: KubbTokens.touchMin,
+                height: KubbTokens.touchMin,
+              ),
+              onPressed: canAddEdge ? onAddEdge : null,
+            ),
+          ],
+        ),
+        const SizedBox(height: KubbTokens.space3),
+        if (!canAddEdge && edges.isEmpty)
+          _HelperText(l10n.stageGraphEdgesNeedNodes)
+        else if (edges.isEmpty)
+          _HelperText(l10n.stageGraphEdgesEmpty)
+        else
+          for (var i = 0; i < edges.length; i++) ...[
+            _EmbeddedEdgeTile(
+              edge: edges[i],
+              onDelete: () => onDeleteEdge(i),
+            ),
+            const SizedBox(height: KubbTokens.space2),
+          ],
+      ],
+    );
+  }
+}
+
+class _EmbeddedEdgeTile extends StatelessWidget {
+  const _EmbeddedEdgeTile({required this.edge, required this.onDelete});
+
+  final StageEdge edge;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: tokens.bgRaised,
+        border: Border.all(color: tokens.line),
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+      ),
+      padding: const EdgeInsets.fromLTRB(
+        KubbTokens.space3,
+        KubbTokens.space2,
+        KubbTokens.space2,
+        KubbTokens.space2,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${edge.fromNodeId} → ${edge.toNodeId}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.fg,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Row(
                   children: [
-                    Text(
-                      l10n.tournamentWizardStageGraphInventory(
-                        graph.nodes.length,
-                        graph.edges.length,
-                      ),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: tokens.fg,
+                    Flexible(
+                      child: Text(
+                        edgeSelectorLabel(l10n, edge.selector),
+                        overflow: TextOverflow.ellipsis,
+                        style:
+                            TextStyle(fontSize: 12, color: tokens.fgMuted),
                       ),
                     ),
-                    const SizedBox(height: KubbTokens.space2),
-                    for (final node in graph.nodes)
-                      Padding(
-                        padding:
-                            const EdgeInsets.only(bottom: KubbTokens.space1),
-                        child: Text(
-                          '${node.id} · ${stageNodeTypeLabel(l10n, node.type)}',
-                          style: TextStyle(fontSize: 12, color: tokens.fgMuted),
-                        ),
-                      ),
+                    const SizedBox(width: KubbTokens.space2),
+                    KubbChip(
+                      tone: KubbChipTone.neutral,
+                      label: stageSeedingInLabel(l10n, edge.seedingIn),
+                    ),
                   ],
                 ),
-        ),
-      ],
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: l10n.stageGraphDeleteEdge,
+            icon: const Icon(LucideIcons.trash2, size: 18),
+            color: KubbTokens.miss,
+            constraints: const BoxConstraints.tightFor(
+              width: KubbTokens.touchMin,
+              height: KubbTokens.touchMin,
+            ),
+            onPressed: onDelete,
+          ),
+        ],
+      ),
     );
   }
 }

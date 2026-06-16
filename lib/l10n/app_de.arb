@@ -197,14 +197,6 @@
   "@stageGraphTitle": {
     "description": "AppBar title for the stage-graph builder screen"
   },
-  "tournamentSetupStageGraphEntry": "Stufengraph bauen",
-  "@tournamentSetupStageGraphEntry": {
-    "description": "Setup-wizard entry-point button label that opens the stage-graph builder"
-  },
-  "tournamentSetupStageGraphEntryHint": "Stufen, Routing und Validierung komponieren",
-  "@tournamentSetupStageGraphEntryHint": {
-    "description": "Helper text under the stage-graph builder entry-point in the setup wizard"
-  },
   "stageGraphFieldSizeSection": "Feldgröße",
   "@stageGraphFieldSizeSection": {
     "description": "Section title for the field-size input"
@@ -2992,14 +2984,6 @@
   "tournamentWizardStageGraphEmbedHint": "Stufen, Routing und Validierung direkt hier komponieren.",
   "@tournamentWizardStageGraphEmbedHint": {
     "description": "Embedded stage-graph builder hint"
-  },
-  "tournamentWizardStageGraphInventory": "{nodeCount} Stufen · {edgeCount} Kanten",
-  "@tournamentWizardStageGraphInventory": {
-    "description": "Embedded stage-graph node/edge inventory summary",
-    "placeholders": {
-      "nodeCount": { "type": "int" },
-      "edgeCount": { "type": "int" }
-    }
   },
   "tournamentWizardVorrundeLabel": "Vorrunde",
   "@tournamentWizardVorrundeLabel": {

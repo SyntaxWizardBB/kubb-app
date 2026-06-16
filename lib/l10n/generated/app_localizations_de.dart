@@ -168,13 +168,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphTitle => 'Stufen-Graph';
 
   @override
-  String get tournamentSetupStageGraphEntry => 'Stufengraph bauen';
-
-  @override
-  String get tournamentSetupStageGraphEntryHint =>
-      'Stufen, Routing und Validierung komponieren';
-
-  @override
   String get stageGraphFieldSizeSection => 'Feldgröße';
 
   @override
@@ -2319,11 +2312,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get tournamentWizardStageGraphEmbedHint =>
       'Stufen, Routing und Validierung direkt hier komponieren.';
-
-  @override
-  String tournamentWizardStageGraphInventory(int nodeCount, int edgeCount) {
-    return '$nodeCount Stufen · $edgeCount Kanten';
-  }
 
   @override
   String get tournamentWizardVorrundeLabel => 'Vorrunde';

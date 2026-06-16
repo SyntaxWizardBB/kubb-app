@@ -1695,6 +1695,10 @@ void main() {
       // Classic KO-system selector is gone; the embedded builder is mounted.
       expect(find.text('K.-o.-System'), findsNothing);
       expect(find.byKey(const Key('wizardStageGraphBuilder')), findsOneWidget);
+      // DOD-04 substance: the hosted body is the real INTERACTIVE builder, not
+      // a read-only placeholder — it exposes add-node / add-edge affordances.
+      expect(find.byKey(const Key('wizardStageGraphAddNode')), findsOneWidget);
+      expect(find.byKey(const Key('wizardStageGraphAddEdge')), findsOneWidget);
       // The source sub-choice is also a shared KubbBinaryChoice.
       expect(find.byKey(const Key('wizardStageGraphSource')), findsOneWidget);
       // Default sub-affordance is "build", so no template bar yet.
@@ -1710,6 +1714,49 @@ void main() {
         find.byKey(const Key('wizardStageGraphTemplateBar')),
         findsOneWidget,
       );
+    });
+
+    testWidgets(
+        'the embedded builder authors a node inline: empty graph -> add-node '
+        'dialog -> node appears and the step frees Weiter (DOD-04)',
+        (tester) async {
+      // Start in stage-graph mode with a truly EMPTY graph so the inline
+      // builder shows its empty-state CTA and the step gate is closed.
+      await _pumpWizard(
+        tester,
+        controllerOverride: _StageGraphSeededController.new,
+        extraOverrides: <Object>[
+          _stageGraphOverride(
+            StageGraph(nodes: const <StageNode>[], edges: const <StageEdge>[]),
+          ),
+        ],
+      );
+      await _typeName(tester, 'Graph Cup');
+      await _tapNext(tester); // -> participants
+      await _tapNext(tester); // -> format
+      expect(find.text('Schritt 3 von 4'), findsOneWidget);
+
+      // Empty graph: "Weiter" is blocked and the add-node CTA is offered.
+      expect(find.text('Nicht spielbar'), findsOneWidget);
+      expect(find.byKey(const Key('wizardStageGraphAddNode')), findsOneWidget);
+
+      // Author a pool stage inline via the SHARED add-node dialog.
+      await tester.tap(find.byKey(const Key('wizardStageGraphAddNode')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('stageGraphNodeIdField')),
+        'groups',
+      );
+      await tester.tap(find.text('Bestätigen'));
+      await tester.pumpAndSettle();
+
+      // The authored node now shows in the inline node list (real builder,
+      // not a placeholder), and the format step frees "Weiter".
+      expect(find.text('groups'), findsOneWidget);
+      final freed = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Weiter'),
+      );
+      expect(freed.onPressed, isNotNull);
     });
 
     testWidgets(
