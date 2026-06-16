@@ -16,7 +16,12 @@ import 'package:kubb_app/features/social/application/social_providers.dart';
 import 'package:kubb_app/features/tournament/application/stage_graph_builder_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
-import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart';
+import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart'
+    show
+        StageGraphTemplate,
+        TemplateVisibility,
+        stageGraphTemplatesProvider,
+        stageGraphTemplatesRepositoryProvider;
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/data/tournament_pdf_uploader.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart'
@@ -225,6 +230,10 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
         targetId =
             await ref.read(tournamentActionsProvider).createTournament(draft);
       }
+      // P2.4: apply stage-graph template if in stage-graph mode.
+      if (draft.formatMode == TournamentFormatMode.stageGraph && editId == null) {
+        await _applyStageGraph(targetId, draft);
+      }
       // Invite-only Spaßturnier: send each picked invitation AFTER the
       // tournament exists / its invite_only flag is persisted. Failures are
       // tolerated per invitee so one bad call doesn't abort the whole flow —
@@ -272,6 +281,42 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  /// P2.4: applies a stage-graph template to a tournament after creation.
+  /// If [draft.appliedTemplateId] is set, applies that template directly.
+  /// Otherwise, auto-saves the free graph as a private template and applies it.
+  /// Failures are tolerated (tournament is already created); no exception is
+  /// thrown.
+  Future<void> _applyStageGraph(
+    TournamentId tournamentId,
+    TournamentConfigDraft draft,
+  ) async {
+    try {
+      final repo = ref.read(stageGraphTemplatesRepositoryProvider);
+      if (draft.appliedTemplateId != null) {
+        // Template was chosen: apply directly.
+        await repo.applyTemplate(
+          tournamentId: tournamentId.value,
+          templateId: draft.appliedTemplateId!,
+        );
+      } else if (draft.stageGraph != null) {
+        // Free graph: auto-save as private template, then apply.
+        final templateId = await repo.saveTemplate(
+          name: 'Auto tournament ${tournamentId.value}',
+          visibility: TemplateVisibility.private,
+          graph: draft.stageGraph!,
+          clubId: draft.clubId,
+        );
+        await repo.applyTemplate(
+          tournamentId: tournamentId.value,
+          templateId: templateId,
+        );
+      }
+    } on Object {
+      // Tolerate failures — tournament is already created; the organizer
+      // can retry from the detail screen if needed.
     }
   }
 
