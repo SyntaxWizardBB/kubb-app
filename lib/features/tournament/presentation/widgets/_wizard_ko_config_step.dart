@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_binary_choice.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_labeled_switch.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
@@ -166,8 +168,7 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
     _pushIfValid();
   }
 
-  void _onSeedingChanged(SeedingMode? mode) {
-    if (mode == null) return;
+  void _onSeedingChanged(SeedingMode mode) {
     setState(() => _seedingMode = mode);
     widget.onSeedingModeChanged(mode);
     _pushIfValid();
@@ -307,52 +308,38 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
       // The single/double-out distinction is chosen on the format step via
       // the KO-system axis (KoType) — `bracketType` derives from it, so we
       // do NOT ask it again here to avoid a conflicting second source.
-      // K21: KO-matchup as radio buttons (same pattern as _SeedingModeRadios).
+      // K21: KO-matchup as a shared binary-choice card (ADR-0033 P1.2).
       label(l10n.tournamentWizardKoMatchupLabel),
-      RadioGroup<KoMatchup>(
-        groupValue: d.koMatchup,
-        onChanged: (m) {
-          if (m != null) c.setKoMatchup(m);
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            RadioListTile<KoMatchup>(
-              value: KoMatchup.seedHighVsLow,
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.tournamentWizardKoMatchupHighLow),
-            ),
-            RadioListTile<KoMatchup>(
-              value: KoMatchup.oneVsTwo,
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.tournamentWizardKoMatchupOneTwo),
-            ),
-          ],
-        ),
+      KubbBinaryChoice<KoMatchup>(
+        selected: d.koMatchup,
+        onChanged: c.setKoMatchup,
+        options: <KubbChoiceOption<KoMatchup>>[
+          KubbChoiceOption<KoMatchup>(
+            value: KoMatchup.seedHighVsLow,
+            title: l10n.tournamentWizardKoMatchupHighLow,
+          ),
+          KubbChoiceOption<KoMatchup>(
+            value: KoMatchup.oneVsTwo,
+            title: l10n.tournamentWizardKoMatchupOneTwo,
+          ),
+        ],
       ),
       const SizedBox(height: KubbTokens.space5),
-      // K22: KO-tiebreak method as radio buttons (same pattern as K21).
+      // K22: KO-tiebreak method as a shared binary-choice card (ADR-0033 P1.2).
       label(l10n.tournamentWizardKoTiebreakMethodLabel),
-      RadioGroup<KoTiebreakMethod>(
-        groupValue: d.koTiebreakMethod,
-        onChanged: (m) {
-          if (m != null) c.setKoTiebreakMethod(m);
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            RadioListTile<KoTiebreakMethod>(
-              value: KoTiebreakMethod.classicKingtossRemoval,
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.tournamentWizardKoTiebreakClassic),
-            ),
-            RadioListTile<KoTiebreakMethod>(
-              value: KoTiebreakMethod.mightyFinisherShootout,
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.tournamentWizardKoTiebreakMighty),
-            ),
-          ],
-        ),
+      KubbBinaryChoice<KoTiebreakMethod>(
+        selected: d.koTiebreakMethod,
+        onChanged: c.setKoTiebreakMethod,
+        options: <KubbChoiceOption<KoTiebreakMethod>>[
+          KubbChoiceOption<KoTiebreakMethod>(
+            value: KoTiebreakMethod.classicKingtossRemoval,
+            title: l10n.tournamentWizardKoTiebreakClassic,
+          ),
+          KubbChoiceOption<KoTiebreakMethod>(
+            value: KoTiebreakMethod.mightyFinisherShootout,
+            title: l10n.tournamentWizardKoTiebreakMighty,
+          ),
+        ],
       ),
       const SizedBox(height: KubbTokens.space5),
       // Per-KO-round rule blocks. The list length is derived from the
@@ -437,10 +424,8 @@ class _KoRoundBlock extends StatelessWidget {
             onChanged: (v) =>
                 onChanged(spec.copyWith(breakBetweenMatchesSeconds: v * 60)),
           ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            dense: true,
-            title: Text(l10n.tournamentWizardKoRoundTiebreakLabel),
+          KubbLabeledSwitch(
+            title: l10n.tournamentWizardKoRoundTiebreakLabel,
             value: spec.tiebreakEnabled,
             onChanged: (on) => onChanged(
               spec.copyWith(
@@ -638,16 +623,17 @@ class _SeedingModeRadios extends StatelessWidget {
   const _SeedingModeRadios({required this.value, required this.onChanged});
 
   final SeedingMode value;
-  final ValueChanged<SeedingMode?> onChanged;
+  final ValueChanged<SeedingMode> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Seeding-Quelle',
+          l10n.tournamentWizardSeedingSourceLabel,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
@@ -656,26 +642,21 @@ class _SeedingModeRadios extends StatelessWidget {
           ),
         ),
         const SizedBox(height: KubbTokens.space2),
-        RadioGroup<SeedingMode>(
-          groupValue: value,
+        KubbBinaryChoice<SeedingMode>(
+          selected: value,
           onChanged: onChanged,
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              RadioListTile<SeedingMode>(
-                value: SeedingMode.auto,
-                contentPadding: EdgeInsets.zero,
-                // "aus Vorrunde" (not "Gruppenphase") — Schoch is also a
-                // valid Vorrunde (P6_SETUP_WIZARD_SPEC.md Screen 6).
-                title: Text('Automatisch aus Vorrunde'),
-              ),
-              RadioListTile<SeedingMode>(
-                value: SeedingMode.manual,
-                contentPadding: EdgeInsets.zero,
-                title: Text('Manuell festlegen'),
-              ),
-            ],
-          ),
+          options: <KubbChoiceOption<SeedingMode>>[
+            KubbChoiceOption<SeedingMode>(
+              value: SeedingMode.auto,
+              // "aus Vorrunde" (not "Gruppenphase") — Schoch is also a valid
+              // Vorrunde (P6_SETUP_WIZARD_SPEC.md Screen 6).
+              title: l10n.tournamentWizardSeedingSourceAuto,
+            ),
+            KubbChoiceOption<SeedingMode>(
+              value: SeedingMode.manual,
+              title: l10n.tournamentWizardSeedingSourceManual,
+            ),
+          ],
         ),
       ],
     );

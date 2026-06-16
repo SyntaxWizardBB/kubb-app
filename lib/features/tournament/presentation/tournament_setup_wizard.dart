@@ -7,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_binary_choice.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_labeled_switch.dart';
 import 'package:kubb_app/features/social/application/social_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
@@ -684,7 +686,7 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         // (P6 invite SPEC §3).
         if (draft.clubId == null) ...[
           const SizedBox(height: KubbTokens.space5),
-          _ToggleRow(
+          KubbLabeledSwitch(
             key: const Key('wizardInviteOnlyToggle'),
             title: l10n.tournamentWizardInviteOnlyLabel,
             subtitle: l10n.tournamentWizardInviteOnlyHint,
@@ -749,38 +751,41 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         const SizedBox(height: KubbTokens.space5),
         _FieldLabel(l10n.tournamentWizardScoringLabel),
         const SizedBox(height: KubbTokens.space2),
-        _ScoringOption(
-          title: l10n.tournamentWizardScoringEkc,
-          subtitle: l10n.tournamentWizardScoringEkcHint,
-          selected: draft.scoring == 'ekc',
-          onTap: () => controller.setScoring('ekc'),
-        ),
-        const SizedBox(height: KubbTokens.space2),
-        _ScoringOption(
-          title: l10n.tournamentWizardScoringClassic,
-          subtitle: l10n.tournamentWizardScoringClassicHint,
-          selected: draft.scoring == 'classic',
-          onTap: () => controller.setScoring('classic'),
+        KubbBinaryChoice<String>(
+          selected: draft.scoring == 'classic' ? 'classic' : 'ekc',
+          onChanged: controller.setScoring,
+          options: <KubbChoiceOption<String>>[
+            KubbChoiceOption<String>(
+              value: 'ekc',
+              title: l10n.tournamentWizardScoringEkc,
+              subtitle: l10n.tournamentWizardScoringEkcHint,
+            ),
+            KubbChoiceOption<String>(
+              value: 'classic',
+              title: l10n.tournamentWizardScoringClassic,
+              subtitle: l10n.tournamentWizardScoringClassicHint,
+            ),
+          ],
         ),
 
         // ---- Regeln & Dokumente ----
         _SectionHeaderText(l10n.tournamentWizardSectionRules),
         const SizedBox(height: KubbTokens.space3),
-        _ToggleRow(
+        KubbLabeledSwitch(
           title: l10n.tournamentWizardRuleSureshot,
           subtitle: l10n.tournamentWizardRuleSureshotHint,
           value: draft.ruleVariants.sureshot,
           onChanged: (v) => controller
               .setRuleVariants(draft.ruleVariants.copyWith(sureshot: v)),
         ),
-        _ToggleRow(
+        KubbLabeledSwitch(
           title: l10n.tournamentWizardRuleDiggy,
           subtitle: l10n.tournamentWizardRuleDiggyHint,
           value: draft.ruleVariants.diggy,
           onChanged: (v) => controller
               .setRuleVariants(draft.ruleVariants.copyWith(diggy: v)),
         ),
-        _ToggleRow(
+        KubbLabeledSwitch(
           title: l10n.tournamentWizardRuleStrafkubb,
           subtitle: l10n.tournamentWizardRuleStrafkubbHint,
           value: draft.ruleVariants.strafkubbOffBaseline,
@@ -788,34 +793,19 @@ class _StepStammdatenState extends State<_StepStammdaten> {
             draft.ruleVariants.copyWith(strafkubbOffBaseline: v),
           ),
         ),
-        // K06: surface the opening rule (Anspielregel). Default stays
-        // '2-4-6'; the segmented control writes the choice via
-        // setRuleVariants so the value is no longer invisible in the wizard.
+        // K06: surface the opening rule (Anspielregel) as a default-on
+        // switch — ON => '2-4-6' (the default), OFF => 'free'. Writes the
+        // choice via setRuleVariants so the value is no longer invisible.
         const SizedBox(height: KubbTokens.space2),
-        _FieldLabel(l10n.tournamentWizardRuleOpeningLabel),
-        const SizedBox(height: KubbTokens.space2),
-        SegmentedButton<String>(
+        KubbLabeledSwitch(
           key: const Key('wizardOpeningRule'),
-          showSelectedIcon: false,
-          segments: <ButtonSegment<String>>[
-            ButtonSegment<String>(
-              value: '2-4-6',
-              label: Text(l10n.tournamentWizardRuleOpening246),
-            ),
-            ButtonSegment<String>(
-              value: 'free',
-              label: Text(l10n.tournamentWizardRuleOpeningFree),
-            ),
-          ],
-          selected: <String>{
-            if (draft.ruleVariants.openingRule == 'free') 'free' else '2-4-6',
-          },
-          onSelectionChanged: (sel) => controller.setRuleVariants(
-            draft.ruleVariants.copyWith(openingRule: sel.first),
+          title: l10n.tournamentWizardRuleOpeningLabel,
+          subtitle: l10n.tournamentWizardRuleOpeningHint,
+          value: draft.ruleVariants.openingRule != 'free',
+          onChanged: (on) => controller.setRuleVariants(
+            draft.ruleVariants.copyWith(openingRule: on ? '2-4-6' : 'free'),
           ),
         ),
-        const SizedBox(height: KubbTokens.space1half),
-        _HelperText(l10n.tournamentWizardRuleOpeningHint),
         const SizedBox(height: KubbTokens.space4),
         _FieldLabel(l10n.tournamentWizardRulesPdfLabel, optional: true),
         const SizedBox(height: KubbTokens.space2),
@@ -958,61 +948,6 @@ class _SectionHeaderText extends StatelessWidget {
           letterSpacing: 0.4,
           color: tokens.fg,
         ),
-      ),
-    );
-  }
-}
-
-/// Title + subtitle row with a trailing [Switch], used for the rule
-/// variants.
-class _ToggleRow extends StatelessWidget {
-  const _ToggleRow({
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    required this.onChanged,
-    super.key,
-  });
-
-  final String title;
-  final String subtitle;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: KubbTokens.space2),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: tokens.fg,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 11, color: tokens.fgMuted),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: KubbTokens.space3),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeTrackColor: tokens.primary,
-          ),
-        ],
       ),
     );
   }
@@ -1624,72 +1559,6 @@ class _SelectChip extends StatelessWidget {
   }
 }
 
-class _ScoringOption extends StatelessWidget {
-  const _ScoringOption({
-    required this.title,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return InkWell(
-      borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(KubbTokens.space3),
-        decoration: BoxDecoration(
-          color: selected ? tokens.bgSunken : tokens.bgRaised,
-          borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-          border: Border.all(
-            color: selected ? tokens.primary : tokens.line,
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              selected
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_unchecked,
-              size: 20,
-              color: tokens.fg,
-            ),
-            const SizedBox(width: KubbTokens.space3),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: tokens.fg,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 11, color: tokens.fgMuted),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _StepParticipants extends StatelessWidget {
   const _StepParticipants({
     required this.draft,
@@ -1926,18 +1795,23 @@ class _StepFormatState extends State<_StepFormat> {
           ),
         ),
         const SizedBox(height: KubbTokens.space2),
-        _OptionRow(
-          selected: draft.vorrundeType == VorrundeType.groupPhase,
-          label: l10n.tournamentWizardVorrundeGroupPhase,
-          description: l10n.tournamentWizardVorrundeGroupPhaseHint,
-          onTap: () => onVorrundeType(VorrundeType.groupPhase),
+        KubbBinaryChoice<VorrundeType>(
+          selected: draft.vorrundeType,
+          onChanged: onVorrundeType,
+          options: <KubbChoiceOption<VorrundeType>>[
+            KubbChoiceOption<VorrundeType>(
+              value: VorrundeType.groupPhase,
+              title: l10n.tournamentWizardVorrundeGroupPhase,
+              subtitle: l10n.tournamentWizardVorrundeGroupPhaseHint,
+            ),
+            KubbChoiceOption<VorrundeType>(
+              value: VorrundeType.schoch,
+              title: l10n.tournamentWizardVorrundeSchoch,
+              subtitle: l10n.tournamentWizardVorrundeSchochHint,
+            ),
+          ],
         ),
-        _OptionRow(
-          selected: draft.vorrundeType == VorrundeType.schoch,
-          label: l10n.tournamentWizardVorrundeSchoch,
-          description: l10n.tournamentWizardVorrundeSchochHint,
-          onTap: () => onVorrundeType(VorrundeType.schoch),
-        ),
+        const SizedBox(height: KubbTokens.space2),
         // T10: the Schoch-rounds slider surfaces when the Vorrunde is Schoch
         // (the pairing engine shares the round count with the Swiss system).
         if (draft.vorrundeType == VorrundeType.schoch)
@@ -1981,23 +1855,26 @@ class _StepFormatState extends State<_StepFormat> {
           ],
         ),
         const SizedBox(height: KubbTokens.space2),
-        _OptionRow(
-          selected: draft.koType == KoType.singleOut,
-          label: l10n.tournamentWizardKoSystemSingle,
-          description: l10n.tournamentWizardKoSystemSingleHint,
-          onTap: () => onKoType(KoType.singleOut),
-        ),
-        _OptionRow(
-          selected: draft.koType == KoType.doubleOut,
-          label: l10n.tournamentWizardKoSystemDouble,
-          description: l10n.tournamentWizardKoSystemDoubleHint,
-          onTap: () => onKoType(KoType.doubleOut),
-        ),
-        _OptionRow(
-          selected: draft.koType == KoType.consolation,
-          label: l10n.tournamentWizardKoSystemConsolation,
-          description: l10n.tournamentWizardKoSystemConsolationHint,
-          onTap: () => onKoType(KoType.consolation),
+        KubbBinaryChoice<KoType>(
+          selected: draft.koType,
+          onChanged: onKoType,
+          options: <KubbChoiceOption<KoType>>[
+            KubbChoiceOption<KoType>(
+              value: KoType.singleOut,
+              title: l10n.tournamentWizardKoSystemSingle,
+              subtitle: l10n.tournamentWizardKoSystemSingleHint,
+            ),
+            KubbChoiceOption<KoType>(
+              value: KoType.doubleOut,
+              title: l10n.tournamentWizardKoSystemDouble,
+              subtitle: l10n.tournamentWizardKoSystemDoubleHint,
+            ),
+            KubbChoiceOption<KoType>(
+              value: KoType.consolation,
+              title: l10n.tournamentWizardKoSystemConsolation,
+              subtitle: l10n.tournamentWizardKoSystemConsolationHint,
+            ),
+          ],
         ),
         // K15: the Model-B (Trostturnier) config — main-bracket size, direct
         // starters and the (required) name — lives ENTIRELY in the KO step now
@@ -2237,80 +2114,6 @@ class _DerivedValueBox extends StatelessWidget {
           fontSize: 14,
           fontWeight: FontWeight.w700,
           color: tokens.fg,
-        ),
-      ),
-    );
-  }
-}
-
-/// Radio-style selectable card with a label + one-line description. Used by
-/// the two-axis format selector (Vorrunde / KO system).
-class _OptionRow extends StatelessWidget {
-  const _OptionRow({
-    required this.selected,
-    required this.label,
-    required this.description,
-    required this.onTap,
-  });
-
-  final bool selected;
-  final String label;
-  final String description;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: KubbTokens.space2),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(KubbTokens.space3),
-          decoration: BoxDecoration(
-            color: selected ? tokens.bgSunken : tokens.bgRaised,
-            borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-            border: Border.all(
-              color: selected ? tokens.primary : tokens.line,
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                selected
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
-                size: 20,
-                color: tokens.fg,
-              ),
-              const SizedBox(width: KubbTokens.space3),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: tokens.fg,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: tokens.fgMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -2990,25 +2793,20 @@ class _PitchPlanSectionState extends State<_PitchPlanSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Wrap(
-          spacing: KubbTokens.space2,
-          runSpacing: KubbTokens.space2,
-          children: [
-            _SelectChip(
-              label: l10n.tournamentWizardPitchModeRange,
-              selected: _mode == PitchMode.range,
-              onTap: () {
-                setState(() => _mode = PitchMode.range);
-                _emit();
-              },
+        KubbBinaryChoice<PitchMode>(
+          selected: _mode,
+          onChanged: (mode) {
+            setState(() => _mode = mode);
+            _emit();
+          },
+          options: <KubbChoiceOption<PitchMode>>[
+            KubbChoiceOption<PitchMode>(
+              value: PitchMode.range,
+              title: l10n.tournamentWizardPitchModeRange,
             ),
-            _SelectChip(
-              label: l10n.tournamentWizardPitchModeManual,
-              selected: _mode == PitchMode.manual,
-              onTap: () {
-                setState(() => _mode = PitchMode.manual);
-                _emit();
-              },
+            KubbChoiceOption<PitchMode>(
+              value: PitchMode.manual,
+              title: l10n.tournamentWizardPitchModeManual,
             ),
           ],
         ),
@@ -3063,29 +2861,26 @@ class _PitchPlanSectionState extends State<_PitchPlanSection> {
         const SizedBox(height: KubbTokens.space4),
         _FieldLabel(l10n.tournamentWizardPitchSortLabel),
         const SizedBox(height: KubbTokens.space2),
-        Wrap(
-          spacing: KubbTokens.space2,
-          runSpacing: KubbTokens.space2,
-          children: [
-            _SelectChip(
-              label: l10n.tournamentWizardPitchSortTopSeeds,
-              selected: _sort == PitchSortStrategy.topSeedsLowNumbers,
-              onTap: () {
-                setState(() {
-                  _sort = PitchSortStrategy.topSeedsLowNumbers;
-                  // Drop any stale manual order when leaving manual mode.
-                  _order = const <int>[];
-                });
-                _emit();
-              },
+        KubbBinaryChoice<PitchSortStrategy>(
+          selected: _sort,
+          onChanged: (next) {
+            setState(() {
+              _sort = next;
+              // Drop any stale manual order when leaving manual mode.
+              if (next == PitchSortStrategy.topSeedsLowNumbers) {
+                _order = const <int>[];
+              }
+            });
+            _emit();
+          },
+          options: <KubbChoiceOption<PitchSortStrategy>>[
+            KubbChoiceOption<PitchSortStrategy>(
+              value: PitchSortStrategy.topSeedsLowNumbers,
+              title: l10n.tournamentWizardPitchSortTopSeeds,
             ),
-            _SelectChip(
-              label: l10n.tournamentWizardPitchSortManual,
-              selected: _sort == PitchSortStrategy.manual,
-              onTap: () {
-                setState(() => _sort = PitchSortStrategy.manual);
-                _emit();
-              },
+            KubbChoiceOption<PitchSortStrategy>(
+              value: PitchSortStrategy.manual,
+              title: l10n.tournamentWizardPitchSortManual,
             ),
           ],
         ),

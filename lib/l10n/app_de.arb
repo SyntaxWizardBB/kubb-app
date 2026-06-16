@@ -2560,6 +2560,18 @@
   "@tournamentWizardScoringClassicHint": {
     "description": "Classic scoring option subtitle"
   },
+  "tournamentWizardSeedingSourceLabel": "Seeding-Quelle",
+  "@tournamentWizardSeedingSourceLabel": {
+    "description": "KO seeding-source selector label"
+  },
+  "tournamentWizardSeedingSourceAuto": "Automatisch aus Vorrunde",
+  "@tournamentWizardSeedingSourceAuto": {
+    "description": "KO seeding-source option: automatic from the prelim phase"
+  },
+  "tournamentWizardSeedingSourceManual": "Manuell festlegen",
+  "@tournamentWizardSeedingSourceManual": {
+    "description": "KO seeding-source option: manual seeding"
+  },
   "tournamentWizardSectionParticipation": "Teilnahme",
   "@tournamentWizardSectionParticipation": {
     "description": "Section header: fee / payment / contact"

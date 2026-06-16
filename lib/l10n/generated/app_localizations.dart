@@ -3616,6 +3616,24 @@ abstract class AppLocalizations {
   /// **'Nur Satzsieg zählt'**
   String get tournamentWizardScoringClassicHint;
 
+  /// KO seeding-source selector label
+  ///
+  /// In de, this message translates to:
+  /// **'Seeding-Quelle'**
+  String get tournamentWizardSeedingSourceLabel;
+
+  /// KO seeding-source option: automatic from the prelim phase
+  ///
+  /// In de, this message translates to:
+  /// **'Automatisch aus Vorrunde'**
+  String get tournamentWizardSeedingSourceAuto;
+
+  /// KO seeding-source option: manual seeding
+  ///
+  /// In de, this message translates to:
+  /// **'Manuell festlegen'**
+  String get tournamentWizardSeedingSourceManual;
+
   /// Section header: fee / payment / contact
   ///
   /// In de, this message translates to:

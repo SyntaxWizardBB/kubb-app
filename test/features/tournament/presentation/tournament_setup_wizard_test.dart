@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_binary_choice.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
@@ -784,7 +785,7 @@ void main() {
     expect(fake.createdSetup?['consolation_direct_count'], 4);
   });
 
-  testWidgets('K21/K22: KO matchup + tiebreak are radio buttons, not '
+  testWidgets('K21/K22: KO matchup + tiebreak are binary-choice cards, not '
       'SegmentedButtons, and are selectable', (tester) async {
     final fake = await _pumpWizard(
       tester,
@@ -798,9 +799,9 @@ void main() {
     // No SegmentedButton for either axis anymore (K21/K22).
     expect(find.byType(SegmentedButton<KoMatchup>), findsNothing);
     expect(find.byType(SegmentedButton<KoTiebreakMethod>), findsNothing);
-    // Radios are rendered for both axes.
-    expect(find.byType(RadioListTile<KoMatchup>), findsNWidgets(2));
-    expect(find.byType(RadioListTile<KoTiebreakMethod>), findsNWidgets(2));
+    // ADR-0033 P1.2: both axes are now shared KubbBinaryChoice cards.
+    expect(find.byType(KubbBinaryChoice<KoMatchup>), findsOneWidget);
+    expect(find.byType(KubbBinaryChoice<KoTiebreakMethod>), findsOneWidget);
 
     // Selecting the "1. vs 2." matchup updates the draft.
     await tester.tap(find.text('1. vs 2.'));
@@ -1213,19 +1214,23 @@ void main() {
     expect(diggySwitch.value, isTrue);
   });
 
-  testWidgets('K06: the opening-rule selector is present and selectable',
+  testWidgets('K06: the opening-rule switch is present and default-on (2-4-6)',
       (tester) async {
     await _pumpWizard(tester);
-    final segmented = find.byKey(const Key('wizardOpeningRule'));
-    expect(segmented, findsOneWidget);
-    // Default shows 2-4-6 selected.
-    final button = tester.widget<SegmentedButton<String>>(segmented);
-    expect(button.selected, <String>{'2-4-6'});
-    // Picking "Frei" updates the rule variants.
-    await tester.tap(find.text('Frei'));
+    // ADR-0033 P1.2: the opening rule is now a default-on KubbLabeledSwitch
+    // (ON => '2-4-6', OFF => 'free').
+    final switchFinder = find.descendant(
+      of: find.byKey(const Key('wizardOpeningRule')),
+      matching: find.byType(Switch),
+    );
+    expect(switchFinder, findsOneWidget);
+    // Default shows the switch ON (== 2-4-6).
+    expect(tester.widget<Switch>(switchFinder).value, isTrue);
+    // Toggling it off selects the "free" opening rule.
+    await tester.ensureVisible(switchFinder);
+    await tester.tap(switchFinder);
     await tester.pumpAndSettle();
-    final updated = tester.widget<SegmentedButton<String>>(segmented);
-    expect(updated.selected, <String>{'free'});
+    expect(tester.widget<Switch>(switchFinder).value, isFalse);
   });
 
   testWidgets('K07: the participant info fields allow up to 5 lines',

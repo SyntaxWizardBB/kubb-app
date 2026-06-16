@@ -1956,6 +1956,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardScoringClassicHint => 'Nur Satzsieg zählt';
 
   @override
+  String get tournamentWizardSeedingSourceLabel => 'Seeding-Quelle';
+
+  @override
+  String get tournamentWizardSeedingSourceAuto => 'Automatisch aus Vorrunde';
+
+  @override
+  String get tournamentWizardSeedingSourceManual => 'Manuell festlegen';
+
+  @override
   String get tournamentWizardSectionParticipation => 'Teilnahme';
 
   @override
