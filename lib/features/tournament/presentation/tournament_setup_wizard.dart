@@ -2613,101 +2613,119 @@ class _StepSummary extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: KubbTokens.space4),
-        // K26-3: prelim (Vorrunde) step.
-        _SummarySection(
-          title: l10n.tournamentWizardSummarySectionVorrunde,
-          rows: <_SummaryRowData>[
-            _SummaryRowData(
-              l10n.tournamentWizardSummaryFormatLabel,
-              draft.vorrundeType == VorrundeType.schoch
-                  ? l10n.tournamentWizardVorrundeSchoch
-                  : l10n.tournamentWizardVorrundeGroupPhase,
-            ),
-            // Group count + grouping strategy only for the group phase.
-            if (draft.vorrundeType == VorrundeType.groupPhase) ...[
+        // P2.5: Stage-Graph section (visible in stage-graph mode only).
+        if (draft.formatMode == TournamentFormatMode.stageGraph) ...[
+          _SummarySection(
+            title: l10n.tournamentWizardSummarySectionVorrunde,
+            rows: <_SummaryRowData>[
               _SummaryRowData(
-                l10n.tournamentWizardPoolGroupCountLabel,
-                draft.poolPhaseConfig == null
-                    ? placeholder
-                    : '${draft.poolPhaseConfig!.groupCount}',
+                'Knoten',
+                '${draft.stageGraph?.nodes.length ?? 0}',
               ),
               _SummaryRowData(
-                l10n.tournamentWizardPoolStrategyLabel,
-                _strategyText(l10n, placeholder),
+                'Kanten',
+                '${draft.stageGraph?.edges.length ?? 0}',
               ),
             ],
-            _SummaryRowData(
-              l10n.tournamentWizardMaxSetsLabel,
-              '${draft.maxSets}',
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardSummaryMatchTimeLabel,
-              '${(draft.roundTimeSeconds / 60).round()}',
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardBreakBetweenLabel,
-              '${(draft.breakBetweenMatchesSeconds / 60).round()}',
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardSummaryPitchesLabel,
-              _pitchText(placeholder),
-            ),
-          ],
-        ),
-        const SizedBox(height: KubbTokens.space4),
-        // K26-4: KO step.
-        _SummarySection(
-          title: l10n.tournamentWizardSummarySectionKo,
-          rows: <_SummaryRowData>[
-            _SummaryRowData(
-              l10n.tournamentWizardSummaryKoTypeLabel,
-              _koTypeText(l10n),
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardSummaryKoSizeLabel,
-              (draft.koConfig?.qualifierCount ?? 0) >= 2
-                  ? '${draft.koConfig!.qualifierCount}'
-                  : placeholder,
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardSummaryKoRoundsLabel,
-              _koRoundsText(l10n, placeholder),
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardSummarySeedingLabel,
-              (draft.bracketSeedingMode ?? SeedingMode.auto) ==
-                      SeedingMode.manual
-                  ? l10n.tournamentWizardSummarySeedingManual
-                  : l10n.tournamentWizardSummarySeedingAuto,
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardKoMatchupLabel,
-              draft.koMatchup == KoMatchup.oneVsTwo
-                  ? l10n.tournamentWizardKoMatchupOneTwo
-                  : l10n.tournamentWizardKoMatchupHighLow,
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardKoTiebreakMethodLabel,
-              draft.koTiebreakMethod ==
-                      KoTiebreakMethod.mightyFinisherShootout
-                  ? l10n.tournamentWizardKoTiebreakMighty
-                  : l10n.tournamentWizardKoTiebreakClassic,
-            ),
-            // Consolation-only: name + direct-starter count.
-            if (draft.koType == KoType.consolation) ...[
+          ),
+          const SizedBox(height: KubbTokens.space4),
+        ] else ...[
+          // K26-3: prelim (Vorrunde) step (classic mode only).
+          _SummarySection(
+            title: l10n.tournamentWizardSummarySectionVorrunde,
+            rows: <_SummaryRowData>[
               _SummaryRowData(
-                l10n.tournamentWizardConsolationNameLabel,
-                text(draft.consolationName),
+                l10n.tournamentWizardSummaryFormatLabel,
+                draft.vorrundeType == VorrundeType.schoch
+                    ? l10n.tournamentWizardVorrundeSchoch
+                    : l10n.tournamentWizardVorrundeGroupPhase,
+              ),
+              // Group count + grouping strategy only for the group phase.
+              if (draft.vorrundeType == VorrundeType.groupPhase) ...[
+                _SummaryRowData(
+                  l10n.tournamentWizardPoolGroupCountLabel,
+                  draft.poolPhaseConfig == null
+                      ? placeholder
+                      : '${draft.poolPhaseConfig!.groupCount}',
+                ),
+                _SummaryRowData(
+                  l10n.tournamentWizardPoolStrategyLabel,
+                  _strategyText(l10n, placeholder),
+                ),
+              ],
+              _SummaryRowData(
+                l10n.tournamentWizardMaxSetsLabel,
+                '${draft.maxSets}',
               ),
               _SummaryRowData(
-                l10n.tournamentWizardSummaryConsolationDirectLabel,
-                draft.consolationDirectCount <= 0
-                    ? l10n.tournamentWizardConsolationDirectCountNone
-                    : '${draft.consolationDirectCount}',
+                l10n.tournamentWizardSummaryMatchTimeLabel,
+                '${(draft.roundTimeSeconds / 60).round()}',
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardBreakBetweenLabel,
+                '${(draft.breakBetweenMatchesSeconds / 60).round()}',
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardSummaryPitchesLabel,
+                _pitchText(placeholder),
               ),
             ],
-          ],
-        ),
+          ),
+          const SizedBox(height: KubbTokens.space4),
+          // K26-4: KO step (classic mode only).
+          _SummarySection(
+            title: l10n.tournamentWizardSummarySectionKo,
+            rows: <_SummaryRowData>[
+              _SummaryRowData(
+                l10n.tournamentWizardSummaryKoTypeLabel,
+                _koTypeText(l10n),
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardSummaryKoSizeLabel,
+                (draft.koConfig?.qualifierCount ?? 0) >= 2
+                    ? '${draft.koConfig!.qualifierCount}'
+                    : placeholder,
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardSummaryKoRoundsLabel,
+                _koRoundsText(l10n, placeholder),
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardSummarySeedingLabel,
+                (draft.bracketSeedingMode ?? SeedingMode.auto) ==
+                        SeedingMode.manual
+                    ? l10n.tournamentWizardSummarySeedingManual
+                    : l10n.tournamentWizardSummarySeedingAuto,
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardKoMatchupLabel,
+                draft.koMatchup == KoMatchup.oneVsTwo
+                    ? l10n.tournamentWizardKoMatchupOneTwo
+                    : l10n.tournamentWizardKoMatchupHighLow,
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardKoTiebreakMethodLabel,
+                draft.koTiebreakMethod ==
+                        KoTiebreakMethod.mightyFinisherShootout
+                    ? l10n.tournamentWizardKoTiebreakMighty
+                    : l10n.tournamentWizardKoTiebreakClassic,
+              ),
+              // Consolation-only: name + direct-starter count.
+              if (draft.koType == KoType.consolation) ...[
+                _SummaryRowData(
+                  l10n.tournamentWizardConsolationNameLabel,
+                  text(draft.consolationName),
+                ),
+                _SummaryRowData(
+                  l10n.tournamentWizardSummaryConsolationDirectLabel,
+                  draft.consolationDirectCount <= 0
+                      ? l10n.tournamentWizardConsolationDirectCountNone
+                      : '${draft.consolationDirectCount}',
+                ),
+              ],
+            ],
+          ),
+        ],
       ],
     );
   }
