@@ -265,6 +265,9 @@ final stageGraphTemplatesRepositoryProvider =
 
 /// The list of stage-graph templates visible to the caller as an [AsyncValue]
 /// (mirrors `eloLeaderboardProvider`). Invalidate to refresh after a save.
+///
+/// Exported so the wizard template-bar (P2.2) + other consumers can watch it
+/// without importing the whole repository file.
 final stageGraphTemplatesProvider =
     FutureProvider<List<StageGraphTemplate>>(
   (ref) async =>
