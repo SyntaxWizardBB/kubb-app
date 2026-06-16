@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/features/tournament/application/stage_graph_builder_controller.dart';
 import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart';
@@ -234,6 +235,57 @@ void main() {
     // Field size + template bar remain visible.
     expect(find.text('Feldgröße'), findsOneWidget);
     expect(find.text('Vorlagen'), findsOneWidget);
+  });
+
+  testWidgets(
+      'P2.3: standalone screen reuses the shared StageGraphBuilderBody and '
+      'keeps the page chrome (Scaffold + KubbAppBar) (P2_3-01 / P2_3-02)',
+      (tester) async {
+    await _pump(tester, graph: _validGraph);
+
+    // The standalone screen renders the shared, extracted body...
+    final bodyFinder = find.byType(StageGraphBuilderBody);
+    expect(bodyFinder, findsOneWidget);
+    // ...as the NON-embedded variant (the standalone page owns the scroll).
+    final body = tester.widget<StageGraphBuilderBody>(bodyFinder);
+    expect(body.embedded, isFalse);
+
+    // The page chrome (Scaffold + KubbAppBar) lives in the screen, NOT in the
+    // body: there must be no Scaffold/KubbAppBar BELOW the body widget.
+    expect(find.byType(Scaffold), findsOneWidget);
+    expect(find.byType(KubbAppBar), findsOneWidget);
+    expect(
+      find.descendant(of: bodyFinder, matching: find.byType(Scaffold)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: bodyFinder, matching: find.byType(KubbAppBar)),
+      findsNothing,
+    );
+  });
+
+  testWidgets(
+      'P2.3: a mutation in the standalone body writes the same '
+      'stageGraphBuilderProvider (P2_3-07)', (tester) async {
+    final controller = await _pump(
+      tester,
+      graph: StageGraph(nodes: <StageNode>[_pool('seed')], edges: const []),
+    );
+
+    final addNodeButton = find.byTooltip('Stufe hinzufügen');
+    await tester.ensureVisible(addNodeButton.first);
+    await tester.pumpAndSettle();
+    await tester.tap(addNodeButton.first);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('stageGraphNodeIdField')),
+      'fromBody',
+    );
+    await tester.tap(find.text('Bestätigen'));
+    await tester.pumpAndSettle();
+
+    expect(controller.state.graph.nodes.any((n) => n.id == 'fromBody'), isTrue);
+    expect(find.text('fromBody'), findsOneWidget);
   });
 
   testWidgets('optional: save template calls repo with current graph',

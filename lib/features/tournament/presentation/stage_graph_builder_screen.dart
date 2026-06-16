@@ -27,16 +27,14 @@ import 'package:lucide_icons/lucide_icons.dart';
 /// Editor view selector. Both views share the SAME `stageGraphBuilderProvider`.
 enum _EditorView { form, canvas }
 
-class StageGraphBuilderScreen extends StatefulWidget {
+/// Standalone stage-graph editor screen. Owns the Scaffold + [KubbAppBar]
+/// chrome and delegates the actual editor content to the shared
+/// [StageGraphBuilderBody] (embedded: false), so the wizard can host the exact
+/// same body inline without duplicating the editor implementation. There is no
+/// second editor body — both paths share this one widget and the one
+/// `stageGraphBuilderProvider`.
+class StageGraphBuilderScreen extends StatelessWidget {
   const StageGraphBuilderScreen({super.key});
-
-  @override
-  State<StageGraphBuilderScreen> createState() =>
-      _StageGraphBuilderScreenState();
-}
-
-class _StageGraphBuilderScreenState extends State<StageGraphBuilderScreen> {
-  _EditorView _view = _EditorView.form;
 
   @override
   Widget build(BuildContext context) {
@@ -48,41 +46,94 @@ class _StageGraphBuilderScreenState extends State<StageGraphBuilderScreen> {
         eyebrow: l.stageGraphEyebrow,
         title: l.stageGraphTitle,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // The single additive entry point: form <-> canvas toggle.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              KubbTokens.space4,
-              KubbTokens.space4,
-              KubbTokens.space4,
-              0,
-            ),
-            child: SegmentedButton<_EditorView>(
-              segments: [
-                ButtonSegment(
-                  value: _EditorView.form,
-                  icon: const Icon(LucideIcons.list, size: 16),
-                  label: Text(l.stageGraphViewForm),
-                ),
-                ButtonSegment(
-                  value: _EditorView.canvas,
-                  icon: const Icon(LucideIcons.gitBranch, size: 16),
-                  label: Text(l.stageGraphViewCanvas),
-                ),
-              ],
-              selected: <_EditorView>{_view},
-              onSelectionChanged: (s) => setState(() => _view = s.first),
-            ),
+      body: const StageGraphBuilderBody(),
+    );
+  }
+}
+
+/// The shared, chrome-free editor body (P2.3). Renders the form/canvas toggle
+/// plus the editor content (field-size section, template bar, nodes/edges or
+/// empty state, validation panel) WITHOUT any Scaffold / [KubbAppBar] / SafeArea
+/// top-chrome of its own. The standalone [StageGraphBuilderScreen] wraps it in
+/// the page chrome; the tournament-setup wizard hosts it inline with
+/// `embedded: true`.
+///
+/// It reads/mutates ONLY [stageGraphBuilderProvider] — there is NO second graph
+/// state. The [embedded] flag only adjusts insets/scrolling for the inline
+/// wizard host; it never forks the editor behaviour or the single source of
+/// truth.
+class StageGraphBuilderBody extends StatefulWidget {
+  const StageGraphBuilderBody({super.key, this.embedded = false});
+
+  /// `true` when hosted inline inside the wizard flow (which already scrolls and
+  /// pads). In that case the body must not introduce its own outer scroll view,
+  /// so the inline content composes into the wizard's scroll. `false` (default,
+  /// standalone screen) keeps the original page layout with the toggle pinned
+  /// above an [Expanded] scrolling editor.
+  final bool embedded;
+
+  @override
+  State<StageGraphBuilderBody> createState() => _StageGraphBuilderBodyState();
+}
+
+class _StageGraphBuilderBodyState extends State<StageGraphBuilderBody> {
+  _EditorView _view = _EditorView.form;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final toggle = Padding(
+      padding: EdgeInsets.fromLTRB(
+        widget.embedded ? 0 : KubbTokens.space4,
+        widget.embedded ? 0 : KubbTokens.space4,
+        widget.embedded ? 0 : KubbTokens.space4,
+        0,
+      ),
+      child: SegmentedButton<_EditorView>(
+        segments: [
+          ButtonSegment(
+            value: _EditorView.form,
+            icon: const Icon(LucideIcons.list, size: 16),
+            label: Text(l.stageGraphViewForm),
           ),
-          Expanded(
-            child: _view == _EditorView.form
-                ? const _StageGraphFormView()
-                : const StageGraphCanvas(),
+          ButtonSegment(
+            value: _EditorView.canvas,
+            icon: const Icon(LucideIcons.gitBranch, size: 16),
+            label: Text(l.stageGraphViewCanvas),
           ),
         ],
+        selected: <_EditorView>{_view},
+        onSelectionChanged: (s) => setState(() => _view = s.first),
       ),
+    );
+
+    final body = _view == _EditorView.form
+        ? _StageGraphFormView(embedded: widget.embedded)
+        : const StageGraphCanvas();
+
+    if (widget.embedded) {
+      // Inline host: the wizard already provides the surrounding scroll view, so
+      // the form view composes flat (no nested scroll) and the canvas — which
+      // needs a bounded height — is given a fixed viewport.
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          toggle,
+          const SizedBox(height: KubbTokens.space4),
+          if (_view == _EditorView.form)
+            body
+          else
+            SizedBox(height: 360, child: body),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        toggle,
+        Expanded(child: body),
+      ],
     );
   }
 }
@@ -90,7 +141,11 @@ class _StageGraphBuilderScreenState extends State<StageGraphBuilderScreen> {
 /// The original form-based editor body (unchanged behavior), now embedded under
 /// the form/canvas toggle. Reads/mutates only `stageGraphBuilderProvider`.
 class _StageGraphFormView extends ConsumerWidget {
-  const _StageGraphFormView();
+  const _StageGraphFormView({this.embedded = false});
+
+  /// When embedded in the wizard the surrounding scroll view is provided by the
+  /// host, so this view composes flat (no own scroll, no page padding).
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -99,31 +154,36 @@ class _StageGraphFormView extends ConsumerWidget {
 
     final isEmpty = s.graph.nodes.isEmpty && s.graph.edges.isEmpty;
 
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _FieldSizeSection(fieldSize: s.fieldSize, notifier: notifier),
+        const SizedBox(height: KubbTokens.space6),
+        _TemplateBar(notifier: notifier, graph: s.graph),
+        const SizedBox(height: KubbTokens.space6),
+        if (isEmpty)
+          _EmptyGraphState(notifier: notifier)
+        else ...[
+          _NodesSection(state: s, notifier: notifier),
+          const SizedBox(height: KubbTokens.space6),
+          _EdgesSection(state: s, notifier: notifier),
+        ],
+        const SizedBox(height: KubbTokens.space6),
+        _ValidationPanel(state: s),
+      ],
+    );
+
+    // Embedded: the wizard host already scrolls and pads, so compose flat.
+    if (embedded) return content;
+
     return SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          KubbTokens.space4,
-          KubbTokens.space5,
-          KubbTokens.space4,
-          KubbTokens.space8,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _FieldSizeSection(fieldSize: s.fieldSize, notifier: notifier),
-            const SizedBox(height: KubbTokens.space6),
-            _TemplateBar(notifier: notifier, graph: s.graph),
-            const SizedBox(height: KubbTokens.space6),
-            if (isEmpty)
-              _EmptyGraphState(notifier: notifier)
-            else ...[
-              _NodesSection(state: s, notifier: notifier),
-              const SizedBox(height: KubbTokens.space6),
-              _EdgesSection(state: s, notifier: notifier),
-            ],
-            const SizedBox(height: KubbTokens.space6),
-            _ValidationPanel(state: s),
-          ],
-        ),
+      padding: const EdgeInsets.fromLTRB(
+        KubbTokens.space4,
+        KubbTokens.space5,
+        KubbTokens.space4,
+        KubbTokens.space8,
+      ),
+      child: content,
     );
   }
 }
