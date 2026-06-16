@@ -1036,4 +1036,229 @@ void main() {
       expect(back.koConfig, isNull);
     });
   });
+
+  group('TournamentConfigDraft stage-graph axis (P2.1, ADR-0033)', () {
+    // A non-trivial graph with >= 1 node + 1 edge for round-trip checks.
+    StageGraph graphFixture() => StageGraph(
+          nodes: <StageNode>[
+            StageNode(
+              id: 'prelim',
+              type: StageNodeType.pool,
+              seeding: StageSeedingSource.fromElo,
+              config: const <String, Object?>{'group_count': 2},
+            ),
+            StageNode(
+              id: 'final',
+              type: StageNodeType.singleElim,
+              seeding: StageSeedingSource.fromPrevRanking,
+            ),
+          ],
+          edges: const <StageEdge>[
+            StageEdge(
+              fromNodeId: 'prelim',
+              toNodeId: 'final',
+              selector: TopK(2),
+            ),
+          ],
+        );
+
+    test('classic is the constructor default (P21-02 / P21-03)', () {
+      const d = TournamentConfigDraft();
+      expect(d.formatMode, TournamentFormatMode.classic);
+      expect(d.stageGraph, isNull);
+      expect(d.stageGraphFieldSize, isNull);
+      expect(d.appliedTemplateId, isNull);
+    });
+
+    test('enum has exactly classic + stageGraph in order (P21-01)', () {
+      expect(
+        TournamentFormatMode.values,
+        <TournamentFormatMode>[
+          TournamentFormatMode.classic,
+          TournamentFormatMode.stageGraph,
+        ],
+      );
+    });
+
+    test('copyWith sets + reads back the stage-graph fields (P21-04)', () {
+      final g = graphFixture();
+      const base = TournamentConfigDraft();
+      final next = base.copyWith(
+        formatMode: TournamentFormatMode.stageGraph,
+        stageGraph: g,
+        stageGraphFieldSize: 6,
+        appliedTemplateId: 'tpl-7',
+      );
+      expect(next.formatMode, TournamentFormatMode.stageGraph);
+      expect(next.stageGraph, g);
+      expect(next.stageGraphFieldSize, 6);
+      expect(next.appliedTemplateId, 'tpl-7');
+    });
+
+    test('copyWith clear-sentinels reset each field to null (P21-04)', () {
+      final seeded = const TournamentConfigDraft().copyWith(
+        stageGraph: graphFixture(),
+        stageGraphFieldSize: 4,
+        appliedTemplateId: 'tpl-1',
+      );
+      expect(
+        seeded.copyWith(clearStageGraph: true).stageGraph,
+        isNull,
+      );
+      expect(
+        seeded.copyWith(clearStageGraphFieldSize: true).stageGraphFieldSize,
+        isNull,
+      );
+      expect(
+        seeded.copyWith(clearAppliedTemplateId: true).appliedTemplateId,
+        isNull,
+      );
+    });
+
+    test('copyWith without args leaves the new fields unchanged (P21-04)', () {
+      final seeded = const TournamentConfigDraft().copyWith(
+        formatMode: TournamentFormatMode.stageGraph,
+        stageGraph: graphFixture(),
+      );
+      final same = seeded.copyWith();
+      expect(same.formatMode, TournamentFormatMode.stageGraph);
+      expect(same.stageGraph, seeded.stageGraph);
+    });
+
+    test('== / hashCode account for the new fields (P21-05)', () {
+      const a = TournamentConfigDraft();
+      final byMode = a.copyWith(formatMode: TournamentFormatMode.stageGraph);
+      final byGraph = a.copyWith(stageGraph: graphFixture());
+
+      // Differing drafts are unequal.
+      expect(byMode, isNot(equals(a)));
+      expect(byGraph, isNot(equals(a)));
+      expect(byMode.hashCode, isNot(equals(a.hashCode)));
+      expect(byGraph.hashCode, isNot(equals(a.hashCode)));
+
+      // Identical drafts stay equal incl. hashCode.
+      final graphA = a.copyWith(stageGraph: graphFixture());
+      final graphB = a.copyWith(stageGraph: graphFixture());
+      expect(graphA, equals(graphB));
+      expect(graphA.hashCode, graphB.hashCode);
+    });
+
+    test('stage-graph round-trips through copyWith (P21-09)', () {
+      final g = graphFixture();
+      final draft = const TournamentConfigDraft().copyWith(stageGraph: g);
+      final roundTripped = draft.copyWith();
+      expect(roundTripped.stageGraph, g);
+      expect(roundTripped.stageGraph!.nodes, hasLength(2));
+      expect(roundTripped.stageGraph!.edges, hasLength(1));
+    });
+
+    test(
+        'classic -> stageGraph -> classic keeps koConfig/vorrundeType AND the '
+        'separately-held graph (P21-09, PLAN §4)', () {
+      final ko = KoPhaseConfig(qualifierCount: 4, participantCount: 8);
+      final classic = const TournamentConfigDraft().copyWith(
+        koConfig: ko,
+        vorrundeType: VorrundeType.schoch,
+      );
+      // Switch to stageGraph + attach a graph.
+      final withGraph = classic.copyWith(
+        formatMode: TournamentFormatMode.stageGraph,
+        stageGraph: graphFixture(),
+      );
+      // Switch back to classic — graph stays attached (separate axis).
+      final backToClassic = withGraph.copyWith(
+        formatMode: TournamentFormatMode.classic,
+      );
+      expect(backToClassic.formatMode, TournamentFormatMode.classic);
+      expect(backToClassic.koConfig, ko);
+      expect(backToClassic.vorrundeType, VorrundeType.schoch);
+      expect(backToClassic.stageGraph, isNotNull);
+    });
+
+    test('classic-default toSetupConfig is byte-identical to baseline (P21-06)',
+        () {
+      // Baseline: the exact classic wire keys a default draft emits BEFORE
+      // P2.1. No new stage-graph key may appear in the classic submit path.
+      const baselineKeys = <String>{
+        'organizer_team_id',
+        'invite_only',
+        'location',
+        'venue_address',
+        'event_starts_at',
+        'checkin_until',
+        'registration_closes_at',
+        'weather_note',
+        'info_food',
+        'info_travel',
+        'info_accommodation',
+        'contact_name',
+        'contact_phone',
+        'entry_fee_cents',
+        'currency',
+        'max_team_size',
+        'payment_methods',
+        'league_categories',
+        'scoring',
+        'rule_variants',
+        'ko_match_format',
+        'vorrunde_type',
+        'ko_type',
+        'ko_round_formats',
+        'pitch_plan',
+        'mighty_finisher_quali',
+        'consolation_bracket',
+        'consolation_main_bracket_size',
+        'consolation_direct_count',
+        'consolation_name',
+        'pool_phase_config',
+        'ko_config',
+        'bracket_type',
+        'ko_matchup',
+        'ko_tiebreak_method',
+        'rules_pdf_url',
+        'site_map_pdf_url',
+      };
+      const classicDefault = TournamentConfigDraft();
+      expect(classicDefault.toSetupConfig().keys.toSet(), baselineKeys);
+      // Even with a graph attached, the classic wire form is unchanged: P2.1
+      // never leaks the graph into toSetupConfig (submit wiring is P2.4).
+      final withGraph = classicDefault.copyWith(stageGraph: graphFixture());
+      expect(withGraph.toSetupConfig().keys.toSet(), baselineKeys);
+      expect(
+        withGraph.toSetupConfig(),
+        equals(classicDefault.toSetupConfig()),
+      );
+    });
+  });
+
+  group('TournamentConfigDraft.fromDetail stage-graph axis (P21-07)', () {
+    test('a classic header yields formatMode classic + null graph', () {
+      const header = TournamentDetailHeader(
+        tournamentId: 't-3',
+        displayName: 'Classic',
+        createdByUserId: 'u-1',
+        clubId: null,
+        teamSize: 1,
+        maxTeamSize: 1,
+        minParticipants: 2,
+        maxParticipants: 8,
+        format: TournamentFormat.roundRobin,
+        scoring: TournamentScoring.ekc,
+        matchFormatConfig: <String, Object?>{},
+        tiebreakerOrder: <String>[],
+        byePoints: null,
+        forfeitPoints: null,
+        status: TournamentStatus.published,
+        publishedAt: null,
+        startedAt: null,
+        completedAt: null,
+      );
+
+      final back = TournamentConfigDraft.fromDetail(header);
+
+      expect(back.formatMode, TournamentFormatMode.classic);
+      expect(back.stageGraph, isNull);
+      expect(back.appliedTemplateId, isNull);
+    });
+  });
 }

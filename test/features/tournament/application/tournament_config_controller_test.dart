@@ -325,4 +325,47 @@ void main() {
       expect(state().minParticipants, TournamentConfigDraft.participantsHardMin);
     });
   });
+
+  group('stage-graph format axis setters (P2.1, P21-08)', () {
+    StageGraph graphFixture() => StageGraph(
+          nodes: <StageNode>[
+            StageNode(
+              id: 'n1',
+              type: StageNodeType.pool,
+              seeding: StageSeedingSource.fromElo,
+            ),
+          ],
+          edges: const <StageEdge>[],
+        );
+
+    test('setFormatMode mutates only formatMode', () {
+      expect(state().formatMode, TournamentFormatMode.classic);
+      controller.setFormatMode(TournamentFormatMode.stageGraph);
+      expect(state().formatMode, TournamentFormatMode.stageGraph);
+    });
+
+    test('setStageGraph sets the graph; clearStageGraph nulls it', () {
+      final g = graphFixture();
+      controller.setStageGraph(g);
+      expect(state().stageGraph, g);
+      controller.clearStageGraph();
+      expect(state().stageGraph, isNull);
+      expect(state().appliedTemplateId, isNull);
+    });
+
+    test('toggling the mode does not discard the classic axis nor the graph',
+        () {
+      controller.setVorrundeType(VorrundeType.schoch);
+      controller.setKoType(KoType.singleOut);
+      controller.setStageGraph(graphFixture());
+      final vorrunde = state().vorrundeType;
+
+      controller.setFormatMode(TournamentFormatMode.stageGraph);
+      controller.setFormatMode(TournamentFormatMode.classic);
+
+      expect(state().vorrundeType, vorrunde);
+      expect(state().koType, KoType.singleOut);
+      expect(state().stageGraph, isNotNull);
+    });
+  });
 }

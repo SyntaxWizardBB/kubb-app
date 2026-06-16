@@ -7,6 +7,17 @@ import 'package:kubb_domain/kubb_domain.dart';
 /// the same `isValid` / `issues` access pattern.
 typedef TournamentConfigValidation = ({bool isValid, List<String> issues});
 
+/// Top-level format axis of the setup wizard (ADR-0033 §2): either the
+/// unchanged CLASSIC Vorrunde × KO path, or a free/template STAGE-GRAPH path.
+///
+/// [classic] is the default and a verbatim continuation of today's behaviour —
+/// the stage-graph fields ([TournamentConfigDraft.stageGraph],
+/// [TournamentConfigDraft.appliedTemplateId]) are held SEPARATELY from
+/// `koConfig` / `vorrundeType` and only consumed on submit when the mode is
+/// [stageGraph] (submit wiring lands with P2.4). The two values keep this
+/// fixed order; template SELECTION is a P2.2 wizard concern, not a third mode.
+enum TournamentFormatMode { classic, stageGraph }
+
 /// A player the organizer has invited to an `invite_only` fun tournament.
 /// Carried as wizard-only state: the invitees are NOT persisted in the
 /// tournament's `p_setup` (only the `invite_only` flag is) — each invitee is
@@ -113,6 +124,11 @@ class TournamentConfigDraft {
     this.consolationMainBracketSize = 8,
     this.consolationDirectCount = 0,
     this.consolationName,
+    // --- P2.1: stage-graph format axis (ADR-0033) ---
+    this.formatMode = TournamentFormatMode.classic,
+    this.stageGraph,
+    this.stageGraphFieldSize,
+    this.appliedTemplateId,
   });
 
   /// Rebuilds a draft from a [TournamentDetailHeader] so the setup wizard
@@ -169,6 +185,19 @@ class TournamentConfigDraft {
     final koRoundFormatsRaw = setup['ko_round_formats'];
 
     final maxTeamSize = intOf(setup['max_team_size']) ?? header.maxTeamSize;
+
+    // ---- P2.1 stage-graph axis (EDIT mode) ----
+    // Behaviour-neutral default: a classic header carries no stage-graph
+    // information, so formatMode falls back to classic and stageGraph stays
+    // null. The optional `format_mode` wire key (written by the P2.4 submit
+    // path) flips it to stageGraph; the applied template id rides the
+    // `applied_stage_graph_template_id` key when present. The graph itself is
+    // hydrated by the embedded builder (P2.3) from the server, not inverted
+    // here. No graph key ⇒ classic.
+    final formatModeWire = setup['format_mode'] as String?;
+    final formatMode = formatModeWire == TournamentFormatMode.stageGraph.name
+        ? TournamentFormatMode.stageGraph
+        : TournamentFormatMode.classic;
 
     return TournamentConfigDraft(
       displayName: header.displayName,
@@ -263,6 +292,10 @@ class TournamentConfigDraft {
       // the nested value; fall back to the legacy top-level key for older rows.
       consolationName: (consolationJson?['name'] as String?) ??
           setup['consolation_name'] as String?,
+      // P2.1: classic headers default formatMode to classic + stageGraph null
+      // (behaviour-neutral); only an explicit stage-graph wire key flips it.
+      formatMode: formatMode,
+      appliedTemplateId: setup['applied_stage_graph_template_id'] as String?,
     );
   }
 
@@ -395,6 +428,30 @@ class TournamentConfigDraft {
   /// KO stage type (single-out / double-out / consolation), the second
   /// format axis. See [vorrundeType].
   final KoType koType;
+
+  // --- P2.1: stage-graph format axis (ADR-0033) ------------------------
+  // Held SEPARATELY from the classic Vorrunde × KO axes so toggling the mode
+  // never overwrites koConfig/vorrundeType (and vice versa). Only the submit
+  // path (P2.4) reads [formatMode] to decide which axis is authoritative;
+  // [toSetupConfig]/[toMatchFormatConfig] stay byte-identical to the classic
+  // wire form and never emit these keys.
+
+  /// Top-level format axis: classic Vorrunde × KO (default) vs. stage-graph.
+  final TournamentFormatMode formatMode;
+
+  /// The stage graph the organizer built / picked, when [formatMode] is
+  /// [TournamentFormatMode.stageGraph]. Null in the classic path. Lives
+  /// separately from the classic KO/Vorrunde fields.
+  final StageGraph? stageGraph;
+
+  /// Field/pitch count seeded into the embedded stage-graph builder (P2.3).
+  /// Null until the builder is hosted. Decoupled from the classic pitch plan.
+  final int? stageGraphFieldSize;
+
+  /// Id of the stage-graph template applied to this tournament, when one was
+  /// chosen ("Vorlage wählen") or auto-saved on submit (OE-1, P2.4). Null in
+  /// the classic path and while a free graph hasn't been saved yet.
+  final String? appliedTemplateId;
 
   // --- Model-B (consolation / Trostturnier) config (ADR-0028 §5) -------
   // Only meaningful when [koType] is [KoType.consolation]; the engine
@@ -691,6 +748,13 @@ class TournamentConfigDraft {
     int? consolationDirectCount,
     String? consolationName,
     bool clearConsolationName = false,
+    TournamentFormatMode? formatMode,
+    StageGraph? stageGraph,
+    bool clearStageGraph = false,
+    int? stageGraphFieldSize,
+    bool clearStageGraphFieldSize = false,
+    String? appliedTemplateId,
+    bool clearAppliedTemplateId = false,
   }) {
     return TournamentConfigDraft(
       displayName: displayName ?? this.displayName,
@@ -763,6 +827,14 @@ class TournamentConfigDraft {
       consolationName: clearConsolationName
           ? null
           : (consolationName ?? this.consolationName),
+      formatMode: formatMode ?? this.formatMode,
+      stageGraph: clearStageGraph ? null : (stageGraph ?? this.stageGraph),
+      stageGraphFieldSize: clearStageGraphFieldSize
+          ? null
+          : (stageGraphFieldSize ?? this.stageGraphFieldSize),
+      appliedTemplateId: clearAppliedTemplateId
+          ? null
+          : (appliedTemplateId ?? this.appliedTemplateId),
     );
   }
 
@@ -1178,7 +1250,11 @@ class TournamentConfigDraft {
           listEquals(other.koRoundFormats, koRoundFormats) &&
           other.consolationMainBracketSize == consolationMainBracketSize &&
           other.consolationDirectCount == consolationDirectCount &&
-          other.consolationName == consolationName;
+          other.consolationName == consolationName &&
+          other.formatMode == formatMode &&
+          other.stageGraph == stageGraph &&
+          other.stageGraphFieldSize == stageGraphFieldSize &&
+          other.appliedTemplateId == appliedTemplateId;
 
   @override
   int get hashCode => Object.hashAll(<Object?>[
@@ -1235,5 +1311,9 @@ class TournamentConfigDraft {
         consolationMainBracketSize,
         consolationDirectCount,
         consolationName,
+        formatMode,
+        stageGraph,
+        stageGraphFieldSize,
+        appliedTemplateId,
       ]);
 }
