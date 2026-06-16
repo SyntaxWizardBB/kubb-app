@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_binary_choice.dart';
+import 'package:kubb_app/features/tournament/application/stage_graph_builder_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
@@ -422,6 +423,43 @@ class _InviteSeededController extends TournamentConfigController {
         ),
       );
 }
+
+/// P2.2: a Schoch-seeded draft already switched into the stage-graph format
+/// mode, so the wizard renders the embedded builder (not the classic Vorrunde
+/// × KO section) and skips the koConfig step.
+class _StageGraphSeededController extends TournamentConfigController {
+  @override
+  TournamentConfigDraft build() => _withStammdaten(
+        const TournamentConfigDraft(
+          format: TournamentFormat.swissThenKo,
+          vorrundeType: VorrundeType.schoch,
+          formatMode: TournamentFormatMode.stageGraph,
+        ),
+      );
+}
+
+/// P2.2 fixtures: a valid non-empty single-pool graph (no findings) and the
+/// empty graph, used to drive the stage-graph format-step gate.
+StageGraph get _p2ValidGraph => StageGraph(
+      nodes: <StageNode>[
+        StageNode(
+          id: 'groups',
+          type: StageNodeType.pool,
+          seeding: StageSeedingSource.asRouted,
+          config: const <String, Object?>{'groupCount': 2, 'qualifierCount': 2},
+        ),
+      ],
+      edges: const <StageEdge>[],
+    );
+
+/// Overrides [stageGraphBuilderProvider] with a controller seeded from [graph]
+/// (and a generous field size so capacity findings don't fire). Returned as
+/// `Object` so it slots into the `_pumpWizard` `extraOverrides` (`List<Object>`
+/// .cast()) without depending on the riverpod `Override` type being exported.
+Object _stageGraphOverride(StageGraph graph) =>
+    stageGraphBuilderProvider.overrideWith(
+      () => StageGraphBuilderController(graph, 8),
+    );
 
 Future<_FakeTournamentRemote> _pumpWizard(
   WidgetTester tester, {
@@ -1604,6 +1642,155 @@ void main() {
       expect(fake.callCount, 1);
       // It is the chosen value, NOT the silent default of 2.
       expect(fake.createdSetsToWin, 3);
+    });
+  });
+
+  group('P2.2 format-mode fork (stage graph)', () {
+    /// Walks name -> participants -> format step (step 3) for a stage-graph
+    /// flow (4 visible steps: name, participants, format, summary — koConfig
+    /// is skipped).
+    Future<void> walkToFormat(WidgetTester tester) async {
+      await _typeName(tester, 'Graph Cup');
+      await _tapNext(tester); // -> participants
+      await _tapNext(tester); // -> format (Vorrunde)
+    }
+
+    testWidgets(
+        'format step opens with the KubbBinaryChoice mode fork offering '
+        'Klassisch / Stufen-Graph / Vorlage wählen (DOD-01)', (tester) async {
+      await _pumpWizard(
+        tester,
+        controllerOverride: _SchochSeededController.new,
+        extraOverrides: <Object>[_stageGraphOverride(_p2ValidGraph)],
+      );
+      await walkToFormat(tester);
+
+      // The primary mode fork is a KubbBinaryChoice.
+      expect(find.byType(KubbBinaryChoice<TournamentFormatMode>),
+          findsOneWidget);
+      // The three semantic paths are visible (classic + the two stage-graph
+      // sub-affordances build/template).
+      expect(find.text('Klassisch'), findsOneWidget);
+      expect(find.text('Stufen-Graph'), findsWidgets);
+    });
+
+    testWidgets(
+        'switching to stage-graph hides the classic Vorrunde/KO part and '
+        'shows the embedded builder (DOD-04)', (tester) async {
+      await _pumpWizard(
+        tester,
+        controllerOverride: _SchochSeededController.new,
+        extraOverrides: <Object>[_stageGraphOverride(_p2ValidGraph)],
+      );
+      await walkToFormat(tester);
+
+      // Classic mode first: the KO-system selector is present.
+      expect(find.text('K.-o.-System'), findsOneWidget);
+      expect(find.byKey(const Key('wizardStageGraphBuilder')), findsNothing);
+
+      // Tap the stage-graph mode option.
+      await tester.tap(find.text('Stufen-Graph').first);
+      await tester.pumpAndSettle();
+
+      // Classic KO-system selector is gone; the embedded builder is mounted.
+      expect(find.text('K.-o.-System'), findsNothing);
+      expect(find.byKey(const Key('wizardStageGraphBuilder')), findsOneWidget);
+      // The source sub-choice is also a shared KubbBinaryChoice.
+      expect(find.byKey(const Key('wizardStageGraphSource')), findsOneWidget);
+      // Default sub-affordance is "build", so no template bar yet.
+      expect(
+        find.byKey(const Key('wizardStageGraphTemplateBar')),
+        findsNothing,
+      );
+
+      // Picking "Vorlage wählen" surfaces the template bar.
+      await tester.tap(find.text('Vorlage wählen'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('wizardStageGraphTemplateBar')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+        '_visibleSteps skips koConfig in stage-graph mode, keeps it in classic '
+        '(DOD-06)', (tester) async {
+      // Stage-graph seeded: 4-step flow (no KO-config step).
+      await _pumpWizard(
+        tester,
+        controllerOverride: _StageGraphSeededController.new,
+        extraOverrides: <Object>[_stageGraphOverride(_p2ValidGraph)],
+      );
+      expect(find.text('Schritt 1 von 4'), findsOneWidget);
+
+      await _typeName(tester, 'Graph Cup');
+      await _tapNext(tester); // -> participants
+      expect(find.text('Schritt 2 von 4'), findsOneWidget);
+      await _tapNext(tester); // -> format
+      expect(find.text('Schritt 3 von 4'), findsOneWidget);
+      await _tapNext(tester); // -> summary (koConfig skipped)
+      expect(find.text('Schritt 4 von 4'), findsOneWidget);
+      expect(find.text('Übersicht'), findsOneWidget);
+      // The KO-config step never appears in this flow.
+      expect(find.text('KO-Konfiguration'), findsNothing);
+    });
+
+    testWidgets(
+        'format-step validity in stage-graph mode: empty graph blocks Weiter, '
+        'a valid non-empty graph frees it (DOD-07)', (tester) async {
+      // Empty graph first -> the format step gate is closed.
+      await _pumpWizard(
+        tester,
+        controllerOverride: _StageGraphSeededController.new,
+        extraOverrides: <Object>[
+          _stageGraphOverride(
+            StageGraph(nodes: const <StageNode>[], edges: const <StageEdge>[]),
+          ),
+        ],
+      );
+      await _typeName(tester, 'Graph Cup');
+      await _tapNext(tester); // -> participants
+      await _tapNext(tester); // -> format
+      expect(find.text('Schritt 3 von 4'), findsOneWidget);
+
+      // "Nicht spielbar" status; "Weiter" is disabled (empty graph).
+      expect(find.text('Nicht spielbar'), findsOneWidget);
+      final blocked = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Weiter'),
+      );
+      expect(blocked.onPressed, isNull);
+    });
+
+    testWidgets(
+        'valid non-empty graph frees Weiter on the stage-graph format step '
+        '(DOD-07)', (tester) async {
+      await _pumpWizard(
+        tester,
+        controllerOverride: _StageGraphSeededController.new,
+        extraOverrides: <Object>[_stageGraphOverride(_p2ValidGraph)],
+      );
+      await _typeName(tester, 'Graph Cup');
+      await _tapNext(tester); // -> participants
+      await _tapNext(tester); // -> format
+      expect(find.text('Schritt 3 von 4'), findsOneWidget);
+
+      expect(find.text('Spielbar'), findsOneWidget);
+      final freed = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Weiter'),
+      );
+      expect(freed.onPressed, isNotNull);
+    });
+
+    testWidgets('the old jump-button key is gone (DOD-08)', (tester) async {
+      await _pumpWizard(
+        tester,
+        controllerOverride: _StageGraphSeededController.new,
+        extraOverrides: <Object>[_stageGraphOverride(_p2ValidGraph)],
+      );
+      await _typeName(tester, 'Graph Cup');
+      await _tapNext(tester); // -> participants
+      await _tapNext(tester); // -> format
+      expect(find.byKey(const Key('wizardStageGraphEntry')), findsNothing);
     });
   });
 }

@@ -2283,6 +2283,49 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardFormatComingSoon => 'Folgt in M2+';
 
   @override
+  String get tournamentWizardFormatModeLabel => 'Turnierformat';
+
+  @override
+  String get tournamentWizardFormatModeClassic => 'Klassisch';
+
+  @override
+  String get tournamentWizardFormatModeClassicHint =>
+      'Vorrunde (Gruppenphase oder Schoch) und ein K.-o.-Baum.';
+
+  @override
+  String get tournamentWizardFormatModeStageGraph => 'Stufen-Graph';
+
+  @override
+  String get tournamentWizardFormatModeStageGraphHint =>
+      'Eigene Stufen frei verketten – Haupt- und Neben-Cups möglich.';
+
+  @override
+  String get tournamentWizardStageGraphSourceLabel => 'Stufen-Graph';
+
+  @override
+  String get tournamentWizardStageGraphSourceBuild => 'Neu erstellen';
+
+  @override
+  String get tournamentWizardStageGraphSourceBuildHint =>
+      'Stufen und Routing von Hand komponieren.';
+
+  @override
+  String get tournamentWizardStageGraphSourceTemplate => 'Vorlage wählen';
+
+  @override
+  String get tournamentWizardStageGraphSourceTemplateHint =>
+      'Mit einer gespeicherten oder System-Vorlage starten.';
+
+  @override
+  String get tournamentWizardStageGraphEmbedHint =>
+      'Stufen, Routing und Validierung direkt hier komponieren.';
+
+  @override
+  String tournamentWizardStageGraphInventory(int nodeCount, int edgeCount) {
+    return '$nodeCount Stufen · $edgeCount Kanten';
+  }
+
+  @override
   String get tournamentWizardVorrundeLabel => 'Vorrunde';
 
   @override

@@ -4216,6 +4216,78 @@ abstract class AppLocalizations {
   /// **'Folgt in M2+'**
   String get tournamentWizardFormatComingSoon;
 
+  /// P2.2 format-mode fork label (classic vs stage graph)
+  ///
+  /// In de, this message translates to:
+  /// **'Turnierformat'**
+  String get tournamentWizardFormatModeLabel;
+
+  /// Classic format-mode option (Vorrunde x KO)
+  ///
+  /// In de, this message translates to:
+  /// **'Klassisch'**
+  String get tournamentWizardFormatModeClassic;
+
+  /// Classic format-mode description
+  ///
+  /// In de, this message translates to:
+  /// **'Vorrunde (Gruppenphase oder Schoch) und ein K.-o.-Baum.'**
+  String get tournamentWizardFormatModeClassicHint;
+
+  /// Stage-graph format-mode option
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen-Graph'**
+  String get tournamentWizardFormatModeStageGraph;
+
+  /// Stage-graph format-mode description
+  ///
+  /// In de, this message translates to:
+  /// **'Eigene Stufen frei verketten – Haupt- und Neben-Cups möglich.'**
+  String get tournamentWizardFormatModeStageGraphHint;
+
+  /// Stage-graph source sub-choice label (build vs template)
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen-Graph'**
+  String get tournamentWizardStageGraphSourceLabel;
+
+  /// Build a fresh stage graph option
+  ///
+  /// In de, this message translates to:
+  /// **'Neu erstellen'**
+  String get tournamentWizardStageGraphSourceBuild;
+
+  /// Build-fresh stage-graph description
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen und Routing von Hand komponieren.'**
+  String get tournamentWizardStageGraphSourceBuildHint;
+
+  /// Pick a saved/system template option
+  ///
+  /// In de, this message translates to:
+  /// **'Vorlage wählen'**
+  String get tournamentWizardStageGraphSourceTemplate;
+
+  /// Template stage-graph description
+  ///
+  /// In de, this message translates to:
+  /// **'Mit einer gespeicherten oder System-Vorlage starten.'**
+  String get tournamentWizardStageGraphSourceTemplateHint;
+
+  /// Embedded stage-graph builder hint
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen, Routing und Validierung direkt hier komponieren.'**
+  String get tournamentWizardStageGraphEmbedHint;
+
+  /// Embedded stage-graph node/edge inventory summary
+  ///
+  /// In de, this message translates to:
+  /// **'{nodeCount} Stufen · {edgeCount} Kanten'**
+  String tournamentWizardStageGraphInventory(int nodeCount, int edgeCount);
+
   /// Preliminary stage selector label
   ///
   /// In de, this message translates to:

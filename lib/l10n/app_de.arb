@@ -2949,6 +2949,58 @@
   "@tournamentWizardFormatComingSoon": {
     "description": "Pill on disabled formats"
   },
+  "tournamentWizardFormatModeLabel": "Turnierformat",
+  "@tournamentWizardFormatModeLabel": {
+    "description": "P2.2 format-mode fork label (classic vs stage graph)"
+  },
+  "tournamentWizardFormatModeClassic": "Klassisch",
+  "@tournamentWizardFormatModeClassic": {
+    "description": "Classic format-mode option (Vorrunde x KO)"
+  },
+  "tournamentWizardFormatModeClassicHint": "Vorrunde (Gruppenphase oder Schoch) und ein K.-o.-Baum.",
+  "@tournamentWizardFormatModeClassicHint": {
+    "description": "Classic format-mode description"
+  },
+  "tournamentWizardFormatModeStageGraph": "Stufen-Graph",
+  "@tournamentWizardFormatModeStageGraph": {
+    "description": "Stage-graph format-mode option"
+  },
+  "tournamentWizardFormatModeStageGraphHint": "Eigene Stufen frei verketten – Haupt- und Neben-Cups möglich.",
+  "@tournamentWizardFormatModeStageGraphHint": {
+    "description": "Stage-graph format-mode description"
+  },
+  "tournamentWizardStageGraphSourceLabel": "Stufen-Graph",
+  "@tournamentWizardStageGraphSourceLabel": {
+    "description": "Stage-graph source sub-choice label (build vs template)"
+  },
+  "tournamentWizardStageGraphSourceBuild": "Neu erstellen",
+  "@tournamentWizardStageGraphSourceBuild": {
+    "description": "Build a fresh stage graph option"
+  },
+  "tournamentWizardStageGraphSourceBuildHint": "Stufen und Routing von Hand komponieren.",
+  "@tournamentWizardStageGraphSourceBuildHint": {
+    "description": "Build-fresh stage-graph description"
+  },
+  "tournamentWizardStageGraphSourceTemplate": "Vorlage wählen",
+  "@tournamentWizardStageGraphSourceTemplate": {
+    "description": "Pick a saved/system template option"
+  },
+  "tournamentWizardStageGraphSourceTemplateHint": "Mit einer gespeicherten oder System-Vorlage starten.",
+  "@tournamentWizardStageGraphSourceTemplateHint": {
+    "description": "Template stage-graph description"
+  },
+  "tournamentWizardStageGraphEmbedHint": "Stufen, Routing und Validierung direkt hier komponieren.",
+  "@tournamentWizardStageGraphEmbedHint": {
+    "description": "Embedded stage-graph builder hint"
+  },
+  "tournamentWizardStageGraphInventory": "{nodeCount} Stufen · {edgeCount} Kanten",
+  "@tournamentWizardStageGraphInventory": {
+    "description": "Embedded stage-graph node/edge inventory summary",
+    "placeholders": {
+      "nodeCount": { "type": "int" },
+      "edgeCount": { "type": "int" }
+    }
+  },
   "tournamentWizardVorrundeLabel": "Vorrunde",
   "@tournamentWizardVorrundeLabel": {
     "description": "Preliminary stage selector label"
