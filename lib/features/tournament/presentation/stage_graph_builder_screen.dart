@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/core/ui/platform_capabilities.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
@@ -82,32 +83,39 @@ class _StageGraphBuilderBodyState extends State<StageGraphBuilderBody> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final toggle = Padding(
-      padding: EdgeInsets.fromLTRB(
-        widget.embedded ? 0 : KubbTokens.space4,
-        widget.embedded ? 0 : KubbTokens.space4,
-        widget.embedded ? 0 : KubbTokens.space4,
-        0,
-      ),
-      child: SegmentedButton<_EditorView>(
-        segments: [
-          ButtonSegment(
-            value: _EditorView.form,
-            icon: const Icon(LucideIcons.list, size: 16),
-            label: Text(l.stageGraphViewForm),
-          ),
-          ButtonSegment(
-            value: _EditorView.canvas,
-            icon: const Icon(LucideIcons.gitBranch, size: 16),
-            label: Text(l.stageGraphViewCanvas),
-          ),
-        ],
-        selected: <_EditorView>{_view},
-        onSelectionChanged: (s) => setState(() => _view = s.first),
-      ),
-    );
+    // P4: the visual drag-and-drop canvas is desktop-only and needs room. On
+    // mobile / narrow viewports the guided form editor is used and the toggle
+    // is hidden; `effectiveView` clamps a stale `canvas` selection back to form.
+    final canvasAvailable = isCanvasAvailable(MediaQuery.sizeOf(context).width);
+    final effectiveView = canvasAvailable ? _view : _EditorView.form;
+    final toggle = !canvasAvailable
+        ? const SizedBox.shrink()
+        : Padding(
+            padding: EdgeInsets.fromLTRB(
+              widget.embedded ? 0 : KubbTokens.space4,
+              widget.embedded ? 0 : KubbTokens.space4,
+              widget.embedded ? 0 : KubbTokens.space4,
+              0,
+            ),
+            child: SegmentedButton<_EditorView>(
+              segments: [
+                ButtonSegment(
+                  value: _EditorView.form,
+                  icon: const Icon(LucideIcons.list, size: 16),
+                  label: Text(l.stageGraphViewForm),
+                ),
+                ButtonSegment(
+                  value: _EditorView.canvas,
+                  icon: const Icon(LucideIcons.gitBranch, size: 16),
+                  label: Text(l.stageGraphViewCanvas),
+                ),
+              ],
+              selected: <_EditorView>{_view},
+              onSelectionChanged: (s) => setState(() => _view = s.first),
+            ),
+          );
 
-    final body = _view == _EditorView.form
+    final body = effectiveView == _EditorView.form
         ? _StageGraphFormView(embedded: widget.embedded)
         : const StageGraphCanvas();
 
@@ -120,7 +128,7 @@ class _StageGraphBuilderBodyState extends State<StageGraphBuilderBody> {
         children: [
           toggle,
           const SizedBox(height: KubbTokens.space4),
-          if (_view == _EditorView.form)
+          if (effectiveView == _EditorView.form)
             body
           else
             SizedBox(height: 360, child: body),
