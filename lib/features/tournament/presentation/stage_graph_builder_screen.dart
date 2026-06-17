@@ -8,6 +8,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_chip.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_labeled_switch.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/tournament/application/stage_graph_builder_controller.dart';
 import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart';
@@ -656,6 +657,16 @@ class _EdgesSection extends StatelessWidget {
             ),
             const SizedBox(height: KubbTokens.space2),
           ],
+        // P3.3: a stage may have MORE than one outgoing edge (winners into the
+        // main bracket AND early losers into a side cup — the KubbMAIster
+        // topology). Make that affordance discoverable once edges are possible.
+        if (canAddEdge) ...[
+          const SizedBox(height: KubbTokens.space2),
+          Text(
+            l.stageGraphEdgesMultiHint,
+            style: TextStyle(fontSize: 12, height: 1.3, color: tokens.fgMuted),
+          ),
+        ],
       ],
     );
   }
@@ -904,6 +915,27 @@ class _AddIconButton extends StatelessWidget {
 
 /// Add/edit dialog for a [StageNode]. Builds the node and pops it; the caller
 /// routes the result into `addNode` / `updateNode`.
+/// Muted explanatory caption used inside the node/edge config dialogs to label
+/// what a setting means (P3.2 — e.g. "qualifiers count PER GROUP", selector
+/// semantics). Plain caption styling from [KubbTokens]; no hardcoded colors.
+class _DialogHint extends StatelessWidget {
+  const _DialogHint(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Padding(
+      padding: const EdgeInsets.only(top: KubbTokens.space2),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 12, height: 1.3, color: tokens.fgMuted),
+      ),
+    );
+  }
+}
+
 class _NodeDialog extends StatefulWidget {
   const _NodeDialog({required this.existingIds, this.initial});
 
@@ -923,6 +955,9 @@ class _NodeDialogState extends State<_NodeDialog> {
   int _qualifierCount = 2;
   int _rounds = 5;
   int _slots = 8;
+  // Double-elim only: with bracket reset the lower-bracket winner must beat the
+  // upper-bracket winner TWICE (engine reads config['with_reset']).
+  bool _withReset = false;
   String? _idError;
 
   @override
@@ -937,6 +972,7 @@ class _NodeDialogState extends State<_NodeDialog> {
     _qualifierCount = _readInt(config['qualifierCount'], _qualifierCount);
     _rounds = _readInt(config['rounds'], _rounds);
     _slots = _readInt(config['slots'], _slots);
+    _withReset = config['with_reset'] == true;
   }
 
   static int _readInt(Object? value, int fallback) =>
@@ -981,9 +1017,11 @@ class _NodeDialogState extends State<_NodeDialog> {
         return <String, Object?>{'rounds': _rounds};
       case StageNodeType.shootoutQuali:
         return <String, Object?>{'slots': _slots};
-      case StageNodeType.singleElim:
       case StageNodeType.doubleElim:
+        return <String, Object?>{'with_reset': _withReset};
+      case StageNodeType.singleElim:
       case StageNodeType.consolation:
+        // Bracket is computed straight from the seeded order; no extra config.
         return const <String, Object?>{};
     }
   }
@@ -1085,21 +1123,27 @@ class _NodeDialogState extends State<_NodeDialog> {
             max: 32,
             onChanged: (v) => setState(() => _groupCount = v),
           ))
+          ..add(_DialogHint(l.stageGraphConfigGroupCountHint))
           ..add(WizardNumberField(
             label: l.stageGraphConfigQualifierCount,
             value: _qualifierCount,
             min: 1,
             max: 64,
             onChanged: (v) => setState(() => _qualifierCount = v),
-          ));
+          ))
+          // P3.2: the recurring confusion — qualifiers are PER GROUP, not a
+          // total across all groups. Spell it out at the field.
+          ..add(_DialogHint(l.stageGraphConfigQualifierHint));
       case StageNodeType.swiss:
-        fields.add(WizardNumberField(
-          label: l.stageGraphConfigRounds,
-          value: _rounds,
-          min: 1,
-          max: 20,
-          onChanged: (v) => setState(() => _rounds = v),
-        ));
+        fields
+          ..add(WizardNumberField(
+            label: l.stageGraphConfigRounds,
+            value: _rounds,
+            min: 1,
+            max: 20,
+            onChanged: (v) => setState(() => _rounds = v),
+          ))
+          ..add(_DialogHint(l.stageGraphConfigSwissHint));
       case StageNodeType.shootoutQuali:
         fields.add(WizardNumberField(
           label: l.stageGraphConfigSlots,
@@ -1108,10 +1152,18 @@ class _NodeDialogState extends State<_NodeDialog> {
           max: 64,
           onChanged: (v) => setState(() => _slots = v),
         ));
-      case StageNodeType.singleElim:
       case StageNodeType.doubleElim:
+        // P3.1: the one engine-consumed KO config — bracket reset.
+        fields.add(KubbLabeledSwitch(
+          title: l.stageGraphConfigWithReset,
+          subtitle: l.stageGraphConfigWithResetHint,
+          value: _withReset,
+          onChanged: (v) => setState(() => _withReset = v),
+        ));
+      case StageNodeType.singleElim:
       case StageNodeType.consolation:
-        break;
+        // No further config: the bracket is built straight from the seed order.
+        fields.add(_DialogHint(l.stageGraphConfigBracketAuto));
     }
     return [
       for (final field in fields) ...[
@@ -1277,6 +1329,8 @@ class _EdgeDialogState extends State<_EdgeDialog> {
                   _error = null;
                 }),
               ),
+              // P3.2: explain what the chosen selector actually forwards.
+              _DialogHint(_selectorKindHint(l, _kind)),
               ..._selectorParams(l),
               const SizedBox(height: KubbTokens.space3),
               DropdownButtonFormField<StageSeedingIn>(
@@ -1413,6 +1467,23 @@ class _EdgeDialogState extends State<_EdgeDialog> {
         return l.stageGraphSelectorWinners;
       case _SelectorKind.nonQualifiers:
         return l.stageGraphSelectorNonQualifiers;
+    }
+  }
+
+  /// One-line explanation of what a selector forwards (P3.2). Makes the
+  /// KubbMAIster side-cup feed (LosersOfRounds) discoverable.
+  String _selectorKindHint(AppLocalizations l, _SelectorKind kind) {
+    switch (kind) {
+      case _SelectorKind.topK:
+        return l.stageGraphSelectorHintTopK;
+      case _SelectorKind.ranks:
+        return l.stageGraphSelectorHintRanks;
+      case _SelectorKind.losersOfRounds:
+        return l.stageGraphSelectorHintLosers;
+      case _SelectorKind.winners:
+        return l.stageGraphSelectorHintWinners;
+      case _SelectorKind.nonQualifiers:
+        return l.stageGraphSelectorHintNonQualifiers;
     }
   }
 }

@@ -592,6 +592,42 @@ abstract class AppLocalizations {
   /// **'Plätze'**
   String get stageGraphConfigSlots;
 
+  /// Helper caption under the groupCount field
+  ///
+  /// In de, this message translates to:
+  /// **'In wie viele Gruppen das Feld aufgeteilt wird.'**
+  String get stageGraphConfigGroupCountHint;
+
+  /// Helper caption clarifying qualifiers are per group, not total
+  ///
+  /// In de, this message translates to:
+  /// **'Qualifikanten zählen pro Gruppe, nicht über alle Gruppen zusammen: bei 2 ziehen die besten 2 jeder Gruppe weiter.'**
+  String get stageGraphConfigQualifierHint;
+
+  /// Helper caption under the swiss rounds field
+  ///
+  /// In de, this message translates to:
+  /// **'Anzahl der Schweizer-System-Runden. Die Paarungen jeder Runde entstehen live nach Tabellenstand.'**
+  String get stageGraphConfigSwissHint;
+
+  /// Switch label for double-elim bracket reset
+  ///
+  /// In de, this message translates to:
+  /// **'Grand-Final-Reset'**
+  String get stageGraphConfigWithReset;
+
+  /// Helper caption explaining the double-elim bracket reset
+  ///
+  /// In de, this message translates to:
+  /// **'Gewinnt das Team aus dem Verlierer-Bracket das erste Finale, gibt es ein zweites, entscheidendes Finale (beide haben dann genau eine Niederlage).'**
+  String get stageGraphConfigWithResetHint;
+
+  /// Caption for single-elim/consolation nodes which need no extra config
+  ///
+  /// In de, this message translates to:
+  /// **'Das Bracket wird automatisch aus der Setzliste gebaut — keine weitere Konfiguration nötig.'**
+  String get stageGraphConfigBracketAuto;
+
   /// Inline error when the node id is empty
   ///
   /// In de, this message translates to:
@@ -699,6 +735,42 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Übrige'**
   String get stageGraphSelectorNonQualifiers;
+
+  /// Explanation of the TopK selector
+  ///
+  /// In de, this message translates to:
+  /// **'Die besten K jeder Quell-Stufe ziehen weiter — z. B. Top 2 jeder Gruppe.'**
+  String get stageGraphSelectorHintTopK;
+
+  /// Explanation of the Ranks selector
+  ///
+  /// In de, this message translates to:
+  /// **'Ein zusammenhängender Rangbereich der Quell-Stufe zieht weiter — z. B. Ränge 3–4 für ein zweites Tableau.'**
+  String get stageGraphSelectorHintRanks;
+
+  /// Explanation of the LosersOfRounds selector
+  ///
+  /// In de, this message translates to:
+  /// **'Verlierer bestimmter K.-o.-Runden werden weitergeleitet — so speist man Trost-/Neben-Cups (KubbMAIster-Topologie).'**
+  String get stageGraphSelectorHintLosers;
+
+  /// Explanation of the Winners selector
+  ///
+  /// In de, this message translates to:
+  /// **'Alle Sieger der Quell-Stufe ziehen weiter.'**
+  String get stageGraphSelectorHintWinners;
+
+  /// Explanation of the NonQualifiers selector
+  ///
+  /// In de, this message translates to:
+  /// **'Alle, die sich NICHT qualifiziert haben, ziehen weiter — z. B. in einen Neben-Cup.'**
+  String get stageGraphSelectorHintNonQualifiers;
+
+  /// Hint that a node may have multiple outgoing edges
+  ///
+  /// In de, this message translates to:
+  /// **'Eine Stufe darf mehrere Kanten haben: z. B. Sieger ins Haupt-Bracket UND Verlierer früher Runden in einen Neben-Cup (siehe KubbMAIster).'**
+  String get stageGraphEdgesMultiHint;
 
   /// Label for StageNodeType.pool
   ///

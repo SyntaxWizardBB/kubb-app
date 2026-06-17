@@ -297,6 +297,29 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphConfigSlots => 'Plätze';
 
   @override
+  String get stageGraphConfigGroupCountHint =>
+      'In wie viele Gruppen das Feld aufgeteilt wird.';
+
+  @override
+  String get stageGraphConfigQualifierHint =>
+      'Qualifikanten zählen pro Gruppe, nicht über alle Gruppen zusammen: bei 2 ziehen die besten 2 jeder Gruppe weiter.';
+
+  @override
+  String get stageGraphConfigSwissHint =>
+      'Anzahl der Schweizer-System-Runden. Die Paarungen jeder Runde entstehen live nach Tabellenstand.';
+
+  @override
+  String get stageGraphConfigWithReset => 'Grand-Final-Reset';
+
+  @override
+  String get stageGraphConfigWithResetHint =>
+      'Gewinnt das Team aus dem Verlierer-Bracket das erste Finale, gibt es ein zweites, entscheidendes Finale (beide haben dann genau eine Niederlage).';
+
+  @override
+  String get stageGraphConfigBracketAuto =>
+      'Das Bracket wird automatisch aus der Setzliste gebaut — keine weitere Konfiguration nötig.';
+
+  @override
   String get stageGraphErrorIdEmpty => 'Die ID darf nicht leer sein.';
 
   @override
@@ -358,6 +381,30 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get stageGraphSelectorNonQualifiers => 'Übrige';
+
+  @override
+  String get stageGraphSelectorHintTopK =>
+      'Die besten K jeder Quell-Stufe ziehen weiter — z. B. Top 2 jeder Gruppe.';
+
+  @override
+  String get stageGraphSelectorHintRanks =>
+      'Ein zusammenhängender Rangbereich der Quell-Stufe zieht weiter — z. B. Ränge 3–4 für ein zweites Tableau.';
+
+  @override
+  String get stageGraphSelectorHintLosers =>
+      'Verlierer bestimmter K.-o.-Runden werden weitergeleitet — so speist man Trost-/Neben-Cups (KubbMAIster-Topologie).';
+
+  @override
+  String get stageGraphSelectorHintWinners =>
+      'Alle Sieger der Quell-Stufe ziehen weiter.';
+
+  @override
+  String get stageGraphSelectorHintNonQualifiers =>
+      'Alle, die sich NICHT qualifiziert haben, ziehen weiter — z. B. in einen Neben-Cup.';
+
+  @override
+  String get stageGraphEdgesMultiHint =>
+      'Eine Stufe darf mehrere Kanten haben: z. B. Sieger ins Haupt-Bracket UND Verlierer früher Runden in einen Neben-Cup (siehe KubbMAIster).';
 
   @override
   String get stageGraphNodeTypePool => 'Gruppen';

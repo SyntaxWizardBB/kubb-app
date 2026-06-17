@@ -360,6 +360,30 @@
   "@stageGraphConfigSlots": {
     "description": "Config field label for slots"
   },
+  "stageGraphConfigGroupCountHint": "In wie viele Gruppen das Feld aufgeteilt wird.",
+  "@stageGraphConfigGroupCountHint": {
+    "description": "Helper caption under the groupCount field"
+  },
+  "stageGraphConfigQualifierHint": "Qualifikanten zählen pro Gruppe, nicht über alle Gruppen zusammen: bei 2 ziehen die besten 2 jeder Gruppe weiter.",
+  "@stageGraphConfigQualifierHint": {
+    "description": "Helper caption clarifying qualifiers are per group, not total"
+  },
+  "stageGraphConfigSwissHint": "Anzahl der Schweizer-System-Runden. Die Paarungen jeder Runde entstehen live nach Tabellenstand.",
+  "@stageGraphConfigSwissHint": {
+    "description": "Helper caption under the swiss rounds field"
+  },
+  "stageGraphConfigWithReset": "Grand-Final-Reset",
+  "@stageGraphConfigWithReset": {
+    "description": "Switch label for double-elim bracket reset"
+  },
+  "stageGraphConfigWithResetHint": "Gewinnt das Team aus dem Verlierer-Bracket das erste Finale, gibt es ein zweites, entscheidendes Finale (beide haben dann genau eine Niederlage).",
+  "@stageGraphConfigWithResetHint": {
+    "description": "Helper caption explaining the double-elim bracket reset"
+  },
+  "stageGraphConfigBracketAuto": "Das Bracket wird automatisch aus der Setzliste gebaut — keine weitere Konfiguration nötig.",
+  "@stageGraphConfigBracketAuto": {
+    "description": "Caption for single-elim/consolation nodes which need no extra config"
+  },
   "stageGraphErrorIdEmpty": "Die ID darf nicht leer sein.",
   "@stageGraphErrorIdEmpty": {
     "description": "Inline error when the node id is empty"
@@ -441,6 +465,30 @@
   "stageGraphSelectorNonQualifiers": "Übrige",
   "@stageGraphSelectorNonQualifiers": {
     "description": "Short label for a NonQualifiers selector"
+  },
+  "stageGraphSelectorHintTopK": "Die besten K jeder Quell-Stufe ziehen weiter — z. B. Top 2 jeder Gruppe.",
+  "@stageGraphSelectorHintTopK": {
+    "description": "Explanation of the TopK selector"
+  },
+  "stageGraphSelectorHintRanks": "Ein zusammenhängender Rangbereich der Quell-Stufe zieht weiter — z. B. Ränge 3–4 für ein zweites Tableau.",
+  "@stageGraphSelectorHintRanks": {
+    "description": "Explanation of the Ranks selector"
+  },
+  "stageGraphSelectorHintLosers": "Verlierer bestimmter K.-o.-Runden werden weitergeleitet — so speist man Trost-/Neben-Cups (KubbMAIster-Topologie).",
+  "@stageGraphSelectorHintLosers": {
+    "description": "Explanation of the LosersOfRounds selector"
+  },
+  "stageGraphSelectorHintWinners": "Alle Sieger der Quell-Stufe ziehen weiter.",
+  "@stageGraphSelectorHintWinners": {
+    "description": "Explanation of the Winners selector"
+  },
+  "stageGraphSelectorHintNonQualifiers": "Alle, die sich NICHT qualifiziert haben, ziehen weiter — z. B. in einen Neben-Cup.",
+  "@stageGraphSelectorHintNonQualifiers": {
+    "description": "Explanation of the NonQualifiers selector"
+  },
+  "stageGraphEdgesMultiHint": "Eine Stufe darf mehrere Kanten haben: z. B. Sieger ins Haupt-Bracket UND Verlierer früher Runden in einen Neben-Cup (siehe KubbMAIster).",
+  "@stageGraphEdgesMultiHint": {
+    "description": "Hint that a node may have multiple outgoing edges"
   },
   "stageGraphNodeTypePool": "Gruppen",
   "@stageGraphNodeTypePool": { "description": "Label for StageNodeType.pool" },
