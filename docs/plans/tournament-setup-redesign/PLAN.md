@@ -121,3 +121,50 @@ Dateien, 1 Commit/Block, kein `git add -A`.
 `widgets/_wizard_ko_config_step.dart` · `data/tournament_config_draft.dart` ·
 `data/stage_graph_templates_repository.dart` (save/apply RPC-Namen) ·
 `lib/core/ui/widgets/kubb_button.dart` (Referenz für neue Choice-Widgets).
+
+## 7. Phase P5 — Nachtrag aus Compliance-Review (§8 + §4)
+
+P1–P4 sind in main-branch; Review-Ergebnis: §8 partial, §4 missing (ADR-Nachtrag
+2026-06-18). P5 schließt beide. **Klassisch-Pfad bleibt bit-identisch.**
+
+**Config-Key-Schema (eine Quelle, UI schreibt = Engine liest), in `StageNode.config`:**
+Bestehende Keys (camelCase) bleiben: `groupCount`, `qualifierCount`, `rounds`,
+`slots`, `with_reset`. NEU (snake_case, spiegelt Klassik-JSON, kein Template-Daten-
+Migrat): `ko_matchup` (seed_high_vs_low|one_vs_two), `ko_tiebreak_method`
+(classic_kingtoss_removal|mighty_finisher_shootout), `ko_round_formats`
+(`[MatchFormatSpec.toJson()]`, Index 0 = Runde 1), `grouping_strategy`
+(snake|random|seeded), `random_seed`.
+
+- **P5.1 §8-Summary (kein Engine-Eingriff).** `_StepSummary` (tournament_setup_wizard.dart
+  ~2616) rendert statt 2 Counts: Knoten (id/Typ/Seeding/Config), Kanten (from→to/
+  Selektor inkl. LosersOfRounds/seedingIn). Null-Template-Fall (`stageGraph==null` &&
+  `appliedTemplateId!=null` → Graph aus `stageGraphBuilderProvider` + Template-Name).
+  Neues `widgets/stage_graph_summary_view.dart` (stateless, reuse Label-Mapper +
+  promoted `stageNodeConfigSummary`). +Regressionstest (built + template-Modus).
+- **P5.2 §4 Domain (pure-Dart, keine Migration).** Neues
+  `kubb_domain/.../stage_graph/stage_node_config.dart`: typisierte read/write-Helper
+  über die freie Map (reuse MatchFormatSpec/KoMatchup/KoTiebreakMethod/
+  PoolGroupingStrategy). +Round-trip-Tests.
+- **P5.3 §4 Migration (Engine-Konsum, lasttragend).** Additive Migration (ts >
+  20261283000000), `CREATE OR REPLACE` aus jeweils HÖCHSTEM Stand kopiert
+  (Stale-Body-Guard per-Funktion-grep): `tournament_generate_stage_matches`
+  (latest = 20261261000000) liest `ko_matchup`/`grouping_strategy`; neuer Helper
+  `_tournament_schedule_stage_ko_seconds` (analog `_tournament_schedule_ko_seconds`
+  20261251000000, liest aber `tournament_stages.config->ko_round_formats`);
+  Stage-KO-Advance-Pfade in 20261252000000 auf den neuen Helper. KEIN db reset, KEIN
+  CDC/Publication-Eingriff. **Vorab verifizieren:** akzeptieren
+  `_tournament_compute_ko_bracket`/`_de_bracket` einen Matchup-Param? Pool-Splitter
+  vorhanden? (sizing P5.3). +SQL-Proben in BEGIN/ROLLBACK.
+- **P5.4 §4 UI-Extraktion (draft-frei).** `widgets/stage_config/` mit
+  `ko_stage_config_panel` (reuse `_KoRoundBlock`→public, KubbBinaryChoice für
+  Matchup/Tiebreak, Consolation), `pool_stage_config_panel` (Grouping + „pro Gruppe"),
+  `swiss_stage_config_panel` (über bestehende, bereits draft-freie SwissConfigSection).
+  Klassik-Steps hosten dieselben Panels → bit-identisch.
+- **P5.5 §4 Node-Dialog-Wiring.** `_NodeDialog` rendert pro Typ die Panels;
+  `_buildConfig` schreibt die neuen Keys via P5.2-Writer (single_elim/consolation nicht
+  mehr `{}`). `stageNodeConfigSummary` deckt neue Keys (Tile + Summary konsistent).
+- **P5.6 Tests/DoD.** Engine-Probe + Round-trip + Summary grün; analyze 0 Fehler;
+  Suite grün; 1 Commit/Phase, Push auf Ansage.
+
+**OP2 (3 System-Presets) folgt NACH P5** (Migrations-Seed, sobald Knoten volle Config
+tragen). **§2** bleibt als 2+1-Gabel (ADR-Wortlaut nachgezogen) — kein Umbau.
