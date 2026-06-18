@@ -550,20 +550,22 @@ class _NodeTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                // Wrap (not Row): on a narrow phone a long type-label chip
+                // (e.g. "K.-o. (einfach)") drops below the id instead of
+                // overflowing — the chip cannot ellipsize (P4.2).
+                Wrap(
+                  spacing: KubbTokens.space2,
+                  runSpacing: KubbTokens.space1,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Flexible(
-                      child: Text(
-                        node.id,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: tokens.fg,
-                        ),
+                    Text(
+                      node.id,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: tokens.fg,
                       ),
                     ),
-                    const SizedBox(width: KubbTokens.space2),
                     KubbChip(
                       tone: KubbChipTone.neutral,
                       label: stageNodeTypeLabel(l, node.type),
@@ -717,17 +719,17 @@ class _EdgeTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Row(
+                // Wrap (not Row): the seeding-mode chip drops below the
+                // selector label on a narrow phone instead of overflowing.
+                Wrap(
+                  spacing: KubbTokens.space2,
+                  runSpacing: KubbTokens.space1,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Flexible(
-                      child: Text(
-                        edgeSelectorLabel(l, edge.selector),
-                        overflow: TextOverflow.ellipsis,
-                        style:
-                            TextStyle(fontSize: 12, color: tokens.fgMuted),
-                      ),
+                    Text(
+                      edgeSelectorLabel(l, edge.selector),
+                      style: TextStyle(fontSize: 12, color: tokens.fgMuted),
                     ),
-                    const SizedBox(width: KubbTokens.space2),
                     KubbChip(
                       tone: KubbChipTone.neutral,
                       label: stageSeedingInLabel(l, edge.seedingIn),
@@ -915,6 +917,18 @@ class _AddIconButton extends StatelessWidget {
 
 /// Add/edit dialog for a [StageNode]. Builds the node and pops it; the caller
 /// routes the result into `addNode` / `updateNode`.
+/// Responsive content width for the editor dialogs (ADR-0033 P4.2). Caps at the
+/// roomy-desktop 360, but on a phone — where the guided form is the ONLY editor
+/// — it shrinks to fit: AlertDialog reserves ~80dp of horizontal inset, so a
+/// fixed 360 would overflow a 360dp screen. Clamps to a sane minimum.
+double _stageDialogWidth(BuildContext context) {
+  // AlertDialog reserves its inset padding (~40dp each side) AND its content
+  // padding (~24dp each side); subtract both so the fixed-width content never
+  // exceeds the dialog's own constraints on a phone.
+  final available = MediaQuery.sizeOf(context).width - 128;
+  return available.clamp(220.0, 360.0);
+}
+
 /// Muted explanatory caption used inside the node/edge config dialogs to label
 /// what a setting means (P3.2 — e.g. "qualifiers count PER GROUP", selector
 /// semantics). Plain caption styling from [KubbTokens]; no hardcoded colors.
@@ -1033,7 +1047,7 @@ class _NodeDialogState extends State<_NodeDialog> {
     return AlertDialog(
       title: Text(isEdit ? l.stageGraphEditNode : l.stageGraphAddNode),
       content: SizedBox(
-        width: 360,
+        width: _stageDialogWidth(context),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1286,7 +1300,7 @@ class _EdgeDialogState extends State<_EdgeDialog> {
     return AlertDialog(
       title: Text(l.stageGraphAddEdge),
       content: SizedBox(
-        width: 360,
+        width: _stageDialogWidth(context),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1535,7 +1549,7 @@ class _SaveTemplateDialogState extends State<_SaveTemplateDialog> {
     return AlertDialog(
       title: Text(l.stageGraphTemplateSave),
       content: SizedBox(
-        width: 360,
+        width: _stageDialogWidth(context),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
