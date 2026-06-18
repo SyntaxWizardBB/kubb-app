@@ -145,16 +145,29 @@ Migrat): `ko_matchup` (seed_high_vs_low|one_vs_two), `ko_tiebreak_method`
   `kubb_domain/.../stage_graph/stage_node_config.dart`: typisierte read/write-Helper
   über die freie Map (reuse MatchFormatSpec/KoMatchup/KoTiebreakMethod/
   PoolGroupingStrategy). +Round-trip-Tests.
-- **P5.3 §4 Migration (Engine-Konsum, lasttragend).** Additive Migration (ts >
-  20261283000000), `CREATE OR REPLACE` aus jeweils HÖCHSTEM Stand kopiert
-  (Stale-Body-Guard per-Funktion-grep): `tournament_generate_stage_matches`
-  (latest = 20261261000000) liest `ko_matchup`/`grouping_strategy`; neuer Helper
-  `_tournament_schedule_stage_ko_seconds` (analog `_tournament_schedule_ko_seconds`
-  20261251000000, liest aber `tournament_stages.config->ko_round_formats`);
-  Stage-KO-Advance-Pfade in 20261252000000 auf den neuen Helper. KEIN db reset, KEIN
-  CDC/Publication-Eingriff. **Vorab verifizieren:** akzeptieren
-  `_tournament_compute_ko_bracket`/`_de_bracket` einen Matchup-Param? Pool-Splitter
-  vorhanden? (sizing P5.3). +SQL-Proben in BEGIN/ROLLBACK.
+- **P5.3 §4 Engine-Konsum — AUFGETEILT (Engine-Surface-Investigation 2026-06-18,
+  Owner „auch Klassik nachrüsten" → ADR-0034).** Befund: Matchup & Tiebreak sind
+  AUCH klassisch nur Stubs; Pool-Splitter `_tournament_compute_pools` existiert;
+  KO-Tiebreak hat KEINE Infrastruktur (Pool-Shootout ≠ KO-Match-Tie). Reihenfolge
+  sicher→riskant:
+  - **P5.3a Pool-Multi-Gruppen (Stage)** — `tournament_generate_stage_matches`
+    (latest 20261261000000) ruft `_tournament_compute_pools` für pool-Knoten mit
+    `group_count`/`grouping_strategy`/`random_seed`. Additiv, berührt Klassik nicht.
+  - **P5.3b Matchup-Konsum (Klassik + Stage, ADR-0034 §1)** —
+    `_tournament_compute_ko_bracket` (+`_de_bracket`) additiver Param
+    `p_matchup DEFAULT 'seed_high_vs_low'`; nur Round-1-Pairing verzweigt,
+    Aufstiegs-Slots unverändert. Klassik aus `tournaments.ko_matchup`, Stage aus
+    `config`. Pure-Dart `_standardBracketOrder` mitziehen. Bracket-Goldens prüfen.
+  - **P5.3c Per-Runden-Format (Stage-Runde 1)** — neuer
+    `_tournament_schedule_stage_ko_seconds` (analog `_tournament_schedule_ko_seconds`
+    20261251000000, liest `tournament_stages.config->ko_round_formats`).
+    Ehrlich-teilweise: spätere Stage-KO-Runden haben noch keinen Scheduler
+    (ADR-0031-Nachbau) — dokumentiert.
+  - **P5.3d Tiebreak-Methoden-Konsum (ADR-0034 §2, EIGENES Feature, ZULETZT)** —
+    Scoring-/Finalize-Flow-Eingriff, keine bestehende Infrastruktur; eigener Block
+    + eigene Tests; fasst Match-Generierung NICHT an.
+  Guardrails: additiv, Stale-Body per-Funktion-Höchst-Timestamp, Probe in
+  BEGIN/ROLLBACK, KEIN db reset, KEIN CDC/Publication-Eingriff.
 - **P5.4 §4 UI-Extraktion (draft-frei).** `widgets/stage_config/` mit
   `ko_stage_config_panel` (reuse `_KoRoundBlock`→public, KubbBinaryChoice für
   Matchup/Tiebreak, Consolation), `pool_stage_config_panel` (Grouping + „pro Gruppe"),
