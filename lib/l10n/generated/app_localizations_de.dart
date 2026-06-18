@@ -297,6 +297,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphConfigSlots => 'Plätze';
 
   @override
+  String get stageGraphConfigRandomSeed => 'Zufalls-Seed';
+
+  @override
+  String get stageGraphConfigKoRoundCount => 'Anzahl K.-o.-Runden';
+
+  @override
+  String stageGraphConfigKoRoundTitle(String n) {
+    return 'Runde $n';
+  }
+
+  @override
   String get stageGraphConfigGroupCountHint =>
       'In wie viele Gruppen das Feld aufgeteilt wird.';
 

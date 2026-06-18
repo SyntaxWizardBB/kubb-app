@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/ui/platform_capabilities.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_binary_choice.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_chip.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
@@ -13,6 +14,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/tournament/application/stage_graph_builder_controller.dart';
 import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/stage_graph_canvas.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/ko_round_block.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -972,7 +974,25 @@ class _NodeDialogState extends State<_NodeDialog> {
   // Double-elim only: with bracket reset the lower-bracket winner must beat the
   // upper-bracket winner TWICE (engine reads config['with_reset']).
   bool _withReset = false;
+  // P5.5 §4: full per-node KO config (matchup / tiebreak method / per-round
+  // format) and pool grouping — written via the kubb_domain stage-node-config
+  // writers so the keys stay in lockstep with the engine/summary readers.
+  KoMatchup _matchup = KoMatchup.seedHighVsLow;
+  KoTiebreakMethod _tiebreak = KoTiebreakMethod.classicKingtossRemoval;
+  List<MatchFormatSpec> _koRounds = const <MatchFormatSpec>[];
+  PoolGroupingStrategy _grouping = PoolGroupingStrategy.snake;
+  int _randomSeed = 0;
   String? _idError;
+
+  /// Sensible default for a freshly-added KO round (Bo3, 30 min, no tiebreak),
+  /// matching the wizard's bare fallback. Self-contained so the stage builder
+  /// stays decoupled from the wizard draft.
+  static const MatchFormatSpec _defaultKoRound = MatchFormatSpec(
+    setsToWin: 2,
+    maxSets: 3,
+    timeLimitSeconds: 1800,
+    tiebreakEnabled: false,
+  );
 
   @override
   void initState() {
@@ -986,11 +1006,34 @@ class _NodeDialogState extends State<_NodeDialog> {
     _qualifierCount = _readInt(config['qualifierCount'], _qualifierCount);
     _rounds = _readInt(config['rounds'], _rounds);
     _slots = _readInt(config['slots'], _slots);
-    _withReset = config['with_reset'] == true;
+    _withReset = koWithResetFromConfig(config);
+    _matchup = koMatchupFromConfig(config) ?? _matchup;
+    _tiebreak = koTiebreakMethodFromConfig(config) ?? _tiebreak;
+    final fmts = koRoundFormatsFromConfig(config);
+    _koRounds = fmts.isNotEmpty
+        ? List<MatchFormatSpec>.of(fmts)
+        : <MatchFormatSpec>[_defaultKoRound, _defaultKoRound, _defaultKoRound];
+    _grouping = poolGroupingStrategyFromConfig(config) ?? _grouping;
+    _randomSeed = poolRandomSeedFromConfig(config) ?? _randomSeed;
   }
 
   static int _readInt(Object? value, int fallback) =>
       value is int ? value : fallback;
+
+  /// Grows/shrinks the per-round format list to [count], seeding new rounds with
+  /// the default. Keeps existing per-round edits.
+  void _setKoRoundCount(int count) {
+    setState(() {
+      if (count > _koRounds.length) {
+        _koRounds = <MatchFormatSpec>[
+          ..._koRounds,
+          for (var i = _koRounds.length; i < count; i++) _defaultKoRound,
+        ];
+      } else if (count < _koRounds.length) {
+        _koRounds = _koRounds.sublist(0, count);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -1018,25 +1061,37 @@ class _NodeDialogState extends State<_NodeDialog> {
     Navigator.of(context).pop(node);
   }
 
-  /// Builds only the type-relevant config keys.
+  /// Builds the type-relevant config keys via the kubb_domain writers (P5.5).
   Map<String, Object?> _buildConfig() {
     switch (_type) {
       case StageNodeType.pool:
       case StageNodeType.roundRobin:
-        return <String, Object?>{
-          'groupCount': _groupCount,
-          'qualifierCount': _qualifierCount,
-        };
+        return writePoolNodeConfig(
+          groupCount: _groupCount,
+          qualifierCount: _qualifierCount,
+          strategy: _grouping,
+          // The seed only matters for the random strategy; drop it otherwise.
+          randomSeed:
+              _grouping == PoolGroupingStrategy.random ? _randomSeed : null,
+        );
       case StageNodeType.swiss:
         return <String, Object?>{'rounds': _rounds};
       case StageNodeType.shootoutQuali:
         return <String, Object?>{'slots': _slots};
       case StageNodeType.doubleElim:
-        return <String, Object?>{'with_reset': _withReset};
+        return writeKoNodeConfig(
+          matchup: _matchup,
+          tiebreakMethod: _tiebreak,
+          withReset: _withReset,
+          roundFormats: _koRounds,
+        );
       case StageNodeType.singleElim:
       case StageNodeType.consolation:
-        // Bracket is computed straight from the seeded order; no extra config.
-        return const <String, Object?>{};
+        return writeKoNodeConfig(
+          matchup: _matchup,
+          tiebreakMethod: _tiebreak,
+          roundFormats: _koRounds,
+        );
     }
   }
 
@@ -1147,7 +1202,31 @@ class _NodeDialogState extends State<_NodeDialog> {
           ))
           // P3.2: the recurring confusion — qualifiers are PER GROUP, not a
           // total across all groups. Spell it out at the field.
-          ..add(_DialogHint(l.stageGraphConfigQualifierHint));
+          ..add(_DialogHint(l.stageGraphConfigQualifierHint))
+          // P5.5: how participants are distributed across the groups.
+          ..add(_fieldLabel(l.tournamentWizardPoolStrategyLabel))
+          ..add(DropdownButtonFormField<PoolGroupingStrategy>(
+            initialValue: _grouping,
+            isExpanded: true,
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+            items: [
+              for (final s in PoolGroupingStrategy.values)
+                DropdownMenuItem<PoolGroupingStrategy>(
+                  value: s,
+                  child: Text(_groupingLabel(l, s)),
+                ),
+            ],
+            onChanged: (v) => setState(() => _grouping = v ?? _grouping),
+          ));
+        if (_grouping == PoolGroupingStrategy.random) {
+          fields.add(WizardNumberField(
+            label: l.stageGraphConfigRandomSeed,
+            value: _randomSeed,
+            min: 0,
+            max: 999999,
+            onChanged: (v) => setState(() => _randomSeed = v),
+          ));
+        }
       case StageNodeType.swiss:
         fields
           ..add(WizardNumberField(
@@ -1167,17 +1246,10 @@ class _NodeDialogState extends State<_NodeDialog> {
           onChanged: (v) => setState(() => _slots = v),
         ));
       case StageNodeType.doubleElim:
-        // P3.1: the one engine-consumed KO config — bracket reset.
-        fields.add(KubbLabeledSwitch(
-          title: l.stageGraphConfigWithReset,
-          subtitle: l.stageGraphConfigWithResetHint,
-          value: _withReset,
-          onChanged: (v) => setState(() => _withReset = v),
-        ));
+        fields.addAll(_koConfigFields(l, includeReset: true));
       case StageNodeType.singleElim:
       case StageNodeType.consolation:
-        // No further config: the bracket is built straight from the seed order.
-        fields.add(_DialogHint(l.stageGraphConfigBracketAuto));
+        fields.addAll(_koConfigFields(l, includeReset: false));
     }
     return [
       for (final field in fields) ...[
@@ -1186,6 +1258,91 @@ class _NodeDialogState extends State<_NodeDialog> {
       ],
     ];
   }
+
+  /// Full per-node KO config (P5.5 §4): matchup, tiebreak method, optional
+  /// bracket reset, and a per-round format list (reusing the classic
+  /// [KoRoundBlock] editor). Round count is explicit because a stage KO node's
+  /// size depends on routing and is not known at config time; the engine reads
+  /// `ko_round_formats[round-1]` with a fallback beyond the list.
+  List<Widget> _koConfigFields(AppLocalizations l, {required bool includeReset}) {
+    return <Widget>[
+      if (includeReset)
+        KubbLabeledSwitch(
+          title: l.stageGraphConfigWithReset,
+          subtitle: l.stageGraphConfigWithResetHint,
+          value: _withReset,
+          onChanged: (v) => setState(() => _withReset = v),
+        ),
+      _fieldLabel(l.tournamentWizardKoMatchupLabel),
+      KubbBinaryChoice<KoMatchup>(
+        selected: _matchup,
+        onChanged: (v) => setState(() => _matchup = v),
+        options: <KubbChoiceOption<KoMatchup>>[
+          KubbChoiceOption<KoMatchup>(
+            value: KoMatchup.seedHighVsLow,
+            title: l.tournamentWizardKoMatchupHighLow,
+          ),
+          KubbChoiceOption<KoMatchup>(
+            value: KoMatchup.oneVsTwo,
+            title: l.tournamentWizardKoMatchupOneTwo,
+          ),
+        ],
+      ),
+      _fieldLabel(l.tournamentWizardKoTiebreakMethodLabel),
+      KubbBinaryChoice<KoTiebreakMethod>(
+        selected: _tiebreak,
+        onChanged: (v) => setState(() => _tiebreak = v),
+        options: <KubbChoiceOption<KoTiebreakMethod>>[
+          KubbChoiceOption<KoTiebreakMethod>(
+            value: KoTiebreakMethod.classicKingtossRemoval,
+            title: l.tournamentWizardKoTiebreakClassic,
+          ),
+          KubbChoiceOption<KoTiebreakMethod>(
+            value: KoTiebreakMethod.mightyFinisherShootout,
+            title: l.tournamentWizardKoTiebreakMighty,
+          ),
+        ],
+      ),
+      WizardNumberField(
+        label: l.stageGraphConfigKoRoundCount,
+        value: _koRounds.length,
+        min: 1,
+        max: 8,
+        onChanged: _setKoRoundCount,
+      ),
+      for (var i = 0; i < _koRounds.length; i++)
+        KoRoundBlock(
+          key: ValueKey<int>(i),
+          title: l.stageGraphConfigKoRoundTitle((i + 1).toString()),
+          spec: _koRounds[i],
+          onChanged: (spec) => setState(() {
+            _koRounds = <MatchFormatSpec>[..._koRounds]..[i] = spec;
+          }),
+        ),
+    ];
+  }
+
+  Widget _fieldLabel(String text) => Builder(
+        builder: (context) {
+          final tokens = Theme.of(context).extension<KubbTokens>()!;
+          return Text(
+            text,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.4,
+              color: tokens.fgMuted,
+            ),
+          );
+        },
+      );
+
+  static String _groupingLabel(AppLocalizations l, PoolGroupingStrategy s) =>
+      switch (s) {
+        PoolGroupingStrategy.snake => l.tournamentWizardPoolStrategySnake,
+        PoolGroupingStrategy.seeded => l.tournamentWizardPoolStrategySeeded,
+        PoolGroupingStrategy.random => l.tournamentWizardPoolStrategyRandom,
+      };
 }
 
 /// Selector kinds offered in the edge dialog (parallel to [EdgeSelector]).
@@ -1740,14 +1897,45 @@ String edgeSelectorLabel(AppLocalizations l, EdgeSelector selector) {
 /// omission — every configured key surfaces) so both render identically.
 String? stageNodeConfigSummary(AppLocalizations l, StageNode node) {
   final parts = <String>[];
-  final g = node.config['groupCount'];
+  final cfg = node.config;
+  final g = cfg['groupCount'];
   if (g is int) parts.add('${l.stageGraphConfigGroupCount}: $g');
-  final q = node.config['qualifierCount'];
+  final q = cfg['qualifierCount'];
   if (q is int) parts.add('${l.stageGraphConfigQualifierCount}: $q');
-  final r = node.config['rounds'];
+  // P5.5: pool grouping strategy.
+  final grouping = poolGroupingStrategyFromConfig(cfg);
+  if (grouping != null) {
+    parts.add(switch (grouping) {
+      PoolGroupingStrategy.snake => l.tournamentWizardPoolStrategySnake,
+      PoolGroupingStrategy.seeded => l.tournamentWizardPoolStrategySeeded,
+      PoolGroupingStrategy.random => l.tournamentWizardPoolStrategyRandom,
+    });
+  }
+  final r = cfg['rounds'];
   if (r is int) parts.add('${l.stageGraphConfigRounds}: $r');
-  final s = node.config['slots'];
+  final s = cfg['slots'];
   if (s is int) parts.add('${l.stageGraphConfigSlots}: $s');
-  if (node.config['with_reset'] == true) parts.add(l.stageGraphConfigWithReset);
+  if (koWithResetFromConfig(cfg)) parts.add(l.stageGraphConfigWithReset);
+  // P5.5: full KO config — matchup, tiebreak method, per-round count.
+  final matchup = koMatchupFromConfig(cfg);
+  if (matchup != null) {
+    parts.add(switch (matchup) {
+      KoMatchup.seedHighVsLow => l.tournamentWizardKoMatchupHighLow,
+      KoMatchup.oneVsTwo => l.tournamentWizardKoMatchupOneTwo,
+    });
+  }
+  final tiebreak = koTiebreakMethodFromConfig(cfg);
+  if (tiebreak != null) {
+    parts.add(switch (tiebreak) {
+      KoTiebreakMethod.classicKingtossRemoval =>
+        l.tournamentWizardKoTiebreakClassic,
+      KoTiebreakMethod.mightyFinisherShootout =>
+        l.tournamentWizardKoTiebreakMighty,
+    });
+  }
+  final koRounds = koRoundFormatsFromConfig(cfg);
+  if (koRounds.isNotEmpty) {
+    parts.add('${l.stageGraphConfigKoRoundCount}: ${koRounds.length}');
+  }
   return parts.isEmpty ? null : parts.join(' · ');
 }

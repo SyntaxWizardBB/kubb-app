@@ -592,6 +592,24 @@ abstract class AppLocalizations {
   /// **'Plätze'**
   String get stageGraphConfigSlots;
 
+  /// Config field label for the deterministic random grouping seed
+  ///
+  /// In de, this message translates to:
+  /// **'Zufalls-Seed'**
+  String get stageGraphConfigRandomSeed;
+
+  /// Config field label for the number of per-round KO format blocks
+  ///
+  /// In de, this message translates to:
+  /// **'Anzahl K.-o.-Runden'**
+  String get stageGraphConfigKoRoundCount;
+
+  /// Title of a per-round KO format block
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {n}'**
+  String stageGraphConfigKoRoundTitle(String n);
+
   /// Helper caption under the groupCount field
   ///
   /// In de, this message translates to:

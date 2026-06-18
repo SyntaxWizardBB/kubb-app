@@ -360,6 +360,23 @@
   "@stageGraphConfigSlots": {
     "description": "Config field label for slots"
   },
+  "stageGraphConfigRandomSeed": "Zufalls-Seed",
+  "@stageGraphConfigRandomSeed": {
+    "description": "Config field label for the deterministic random grouping seed"
+  },
+  "stageGraphConfigKoRoundCount": "Anzahl K.-o.-Runden",
+  "@stageGraphConfigKoRoundCount": {
+    "description": "Config field label for the number of per-round KO format blocks"
+  },
+  "stageGraphConfigKoRoundTitle": "Runde {n}",
+  "@stageGraphConfigKoRoundTitle": {
+    "description": "Title of a per-round KO format block",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "stageGraphConfigGroupCountHint": "In wie viele Gruppen das Feld aufgeteilt wird.",
   "@stageGraphConfigGroupCountHint": {
     "description": "Helper caption under the groupCount field"

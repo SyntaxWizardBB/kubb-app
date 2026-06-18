@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_labeled_switch.dart';
 import 'package:kubb_app/features/tournament/presentation/stage_graph_builder_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
-// P3.1/P3.2: the node dialog must surface the engine-consumed KO config
-// (double-elim `with_reset`) and the per-group qualifier labeling.
+// P3.1/P3.2 + P5.5: the node dialog surfaces the full per-node KO config
+// (matchup, tiebreak method, per-round format, double-elim `with_reset`) and the
+// pool grouping / per-group qualifier labeling.
+
+/// The double-elim reset Switch lives inside the 'Grand-Final-Reset'
+/// KubbLabeledSwitch; the KO per-round blocks add their own tiebreak switches,
+/// so target the reset one specifically.
+Finder resetSwitch() => find.descendant(
+      of: find.widgetWithText(KubbLabeledSwitch, 'Grand-Final-Reset'),
+      matching: find.byType(Switch),
+    );
 
 /// Pumps a button that opens the (private) node EDIT dialog via the public seam
 /// and captures the returned node.
@@ -39,6 +49,44 @@ Future<StageNode?> _editNode(
     ),
   );
   await tester.tap(find.text('open'));
+  await tester.pumpAndSettle();
+  return result;
+}
+
+/// Like [_editNode] but also taps Bestätigen, so the returned node carries the
+/// config the dialog built.
+Future<StageNode?> _editAndConfirm(
+  WidgetTester tester, {
+  required StageNode initial,
+}) async {
+  StageNode? result;
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: KubbTheme.light(),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => Center(
+            child: ElevatedButton(
+              onPressed: () async {
+                result = await showStageNodeEditDialog(
+                  context,
+                  initial: initial,
+                  existingIds: const <String>{},
+                );
+              },
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.tap(find.text('open'));
+  await tester.pumpAndSettle();
+  await tester.ensureVisible(find.text('Bestätigen'));
+  await tester.tap(find.text('Bestätigen'));
   await tester.pumpAndSettle();
   return result;
 }
@@ -86,8 +134,10 @@ void main() {
     await tester.pumpAndSettle();
 
     // Toggle the reset switch on, then confirm.
-    await tester.tap(find.byType(Switch));
+    await tester.ensureVisible(resetSwitch());
+    await tester.tap(resetSwitch());
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Bestätigen'));
     await tester.tap(find.text('Bestätigen'));
     await tester.pumpAndSettle();
 
@@ -102,7 +152,7 @@ void main() {
       initial: _node(StageNodeType.doubleElim,
           config: const <String, Object?>{'with_reset': true}),
     );
-    final sw = tester.widget<Switch>(find.byType(Switch));
+    final sw = tester.widget<Switch>(resetSwitch());
     expect(sw.value, isTrue);
   });
 
@@ -115,10 +165,41 @@ void main() {
     expect(find.textContaining('pro Gruppe'), findsWidgets);
   });
 
-  testWidgets('single-elim node shows the bracket-auto caption (no extra config)',
-      (tester) async {
+  testWidgets('single-elim node now offers full KO config (matchup/rounds), '
+      'no reset switch (P5.5)', (tester) async {
     await _editNode(tester, initial: _node(StageNodeType.singleElim));
-    expect(find.textContaining('automatisch aus der Setzliste'), findsOneWidget);
-    expect(find.byType(Switch), findsNothing);
+    // Full KO config is present...
+    expect(find.text('Begegnungen'), findsOneWidget); // matchup label
+    expect(find.text('Anzahl K.-o.-Runden'), findsOneWidget);
+    // ...but bracket reset is double-elim-only.
+    expect(resetSwitch(), findsNothing);
+  });
+
+  testWidgets('KO node writes matchup + tiebreak + per-round formats (P5.5)',
+      (tester) async {
+    final node = await _editAndConfirm(
+      tester,
+      initial: _node(StageNodeType.singleElim),
+    );
+    expect(node, isNotNull);
+    // Defaults are written via the domain writer (round formats seeded).
+    expect(koMatchupFromConfig(node!.config), isNotNull);
+    expect(koTiebreakMethodFromConfig(node.config), isNotNull);
+    expect(koRoundFormatsFromConfig(node.config), isNotEmpty);
+  });
+
+  testWidgets('pool node writes grouping strategy (P5.5)', (tester) async {
+    final node = await _editAndConfirm(
+      tester,
+      initial: _node(StageNodeType.pool,
+          config: const <String, Object?>{
+            'groupCount': 4,
+            'qualifierCount': 2,
+            'grouping_strategy': 'snake',
+          }),
+    );
+    expect(node, isNotNull);
+    expect(poolGroupingStrategyFromConfig(node!.config),
+        PoolGroupingStrategy.snake);
   });
 }
