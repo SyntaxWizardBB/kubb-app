@@ -113,3 +113,44 @@ für Stammdaten).
 > Reihenfolge (Plan): P1 Buttons → P2 Wizard-Gabel + globale Eingaben + Summary →
 > P3 Stufen-Config-Tiefe + Beschriftung + Multi-Kanten-UX → P4 Canvas-Desktop/
 > Mobil-geführt. „Klassisch = eigener Pfad" ist verbindlich.
+
+## Umsetzungsstand & Nachtrag (2026-06-18, nach Compliance-Review)
+
+Ein 10-Agent-Compliance-Review hat P1–P4 gegen diese ADR geprüft. Ergebnis: **7
+implemented, 1 deviation, 2 partial, 1 missing**. Daraus folgende Owner-Entscheide:
+
+- **§1, §3, §5, §6, §7 — erfüllt.** Branch `feat/tournament-setup-redesign`
+  (P1.1 `71e222b` … P4.2 `d9e717c`). Classic-Pfad nachweislich unverändert,
+  Suite grün.
+
+- **§2 — akzeptierte Abweichung (Wortlaut hiermit nachgezogen).** Statt *einem*
+  Fork mit *drei* gleichrangigen Optionen ist die Format-Wahl **2+1 verschachtelt**:
+  Top-Level Klassisch ↔ Stufen-Graph (`TournamentFormatMode`), danach im Graph-Zweig
+  Bauen ↔ Vorlage-wählen. Alle drei Zielzustände sind erreichbar und korrekt
+  verdrahtet; der gelockte Kern („Klassisch = eigener Pfad, nie Preset-Graph") ist
+  erfüllt. **Diese 2+1-Struktur ist die verbindliche Soll-Form** — kein Umbau auf
+  drei flache Peers nötig.
+
+- **§4 — OFFEN, Scope ERWEITERT (zu bauen).** Die volle Per-Knoten-Config
+  (KO-Per-Runden-Format/Matchup/Tiebreak, Pool-Grouping-Strategy) fehlt. Wichtig:
+  Die Stufen-Engine (`tournament_generate_stage_matches`) liest aus `StageNode.config`
+  heute **nur `with_reset`** — Match-Format kommt aus den Turnier-Prelim/KO-Settings.
+  Reine Config-UI wäre **totes Setting**. Owner-Entscheid: **§4 wird voll gebaut =
+  Config-UI *und* Engine-Verdrahtung**, damit die Node-Config tatsächlich konsumiert
+  wird. (UI-Mechanik: Wiederverwendung/Extraktion von `_KoRoundBlock`,
+  `_wizard_ko_config_step`, `_wizard_pool_config_step`, `swiss_config_section`.)
+
+- **§8 — OFFEN (zu bauen).** Die Summary zeigt im Graph-Modus nur Knoten-/Kanten-
+  *Counts* — Verstoß gegen §8 + H2-Regel (keine stille Auslassung). Owner-Entscheid:
+  **jetzt bauen** — Summary rendert Knoten (Typ/Seeding), Kanten (Topologie/Selektor)
+  und vorhandene Per-Stufen-Config; der Template-Modus-Fall (`stageGraph==null` →
+  0/0) wird aufgelöst; Regressionstest ergänzt.
+
+- **OP2 (System-Presets) — akzeptiert/zurückgestellt.** Die Vorlagen-*Mechanik* ist
+  fertig; nur 1 generisches Preset ist geseedet. Die 3 benannten Presets
+  („KubbMAIster", „Gruppen→KO", „+2 Neben-Cups") werden **nach §4** als Migrations-
+  Seed nachgezogen (dann können sie die volle Match-Config tragen).
+
+> **Neue Plan-Phase P5** (siehe `docs/plans/tournament-setup-redesign/PLAN.md`):
+> P5.1 §8-Summary (kein Engine-Eingriff), P5.2–P5.x §4 Per-Knoten-Config-UI +
+> Engine-Konsum (Domain → Migration → UI → Tests, additiv, kein `db reset`).
