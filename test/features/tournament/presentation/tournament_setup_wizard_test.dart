@@ -8,6 +8,8 @@ import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/features/tournament/application/stage_graph_builder_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
+import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart'
+    show StageGraphTemplate, TemplateVisibility, stageGraphTemplatesProvider;
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/stage_graph_builder_screen.dart';
@@ -436,6 +438,22 @@ class _StageGraphSeededController extends TournamentConfigController {
           format: TournamentFormat.swissThenKo,
           vorrundeType: VorrundeType.schoch,
           formatMode: TournamentFormatMode.stageGraph,
+        ),
+      );
+}
+
+/// P5.1 (§8): a stage-graph-mode draft in TEMPLATE mode — `appliedTemplateId`
+/// is set but `stageGraph` is null (the template is applied server-side on
+/// create), so the summary must resolve the graph from the live builder and
+/// show the template name instead of 0/0.
+class _StageGraphTemplateController extends TournamentConfigController {
+  @override
+  TournamentConfigDraft build() => _withStammdaten(
+        const TournamentConfigDraft(
+          format: TournamentFormat.swissThenKo,
+          vorrundeType: VorrundeType.schoch,
+          formatMode: TournamentFormatMode.stageGraph,
+          appliedTemplateId: 'tpl-kubbmaister',
         ),
       );
 }
@@ -2012,6 +2030,92 @@ void main() {
         container.read(tournamentConfigControllerProvider).stageGraph,
         isNull,
       );
+    });
+  });
+
+  // ---- P5.1 (§8): the summary renders the FULL stage-graph ------------------
+  group('P5.1 stage-graph summary (§8)', () {
+    // A valid two-stage graph: pool 'groups' (with config) -> single-elim 'cup'
+    // via TopK(2). Valid so the format-step gate lets us reach the summary.
+    StageGraph graph() => StageGraph(
+          nodes: <StageNode>[
+            StageNode(
+              id: 'groups',
+              type: StageNodeType.pool,
+              seeding: StageSeedingSource.asRouted,
+              config: const <String, Object?>{
+                'groupCount': 2,
+                'qualifierCount': 2,
+              },
+            ),
+            StageNode(
+              id: 'cup',
+              type: StageNodeType.singleElim,
+              seeding: StageSeedingSource.asRouted,
+            ),
+          ],
+          edges: const <StageEdge>[
+            StageEdge(fromNodeId: 'groups', toNodeId: 'cup', selector: TopK(2)),
+          ],
+        );
+
+    Future<void> walkToSummary(WidgetTester tester) async {
+      await _typeName(tester, 'Graph Cup');
+      await _tapNext(tester); // -> participants
+      await _tapNext(tester); // -> format
+      await _tapNext(tester); // -> summary
+    }
+
+    testWidgets('built-graph mode lists every node + edge, not just counts',
+        (tester) async {
+      await _pumpWizard(
+        tester,
+        controllerOverride: _StageGraphSeededController.new,
+        extraOverrides: <Object>[_stageGraphOverride(graph())],
+      );
+      await walkToSummary(tester);
+
+      // Nodes: id + type label + per-stage config (no silent omission, §8/H2).
+      expect(find.text('groups'), findsOneWidget);
+      expect(find.text('cup'), findsOneWidget);
+      expect(find.textContaining('Qualifikanten: 2'), findsOneWidget);
+      // Edge: topology + selector — not reduced to a bare count.
+      expect(find.text('groups → cup'), findsOneWidget);
+      expect(find.textContaining('Top 2'), findsOneWidget);
+      // The old count-only rows must be gone.
+      expect(find.text('Knoten'), findsNothing);
+    });
+
+    testWidgets('template mode shows the template name + resolved graph (no 0/0)',
+        (tester) async {
+      final g = graph();
+      await _pumpWizard(
+        tester,
+        controllerOverride: _StageGraphTemplateController.new,
+        extraOverrides: <Object>[
+          _stageGraphOverride(g),
+          stageGraphTemplatesProvider.overrideWith(
+            (ref) async => <StageGraphTemplate>[
+              StageGraphTemplate(
+                id: 'tpl-kubbmaister',
+                name: 'KubbMAIster Cup',
+                description: null,
+                visibility: TemplateVisibility.public,
+                graph: g,
+                isSystem: true,
+              ),
+            ],
+          ),
+        ],
+      );
+      await walkToSummary(tester);
+
+      // The chosen template's NAME is surfaced...
+      expect(find.text('KubbMAIster Cup'), findsOneWidget);
+      // ...and the graph is resolved from the live builder (the old bug showed
+      // 0/0 because draft.stageGraph is null until the server applies it).
+      expect(find.text('groups'), findsOneWidget);
+      expect(find.text('groups → cup'), findsOneWidget);
     });
   });
 }

@@ -531,7 +531,7 @@ class _NodeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
-    final config = _nodeConfigSummary(node);
+    final config = stageNodeConfigSummary(l, node);
     return Container(
       decoration: BoxDecoration(
         color: tokens.bgRaised,
@@ -1735,15 +1735,19 @@ String edgeSelectorLabel(AppLocalizations l, EdgeSelector selector) {
 }
 
 /// Compact config summary for a node tile (only present keys).
-String? _nodeConfigSummary(StageNode node) {
+/// Localized one-line summary of a stage node's configured fields, or null when
+/// nothing is set. Shared by the node tile and the wizard summary (§8: no silent
+/// omission — every configured key surfaces) so both render identically.
+String? stageNodeConfigSummary(AppLocalizations l, StageNode node) {
   final parts = <String>[];
   final g = node.config['groupCount'];
-  if (g is int) parts.add('groupCount: $g');
+  if (g is int) parts.add('${l.stageGraphConfigGroupCount}: $g');
   final q = node.config['qualifierCount'];
-  if (q is int) parts.add('qualifierCount: $q');
+  if (q is int) parts.add('${l.stageGraphConfigQualifierCount}: $q');
   final r = node.config['rounds'];
-  if (r is int) parts.add('rounds: $r');
+  if (r is int) parts.add('${l.stageGraphConfigRounds}: $r');
   final s = node.config['slots'];
-  if (s is int) parts.add('slots: $s');
+  if (s is int) parts.add('${l.stageGraphConfigSlots}: $s');
+  if (node.config['with_reset'] == true) parts.add(l.stageGraphConfigWithReset);
   return parts.isEmpty ? null : parts.join(' · ');
 }

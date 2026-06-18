@@ -30,7 +30,13 @@ import 'package:kubb_app/features/tournament/data/tournament_repository.dart'
         TournamentLockedException,
         tournamentRemoteProvider;
 import 'package:kubb_app/features/tournament/presentation/stage_graph_builder_screen.dart'
-    show StageGraphBuilderBody;
+    show
+        StageGraphBuilderBody,
+        edgeSelectorLabel,
+        stageNodeConfigSummary,
+        stageNodeTypeLabel,
+        stageSeedingInLabel,
+        stageSeedingSourceLabel;
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_model_explainer_sheet.dart';
@@ -2613,22 +2619,10 @@ class _StepSummary extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: KubbTokens.space4),
-        // P2.5: Stage-Graph section (visible in stage-graph mode only).
+        // P5.1 (§8): Stage-Graph section (stage-graph mode only) — renders the
+        // full graph (stages + edges + per-stage config), not just counts.
         if (draft.formatMode == TournamentFormatMode.stageGraph) ...[
-          _SummarySection(
-            title: l10n.tournamentWizardSummarySectionVorrunde,
-            rows: <_SummaryRowData>[
-              _SummaryRowData(
-                'Knoten',
-                '${draft.stageGraph?.nodes.length ?? 0}',
-              ),
-              _SummaryRowData(
-                'Kanten',
-                '${draft.stageGraph?.edges.length ?? 0}',
-              ),
-            ],
-          ),
-          const SizedBox(height: KubbTokens.space4),
+          ..._buildStageGraphSummary(ref, l10n),
         ] else ...[
           // K26-3: prelim (Vorrunde) step (classic mode only).
           _SummarySection(
@@ -2843,6 +2837,77 @@ class _StepSummary extends ConsumerWidget {
       KoType.doubleOut => l10n.tournamentWizardSummaryKoTypeDouble,
       KoType.consolation => l10n.tournamentWizardSummaryKoTypeConsolation,
     };
+  }
+
+  /// §8 (P5.1): renders the chosen stage-graph in the summary — stages
+  /// (id, type, seeding, per-stage config) and edges (from→to, selector incl.
+  /// LosersOfRounds, seeding-in). Nothing configured is silently omitted.
+  ///
+  /// Resolves the graph even in template mode: `draft.stageGraph` is null until
+  /// the server applies the template, but the live builder already holds the
+  /// chosen/built graph (picking a template runs `loadFromGraph`), so reading
+  /// it fixes the old 0/0-despite-template bug.
+  List<Widget> _buildStageGraphSummary(WidgetRef ref, AppLocalizations l10n) {
+    final graph = draft.stageGraph ?? ref.watch(stageGraphBuilderProvider).graph;
+    final placeholder = l10n.tournamentWizardSummaryPlaceholder;
+
+    String? templateName;
+    final tid = draft.appliedTemplateId;
+    if (tid != null) {
+      templateName = ref.watch(stageGraphTemplatesProvider).maybeWhen(
+            data: (list) {
+              for (final t in list) {
+                if (t.id == tid) return t.name;
+              }
+              return null;
+            },
+            orElse: () => null,
+          );
+    }
+
+    final nodeRows = <_SummaryRowData>[
+      for (final n in graph.nodes)
+        _SummaryRowData(
+          n.id,
+          <String>[
+            stageNodeTypeLabel(l10n, n.type),
+            stageSeedingSourceLabel(l10n, n.seeding),
+            ?stageNodeConfigSummary(l10n, n),
+          ].join(' · '),
+        ),
+    ];
+    final edgeRows = <_SummaryRowData>[
+      for (final e in graph.edges)
+        _SummaryRowData(
+          '${e.fromNodeId} → ${e.toNodeId}',
+          '${edgeSelectorLabel(l10n, e.selector)} · '
+              '${stageSeedingInLabel(l10n, e.seedingIn)}',
+        ),
+    ];
+
+    return [
+      _SummarySection(
+        title: l10n.stageGraphNodesSection,
+        rows: <_SummaryRowData>[
+          if (templateName != null)
+            _SummaryRowData(l10n.stageGraphTemplatesSection, templateName),
+          if (nodeRows.isEmpty)
+            _SummaryRowData(l10n.stageGraphNodesSection, placeholder)
+          else
+            ...nodeRows,
+        ],
+      ),
+      const SizedBox(height: KubbTokens.space4),
+      _SummarySection(
+        title: l10n.stageGraphEdgesSection,
+        rows: edgeRows.isEmpty
+            ? <_SummaryRowData>[
+                _SummaryRowData(l10n.stageGraphEdgesSection, placeholder),
+              ]
+            : edgeRows,
+      ),
+      const SizedBox(height: KubbTokens.space4),
+    ];
   }
 }
 
