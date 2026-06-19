@@ -352,18 +352,6 @@ abstract class AppLocalizations {
   /// **'Stufen-Graph'**
   String get stageGraphTitle;
 
-  /// Setup-wizard entry-point button label that opens the stage-graph builder
-  ///
-  /// In de, this message translates to:
-  /// **'Stufengraph bauen'**
-  String get tournamentSetupStageGraphEntry;
-
-  /// Helper text under the stage-graph builder entry-point in the setup wizard
-  ///
-  /// In de, this message translates to:
-  /// **'Stufen, Routing und Validierung komponieren'**
-  String get tournamentSetupStageGraphEntryHint;
-
   /// Section title for the field-size input
   ///
   /// In de, this message translates to:
@@ -604,6 +592,60 @@ abstract class AppLocalizations {
   /// **'Plätze'**
   String get stageGraphConfigSlots;
 
+  /// Config field label for the deterministic random grouping seed
+  ///
+  /// In de, this message translates to:
+  /// **'Zufalls-Seed'**
+  String get stageGraphConfigRandomSeed;
+
+  /// Config field label for the number of per-round KO format blocks
+  ///
+  /// In de, this message translates to:
+  /// **'Anzahl K.-o.-Runden'**
+  String get stageGraphConfigKoRoundCount;
+
+  /// Title of a per-round KO format block
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {n}'**
+  String stageGraphConfigKoRoundTitle(String n);
+
+  /// Helper caption under the groupCount field
+  ///
+  /// In de, this message translates to:
+  /// **'In wie viele Gruppen das Feld aufgeteilt wird.'**
+  String get stageGraphConfigGroupCountHint;
+
+  /// Helper caption clarifying qualifiers are per group, not total
+  ///
+  /// In de, this message translates to:
+  /// **'Qualifikanten zählen pro Gruppe, nicht über alle Gruppen zusammen: bei 2 ziehen die besten 2 jeder Gruppe weiter.'**
+  String get stageGraphConfigQualifierHint;
+
+  /// Helper caption under the swiss rounds field
+  ///
+  /// In de, this message translates to:
+  /// **'Anzahl der Schweizer-System-Runden. Die Paarungen jeder Runde entstehen live nach Tabellenstand.'**
+  String get stageGraphConfigSwissHint;
+
+  /// Switch label for double-elim bracket reset
+  ///
+  /// In de, this message translates to:
+  /// **'Grand-Final-Reset'**
+  String get stageGraphConfigWithReset;
+
+  /// Helper caption explaining the double-elim bracket reset
+  ///
+  /// In de, this message translates to:
+  /// **'Gewinnt das Team aus dem Verlierer-Bracket das erste Finale, gibt es ein zweites, entscheidendes Finale (beide haben dann genau eine Niederlage).'**
+  String get stageGraphConfigWithResetHint;
+
+  /// Caption for single-elim/consolation nodes which need no extra config
+  ///
+  /// In de, this message translates to:
+  /// **'Das Bracket wird automatisch aus der Setzliste gebaut — keine weitere Konfiguration nötig.'**
+  String get stageGraphConfigBracketAuto;
+
   /// Inline error when the node id is empty
   ///
   /// In de, this message translates to:
@@ -711,6 +753,42 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Übrige'**
   String get stageGraphSelectorNonQualifiers;
+
+  /// Explanation of the TopK selector
+  ///
+  /// In de, this message translates to:
+  /// **'Die besten K jeder Quell-Stufe ziehen weiter — z. B. Top 2 jeder Gruppe.'**
+  String get stageGraphSelectorHintTopK;
+
+  /// Explanation of the Ranks selector
+  ///
+  /// In de, this message translates to:
+  /// **'Ein zusammenhängender Rangbereich der Quell-Stufe zieht weiter — z. B. Ränge 3–4 für ein zweites Tableau.'**
+  String get stageGraphSelectorHintRanks;
+
+  /// Explanation of the LosersOfRounds selector
+  ///
+  /// In de, this message translates to:
+  /// **'Verlierer bestimmter K.-o.-Runden werden weitergeleitet — so speist man Trost-/Neben-Cups (KubbMAIster-Topologie).'**
+  String get stageGraphSelectorHintLosers;
+
+  /// Explanation of the Winners selector
+  ///
+  /// In de, this message translates to:
+  /// **'Alle Sieger der Quell-Stufe ziehen weiter.'**
+  String get stageGraphSelectorHintWinners;
+
+  /// Explanation of the NonQualifiers selector
+  ///
+  /// In de, this message translates to:
+  /// **'Alle, die sich NICHT qualifiziert haben, ziehen weiter — z. B. in einen Neben-Cup.'**
+  String get stageGraphSelectorHintNonQualifiers;
+
+  /// Hint that a node may have multiple outgoing edges
+  ///
+  /// In de, this message translates to:
+  /// **'Eine Stufe darf mehrere Kanten haben: z. B. Sieger ins Haupt-Bracket UND Verlierer früher Runden in einen Neben-Cup (siehe KubbMAIster).'**
+  String get stageGraphEdgesMultiHint;
 
   /// Label for StageNodeType.pool
   ///
@@ -3616,6 +3694,24 @@ abstract class AppLocalizations {
   /// **'Nur Satzsieg zählt'**
   String get tournamentWizardScoringClassicHint;
 
+  /// KO seeding-source selector label
+  ///
+  /// In de, this message translates to:
+  /// **'Seeding-Quelle'**
+  String get tournamentWizardSeedingSourceLabel;
+
+  /// KO seeding-source option: automatic from the prelim phase
+  ///
+  /// In de, this message translates to:
+  /// **'Automatisch aus Vorrunde'**
+  String get tournamentWizardSeedingSourceAuto;
+
+  /// KO seeding-source option: manual seeding
+  ///
+  /// In de, this message translates to:
+  /// **'Manuell festlegen'**
+  String get tournamentWizardSeedingSourceManual;
+
   /// Section header: fee / payment / contact
   ///
   /// In de, this message translates to:
@@ -4197,6 +4293,72 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Folgt in M2+'**
   String get tournamentWizardFormatComingSoon;
+
+  /// P2.2 format-mode fork label (classic vs stage graph)
+  ///
+  /// In de, this message translates to:
+  /// **'Turnierformat'**
+  String get tournamentWizardFormatModeLabel;
+
+  /// Classic format-mode option (Vorrunde x KO)
+  ///
+  /// In de, this message translates to:
+  /// **'Klassisch'**
+  String get tournamentWizardFormatModeClassic;
+
+  /// Classic format-mode description
+  ///
+  /// In de, this message translates to:
+  /// **'Vorrunde (Gruppenphase oder Schoch) und ein K.-o.-Baum.'**
+  String get tournamentWizardFormatModeClassicHint;
+
+  /// Stage-graph format-mode option
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen-Graph'**
+  String get tournamentWizardFormatModeStageGraph;
+
+  /// Stage-graph format-mode description
+  ///
+  /// In de, this message translates to:
+  /// **'Eigene Stufen frei verketten – Haupt- und Neben-Cups möglich.'**
+  String get tournamentWizardFormatModeStageGraphHint;
+
+  /// Stage-graph source sub-choice label (build vs template)
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen-Graph'**
+  String get tournamentWizardStageGraphSourceLabel;
+
+  /// Build a fresh stage graph option
+  ///
+  /// In de, this message translates to:
+  /// **'Neu erstellen'**
+  String get tournamentWizardStageGraphSourceBuild;
+
+  /// Build-fresh stage-graph description
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen und Routing von Hand komponieren.'**
+  String get tournamentWizardStageGraphSourceBuildHint;
+
+  /// Pick a saved/system template option
+  ///
+  /// In de, this message translates to:
+  /// **'Vorlage wählen'**
+  String get tournamentWizardStageGraphSourceTemplate;
+
+  /// Template stage-graph description
+  ///
+  /// In de, this message translates to:
+  /// **'Mit einer gespeicherten oder System-Vorlage starten.'**
+  String get tournamentWizardStageGraphSourceTemplateHint;
+
+  /// Embedded stage-graph builder hint
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen, Routing und Validierung direkt hier komponieren.'**
+  String get tournamentWizardStageGraphEmbedHint;
 
   /// Preliminary stage selector label
   ///

@@ -2,15 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/core/ui/platform_capabilities.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_binary_choice.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_chip.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_labeled_switch.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/tournament/application/stage_graph_builder_controller.dart';
 import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/stage_graph_canvas.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/ko_round_block.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -27,16 +31,14 @@ import 'package:lucide_icons/lucide_icons.dart';
 /// Editor view selector. Both views share the SAME `stageGraphBuilderProvider`.
 enum _EditorView { form, canvas }
 
-class StageGraphBuilderScreen extends StatefulWidget {
+/// Standalone stage-graph editor screen. Owns the Scaffold + [KubbAppBar]
+/// chrome and delegates the actual editor content to the shared
+/// [StageGraphBuilderBody] (embedded: false), so the wizard can host the exact
+/// same body inline without duplicating the editor implementation. There is no
+/// second editor body — both paths share this one widget and the one
+/// `stageGraphBuilderProvider`.
+class StageGraphBuilderScreen extends StatelessWidget {
   const StageGraphBuilderScreen({super.key});
-
-  @override
-  State<StageGraphBuilderScreen> createState() =>
-      _StageGraphBuilderScreenState();
-}
-
-class _StageGraphBuilderScreenState extends State<StageGraphBuilderScreen> {
-  _EditorView _view = _EditorView.form;
 
   @override
   Widget build(BuildContext context) {
@@ -48,15 +50,54 @@ class _StageGraphBuilderScreenState extends State<StageGraphBuilderScreen> {
         eyebrow: l.stageGraphEyebrow,
         title: l.stageGraphTitle,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // The single additive entry point: form <-> canvas toggle.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              KubbTokens.space4,
-              KubbTokens.space4,
-              KubbTokens.space4,
+      body: const StageGraphBuilderBody(),
+    );
+  }
+}
+
+/// The shared, chrome-free editor body (P2.3). Renders the form/canvas toggle
+/// plus the editor content (field-size section, template bar, nodes/edges or
+/// empty state, validation panel) WITHOUT any Scaffold / [KubbAppBar] / SafeArea
+/// top-chrome of its own. The standalone [StageGraphBuilderScreen] wraps it in
+/// the page chrome; the tournament-setup wizard hosts it inline with
+/// `embedded: true`.
+///
+/// It reads/mutates ONLY [stageGraphBuilderProvider] — there is NO second graph
+/// state. The [embedded] flag only adjusts insets/scrolling for the inline
+/// wizard host; it never forks the editor behaviour or the single source of
+/// truth.
+class StageGraphBuilderBody extends StatefulWidget {
+  const StageGraphBuilderBody({super.key, this.embedded = false});
+
+  /// `true` when hosted inline inside the wizard flow (which already scrolls and
+  /// pads). In that case the body must not introduce its own outer scroll view,
+  /// so the inline content composes into the wizard's scroll. `false` (default,
+  /// standalone screen) keeps the original page layout with the toggle pinned
+  /// above an [Expanded] scrolling editor.
+  final bool embedded;
+
+  @override
+  State<StageGraphBuilderBody> createState() => _StageGraphBuilderBodyState();
+}
+
+class _StageGraphBuilderBodyState extends State<StageGraphBuilderBody> {
+  _EditorView _view = _EditorView.form;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    // P4: the visual drag-and-drop canvas is desktop-only and needs room. On
+    // mobile / narrow viewports the guided form editor is used and the toggle
+    // is hidden; `effectiveView` clamps a stale `canvas` selection back to form.
+    final canvasAvailable = isCanvasAvailable(MediaQuery.sizeOf(context).width);
+    final effectiveView = canvasAvailable ? _view : _EditorView.form;
+    final toggle = !canvasAvailable
+        ? const SizedBox.shrink()
+        : Padding(
+            padding: EdgeInsets.fromLTRB(
+              widget.embedded ? 0 : KubbTokens.space4,
+              widget.embedded ? 0 : KubbTokens.space4,
+              widget.embedded ? 0 : KubbTokens.space4,
               0,
             ),
             child: SegmentedButton<_EditorView>(
@@ -75,14 +116,35 @@ class _StageGraphBuilderScreenState extends State<StageGraphBuilderScreen> {
               selected: <_EditorView>{_view},
               onSelectionChanged: (s) => setState(() => _view = s.first),
             ),
-          ),
-          Expanded(
-            child: _view == _EditorView.form
-                ? const _StageGraphFormView()
-                : const StageGraphCanvas(),
-          ),
+          );
+
+    final body = effectiveView == _EditorView.form
+        ? _StageGraphFormView(embedded: widget.embedded)
+        : const StageGraphCanvas();
+
+    if (widget.embedded) {
+      // Inline host: the wizard already provides the surrounding scroll view, so
+      // the form view composes flat (no nested scroll) and the canvas — which
+      // needs a bounded height — is given a fixed viewport.
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          toggle,
+          const SizedBox(height: KubbTokens.space4),
+          if (effectiveView == _EditorView.form)
+            body
+          else
+            SizedBox(height: 360, child: body),
         ],
-      ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        toggle,
+        Expanded(child: body),
+      ],
     );
   }
 }
@@ -90,7 +152,11 @@ class _StageGraphBuilderScreenState extends State<StageGraphBuilderScreen> {
 /// The original form-based editor body (unchanged behavior), now embedded under
 /// the form/canvas toggle. Reads/mutates only `stageGraphBuilderProvider`.
 class _StageGraphFormView extends ConsumerWidget {
-  const _StageGraphFormView();
+  const _StageGraphFormView({this.embedded = false});
+
+  /// When embedded in the wizard the surrounding scroll view is provided by the
+  /// host, so this view composes flat (no own scroll, no page padding).
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -99,31 +165,36 @@ class _StageGraphFormView extends ConsumerWidget {
 
     final isEmpty = s.graph.nodes.isEmpty && s.graph.edges.isEmpty;
 
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _FieldSizeSection(fieldSize: s.fieldSize, notifier: notifier),
+        const SizedBox(height: KubbTokens.space6),
+        _TemplateBar(notifier: notifier, graph: s.graph),
+        const SizedBox(height: KubbTokens.space6),
+        if (isEmpty)
+          _EmptyGraphState(notifier: notifier)
+        else ...[
+          _NodesSection(state: s, notifier: notifier),
+          const SizedBox(height: KubbTokens.space6),
+          _EdgesSection(state: s, notifier: notifier),
+        ],
+        const SizedBox(height: KubbTokens.space6),
+        _ValidationPanel(state: s),
+      ],
+    );
+
+    // Embedded: the wizard host already scrolls and pads, so compose flat.
+    if (embedded) return content;
+
     return SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          KubbTokens.space4,
-          KubbTokens.space5,
-          KubbTokens.space4,
-          KubbTokens.space8,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _FieldSizeSection(fieldSize: s.fieldSize, notifier: notifier),
-            const SizedBox(height: KubbTokens.space6),
-            _TemplateBar(notifier: notifier, graph: s.graph),
-            const SizedBox(height: KubbTokens.space6),
-            if (isEmpty)
-              _EmptyGraphState(notifier: notifier)
-            else ...[
-              _NodesSection(state: s, notifier: notifier),
-              const SizedBox(height: KubbTokens.space6),
-              _EdgesSection(state: s, notifier: notifier),
-            ],
-            const SizedBox(height: KubbTokens.space6),
-            _ValidationPanel(state: s),
-          ],
-        ),
+      padding: const EdgeInsets.fromLTRB(
+        KubbTokens.space4,
+        KubbTokens.space5,
+        KubbTokens.space4,
+        KubbTokens.space8,
+      ),
+      child: content,
     );
   }
 }
@@ -462,7 +533,7 @@ class _NodeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
-    final config = _nodeConfigSummary(node);
+    final config = stageNodeConfigSummary(l, node);
     return Container(
       decoration: BoxDecoration(
         color: tokens.bgRaised,
@@ -481,20 +552,22 @@ class _NodeTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                // Wrap (not Row): on a narrow phone a long type-label chip
+                // (e.g. "K.-o. (einfach)") drops below the id instead of
+                // overflowing — the chip cannot ellipsize (P4.2).
+                Wrap(
+                  spacing: KubbTokens.space2,
+                  runSpacing: KubbTokens.space1,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Flexible(
-                      child: Text(
-                        node.id,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: tokens.fg,
-                        ),
+                    Text(
+                      node.id,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: tokens.fg,
                       ),
                     ),
-                    const SizedBox(width: KubbTokens.space2),
                     KubbChip(
                       tone: KubbChipTone.neutral,
                       label: stageNodeTypeLabel(l, node.type),
@@ -588,6 +661,16 @@ class _EdgesSection extends StatelessWidget {
             ),
             const SizedBox(height: KubbTokens.space2),
           ],
+        // P3.3: a stage may have MORE than one outgoing edge (winners into the
+        // main bracket AND early losers into a side cup — the KubbMAIster
+        // topology). Make that affordance discoverable once edges are possible.
+        if (canAddEdge) ...[
+          const SizedBox(height: KubbTokens.space2),
+          Text(
+            l.stageGraphEdgesMultiHint,
+            style: TextStyle(fontSize: 12, height: 1.3, color: tokens.fgMuted),
+          ),
+        ],
       ],
     );
   }
@@ -638,17 +721,17 @@ class _EdgeTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Row(
+                // Wrap (not Row): the seeding-mode chip drops below the
+                // selector label on a narrow phone instead of overflowing.
+                Wrap(
+                  spacing: KubbTokens.space2,
+                  runSpacing: KubbTokens.space1,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Flexible(
-                      child: Text(
-                        edgeSelectorLabel(l, edge.selector),
-                        overflow: TextOverflow.ellipsis,
-                        style:
-                            TextStyle(fontSize: 12, color: tokens.fgMuted),
-                      ),
+                    Text(
+                      edgeSelectorLabel(l, edge.selector),
+                      style: TextStyle(fontSize: 12, color: tokens.fgMuted),
                     ),
-                    const SizedBox(width: KubbTokens.space2),
                     KubbChip(
                       tone: KubbChipTone.neutral,
                       label: stageSeedingInLabel(l, edge.seedingIn),
@@ -836,6 +919,39 @@ class _AddIconButton extends StatelessWidget {
 
 /// Add/edit dialog for a [StageNode]. Builds the node and pops it; the caller
 /// routes the result into `addNode` / `updateNode`.
+/// Responsive content width for the editor dialogs (ADR-0033 P4.2). Caps at the
+/// roomy-desktop 360, but on a phone — where the guided form is the ONLY editor
+/// — it shrinks to fit: AlertDialog reserves ~80dp of horizontal inset, so a
+/// fixed 360 would overflow a 360dp screen. Clamps to a sane minimum.
+double _stageDialogWidth(BuildContext context) {
+  // AlertDialog reserves its inset padding (~40dp each side) AND its content
+  // padding (~24dp each side); subtract both so the fixed-width content never
+  // exceeds the dialog's own constraints on a phone.
+  final available = MediaQuery.sizeOf(context).width - 128;
+  return available.clamp(220.0, 360.0);
+}
+
+/// Muted explanatory caption used inside the node/edge config dialogs to label
+/// what a setting means (P3.2 — e.g. "qualifiers count PER GROUP", selector
+/// semantics). Plain caption styling from [KubbTokens]; no hardcoded colors.
+class _DialogHint extends StatelessWidget {
+  const _DialogHint(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Padding(
+      padding: const EdgeInsets.only(top: KubbTokens.space2),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 12, height: 1.3, color: tokens.fgMuted),
+      ),
+    );
+  }
+}
+
 class _NodeDialog extends StatefulWidget {
   const _NodeDialog({required this.existingIds, this.initial});
 
@@ -855,7 +971,28 @@ class _NodeDialogState extends State<_NodeDialog> {
   int _qualifierCount = 2;
   int _rounds = 5;
   int _slots = 8;
+  // Double-elim only: with bracket reset the lower-bracket winner must beat the
+  // upper-bracket winner TWICE (engine reads config['with_reset']).
+  bool _withReset = false;
+  // P5.5 §4: full per-node KO config (matchup / tiebreak method / per-round
+  // format) and pool grouping — written via the kubb_domain stage-node-config
+  // writers so the keys stay in lockstep with the engine/summary readers.
+  KoMatchup _matchup = KoMatchup.seedHighVsLow;
+  KoTiebreakMethod _tiebreak = KoTiebreakMethod.classicKingtossRemoval;
+  List<MatchFormatSpec> _koRounds = const <MatchFormatSpec>[];
+  PoolGroupingStrategy _grouping = PoolGroupingStrategy.snake;
+  int _randomSeed = 0;
   String? _idError;
+
+  /// Sensible default for a freshly-added KO round (Bo3, 30 min, no tiebreak),
+  /// matching the wizard's bare fallback. Self-contained so the stage builder
+  /// stays decoupled from the wizard draft.
+  static const MatchFormatSpec _defaultKoRound = MatchFormatSpec(
+    setsToWin: 2,
+    maxSets: 3,
+    timeLimitSeconds: 1800,
+    tiebreakEnabled: false,
+  );
 
   @override
   void initState() {
@@ -869,10 +1006,34 @@ class _NodeDialogState extends State<_NodeDialog> {
     _qualifierCount = _readInt(config['qualifierCount'], _qualifierCount);
     _rounds = _readInt(config['rounds'], _rounds);
     _slots = _readInt(config['slots'], _slots);
+    _withReset = koWithResetFromConfig(config);
+    _matchup = koMatchupFromConfig(config) ?? _matchup;
+    _tiebreak = koTiebreakMethodFromConfig(config) ?? _tiebreak;
+    final fmts = koRoundFormatsFromConfig(config);
+    _koRounds = fmts.isNotEmpty
+        ? List<MatchFormatSpec>.of(fmts)
+        : <MatchFormatSpec>[_defaultKoRound, _defaultKoRound, _defaultKoRound];
+    _grouping = poolGroupingStrategyFromConfig(config) ?? _grouping;
+    _randomSeed = poolRandomSeedFromConfig(config) ?? _randomSeed;
   }
 
   static int _readInt(Object? value, int fallback) =>
       value is int ? value : fallback;
+
+  /// Grows/shrinks the per-round format list to [count], seeding new rounds with
+  /// the default. Keeps existing per-round edits.
+  void _setKoRoundCount(int count) {
+    setState(() {
+      if (count > _koRounds.length) {
+        _koRounds = <MatchFormatSpec>[
+          ..._koRounds,
+          for (var i = _koRounds.length; i < count; i++) _defaultKoRound,
+        ];
+      } else if (count < _koRounds.length) {
+        _koRounds = _koRounds.sublist(0, count);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -900,23 +1061,37 @@ class _NodeDialogState extends State<_NodeDialog> {
     Navigator.of(context).pop(node);
   }
 
-  /// Builds only the type-relevant config keys.
+  /// Builds the type-relevant config keys via the kubb_domain writers (P5.5).
   Map<String, Object?> _buildConfig() {
     switch (_type) {
       case StageNodeType.pool:
       case StageNodeType.roundRobin:
-        return <String, Object?>{
-          'groupCount': _groupCount,
-          'qualifierCount': _qualifierCount,
-        };
+        return writePoolNodeConfig(
+          groupCount: _groupCount,
+          qualifierCount: _qualifierCount,
+          strategy: _grouping,
+          // The seed only matters for the random strategy; drop it otherwise.
+          randomSeed:
+              _grouping == PoolGroupingStrategy.random ? _randomSeed : null,
+        );
       case StageNodeType.swiss:
         return <String, Object?>{'rounds': _rounds};
       case StageNodeType.shootoutQuali:
         return <String, Object?>{'slots': _slots};
-      case StageNodeType.singleElim:
       case StageNodeType.doubleElim:
+        return writeKoNodeConfig(
+          matchup: _matchup,
+          tiebreakMethod: _tiebreak,
+          withReset: _withReset,
+          roundFormats: _koRounds,
+        );
+      case StageNodeType.singleElim:
       case StageNodeType.consolation:
-        return const <String, Object?>{};
+        return writeKoNodeConfig(
+          matchup: _matchup,
+          tiebreakMethod: _tiebreak,
+          roundFormats: _koRounds,
+        );
     }
   }
 
@@ -927,7 +1102,7 @@ class _NodeDialogState extends State<_NodeDialog> {
     return AlertDialog(
       title: Text(isEdit ? l.stageGraphEditNode : l.stageGraphAddNode),
       content: SizedBox(
-        width: 360,
+        width: _stageDialogWidth(context),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1017,21 +1192,51 @@ class _NodeDialogState extends State<_NodeDialog> {
             max: 32,
             onChanged: (v) => setState(() => _groupCount = v),
           ))
+          ..add(_DialogHint(l.stageGraphConfigGroupCountHint))
           ..add(WizardNumberField(
             label: l.stageGraphConfigQualifierCount,
             value: _qualifierCount,
             min: 1,
             max: 64,
             onChanged: (v) => setState(() => _qualifierCount = v),
+          ))
+          // P3.2: the recurring confusion — qualifiers are PER GROUP, not a
+          // total across all groups. Spell it out at the field.
+          ..add(_DialogHint(l.stageGraphConfigQualifierHint))
+          // P5.5: how participants are distributed across the groups.
+          ..add(_fieldLabel(l.tournamentWizardPoolStrategyLabel))
+          ..add(DropdownButtonFormField<PoolGroupingStrategy>(
+            initialValue: _grouping,
+            isExpanded: true,
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+            items: [
+              for (final s in PoolGroupingStrategy.values)
+                DropdownMenuItem<PoolGroupingStrategy>(
+                  value: s,
+                  child: Text(_groupingLabel(l, s)),
+                ),
+            ],
+            onChanged: (v) => setState(() => _grouping = v ?? _grouping),
           ));
+        if (_grouping == PoolGroupingStrategy.random) {
+          fields.add(WizardNumberField(
+            label: l.stageGraphConfigRandomSeed,
+            value: _randomSeed,
+            min: 0,
+            max: 999999,
+            onChanged: (v) => setState(() => _randomSeed = v),
+          ));
+        }
       case StageNodeType.swiss:
-        fields.add(WizardNumberField(
-          label: l.stageGraphConfigRounds,
-          value: _rounds,
-          min: 1,
-          max: 20,
-          onChanged: (v) => setState(() => _rounds = v),
-        ));
+        fields
+          ..add(WizardNumberField(
+            label: l.stageGraphConfigRounds,
+            value: _rounds,
+            min: 1,
+            max: 20,
+            onChanged: (v) => setState(() => _rounds = v),
+          ))
+          ..add(_DialogHint(l.stageGraphConfigSwissHint));
       case StageNodeType.shootoutQuali:
         fields.add(WizardNumberField(
           label: l.stageGraphConfigSlots,
@@ -1040,10 +1245,11 @@ class _NodeDialogState extends State<_NodeDialog> {
           max: 64,
           onChanged: (v) => setState(() => _slots = v),
         ));
-      case StageNodeType.singleElim:
       case StageNodeType.doubleElim:
+        fields.addAll(_koConfigFields(l, includeReset: true));
+      case StageNodeType.singleElim:
       case StageNodeType.consolation:
-        break;
+        fields.addAll(_koConfigFields(l, includeReset: false));
     }
     return [
       for (final field in fields) ...[
@@ -1052,6 +1258,91 @@ class _NodeDialogState extends State<_NodeDialog> {
       ],
     ];
   }
+
+  /// Full per-node KO config (P5.5 §4): matchup, tiebreak method, optional
+  /// bracket reset, and a per-round format list (reusing the classic
+  /// [KoRoundBlock] editor). Round count is explicit because a stage KO node's
+  /// size depends on routing and is not known at config time; the engine reads
+  /// `ko_round_formats[round-1]` with a fallback beyond the list.
+  List<Widget> _koConfigFields(AppLocalizations l, {required bool includeReset}) {
+    return <Widget>[
+      if (includeReset)
+        KubbLabeledSwitch(
+          title: l.stageGraphConfigWithReset,
+          subtitle: l.stageGraphConfigWithResetHint,
+          value: _withReset,
+          onChanged: (v) => setState(() => _withReset = v),
+        ),
+      _fieldLabel(l.tournamentWizardKoMatchupLabel),
+      KubbBinaryChoice<KoMatchup>(
+        selected: _matchup,
+        onChanged: (v) => setState(() => _matchup = v),
+        options: <KubbChoiceOption<KoMatchup>>[
+          KubbChoiceOption<KoMatchup>(
+            value: KoMatchup.seedHighVsLow,
+            title: l.tournamentWizardKoMatchupHighLow,
+          ),
+          KubbChoiceOption<KoMatchup>(
+            value: KoMatchup.oneVsTwo,
+            title: l.tournamentWizardKoMatchupOneTwo,
+          ),
+        ],
+      ),
+      _fieldLabel(l.tournamentWizardKoTiebreakMethodLabel),
+      KubbBinaryChoice<KoTiebreakMethod>(
+        selected: _tiebreak,
+        onChanged: (v) => setState(() => _tiebreak = v),
+        options: <KubbChoiceOption<KoTiebreakMethod>>[
+          KubbChoiceOption<KoTiebreakMethod>(
+            value: KoTiebreakMethod.classicKingtossRemoval,
+            title: l.tournamentWizardKoTiebreakClassic,
+          ),
+          KubbChoiceOption<KoTiebreakMethod>(
+            value: KoTiebreakMethod.mightyFinisherShootout,
+            title: l.tournamentWizardKoTiebreakMighty,
+          ),
+        ],
+      ),
+      WizardNumberField(
+        label: l.stageGraphConfigKoRoundCount,
+        value: _koRounds.length,
+        min: 1,
+        max: 8,
+        onChanged: _setKoRoundCount,
+      ),
+      for (var i = 0; i < _koRounds.length; i++)
+        KoRoundBlock(
+          key: ValueKey<int>(i),
+          title: l.stageGraphConfigKoRoundTitle((i + 1).toString()),
+          spec: _koRounds[i],
+          onChanged: (spec) => setState(() {
+            _koRounds = <MatchFormatSpec>[..._koRounds]..[i] = spec;
+          }),
+        ),
+    ];
+  }
+
+  Widget _fieldLabel(String text) => Builder(
+        builder: (context) {
+          final tokens = Theme.of(context).extension<KubbTokens>()!;
+          return Text(
+            text,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.4,
+              color: tokens.fgMuted,
+            ),
+          );
+        },
+      );
+
+  static String _groupingLabel(AppLocalizations l, PoolGroupingStrategy s) =>
+      switch (s) {
+        PoolGroupingStrategy.snake => l.tournamentWizardPoolStrategySnake,
+        PoolGroupingStrategy.seeded => l.tournamentWizardPoolStrategySeeded,
+        PoolGroupingStrategy.random => l.tournamentWizardPoolStrategyRandom,
+      };
 }
 
 /// Selector kinds offered in the edge dialog (parallel to [EdgeSelector]).
@@ -1166,7 +1457,7 @@ class _EdgeDialogState extends State<_EdgeDialog> {
     return AlertDialog(
       title: Text(l.stageGraphAddEdge),
       content: SizedBox(
-        width: 360,
+        width: _stageDialogWidth(context),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1209,6 +1500,8 @@ class _EdgeDialogState extends State<_EdgeDialog> {
                   _error = null;
                 }),
               ),
+              // P3.2: explain what the chosen selector actually forwards.
+              _DialogHint(_selectorKindHint(l, _kind)),
               ..._selectorParams(l),
               const SizedBox(height: KubbTokens.space3),
               DropdownButtonFormField<StageSeedingIn>(
@@ -1347,6 +1640,23 @@ class _EdgeDialogState extends State<_EdgeDialog> {
         return l.stageGraphSelectorNonQualifiers;
     }
   }
+
+  /// One-line explanation of what a selector forwards (P3.2). Makes the
+  /// KubbMAIster side-cup feed (LosersOfRounds) discoverable.
+  String _selectorKindHint(AppLocalizations l, _SelectorKind kind) {
+    switch (kind) {
+      case _SelectorKind.topK:
+        return l.stageGraphSelectorHintTopK;
+      case _SelectorKind.ranks:
+        return l.stageGraphSelectorHintRanks;
+      case _SelectorKind.losersOfRounds:
+        return l.stageGraphSelectorHintLosers;
+      case _SelectorKind.winners:
+        return l.stageGraphSelectorHintWinners;
+      case _SelectorKind.nonQualifiers:
+        return l.stageGraphSelectorHintNonQualifiers;
+    }
+  }
 }
 
 /// Result payload of the save-template dialog.
@@ -1396,7 +1706,7 @@ class _SaveTemplateDialogState extends State<_SaveTemplateDialog> {
     return AlertDialog(
       title: Text(l.stageGraphTemplateSave),
       content: SizedBox(
-        width: 360,
+        width: _stageDialogWidth(context),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1582,15 +1892,50 @@ String edgeSelectorLabel(AppLocalizations l, EdgeSelector selector) {
 }
 
 /// Compact config summary for a node tile (only present keys).
-String? _nodeConfigSummary(StageNode node) {
+/// Localized one-line summary of a stage node's configured fields, or null when
+/// nothing is set. Shared by the node tile and the wizard summary (§8: no silent
+/// omission — every configured key surfaces) so both render identically.
+String? stageNodeConfigSummary(AppLocalizations l, StageNode node) {
   final parts = <String>[];
-  final g = node.config['groupCount'];
-  if (g is int) parts.add('groupCount: $g');
-  final q = node.config['qualifierCount'];
-  if (q is int) parts.add('qualifierCount: $q');
-  final r = node.config['rounds'];
-  if (r is int) parts.add('rounds: $r');
-  final s = node.config['slots'];
-  if (s is int) parts.add('slots: $s');
+  final cfg = node.config;
+  final g = cfg['groupCount'];
+  if (g is int) parts.add('${l.stageGraphConfigGroupCount}: $g');
+  final q = cfg['qualifierCount'];
+  if (q is int) parts.add('${l.stageGraphConfigQualifierCount}: $q');
+  // P5.5: pool grouping strategy.
+  final grouping = poolGroupingStrategyFromConfig(cfg);
+  if (grouping != null) {
+    parts.add(switch (grouping) {
+      PoolGroupingStrategy.snake => l.tournamentWizardPoolStrategySnake,
+      PoolGroupingStrategy.seeded => l.tournamentWizardPoolStrategySeeded,
+      PoolGroupingStrategy.random => l.tournamentWizardPoolStrategyRandom,
+    });
+  }
+  final r = cfg['rounds'];
+  if (r is int) parts.add('${l.stageGraphConfigRounds}: $r');
+  final s = cfg['slots'];
+  if (s is int) parts.add('${l.stageGraphConfigSlots}: $s');
+  if (koWithResetFromConfig(cfg)) parts.add(l.stageGraphConfigWithReset);
+  // P5.5: full KO config — matchup, tiebreak method, per-round count.
+  final matchup = koMatchupFromConfig(cfg);
+  if (matchup != null) {
+    parts.add(switch (matchup) {
+      KoMatchup.seedHighVsLow => l.tournamentWizardKoMatchupHighLow,
+      KoMatchup.oneVsTwo => l.tournamentWizardKoMatchupOneTwo,
+    });
+  }
+  final tiebreak = koTiebreakMethodFromConfig(cfg);
+  if (tiebreak != null) {
+    parts.add(switch (tiebreak) {
+      KoTiebreakMethod.classicKingtossRemoval =>
+        l.tournamentWizardKoTiebreakClassic,
+      KoTiebreakMethod.mightyFinisherShootout =>
+        l.tournamentWizardKoTiebreakMighty,
+    });
+  }
+  final koRounds = koRoundFormatsFromConfig(cfg);
+  if (koRounds.isNotEmpty) {
+    parts.add('${l.stageGraphConfigKoRoundCount}: ${koRounds.length}');
+  }
   return parts.isEmpty ? null : parts.join(' · ');
 }

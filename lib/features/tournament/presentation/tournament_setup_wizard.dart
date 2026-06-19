@@ -7,10 +7,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_binary_choice.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_chip.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_labeled_switch.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/social/application/social_providers.dart';
+import 'package:kubb_app/features/tournament/application/stage_graph_builder_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
+import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart'
+    show
+        StageGraphTemplate,
+        TemplateVisibility,
+        stageGraphTemplatesProvider,
+        stageGraphTemplatesRepositoryProvider;
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/data/tournament_pdf_uploader.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart'
@@ -18,6 +29,14 @@ import 'package:kubb_app/features/tournament/data/tournament_repository.dart'
         StructureLockedException,
         TournamentLockedException,
         tournamentRemoteProvider;
+import 'package:kubb_app/features/tournament/presentation/stage_graph_builder_screen.dart'
+    show
+        StageGraphBuilderBody,
+        edgeSelectorLabel,
+        stageNodeConfigSummary,
+        stageNodeTypeLabel,
+        stageSeedingInLabel,
+        stageSeedingSourceLabel;
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_model_explainer_sheet.dart';
@@ -76,11 +95,16 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
   /// is gone — group count + grouping strategy are configured inline in the
   /// Vorrunde step (`_StepFormat`) when `vorrundeType == groupPhase`.
   List<_StepKind> _visibleSteps(TournamentConfigDraft draft) {
+    // P2.2: in the stage-graph mode the classic KO config does not belong to
+    // the flow — the staged format authors its own KO stages inside the
+    // embedded builder, so the dedicated koConfig step is skipped. The classic
+    // mode keeps the exact 5-step list (name, participants, format, koConfig,
+    // summary).
     return <_StepKind>[
       _StepKind.name,
       _StepKind.participants,
       _StepKind.format,
-      _StepKind.koConfig,
+      if (draft.formatMode == TournamentFormatMode.classic) _StepKind.koConfig,
       _StepKind.summary,
     ];
   }
@@ -131,6 +155,13 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
         final maxSetsOk = draft.maxSets >= TournamentConfigDraft.maxSetsMin &&
             draft.maxSets <= TournamentConfigDraft.maxSetsMax;
         if (!maxSetsOk) return false;
+        // P2.2: in the stage-graph mode the format step's validity is sourced
+        // from the embedded builder (single source of truth). It is valid iff
+        // the graph has no blocking errors AND at least one stage exists.
+        if (draft.formatMode == TournamentFormatMode.stageGraph) {
+          final builder = ref.watch(stageGraphBuilderProvider);
+          return !builder.hasErrors && builder.graph.nodes.isNotEmpty;
+        }
         // K12: in the group phase the inline group-count input must be a valid
         // group count (2..16). The qualifier-per-group divisibility check
         // (koBracketSize % groupCount) needs the KO size, which is only chosen
@@ -205,6 +236,10 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
         targetId =
             await ref.read(tournamentActionsProvider).createTournament(draft);
       }
+      // P2.4: apply stage-graph template if in stage-graph mode.
+      if (draft.formatMode == TournamentFormatMode.stageGraph && editId == null) {
+        await _applyStageGraph(targetId, draft);
+      }
       // Invite-only Spaßturnier: send each picked invitation AFTER the
       // tournament exists / its invite_only flag is persisted. Failures are
       // tolerated per invitee so one bad call doesn't abort the whole flow —
@@ -252,6 +287,42 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  /// P2.4: applies a stage-graph template to a tournament after creation.
+  /// If [draft.appliedTemplateId] is set, applies that template directly.
+  /// Otherwise, auto-saves the free graph as a private template and applies it.
+  /// Failures are tolerated (tournament is already created); no exception is
+  /// thrown.
+  Future<void> _applyStageGraph(
+    TournamentId tournamentId,
+    TournamentConfigDraft draft,
+  ) async {
+    try {
+      final repo = ref.read(stageGraphTemplatesRepositoryProvider);
+      if (draft.appliedTemplateId != null) {
+        // Template was chosen: apply directly.
+        await repo.applyTemplate(
+          tournamentId: tournamentId.value,
+          templateId: draft.appliedTemplateId!,
+        );
+      } else if (draft.stageGraph != null) {
+        // Free graph: auto-save as private template, then apply.
+        final templateId = await repo.saveTemplate(
+          name: 'Auto tournament ${tournamentId.value}',
+          visibility: TemplateVisibility.private,
+          graph: draft.stageGraph!,
+          clubId: draft.clubId,
+        );
+        await repo.applyTemplate(
+          tournamentId: tournamentId.value,
+          templateId: templateId,
+        );
+      }
+    } on Object {
+      // Tolerate failures — tournament is already created; the organizer
+      // can retry from the detail screen if needed.
     }
   }
 
@@ -390,6 +461,7 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
           draft: draft,
           controller: controller,
           koBracketSize: _koBracketSize(draft),
+          onFormatMode: controller.setFormatMode,
           onVorrundeType: controller.setVorrundeType,
           onKoType: controller.setKoType,
           onSetsToWin: controller.setSetsToWin,
@@ -684,7 +756,7 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         // (P6 invite SPEC §3).
         if (draft.clubId == null) ...[
           const SizedBox(height: KubbTokens.space5),
-          _ToggleRow(
+          KubbLabeledSwitch(
             key: const Key('wizardInviteOnlyToggle'),
             title: l10n.tournamentWizardInviteOnlyLabel,
             subtitle: l10n.tournamentWizardInviteOnlyHint,
@@ -749,38 +821,41 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         const SizedBox(height: KubbTokens.space5),
         _FieldLabel(l10n.tournamentWizardScoringLabel),
         const SizedBox(height: KubbTokens.space2),
-        _ScoringOption(
-          title: l10n.tournamentWizardScoringEkc,
-          subtitle: l10n.tournamentWizardScoringEkcHint,
-          selected: draft.scoring == 'ekc',
-          onTap: () => controller.setScoring('ekc'),
-        ),
-        const SizedBox(height: KubbTokens.space2),
-        _ScoringOption(
-          title: l10n.tournamentWizardScoringClassic,
-          subtitle: l10n.tournamentWizardScoringClassicHint,
-          selected: draft.scoring == 'classic',
-          onTap: () => controller.setScoring('classic'),
+        KubbBinaryChoice<String>(
+          selected: draft.scoring == 'classic' ? 'classic' : 'ekc',
+          onChanged: controller.setScoring,
+          options: <KubbChoiceOption<String>>[
+            KubbChoiceOption<String>(
+              value: 'ekc',
+              title: l10n.tournamentWizardScoringEkc,
+              subtitle: l10n.tournamentWizardScoringEkcHint,
+            ),
+            KubbChoiceOption<String>(
+              value: 'classic',
+              title: l10n.tournamentWizardScoringClassic,
+              subtitle: l10n.tournamentWizardScoringClassicHint,
+            ),
+          ],
         ),
 
         // ---- Regeln & Dokumente ----
         _SectionHeaderText(l10n.tournamentWizardSectionRules),
         const SizedBox(height: KubbTokens.space3),
-        _ToggleRow(
+        KubbLabeledSwitch(
           title: l10n.tournamentWizardRuleSureshot,
           subtitle: l10n.tournamentWizardRuleSureshotHint,
           value: draft.ruleVariants.sureshot,
           onChanged: (v) => controller
               .setRuleVariants(draft.ruleVariants.copyWith(sureshot: v)),
         ),
-        _ToggleRow(
+        KubbLabeledSwitch(
           title: l10n.tournamentWizardRuleDiggy,
           subtitle: l10n.tournamentWizardRuleDiggyHint,
           value: draft.ruleVariants.diggy,
           onChanged: (v) => controller
               .setRuleVariants(draft.ruleVariants.copyWith(diggy: v)),
         ),
-        _ToggleRow(
+        KubbLabeledSwitch(
           title: l10n.tournamentWizardRuleStrafkubb,
           subtitle: l10n.tournamentWizardRuleStrafkubbHint,
           value: draft.ruleVariants.strafkubbOffBaseline,
@@ -788,34 +863,19 @@ class _StepStammdatenState extends State<_StepStammdaten> {
             draft.ruleVariants.copyWith(strafkubbOffBaseline: v),
           ),
         ),
-        // K06: surface the opening rule (Anspielregel). Default stays
-        // '2-4-6'; the segmented control writes the choice via
-        // setRuleVariants so the value is no longer invisible in the wizard.
+        // K06: surface the opening rule (Anspielregel) as a default-on
+        // switch — ON => '2-4-6' (the default), OFF => 'free'. Writes the
+        // choice via setRuleVariants so the value is no longer invisible.
         const SizedBox(height: KubbTokens.space2),
-        _FieldLabel(l10n.tournamentWizardRuleOpeningLabel),
-        const SizedBox(height: KubbTokens.space2),
-        SegmentedButton<String>(
+        KubbLabeledSwitch(
           key: const Key('wizardOpeningRule'),
-          showSelectedIcon: false,
-          segments: <ButtonSegment<String>>[
-            ButtonSegment<String>(
-              value: '2-4-6',
-              label: Text(l10n.tournamentWizardRuleOpening246),
-            ),
-            ButtonSegment<String>(
-              value: 'free',
-              label: Text(l10n.tournamentWizardRuleOpeningFree),
-            ),
-          ],
-          selected: <String>{
-            if (draft.ruleVariants.openingRule == 'free') 'free' else '2-4-6',
-          },
-          onSelectionChanged: (sel) => controller.setRuleVariants(
-            draft.ruleVariants.copyWith(openingRule: sel.first),
+          title: l10n.tournamentWizardRuleOpeningLabel,
+          subtitle: l10n.tournamentWizardRuleOpeningHint,
+          value: draft.ruleVariants.openingRule != 'free',
+          onChanged: (on) => controller.setRuleVariants(
+            draft.ruleVariants.copyWith(openingRule: on ? '2-4-6' : 'free'),
           ),
         ),
-        const SizedBox(height: KubbTokens.space1half),
-        _HelperText(l10n.tournamentWizardRuleOpeningHint),
         const SizedBox(height: KubbTokens.space4),
         _FieldLabel(l10n.tournamentWizardRulesPdfLabel, optional: true),
         const SizedBox(height: KubbTokens.space2),
@@ -958,61 +1018,6 @@ class _SectionHeaderText extends StatelessWidget {
           letterSpacing: 0.4,
           color: tokens.fg,
         ),
-      ),
-    );
-  }
-}
-
-/// Title + subtitle row with a trailing [Switch], used for the rule
-/// variants.
-class _ToggleRow extends StatelessWidget {
-  const _ToggleRow({
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    required this.onChanged,
-    super.key,
-  });
-
-  final String title;
-  final String subtitle;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: KubbTokens.space2),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: tokens.fg,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 11, color: tokens.fgMuted),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: KubbTokens.space3),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeTrackColor: tokens.primary,
-          ),
-        ],
       ),
     );
   }
@@ -1624,72 +1629,6 @@ class _SelectChip extends StatelessWidget {
   }
 }
 
-class _ScoringOption extends StatelessWidget {
-  const _ScoringOption({
-    required this.title,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return InkWell(
-      borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(KubbTokens.space3),
-        decoration: BoxDecoration(
-          color: selected ? tokens.bgSunken : tokens.bgRaised,
-          borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-          border: Border.all(
-            color: selected ? tokens.primary : tokens.line,
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              selected
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_unchecked,
-              size: 20,
-              color: tokens.fg,
-            ),
-            const SizedBox(width: KubbTokens.space3),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: tokens.fg,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 11, color: tokens.fgMuted),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _StepParticipants extends StatelessWidget {
   const _StepParticipants({
     required this.draft,
@@ -1741,11 +1680,12 @@ class _StepParticipants extends StatelessWidget {
   }
 }
 
-class _StepFormat extends StatefulWidget {
+class _StepFormat extends ConsumerStatefulWidget {
   const _StepFormat({
     required this.draft,
     required this.controller,
     required this.koBracketSize,
+    required this.onFormatMode,
     required this.onVorrundeType,
     required this.onKoType,
     required this.onSetsToWin,
@@ -1769,6 +1709,11 @@ class _StepFormat extends StatefulWidget {
   /// for the read-only "Qualifier pro Gruppe" value derived inline (K12).
   /// 0 until a valid KO size is chosen (the KO step follows this one).
   final int koBracketSize;
+
+  /// P2.2: the format-mode fork (classic Vorrunde × KO vs. stage-graph). Wired
+  /// to `controller.setFormatMode` so the choice is bound to the draft (no
+  /// local shadow state for the mode).
+  final ValueChanged<TournamentFormatMode> onFormatMode;
   // Two-axis format selection: Vorrunde (group phase vs Schoch) and KO
   // system (single-out / double-elimination / consolation). The controller
   // derives the legacy `TournamentFormat` + `BracketType` from these axes.
@@ -1795,10 +1740,23 @@ class _StepFormat extends StatefulWidget {
   final ValueChanged<int> onBreakBetween;
 
   @override
-  State<_StepFormat> createState() => _StepFormatState();
+  ConsumerState<_StepFormat> createState() => _StepFormatState();
 }
 
-class _StepFormatState extends State<_StepFormat> {
+class _StepFormatState extends ConsumerState<_StepFormat> {
+  /// P2.2 sub-affordance for the stage-graph mode: whether the organizer wants
+  /// to build a fresh graph or start from a saved template (which surfaces the
+  /// template bar). This is NOT a mode shadow — `draft.formatMode` stays the
+  /// single source of truth for classic-vs-stageGraph; this only toggles the
+  /// template-bar visibility within the stage-graph branch.
+  bool _useTemplate = false;
+
+  /// P2.3: guards the one-time field-size seed from the pitch plan. The builder
+  /// field size is seeded ONCE from `pitchPlan.availablePitches().length` when
+  /// the embedded builder first surfaces, so a value the organizer later edits
+  /// in the builder is never overwritten on rebuild (idempotent, no flicker
+  /// between the pitch seed and a manual change).
+  bool _stageFieldSizeSeeded = false;
   late final TextEditingController _groupCountCtrl;
   late final TextEditingController _seedCtrl;
 
@@ -1817,6 +1775,27 @@ class _StepFormatState extends State<_StepFormat> {
     _groupCountCtrl.dispose();
     _seedCtrl.dispose();
     super.dispose();
+  }
+
+  /// P2.3: seeds the embedded builder's field size ONCE from the draft's pitch
+  /// plan (`pitchPlan.availablePitches().length`). When the pitch plan is null
+  /// or has no available pitches the seed is skipped and the builder keeps its
+  /// own default ([StageGraphBuilderController.defaultFieldSize]) — no crash.
+  /// The seed runs in a post-frame callback (provider mutation is not allowed
+  /// during build) and only when the value actually differs, so a field size
+  /// the organizer later changes in the builder is never clobbered.
+  void _maybeSeedStageFieldSize(TournamentConfigDraft draft) {
+    if (_stageFieldSizeSeeded) return;
+    _stageFieldSizeSeeded = true;
+    final pitchCount = draft.pitchPlan?.availablePitches().length ?? 0;
+    if (pitchCount <= 0) return; // documented fallback: keep builder default.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final notifier = ref.read(stageGraphBuilderProvider.notifier);
+      if (ref.read(stageGraphBuilderProvider).fieldSize != pitchCount) {
+        notifier.setFieldSize(pitchCount);
+      }
+    });
   }
 
   /// Current grouping strategy (defaults to snake before the organiser picks).
@@ -1906,18 +1885,42 @@ class _StepFormatState extends State<_StepFormat> {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l10n = AppLocalizations.of(context);
     final draft = widget.draft;
-    final onVorrundeType = widget.onVorrundeType;
-    final onKoType = widget.onKoType;
     final onSetsToWin = widget.onSetsToWin;
     final onMaxSets = widget.onMaxSets;
     final onRoundTime = widget.onRoundTime;
     final onBreakBetween = widget.onBreakBetween;
+    final isClassic = draft.formatMode == TournamentFormatMode.classic;
+
+    // P2.3: in the stage-graph mode the embedded builder is the single source
+    // of truth (`stageGraphBuilderProvider`). Two wirings bind it to the draft:
+    //
+    //  - field-size SEED (once): from `pitchPlan.availablePitches().length`, so
+    //    the builder starts with one field per available pitch. Idempotent — a
+    //    field size the organizer edits later in the builder is not overwritten.
+    //  - graph MIRROR (onChange): every builder graph change is pushed into the
+    //    draft via `controller.setStageGraph`, so `draft.stageGraph` always
+    //    equals the builder graph. The classic path never touches `stageGraph`.
+    if (!isClassic) {
+      _maybeSeedStageFieldSize(draft);
+      ref.listen<StageGraphBuilderState>(
+        stageGraphBuilderProvider,
+        (prev, next) {
+          if (prev?.graph != next.graph) {
+            widget.controller.setStageGraph(next.graph);
+          }
+        },
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ---- Vorrunde axis (Gruppenphase | Schoch) ----
+        // ---- P2.2 format-mode fork (Klassisch | Stufen-Graph) ----
+        // ADR-0033 §2: "Klassisch" stays an own, behaviour-neutral path; the
+        // stage-graph mode embeds the builder inline (no jump screen). The mode
+        // is bound to the draft via `onFormatMode` — no local mode shadow.
         Text(
-          l10n.tournamentWizardVorrundeLabel,
+          l10n.tournamentWizardFormatModeLabel,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
@@ -1926,85 +1929,30 @@ class _StepFormatState extends State<_StepFormat> {
           ),
         ),
         const SizedBox(height: KubbTokens.space2),
-        _OptionRow(
-          selected: draft.vorrundeType == VorrundeType.groupPhase,
-          label: l10n.tournamentWizardVorrundeGroupPhase,
-          description: l10n.tournamentWizardVorrundeGroupPhaseHint,
-          onTap: () => onVorrundeType(VorrundeType.groupPhase),
-        ),
-        _OptionRow(
-          selected: draft.vorrundeType == VorrundeType.schoch,
-          label: l10n.tournamentWizardVorrundeSchoch,
-          description: l10n.tournamentWizardVorrundeSchochHint,
-          onTap: () => onVorrundeType(VorrundeType.schoch),
-        ),
-        // T10: the Schoch-rounds slider surfaces when the Vorrunde is Schoch
-        // (the pairing engine shares the round count with the Swiss system).
-        if (draft.vorrundeType == VorrundeType.schoch)
-          SwissConfigSection(
-            participantCount: draft.maxParticipants,
-            rounds: widget.swissRounds,
-            onRoundsChanged: widget.onSwissRoundsChanged,
-          ),
-        // K12: group-phase config (group count + grouping strategy) lives
-        // inline here, only when the group phase is the selected Vorrunde.
-        if (draft.vorrundeType == VorrundeType.groupPhase)
-          ..._groupPhaseSection(tokens, l10n),
-        const SizedBox(height: KubbTokens.space5),
-        // ---- KO axis (Single-Out | Double-Elimination | Trostturnier) ----
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                l10n.tournamentWizardKoSystemLabel,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.4,
-                  color: tokens.fgMuted,
-                ),
-              ),
+        KubbBinaryChoice<TournamentFormatMode>(
+          selected: draft.formatMode,
+          onChanged: widget.onFormatMode,
+          options: <KubbChoiceOption<TournamentFormatMode>>[
+            KubbChoiceOption<TournamentFormatMode>(
+              value: TournamentFormatMode.classic,
+              title: l10n.tournamentWizardFormatModeClassic,
+              subtitle: l10n.tournamentWizardFormatModeClassicHint,
             ),
-            // Info icon opens the KO-model explainer sheet. >=48dp touch
-            // target per --bk-touch-min (Design-System).
-            IconButton(
-              icon: Icon(
-                LucideIcons.info,
-                size: 18,
-                color: tokens.fgMuted,
-              ),
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              padding: EdgeInsets.zero,
-              tooltip: l10n.tournamentKoModelExplainerOpen,
-              onPressed: () => KoModelExplainerSheet.show(context),
+            KubbChoiceOption<TournamentFormatMode>(
+              value: TournamentFormatMode.stageGraph,
+              title: l10n.tournamentWizardFormatModeStageGraph,
+              subtitle: l10n.tournamentWizardFormatModeStageGraphHint,
             ),
           ],
         ),
-        const SizedBox(height: KubbTokens.space2),
-        _OptionRow(
-          selected: draft.koType == KoType.singleOut,
-          label: l10n.tournamentWizardKoSystemSingle,
-          description: l10n.tournamentWizardKoSystemSingleHint,
-          onTap: () => onKoType(KoType.singleOut),
-        ),
-        _OptionRow(
-          selected: draft.koType == KoType.doubleOut,
-          label: l10n.tournamentWizardKoSystemDouble,
-          description: l10n.tournamentWizardKoSystemDoubleHint,
-          onTap: () => onKoType(KoType.doubleOut),
-        ),
-        _OptionRow(
-          selected: draft.koType == KoType.consolation,
-          label: l10n.tournamentWizardKoSystemConsolation,
-          description: l10n.tournamentWizardKoSystemConsolationHint,
-          onTap: () => onKoType(KoType.consolation),
-        ),
-        // K15: the Model-B (Trostturnier) config — main-bracket size, direct
-        // starters and the (required) name — lives ENTIRELY in the KO step now
-        // (_wizard_ko_config_step.dart, _ConsolationKoSection). It is no longer
-        // rendered here, so the main-bracket size is chosen exactly once.
         const SizedBox(height: KubbTokens.space5),
-        // ---- Vorrunde scoring: "Sätze zum Sieg" + "Max. Sätze" (V2 spec) ----
+        // The classic Vorrunde × KO section renders ONLY in the classic mode
+        // (behaviour-neutral, unchanged widgets/keys/order). The stage-graph
+        // mode hosts the embedded builder instead.
+        if (isClassic) ..._classicFormatSection(tokens, l10n)
+        else ..._stageGraphSection(tokens, l10n),
+        const SizedBox(height: KubbTokens.space5),
+        // ---- Globaler Config-Teil (OE-4): sets/time/pitch for BOTH modes ----
         // The prelim sets-to-win field. onChanged maps onto the existing
         // controller.setSetsToWin, which auto-clamps maxSets to >= 2*n-1, so
         // sets_to_win <= max_sets stays consistent without extra widget logic.
@@ -2048,26 +1996,180 @@ class _StepFormatState extends State<_StepFormat> {
           onChanged: widget.onPitchPlanChanged,
         ),
         // K23/K24: per-group pitch assignment lives in the pitch context, gated
-        // on group phase + a pitch plan with available pitches.
-        if (draft.vorrundeType == VorrundeType.groupPhase)
+        // on group phase + a pitch plan with available pitches. Only relevant
+        // in the classic group-phase path.
+        if (isClassic && draft.vorrundeType == VorrundeType.groupPhase)
           ..._pitchAssignmentSection(tokens, l10n),
-        // ADR-0030 §Editor: advanced entry point into the form-based
-        // stage-graph builder. Moved off the tournament hub — it belongs to
-        // setup, so the staged-format authoring sits next to the format/phase
-        // configuration. The builder owns its own screen/route/controller; this
-        // only navigates there.
-        _SectionHeaderText(l10n.stageGraphTitle),
-        const SizedBox(height: KubbTokens.space2),
-        _HelperText(l10n.tournamentSetupStageGraphEntryHint),
-        const SizedBox(height: KubbTokens.space3),
-        KubbButton(
-          key: const Key('wizardStageGraphEntry'),
-          variant: KubbButtonVariant.secondary,
-          onPressed: () => context.push(TournamentRoutes.stageGraph),
-          child: Text(l10n.tournamentSetupStageGraphEntry),
-        ),
       ],
     );
+  }
+
+  /// P2.2: the classic Vorrunde × KO section, unchanged from before the fork
+  /// (same widgets, keys, order, validation). Only additively wrapped behind
+  /// the format-mode branch.
+  List<Widget> _classicFormatSection(KubbTokens tokens, AppLocalizations l10n) {
+    final draft = widget.draft;
+    final onVorrundeType = widget.onVorrundeType;
+    final onKoType = widget.onKoType;
+    return <Widget>[
+      // ---- Vorrunde axis (Gruppenphase | Schoch) ----
+      Text(
+        l10n.tournamentWizardVorrundeLabel,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+          color: tokens.fgMuted,
+        ),
+      ),
+      const SizedBox(height: KubbTokens.space2),
+      KubbBinaryChoice<VorrundeType>(
+          selected: draft.vorrundeType,
+          onChanged: onVorrundeType,
+          options: <KubbChoiceOption<VorrundeType>>[
+            KubbChoiceOption<VorrundeType>(
+              value: VorrundeType.groupPhase,
+              title: l10n.tournamentWizardVorrundeGroupPhase,
+              subtitle: l10n.tournamentWizardVorrundeGroupPhaseHint,
+            ),
+            KubbChoiceOption<VorrundeType>(
+              value: VorrundeType.schoch,
+              title: l10n.tournamentWizardVorrundeSchoch,
+              subtitle: l10n.tournamentWizardVorrundeSchochHint,
+            ),
+          ],
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        // T10: the Schoch-rounds slider surfaces when the Vorrunde is Schoch
+        // (the pairing engine shares the round count with the Swiss system).
+        if (draft.vorrundeType == VorrundeType.schoch)
+          SwissConfigSection(
+            participantCount: draft.maxParticipants,
+            rounds: widget.swissRounds,
+            onRoundsChanged: widget.onSwissRoundsChanged,
+          ),
+        // K12: group-phase config (group count + grouping strategy) lives
+        // inline here, only when the group phase is the selected Vorrunde.
+        if (draft.vorrundeType == VorrundeType.groupPhase)
+          ..._groupPhaseSection(tokens, l10n),
+        const SizedBox(height: KubbTokens.space5),
+        // ---- KO axis (Single-Out | Double-Elimination | Trostturnier) ----
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l10n.tournamentWizardKoSystemLabel,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.4,
+                  color: tokens.fgMuted,
+                ),
+              ),
+            ),
+            // Info icon opens the KO-model explainer sheet. >=48dp touch
+            // target per --bk-touch-min (Design-System).
+            IconButton(
+              icon: Icon(
+                LucideIcons.info,
+                size: 18,
+                color: tokens.fgMuted,
+              ),
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              padding: EdgeInsets.zero,
+              tooltip: l10n.tournamentKoModelExplainerOpen,
+              onPressed: () => KoModelExplainerSheet.show(context),
+            ),
+          ],
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        KubbBinaryChoice<KoType>(
+          selected: draft.koType,
+          onChanged: onKoType,
+          options: <KubbChoiceOption<KoType>>[
+            KubbChoiceOption<KoType>(
+              value: KoType.singleOut,
+              title: l10n.tournamentWizardKoSystemSingle,
+              subtitle: l10n.tournamentWizardKoSystemSingleHint,
+            ),
+            KubbChoiceOption<KoType>(
+              value: KoType.doubleOut,
+              title: l10n.tournamentWizardKoSystemDouble,
+              subtitle: l10n.tournamentWizardKoSystemDoubleHint,
+            ),
+            KubbChoiceOption<KoType>(
+              value: KoType.consolation,
+              title: l10n.tournamentWizardKoSystemConsolation,
+              subtitle: l10n.tournamentWizardKoSystemConsolationHint,
+            ),
+          ],
+        ),
+      // K15: the Model-B (Trostturnier) config — main-bracket size, direct
+      // starters and the (required) name — lives ENTIRELY in the KO step now
+      // (_wizard_ko_config_step.dart, _ConsolationKoSection). It is no longer
+      // rendered here, so the main-bracket size is chosen exactly once.
+    ];
+  }
+
+  /// P2.2: the embedded stage-graph builder section. Renders inline (no jump
+  /// screen) and reads/mutates ONLY [stageGraphBuilderProvider] (single source
+  /// of truth, no doubled graph state). The template bar surfaces only in the
+  /// "Vorlage wählen" sub-affordance. The full node/edge editor body is the
+  /// reusable builder body extracted in P2.3; here the inline host exposes the
+  /// graph source choice, the live template bar (template variant) and the
+  /// live validation status that gates the step.
+  List<Widget> _stageGraphSection(KubbTokens tokens, AppLocalizations l10n) {
+    return <Widget>[
+      Text(
+        l10n.tournamentWizardStageGraphSourceLabel,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+          color: tokens.fgMuted,
+        ),
+      ),
+      const SizedBox(height: KubbTokens.space2),
+      // The source sub-choice (build fresh vs pick a template) is also a shared
+      // KubbBinaryChoice. It only toggles the template-bar visibility; the
+      // canonical mode stays `draft.formatMode == stageGraph`.
+      KubbBinaryChoice<bool>(
+        key: const Key('wizardStageGraphSource'),
+        selected: _useTemplate,
+        onChanged: (v) => setState(() => _useTemplate = v),
+        options: <KubbChoiceOption<bool>>[
+          KubbChoiceOption<bool>(
+            value: false,
+            title: l10n.tournamentWizardStageGraphSourceBuild,
+            subtitle: l10n.tournamentWizardStageGraphSourceBuildHint,
+          ),
+          KubbChoiceOption<bool>(
+            value: true,
+            title: l10n.tournamentWizardStageGraphSourceTemplate,
+            subtitle: l10n.tournamentWizardStageGraphSourceTemplateHint,
+          ),
+        ],
+      ),
+      const SizedBox(height: KubbTokens.space5),
+      // Template bar (apply a saved/system template into the shared provider)
+      // — visible only in the "Vorlage wählen" variant.
+      if (_useTemplate) ...[
+        const _StageGraphTemplateBar(
+          key: Key('wizardStageGraphTemplateBar'),
+        ),
+        const SizedBox(height: KubbTokens.space5),
+      ],
+      // P2.3: the inline embedded builder body is the SHARED, extracted
+      // `StageGraphBuilderBody` (embedded: true) — the exact same widget the
+      // standalone editor screen renders. There is no duplicated embedded
+      // editor: it reads/mutates ONLY `stageGraphBuilderProvider` (single
+      // source of truth, no doubled graph state) and authors the graph through
+      // the same dialog seams the standalone editor uses.
+      const StageGraphBuilderBody(
+        key: Key('wizardStageGraphBuilder'),
+        embedded: true,
+      ),
+    ];
   }
 
   /// K12: inline group-phase config — group count + grouping strategy +
@@ -2212,6 +2314,129 @@ class _StepFormatState extends State<_StepFormat> {
   }
 }
 
+/// P2.2: inline template bar for the wizard's stage-graph "Vorlage wählen"
+/// variant. Watches [stageGraphTemplatesProvider] and applies the picked
+/// template into the shared [stageGraphBuilderProvider] via `loadFromGraph`
+/// (single source of truth — no separate graph state here). Save-as-template
+/// is NOT offered in the wizard; that is the submit-wiring's job (P2.4).
+class _StageGraphTemplateBar extends ConsumerStatefulWidget {
+  const _StageGraphTemplateBar({super.key});
+
+  @override
+  ConsumerState<_StageGraphTemplateBar> createState() =>
+      _StageGraphTemplateBarState();
+}
+
+class _StageGraphTemplateBarState
+    extends ConsumerState<_StageGraphTemplateBar> {
+  String? _selectedId;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
+    final templatesAsync = ref.watch(stageGraphTemplatesProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SectionHeaderText(l10n.stageGraphTemplatesSection),
+        const SizedBox(height: KubbTokens.space3),
+        templatesAsync.when(
+          loading: () => KubbSkeleton.bar(height: 48),
+          error: (_, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _HelperText(l10n.stageGraphTemplatesError),
+              const SizedBox(height: KubbTokens.space2),
+              SizedBox(
+                height: KubbTokens.touchMin,
+                child: KubbButton(
+                  variant: KubbButtonVariant.secondary,
+                  onPressed: () =>
+                      ref.invalidate(stageGraphTemplatesProvider),
+                  child: Text(l10n.stageGraphRetry),
+                ),
+              ),
+            ],
+          ),
+          data: (templates) => _buildData(l10n, tokens, templates),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildData(
+    AppLocalizations l10n,
+    KubbTokens tokens,
+    List<StageGraphTemplate> templates,
+  ) {
+    final hasSelection =
+        templates.any((t) => t.id == _selectedId) && _selectedId != null;
+    final selected = hasSelection ? _selectedId : null;
+    if (templates.isEmpty) {
+      return _HelperText(l10n.stageGraphTemplatesEmpty);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DropdownButtonFormField<String>(
+          key: const Key('wizardStageGraphTemplatePicker'),
+          initialValue: selected,
+          isExpanded: true,
+          decoration: InputDecoration(
+            labelText: l10n.stageGraphTemplatePickerLabel,
+            border: const OutlineInputBorder(),
+          ),
+          items: [
+            for (final t in templates)
+              DropdownMenuItem<String>(
+                value: t.id,
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(t.name, overflow: TextOverflow.ellipsis),
+                    ),
+                    if (t.isSystem) ...[
+                      const SizedBox(width: KubbTokens.space2),
+                      KubbChip(
+                        tone: KubbChipTone.heli,
+                        label: l10n.stageGraphTemplateSystemBadge,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+          ],
+          onChanged: (v) => setState(() => _selectedId = v),
+        ),
+        const SizedBox(height: KubbTokens.space3),
+        SizedBox(
+          height: KubbTokens.touchMin,
+          child: KubbButton(
+            variant: KubbButtonVariant.secondary,
+            onPressed: selected == null
+                ? null
+                : () => _apply(l10n, templates, selected),
+            child: Text(l10n.stageGraphTemplateApply),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _apply(
+    AppLocalizations l10n,
+    List<StageGraphTemplate> templates,
+    String id,
+  ) {
+    final template = templates.firstWhere((t) => t.id == id);
+    ref.read(stageGraphBuilderProvider.notifier).loadFromGraph(template.graph);
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(l10n.stageGraphTemplateApplied)));
+  }
+}
+
 /// Read-only display box for a derived value (e.g. qualifier-per-group),
 /// styled like a disabled outline field so it reads as non-editable (K12).
 class _DerivedValueBox extends StatelessWidget {
@@ -2237,80 +2462,6 @@ class _DerivedValueBox extends StatelessWidget {
           fontSize: 14,
           fontWeight: FontWeight.w700,
           color: tokens.fg,
-        ),
-      ),
-    );
-  }
-}
-
-/// Radio-style selectable card with a label + one-line description. Used by
-/// the two-axis format selector (Vorrunde / KO system).
-class _OptionRow extends StatelessWidget {
-  const _OptionRow({
-    required this.selected,
-    required this.label,
-    required this.description,
-    required this.onTap,
-  });
-
-  final bool selected;
-  final String label;
-  final String description;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: KubbTokens.space2),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(KubbTokens.space3),
-          decoration: BoxDecoration(
-            color: selected ? tokens.bgSunken : tokens.bgRaised,
-            borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-            border: Border.all(
-              color: selected ? tokens.primary : tokens.line,
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                selected
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
-                size: 20,
-                color: tokens.fg,
-              ),
-              const SizedBox(width: KubbTokens.space3),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: tokens.fg,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: tokens.fgMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -2468,101 +2619,107 @@ class _StepSummary extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: KubbTokens.space4),
-        // K26-3: prelim (Vorrunde) step.
-        _SummarySection(
-          title: l10n.tournamentWizardSummarySectionVorrunde,
-          rows: <_SummaryRowData>[
-            _SummaryRowData(
-              l10n.tournamentWizardSummaryFormatLabel,
-              draft.vorrundeType == VorrundeType.schoch
-                  ? l10n.tournamentWizardVorrundeSchoch
-                  : l10n.tournamentWizardVorrundeGroupPhase,
-            ),
-            // Group count + grouping strategy only for the group phase.
-            if (draft.vorrundeType == VorrundeType.groupPhase) ...[
+        // P5.1 (§8): Stage-Graph section (stage-graph mode only) — renders the
+        // full graph (stages + edges + per-stage config), not just counts.
+        if (draft.formatMode == TournamentFormatMode.stageGraph) ...[
+          ..._buildStageGraphSummary(ref, l10n),
+        ] else ...[
+          // K26-3: prelim (Vorrunde) step (classic mode only).
+          _SummarySection(
+            title: l10n.tournamentWizardSummarySectionVorrunde,
+            rows: <_SummaryRowData>[
               _SummaryRowData(
-                l10n.tournamentWizardPoolGroupCountLabel,
-                draft.poolPhaseConfig == null
-                    ? placeholder
-                    : '${draft.poolPhaseConfig!.groupCount}',
+                l10n.tournamentWizardSummaryFormatLabel,
+                draft.vorrundeType == VorrundeType.schoch
+                    ? l10n.tournamentWizardVorrundeSchoch
+                    : l10n.tournamentWizardVorrundeGroupPhase,
+              ),
+              // Group count + grouping strategy only for the group phase.
+              if (draft.vorrundeType == VorrundeType.groupPhase) ...[
+                _SummaryRowData(
+                  l10n.tournamentWizardPoolGroupCountLabel,
+                  draft.poolPhaseConfig == null
+                      ? placeholder
+                      : '${draft.poolPhaseConfig!.groupCount}',
+                ),
+                _SummaryRowData(
+                  l10n.tournamentWizardPoolStrategyLabel,
+                  _strategyText(l10n, placeholder),
+                ),
+              ],
+              _SummaryRowData(
+                l10n.tournamentWizardMaxSetsLabel,
+                '${draft.maxSets}',
               ),
               _SummaryRowData(
-                l10n.tournamentWizardPoolStrategyLabel,
-                _strategyText(l10n, placeholder),
-              ),
-            ],
-            _SummaryRowData(
-              l10n.tournamentWizardMaxSetsLabel,
-              '${draft.maxSets}',
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardSummaryMatchTimeLabel,
-              '${(draft.roundTimeSeconds / 60).round()}',
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardBreakBetweenLabel,
-              '${(draft.breakBetweenMatchesSeconds / 60).round()}',
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardSummaryPitchesLabel,
-              _pitchText(placeholder),
-            ),
-          ],
-        ),
-        const SizedBox(height: KubbTokens.space4),
-        // K26-4: KO step.
-        _SummarySection(
-          title: l10n.tournamentWizardSummarySectionKo,
-          rows: <_SummaryRowData>[
-            _SummaryRowData(
-              l10n.tournamentWizardSummaryKoTypeLabel,
-              _koTypeText(l10n),
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardSummaryKoSizeLabel,
-              (draft.koConfig?.qualifierCount ?? 0) >= 2
-                  ? '${draft.koConfig!.qualifierCount}'
-                  : placeholder,
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardSummaryKoRoundsLabel,
-              _koRoundsText(l10n, placeholder),
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardSummarySeedingLabel,
-              (draft.bracketSeedingMode ?? SeedingMode.auto) ==
-                      SeedingMode.manual
-                  ? l10n.tournamentWizardSummarySeedingManual
-                  : l10n.tournamentWizardSummarySeedingAuto,
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardKoMatchupLabel,
-              draft.koMatchup == KoMatchup.oneVsTwo
-                  ? l10n.tournamentWizardKoMatchupOneTwo
-                  : l10n.tournamentWizardKoMatchupHighLow,
-            ),
-            _SummaryRowData(
-              l10n.tournamentWizardKoTiebreakMethodLabel,
-              draft.koTiebreakMethod ==
-                      KoTiebreakMethod.mightyFinisherShootout
-                  ? l10n.tournamentWizardKoTiebreakMighty
-                  : l10n.tournamentWizardKoTiebreakClassic,
-            ),
-            // Consolation-only: name + direct-starter count.
-            if (draft.koType == KoType.consolation) ...[
-              _SummaryRowData(
-                l10n.tournamentWizardConsolationNameLabel,
-                text(draft.consolationName),
+                l10n.tournamentWizardSummaryMatchTimeLabel,
+                '${(draft.roundTimeSeconds / 60).round()}',
               ),
               _SummaryRowData(
-                l10n.tournamentWizardSummaryConsolationDirectLabel,
-                draft.consolationDirectCount <= 0
-                    ? l10n.tournamentWizardConsolationDirectCountNone
-                    : '${draft.consolationDirectCount}',
+                l10n.tournamentWizardBreakBetweenLabel,
+                '${(draft.breakBetweenMatchesSeconds / 60).round()}',
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardSummaryPitchesLabel,
+                _pitchText(placeholder),
               ),
             ],
-          ],
-        ),
+          ),
+          const SizedBox(height: KubbTokens.space4),
+          // K26-4: KO step (classic mode only).
+          _SummarySection(
+            title: l10n.tournamentWizardSummarySectionKo,
+            rows: <_SummaryRowData>[
+              _SummaryRowData(
+                l10n.tournamentWizardSummaryKoTypeLabel,
+                _koTypeText(l10n),
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardSummaryKoSizeLabel,
+                (draft.koConfig?.qualifierCount ?? 0) >= 2
+                    ? '${draft.koConfig!.qualifierCount}'
+                    : placeholder,
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardSummaryKoRoundsLabel,
+                _koRoundsText(l10n, placeholder),
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardSummarySeedingLabel,
+                (draft.bracketSeedingMode ?? SeedingMode.auto) ==
+                        SeedingMode.manual
+                    ? l10n.tournamentWizardSummarySeedingManual
+                    : l10n.tournamentWizardSummarySeedingAuto,
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardKoMatchupLabel,
+                draft.koMatchup == KoMatchup.oneVsTwo
+                    ? l10n.tournamentWizardKoMatchupOneTwo
+                    : l10n.tournamentWizardKoMatchupHighLow,
+              ),
+              _SummaryRowData(
+                l10n.tournamentWizardKoTiebreakMethodLabel,
+                draft.koTiebreakMethod ==
+                        KoTiebreakMethod.mightyFinisherShootout
+                    ? l10n.tournamentWizardKoTiebreakMighty
+                    : l10n.tournamentWizardKoTiebreakClassic,
+              ),
+              // Consolation-only: name + direct-starter count.
+              if (draft.koType == KoType.consolation) ...[
+                _SummaryRowData(
+                  l10n.tournamentWizardConsolationNameLabel,
+                  text(draft.consolationName),
+                ),
+                _SummaryRowData(
+                  l10n.tournamentWizardSummaryConsolationDirectLabel,
+                  draft.consolationDirectCount <= 0
+                      ? l10n.tournamentWizardConsolationDirectCountNone
+                      : '${draft.consolationDirectCount}',
+                ),
+              ],
+            ],
+          ),
+        ],
       ],
     );
   }
@@ -2680,6 +2837,77 @@ class _StepSummary extends ConsumerWidget {
       KoType.doubleOut => l10n.tournamentWizardSummaryKoTypeDouble,
       KoType.consolation => l10n.tournamentWizardSummaryKoTypeConsolation,
     };
+  }
+
+  /// §8 (P5.1): renders the chosen stage-graph in the summary — stages
+  /// (id, type, seeding, per-stage config) and edges (from→to, selector incl.
+  /// LosersOfRounds, seeding-in). Nothing configured is silently omitted.
+  ///
+  /// Resolves the graph even in template mode: `draft.stageGraph` is null until
+  /// the server applies the template, but the live builder already holds the
+  /// chosen/built graph (picking a template runs `loadFromGraph`), so reading
+  /// it fixes the old 0/0-despite-template bug.
+  List<Widget> _buildStageGraphSummary(WidgetRef ref, AppLocalizations l10n) {
+    final graph = draft.stageGraph ?? ref.watch(stageGraphBuilderProvider).graph;
+    final placeholder = l10n.tournamentWizardSummaryPlaceholder;
+
+    String? templateName;
+    final tid = draft.appliedTemplateId;
+    if (tid != null) {
+      templateName = ref.watch(stageGraphTemplatesProvider).maybeWhen(
+            data: (list) {
+              for (final t in list) {
+                if (t.id == tid) return t.name;
+              }
+              return null;
+            },
+            orElse: () => null,
+          );
+    }
+
+    final nodeRows = <_SummaryRowData>[
+      for (final n in graph.nodes)
+        _SummaryRowData(
+          n.id,
+          <String>[
+            stageNodeTypeLabel(l10n, n.type),
+            stageSeedingSourceLabel(l10n, n.seeding),
+            ?stageNodeConfigSummary(l10n, n),
+          ].join(' · '),
+        ),
+    ];
+    final edgeRows = <_SummaryRowData>[
+      for (final e in graph.edges)
+        _SummaryRowData(
+          '${e.fromNodeId} → ${e.toNodeId}',
+          '${edgeSelectorLabel(l10n, e.selector)} · '
+              '${stageSeedingInLabel(l10n, e.seedingIn)}',
+        ),
+    ];
+
+    return [
+      _SummarySection(
+        title: l10n.stageGraphNodesSection,
+        rows: <_SummaryRowData>[
+          if (templateName != null)
+            _SummaryRowData(l10n.stageGraphTemplatesSection, templateName),
+          if (nodeRows.isEmpty)
+            _SummaryRowData(l10n.stageGraphNodesSection, placeholder)
+          else
+            ...nodeRows,
+        ],
+      ),
+      const SizedBox(height: KubbTokens.space4),
+      _SummarySection(
+        title: l10n.stageGraphEdgesSection,
+        rows: edgeRows.isEmpty
+            ? <_SummaryRowData>[
+                _SummaryRowData(l10n.stageGraphEdgesSection, placeholder),
+              ]
+            : edgeRows,
+      ),
+      const SizedBox(height: KubbTokens.space4),
+    ];
   }
 }
 
@@ -2990,25 +3218,20 @@ class _PitchPlanSectionState extends State<_PitchPlanSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Wrap(
-          spacing: KubbTokens.space2,
-          runSpacing: KubbTokens.space2,
-          children: [
-            _SelectChip(
-              label: l10n.tournamentWizardPitchModeRange,
-              selected: _mode == PitchMode.range,
-              onTap: () {
-                setState(() => _mode = PitchMode.range);
-                _emit();
-              },
+        KubbBinaryChoice<PitchMode>(
+          selected: _mode,
+          onChanged: (mode) {
+            setState(() => _mode = mode);
+            _emit();
+          },
+          options: <KubbChoiceOption<PitchMode>>[
+            KubbChoiceOption<PitchMode>(
+              value: PitchMode.range,
+              title: l10n.tournamentWizardPitchModeRange,
             ),
-            _SelectChip(
-              label: l10n.tournamentWizardPitchModeManual,
-              selected: _mode == PitchMode.manual,
-              onTap: () {
-                setState(() => _mode = PitchMode.manual);
-                _emit();
-              },
+            KubbChoiceOption<PitchMode>(
+              value: PitchMode.manual,
+              title: l10n.tournamentWizardPitchModeManual,
             ),
           ],
         ),
@@ -3063,29 +3286,26 @@ class _PitchPlanSectionState extends State<_PitchPlanSection> {
         const SizedBox(height: KubbTokens.space4),
         _FieldLabel(l10n.tournamentWizardPitchSortLabel),
         const SizedBox(height: KubbTokens.space2),
-        Wrap(
-          spacing: KubbTokens.space2,
-          runSpacing: KubbTokens.space2,
-          children: [
-            _SelectChip(
-              label: l10n.tournamentWizardPitchSortTopSeeds,
-              selected: _sort == PitchSortStrategy.topSeedsLowNumbers,
-              onTap: () {
-                setState(() {
-                  _sort = PitchSortStrategy.topSeedsLowNumbers;
-                  // Drop any stale manual order when leaving manual mode.
-                  _order = const <int>[];
-                });
-                _emit();
-              },
+        KubbBinaryChoice<PitchSortStrategy>(
+          selected: _sort,
+          onChanged: (next) {
+            setState(() {
+              _sort = next;
+              // Drop any stale manual order when leaving manual mode.
+              if (next == PitchSortStrategy.topSeedsLowNumbers) {
+                _order = const <int>[];
+              }
+            });
+            _emit();
+          },
+          options: <KubbChoiceOption<PitchSortStrategy>>[
+            KubbChoiceOption<PitchSortStrategy>(
+              value: PitchSortStrategy.topSeedsLowNumbers,
+              title: l10n.tournamentWizardPitchSortTopSeeds,
             ),
-            _SelectChip(
-              label: l10n.tournamentWizardPitchSortManual,
-              selected: _sort == PitchSortStrategy.manual,
-              onTap: () {
-                setState(() => _sort = PitchSortStrategy.manual);
-                _emit();
-              },
+            KubbChoiceOption<PitchSortStrategy>(
+              value: PitchSortStrategy.manual,
+              title: l10n.tournamentWizardPitchSortManual,
             ),
           ],
         ),

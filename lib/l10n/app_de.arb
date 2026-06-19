@@ -197,14 +197,6 @@
   "@stageGraphTitle": {
     "description": "AppBar title for the stage-graph builder screen"
   },
-  "tournamentSetupStageGraphEntry": "Stufengraph bauen",
-  "@tournamentSetupStageGraphEntry": {
-    "description": "Setup-wizard entry-point button label that opens the stage-graph builder"
-  },
-  "tournamentSetupStageGraphEntryHint": "Stufen, Routing und Validierung komponieren",
-  "@tournamentSetupStageGraphEntryHint": {
-    "description": "Helper text under the stage-graph builder entry-point in the setup wizard"
-  },
   "stageGraphFieldSizeSection": "Feldgröße",
   "@stageGraphFieldSizeSection": {
     "description": "Section title for the field-size input"
@@ -368,6 +360,47 @@
   "@stageGraphConfigSlots": {
     "description": "Config field label for slots"
   },
+  "stageGraphConfigRandomSeed": "Zufalls-Seed",
+  "@stageGraphConfigRandomSeed": {
+    "description": "Config field label for the deterministic random grouping seed"
+  },
+  "stageGraphConfigKoRoundCount": "Anzahl K.-o.-Runden",
+  "@stageGraphConfigKoRoundCount": {
+    "description": "Config field label for the number of per-round KO format blocks"
+  },
+  "stageGraphConfigKoRoundTitle": "Runde {n}",
+  "@stageGraphConfigKoRoundTitle": {
+    "description": "Title of a per-round KO format block",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "stageGraphConfigGroupCountHint": "In wie viele Gruppen das Feld aufgeteilt wird.",
+  "@stageGraphConfigGroupCountHint": {
+    "description": "Helper caption under the groupCount field"
+  },
+  "stageGraphConfigQualifierHint": "Qualifikanten zählen pro Gruppe, nicht über alle Gruppen zusammen: bei 2 ziehen die besten 2 jeder Gruppe weiter.",
+  "@stageGraphConfigQualifierHint": {
+    "description": "Helper caption clarifying qualifiers are per group, not total"
+  },
+  "stageGraphConfigSwissHint": "Anzahl der Schweizer-System-Runden. Die Paarungen jeder Runde entstehen live nach Tabellenstand.",
+  "@stageGraphConfigSwissHint": {
+    "description": "Helper caption under the swiss rounds field"
+  },
+  "stageGraphConfigWithReset": "Grand-Final-Reset",
+  "@stageGraphConfigWithReset": {
+    "description": "Switch label for double-elim bracket reset"
+  },
+  "stageGraphConfigWithResetHint": "Gewinnt das Team aus dem Verlierer-Bracket das erste Finale, gibt es ein zweites, entscheidendes Finale (beide haben dann genau eine Niederlage).",
+  "@stageGraphConfigWithResetHint": {
+    "description": "Helper caption explaining the double-elim bracket reset"
+  },
+  "stageGraphConfigBracketAuto": "Das Bracket wird automatisch aus der Setzliste gebaut — keine weitere Konfiguration nötig.",
+  "@stageGraphConfigBracketAuto": {
+    "description": "Caption for single-elim/consolation nodes which need no extra config"
+  },
   "stageGraphErrorIdEmpty": "Die ID darf nicht leer sein.",
   "@stageGraphErrorIdEmpty": {
     "description": "Inline error when the node id is empty"
@@ -449,6 +482,30 @@
   "stageGraphSelectorNonQualifiers": "Übrige",
   "@stageGraphSelectorNonQualifiers": {
     "description": "Short label for a NonQualifiers selector"
+  },
+  "stageGraphSelectorHintTopK": "Die besten K jeder Quell-Stufe ziehen weiter — z. B. Top 2 jeder Gruppe.",
+  "@stageGraphSelectorHintTopK": {
+    "description": "Explanation of the TopK selector"
+  },
+  "stageGraphSelectorHintRanks": "Ein zusammenhängender Rangbereich der Quell-Stufe zieht weiter — z. B. Ränge 3–4 für ein zweites Tableau.",
+  "@stageGraphSelectorHintRanks": {
+    "description": "Explanation of the Ranks selector"
+  },
+  "stageGraphSelectorHintLosers": "Verlierer bestimmter K.-o.-Runden werden weitergeleitet — so speist man Trost-/Neben-Cups (KubbMAIster-Topologie).",
+  "@stageGraphSelectorHintLosers": {
+    "description": "Explanation of the LosersOfRounds selector"
+  },
+  "stageGraphSelectorHintWinners": "Alle Sieger der Quell-Stufe ziehen weiter.",
+  "@stageGraphSelectorHintWinners": {
+    "description": "Explanation of the Winners selector"
+  },
+  "stageGraphSelectorHintNonQualifiers": "Alle, die sich NICHT qualifiziert haben, ziehen weiter — z. B. in einen Neben-Cup.",
+  "@stageGraphSelectorHintNonQualifiers": {
+    "description": "Explanation of the NonQualifiers selector"
+  },
+  "stageGraphEdgesMultiHint": "Eine Stufe darf mehrere Kanten haben: z. B. Sieger ins Haupt-Bracket UND Verlierer früher Runden in einen Neben-Cup (siehe KubbMAIster).",
+  "@stageGraphEdgesMultiHint": {
+    "description": "Hint that a node may have multiple outgoing edges"
   },
   "stageGraphNodeTypePool": "Gruppen",
   "@stageGraphNodeTypePool": { "description": "Label for StageNodeType.pool" },
@@ -2560,6 +2617,18 @@
   "@tournamentWizardScoringClassicHint": {
     "description": "Classic scoring option subtitle"
   },
+  "tournamentWizardSeedingSourceLabel": "Seeding-Quelle",
+  "@tournamentWizardSeedingSourceLabel": {
+    "description": "KO seeding-source selector label"
+  },
+  "tournamentWizardSeedingSourceAuto": "Automatisch aus Vorrunde",
+  "@tournamentWizardSeedingSourceAuto": {
+    "description": "KO seeding-source option: automatic from the prelim phase"
+  },
+  "tournamentWizardSeedingSourceManual": "Manuell festlegen",
+  "@tournamentWizardSeedingSourceManual": {
+    "description": "KO seeding-source option: manual seeding"
+  },
   "tournamentWizardSectionParticipation": "Teilnahme",
   "@tournamentWizardSectionParticipation": {
     "description": "Section header: fee / payment / contact"
@@ -2936,6 +3005,50 @@
   "tournamentWizardFormatComingSoon": "Folgt in M2+",
   "@tournamentWizardFormatComingSoon": {
     "description": "Pill on disabled formats"
+  },
+  "tournamentWizardFormatModeLabel": "Turnierformat",
+  "@tournamentWizardFormatModeLabel": {
+    "description": "P2.2 format-mode fork label (classic vs stage graph)"
+  },
+  "tournamentWizardFormatModeClassic": "Klassisch",
+  "@tournamentWizardFormatModeClassic": {
+    "description": "Classic format-mode option (Vorrunde x KO)"
+  },
+  "tournamentWizardFormatModeClassicHint": "Vorrunde (Gruppenphase oder Schoch) und ein K.-o.-Baum.",
+  "@tournamentWizardFormatModeClassicHint": {
+    "description": "Classic format-mode description"
+  },
+  "tournamentWizardFormatModeStageGraph": "Stufen-Graph",
+  "@tournamentWizardFormatModeStageGraph": {
+    "description": "Stage-graph format-mode option"
+  },
+  "tournamentWizardFormatModeStageGraphHint": "Eigene Stufen frei verketten – Haupt- und Neben-Cups möglich.",
+  "@tournamentWizardFormatModeStageGraphHint": {
+    "description": "Stage-graph format-mode description"
+  },
+  "tournamentWizardStageGraphSourceLabel": "Stufen-Graph",
+  "@tournamentWizardStageGraphSourceLabel": {
+    "description": "Stage-graph source sub-choice label (build vs template)"
+  },
+  "tournamentWizardStageGraphSourceBuild": "Neu erstellen",
+  "@tournamentWizardStageGraphSourceBuild": {
+    "description": "Build a fresh stage graph option"
+  },
+  "tournamentWizardStageGraphSourceBuildHint": "Stufen und Routing von Hand komponieren.",
+  "@tournamentWizardStageGraphSourceBuildHint": {
+    "description": "Build-fresh stage-graph description"
+  },
+  "tournamentWizardStageGraphSourceTemplate": "Vorlage wählen",
+  "@tournamentWizardStageGraphSourceTemplate": {
+    "description": "Pick a saved/system template option"
+  },
+  "tournamentWizardStageGraphSourceTemplateHint": "Mit einer gespeicherten oder System-Vorlage starten.",
+  "@tournamentWizardStageGraphSourceTemplateHint": {
+    "description": "Template stage-graph description"
+  },
+  "tournamentWizardStageGraphEmbedHint": "Stufen, Routing und Validierung direkt hier komponieren.",
+  "@tournamentWizardStageGraphEmbedHint": {
+    "description": "Embedded stage-graph builder hint"
   },
   "tournamentWizardVorrundeLabel": "Vorrunde",
   "@tournamentWizardVorrundeLabel": {

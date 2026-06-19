@@ -375,6 +375,7 @@ TournamentMatchRef tournamentMatchRefFromCdcRow(Map<String, Object?> row) {
     finalScoreB: _asIntOrNull(row['final_score_b']),
     // M2a: raw CDC table column carries the phase token directly.
     phase: matchPhaseFromWire(row['phase'] as String?),
+    stageNodeId: row['stage_node_id'] as String?,
   );
 }
 
@@ -505,6 +506,7 @@ TournamentMatchRef tournamentMatchRefFromRow(Map<String, dynamic> row) {
     // and CDC rows omit it -> defaults to group (non-forcing, never
     // fabricates a KO auto-winner).
     phase: matchPhaseFromWire(row['phase'] as String?),
+    stageNodeId: row['stage_node_id'] as String?,
   );
 }
 

@@ -629,6 +629,32 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     return koBracketSize ~/ groupCount;
   }
 
+  // --- P2.1: stage-graph format axis (ADR-0033) ------------------------
+
+  /// Sets the top-level format axis (classic vs. stage-graph). Only mutates
+  /// [TournamentConfigDraft.formatMode]; the classic Vorrunde × KO fields and
+  /// the separately-held [TournamentConfigDraft.stageGraph] are preserved, so a
+  /// mode switch never discards either path's data (PLAN §4 risk hedge).
+  void setFormatMode(TournamentFormatMode mode) {
+    state = state.copyWith(formatMode: mode);
+  }
+
+  /// Sets the built/picked stage graph. Held separately from koConfig /
+  /// vorrundeType, so this does not touch the classic axis.
+  void setStageGraph(StageGraph graph) {
+    state = state.copyWith(stageGraph: graph);
+  }
+
+  /// Clears the stage graph (and the applied template id it logically belongs
+  /// to), e.g. when the organizer abandons the graph path. Leaves the classic
+  /// Vorrunde × KO fields untouched.
+  void clearStageGraph() {
+    state = state.copyWith(
+      clearStageGraph: true,
+      clearAppliedTemplateId: true,
+    );
+  }
+
   TournamentConfigValidation validate() => state.validate();
 
   void reset() {

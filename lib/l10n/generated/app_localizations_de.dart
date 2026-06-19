@@ -168,13 +168,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphTitle => 'Stufen-Graph';
 
   @override
-  String get tournamentSetupStageGraphEntry => 'Stufengraph bauen';
-
-  @override
-  String get tournamentSetupStageGraphEntryHint =>
-      'Stufen, Routing und Validierung komponieren';
-
-  @override
   String get stageGraphFieldSizeSection => 'Feldgröße';
 
   @override
@@ -304,6 +297,40 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphConfigSlots => 'Plätze';
 
   @override
+  String get stageGraphConfigRandomSeed => 'Zufalls-Seed';
+
+  @override
+  String get stageGraphConfigKoRoundCount => 'Anzahl K.-o.-Runden';
+
+  @override
+  String stageGraphConfigKoRoundTitle(String n) {
+    return 'Runde $n';
+  }
+
+  @override
+  String get stageGraphConfigGroupCountHint =>
+      'In wie viele Gruppen das Feld aufgeteilt wird.';
+
+  @override
+  String get stageGraphConfigQualifierHint =>
+      'Qualifikanten zählen pro Gruppe, nicht über alle Gruppen zusammen: bei 2 ziehen die besten 2 jeder Gruppe weiter.';
+
+  @override
+  String get stageGraphConfigSwissHint =>
+      'Anzahl der Schweizer-System-Runden. Die Paarungen jeder Runde entstehen live nach Tabellenstand.';
+
+  @override
+  String get stageGraphConfigWithReset => 'Grand-Final-Reset';
+
+  @override
+  String get stageGraphConfigWithResetHint =>
+      'Gewinnt das Team aus dem Verlierer-Bracket das erste Finale, gibt es ein zweites, entscheidendes Finale (beide haben dann genau eine Niederlage).';
+
+  @override
+  String get stageGraphConfigBracketAuto =>
+      'Das Bracket wird automatisch aus der Setzliste gebaut — keine weitere Konfiguration nötig.';
+
+  @override
   String get stageGraphErrorIdEmpty => 'Die ID darf nicht leer sein.';
 
   @override
@@ -365,6 +392,30 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get stageGraphSelectorNonQualifiers => 'Übrige';
+
+  @override
+  String get stageGraphSelectorHintTopK =>
+      'Die besten K jeder Quell-Stufe ziehen weiter — z. B. Top 2 jeder Gruppe.';
+
+  @override
+  String get stageGraphSelectorHintRanks =>
+      'Ein zusammenhängender Rangbereich der Quell-Stufe zieht weiter — z. B. Ränge 3–4 für ein zweites Tableau.';
+
+  @override
+  String get stageGraphSelectorHintLosers =>
+      'Verlierer bestimmter K.-o.-Runden werden weitergeleitet — so speist man Trost-/Neben-Cups (KubbMAIster-Topologie).';
+
+  @override
+  String get stageGraphSelectorHintWinners =>
+      'Alle Sieger der Quell-Stufe ziehen weiter.';
+
+  @override
+  String get stageGraphSelectorHintNonQualifiers =>
+      'Alle, die sich NICHT qualifiziert haben, ziehen weiter — z. B. in einen Neben-Cup.';
+
+  @override
+  String get stageGraphEdgesMultiHint =>
+      'Eine Stufe darf mehrere Kanten haben: z. B. Sieger ins Haupt-Bracket UND Verlierer früher Runden in einen Neben-Cup (siehe KubbMAIster).';
 
   @override
   String get stageGraphNodeTypePool => 'Gruppen';
@@ -1956,6 +2007,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardScoringClassicHint => 'Nur Satzsieg zählt';
 
   @override
+  String get tournamentWizardSeedingSourceLabel => 'Seeding-Quelle';
+
+  @override
+  String get tournamentWizardSeedingSourceAuto => 'Automatisch aus Vorrunde';
+
+  @override
+  String get tournamentWizardSeedingSourceManual => 'Manuell festlegen';
+
+  @override
   String get tournamentWizardSectionParticipation => 'Teilnahme';
 
   @override
@@ -2272,6 +2332,44 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentWizardFormatComingSoon => 'Folgt in M2+';
+
+  @override
+  String get tournamentWizardFormatModeLabel => 'Turnierformat';
+
+  @override
+  String get tournamentWizardFormatModeClassic => 'Klassisch';
+
+  @override
+  String get tournamentWizardFormatModeClassicHint =>
+      'Vorrunde (Gruppenphase oder Schoch) und ein K.-o.-Baum.';
+
+  @override
+  String get tournamentWizardFormatModeStageGraph => 'Stufen-Graph';
+
+  @override
+  String get tournamentWizardFormatModeStageGraphHint =>
+      'Eigene Stufen frei verketten – Haupt- und Neben-Cups möglich.';
+
+  @override
+  String get tournamentWizardStageGraphSourceLabel => 'Stufen-Graph';
+
+  @override
+  String get tournamentWizardStageGraphSourceBuild => 'Neu erstellen';
+
+  @override
+  String get tournamentWizardStageGraphSourceBuildHint =>
+      'Stufen und Routing von Hand komponieren.';
+
+  @override
+  String get tournamentWizardStageGraphSourceTemplate => 'Vorlage wählen';
+
+  @override
+  String get tournamentWizardStageGraphSourceTemplateHint =>
+      'Mit einer gespeicherten oder System-Vorlage starten.';
+
+  @override
+  String get tournamentWizardStageGraphEmbedHint =>
+      'Stufen, Routing und Validierung direkt hier komponieren.';
 
   @override
   String get tournamentWizardVorrundeLabel => 'Vorrunde';

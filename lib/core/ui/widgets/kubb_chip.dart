@@ -69,13 +69,21 @@ class KubbChip extends StatelessWidget {
                   Icon(icon, size: 14, color: palette.foreground),
                   const SizedBox(width: 6),
                 ],
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: palette.foreground,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    height: 1.2,
+                // Flexible + ellipsis: a chip never overflows. Under a tight
+                // width constraint (e.g. a long label on a narrow phone) the
+                // label ellipsizes instead of throwing; MainAxisSize.min keeps
+                // it intrinsic-width when there is room, so the common case is
+                // visually unchanged.
+                Flexible(
+                  child: Text(
+                    label,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: palette.foreground,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                    ),
                   ),
                 ),
               ],
