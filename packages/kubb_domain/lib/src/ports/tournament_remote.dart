@@ -240,6 +240,7 @@ class TournamentMatchRef {
     this.participantADisplayName,
     this.participantBDisplayName,
     this.phase = MatchPhase.group,
+    this.stageNodeId,
   });
 
   final TournamentMatchId matchId;
@@ -283,6 +284,13 @@ class TournamentMatchRef {
   /// winner.
   final MatchPhase phase;
 
+  /// P5.3d: the stage-graph node this match belongs to (`tournament_matches.
+  /// stage_node_id`), or null for classic (non-stage) matches. Lets the live
+  /// match-scoring resolve the KO tiebreak method from the node's config when
+  /// the tournament runs a stage graph, falling back to the tournament-level
+  /// method.
+  final String? stageNodeId;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -304,7 +312,8 @@ class TournamentMatchRef {
           other.setsWonB == setsWonB &&
           other.participantADisplayName == participantADisplayName &&
           other.participantBDisplayName == participantBDisplayName &&
-          other.phase == phase;
+          other.phase == phase &&
+          other.stageNodeId == stageNodeId;
 
   @override
   int get hashCode => Object.hash(
@@ -326,6 +335,7 @@ class TournamentMatchRef {
         participantADisplayName,
         participantBDisplayName,
         phase,
+        stageNodeId,
       );
 }
 

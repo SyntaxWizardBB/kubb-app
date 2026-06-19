@@ -17,6 +17,7 @@ import 'package:kubb_app/features/tournament/application/tournament_providers.da
 import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_score_draft_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_shootout_providers.dart';
+import 'package:kubb_app/features/tournament/data/stage_tiebreak_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/participant_name.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/pitch_call_banner.dart';
@@ -149,11 +150,21 @@ class _TournamentMatchDetailScreenState
     );
   }
 
-  /// M2b (F2/F3): the configured KO tiebreak / finisher method, read from
-  /// the detail header's `setup` map. Defaults to the classic king-toss
-  /// removal (a simple two-way choice) when absent.
+  /// M2b (F2/F3) + P5.3d: the configured KO tiebreak / finisher method for
+  /// THIS match. A stage-graph KO match uses its node's configured method
+  /// ([stageMethods] keyed by `stage_node_id`); otherwise it falls back to the
+  /// tournament-level method from the detail header's `setup` map. Defaults to
+  /// the classic king-toss removal when absent.
   KoTiebreakMethod _koTiebreakMethod(
-      AsyncValue<TournamentDetail?> detailAsync) {
+    AsyncValue<TournamentDetail?> detailAsync,
+    TournamentMatchRef match,
+    Map<String, KoTiebreakMethod> stageMethods,
+  ) {
+    final nodeId = match.stageNodeId;
+    if (nodeId != null) {
+      final nodeMethod = stageMethods[nodeId];
+      if (nodeMethod != null) return nodeMethod;
+    }
     return detailAsync.maybeWhen<KoTiebreakMethod>(
       data: (d) {
         final wire = d?.tournament.setup['ko_tiebreak_method'];
@@ -497,7 +508,16 @@ class _TournamentMatchDetailScreenState
         ref.watch(tournamentDetailProvider(TournamentId(widget.tournamentId)));
     // B1/F2: config-derived per-side base-kubb cap + KO finisher method.
     final maxBasekubbs = _maxBasekubbsFor(detailAsync);
-    final koMethod = _koTiebreakMethod(detailAsync);
+    // P5.3d: stage-node tiebreak methods (empty for classic tournaments); a
+    // stage KO match prefers its node's configured method.
+    final stageMethods = ref
+        .watch(tournamentStageTiebreakMethodsProvider(
+            TournamentId(widget.tournamentId)))
+        .maybeWhen<Map<String, KoTiebreakMethod>>(
+          data: (m) => m,
+          orElse: () => const <String, KoTiebreakMethod>{},
+        );
+    final koMethod = _koTiebreakMethod(detailAsync, match, stageMethods);
     final validationMessage = _validate(
       l,
       drafts,
