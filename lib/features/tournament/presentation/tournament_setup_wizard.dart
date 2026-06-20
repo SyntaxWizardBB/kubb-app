@@ -1746,12 +1746,6 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
   /// template-bar visibility within the stage-graph branch.
   bool _useTemplate = false;
 
-  /// P2.3: guards the one-time field-size seed from the pitch plan. The builder
-  /// field size is seeded ONCE from `pitchPlan.availablePitches().length` when
-  /// the embedded builder first surfaces, so a value the organizer later edits
-  /// in the builder is never overwritten on rebuild (idempotent, no flicker
-  /// between the pitch seed and a manual change).
-  bool _stageFieldSizeSeeded = false;
   late final TextEditingController _groupCountCtrl;
   late final TextEditingController _seedCtrl;
 
@@ -1772,23 +1766,22 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
     super.dispose();
   }
 
-  /// P2.3: seeds the embedded builder's field size ONCE from the draft's pitch
-  /// plan (`pitchPlan.availablePitches().length`). When the pitch plan is null
-  /// or has no available pitches the seed is skipped and the builder keeps its
-  /// own default ([StageGraphBuilderController.defaultFieldSize]) — no crash.
-  /// The seed runs in a post-frame callback (provider mutation is not allowed
-  /// during build) and only when the value actually differs, so a field size
-  /// the organizer later changes in the builder is never clobbered.
+  /// Seeds the embedded builder's root capacity ONCE from the draft's
+  /// `maxParticipants` — the participant count entering the root stage, which is
+  /// the same value `validateStageGraph` runs against in
+  /// [TournamentConfigDraft.validate]. The embedded builder no longer shows a
+  /// separate field-size input, so this seed is the only capacity source in the
+  /// wizard. Runs in a post-frame callback (provider mutation is not allowed
+  /// during build) and re-seeds when `maxParticipants` changes upstream, so the
+  /// builder capacity always tracks the participants step.
   void _maybeSeedStageFieldSize(TournamentConfigDraft draft) {
-    if (_stageFieldSizeSeeded) return;
-    _stageFieldSizeSeeded = true;
-    final pitchCount = draft.pitchPlan?.availablePitches().length ?? 0;
-    if (pitchCount <= 0) return; // documented fallback: keep builder default.
+    final capacity = draft.maxParticipants;
+    if (capacity <= 0) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final notifier = ref.read(stageGraphBuilderProvider.notifier);
-      if (ref.read(stageGraphBuilderProvider).fieldSize != pitchCount) {
-        notifier.setFieldSize(pitchCount);
+      if (ref.read(stageGraphBuilderProvider).fieldSize != capacity) {
+        notifier.setFieldSize(capacity);
       }
     });
   }
@@ -1888,9 +1881,9 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
     // P2.3: in the stage-graph mode the embedded builder is the single source
     // of truth (`stageGraphBuilderProvider`). Two wirings bind it to the draft:
     //
-    //  - field-size SEED (once): from `pitchPlan.availablePitches().length`, so
-    //    the builder starts with one field per available pitch. Idempotent — a
-    //    field size the organizer edits later in the builder is not overwritten.
+    //  - capacity SEED: the builder root capacity tracks `maxParticipants` (set
+    //    one step earlier), so the embedded builder needs no separate field
+    //    input and validates against the same number as `draft.validate`.
     //  - graph MIRROR (onChange): every builder graph change is pushed into the
     //    draft via `controller.setStageGraph`, so `draft.stageGraph` always
     //    equals the builder graph. The classic path never touches `stageGraph`.

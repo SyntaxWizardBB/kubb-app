@@ -169,8 +169,13 @@ class _StageGraphFormView extends ConsumerWidget {
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _FieldSizeSection(fieldSize: s.fieldSize, notifier: notifier),
-        const SizedBox(height: KubbTokens.space6),
+        // The embedded wizard host derives the root capacity from
+        // `maxParticipants`, so the field-size input only surfaces in the
+        // standalone editor where there is no participant context to seed it.
+        if (!embedded) ...[
+          _FieldSizeSection(fieldSize: s.fieldSize, notifier: notifier),
+          const SizedBox(height: KubbTokens.space6),
+        ],
         _TemplateBar(notifier: notifier, graph: s.graph),
         const SizedBox(height: KubbTokens.space6),
         if (isEmpty)

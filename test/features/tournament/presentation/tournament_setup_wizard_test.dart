@@ -458,25 +458,6 @@ class _StageGraphTemplateController extends TournamentConfigController {
       );
 }
 
-/// P2.3: a stage-graph-mode draft that ALSO carries a pitch plan with N
-/// available pitches, so the embedded builder seeds its field size from
-/// `pitchPlan.availablePitches().length` (here: 3 -> pitches 5,6,7).
-class _StageGraphWithPitchesController extends TournamentConfigController {
-  @override
-  TournamentConfigDraft build() => _withStammdaten(
-        const TournamentConfigDraft(
-          format: TournamentFormat.swissThenKo,
-          vorrundeType: VorrundeType.schoch,
-          formatMode: TournamentFormatMode.stageGraph,
-          pitchPlan: PitchPlan(
-            mode: PitchMode.range,
-            rangeFrom: 5,
-            rangeTo: 7,
-          ),
-        ),
-      );
-}
-
 /// P2.3: overrides [stageGraphBuilderProvider] with a fresh controller seeded
 /// from [graph] but keeping the controller's DEFAULT field size, so a pitch
 /// seed (if any) is observable instead of a hardcoded value.
@@ -1883,41 +1864,12 @@ void main() {
     // ---- P2.3: extracted body reuse, single provider, seed + onChange -------
 
     testWidgets(
-        'P2.3: field size is seeded from the pitch plan availablePitches().length '
-        'and a later manual change is preserved (P2_3-05)', (tester) async {
-      // Draft has a pitch plan with 3 available pitches (5,6,7); the embedded
-      // builder uses the controller's DEFAULT field size (4) so the seed to 3
-      // is observable.
-      await _pumpWizard(
-        tester,
-        controllerOverride: _StageGraphWithPitchesController.new,
-        extraOverrides: <Object>[
-          _stageGraphDefaultFieldSizeOverride(_p2ValidGraph),
-        ],
-      );
-      await _typeName(tester, 'Graph Cup');
-      await _tapNext(tester); // -> participants
-      await _tapNext(tester); // -> format
-      await tester.pumpAndSettle();
-
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(TournamentSetupWizard)),
-      );
-      // The builder field size was seeded to the pitch count (3).
-      expect(container.read(stageGraphBuilderProvider).fieldSize, 3);
-
-      // A later manual change in the builder is NOT clobbered by the seed: the
-      // seed is one-shot (idempotent).
-      container.read(stageGraphBuilderProvider.notifier).setFieldSize(9);
-      await tester.pumpAndSettle();
-      expect(container.read(stageGraphBuilderProvider).fieldSize, 9);
-    });
-
-    testWidgets(
-        'P2.3: without a pitch plan the builder keeps its default field size '
-        '(documented fallback, no crash) (P2_3-05)', (tester) async {
-      // _StageGraphSeededController has no pitch plan -> the seed is skipped and
-      // the builder keeps the controller default field size (4).
+        'P2.3: the embedded builder root capacity is seeded from '
+        'maxParticipants and has no separate field-size input (P2_3-05)',
+        (tester) async {
+      // The seeded draft carries the default maxParticipants (8). The embedded
+      // builder starts from the controller DEFAULT field size (4) so the seed
+      // to 8 is observable.
       await _pumpWizard(
         tester,
         controllerOverride: _StageGraphSeededController.new,
@@ -1933,10 +1885,17 @@ void main() {
       final container = ProviderScope.containerOf(
         tester.element(find.byType(TournamentSetupWizard)),
       );
+      final draft = container.read(tournamentConfigControllerProvider);
+      // The builder capacity tracks maxParticipants, not the pitch count.
       expect(
         container.read(stageGraphBuilderProvider).fieldSize,
-        StageGraphBuilderController.defaultFieldSize,
+        draft.maxParticipants,
       );
+
+      // The embedded builder no longer shows a field-size input — the capacity
+      // is derived, not entered a second time.
+      expect(find.text('Anzahl Felder'), findsNothing);
+      expect(find.text('Feldgröße'), findsNothing);
     });
 
     testWidgets(
