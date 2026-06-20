@@ -439,6 +439,37 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphNodeTypeShootoutQuali => 'Shoot-out-Quali';
 
   @override
+  String get stageGraphNodeTypeInfoTitle => 'Stufentyp';
+
+  @override
+  String get stageGraphNodeTypeInfoPool =>
+      'Jeder spielt in seiner Gruppe gegen jeden. Aus jeder Gruppe ziehen die Bestplatzierten weiter. Bei n Teilnehmern pro Gruppe sind das n-1 Runden.';
+
+  @override
+  String get stageGraphNodeTypeInfoSwiss =>
+      'Schweizer System: die Paarungen werden nach jeder Runde neu nach Tabellenstand gebildet — Sieger gegen Sieger, Verlierer gegen Verlierer. Flexible Rundenzahl, ein gemeinsamer Pool. Ideal für grosse Felder, weil nicht jeder gegen jeden spielen muss.';
+
+  @override
+  String get stageGraphNodeTypeInfoSingleElim =>
+      'Wer ein Spiel verliert, ist raus. Schnell und kurz, aber eine einzige Niederlage beendet das Turnier.';
+
+  @override
+  String get stageGraphNodeTypeInfoDoubleElim =>
+      'Erst nach der zweiten Niederlage ist man raus (Verliererbracket). Fairer als einfaches K.-o., braucht aber mehr Spiele und Zeit.';
+
+  @override
+  String get stageGraphNodeTypeInfoConsolation =>
+      'Nebenwettbewerb für früh ausgeschiedene Teams, damit sie weiterspielen. Beeinflusst die Hauptwertung nicht.';
+
+  @override
+  String get stageGraphNodeTypeInfoRoundRobin =>
+      'Jeder spielt gegen jeden. Die Tabelle entscheidet, niemand scheidet vorzeitig aus.';
+
+  @override
+  String get stageGraphNodeTypeInfoShootoutQuali =>
+      'Qualifikation per Shoot-out: die besten Würfe sichern die Startplätze für die nächste Stufe.';
+
+  @override
   String get stageGraphSeedingFromElo => 'Aus ELO';
 
   @override
@@ -458,6 +489,21 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get stageGraphSeedingInManual => 'Manuell';
+
+  @override
+  String get stageGraphSeedingInInfoTitle => 'Seeding-Modus';
+
+  @override
+  String get stageGraphSeedingInInfoOrderPreserving =>
+      'Die weitergeleiteten Teams behalten die Reihenfolge aus der Quell-Stufe.';
+
+  @override
+  String get stageGraphSeedingInInfoReseedBySourceRank =>
+      'Die Teams werden anhand ihres Rangs in der Quell-Stufe neu gesetzt, bevor sie in die nächste Stufe gehen.';
+
+  @override
+  String get stageGraphSeedingInInfoManual =>
+      'Du legst die Setzung der weitergeleiteten Teams selbst fest. Achtung: das kann den Phasenstart blockieren, bis die Setzung gespeichert ist.';
 
   @override
   String get stageGraphSaveTemplateName => 'Name';
@@ -2230,6 +2276,21 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentWizardPoolStrategyRandom => 'Random (deterministisch)';
+
+  @override
+  String get stageGraphGroupingInfoTitle => 'Gruppierungsstrategie';
+
+  @override
+  String get stageGraphGroupingInfoSnake =>
+      'Reissverschluss: stärkste und schwächste Teams werden abwechselnd auf die Gruppen verteilt, damit die Gruppen etwa gleich stark sind.';
+
+  @override
+  String get stageGraphGroupingInfoSeeded =>
+      'Blockweise nach Setzung: die Top-Teams werden der Reihe nach auf die Gruppen verteilt.';
+
+  @override
+  String get stageGraphGroupingInfoRandom =>
+      'Zufällige Verteilung auf die Gruppen. Mit gesetztem Seed reproduzierbar.';
 
   @override
   String get tournamentWizardPoolRandomSeedLabel => 'Random-Seed (optional)';

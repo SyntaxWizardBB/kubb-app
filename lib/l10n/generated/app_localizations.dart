@@ -832,6 +832,54 @@ abstract class AppLocalizations {
   /// **'Shoot-out-Quali'**
   String get stageGraphNodeTypeShootoutQuali;
 
+  /// Title of the stage-type explainer dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Stufentyp'**
+  String get stageGraphNodeTypeInfoTitle;
+
+  /// Explainer for StageNodeType.pool
+  ///
+  /// In de, this message translates to:
+  /// **'Jeder spielt in seiner Gruppe gegen jeden. Aus jeder Gruppe ziehen die Bestplatzierten weiter. Bei n Teilnehmern pro Gruppe sind das n-1 Runden.'**
+  String get stageGraphNodeTypeInfoPool;
+
+  /// Explainer for StageNodeType.swiss
+  ///
+  /// In de, this message translates to:
+  /// **'Schweizer System: die Paarungen werden nach jeder Runde neu nach Tabellenstand gebildet — Sieger gegen Sieger, Verlierer gegen Verlierer. Flexible Rundenzahl, ein gemeinsamer Pool. Ideal für grosse Felder, weil nicht jeder gegen jeden spielen muss.'**
+  String get stageGraphNodeTypeInfoSwiss;
+
+  /// Explainer for StageNodeType.singleElim
+  ///
+  /// In de, this message translates to:
+  /// **'Wer ein Spiel verliert, ist raus. Schnell und kurz, aber eine einzige Niederlage beendet das Turnier.'**
+  String get stageGraphNodeTypeInfoSingleElim;
+
+  /// Explainer for StageNodeType.doubleElim
+  ///
+  /// In de, this message translates to:
+  /// **'Erst nach der zweiten Niederlage ist man raus (Verliererbracket). Fairer als einfaches K.-o., braucht aber mehr Spiele und Zeit.'**
+  String get stageGraphNodeTypeInfoDoubleElim;
+
+  /// Explainer for StageNodeType.consolation
+  ///
+  /// In de, this message translates to:
+  /// **'Nebenwettbewerb für früh ausgeschiedene Teams, damit sie weiterspielen. Beeinflusst die Hauptwertung nicht.'**
+  String get stageGraphNodeTypeInfoConsolation;
+
+  /// Explainer for StageNodeType.roundRobin
+  ///
+  /// In de, this message translates to:
+  /// **'Jeder spielt gegen jeden. Die Tabelle entscheidet, niemand scheidet vorzeitig aus.'**
+  String get stageGraphNodeTypeInfoRoundRobin;
+
+  /// Explainer for StageNodeType.shootoutQuali
+  ///
+  /// In de, this message translates to:
+  /// **'Qualifikation per Shoot-out: die besten Würfe sichern die Startplätze für die nächste Stufe.'**
+  String get stageGraphNodeTypeInfoShootoutQuali;
+
   /// Label for StageSeedingSource.fromElo
   ///
   /// In de, this message translates to:
@@ -873,6 +921,30 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Manuell'**
   String get stageGraphSeedingInManual;
+
+  /// Title of the edge-seeding explainer dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Seeding-Modus'**
+  String get stageGraphSeedingInInfoTitle;
+
+  /// Explainer for StageSeedingIn.orderPreserving
+  ///
+  /// In de, this message translates to:
+  /// **'Die weitergeleiteten Teams behalten die Reihenfolge aus der Quell-Stufe.'**
+  String get stageGraphSeedingInInfoOrderPreserving;
+
+  /// Explainer for StageSeedingIn.reseedBySourceRank
+  ///
+  /// In de, this message translates to:
+  /// **'Die Teams werden anhand ihres Rangs in der Quell-Stufe neu gesetzt, bevor sie in die nächste Stufe gehen.'**
+  String get stageGraphSeedingInInfoReseedBySourceRank;
+
+  /// Explainer for StageSeedingIn.manual
+  ///
+  /// In de, this message translates to:
+  /// **'Du legst die Setzung der weitergeleiteten Teams selbst fest. Achtung: das kann den Phasenstart blockieren, bis die Setzung gespeichert ist.'**
+  String get stageGraphSeedingInInfoManual;
 
   /// Label for the template name field
   ///
@@ -4101,6 +4173,30 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Random (deterministisch)'**
   String get tournamentWizardPoolStrategyRandom;
+
+  /// Title of the grouping-strategy explainer dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppierungsstrategie'**
+  String get stageGraphGroupingInfoTitle;
+
+  /// Explainer for PoolGroupingStrategy.snake
+  ///
+  /// In de, this message translates to:
+  /// **'Reissverschluss: stärkste und schwächste Teams werden abwechselnd auf die Gruppen verteilt, damit die Gruppen etwa gleich stark sind.'**
+  String get stageGraphGroupingInfoSnake;
+
+  /// Explainer for PoolGroupingStrategy.seeded
+  ///
+  /// In de, this message translates to:
+  /// **'Blockweise nach Setzung: die Top-Teams werden der Reihe nach auf die Gruppen verteilt.'**
+  String get stageGraphGroupingInfoSeeded;
+
+  /// Explainer for PoolGroupingStrategy.random
+  ///
+  /// In de, this message translates to:
+  /// **'Zufällige Verteilung auf die Gruppen. Mit gesetztem Seed reproduzierbar.'**
+  String get stageGraphGroupingInfoRandom;
 
   /// Label for the optional random-seed input shown for the random strategy
   ///

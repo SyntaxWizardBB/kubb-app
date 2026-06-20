@@ -14,6 +14,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/tournament/application/stage_graph_builder_controller.dart';
 import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/stage_graph_canvas.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_round_block.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -1126,22 +1127,31 @@ class _NodeDialogState extends State<_NodeDialog> {
                 },
               ),
               const SizedBox(height: KubbTokens.space3),
-              DropdownButtonFormField<StageNodeType>(
-                initialValue: _type,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: l.stageGraphFieldType,
-                  border: const OutlineInputBorder(),
-                ),
-                items: [
-                  for (final t in selectableStageNodeTypes)
-                    DropdownMenuItem<StageNodeType>(
-                      value: t,
-                      child: Text(stageNodeTypeLabel(l, t)),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<StageNodeType>(
+                      initialValue: _type,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        labelText: l.stageGraphFieldType,
+                        border: const OutlineInputBorder(),
+                      ),
+                      items: [
+                        for (final t in selectableStageNodeTypes)
+                          DropdownMenuItem<StageNodeType>(
+                            value: t,
+                            child: Text(stageNodeTypeLabel(l, t)),
+                          ),
+                      ],
+                      onChanged: (v) => setState(() => _type = v ?? _type),
                     ),
+                  ),
+                  InfoIconButton(
+                    title: l.stageGraphNodeTypeInfoTitle,
+                    message: stageNodeTypeInfo(l, _type),
+                  ),
                 ],
-                onChanged: (v) =>
-                    setState(() => _type = v ?? _type),
               ),
               const SizedBox(height: KubbTokens.space3),
               DropdownButtonFormField<StageSeedingSource>(
@@ -1204,7 +1214,15 @@ class _NodeDialogState extends State<_NodeDialog> {
           // total across all groups. Spell it out at the field.
           ..add(_DialogHint(l.stageGraphConfigQualifierHint))
           // P5.5: how participants are distributed across the groups.
-          ..add(_fieldLabel(l.tournamentWizardPoolStrategyLabel))
+          ..add(Row(
+            children: [
+              Expanded(child: _fieldLabel(l.tournamentWizardPoolStrategyLabel)),
+              InfoIconButton(
+                title: l.stageGraphGroupingInfoTitle,
+                message: _groupingInfo(l, _grouping),
+              ),
+            ],
+          ))
           ..add(DropdownButtonFormField<PoolGroupingStrategy>(
             initialValue: _grouping,
             isExpanded: true,
@@ -1342,6 +1360,13 @@ class _NodeDialogState extends State<_NodeDialog> {
         PoolGroupingStrategy.snake => l.tournamentWizardPoolStrategySnake,
         PoolGroupingStrategy.seeded => l.tournamentWizardPoolStrategySeeded,
         PoolGroupingStrategy.random => l.tournamentWizardPoolStrategyRandom,
+      };
+
+  static String _groupingInfo(AppLocalizations l, PoolGroupingStrategy s) =>
+      switch (s) {
+        PoolGroupingStrategy.snake => l.stageGraphGroupingInfoSnake,
+        PoolGroupingStrategy.seeded => l.stageGraphGroupingInfoSeeded,
+        PoolGroupingStrategy.random => l.stageGraphGroupingInfoRandom,
       };
 }
 
@@ -1504,22 +1529,32 @@ class _EdgeDialogState extends State<_EdgeDialog> {
               _DialogHint(_selectorKindHint(l, _kind)),
               ..._selectorParams(l),
               const SizedBox(height: KubbTokens.space3),
-              DropdownButtonFormField<StageSeedingIn>(
-                initialValue: _seedingIn,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: l.stageGraphEdgeSeedingInLabel,
-                  border: const OutlineInputBorder(),
-                ),
-                items: [
-                  for (final si in StageSeedingIn.values)
-                    DropdownMenuItem<StageSeedingIn>(
-                      value: si,
-                      child: Text(stageSeedingInLabel(l, si)),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<StageSeedingIn>(
+                      initialValue: _seedingIn,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        labelText: l.stageGraphEdgeSeedingInLabel,
+                        border: const OutlineInputBorder(),
+                      ),
+                      items: [
+                        for (final si in StageSeedingIn.values)
+                          DropdownMenuItem<StageSeedingIn>(
+                            value: si,
+                            child: Text(stageSeedingInLabel(l, si)),
+                          ),
+                      ],
+                      onChanged: (v) =>
+                          setState(() => _seedingIn = v ?? _seedingIn),
                     ),
+                  ),
+                  InfoIconButton(
+                    title: l.stageGraphSeedingInInfoTitle,
+                    message: stageSeedingInInfo(l, _seedingIn),
+                  ),
                 ],
-                onChanged: (v) =>
-                    setState(() => _seedingIn = v ?? _seedingIn),
               ),
               if (_error != null) ...[
                 const SizedBox(height: KubbTokens.space3),
@@ -1845,6 +1880,41 @@ String stageNodeTypeLabel(AppLocalizations l, StageNodeType type) {
       return l.stageGraphNodeTypeConsolation;
     case StageNodeType.shootoutQuali:
       return l.stageGraphNodeTypeShootoutQuali;
+  }
+}
+
+/// Localized explainer text for a [StageNodeType] — what the type does to the
+/// matches. Surfaced via the type-picker info button.
+String stageNodeTypeInfo(AppLocalizations l, StageNodeType type) {
+  switch (type) {
+    case StageNodeType.pool:
+      return l.stageGraphNodeTypeInfoPool;
+    case StageNodeType.roundRobin:
+      return l.stageGraphNodeTypeInfoRoundRobin;
+    case StageNodeType.swiss:
+      return l.stageGraphNodeTypeInfoSwiss;
+    case StageNodeType.singleElim:
+      return l.stageGraphNodeTypeInfoSingleElim;
+    case StageNodeType.doubleElim:
+      return l.stageGraphNodeTypeInfoDoubleElim;
+    case StageNodeType.consolation:
+      return l.stageGraphNodeTypeInfoConsolation;
+    case StageNodeType.shootoutQuali:
+      return l.stageGraphNodeTypeInfoShootoutQuali;
+  }
+}
+
+/// Localized explainer text for a [StageSeedingIn] — what the seeding mode does
+/// to the participants entering the target stage. Surfaced via the edge-dialog
+/// info button.
+String stageSeedingInInfo(AppLocalizations l, StageSeedingIn si) {
+  switch (si) {
+    case StageSeedingIn.orderPreserving:
+      return l.stageGraphSeedingInInfoOrderPreserving;
+    case StageSeedingIn.reseedBySourceRank:
+      return l.stageGraphSeedingInInfoReseedBySourceRank;
+    case StageSeedingIn.manual:
+      return l.stageGraphSeedingInInfoManual;
   }
 }
 

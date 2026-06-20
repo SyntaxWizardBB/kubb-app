@@ -288,6 +288,72 @@ void main() {
     expect(find.text('fromBody'), findsOneWidget);
   });
 
+  testWidgets('info button explains the selected stage type', (tester) async {
+    await _pump(
+      tester,
+      graph: StageGraph(nodes: <StageNode>[_pool('seed')], edges: const []),
+    );
+
+    await tester.tap(find.byTooltip('Stufe hinzufügen').first);
+    await tester.pumpAndSettle();
+
+    // Default type is "Gruppe" (pool). Tap its info button.
+    await tester.tap(find.byTooltip('Stufentyp'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Jeder spielt in seiner Gruppe gegen jeden'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('info button explains the grouping strategy', (tester) async {
+    await _pump(
+      tester,
+      graph: StageGraph(nodes: <StageNode>[_pool('seed')], edges: const []),
+    );
+
+    await tester.tap(find.byTooltip('Stufe hinzufügen').first);
+    await tester.pumpAndSettle();
+
+    // Pool node -> grouping strategy field is shown; default is snake.
+    final groupingInfo = find.byTooltip('Gruppierungsstrategie');
+    await tester.ensureVisible(groupingInfo);
+    await tester.pumpAndSettle();
+    await tester.tap(groupingInfo);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Reissverschluss'), findsOneWidget);
+  });
+
+  testWidgets('info button explains the edge seeding mode', (tester) async {
+    await _pump(
+      tester,
+      graph: StageGraph(
+        nodes: <StageNode>[_pool('a'), _singleElim('b')],
+        edges: const [],
+      ),
+    );
+
+    final addEdgeButton = find.byTooltip('Kante hinzufügen');
+    await tester.ensureVisible(addEdgeButton.first);
+    await tester.pumpAndSettle();
+    await tester.tap(addEdgeButton.first);
+    await tester.pumpAndSettle();
+
+    // Default seeding mode is orderPreserving.
+    final seedingInfo = find.byTooltip('Seeding-Modus');
+    await tester.ensureVisible(seedingInfo);
+    await tester.pumpAndSettle();
+    await tester.tap(seedingInfo);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('behalten die Reihenfolge aus der Quell-Stufe'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('optional: save template calls repo with current graph',
       (tester) async {
     final repoFake = _CapturingRepo();
