@@ -144,6 +144,24 @@ void main() {
       expect(v.issues.any((i) => i.contains('Höchstens')), isTrue);
     });
 
+    test('Schoch validates with a large field (> 64 participants)', () {
+      // Schoch is the big-field Vorrunde — there is no 64-player ceiling. A
+      // draft with 100 participants and a configured KO must validate.
+      final d = _validStammdaten().copyWith(
+        vorrundeType: VorrundeType.schoch,
+        koType: KoType.singleOut,
+        maxParticipants: 100,
+        koConfig: KoPhaseConfig(
+          qualifierCount: 16,
+          participantCount: 100,
+        ),
+      );
+      final v = d.validate();
+      expect(v.isValid, isTrue);
+      expect(v.issues, isEmpty);
+      expect(d.derivedFormat, TournamentFormat.swissThenKo);
+    });
+
     test('flags sets-to-win below 1', () {
       const d = TournamentConfigDraft(
         displayName: 'Cup',

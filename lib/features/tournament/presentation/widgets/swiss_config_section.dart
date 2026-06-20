@@ -6,8 +6,9 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 /// Inline configuration block for the Swiss-System format option in the
 /// setup wizard (TASK-M5.3-T10). Lets the organizer pick the number of
 /// rounds (default `ceil(log2(n))`, OD-M5-04), surfaces the read-only
-/// tiebreak order (Buchholz → Direct-Encounter → Random) and warns when
-/// the participant cap exceeds the system's sweet spot of 64 (R-M5-G2).
+/// tiebreak order (Buchholz → Direct-Encounter → Random) and, for large
+/// fields, hints that more rounds help separate the standings. Schoch is the
+/// big-field Vorrunde, so there is no upper participant limit here.
 class SwissConfigSection extends StatelessWidget {
   const SwissConfigSection({
     required this.participantCount,
@@ -24,7 +25,10 @@ class SwissConfigSection extends StatelessWidget {
 
   static const int roundsMin = 5;
   static const int roundsMax = 9;
-  static const int participantSweetSpot = 64;
+
+  /// Above this field size the section nudges the organizer towards more
+  /// rounds — a hint, never a limit. Schoch handles arbitrary field sizes.
+  static const int largeFieldHint = 64;
 
   /// `clamp(ceil(log2(n)) + 3, 5, 9)` per decision §G — yields the empirical
   /// default of 8 rounds for typical fields (n ≈ 32–128) and never drops
@@ -38,7 +42,7 @@ class SwissConfigSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final overCap = participantCount > participantSweetSpot;
+    final largeField = participantCount > largeFieldHint;
     return Container(
       margin: const EdgeInsets.only(top: KubbTokens.space3),
       padding: const EdgeInsets.all(KubbTokens.space3),
@@ -50,23 +54,23 @@ class SwissConfigSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (overCap) ...[
+          if (largeField) ...[
             Container(
               padding: const EdgeInsets.all(KubbTokens.space2),
               decoration: BoxDecoration(
-                color: KubbTokens.miss.withValues(alpha: 0.12),
+                color: tokens.primary.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(KubbTokens.radiusSm),
-                border: Border.all(color: KubbTokens.miss),
+                border: Border.all(color: tokens.primary),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded,
-                      size: 18, color: KubbTokens.miss),
+                  Icon(Icons.info_outline_rounded,
+                      size: 18, color: tokens.primary),
                   const SizedBox(width: KubbTokens.space2),
                   Expanded(
                     child: Text(
-                      'Schweizer System ist optimiert für ≤ '
-                      '$participantSweetSpot Teilnehmer.',
+                      'Grosses Feld: mehr Runden trennen die Tabelle '
+                      'sauberer.',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
