@@ -664,6 +664,12 @@ abstract class AppLocalizations {
   /// **'Die ID darf nicht leer sein.'**
   String get stageGraphErrorIdEmpty;
 
+  /// Inline error when the template name is empty
+  ///
+  /// In de, this message translates to:
+  /// **'Der Name darf nicht leer sein.'**
+  String get stageGraphErrorNameEmpty;
+
   /// Inline error when the node id collides with an existing one
   ///
   /// In de, this message translates to:
@@ -973,13 +979,13 @@ abstract class AppLocalizations {
   /// Label for TemplateVisibility.private
   ///
   /// In de, this message translates to:
-  /// **'Privat'**
+  /// **'Privat (nur ich)'**
   String get stageGraphVisibilityPrivate;
 
   /// Label for TemplateVisibility.club
   ///
   /// In de, this message translates to:
-  /// **'Veranstalterteam'**
+  /// **'Verein/Organisation'**
   String get stageGraphVisibilityClub;
 
   /// Label for TemplateVisibility.public
@@ -987,6 +993,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Öffentlich'**
   String get stageGraphVisibilityPublic;
+
+  /// Helper shown when the club visibility is not selectable because no club is set
+  ///
+  /// In de, this message translates to:
+  /// **'Fuer Verein/Organisation muss ein Veranstalter gewaehlt sein.'**
+  String get stageGraphSaveTemplateClubUnavailable;
 
   /// Generic confirm button in stage-graph dialogs
   ///

@@ -16,6 +16,7 @@ import 'package:kubb_app/features/tournament/data/stage_graph_templates_reposito
 import 'package:kubb_app/features/tournament/presentation/stage_graph_canvas.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_round_block.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/save_template_dialog.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -421,9 +422,9 @@ class _TemplateBarState extends ConsumerState<_TemplateBar> {
   }
 
   Future<void> _save(BuildContext context, AppLocalizations l) async {
-    final result = await showDialog<_SaveTemplateResult>(
+    final result = await showDialog<SaveTemplateResult>(
       context: context,
-      builder: (_) => const _SaveTemplateDialog(),
+      builder: (_) => const SaveTemplateDialog(),
     );
     if (result == null || !context.mounted) return;
     final repo = ref.read(stageGraphTemplatesRepositoryProvider);
@@ -1888,104 +1889,6 @@ class _EdgeDialogState extends State<_EdgeDialog> {
   }
 }
 
-/// Result payload of the save-template dialog.
-class _SaveTemplateResult {
-  const _SaveTemplateResult({
-    required this.name,
-    required this.visibility,
-  });
-
-  final String name;
-  final TemplateVisibility visibility;
-}
-
-class _SaveTemplateDialog extends StatefulWidget {
-  const _SaveTemplateDialog();
-
-  @override
-  State<_SaveTemplateDialog> createState() => _SaveTemplateDialogState();
-}
-
-class _SaveTemplateDialogState extends State<_SaveTemplateDialog> {
-  final _nameController = TextEditingController();
-  TemplateVisibility _visibility = TemplateVisibility.private;
-  String? _nameError;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
-
-  void _confirm() {
-    final l = AppLocalizations.of(context);
-    final name = _nameController.text.trim();
-    if (name.isEmpty) {
-      setState(() => _nameError = l.stageGraphErrorIdEmpty);
-      return;
-    }
-    Navigator.of(context).pop(
-      _SaveTemplateResult(name: name, visibility: _visibility),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return AlertDialog(
-      title: Text(l.stageGraphTemplateSave),
-      content: SizedBox(
-        width: _stageDialogWidth(context),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              key: const Key('stageGraphTemplateNameField'),
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: l.stageGraphSaveTemplateName,
-                errorText: _nameError,
-                border: const OutlineInputBorder(),
-              ),
-              onChanged: (_) {
-                if (_nameError != null) setState(() => _nameError = null);
-              },
-            ),
-            const SizedBox(height: KubbTokens.space3),
-            DropdownButtonFormField<TemplateVisibility>(
-              initialValue: _visibility,
-              isExpanded: true,
-              decoration: InputDecoration(
-                labelText: l.stageGraphSaveTemplateVisibility,
-                border: const OutlineInputBorder(),
-              ),
-              items: [
-                for (final v in TemplateVisibility.values)
-                  DropdownMenuItem<TemplateVisibility>(
-                    value: v,
-                    child: Text(templateVisibilityLabel(l, v)),
-                  ),
-              ],
-              onChanged: (v) =>
-                  setState(() => _visibility = v ?? _visibility),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l.stageGraphCancel),
-        ),
-        FilledButton(
-          onPressed: _confirm,
-          child: Text(l.stageGraphConfirm),
-        ),
-      ],
-    );
-  }
-}
 
 // === Shared editor entry points (reused by the canvas view) ================
 //
@@ -2157,18 +2060,6 @@ String stageSeedingInLabel(AppLocalizations l, StageSeedingIn si) {
       return l.stageGraphSeedingInReseedBySourceRank;
     case StageSeedingIn.manual:
       return l.stageGraphSeedingInManual;
-  }
-}
-
-/// Localized label for a [TemplateVisibility].
-String templateVisibilityLabel(AppLocalizations l, TemplateVisibility v) {
-  switch (v) {
-    case TemplateVisibility.private:
-      return l.stageGraphVisibilityPrivate;
-    case TemplateVisibility.club:
-      return l.stageGraphVisibilityClub;
-    case TemplateVisibility.public:
-      return l.stageGraphVisibilityPublic;
   }
 }
 

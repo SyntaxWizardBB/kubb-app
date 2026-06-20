@@ -418,6 +418,10 @@
   "@stageGraphErrorIdEmpty": {
     "description": "Inline error when the node id is empty"
   },
+  "stageGraphErrorNameEmpty": "Der Name darf nicht leer sein.",
+  "@stageGraphErrorNameEmpty": {
+    "description": "Inline error when the template name is empty"
+  },
   "stageGraphErrorIdDuplicate": "Diese ID existiert bereits.",
   "@stageGraphErrorIdDuplicate": {
     "description": "Inline error when the node id collides with an existing one"
@@ -576,12 +580,14 @@
   "@stageGraphSaveTemplateName": { "description": "Label for the template name field" },
   "stageGraphSaveTemplateVisibility": "Sichtbarkeit",
   "@stageGraphSaveTemplateVisibility": { "description": "Label for the visibility dropdown" },
-  "stageGraphVisibilityPrivate": "Privat",
+  "stageGraphVisibilityPrivate": "Privat (nur ich)",
   "@stageGraphVisibilityPrivate": { "description": "Label for TemplateVisibility.private" },
-  "stageGraphVisibilityClub": "Veranstalterteam",
+  "stageGraphVisibilityClub": "Verein/Organisation",
   "@stageGraphVisibilityClub": { "description": "Label for TemplateVisibility.club" },
   "stageGraphVisibilityPublic": "Öffentlich",
   "@stageGraphVisibilityPublic": { "description": "Label for TemplateVisibility.public" },
+  "stageGraphSaveTemplateClubUnavailable": "Fuer Verein/Organisation muss ein Veranstalter gewaehlt sein.",
+  "@stageGraphSaveTemplateClubUnavailable": { "description": "Helper shown when the club visibility is not selectable because no club is set" },
   "stageGraphConfirm": "Bestätigen",
   "@stageGraphConfirm": { "description": "Generic confirm button in stage-graph dialogs" },
   "stageGraphCancel": "Abbrechen",

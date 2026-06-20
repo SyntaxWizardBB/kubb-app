@@ -342,6 +342,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphErrorIdEmpty => 'Die ID darf nicht leer sein.';
 
   @override
+  String get stageGraphErrorNameEmpty => 'Der Name darf nicht leer sein.';
+
+  @override
   String get stageGraphErrorIdDuplicate => 'Diese ID existiert bereits.';
 
   @override
@@ -520,13 +523,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphSaveTemplateVisibility => 'Sichtbarkeit';
 
   @override
-  String get stageGraphVisibilityPrivate => 'Privat';
+  String get stageGraphVisibilityPrivate => 'Privat (nur ich)';
 
   @override
-  String get stageGraphVisibilityClub => 'Veranstalterteam';
+  String get stageGraphVisibilityClub => 'Verein/Organisation';
 
   @override
   String get stageGraphVisibilityPublic => 'Öffentlich';
+
+  @override
+  String get stageGraphSaveTemplateClubUnavailable =>
+      'Fuer Verein/Organisation muss ein Veranstalter gewaehlt sein.';
 
   @override
   String get stageGraphConfirm => 'Bestätigen';
