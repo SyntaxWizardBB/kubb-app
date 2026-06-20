@@ -283,6 +283,103 @@ void main() {
     });
   });
 
+  group('TournamentConfigDraft.validate stage-graph axis', () {
+    // A graph the validator accepts: a pool stage feeding a KO bracket.
+    StageGraph koGraph() => StageGraph(
+          nodes: <StageNode>[
+            StageNode(
+              id: 'prelim',
+              type: StageNodeType.pool,
+              seeding: StageSeedingSource.fromElo,
+            ),
+            StageNode(
+              id: 'final',
+              type: StageNodeType.singleElim,
+              seeding: StageSeedingSource.fromPrevRanking,
+            ),
+          ],
+          edges: const <StageEdge>[
+            StageEdge(
+              fromNodeId: 'prelim',
+              toNodeId: 'final',
+              selector: TopK(2),
+            ),
+          ],
+        );
+
+    TournamentConfigDraft stageGraphDraft({StageGraph? graph}) =>
+        _validStammdaten().copyWith(
+          formatMode: TournamentFormatMode.stageGraph,
+          stageGraph: graph ?? koGraph(),
+          maxParticipants: 8,
+        );
+
+    test('a non-empty, error-free graph validates without a koConfig', () {
+      final v = stageGraphDraft().validate();
+      expect(v.isValid, isTrue);
+      expect(v.issues, isNot(contains('KO-Phase-Konfiguration fehlt.')));
+    });
+
+    test('the classic koConfig rule does not fire in stage-graph mode', () {
+      // The controller normalizes format to roundRobinThenKo, so requiresKoConfig
+      // is true — but with no classic KO step the koConfig stays null. The
+      // stage-graph branch must not surface the classic issue.
+      final d = stageGraphDraft().copyWith(format: TournamentFormat.roundRobinThenKo);
+      expect(d.requiresKoConfig, isTrue);
+      expect(d.koConfig, isNull);
+      expect(
+        d.validate().issues,
+        isNot(contains('KO-Phase-Konfiguration fehlt.')),
+      );
+    });
+
+    test('a missing graph is rejected', () {
+      final d = _validStammdaten().copyWith(
+        formatMode: TournamentFormatMode.stageGraph,
+      );
+      final v = d.validate();
+      expect(v.isValid, isFalse);
+      expect(v.issues, contains('Stufen-Graph fehlt.'));
+    });
+
+    test('an empty graph is rejected', () {
+      final empty = StageGraph(nodes: const <StageNode>[], edges: const <StageEdge>[]);
+      final v = stageGraphDraft(graph: empty).validate();
+      expect(v.isValid, isFalse);
+      expect(v.issues, contains('Stufen-Graph fehlt.'));
+    });
+
+    test('a graph with a blocking error is rejected', () {
+      // A self-loop is a cycle the validator flags as a blocking error.
+      final cyclic = StageGraph(
+        nodes: <StageNode>[
+          StageNode(
+            id: 'a',
+            type: StageNodeType.singleElim,
+            seeding: StageSeedingSource.fromElo,
+          ),
+        ],
+        edges: const <StageEdge>[
+          StageEdge(fromNodeId: 'a', toNodeId: 'a', selector: Winners()),
+        ],
+      );
+      final v = stageGraphDraft(graph: cyclic).validate();
+      expect(v.isValid, isFalse);
+      expect(v.issues, contains('Stufen-Graph ist fehlerhaft.'));
+    });
+
+    test('classic mode without koConfig still fails (regression guard)', () {
+      final d = _validStammdaten().copyWith(
+        format: TournamentFormat.roundRobinThenKo,
+      );
+      expect(d.formatMode, TournamentFormatMode.classic);
+      expect(d.requiresKoConfig, isTrue);
+      final v = d.validate();
+      expect(v.isValid, isFalse);
+      expect(v.issues, contains('KO-Phase-Konfiguration fehlt.'));
+    });
+  });
+
   group('TournamentConfigDraft.resolvedDisplayName (K01)', () {
     test('appends the current year when no year is present', () {
       final year = DateTime.now().year;

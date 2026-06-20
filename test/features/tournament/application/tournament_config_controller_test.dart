@@ -367,5 +367,43 @@ void main() {
       expect(state().koType, KoType.singleOut);
       expect(state().stageGraph, isNotNull);
     });
+
+    test('normalizes format to a KO format yet validates in stage-graph mode',
+        () {
+      // build() forces format to derivedFormat (roundRobinThenKo), so the
+      // classic koConfig rule would block submit even though the stage-graph
+      // path never opens the classic KO step. The graph must carry validity.
+      final koGraph = StageGraph(
+        nodes: <StageNode>[
+          StageNode(
+            id: 'prelim',
+            type: StageNodeType.pool,
+            seeding: StageSeedingSource.fromElo,
+          ),
+          StageNode(
+            id: 'final',
+            type: StageNodeType.singleElim,
+            seeding: StageSeedingSource.fromPrevRanking,
+          ),
+        ],
+        edges: const <StageEdge>[
+          StageEdge(fromNodeId: 'prelim', toNodeId: 'final', selector: TopK(2)),
+        ],
+      );
+      controller.setDisplayName('Stufen Cup');
+      controller.setLocation('Esp');
+      controller.setVenueAddress('Sportplatz Esp, Fislisbach');
+      controller.setClubId(null);
+      controller.setFormatMode(TournamentFormatMode.stageGraph);
+      controller.setStageGraph(koGraph);
+
+      expect(state().format, TournamentFormat.roundRobinThenKo);
+      expect(state().koConfig, isNull);
+      final v = controller.validate();
+      expect(
+        v.issues,
+        isNot(contains('KO-Phase-Konfiguration fehlt.')),
+      );
+    });
   });
 }

@@ -1013,7 +1013,26 @@ class TournamentConfigDraft {
       issues.add('Basiskubbs pro Seite muss mindestens 1 sein.');
     }
 
-    if (requiresKoConfig && koConfig == null) {
+    if (formatMode == TournamentFormatMode.stageGraph) {
+      // The stage-graph path carries its own structure instead of the classic
+      // koConfig. The classic koType axis still normalizes to a KO-requiring
+      // format (controller default), so the classic koConfig rule must not
+      // apply here — the graph is the source of truth.
+      final graph = stageGraph;
+      if (graph == null || graph.nodes.isEmpty) {
+        issues.add('Stufen-Graph fehlt.');
+      } else {
+        // validateStageGraph's fieldSize is the participant count entering the
+        // root stage (capacity propagation), not the pitch count, so it reads
+        // from maxParticipants rather than stageGraphFieldSize.
+        final findings = validateStageGraph(graph, fieldSize: maxParticipants);
+        final hasBlockingError = findings
+            .any((f) => f.severity == ValidationSeverity.error);
+        if (hasBlockingError) {
+          issues.add('Stufen-Graph ist fehlerhaft.');
+        }
+      }
+    } else if (requiresKoConfig && koConfig == null) {
       issues.add('KO-Phase-Konfiguration fehlt.');
     }
 
