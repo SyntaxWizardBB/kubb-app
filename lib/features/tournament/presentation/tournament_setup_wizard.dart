@@ -40,6 +40,7 @@ import 'package:kubb_app/features/tournament/presentation/stage_graph_builder_sc
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_model_explainer_sheet.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/save_template_dialog.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/swiss_config_section.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -1898,9 +1899,16 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
       ref.listen<StageGraphBuilderState>(
         stageGraphBuilderProvider,
         (prev, next) {
-          if (prev?.graph != next.graph) {
-            widget.controller.setStageGraph(next.graph);
+          if (prev?.graph == next.graph) return;
+          // A bound template means `draft.stageGraph` mirrors that template's
+          // graph (the apply set both atomically). If the new builder graph
+          // differs from it, the organizer edited the graph by hand — drop the
+          // binding first so submit doesn't reuse a template they changed.
+          if (draft.appliedTemplateId != null &&
+              next.graph != draft.stageGraph) {
+            widget.controller.setAppliedTemplateId(null);
           }
+          widget.controller.setStageGraph(next.graph);
         },
       );
     }
@@ -2121,7 +2129,15 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
       KubbBinaryChoice<bool>(
         key: const Key('wizardStageGraphSource'),
         selected: _useTemplate,
-        onChanged: (v) => setState(() => _useTemplate = v),
+        onChanged: (v) {
+          // Switching the graph source drops any template binding: "frisch
+          // bauen" must not keep a stale appliedTemplateId, and re-entering the
+          // template path starts unbound until a template is applied again.
+          if (v != _useTemplate) {
+            widget.controller.setAppliedTemplateId(null);
+          }
+          setState(() => _useTemplate = v);
+        },
         options: <KubbChoiceOption<bool>>[
           KubbChoiceOption<bool>(
             value: false,
@@ -2139,8 +2155,10 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
       // Template bar (apply a saved/system template into the shared provider)
       // — visible only in the "Vorlage wählen" variant.
       if (_useTemplate) ...[
-        const _StageGraphTemplateBar(
-          key: Key('wizardStageGraphTemplateBar'),
+        _StageGraphTemplateBar(
+          key: const Key('wizardStageGraphTemplateBar'),
+          controller: widget.controller,
+          clubId: widget.draft.clubId,
         ),
         const SizedBox(height: KubbTokens.space5),
       ],
@@ -2302,10 +2320,25 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
 /// P2.2: inline template bar for the wizard's stage-graph "Vorlage wählen"
 /// variant. Watches [stageGraphTemplatesProvider] and applies the picked
 /// template into the shared [stageGraphBuilderProvider] via `loadFromGraph`
-/// (single source of truth — no separate graph state here). Save-as-template
-/// is NOT offered in the wizard; that is the submit-wiring's job (P2.4).
+/// (single source of truth — no separate graph state here).
+///
+/// #8: also offers "Als Vorlage speichern" — the current builder graph is saved
+/// as a private/club/public template via the same shared [SaveTemplateDialog]
+/// the standalone editor uses. Applying a template additionally binds it to the
+/// draft (`onApplied`) so submit reuses it instead of duplicating an
+/// auto-private copy.
 class _StageGraphTemplateBar extends ConsumerStatefulWidget {
-  const _StageGraphTemplateBar({super.key});
+  const _StageGraphTemplateBar({
+    required this.controller,
+    required this.clubId,
+    super.key,
+  });
+
+  final TournamentConfigController controller;
+
+  /// Organizing club of the draft (null = Spaßturnier / personal). Forwarded to
+  /// a `club`-scoped save; when null that scope is disabled in the dialog.
+  final String? clubId;
 
   @override
   ConsumerState<_StageGraphTemplateBar> createState() =>
@@ -2358,52 +2391,71 @@ class _StageGraphTemplateBarState
     final hasSelection =
         templates.any((t) => t.id == _selectedId) && _selectedId != null;
     final selected = hasSelection ? _selectedId : null;
-    if (templates.isEmpty) {
-      return _HelperText(l10n.stageGraphTemplatesEmpty);
-    }
+    final graphEmpty = ref.watch(stageGraphBuilderProvider).graph.nodes.isEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DropdownButtonFormField<String>(
-          key: const Key('wizardStageGraphTemplatePicker'),
-          initialValue: selected,
-          isExpanded: true,
-          decoration: InputDecoration(
-            labelText: l10n.stageGraphTemplatePickerLabel,
-            border: const OutlineInputBorder(),
-          ),
-          items: [
-            for (final t in templates)
-              DropdownMenuItem<String>(
-                value: t.id,
-                child: Row(
-                  children: [
-                    Flexible(
-                      child: Text(t.name, overflow: TextOverflow.ellipsis),
-                    ),
-                    if (t.isSystem) ...[
-                      const SizedBox(width: KubbTokens.space2),
-                      KubbChip(
-                        tone: KubbChipTone.heli,
-                        label: l10n.stageGraphTemplateSystemBadge,
+        if (templates.isEmpty)
+          _HelperText(l10n.stageGraphTemplatesEmpty)
+        else
+          DropdownButtonFormField<String>(
+            key: const Key('wizardStageGraphTemplatePicker'),
+            initialValue: selected,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: l10n.stageGraphTemplatePickerLabel,
+              border: const OutlineInputBorder(),
+            ),
+            items: [
+              for (final t in templates)
+                DropdownMenuItem<String>(
+                  value: t.id,
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(t.name, overflow: TextOverflow.ellipsis),
                       ),
+                      if (t.isSystem) ...[
+                        const SizedBox(width: KubbTokens.space2),
+                        KubbChip(
+                          tone: KubbChipTone.heli,
+                          label: l10n.stageGraphTemplateSystemBadge,
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
+                ),
+            ],
+            onChanged: (v) => setState(() => _selectedId = v),
+          ),
+        const SizedBox(height: KubbTokens.space3),
+        Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: KubbTokens.touchMin,
+                child: KubbButton(
+                  variant: KubbButtonVariant.secondary,
+                  onPressed: selected == null
+                      ? null
+                      : () => _apply(l10n, templates, selected),
+                  child: Text(l10n.stageGraphTemplateApply),
                 ),
               ),
+            ),
+            const SizedBox(width: KubbTokens.space3),
+            Expanded(
+              child: SizedBox(
+                height: KubbTokens.touchMin,
+                child: KubbButton(
+                  key: const Key('wizardStageGraphTemplateSave'),
+                  variant: KubbButtonVariant.primary,
+                  onPressed: graphEmpty ? null : () => _save(l10n),
+                  child: Text(l10n.stageGraphTemplateSave),
+                ),
+              ),
+            ),
           ],
-          onChanged: (v) => setState(() => _selectedId = v),
-        ),
-        const SizedBox(height: KubbTokens.space3),
-        SizedBox(
-          height: KubbTokens.touchMin,
-          child: KubbButton(
-            variant: KubbButtonVariant.secondary,
-            onPressed: selected == null
-                ? null
-                : () => _apply(l10n, templates, selected),
-            child: Text(l10n.stageGraphTemplateApply),
-          ),
         ),
       ],
     );
@@ -2415,10 +2467,49 @@ class _StageGraphTemplateBarState
     String id,
   ) {
     final template = templates.firstWhere((t) => t.id == id);
+    // Apply into the builder (single source of truth). The graph-mirror listen
+    // in _StepFormat pushes the loaded graph into the draft; binding the id
+    // afterwards lets submit reuse this template instead of duplicating an
+    // auto-private copy.
     ref.read(stageGraphBuilderProvider.notifier).loadFromGraph(template.graph);
+    widget.controller
+      ..setStageGraph(template.graph)
+      ..setAppliedTemplateId(template.id);
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(SnackBar(content: Text(l10n.stageGraphTemplateApplied)));
+  }
+
+  Future<void> _save(AppLocalizations l10n) async {
+    final graph = ref.read(stageGraphBuilderProvider).graph;
+    final result = await showDialog<SaveTemplateResult>(
+      context: context,
+      builder: (_) => SaveTemplateDialog(clubAvailable: widget.clubId != null),
+    );
+    if (result == null || !mounted) return;
+    final repo = ref.read(stageGraphTemplatesRepositoryProvider);
+    try {
+      await repo.saveTemplate(
+        name: result.name,
+        visibility: result.visibility,
+        graph: graph,
+        clubId: result.visibility == TemplateVisibility.club
+            ? widget.clubId
+            : null,
+      );
+      ref.invalidate(stageGraphTemplatesProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(SnackBar(content: Text(l10n.stageGraphTemplateSaved)));
+    } on Object {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(content: Text(l10n.stageGraphTemplateSaveError)),
+        );
+    }
   }
 }
 

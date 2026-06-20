@@ -9,7 +9,12 @@ import 'package:kubb_app/features/tournament/application/stage_graph_builder_con
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart'
-    show StageGraphTemplate, TemplateVisibility, stageGraphTemplatesProvider;
+    show
+        StageGraphTemplate,
+        StageGraphTemplatesRepository,
+        TemplateVisibility,
+        stageGraphTemplatesProvider,
+        stageGraphTemplatesRepositoryProvider;
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/stage_graph_builder_screen.dart';
@@ -2057,4 +2062,264 @@ void main() {
       expect(find.text('groups → cup'), findsOneWidget);
     });
   });
+
+  group('#8 stage-graph template save + bind in the wizard', () {
+    StageGraph graph() => StageGraph(
+          nodes: <StageNode>[
+            StageNode(
+              id: 'groups',
+              type: StageNodeType.pool,
+              seeding: StageSeedingSource.asRouted,
+              config: const <String, Object?>{
+                'groupCount': 2,
+                'qualifierCount': 2,
+              },
+            ),
+            StageNode(
+              id: 'cup',
+              type: StageNodeType.singleElim,
+              seeding: StageSeedingSource.asRouted,
+            ),
+          ],
+          edges: const <StageEdge>[
+            StageEdge(fromNodeId: 'groups', toNodeId: 'cup', selector: TopK(2)),
+          ],
+        );
+
+    /// A draft already in stage-graph mode with a club set, so a club-scoped
+    /// save forwards the club id. A club tournament is league-relevant, so the
+    /// Stammdaten step also needs a league category to pass its gate.
+    TournamentConfigController seededWithClub() => _SeededFn(
+          () => _withStammdaten(
+            const TournamentConfigDraft(
+              format: TournamentFormat.swissThenKo,
+              vorrundeType: VorrundeType.schoch,
+              formatMode: TournamentFormatMode.stageGraph,
+              clubId: 'club-7',
+              leagueCategories: <LeagueCategory>[LeagueCategory.a],
+            ),
+          ),
+        );
+
+    Future<void> openTemplateSource(WidgetTester tester) async {
+      await _typeName(tester, 'Graph Cup');
+      await _tapNext(tester); // -> participants
+      await _tapNext(tester); // -> format (stage-graph mode)
+      // Switch the graph source to the template variant so the bar shows. The
+      // option title "Vorlage wählen" also labels the template picker below, so
+      // target the source option inside its keyed binary-choice widget.
+      final sourceOption = find.descendant(
+        of: find.byKey(const Key('wizardStageGraphSource')),
+        matching: find.text('Vorlage wählen'),
+      );
+      await tester.ensureVisible(sourceOption);
+      await tester.pumpAndSettle();
+      await tester.tap(sourceOption);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('save button is hidden for an empty graph, shown for a filled '
+        'one', (tester) async {
+      await _pumpWizard(
+        tester,
+        controllerOverride: _StageGraphSeededController.new,
+        extraOverrides: <Object>[
+          _stageGraphOverride(
+            StageGraph(nodes: const <StageNode>[], edges: const <StageEdge>[]),
+          ),
+          stageGraphTemplatesProvider.overrideWith(
+            (_) async => const <StageGraphTemplate>[],
+          ),
+        ],
+      );
+      await openTemplateSource(tester);
+      final saveBtn = find.byKey(const Key('wizardStageGraphTemplateSave'));
+      expect(saveBtn, findsOneWidget);
+      expect(
+        tester.widget<KubbButton>(saveBtn).onPressed,
+        isNull,
+      );
+    });
+
+    testWidgets('saving forwards name + visibility + clubId and invalidates the '
+        'list', (tester) async {
+      final repo = _CapturingTemplatesRepo();
+      await _pumpWizard(
+        tester,
+        controllerOverride: seededWithClub,
+        extraOverrides: <Object>[
+          _stageGraphOverride(graph()),
+          stageGraphTemplatesRepositoryProvider.overrideWithValue(repo),
+          stageGraphTemplatesProvider.overrideWith(
+            (_) async => const <StageGraphTemplate>[],
+          ),
+        ],
+      );
+      await openTemplateSource(tester);
+
+      await tester.tap(find.byKey(const Key('wizardStageGraphTemplateSave')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('stageGraphTemplateNameField')),
+        'Mein Verein Cup',
+      );
+      // Pick the club visibility.
+      await tester.tap(
+        find.byKey(const Key('stageGraphTemplateVisibilityField')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Verein/Organisation').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Bestätigen'));
+      await tester.pumpAndSettle();
+
+      expect(repo.saved, hasLength(1));
+      final call = repo.saved.single;
+      expect(call.name, 'Mein Verein Cup');
+      expect(call.visibility, TemplateVisibility.club);
+      expect(call.clubId, 'club-7');
+      expect(find.text('Vorlage gespeichert.'), findsOneWidget);
+    });
+
+    testWidgets('a missing club disables the club visibility option',
+        (tester) async {
+      await _pumpWizard(
+        tester,
+        // Default seed is a Spaßturnier (clubId == null) in stage-graph mode.
+        controllerOverride: _StageGraphSeededController.new,
+        extraOverrides: <Object>[
+          _stageGraphOverride(graph()),
+          stageGraphTemplatesProvider.overrideWith(
+            (_) async => const <StageGraphTemplate>[],
+          ),
+        ],
+      );
+      await openTemplateSource(tester);
+      await tester.tap(find.byKey(const Key('wizardStageGraphTemplateSave')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('muss ein Veranstalter gewaehlt sein'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('applying a template binds appliedTemplateId; editing the graph '
+        'clears it again', (tester) async {
+      await _pumpWizard(
+        tester,
+        controllerOverride: () => _SeededFn(
+          () => _withStammdaten(
+            const TournamentConfigDraft(
+              format: TournamentFormat.swissThenKo,
+              vorrundeType: VorrundeType.schoch,
+              formatMode: TournamentFormatMode.stageGraph,
+            ),
+          ),
+        ),
+        extraOverrides: <Object>[
+          _stageGraphOverride(
+            StageGraph(nodes: const <StageNode>[], edges: const <StageEdge>[]),
+          ),
+          stageGraphTemplatesProvider.overrideWith(
+            (_) async => <StageGraphTemplate>[
+              StageGraphTemplate(
+                id: 'tpl-x',
+                name: 'Vorlage X',
+                description: null,
+                visibility: TemplateVisibility.public,
+                graph: graph(),
+                isSystem: true,
+              ),
+            ],
+          ),
+        ],
+      );
+      await openTemplateSource(tester);
+
+      // Pick + apply the template.
+      await tester.tap(
+        find.byKey(const Key('wizardStageGraphTemplatePicker')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Vorlage X').last);
+      await tester.pumpAndSettle();
+      // The embedded builder body hosts its own template bar too, so scope the
+      // apply tap to the wizard's bar.
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const Key('wizardStageGraphTemplateBar')),
+          matching: find.text('Anwenden'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(TournamentSetupWizard)),
+      );
+      expect(
+        container.read(tournamentConfigControllerProvider).appliedTemplateId,
+        'tpl-x',
+      );
+
+      // A manual graph edit (drop a node) must clear the binding.
+      container.read(stageGraphBuilderProvider.notifier).removeNode('cup');
+      await tester.pumpAndSettle();
+
+      expect(
+        container.read(tournamentConfigControllerProvider).appliedTemplateId,
+        isNull,
+      );
+    });
+  });
+}
+
+/// Builds a controller from a draft factory, so a test can seed an arbitrary
+/// starting draft without a dedicated subclass.
+class _SeededFn extends TournamentConfigController {
+  _SeededFn(this._seed);
+
+  final TournamentConfigDraft Function() _seed;
+
+  @override
+  TournamentConfigDraft build() => _seed();
+}
+
+/// Captured `saveTemplate` call for the wizard save assertions.
+class _SavedCall {
+  const _SavedCall({
+    required this.name,
+    required this.visibility,
+    required this.clubId,
+  });
+
+  final String name;
+  final TemplateVisibility visibility;
+  final String? clubId;
+}
+
+/// Repository fake over the public test seam that records every save and never
+/// touches Supabase.
+class _CapturingTemplatesRepo extends StageGraphTemplatesRepository {
+  _CapturingTemplatesRepo()
+      : super.withSeams(
+          select: (_) async => const <dynamic>[],
+          rpc: (_, _) async => 'new-id',
+        );
+
+  final List<_SavedCall> saved = <_SavedCall>[];
+
+  @override
+  Future<String> saveTemplate({
+    required String name,
+    required TemplateVisibility visibility,
+    required StageGraph graph,
+    String? description,
+    String? clubId,
+  }) async {
+    saved.add(
+      _SavedCall(name: name, visibility: visibility, clubId: clubId),
+    );
+    return 'new-id';
+  }
 }

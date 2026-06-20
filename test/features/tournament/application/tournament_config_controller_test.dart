@@ -353,6 +353,13 @@ void main() {
       expect(state().appliedTemplateId, isNull);
     });
 
+    test('setAppliedTemplateId binds the template; null clears it', () {
+      controller.setAppliedTemplateId('tmpl-7');
+      expect(state().appliedTemplateId, 'tmpl-7');
+      controller.setAppliedTemplateId(null);
+      expect(state().appliedTemplateId, isNull);
+    });
+
     test('toggling the mode does not discard the classic axis nor the graph',
         () {
       controller.setVorrundeType(VorrundeType.schoch);

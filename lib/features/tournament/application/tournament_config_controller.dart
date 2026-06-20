@@ -645,6 +645,17 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     state = state.copyWith(stageGraph: graph);
   }
 
+  /// Binds the draft to a saved/system template (P2.4). When set, submit applies
+  /// that template directly instead of auto-saving the free graph as a private
+  /// duplicate. Pass null when the organizer edits the graph manually so the
+  /// stale template reference does not leak into submit.
+  void setAppliedTemplateId(String? id) {
+    state = state.copyWith(
+      appliedTemplateId: id,
+      clearAppliedTemplateId: id == null,
+    );
+  }
+
   /// Clears the stage graph (and the applied template id it logically belongs
   /// to), e.g. when the organizer abandons the graph path. Leaves the classic
   /// Vorrunde × KO fields untouched.
