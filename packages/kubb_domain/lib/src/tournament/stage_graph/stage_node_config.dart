@@ -6,7 +6,8 @@
 /// - KO nodes: `ko_matchup`, `ko_tiebreak_method`, `with_reset` (double-elim),
 ///   `ko_round_formats` (`[MatchFormatSpec.toJson()]`, index 0 = round 1).
 /// - Pool/round-robin nodes: `groupCount`, `qualifierCount` (per group),
-///   `grouping_strategy`, `random_seed`.
+///   `grouping_strategy`, `random_seed`, `group_pitch_assignment` (per-group
+///   pitch numbers, mirrors `PitchPlan.groupAssignment`).
 /// - Swiss nodes: `rounds`.
 ///
 /// Existing keys stay camelCase (`groupCount`/`qualifierCount`/`rounds`/
@@ -29,6 +30,7 @@ abstract final class StageNodeConfigKeys {
   static const qualifierCount = 'qualifierCount';
   static const groupingStrategy = 'grouping_strategy';
   static const randomSeed = 'random_seed';
+  static const groupPitchAssignment = 'group_pitch_assignment';
   static const rounds = 'rounds';
 }
 
@@ -96,6 +98,26 @@ int? poolRandomSeedFromConfig(Map<String, Object?> config) {
   return raw is int ? raw : null;
 }
 
+/// Per-group pitch assignment (group label → pitch numbers), empty when unset.
+/// Mirrors `PitchPlan.groupAssignment`. Malformed entries (non-string keys,
+/// non-list / non-int values) are dropped rather than throwing — node configs
+/// are user data and may be partial.
+Map<String, List<int>> poolGroupPitchAssignmentFromConfig(
+  Map<String, Object?> config,
+) {
+  final raw = config[StageNodeConfigKeys.groupPitchAssignment];
+  if (raw is! Map) return const <String, List<int>>{};
+  final out = <String, List<int>>{};
+  for (final entry in raw.entries) {
+    final key = entry.key;
+    final value = entry.value;
+    if (key is! String || value is! List) continue;
+    final pitches = <int>[for (final p in value) if (p is int) p];
+    if (pitches.isNotEmpty) out[key] = pitches;
+  }
+  return out;
+}
+
 // --- Writers ----------------------------------------------------------------
 
 /// Builds the config map for a KO node. Only set fields are written, so the
@@ -118,17 +140,24 @@ Map<String, Object?> writeKoNodeConfig({
   };
 }
 
-/// Builds the config map for a pool/round-robin node.
+/// Builds the config map for a pool/round-robin node. [groupPitchAssignment]
+/// maps a group label (A, B, …) to the pitch numbers serving that group; it is
+/// only written when non-empty so older graphs without the key stay clean.
 Map<String, Object?> writePoolNodeConfig({
   required int groupCount,
   required int qualifierCount,
   PoolGroupingStrategy? strategy,
   int? randomSeed,
+  Map<String, List<int>> groupPitchAssignment = const <String, List<int>>{},
 }) {
   return <String, Object?>{
     StageNodeConfigKeys.groupCount: groupCount,
     StageNodeConfigKeys.qualifierCount: qualifierCount,
     if (strategy != null) StageNodeConfigKeys.groupingStrategy: strategy.name,
     StageNodeConfigKeys.randomSeed: ?randomSeed,
+    if (groupPitchAssignment.isNotEmpty)
+      StageNodeConfigKeys.groupPitchAssignment: <String, Object?>{
+        for (final e in groupPitchAssignment.entries) e.key: List<int>.of(e.value),
+      },
   };
 }

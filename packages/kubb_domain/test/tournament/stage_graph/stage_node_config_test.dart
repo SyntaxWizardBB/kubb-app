@@ -60,6 +60,30 @@ void main() {
       expect(config.containsKey(StageNodeConfigKeys.randomSeed), isFalse);
       expect(poolGroupingStrategyFromConfig(config), isNull);
     });
+
+    test('group pitch assignment round-trips through config serialization', () {
+      final config = writePoolNodeConfig(
+        groupCount: 2,
+        qualifierCount: 2,
+        groupPitchAssignment: const <String, List<int>>{
+          'A': <int>[1, 2],
+          'B': <int>[3],
+        },
+      );
+      expect(poolGroupPitchAssignmentFromConfig(config), <String, List<int>>{
+        'A': <int>[1, 2],
+        'B': <int>[3],
+      });
+    });
+
+    test('omits group pitch assignment when empty (no placeholder key)', () {
+      final config = writePoolNodeConfig(groupCount: 2, qualifierCount: 1);
+      expect(
+        config.containsKey(StageNodeConfigKeys.groupPitchAssignment),
+        isFalse,
+      );
+      expect(poolGroupPitchAssignmentFromConfig(config), isEmpty);
+    });
   });
 
   group('stage node config — readers are total (partial/garbage tolerant)', () {
@@ -71,6 +95,7 @@ void main() {
       expect(koRoundFormatsFromConfig(empty), isEmpty);
       expect(poolGroupingStrategyFromConfig(empty), isNull);
       expect(poolRandomSeedFromConfig(empty), isNull);
+      expect(poolGroupPitchAssignmentFromConfig(empty), isEmpty);
     });
 
     test('wrong-typed / unknown values are ignored, not thrown', () {
@@ -84,6 +109,11 @@ void main() {
         ],
         StageNodeConfigKeys.groupingStrategy: 'nope',
         StageNodeConfigKeys.randomSeed: 'x',
+        StageNodeConfigKeys.groupPitchAssignment: <Object?, Object?>{
+          'A': <Object?>[1, 'x', 2],
+          7: <Object?>[3],
+          'B': 'not_a_list',
+        },
       };
       expect(koMatchupFromConfig(garbage), isNull);
       expect(koTiebreakMethodFromConfig(garbage), isNull);
@@ -91,6 +121,10 @@ void main() {
       expect(koRoundFormatsFromConfig(garbage), hasLength(1));
       expect(poolGroupingStrategyFromConfig(garbage), isNull);
       expect(poolRandomSeedFromConfig(garbage), isNull);
+      // non-int pitches dropped, non-string key dropped, non-list value dropped.
+      expect(poolGroupPitchAssignmentFromConfig(garbage), <String, List<int>>{
+        'A': <int>[1, 2],
+      });
     });
   });
 }
