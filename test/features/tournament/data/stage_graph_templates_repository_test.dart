@@ -62,6 +62,40 @@ void main() {
       final selector = template.graph.edges.single.selector;
       expect(selector, isA<TopK>());
       expect((selector as TopK).k, 4);
+
+      // No pitch_plan column => null (this row omits it).
+      expect(template.pitchPlan, isNull);
+    });
+
+    test('parses a pitch_plan jsonb column into a PitchPlan (round-trips)', () {
+      const pitchPlan = PitchPlan(
+        mode: PitchMode.range,
+        rangeFrom: 1,
+        rangeTo: 4,
+      );
+      final template = templateFromRow(<String, dynamic>{
+        'id': 't-pitch',
+        'name': 'With pitches',
+        'visibility': 'public',
+        'owner_user_id': 'u-1',
+        'graph': graphJson(),
+        'pitch_plan': pitchPlan.toJson(),
+      });
+
+      expect(template.pitchPlan, pitchPlan);
+    });
+
+    test('null pitch_plan column stays null (backward compatible)', () {
+      final template = templateFromRow(<String, dynamic>{
+        'id': 't-no-pitch',
+        'name': 'No pitches',
+        'visibility': 'public',
+        'owner_user_id': 'u-1',
+        'graph': graphJson(),
+        'pitch_plan': null,
+      });
+
+      expect(template.pitchPlan, isNull);
     });
 
     test('owner_user_id == null => isSystem true; set owner => false', () {
@@ -165,6 +199,11 @@ void main() {
         },
       );
 
+      const pitchPlan = PitchPlan(
+        mode: PitchMode.range,
+        rangeFrom: 1,
+        rangeTo: 6,
+      );
       final graph = StageGraph.fromJson(graphJson());
       final id = await repo.saveTemplate(
         name: 'My template',
@@ -172,11 +211,17 @@ void main() {
         visibility: TemplateVisibility.club,
         graph: graph,
         clubId: 'club-1',
+        pitchPlan: pitchPlan,
       );
 
       expect(id, 'new-id');
       expect(capturedFn, StageGraphTemplatesRepository.saveRpcName);
       expect(capturedParams, isNotNull);
+      // #11: the pitch plan rides p_pitch_plan as its serialized map.
+      expect(
+        capturedParams![StageGraphTemplatesRepository.savePitchPlanParam],
+        pitchPlan.toJson(),
+      );
       expect(
         capturedParams![StageGraphTemplatesRepository.saveNameParam],
         'My template',
@@ -198,6 +243,35 @@ void main() {
           capturedParams![StageGraphTemplatesRepository.saveGraphParam];
       expect(graphParam, isA<Map<String, Object?>>());
       expect(graphParam, graph.toJson());
+    });
+
+    test('omitting the pitch plan passes p_pitch_plan: null (standalone save)',
+        () async {
+      Map<String, dynamic>? capturedParams;
+      final repo = StageGraphTemplatesRepository.withSeams(
+        select: (table) async => const <dynamic>[],
+        rpc: (fn, params) async {
+          capturedParams = params;
+          return 'new-id';
+        },
+      );
+
+      await repo.saveTemplate(
+        name: 'No pitches',
+        visibility: TemplateVisibility.private,
+        graph: StageGraph.fromJson(graphJson()),
+      );
+
+      expect(
+        capturedParams!.containsKey(
+          StageGraphTemplatesRepository.savePitchPlanParam,
+        ),
+        isTrue,
+      );
+      expect(
+        capturedParams![StageGraphTemplatesRepository.savePitchPlanParam],
+        isNull,
+      );
     });
   });
 
@@ -253,6 +327,7 @@ void main() {
       expect(StageGraphTemplatesRepository.saveVisibilityParam, 'visibility');
       expect(StageGraphTemplatesRepository.saveGraphParam, 'graph');
       expect(StageGraphTemplatesRepository.saveClubIdParam, 'club_id');
+      expect(StageGraphTemplatesRepository.savePitchPlanParam, 'pitch_plan');
       expect(
         StageGraphTemplatesRepository.applyTournamentIdParam,
         'tournament_id',

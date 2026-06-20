@@ -56,6 +56,7 @@ class StageGraphTemplate {
     required this.visibility,
     required this.graph,
     required this.isSystem,
+    this.pitchPlan,
   });
 
   /// Stable template id (uuid).
@@ -76,6 +77,12 @@ class StageGraphTemplate {
   /// Whether this is an ownerless system preset (`owner_user_id == null`).
   final bool isSystem;
 
+  /// Optional pitch plan saved alongside the graph (#11). Null for templates
+  /// stored before the pitch-plan column existed, or for a standalone save
+  /// outside the wizard (no draft/pitch context). When present, the wizard
+  /// restores it into the config draft on apply.
+  final PitchPlan? pitchPlan;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -85,11 +92,19 @@ class StageGraphTemplate {
           other.description == description &&
           other.visibility == visibility &&
           other.graph == graph &&
-          other.isSystem == isSystem;
+          other.isSystem == isSystem &&
+          other.pitchPlan == pitchPlan;
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, description, visibility, graph, isSystem);
+  int get hashCode => Object.hash(
+        id,
+        name,
+        description,
+        visibility,
+        graph,
+        isSystem,
+        pitchPlan,
+      );
 
   @override
   String toString() =>
@@ -117,6 +132,16 @@ StageGraphTemplate templateFromRow(Map<String, dynamic> row) {
   final graphMap = (rawGraph as Map).map(
     (key, value) => MapEntry(key as String, value as Object?),
   );
+  // pitch_plan is nullable (older rows / pitch-less saves). Parse it the same
+  // way as graph when present; a null column stays a null PitchPlan.
+  final rawPitchPlan = row['pitch_plan'];
+  final pitchPlan = rawPitchPlan is Map
+      ? PitchPlan.fromJson(
+          rawPitchPlan.map(
+            (key, value) => MapEntry(key as String, value as Object?),
+          ),
+        )
+      : null;
   return StageGraphTemplate(
     id: row['id'] as String? ?? '',
     name: row['name'] as String? ?? '',
@@ -124,6 +149,7 @@ StageGraphTemplate templateFromRow(Map<String, dynamic> row) {
     visibility: TemplateVisibility.fromWire(row['visibility'] as String?),
     graph: StageGraph.fromJson(graphMap),
     isSystem: row['owner_user_id'] == null,
+    pitchPlan: pitchPlan,
   );
 }
 
@@ -186,6 +212,7 @@ class StageGraphTemplatesRepository {
   static const String saveVisibilityParam = 'visibility';
   static const String saveGraphParam = 'graph';
   static const String saveClubIdParam = 'club_id';
+  static const String savePitchPlanParam = 'pitch_plan';
 
   /// Param keys of `apply_stage_graph_template(tournament_id, template_id)`.
   static const String applyTournamentIdParam = 'tournament_id';
@@ -223,13 +250,18 @@ class StageGraphTemplatesRepository {
   /// and returns the new template id (uuid).
   ///
   /// [graph] is serialized via `graph.toJson()` (reusing the domain
-  /// serializer); [visibility] is passed as its wire string.
+  /// serializer); [visibility] is passed as its wire string. The optional
+  /// [pitchPlan] (#11) is serialized via its own `toJson()` and rides the
+  /// `p_pitch_plan` RPC param; null when the caller has no pitch context
+  /// (older templates / the standalone editor), keeping the wire backward
+  /// compatible.
   Future<String> saveTemplate({
     required String name,
     required TemplateVisibility visibility,
     required StageGraph graph,
     String? description,
     String? clubId,
+    PitchPlan? pitchPlan,
   }) async {
     final result = await _rpc(saveRpcName, <String, dynamic>{
       saveNameParam: name,
@@ -237,6 +269,7 @@ class StageGraphTemplatesRepository {
       saveVisibilityParam: visibility.toWire(),
       saveGraphParam: graph.toJson(),
       saveClubIdParam: clubId,
+      savePitchPlanParam: pitchPlan?.toJson(),
     });
     return result! as String;
   }
