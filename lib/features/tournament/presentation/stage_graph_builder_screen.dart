@@ -663,6 +663,7 @@ class _EdgesSection extends StatelessWidget {
           for (var i = 0; i < edges.length; i++) ...[
             _EdgeTile(
               edge: edges[i],
+              onEdit: () => _openEditEdge(context, i, edges[i]),
               onDelete: () => notifier.removeEdge(i),
             ),
             const SizedBox(height: KubbTokens.space2),
@@ -688,12 +689,29 @@ class _EdgesSection extends StatelessWidget {
     );
     if (edge != null) notifier.addEdge(edge);
   }
+
+  Future<void> _openEditEdge(
+    BuildContext context,
+    int index,
+    StageEdge edge,
+  ) async {
+    final updated = await showDialog<StageEdge>(
+      context: context,
+      builder: (_) => _EdgeDialog(nodes: state.graph.nodes, initialEdge: edge),
+    );
+    if (updated != null) notifier.updateEdge(index, updated);
+  }
 }
 
 class _EdgeTile extends StatelessWidget {
-  const _EdgeTile({required this.edge, required this.onDelete});
+  const _EdgeTile({
+    required this.edge,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   final StageEdge edge;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   @override
@@ -746,6 +764,15 @@ class _EdgeTile extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          IconButton(
+            tooltip: l.stageGraphEditEdge,
+            icon: const Icon(LucideIcons.pencil, size: 18),
+            constraints: const BoxConstraints.tightFor(
+              width: KubbTokens.touchMin,
+              height: KubbTokens.touchMin,
+            ),
+            onPressed: onEdit,
           ),
           IconButton(
             tooltip: l.stageGraphDeleteEdge,
@@ -1378,20 +1405,32 @@ class _NodeDialogState extends State<_NodeDialog> {
 /// Selector kinds offered in the edge dialog (parallel to [EdgeSelector]).
 enum _SelectorKind { topK, ranks, losersOfRounds, winners, nonQualifiers }
 
-/// Add dialog for a [StageEdge].
+/// Add/edit dialog for a [StageEdge].
 class _EdgeDialog extends StatefulWidget {
-  const _EdgeDialog({required this.nodes, this.initialFrom, this.initialTo});
+  const _EdgeDialog({
+    required this.nodes,
+    this.initialFrom,
+    this.initialTo,
+    this.initialEdge,
+  });
 
   final List<StageNode> nodes;
 
   /// Optional pre-selected `from` node id (L4b-2 gesture seed). When null the
   /// dialog keeps its original default (`nodes.first`). Additive & optional —
-  /// the toolbar / form-view call sites stay unchanged.
+  /// the toolbar / form-view call sites stay unchanged. Ignored when
+  /// [initialEdge] is given (the edge carries its own `from`).
   final String? initialFrom;
 
   /// Optional pre-selected `to` node id (L4b-2 gesture seed). When null the
-  /// dialog keeps its original default (`nodes[1]` / `nodes.first`).
+  /// dialog keeps its original default (`nodes[1]` / `nodes.first`). Ignored
+  /// when [initialEdge] is given.
   final String? initialTo;
+
+  /// Existing edge to edit. When non-null every field (from, to, selector kind
+  /// and its parameters, seeding) is pre-filled from it and the dialog runs in
+  /// edit mode (different title). When null the dialog runs in add mode.
+  final StageEdge? initialEdge;
 
   @override
   State<_EdgeDialog> createState() => _EdgeDialogState();
@@ -1412,10 +1451,12 @@ class _EdgeDialogState extends State<_EdgeDialog> {
   void initState() {
     super.initState();
     final ids = widget.nodes.map((n) => n.id).toSet();
+    final edit = widget.initialEdge;
     // Use the optional gesture seed when it points at a known node; otherwise
     // fall back to the UNCHANGED default selection (nodes.first / nodes[1]).
-    final seedFrom = widget.initialFrom;
-    final seedTo = widget.initialTo;
+    // In edit mode the existing edge's endpoints take precedence.
+    final seedFrom = edit?.fromNodeId ?? widget.initialFrom;
+    final seedTo = edit?.toNodeId ?? widget.initialTo;
     _from = (seedFrom != null && ids.contains(seedFrom))
         ? seedFrom
         : widget.nodes.first.id;
@@ -1424,7 +1465,28 @@ class _EdgeDialogState extends State<_EdgeDialog> {
         : (widget.nodes.length > 1
             ? widget.nodes[1].id
             : widget.nodes.first.id);
-    _roundsController = TextEditingController(text: '1');
+    var roundsText = '1';
+    if (edit != null) {
+      _seedingIn = edit.seedingIn;
+      switch (edit.selector) {
+        case final TopK s:
+          _kind = _SelectorKind.topK;
+          _k = s.k;
+        case final Ranks s:
+          _kind = _SelectorKind.ranks;
+          _rankFrom = s.from;
+          _rankTo = s.to;
+        case final LosersOfRounds s:
+          _kind = _SelectorKind.losersOfRounds;
+          final sorted = s.rounds.toList()..sort();
+          roundsText = sorted.join(', ');
+        case Winners():
+          _kind = _SelectorKind.winners;
+        case NonQualifiers():
+          _kind = _SelectorKind.nonQualifiers;
+      }
+    }
+    _roundsController = TextEditingController(text: roundsText);
   }
 
   @override
@@ -1485,7 +1547,11 @@ class _EdgeDialogState extends State<_EdgeDialog> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     return AlertDialog(
-      title: Text(l.stageGraphAddEdge),
+      title: Text(
+        widget.initialEdge == null
+            ? l.stageGraphAddEdge
+            : l.stageGraphEditEdge,
+      ),
       content: SizedBox(
         width: _stageDialogWidth(context),
         child: SingleChildScrollView(
@@ -1847,6 +1913,19 @@ Future<StageEdge?> showStageEdgeAddDialog(
         initialFrom: initialFrom,
         initialTo: initialTo,
       ),
+    );
+
+/// Opens the add-edge dialog seeded with the existing [initial] edge so every
+/// field (from, to, selector + parameters, seeding) is pre-filled, and returns
+/// the updated [StageEdge], or `null` if cancelled.
+Future<StageEdge?> showStageEdgeEditDialog(
+  BuildContext context, {
+  required List<StageNode> nodes,
+  required StageEdge initial,
+}) =>
+    showDialog<StageEdge>(
+      context: context,
+      builder: (_) => _EdgeDialog(nodes: nodes, initialEdge: initial),
     );
 
 /// Builds the existing validation panel for a given builder [state]. Reuses the

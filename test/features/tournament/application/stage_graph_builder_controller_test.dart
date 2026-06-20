@@ -172,6 +172,37 @@ void main() {
     expect(read().graph, before);
   });
 
+  test('updateEdge: replaces the edge at index; out-of-range is no-op', () {
+    const edgeB = StageEdge(
+      fromNodeId: 'pool',
+      selector: Winners(),
+      toNodeId: 'ko',
+    );
+    const replacement = StageEdge(
+      fromNodeId: 'pool',
+      selector: TopK(4),
+      toNodeId: 'ko',
+      seedingIn: StageSeedingIn.reseedBySourceRank,
+    );
+    controller
+      ..addNode(poolNode())
+      ..addNode(koNode())
+      ..addEdge(poolToKoEdge)
+      ..addEdge(edgeB)
+      ..updateEdge(0, replacement);
+    final state = read();
+    expect(state.graph.edges, <StageEdge>[replacement, edgeB]);
+    // findings stay consistent with the mutated graph.
+    expect(
+      state.findings,
+      validateStageGraph(state.graph, fieldSize: state.fieldSize),
+    );
+
+    final before = read().graph;
+    controller.updateEdge(5, replacement); // out of range
+    expect(read().graph, before);
+  });
+
   test('setFieldSize: only changes fieldSize and re-validates capacity', () {
     // A pool with groupCount 4 needs >= 8 participants.
     controller

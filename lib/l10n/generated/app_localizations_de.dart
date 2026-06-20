@@ -201,6 +201,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphAddEdge => 'Kante hinzufügen';
 
   @override
+  String get stageGraphEditEdge => 'Kante bearbeiten';
+
+  @override
   String get stageGraphDeleteEdge => 'Kante löschen';
 
   @override

@@ -412,6 +412,12 @@ abstract class AppLocalizations {
   /// **'Kante hinzufügen'**
   String get stageGraphAddEdge;
 
+  /// Button to edit an existing routing edge
+  ///
+  /// In de, this message translates to:
+  /// **'Kante bearbeiten'**
+  String get stageGraphEditEdge;
+
   /// Action to delete a routing edge
   ///
   /// In de, this message translates to:

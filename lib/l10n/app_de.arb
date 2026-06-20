@@ -240,6 +240,10 @@
   "@stageGraphAddEdge": {
     "description": "Button to add a new routing edge"
   },
+  "stageGraphEditEdge": "Kante bearbeiten",
+  "@stageGraphEditEdge": {
+    "description": "Button to edit an existing routing edge"
+  },
   "stageGraphDeleteEdge": "Kante löschen",
   "@stageGraphDeleteEdge": {
     "description": "Action to delete a routing edge"

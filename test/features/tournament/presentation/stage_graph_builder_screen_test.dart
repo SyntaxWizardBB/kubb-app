@@ -199,6 +199,55 @@ void main() {
     expect(find.text('Top 2'), findsOneWidget);
   });
 
+  testWidgets('T4b edit edge -> updateEdge, prefilled, no duplicate',
+      (tester) async {
+    final controller = await _pump(
+      tester,
+      graph: StageGraph(
+        nodes: <StageNode>[_pool('a'), _singleElim('b')],
+        edges: const [
+          StageEdge(
+            fromNodeId: 'a',
+            toNodeId: 'b',
+            selector: Ranks(3, 5),
+          ),
+        ],
+      ),
+    );
+
+    expect(controller.state.graph.edges, hasLength(1));
+    expect(find.text('a → b'), findsOneWidget);
+
+    // Open the edit dialog from the edge tile.
+    final editButton = find.byTooltip('Kante bearbeiten');
+    await tester.ensureVisible(editButton.first);
+    await tester.pumpAndSettle();
+    await tester.tap(editButton.first);
+    await tester.pumpAndSettle();
+
+    // Dialog opened in edit mode with the existing selector params pre-filled
+    // (Ranks 3..5) and the existing endpoints (from a, to b).
+    expect(find.text('Kante bearbeiten'), findsOneWidget);
+    expect(find.widgetWithText(TextField, '3'), findsOneWidget);
+    final rankToField = find.widgetWithText(TextField, '5');
+    expect(rankToField, findsOneWidget);
+
+    // Change the upper rank to 6 and confirm.
+    await tester.enterText(rankToField, '6');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Bestätigen'));
+    await tester.pumpAndSettle();
+
+    // Same single edge, replaced in place with the new rank band.
+    expect(controller.state.graph.edges, hasLength(1));
+    final edge = controller.state.graph.edges.first;
+    expect(edge.fromNodeId, 'a');
+    expect(edge.toNodeId, 'b');
+    expect(edge.selector, const Ranks(3, 6));
+    expect(find.text('a → b'), findsOneWidget);
+  });
+
   testWidgets('T5 apply template -> loadFromGraph', (tester) async {
     final controller = await _pump(
       tester,

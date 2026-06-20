@@ -131,6 +131,15 @@ class StageGraphBuilderController extends Notifier<StageGraphBuilderState> {
     _replaceGraph(nodes: state.graph.nodes, edges: edges);
   }
 
+  /// Replaces the edge at [index] (declaration order) with [edge] and
+  /// re-validates. An out-of-range index is a no-op.
+  void updateEdge(int index, StageEdge edge) {
+    final current = state.graph.edges;
+    if (index < 0 || index >= current.length) return;
+    final edges = <StageEdge>[...current]..[index] = edge;
+    _replaceGraph(nodes: state.graph.nodes, edges: edges);
+  }
+
   /// Removes the edge at [index] (declaration order) and re-validates. An
   /// out-of-range index is a no-op.
   void removeEdge(int index) {
