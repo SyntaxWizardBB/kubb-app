@@ -319,6 +319,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Qualifikanten zählen pro Gruppe, nicht über alle Gruppen zusammen: bei 2 ziehen die besten 2 jeder Gruppe weiter.';
 
   @override
+  String stageGraphConfigGroupPitchSummary(int count) {
+    return 'Pitches: $count Gruppen zugeteilt';
+  }
+
+  @override
   String get stageGraphConfigSwissHint =>
       'Anzahl der Schweizer-System-Runden. Die Paarungen jeder Runde entstehen live nach Tabellenstand.';
 

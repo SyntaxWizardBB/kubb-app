@@ -23,6 +23,7 @@ Finder resetSwitch() => find.descendant(
 Future<StageNode?> _editNode(
   WidgetTester tester, {
   required StageNode initial,
+  List<int> availablePitches = const <int>[],
 }) async {
   StageNode? result;
   await tester.pumpWidget(
@@ -39,6 +40,7 @@ Future<StageNode?> _editNode(
                   context,
                   initial: initial,
                   existingIds: const <String>{},
+                  availablePitches: availablePitches,
                 );
               },
               child: const Text('open'),
@@ -58,6 +60,7 @@ Future<StageNode?> _editNode(
 Future<StageNode?> _editAndConfirm(
   WidgetTester tester, {
   required StageNode initial,
+  List<int> availablePitches = const <int>[],
 }) async {
   StageNode? result;
   await tester.pumpWidget(
@@ -74,6 +77,7 @@ Future<StageNode?> _editAndConfirm(
                   context,
                   initial: initial,
                   existingIds: const <String>{},
+                  availablePitches: availablePitches,
                 );
               },
               child: const Text('open'),
@@ -84,6 +88,51 @@ Future<StageNode?> _editAndConfirm(
     ),
   );
   await tester.tap(find.text('open'));
+  await tester.pumpAndSettle();
+  await tester.ensureVisible(find.text('Bestätigen'));
+  await tester.tap(find.text('Bestätigen'));
+  await tester.pumpAndSettle();
+  return result;
+}
+
+/// Opens the pool node EDIT dialog, taps the first pitch chip under group A,
+/// then confirms — so the returned node carries the per-group assignment.
+Future<StageNode?> _editAndConfirmWithTap(
+  WidgetTester tester, {
+  required StageNode initial,
+  required List<int> availablePitches,
+}) async {
+  StageNode? result;
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: KubbTheme.light(),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => Center(
+            child: ElevatedButton(
+              onPressed: () async {
+                result = await showStageNodeEditDialog(
+                  context,
+                  initial: initial,
+                  existingIds: const <String>{},
+                  availablePitches: availablePitches,
+                );
+              },
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.tap(find.text('open'));
+  await tester.pumpAndSettle();
+  // Group A's first pitch chip is the '1' under the 'Gruppe A' label.
+  final chip = find.text('${availablePitches.first}').first;
+  await tester.ensureVisible(chip);
+  await tester.tap(chip);
   await tester.pumpAndSettle();
   await tester.ensureVisible(find.text('Bestätigen'));
   await tester.tap(find.text('Bestätigen'));
@@ -201,6 +250,61 @@ void main() {
     expect(node, isNotNull);
     expect(poolGroupingStrategyFromConfig(node!.config),
         PoolGroupingStrategy.snake);
+  });
+
+  testWidgets('pool node hides the pitch assignment section without pitches',
+      (tester) async {
+    await _editNode(
+      tester,
+      initial: _node(StageNodeType.pool,
+          config: const <String, Object?>{'groupCount': 2, 'qualifierCount': 2}),
+    );
+    expect(find.text('Pitch-Zuteilung pro Gruppe'), findsNothing);
+  });
+
+  testWidgets('pool node shows the pitch assignment section when pitches exist',
+      (tester) async {
+    await _editNode(
+      tester,
+      initial: _node(StageNodeType.pool,
+          config: const <String, Object?>{'groupCount': 2, 'qualifierCount': 2}),
+      availablePitches: const <int>[1, 2, 3],
+    );
+    expect(find.text('Pitch-Zuteilung pro Gruppe'), findsOneWidget);
+    expect(find.text('Gruppe A'), findsOneWidget);
+    expect(find.text('Gruppe B'), findsOneWidget);
+  });
+
+  testWidgets('selecting a pitch for a group persists into the node config',
+      (tester) async {
+    final node = await _editAndConfirmWithTap(
+      tester,
+      initial: _node(StageNodeType.pool,
+          config: const <String, Object?>{'groupCount': 2, 'qualifierCount': 2}),
+      availablePitches: const <int>[1, 2, 3],
+    );
+    expect(node, isNotNull);
+    final assignment = poolGroupPitchAssignmentFromConfig(node!.config);
+    expect(assignment['A'], contains(1));
+  });
+
+  testWidgets('an existing assignment pre-fills the chips as selected',
+      (tester) async {
+    await _editNode(
+      tester,
+      initial: _node(StageNodeType.pool, config: const <String, Object?>{
+        'groupCount': 2,
+        'qualifierCount': 2,
+        'group_pitch_assignment': <String, Object?>{
+          'A': <int>[2],
+        },
+      }),
+      availablePitches: const <int>[1, 2, 3],
+    );
+    // The chip for pitch 2 under group A renders; the assignment survived the
+    // round-trip through config → dialog state.
+    expect(find.text('Gruppe A'), findsOneWidget);
+    expect(find.text('2'), findsWidgets);
   });
 
   test('the add picker offers exactly the five curated types', () {

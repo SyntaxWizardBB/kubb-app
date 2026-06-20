@@ -389,6 +389,15 @@
   "@stageGraphConfigQualifierHint": {
     "description": "Helper caption clarifying qualifiers are per group, not total"
   },
+  "stageGraphConfigGroupPitchSummary": "Pitches: {count} Gruppen zugeteilt",
+  "@stageGraphConfigGroupPitchSummary": {
+    "description": "Node tile summary line for the per-group pitch assignment",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "stageGraphConfigSwissHint": "Anzahl der Schweizer-System-Runden. Die Paarungen jeder Runde entstehen live nach Tabellenstand.",
   "@stageGraphConfigSwissHint": {
     "description": "Helper caption under the swiss rounds field"

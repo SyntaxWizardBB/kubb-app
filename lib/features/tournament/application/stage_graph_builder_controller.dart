@@ -18,18 +18,23 @@ class StageGraphBuilderState {
     required this.graph,
     required this.fieldSize,
     required this.findings,
+    this.availablePitches = const <int>[],
   });
 
   /// Builds a state by validating [graph] for [fieldSize], so [findings] is
-  /// always consistent with the graph (live validation).
+  /// always consistent with the graph (live validation). [availablePitches]
+  /// carries through unchanged — it feeds the per-group pitch assignment in the
+  /// pool node dialog and does not affect validation.
   factory StageGraphBuilderState.fromGraph(
     StageGraph graph, {
     required int fieldSize,
+    List<int> availablePitches = const <int>[],
   }) =>
       StageGraphBuilderState(
         graph: graph,
         fieldSize: fieldSize,
         findings: validateStageGraph(graph, fieldSize: fieldSize),
+        availablePitches: availablePitches,
       );
 
   /// The in-progress stage graph.
@@ -40,6 +45,12 @@ class StageGraphBuilderState {
 
   /// Derived validation findings (errors + warnings), V-ORDER sorted.
   final List<ValidationFinding> findings;
+
+  /// Pitch numbers the organizer can assign per group in a pool node (seeded
+  /// from the draft's pitch plan in the wizard host). Empty in the standalone
+  /// editor, where there is no pitch-plan context, so the assignment section
+  /// stays hidden there.
+  final List<int> availablePitches;
 
   /// Whether any finding is a blocking error. Warnings never block (ADR-0030
   /// §Schweregrade: only `error` is blocking).
@@ -52,10 +63,16 @@ class StageGraphBuilderState {
       other is StageGraphBuilderState &&
           other.graph == graph &&
           other.fieldSize == fieldSize &&
-          listEquals(other.findings, findings);
+          listEquals(other.findings, findings) &&
+          listEquals(other.availablePitches, availablePitches);
 
   @override
-  int get hashCode => Object.hash(graph, fieldSize, Object.hashAll(findings));
+  int get hashCode => Object.hash(
+        graph,
+        fieldSize,
+        Object.hashAll(findings),
+        Object.hashAll(availablePitches),
+      );
 }
 
 /// Live-validating editor controller for an in-progress stage graph (ADR-0030
@@ -92,6 +109,21 @@ class StageGraphBuilderController extends Notifier<StageGraphBuilderState> {
     state = StageGraphBuilderState.fromGraph(
       state.graph,
       fieldSize: fieldSize,
+      availablePitches: state.availablePitches,
+    );
+  }
+
+  /// Sets the pitch numbers offered for per-group assignment in pool nodes.
+  /// Does not touch the graph or re-validate (pitches don't affect validation);
+  /// the wizard host seeds this from the draft's pitch plan. No-op when the new
+  /// list equals the current one, to avoid needless rebuilds.
+  void setAvailablePitches(List<int> pitches) {
+    if (listEquals(state.availablePitches, pitches)) return;
+    state = StageGraphBuilderState(
+      graph: state.graph,
+      fieldSize: state.fieldSize,
+      findings: state.findings,
+      availablePitches: List<int>.unmodifiable(pitches),
     );
   }
 
@@ -152,7 +184,11 @@ class StageGraphBuilderController extends Notifier<StageGraphBuilderState> {
   /// Replaces the entire graph (e.g. from a loaded template) and re-validates,
   /// keeping the current [StageGraphBuilderState.fieldSize].
   void loadFromGraph(StageGraph graph) {
-    state = StageGraphBuilderState.fromGraph(graph, fieldSize: state.fieldSize);
+    state = StageGraphBuilderState.fromGraph(
+      graph,
+      fieldSize: state.fieldSize,
+      availablePitches: state.availablePitches,
+    );
   }
 
   /// Builds a fresh immutable [StageGraph] from copied lists (the domain lists
@@ -162,7 +198,11 @@ class StageGraphBuilderController extends Notifier<StageGraphBuilderState> {
     required List<StageEdge> edges,
   }) {
     final graph = StageGraph(nodes: nodes, edges: edges);
-    state = StageGraphBuilderState.fromGraph(graph, fieldSize: state.fieldSize);
+    state = StageGraphBuilderState.fromGraph(
+      graph,
+      fieldSize: state.fieldSize,
+      availablePitches: state.availablePitches,
+    );
   }
 }
 

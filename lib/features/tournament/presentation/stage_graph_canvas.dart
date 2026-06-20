@@ -129,7 +129,11 @@ class _CanvasToolbar extends StatelessWidget {
 
   Future<void> _addNode(BuildContext context) async {
     final existing = state.graph.nodes.map((n) => n.id).toSet();
-    final node = await showStageNodeAddDialog(context, existingIds: existing);
+    final node = await showStageNodeAddDialog(
+      context,
+      existingIds: existing,
+      availablePitches: state.availablePitches,
+    );
     if (node != null) controller.addNode(node);
   }
 
@@ -608,6 +612,7 @@ class _PositionedNodeCard extends ConsumerWidget {
       context,
       initial: node,
       existingIds: existing,
+      availablePitches: state.availablePitches,
     );
     if (updated != null) controller.updateNode(node.id, updated);
   }

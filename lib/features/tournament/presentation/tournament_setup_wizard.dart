@@ -1776,13 +1776,19 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
   /// builder capacity always tracks the participants step.
   void _maybeSeedStageFieldSize(TournamentConfigDraft draft) {
     final capacity = draft.maxParticipants;
-    if (capacity <= 0) return;
+    // The pitch numbers the organizer configured (pitch-plan step) feed the
+    // per-group pitch assignment inside the embedded builder's pool node dialog.
+    // Seeded the same way as the capacity so the dialog sees the same source as
+    // the classic pool step.
+    final pitches = draft.pitchPlan?.availablePitches() ?? const <int>[];
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final notifier = ref.read(stageGraphBuilderProvider.notifier);
-      if (ref.read(stageGraphBuilderProvider).fieldSize != capacity) {
+      final current = ref.read(stageGraphBuilderProvider);
+      if (capacity > 0 && current.fieldSize != capacity) {
         notifier.setFieldSize(capacity);
       }
+      notifier.setAvailablePitches(pitches);
     });
   }
 

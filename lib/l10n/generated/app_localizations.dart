@@ -628,6 +628,12 @@ abstract class AppLocalizations {
   /// **'Qualifikanten zählen pro Gruppe, nicht über alle Gruppen zusammen: bei 2 ziehen die besten 2 jeder Gruppe weiter.'**
   String get stageGraphConfigQualifierHint;
 
+  /// Node tile summary line for the per-group pitch assignment
+  ///
+  /// In de, this message translates to:
+  /// **'Pitches: {count} Gruppen zugeteilt'**
+  String stageGraphConfigGroupPitchSummary(int count);
+
   /// Helper caption under the swiss rounds field
   ///
   /// In de, this message translates to:

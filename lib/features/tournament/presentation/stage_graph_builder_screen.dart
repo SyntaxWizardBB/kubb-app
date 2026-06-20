@@ -179,7 +179,7 @@ class _StageGraphFormView extends ConsumerWidget {
         _TemplateBar(notifier: notifier, graph: s.graph),
         const SizedBox(height: KubbTokens.space6),
         if (isEmpty)
-          _EmptyGraphState(notifier: notifier)
+          _EmptyGraphState(notifier: notifier, availablePitches: s.availablePitches)
         else ...[
           _NodesSection(state: s, notifier: notifier),
           const SizedBox(height: KubbTokens.space6),
@@ -486,7 +486,10 @@ class _NodesSection extends StatelessWidget {
     final existing = state.graph.nodes.map((n) => n.id).toSet();
     final node = await showDialog<StageNode>(
       context: context,
-      builder: (_) => _NodeDialog(existingIds: existing),
+      builder: (_) => _NodeDialog(
+        existingIds: existing,
+        availablePitches: state.availablePitches,
+      ),
     );
     if (node != null) notifier.addNode(node);
   }
@@ -496,7 +499,11 @@ class _NodesSection extends StatelessWidget {
         state.graph.nodes.map((n) => n.id).where((id) => id != node.id).toSet();
     final updated = await showDialog<StageNode>(
       context: context,
-      builder: (_) => _NodeDialog(existingIds: existing, initial: node),
+      builder: (_) => _NodeDialog(
+        existingIds: existing,
+        initial: node,
+        availablePitches: state.availablePitches,
+      ),
     );
     if (updated != null) notifier.updateNode(node.id, updated);
   }
@@ -893,9 +900,13 @@ class _FindingTile extends StatelessWidget {
 // --- Empty state -----------------------------------------------------------
 
 class _EmptyGraphState extends StatelessWidget {
-  const _EmptyGraphState({required this.notifier});
+  const _EmptyGraphState({
+    required this.notifier,
+    this.availablePitches = const <int>[],
+  });
 
   final StageGraphBuilderController notifier;
+  final List<int> availablePitches;
 
   @override
   Widget build(BuildContext context) {
@@ -918,7 +929,10 @@ class _EmptyGraphState extends StatelessWidget {
   Future<void> _openAddNode(BuildContext context) async {
     final node = await showDialog<StageNode>(
       context: context,
-      builder: (_) => const _NodeDialog(existingIds: <String>{}),
+      builder: (_) => _NodeDialog(
+        existingIds: const <String>{},
+        availablePitches: availablePitches,
+      ),
     );
     if (node != null) notifier.addNode(node);
   }
@@ -986,11 +1000,20 @@ class _DialogHint extends StatelessWidget {
 }
 
 class _NodeDialog extends StatefulWidget {
-  const _NodeDialog({required this.existingIds, this.initial});
+  const _NodeDialog({
+    required this.existingIds,
+    this.initial,
+    this.availablePitches = const <int>[],
+  });
 
   /// Ids already used by OTHER nodes — used for duplicate detection.
   final Set<String> existingIds;
   final StageNode? initial;
+
+  /// Pitch numbers the organizer can assign per group (pool / round-robin
+  /// nodes). Empty when no pitch plan is configured (standalone editor), in
+  /// which case the per-group pitch assignment section is hidden.
+  final List<int> availablePitches;
 
   @override
   State<_NodeDialog> createState() => _NodeDialogState();
@@ -1015,6 +1038,8 @@ class _NodeDialogState extends State<_NodeDialog> {
   List<MatchFormatSpec> _koRounds = const <MatchFormatSpec>[];
   PoolGroupingStrategy _grouping = PoolGroupingStrategy.snake;
   int _randomSeed = 0;
+  // Per-group pitch assignment (group label → pitch numbers) for pool nodes.
+  Map<String, List<int>> _groupPitchAssignment = const <String, List<int>>{};
   String? _idError;
 
   /// Sensible default for a freshly-added KO round (Bo3, 30 min, no tiebreak),
@@ -1048,6 +1073,10 @@ class _NodeDialogState extends State<_NodeDialog> {
         : <MatchFormatSpec>[_defaultKoRound, _defaultKoRound, _defaultKoRound];
     _grouping = poolGroupingStrategyFromConfig(config) ?? _grouping;
     _randomSeed = poolRandomSeedFromConfig(config) ?? _randomSeed;
+    _groupPitchAssignment = <String, List<int>>{
+      for (final e in poolGroupPitchAssignmentFromConfig(config).entries)
+        e.key: List<int>.of(e.value),
+    };
   }
 
   static int _readInt(Object? value, int fallback) =>
@@ -1065,6 +1094,37 @@ class _NodeDialogState extends State<_NodeDialog> {
       } else if (count < _koRounds.length) {
         _koRounds = _koRounds.sublist(0, count);
       }
+    });
+  }
+
+  /// Group label for index 0..n: 'A', 'B', 'C', …
+  static String _groupLabel(int index) =>
+      String.fromCharCode('A'.codeUnitAt(0) + index);
+
+  /// Inverse of [_groupLabel]: the 0-based index of a single-letter group
+  /// label, or a large sentinel for anything unexpected so stale keys are
+  /// dropped on save.
+  static int _groupIndexOf(String label) =>
+      label.length == 1 ? label.codeUnitAt(0) - 'A'.codeUnitAt(0) : 1 << 30;
+
+  /// Toggles [pitch] in the assignment list of group [label]. A pitch may serve
+  /// several groups, so this only flips the one group.
+  void _togglePitchForGroup(String label, int pitch) {
+    setState(() {
+      final next = <String, List<int>>{
+        for (final e in _groupPitchAssignment.entries)
+          e.key: List<int>.of(e.value),
+      };
+      final current = next.putIfAbsent(label, () => <int>[]);
+      if (current.contains(pitch)) {
+        current.remove(pitch);
+      } else {
+        current
+          ..add(pitch)
+          ..sort();
+      }
+      if (current.isEmpty) next.remove(label);
+      _groupPitchAssignment = next;
     });
   }
 
@@ -1106,6 +1166,13 @@ class _NodeDialogState extends State<_NodeDialog> {
           // The seed only matters for the random strategy; drop it otherwise.
           randomSeed:
               _grouping == PoolGroupingStrategy.random ? _randomSeed : null,
+          // Only keep assignments for groups that still exist (group count may
+          // have shrunk after an assignment was made).
+          groupPitchAssignment: <String, List<int>>{
+            for (final e in _groupPitchAssignment.entries)
+              if (_groupIndexOf(e.key) < _groupCount && e.value.isNotEmpty)
+                e.key: e.value,
+          },
         );
       case StageNodeType.swiss:
         return <String, Object?>{'rounds': _rounds};
@@ -1277,6 +1344,8 @@ class _NodeDialogState extends State<_NodeDialog> {
             onChanged: (v) => setState(() => _randomSeed = v),
           ));
         }
+        final pitchSection = _pitchAssignmentField(l);
+        if (pitchSection != null) fields.add(pitchSection);
       case StageNodeType.swiss:
         fields
           ..add(WizardNumberField(
@@ -1307,6 +1376,60 @@ class _NodeDialogState extends State<_NodeDialog> {
         field,
       ],
     ];
+  }
+
+  /// "Pitch-Zuteilung pro Gruppe" — only built when pitches are available and
+  /// the group count is sane. For each group A..N the organizer multi-selects
+  /// the pitch numbers serving that group; a pitch may serve several groups.
+  /// Returns null (section omitted, no error) when there are no pitches to
+  /// assign — e.g. the standalone editor with no pitch-plan context.
+  Widget? _pitchAssignmentField(AppLocalizations l) {
+    final pitches = widget.availablePitches;
+    if (pitches.isEmpty || _groupCount < 1) return null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _fieldLabel(l.tournamentWizardPoolPitchAssignmentLabel),
+        _DialogHint(l.tournamentWizardPoolPitchAssignmentHint),
+        for (var g = 0; g < _groupCount; g++) ...[
+          const SizedBox(height: KubbTokens.space3),
+          Builder(
+            builder: (context) {
+              final tokens = Theme.of(context).extension<KubbTokens>()!;
+              final label = _groupLabel(g);
+              final assigned =
+                  _groupPitchAssignment[label] ?? const <int>[];
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.tournamentWizardPoolGroupLabel(label),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.fg,
+                    ),
+                  ),
+                  const SizedBox(height: KubbTokens.space2),
+                  Wrap(
+                    spacing: KubbTokens.space2,
+                    runSpacing: KubbTokens.space2,
+                    children: [
+                      for (final pitch in pitches)
+                        _PitchAssignChip(
+                          label: '$pitch',
+                          selected: assigned.contains(pitch),
+                          onTap: () => _togglePitchForGroup(label, pitch),
+                        ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ],
+    );
   }
 
   /// Full per-node KO config (P5.5 §4): matchup, tiebreak method, optional
@@ -1876,10 +1999,14 @@ class _SaveTemplateDialogState extends State<_SaveTemplateDialog> {
 Future<StageNode?> showStageNodeAddDialog(
   BuildContext context, {
   required Set<String> existingIds,
+  List<int> availablePitches = const <int>[],
 }) =>
     showDialog<StageNode>(
       context: context,
-      builder: (_) => _NodeDialog(existingIds: existingIds),
+      builder: (_) => _NodeDialog(
+        existingIds: existingIds,
+        availablePitches: availablePitches,
+      ),
     );
 
 /// Opens the existing edit-node dialog seeded with [initial] and returns the
@@ -1889,10 +2016,15 @@ Future<StageNode?> showStageNodeEditDialog(
   BuildContext context, {
   required StageNode initial,
   required Set<String> existingIds,
+  List<int> availablePitches = const <int>[],
 }) =>
     showDialog<StageNode>(
       context: context,
-      builder: (_) => _NodeDialog(existingIds: existingIds, initial: initial),
+      builder: (_) => _NodeDialog(
+        existingIds: existingIds,
+        initial: initial,
+        availablePitches: availablePitches,
+      ),
     );
 
 /// Opens the existing add-edge dialog and returns the built [StageEdge], or
@@ -2077,6 +2209,10 @@ String? stageNodeConfigSummary(AppLocalizations l, StageNode node) {
       PoolGroupingStrategy.random => l.tournamentWizardPoolStrategyRandom,
     });
   }
+  final pitchAssignment = poolGroupPitchAssignmentFromConfig(cfg);
+  if (pitchAssignment.isNotEmpty) {
+    parts.add(l.stageGraphConfigGroupPitchSummary(pitchAssignment.length));
+  }
   final r = cfg['rounds'];
   if (r is int) parts.add('${l.stageGraphConfigRounds}: $r');
   final s = cfg['slots'];
@@ -2104,4 +2240,54 @@ String? stageNodeConfigSummary(AppLocalizations l, StageNode node) {
     parts.add('${l.stageGraphConfigKoRoundCount}: ${koRounds.length}');
   }
   return parts.isEmpty ? null : parts.join(' · ');
+}
+
+/// Compact multi-select chip for a single pitch number in the per-group
+/// pitch-assignment grid of the pool node dialog. Mirrors the classic pool
+/// step's chip (numeric, dense) but stays local to this screen.
+class _PitchAssignChip extends StatelessWidget {
+  const _PitchAssignChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return InkWell(
+      borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: KubbTokens.touchMin),
+        padding: const EdgeInsets.symmetric(
+          horizontal: KubbTokens.space4,
+          vertical: KubbTokens.space2,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? tokens.primary : tokens.bgRaised,
+          borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
+          border: Border.all(
+            color: selected ? tokens.primary : tokens.line,
+            width: 1.5,
+          ),
+        ),
+        child: Center(
+          widthFactor: 1,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: selected ? Colors.white : tokens.fg,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
