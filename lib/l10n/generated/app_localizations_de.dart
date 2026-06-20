@@ -2469,10 +2469,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardSetsToWinLabel => 'Sätze zum Sieg';
 
   @override
-  String get tournamentWizardSetsToWinPrelimLabel =>
-      'Sätze zum Sieg (Vorrunde)';
-
-  @override
   String get tournamentWizardMaxSetsLabel => 'Max. Sätze';
 
   @override

@@ -1633,10 +1633,10 @@ void main() {
     expect(find.textContaining('Runden konfiguriert'), findsNothing);
   });
 
-  group('V2-A: prelim "Sätze zum Sieg" field in the format step', () {
+  group('prelim scoring fields in the format step', () {
     testWidgets(
-        'the prelim sets_to_win field appears in the Vorrunde step, '
-        'distinct from "Max. Sätze"', (tester) async {
+        'the Vorrunde step exposes only "Max. Sätze", no separate '
+        'sets-to-win input', (tester) async {
       await _pumpWizard(
         tester,
         controllerOverride: _SchochSeededController.new,
@@ -1646,15 +1646,14 @@ void main() {
       await _tapNext(tester); // -> Vorrunde (format step)
       expect(find.text('Schritt 3 von 5'), findsOneWidget);
 
-      // Two distinct, separately labelled scoring fields are present: the new
-      // prelim "Sätze zum Sieg (Vorrunde)" and the existing "Max. Sätze".
-      expect(find.text('Sätze zum Sieg (Vorrunde)'), findsOneWidget);
+      expect(find.text('Sätze zum Sieg (Vorrunde)'), findsNothing);
+      expect(find.text('Sätze zum Sieg'), findsNothing);
       expect(find.text('Max. Sätze'), findsOneWidget);
     });
 
     testWidgets(
-        'entering a prelim sets_to_win sets draft.setsToWin and emits it via '
-        'toMatchFormatConfig (not the silent default 2)', (tester) async {
+        'the prelim still emits a sets_to_win in the payload from the draft '
+        'default', (tester) async {
       final fake = await _pumpWizard(
         tester,
         controllerOverride: _SchochSeededController.new,
@@ -1662,33 +1661,14 @@ void main() {
       await _typeName(tester, 'Cup');
       await _tapNext(tester); // -> participants
       await _tapNext(tester); // -> Vorrunde (format step)
-
-      // The field shows the current prelim value (default 2) and lives next to
-      // its label.
-      final field = find.ancestor(
-        of: find.text('Sätze zum Sieg (Vorrunde)'),
-        matching: find.byType(Column),
-      );
-      expect(field, findsWidgets);
-
-      final textField = find.descendant(
-        of: field.first,
-        matching: find.byType(TextField),
-      );
-      expect(textField, findsOneWidget);
-      await tester.enterText(textField, '3');
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
-
-      // Walk to the summary and submit so we can read the emitted payload.
       await _tapNext(tester); // -> KO config
       await _tapNext(tester); // -> summary
       await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
       await tester.pumpAndSettle();
 
       expect(fake.callCount, 1);
-      // It is the chosen value, NOT the silent default of 2.
-      expect(fake.createdSetsToWin, 3);
+      // No prelim input exists, so the payload carries the draft default.
+      expect(fake.createdSetsToWin, 2);
     });
   });
 

@@ -3162,10 +3162,6 @@
   "@tournamentWizardSetsToWinLabel": {
     "description": "Sets-to-win stepper label"
   },
-  "tournamentWizardSetsToWinPrelimLabel": "Sätze zum Sieg (Vorrunde)",
-  "@tournamentWizardSetsToWinPrelimLabel": {
-    "description": "Prelim sets-to-win field label in the format step"
-  },
   "tournamentWizardMaxSetsLabel": "Max. Sätze",
   "@tournamentWizardMaxSetsLabel": {
     "description": "Max-sets stepper label"
