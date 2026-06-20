@@ -769,7 +769,7 @@ abstract class AppLocalizations {
   /// Explanation of the LosersOfRounds selector
   ///
   /// In de, this message translates to:
-  /// **'Verlierer bestimmter K.-o.-Runden werden weitergeleitet — so speist man Trost-/Neben-Cups (KubbMAIster-Topologie).'**
+  /// **'Verlierer bestimmter K.-o.-Runden werden weitergeleitet — so speist man Trost-/Neben-Cups.'**
   String get stageGraphSelectorHintLosers;
 
   /// Explanation of the Winners selector
@@ -787,7 +787,7 @@ abstract class AppLocalizations {
   /// Hint that a node may have multiple outgoing edges
   ///
   /// In de, this message translates to:
-  /// **'Eine Stufe darf mehrere Kanten haben: z. B. Sieger ins Haupt-Bracket UND Verlierer früher Runden in einen Neben-Cup (siehe KubbMAIster).'**
+  /// **'Eine Stufe darf mehrere Kanten haben: z. B. Sieger ins Haupt-Bracket UND Verlierer früher Runden in einen Neben-Cup.'**
   String get stageGraphEdgesMultiHint;
 
   /// Label for StageNodeType.pool

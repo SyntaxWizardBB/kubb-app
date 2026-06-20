@@ -662,8 +662,8 @@ class _EdgesSection extends StatelessWidget {
             const SizedBox(height: KubbTokens.space2),
           ],
         // P3.3: a stage may have MORE than one outgoing edge (winners into the
-        // main bracket AND early losers into a side cup — the KubbMAIster
-        // topology). Make that affordance discoverable once edges are possible.
+        // main bracket AND early losers into a side cup). Make that affordance
+        // discoverable once edges are possible.
         if (canAddEdge) ...[
           const SizedBox(height: KubbTokens.space2),
           Text(
@@ -1642,7 +1642,7 @@ class _EdgeDialogState extends State<_EdgeDialog> {
   }
 
   /// One-line explanation of what a selector forwards (P3.2). Makes the
-  /// KubbMAIster side-cup feed (LosersOfRounds) discoverable.
+  /// side-cup feed (LosersOfRounds) discoverable.
   String _selectorKindHint(AppLocalizations l, _SelectorKind kind) {
     switch (kind) {
       case _SelectorKind.topK:

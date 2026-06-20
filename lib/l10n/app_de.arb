@@ -491,7 +491,7 @@
   "@stageGraphSelectorHintRanks": {
     "description": "Explanation of the Ranks selector"
   },
-  "stageGraphSelectorHintLosers": "Verlierer bestimmter K.-o.-Runden werden weitergeleitet — so speist man Trost-/Neben-Cups (KubbMAIster-Topologie).",
+  "stageGraphSelectorHintLosers": "Verlierer bestimmter K.-o.-Runden werden weitergeleitet — so speist man Trost-/Neben-Cups.",
   "@stageGraphSelectorHintLosers": {
     "description": "Explanation of the LosersOfRounds selector"
   },
@@ -503,7 +503,7 @@
   "@stageGraphSelectorHintNonQualifiers": {
     "description": "Explanation of the NonQualifiers selector"
   },
-  "stageGraphEdgesMultiHint": "Eine Stufe darf mehrere Kanten haben: z. B. Sieger ins Haupt-Bracket UND Verlierer früher Runden in einen Neben-Cup (siehe KubbMAIster).",
+  "stageGraphEdgesMultiHint": "Eine Stufe darf mehrere Kanten haben: z. B. Sieger ins Haupt-Bracket UND Verlierer früher Runden in einen Neben-Cup.",
   "@stageGraphEdgesMultiHint": {
     "description": "Hint that a node may have multiple outgoing edges"
   },

@@ -403,7 +403,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get stageGraphSelectorHintLosers =>
-      'Verlierer bestimmter K.-o.-Runden werden weitergeleitet — so speist man Trost-/Neben-Cups (KubbMAIster-Topologie).';
+      'Verlierer bestimmter K.-o.-Runden werden weitergeleitet — so speist man Trost-/Neben-Cups.';
 
   @override
   String get stageGraphSelectorHintWinners =>
@@ -415,7 +415,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get stageGraphEdgesMultiHint =>
-      'Eine Stufe darf mehrere Kanten haben: z. B. Sieger ins Haupt-Bracket UND Verlierer früher Runden in einen Neben-Cup (siehe KubbMAIster).';
+      'Eine Stufe darf mehrere Kanten haben: z. B. Sieger ins Haupt-Bracket UND Verlierer früher Runden in einen Neben-Cup.';
 
   @override
   String get stageGraphNodeTypePool => 'Gruppe';
