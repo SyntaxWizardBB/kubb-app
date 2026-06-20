@@ -5782,6 +5782,12 @@ abstract class AppLocalizations {
   /// **'Bearbeiten'**
   String get tournamentDetailActionEdit;
 
+  /// Action: organizer reactivates an aborted tournament back to its pre-abort status
+  ///
+  /// In de, this message translates to:
+  /// **'Fortsetzen'**
+  String get tournamentDetailActionResume;
+
   /// Lifecycle hint shown to the organizer while the tournament is still a draft (publishing opens registration immediately)
   ///
   /// In de, this message translates to:

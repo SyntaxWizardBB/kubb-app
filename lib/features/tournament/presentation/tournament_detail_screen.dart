@@ -549,14 +549,16 @@ class _Actions extends ConsumerWidget {
     // tournament is `live`. The server (migration 20261243000000) re-checks
     // the manage gate and applies the field-safety classes / safe recompute;
     // a structural change against an already-played phase is rejected with
-    // HINT STRUCTURE_LOCKED. Only `finalized` and `aborted` are frozen — for
-    // those two the edit entry-point is not rendered at all.
+    // HINT STRUCTURE_LOCKED. `aborted` is editable too — saving leaves the
+    // aborted state (server restores the pre-abort status). Only `finalized`
+    // stays frozen.
     final canEdit = canManage &&
         (status == TournamentStatus.draft ||
             status == TournamentStatus.published ||
             status == TournamentStatus.registrationOpen ||
             status == TournamentStatus.registrationClosed ||
-            status == TournamentStatus.live);
+            status == TournamentStatus.live ||
+            status == TournamentStatus.aborted);
     if (canEdit) {
       nav(l.tournamentDetailActionEdit, TournamentRoutes.edit(id.value));
     }
@@ -618,17 +620,26 @@ class _Actions extends ConsumerWidget {
       }
     } else if (status == TournamentStatus.finalized) {
       nav(l.tournamentDetailActionStandings, '$pathBase/standings');
-    } else if (status == TournamentStatus.aborted) {
-      return Container(
-        padding: const EdgeInsets.all(KubbTokens.space4),
-        decoration: BoxDecoration(
-            color: KubbTokens.miss.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(KubbTokens.radiusMd)),
-        child: Text(l.tournamentDetailAborted,
-            style: TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg)),
-      );
+    } else if (status == TournamentStatus.aborted && canManage) {
+      // Reactivate moves the tournament back to its pre-abort status; the
+      // Edit button (added above via canEdit) opens the wizard, which also
+      // leaves the aborted state on save.
+      op(l.tournamentDetailActionResume, () => actions.reactivate(id));
     }
+
+    final abortedBanner = status == TournamentStatus.aborted
+        ? Container(
+            padding: const EdgeInsets.all(KubbTokens.space4),
+            decoration: BoxDecoration(
+                color: KubbTokens.miss.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(KubbTokens.radiusMd)),
+            child: Text(l.tournamentDetailAborted,
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.fg)),
+          )
+        : null;
 
     if (hasBracket) {
       nav(l.tournamentDetailActionBracket, '$pathBase/bracket');
@@ -645,10 +656,16 @@ class _Actions extends ConsumerWidget {
     // invisible (USER SPEC).
     final hint = canManage ? _lifecycleHint(status, l) : null;
 
-    if (buttons.isEmpty && hint == null) return const SizedBox.shrink();
+    if (buttons.isEmpty && hint == null && abortedBanner == null) {
+      return const SizedBox.shrink();
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (abortedBanner != null) ...[
+          abortedBanner,
+          const SizedBox(height: KubbTokens.space3),
+        ],
         if (hint != null) ...[
           _LifecycleHint(text: hint),
           const SizedBox(height: KubbTokens.space3),

@@ -26,9 +26,10 @@ TournamentSummaryRef _ref({
 }
 
 Future<void> _pump(
-  WidgetTester tester,
-  List<TournamentSummaryRef> rows,
-) async {
+  WidgetTester tester, {
+  List<TournamentSummaryRef> finalized = const [],
+  List<TournamentSummaryRef> aborted = const [],
+}) async {
   final router = GoRouter(
     initialLocation: '/tournament/past',
     routes: [
@@ -48,7 +49,9 @@ Future<void> _pump(
     ProviderScope(
       overrides: [
         tournamentListProvider(TournamentStatus.finalized)
-            .overrideWith((_) async => rows),
+            .overrideWith((_) async => finalized),
+        tournamentListProvider(TournamentStatus.aborted)
+            .overrideWith((_) async => aborted),
       ],
       child: MaterialApp.router(
         theme: KubbTheme.light(),
@@ -62,36 +65,44 @@ Future<void> _pump(
 }
 
 void main() {
-  testWidgets('shows only finalized tournaments and hides other states',
+  testWidgets('lists finalized and aborted, hides the live/open/draft states',
       (tester) async {
-    await _pump(tester, [
-      _ref(id: 'a', name: 'Done-Cup', status: TournamentStatus.finalized),
-      _ref(id: 'b', name: 'Live-Cup', status: TournamentStatus.live),
-      _ref(id: 'c', name: 'Open-Cup', status: TournamentStatus.registrationOpen),
-      _ref(id: 'd', name: 'Draft-Cup', status: TournamentStatus.draft),
-      _ref(id: 'e', name: 'Aborted-Cup', status: TournamentStatus.aborted),
-    ]);
+    await _pump(
+      tester,
+      finalized: [
+        _ref(id: 'a', name: 'Done-Cup', status: TournamentStatus.finalized),
+        _ref(id: 'b', name: 'Live-Cup', status: TournamentStatus.live),
+        _ref(id: 'c', name: 'Open-Cup',
+            status: TournamentStatus.registrationOpen),
+      ],
+      aborted: [
+        _ref(id: 'e', name: 'Aborted-Cup', status: TournamentStatus.aborted),
+        _ref(id: 'd', name: 'Draft-Cup', status: TournamentStatus.draft),
+      ],
+    );
 
     expect(find.text('Done-Cup'), findsOneWidget);
+    expect(find.text('Aborted-Cup'), findsOneWidget);
+    // Slices are guarded client-side, so a mis-tagged row is dropped.
     expect(find.text('Live-Cup'), findsNothing);
     expect(find.text('Open-Cup'), findsNothing);
     expect(find.text('Draft-Cup'), findsNothing);
-    expect(find.text('Aborted-Cup'), findsNothing);
   });
 
-  testWidgets('tapping a finalized card pushes the detail route',
-      (tester) async {
-    await _pump(tester, [
-      _ref(id: 'a', name: 'Done-Cup', status: TournamentStatus.finalized),
-    ]);
+  testWidgets('tapping a card pushes the detail route', (tester) async {
+    await _pump(
+      tester,
+      finalized: [
+        _ref(id: 'a', name: 'Done-Cup', status: TournamentStatus.finalized),
+      ],
+    );
     await tester.tap(find.text('Done-Cup'));
     await tester.pumpAndSettle();
     expect(find.text('detail-a'), findsOneWidget);
   });
 
-  testWidgets('shows the empty state when there are no finalized tournaments',
-      (tester) async {
-    await _pump(tester, const []);
+  testWidgets('shows the empty state when nothing is finished', (tester) async {
+    await _pump(tester);
     expect(find.byType(KubbEmptyState), findsOneWidget);
     expect(find.text('Noch keine vergangenen Turniere'), findsOneWidget);
   });

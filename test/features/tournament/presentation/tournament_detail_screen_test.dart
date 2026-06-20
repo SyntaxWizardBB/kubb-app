@@ -192,13 +192,26 @@ void main() {
     expect(find.text('Bearbeiten'), findsNothing);
   });
 
-  testWidgets('V2-B2: Bearbeiten hidden once the tournament is aborted',
+  testWidgets('aborted as creator shows Fortsetzen and Bearbeiten',
       (tester) async {
     await _pump(
       tester,
       _detail(status: TournamentStatus.aborted),
       callerUserId: _creator,
     );
+    expect(find.text('Turnier abgebrochen.'), findsOneWidget);
+    expect(find.text('Fortsetzen'), findsOneWidget);
+    expect(find.text('Bearbeiten'), findsOneWidget);
+  });
+
+  testWidgets('aborted as outsider shows neither Fortsetzen nor Bearbeiten',
+      (tester) async {
+    await _pump(
+      tester,
+      _detail(status: TournamentStatus.aborted),
+      callerUserId: 'u-other',
+    );
+    expect(find.text('Fortsetzen'), findsNothing);
     expect(find.text('Bearbeiten'), findsNothing);
   });
 

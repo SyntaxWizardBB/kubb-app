@@ -3176,6 +3176,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentDetailActionEdit => 'Bearbeiten';
 
   @override
+  String get tournamentDetailActionResume => 'Fortsetzen';
+
+  @override
   String get tournamentDetailHintDraft =>
       'Veröffentlichen — die Anmeldung ist danach sofort offen und Spieler können sich anmelden. Starten kannst du, sobald genug Teilnehmer dabei sind.';
 
