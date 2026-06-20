@@ -2475,6 +2475,14 @@ class _StageGraphTemplateBarState
     widget.controller
       ..setStageGraph(template.graph)
       ..setAppliedTemplateId(template.id);
+    // #11: a template saved from the wizard carries the full setup, including
+    // the pitch plan. Restore it into the draft so "alles als Vorlage" round-
+    // trips. Older templates carry no pitch plan (null) — then we leave the
+    // draft's current pitch plan untouched rather than wiping it.
+    final templatePitchPlan = template.pitchPlan;
+    if (templatePitchPlan != null) {
+      widget.controller.setPitchPlan(templatePitchPlan);
+    }
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(SnackBar(content: Text(l10n.stageGraphTemplateApplied)));
@@ -2496,6 +2504,9 @@ class _StageGraphTemplateBarState
         clubId: result.visibility == TemplateVisibility.club
             ? widget.clubId
             : null,
+        // #11: persist the full setup — carry the draft's pitch plan so an
+        // applied template restores the pitches too, not just nodes/edges.
+        pitchPlan: ref.read(tournamentConfigControllerProvider).pitchPlan,
       );
       ref.invalidate(stageGraphTemplatesProvider);
       if (!mounted) return;

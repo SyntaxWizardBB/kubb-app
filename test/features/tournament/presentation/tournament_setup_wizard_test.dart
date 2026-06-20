@@ -2097,6 +2097,11 @@ void main() {
               formatMode: TournamentFormatMode.stageGraph,
               clubId: 'club-7',
               leagueCategories: <LeagueCategory>[LeagueCategory.a],
+              pitchPlan: PitchPlan(
+                mode: PitchMode.range,
+                rangeFrom: 1,
+                rangeTo: 4,
+              ),
             ),
           ),
         );
@@ -2178,6 +2183,11 @@ void main() {
       expect(call.name, 'Mein Verein Cup');
       expect(call.visibility, TemplateVisibility.club);
       expect(call.clubId, 'club-7');
+      // #11: the draft's pitch plan rides along into the saved template.
+      expect(
+        call.pitchPlan,
+        const PitchPlan(mode: PitchMode.range, rangeFrom: 1, rangeTo: 4),
+      );
       expect(find.text('Vorlage gespeichert.'), findsOneWidget);
     });
 
@@ -2230,6 +2240,12 @@ void main() {
                 visibility: TemplateVisibility.public,
                 graph: graph(),
                 isSystem: true,
+                // #11: this template carries a pitch plan; applying restores it.
+                pitchPlan: const PitchPlan(
+                  mode: PitchMode.range,
+                  rangeFrom: 2,
+                  rangeTo: 5,
+                ),
               ),
             ],
           ),
@@ -2261,6 +2277,11 @@ void main() {
         container.read(tournamentConfigControllerProvider).appliedTemplateId,
         'tpl-x',
       );
+      // The applied template's pitch plan landed in the draft.
+      expect(
+        container.read(tournamentConfigControllerProvider).pitchPlan,
+        const PitchPlan(mode: PitchMode.range, rangeFrom: 2, rangeTo: 5),
+      );
 
       // A manual graph edit (drop a node) must clear the binding.
       container.read(stageGraphBuilderProvider.notifier).removeNode('cup');
@@ -2291,11 +2312,13 @@ class _SavedCall {
     required this.name,
     required this.visibility,
     required this.clubId,
+    required this.pitchPlan,
   });
 
   final String name;
   final TemplateVisibility visibility;
   final String? clubId;
+  final PitchPlan? pitchPlan;
 }
 
 /// Repository fake over the public test seam that records every save and never
@@ -2316,9 +2339,15 @@ class _CapturingTemplatesRepo extends StageGraphTemplatesRepository {
     required StageGraph graph,
     String? description,
     String? clubId,
+    PitchPlan? pitchPlan,
   }) async {
     saved.add(
-      _SavedCall(name: name, visibility: visibility, clubId: clubId),
+      _SavedCall(
+        name: name,
+        visibility: visibility,
+        clubId: clubId,
+        pitchPlan: pitchPlan,
+      ),
     );
     return 'new-id';
   }
