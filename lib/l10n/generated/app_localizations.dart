@@ -547,13 +547,13 @@ abstract class AppLocalizations {
   /// Label for the node id text field
   ///
   /// In de, this message translates to:
-  /// **'Stufen-ID'**
+  /// **'Stufen-Name'**
   String get stageGraphFieldId;
 
   /// Helper text shown when the node id field is locked in edit mode
   ///
   /// In de, this message translates to:
-  /// **'Die ID kann nicht geändert werden, solange Kanten daran hängen können.'**
+  /// **'Der Name kann nicht geändert werden, solange Kanten daran hängen.'**
   String get stageGraphFieldIdLockedHint;
 
   /// Label for the node type dropdown

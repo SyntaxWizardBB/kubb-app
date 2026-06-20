@@ -328,11 +328,11 @@
   "@stageGraphEmptyBody": {
     "description": "Empty-state body when the graph is empty"
   },
-  "stageGraphFieldId": "Stufen-ID",
+  "stageGraphFieldId": "Stufen-Name",
   "@stageGraphFieldId": {
     "description": "Label for the node id text field"
   },
-  "stageGraphFieldIdLockedHint": "Die ID kann nicht geändert werden, solange Kanten daran hängen können.",
+  "stageGraphFieldIdLockedHint": "Der Name kann nicht geändert werden, solange Kanten daran hängen.",
   "@stageGraphFieldIdLockedHint": {
     "description": "Helper text shown when the node id field is locked in edit mode"
   },

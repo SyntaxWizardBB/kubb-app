@@ -272,11 +272,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Füge eine erste Stufe hinzu oder wende eine Vorlage an, um das Turnier zu komponieren.';
 
   @override
-  String get stageGraphFieldId => 'Stufen-ID';
+  String get stageGraphFieldId => 'Stufen-Name';
 
   @override
   String get stageGraphFieldIdLockedHint =>
-      'Die ID kann nicht geändert werden, solange Kanten daran hängen können.';
+      'Der Name kann nicht geändert werden, solange Kanten daran hängen.';
 
   @override
   String get stageGraphFieldType => 'Typ';
