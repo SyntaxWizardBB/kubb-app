@@ -2220,7 +2220,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Qualifier pro Gruppe';
 
   @override
-  String get tournamentWizardPoolStrategyLabel => 'Grouping-Strategie';
+  String get tournamentWizardPoolStrategyLabel => 'Gruppierungsstrategie';
 
   @override
   String get tournamentWizardPoolStrategySnake => 'Snake (Schweizer-Liga)';

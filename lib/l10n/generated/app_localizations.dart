@@ -4081,7 +4081,7 @@ abstract class AppLocalizations {
   /// Label for the pool grouping-strategy selector
   ///
   /// In de, this message translates to:
-  /// **'Grouping-Strategie'**
+  /// **'Gruppierungsstrategie'**
   String get tournamentWizardPoolStrategyLabel;
 
   /// Snake grouping-strategy option

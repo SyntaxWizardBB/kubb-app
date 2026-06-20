@@ -666,7 +666,7 @@ void main() {
     expect(find.text('Vorrunde'), findsWidgets);
     // K12: group count + grouping strategy are configured inline here.
     expect(find.text('Anzahl Gruppen'), findsOneWidget);
-    expect(find.text('Grouping-Strategie'), findsOneWidget);
+    expect(find.text('Gruppierungsstrategie'), findsOneWidget);
 
     await _tapNext(tester); // -> KO config (no separate group-phase step)
     expect(find.text('Schritt 4 von 5'), findsOneWidget);
@@ -1344,7 +1344,7 @@ void main() {
     await _tapNext(tester); // -> participants
     await _tapNext(tester); // -> Vorrunde
     expect(find.text('Anzahl Gruppen'), findsOneWidget);
-    expect(find.text('Grouping-Strategie'), findsOneWidget);
+    expect(find.text('Gruppierungsstrategie'), findsOneWidget);
     // The inline group-count field defaults to 4.
     final groupCount = tester.widget<TextField>(
       find.byKey(const Key('wizardGroupCountField')),
@@ -1364,7 +1364,7 @@ void main() {
     await _tapNext(tester); // -> participants
     await _tapNext(tester); // -> Vorrunde
     expect(find.byKey(const Key('wizardGroupCountField')), findsNothing);
-    expect(find.text('Grouping-Strategie'), findsNothing);
+    expect(find.text('Gruppierungsstrategie'), findsNothing);
   });
 
   testWidgets('K12: picking the Random strategy reveals the seed field',

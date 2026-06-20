@@ -180,7 +180,7 @@ class _WizardPoolConfigStepState extends State<WizardPoolConfigStep> {
           value: _isValid ? '$_derivedQualifiersPerGroup' : '—',
         ),
         const SizedBox(height: KubbTokens.space5),
-        _fieldLabel(tokens, 'Grouping-Strategie'),
+        _fieldLabel(tokens, 'Gruppierungsstrategie'),
         const SizedBox(height: KubbTokens.space2),
         DropdownButtonFormField<PoolGroupingStrategy>(
           initialValue: _strategy,

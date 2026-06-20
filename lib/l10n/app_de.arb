@@ -2901,7 +2901,7 @@
   "@tournamentWizardPoolQualifiersPerGroupLabel": {
     "description": "Read-only label for the derived qualifiers-per-group value"
   },
-  "tournamentWizardPoolStrategyLabel": "Grouping-Strategie",
+  "tournamentWizardPoolStrategyLabel": "Gruppierungsstrategie",
   "@tournamentWizardPoolStrategyLabel": {
     "description": "Label for the pool grouping-strategy selector"
   },
