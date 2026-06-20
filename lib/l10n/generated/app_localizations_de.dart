@@ -418,13 +418,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Eine Stufe darf mehrere Kanten haben: z. B. Sieger ins Haupt-Bracket UND Verlierer früher Runden in einen Neben-Cup (siehe KubbMAIster).';
 
   @override
-  String get stageGraphNodeTypePool => 'Gruppen';
+  String get stageGraphNodeTypePool => 'Gruppe';
 
   @override
   String get stageGraphNodeTypeRoundRobin => 'Jeder gegen jeden';
 
   @override
-  String get stageGraphNodeTypeSwiss => 'Schweizer System';
+  String get stageGraphNodeTypeSwiss => 'Schoch';
 
   @override
   String get stageGraphNodeTypeSingleElim => 'K.-o. (einfach)';
@@ -433,7 +433,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphNodeTypeDoubleElim => 'K.-o. (doppelt)';
 
   @override
-  String get stageGraphNodeTypeConsolation => 'Trostrunde';
+  String get stageGraphNodeTypeConsolation => 'Trosttournier';
 
   @override
   String get stageGraphNodeTypeShootoutQuali => 'Shoot-out-Quali';

@@ -1134,7 +1134,7 @@ class _NodeDialogState extends State<_NodeDialog> {
                   border: const OutlineInputBorder(),
                 ),
                 items: [
-                  for (final t in StageNodeType.values)
+                  for (final t in selectableStageNodeTypes)
                     DropdownMenuItem<StageNodeType>(
                       value: t,
                       child: Text(stageNodeTypeLabel(l, t)),
@@ -1815,6 +1815,18 @@ Widget buildStageValidationPanel(StageGraphBuilderState state) =>
     _ValidationPanel(state: state);
 
 // === Localized label mappers ==============================================
+
+/// Stage types offered when adding a new node. A curated subset of
+/// [StageNodeType.values]: round-robin and shoot-out-quali stay in the model
+/// (existing graphs and templates still render them via [stageNodeTypeLabel])
+/// but are not picked for fresh stages.
+const List<StageNodeType> selectableStageNodeTypes = [
+  StageNodeType.pool,
+  StageNodeType.swiss,
+  StageNodeType.singleElim,
+  StageNodeType.doubleElim,
+  StageNodeType.consolation,
+];
 
 /// Localized label for a [StageNodeType].
 String stageNodeTypeLabel(AppLocalizations l, StageNodeType type) {

@@ -202,4 +202,56 @@ void main() {
     expect(poolGroupingStrategyFromConfig(node!.config),
         PoolGroupingStrategy.snake);
   });
+
+  test('the add picker offers exactly the five curated types', () {
+    expect(selectableStageNodeTypes, const [
+      StageNodeType.pool,
+      StageNodeType.swiss,
+      StageNodeType.singleElim,
+      StageNodeType.doubleElim,
+      StageNodeType.consolation,
+    ]);
+    expect(selectableStageNodeTypes, isNot(contains(StageNodeType.roundRobin)));
+    expect(
+      selectableStageNodeTypes,
+      isNot(contains(StageNodeType.shootoutQuali)),
+    );
+  });
+
+  testWidgets('add dialog type dropdown lists the five curated labels only',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: KubbTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => Center(
+              child: ElevatedButton(
+                onPressed: () => showStageNodeAddDialog(
+                  context,
+                  existingIds: const <String>{},
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    // Open the type dropdown so its menu entries render.
+    await tester.tap(find.text('Gruppe').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Schoch'), findsWidgets);
+    expect(find.text('K.-o. (einfach)'), findsWidgets);
+    expect(find.text('K.-o. (doppelt)'), findsWidgets);
+    expect(find.text('Trosttournier'), findsWidgets);
+    expect(find.text('Jeder gegen jeden'), findsNothing);
+    expect(find.text('Shoot-out-Quali'), findsNothing);
+  });
 }

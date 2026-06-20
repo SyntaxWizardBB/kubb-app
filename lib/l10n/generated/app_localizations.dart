@@ -793,7 +793,7 @@ abstract class AppLocalizations {
   /// Label for StageNodeType.pool
   ///
   /// In de, this message translates to:
-  /// **'Gruppen'**
+  /// **'Gruppe'**
   String get stageGraphNodeTypePool;
 
   /// Label for StageNodeType.roundRobin
@@ -805,7 +805,7 @@ abstract class AppLocalizations {
   /// Label for StageNodeType.swiss
   ///
   /// In de, this message translates to:
-  /// **'Schweizer System'**
+  /// **'Schoch'**
   String get stageGraphNodeTypeSwiss;
 
   /// Label for StageNodeType.singleElim
@@ -823,7 +823,7 @@ abstract class AppLocalizations {
   /// Label for StageNodeType.consolation
   ///
   /// In de, this message translates to:
-  /// **'Trostrunde'**
+  /// **'Trosttournier'**
   String get stageGraphNodeTypeConsolation;
 
   /// Label for StageNodeType.shootoutQuali
