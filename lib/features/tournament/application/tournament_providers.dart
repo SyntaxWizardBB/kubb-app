@@ -266,6 +266,13 @@ class TournamentActions {
     _invalidateListAndDetail(id);
   }
 
+  /// Brings an aborted tournament back to the status it had before the abort.
+  /// Refreshes list + detail so the status-gated buttons re-render.
+  Future<void> reactivate(TournamentId id) async {
+    await _ref.read(tournamentRemoteProvider).reactivateTournament(id);
+    _invalidateListAndDetail(id);
+  }
+
   Future<TournamentParticipantId> registerSingle(TournamentId id) async {
     final pid =
         await _ref.read(tournamentRemoteProvider).registerSingle(id);

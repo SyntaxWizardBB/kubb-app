@@ -144,6 +144,9 @@ class _FakeTournamentRemote implements TournamentRemote {
   Future<void> abortTournament(TournamentId id) async {}
 
   @override
+  Future<void> reactivateTournament(TournamentId id) async {}
+
+  @override
   Future<TournamentParticipantId> registerSingle(TournamentId id) async =>
       const TournamentParticipantId('p-1');
 

@@ -330,8 +330,16 @@ class FakeTournamentRemote implements TournamentRemote {
     if (t.status != TournamentStatus.draft &&
         t.status != TournamentStatus.published &&
         t.status != TournamentStatus.registrationOpen &&
-        t.status != TournamentStatus.registrationClosed) {
+        t.status != TournamentStatus.registrationClosed &&
+        t.status != TournamentStatus.live &&
+        t.status != TournamentStatus.aborted) {
       throw StateError('TOURNAMENT_LOCKED: ${t.status.name}');
+    }
+    if (t.status == TournamentStatus.aborted) {
+      t
+        ..status = t.preAbortStatus ?? TournamentStatus.draft
+        ..preAbortStatus = null
+        ..completedAt = null;
     }
     t
       ..displayName = displayName
@@ -425,8 +433,24 @@ class FakeTournamentRemote implements TournamentRemote {
   }
 
   @override
-  Future<void> abortTournament(TournamentId id) async =>
-      _tournaments[id]!.status = TournamentStatus.aborted;
+  Future<void> abortTournament(TournamentId id) async {
+    final t = _tournaments[id]!;
+    t
+      ..preAbortStatus = t.status
+      ..status = TournamentStatus.aborted;
+  }
+
+  @override
+  Future<void> reactivateTournament(TournamentId id) async {
+    final t = _tournaments[id]!;
+    if (t.status != TournamentStatus.aborted) {
+      throw StateError('not aborted: ${t.status.name}');
+    }
+    t
+      ..status = t.preAbortStatus ?? TournamentStatus.draft
+      ..preAbortStatus = null
+      ..completedAt = null;
+  }
 
   @override
   Future<TournamentParticipantId> registerSingle(TournamentId id) async {
@@ -1776,6 +1800,7 @@ class _Tournament {
   TournamentFormat format;
   final UserId createdByUserId;
   TournamentStatus status = TournamentStatus.draft;
+  TournamentStatus? preAbortStatus;
   DateTime? startedAt;
   DateTime? completedAt;
   final List<TournamentParticipantId> participantIds = [];

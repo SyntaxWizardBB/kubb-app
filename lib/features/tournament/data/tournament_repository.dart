@@ -412,6 +412,10 @@ class TournamentRepository implements TournamentRemote {
       _voidRpc('tournament_abort', id);
 
   @override
+  Future<void> reactivateTournament(TournamentId id) =>
+      _voidRpc('tournament_reactivate', id);
+
+  @override
   Future<TournamentParticipantId> registerSingle(TournamentId id) async {
     final response = await _client.rpc<Map<String, dynamic>>(
       'tournament_register_single',

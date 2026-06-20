@@ -824,6 +824,14 @@ abstract interface class TournamentRemote {
   Future<void> finalizeTournament(TournamentId id);
   Future<void> abortTournament(TournamentId id);
 
+  /// Reactivates an aborted tournament — moves it back to the status it held
+  /// before the abort (the server stores `pre_abort_status`; absent it falls
+  /// back to `draft`) and clears `completed_at`. Server-gated on the setup
+  /// authority (creator OR club owner/admin) and only valid while the
+  /// tournament is `aborted`; the RPC errors otherwise. Backed by
+  /// `tournament_reactivate`.
+  Future<void> reactivateTournament(TournamentId id);
+
   // Registration (participant)
   Future<TournamentParticipantId> registerSingle(TournamentId id);
   Future<void> withdrawRegistration(TournamentParticipantId participantId);
