@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/core/application/outbox_flusher_provider.dart'
+    show outboxFlusherProvider;
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/organizer_team/application/organizer_team_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_bracket_provider.dart';
@@ -372,6 +376,11 @@ class TournamentActions {
           consensusRound: consensusRound,
           setScores: setScores,
         );
+    // Kick off the flush from the action's ref: the repository can't do it
+    // itself without forming a remote↔flusher provider cycle. Fire-and-forget
+    // so a network failure inside the flush doesn't abort the submit — the
+    // row is durably enqueued and the flusher retries on reconnect.
+    unawaited(_ref.read(outboxFlusherProvider).flushPending());
     _ref.invalidate(tournamentMatchDetailProvider(matchId));
   }
 

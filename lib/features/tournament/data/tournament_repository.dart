@@ -1,11 +1,10 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/application/outbox_flusher_provider.dart'
-    show outboxFlusherProvider, scoreSubmissionOutboxDaoProvider;
+    show scoreSubmissionOutboxDaoProvider;
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/core/data/device_id_provider.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
@@ -478,10 +477,11 @@ class TournamentRepository implements TournamentRemote {
   /// TASK-M4.3-T10: route every score submission through the
   /// `ScoreSubmissionOutbox` so submissions survive offline periods and
   /// app crashes. One outbox row per set is enqueued with a freshly
-  /// ticked Lamport counter; immediately after the inserts we kick off
-  /// `OutboxFlusher.flushPending` fire-and-forget so an online submit
-  /// reaches the RPC within the same frame. The legacy direct
-  /// `tournament_propose_set_scores` RPC path is intentionally removed.
+  /// ticked Lamport counter. The flush is kicked off by the application
+  /// action that calls this method, not from here — driving it through the
+  /// repository's own [Ref] would close a remote↔flusher provider cycle.
+  /// The legacy direct `tournament_propose_set_scores` RPC path is
+  /// intentionally removed.
   ///
   /// Falls back to the direct RPC call only when [_ref] is null — i.e.
   /// the repository was built outside of Riverpod (e.g. legacy ad-hoc
@@ -542,12 +542,11 @@ class TournamentRepository implements TournamentRemote {
         ),
       );
     }
-    // Fire-and-forget: a synchronous failure inside `flushPending`
-    // (network down, etc.) must not abort the submit path — the
-    // submission is durably enqueued and the flusher's connectivity
-    // listener will retry. We don't await to keep the UI responsive
-    // when offline.
-    unawaited(ref.read(outboxFlusherProvider).flushPending());
+    // The submission is durably enqueued. The flush itself is kicked off
+    // by the application action (TournamentActions.proposeSetScores) whose
+    // ref is not part of the remote↔flusher provider graph, so the submit
+    // path can't form a circular dependency. The flusher's connectivity
+    // listener still retries on its own when offline.
   }
 
   @override
