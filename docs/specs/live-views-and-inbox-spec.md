@@ -31,15 +31,19 @@ Gruppenphase erscheint „Runde 1" mehrfach, ohne „Gruppe A").
 
 **Soll — die Live-Reiter richten sich nach dem Vorrunden-Typ:**
 
-| Turnier-Typ | Rangliste-Reiter | Übersicht-Reiter |
+| Turnier-Typ / Phase | Rangliste-Reiter | Übersicht-Reiter |
 |---|---|---|
-| **Gruppenphase** | **gruppierte** Rangliste (eine Tabelle pro Gruppe), nicht flach; Qualifikanten-Markierung gemäß Config | Match-Liste mit **Gruppen-Label** (z. B. „Gruppe A · Runde 1") |
-| **Schoch** | eine Rangliste mit Schoch-Tiebreak (Punkte → Buchholz, gemäß Vorrunde-Spec) | Match-Liste nach Runde |
-| **Jeder-gegen-jeden** | eine Rangliste (Punkte → Kubb-Differenz, gemäß Vorrunde-Spec) | Match-Liste nach Runde |
+| **Gruppenphase** | **gruppierte** Rangliste (eine Tabelle pro Gruppe), **kein Buchholz** (Punkte → Kubb-Differenz, Vorrunde-Spec); Qualifikanten gemäß Config | Match-Liste mit **Gruppen-Label** (z. B. „Gruppe A · Runde 1") |
+| **Schoch** | eine Rangliste mit Schoch-Tiebreak (Punkte → **Buchholz**, Vorrunde-Spec) | Match-Liste nach Runde |
+| **Jeder-gegen-jeden** | eine Rangliste (Punkte → Kubb-Differenz, Vorrunde-Spec) | Match-Liste nach Runde |
+| **KO-Phase** | KO-/Endsicht | **KO-Baum (Bracket)** statt Match-Liste |
 
 **MUSS konkret:**
 - **Gruppenphase → gruppierte Rangliste** direkt im Live-Reiter (nicht nur im
-  separaten Pool-Screen).
+  separaten Pool-Screen), **ohne Buchholz** (der ist in Gruppen sinnlos — Vorrunde-Spec).
+- **KO-Phase → Bracket:** sobald die KO-Phase läuft, zeigt die **Übersicht** den
+  **KO-Baum** (bestehende `tournament_bracket_screen`-Sicht wiederverwenden) statt der
+  Rundenliste.
 - **Tiebreak-Kette aus der Config** lesen (nicht hart verdrahten); pro Vorrunden-Typ
   die richtige Kette (siehe Vorrunde-/Seeding-Specs).
 - **Qualifikanten pro Gruppe aus der Config** (nicht fix 2).
@@ -89,6 +93,9 @@ Gruppen-Struktur.
 **5.5 Postfach:** Bell ist auf der Live-Sicht und allen Nicht-Eingabe/Config-Screens
 vorhanden; auf Eingabe-/Config-Screens fehlt sie (gewollt).
 
+**5.6 KO-Bracket:** Sobald die KO-Phase läuft, zeigt die „Übersicht" den KO-Baum
+(Bracket) statt der Rundenliste.
+
 ---
 
 ## 6. Ist-Zustand / Mapping (Code)
@@ -107,8 +114,9 @@ vorhanden; auf Eingabe-/Config-Screens fehlt sie (gewollt).
 
 ---
 
-## 7. Offene Punkte
+## 7. Geklärte Entscheide
 
-- **OFFEN-1 (Hybrid-Phasenwechsel):** Bei Gruppenphase→KO: zeigt der Rangliste-Reiter
-  während der KO-Phase die KO-Bracket-Sicht oder weiter die (eingefrorene)
-  Gruppen-Rangliste? (Vermutlich Bracket in „Übersicht", Endrangliste in „Rangliste".)
+- **Hybrid-Phasenwechsel (geklärt):** Bei Gruppenphase→KO zeigt während der KO-Phase
+  die **Übersicht** den **KO-Baum (Bracket)**, die **Rangliste** die KO-/Endsicht. Die
+  Vorrunden-Rangliste (gruppiert bzw. Schoch) gilt während der Vorrunde; mit Start der
+  KO-Phase schaltet die Sicht phasen-bewusst um.

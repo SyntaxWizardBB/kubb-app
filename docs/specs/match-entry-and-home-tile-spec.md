@@ -61,8 +61,11 @@ Home-Hub (`home_screen.dart`).
   fail-closed). Kein Match → keine Kachel.
 - **Tap** → Match-Eingabe-Screen (Score-Eingabe).
 - Die separate **„Laufendes Match"-Kachel entfällt** (`_OngoingMatchCard`,
-  `home_screen.dart:60-64 / 121-124 / 201-232`) — sie wird durch die grüne Kachel
-  ersetzt (eine Kachel, nicht zwei).
+  `home_screen.dart:60-64 / 121-124 / 201-232`).
+- **Reihenfolge & Netto:** Zuerst die grüne (conditional) Match-Kachel ins Home
+  einbauen; danach **beide** alten Kacheln **entfernen** — „Match-Modus / In
+  Vorbereitung" **UND** „Laufendes Match". Ergebnis: **eine** grüne Match-Kachel
+  (nur bei eintragbarem Match), keine der beiden alten mehr.
 
 ---
 
