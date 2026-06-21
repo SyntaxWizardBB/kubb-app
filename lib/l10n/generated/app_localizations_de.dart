@@ -168,14 +168,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphTitle => 'Stufen-Graph';
 
   @override
-  String get stageGraphFieldSizeSection => 'Feldgröße';
+  String get stageGraphFieldSizeSection => 'Feldgrösse';
 
   @override
   String get stageGraphFieldSizeLabel => 'Anzahl Felder';
 
   @override
   String get stageGraphFieldSizeHint =>
-      'Die Feldgröße treibt die Kapazitäts- und Planbarkeits-Warnungen.';
+      'Die Feldgrösse treibt die Kapazitäts- und Planbarkeits-Warnungen.';
 
   @override
   String get stageGraphNodesSection => 'Stufen';
@@ -533,7 +533,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get stageGraphSaveTemplateClubUnavailable =>
-      'Fuer Verein/Organisation muss ein Veranstalter gewaehlt sein.';
+      'Für Verein/Organisation muss ein Veranstalter gewählt sein.';
 
   @override
   String get stageGraphConfirm => 'Bestätigen';
@@ -4539,10 +4539,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get achievementsBadgeHundredHitsDesc =>
-      'Sammle 100 Treffer ueber alle Sessions.';
+      'Sammle 100 Treffer über alle Sessions.';
 
   @override
-  String get achievementsBadgeStreakTitle => 'Serien-Schuetze';
+  String get achievementsBadgeStreakTitle => 'Serien-Schütze';
 
   @override
   String get achievementsBadgeStreakDesc =>
@@ -4553,14 +4553,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get achievementsBadgeHeliDesc =>
-      'Lande 5 Helikopter-Wuerfe in einer Session.';
+      'Lande 5 Helikopter-Würfe in einer Session.';
 
   @override
-  String get achievementsBadgeKingTitle => 'Koenigsmacher';
+  String get achievementsBadgeKingTitle => 'Königsmacher';
 
   @override
   String get achievementsBadgeKingDesc =>
-      'Gewinne ein Match mit dem letzten Wurf auf den Koenig.';
+      'Gewinne ein Match mit dem letzten Wurf auf den König.';
 
   @override
   String achievementsLockedChip(String trigger) {

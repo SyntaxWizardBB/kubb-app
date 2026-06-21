@@ -355,7 +355,7 @@ abstract class AppLocalizations {
   /// Section title for the field-size input
   ///
   /// In de, this message translates to:
-  /// **'Feldgröße'**
+  /// **'Feldgrösse'**
   String get stageGraphFieldSizeSection;
 
   /// Label for the field-size number field
@@ -367,7 +367,7 @@ abstract class AppLocalizations {
   /// Helper text explaining what the field size affects
   ///
   /// In de, this message translates to:
-  /// **'Die Feldgröße treibt die Kapazitäts- und Planbarkeits-Warnungen.'**
+  /// **'Die Feldgrösse treibt die Kapazitäts- und Planbarkeits-Warnungen.'**
   String get stageGraphFieldSizeHint;
 
   /// Section title for the nodes list
@@ -997,7 +997,7 @@ abstract class AppLocalizations {
   /// Helper shown when the club visibility is not selectable because no club is set
   ///
   /// In de, this message translates to:
-  /// **'Fuer Verein/Organisation muss ein Veranstalter gewaehlt sein.'**
+  /// **'Für Verein/Organisation muss ein Veranstalter gewählt sein.'**
   String get stageGraphSaveTemplateClubUnavailable;
 
   /// Generic confirm button in stage-graph dialogs
@@ -3652,7 +3652,7 @@ abstract class AppLocalizations {
   /// **'Bitte wählen'**
   String get tournamentWizardClubChoosePrompt;
 
-  /// Toggle title for an invite-only fun tournament (Spaßturnier)
+  /// Toggle title for an invite-only fun tournament (Spassturnier)
   ///
   /// In de, this message translates to:
   /// **'Auf Einladung'**
@@ -8197,13 +8197,13 @@ abstract class AppLocalizations {
   /// Description of the 100-hits placeholder badge
   ///
   /// In de, this message translates to:
-  /// **'Sammle 100 Treffer ueber alle Sessions.'**
+  /// **'Sammle 100 Treffer über alle Sessions.'**
   String get achievementsBadgeHundredHitsDesc;
 
   /// Placeholder badge — 10x streak
   ///
   /// In de, this message translates to:
-  /// **'Serien-Schuetze'**
+  /// **'Serien-Schütze'**
   String get achievementsBadgeStreakTitle;
 
   /// Description of the streak placeholder badge
@@ -8221,19 +8221,19 @@ abstract class AppLocalizations {
   /// Description of the heli placeholder badge
   ///
   /// In de, this message translates to:
-  /// **'Lande 5 Helikopter-Wuerfe in einer Session.'**
+  /// **'Lande 5 Helikopter-Würfe in einer Session.'**
   String get achievementsBadgeHeliDesc;
 
   /// Placeholder badge — finishing king hit
   ///
   /// In de, this message translates to:
-  /// **'Koenigsmacher'**
+  /// **'Königsmacher'**
   String get achievementsBadgeKingTitle;
 
   /// Description of the king placeholder badge
   ///
   /// In de, this message translates to:
-  /// **'Gewinne ein Match mit dem letzten Wurf auf den Koenig.'**
+  /// **'Gewinne ein Match mit dem letzten Wurf auf den König.'**
   String get achievementsBadgeKingDesc;
 
   /// Status chip on a locked badge — describes the unlock condition

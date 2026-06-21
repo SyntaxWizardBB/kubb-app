@@ -1903,7 +1903,7 @@ void main() {
       // The embedded builder no longer shows a field-size input — the capacity
       // is derived, not entered a second time.
       expect(find.text('Anzahl Felder'), findsNothing);
-      expect(find.text('Feldgröße'), findsNothing);
+      expect(find.text('Feldgrösse'), findsNothing);
     });
 
     testWidgets(
@@ -2212,7 +2212,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.textContaining('muss ein Veranstalter gewaehlt sein'),
+        find.textContaining('muss ein Veranstalter gewählt sein'),
         findsOneWidget,
       );
     });

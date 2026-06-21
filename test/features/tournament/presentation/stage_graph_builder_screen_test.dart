@@ -282,7 +282,7 @@ void main() {
     expect(find.byType(KubbEmptyState), findsOneWidget);
     expect(find.text('Noch kein Stufen-Graph'), findsOneWidget);
     // Field size + template bar remain visible.
-    expect(find.text('Feldgröße'), findsOneWidget);
+    expect(find.text('Feldgrösse'), findsOneWidget);
     expect(find.text('Vorlagen'), findsOneWidget);
   });
 

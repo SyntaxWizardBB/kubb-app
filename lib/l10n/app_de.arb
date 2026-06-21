@@ -197,7 +197,7 @@
   "@stageGraphTitle": {
     "description": "AppBar title for the stage-graph builder screen"
   },
-  "stageGraphFieldSizeSection": "Feldgröße",
+  "stageGraphFieldSizeSection": "Feldgrösse",
   "@stageGraphFieldSizeSection": {
     "description": "Section title for the field-size input"
   },
@@ -205,7 +205,7 @@
   "@stageGraphFieldSizeLabel": {
     "description": "Label for the field-size number field"
   },
-  "stageGraphFieldSizeHint": "Die Feldgröße treibt die Kapazitäts- und Planbarkeits-Warnungen.",
+  "stageGraphFieldSizeHint": "Die Feldgrösse treibt die Kapazitäts- und Planbarkeits-Warnungen.",
   "@stageGraphFieldSizeHint": {
     "description": "Helper text explaining what the field size affects"
   },
@@ -586,7 +586,7 @@
   "@stageGraphVisibilityClub": { "description": "Label for TemplateVisibility.club" },
   "stageGraphVisibilityPublic": "Öffentlich",
   "@stageGraphVisibilityPublic": { "description": "Label for TemplateVisibility.public" },
-  "stageGraphSaveTemplateClubUnavailable": "Fuer Verein/Organisation muss ein Veranstalter gewaehlt sein.",
+  "stageGraphSaveTemplateClubUnavailable": "Für Verein/Organisation muss ein Veranstalter gewählt sein.",
   "@stageGraphSaveTemplateClubUnavailable": { "description": "Helper shown when the club visibility is not selectable because no club is set" },
   "stageGraphConfirm": "Bestätigen",
   "@stageGraphConfirm": { "description": "Generic confirm button in stage-graph dialogs" },
@@ -2556,7 +2556,7 @@
   },
   "tournamentWizardInviteOnlyLabel": "Auf Einladung",
   "@tournamentWizardInviteOnlyLabel": {
-    "description": "Toggle title for an invite-only fun tournament (Spaßturnier)"
+    "description": "Toggle title for an invite-only fun tournament (Spassturnier)"
   },
   "tournamentWizardInviteOnlyHint": "Nur eingeladene Spieler sehen dieses Turnier und können sich anmelden.",
   "@tournamentWizardInviteOnlyHint": {
@@ -5803,11 +5803,11 @@
   "@achievementsBadgeHundredHitsTitle": {
     "description": "Placeholder badge — cumulative 100 hits"
   },
-  "achievementsBadgeHundredHitsDesc": "Sammle 100 Treffer ueber alle Sessions.",
+  "achievementsBadgeHundredHitsDesc": "Sammle 100 Treffer über alle Sessions.",
   "@achievementsBadgeHundredHitsDesc": {
     "description": "Description of the 100-hits placeholder badge"
   },
-  "achievementsBadgeStreakTitle": "Serien-Schuetze",
+  "achievementsBadgeStreakTitle": "Serien-Schütze",
   "@achievementsBadgeStreakTitle": {
     "description": "Placeholder badge — 10x streak"
   },
@@ -5819,15 +5819,15 @@
   "@achievementsBadgeHeliTitle": {
     "description": "Placeholder badge — helicopter throws"
   },
-  "achievementsBadgeHeliDesc": "Lande 5 Helikopter-Wuerfe in einer Session.",
+  "achievementsBadgeHeliDesc": "Lande 5 Helikopter-Würfe in einer Session.",
   "@achievementsBadgeHeliDesc": {
     "description": "Description of the heli placeholder badge"
   },
-  "achievementsBadgeKingTitle": "Koenigsmacher",
+  "achievementsBadgeKingTitle": "Königsmacher",
   "@achievementsBadgeKingTitle": {
     "description": "Placeholder badge — finishing king hit"
   },
-  "achievementsBadgeKingDesc": "Gewinne ein Match mit dem letzten Wurf auf den Koenig.",
+  "achievementsBadgeKingDesc": "Gewinne ein Match mit dem letzten Wurf auf den König.",
   "@achievementsBadgeKingDesc": {
     "description": "Description of the king placeholder badge"
   },
