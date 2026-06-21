@@ -637,7 +637,7 @@ abstract class AppLocalizations {
   /// Helper caption under the swiss rounds field
   ///
   /// In de, this message translates to:
-  /// **'Anzahl der Schweizer-System-Runden. Die Paarungen jeder Runde entstehen live nach Tabellenstand.'**
+  /// **'Anzahl der Schoch-Runden. Die Paarungen jeder Runde entstehen live nach Tabellenstand.'**
   String get stageGraphConfigSwissHint;
 
   /// Switch label for double-elim bracket reset
@@ -811,7 +811,7 @@ abstract class AppLocalizations {
   /// Label for StageNodeType.pool
   ///
   /// In de, this message translates to:
-  /// **'Gruppe'**
+  /// **'Gruppenphase'**
   String get stageGraphNodeTypePool;
 
   /// Label for StageNodeType.roundRobin
@@ -865,7 +865,7 @@ abstract class AppLocalizations {
   /// Explainer for StageNodeType.swiss
   ///
   /// In de, this message translates to:
-  /// **'Schweizer System: die Paarungen werden nach jeder Runde neu nach Tabellenstand gebildet — Sieger gegen Sieger, Verlierer gegen Verlierer. Flexible Rundenzahl, ein gemeinsamer Pool. Ideal für grosse Felder, weil nicht jeder gegen jeden spielen muss.'**
+  /// **'Schoch: die Paarungen werden nach jeder Runde neu nach Tabellenstand gebildet — Sieger gegen Sieger, Verlierer gegen Verlierer. Flexible Rundenzahl, ein gemeinsamer Pool. Ideal für grosse Felder, weil nicht jeder gegen jeden spielen muss.'**
   String get stageGraphNodeTypeInfoSwiss;
 
   /// Explainer for StageNodeType.singleElim
@@ -901,7 +901,7 @@ abstract class AppLocalizations {
   /// Label for StageSeedingSource.fromElo
   ///
   /// In de, this message translates to:
-  /// **'Aus ELO'**
+  /// **'Aus ELO-Wertung'**
   String get stageGraphSeedingFromElo;
 
   /// Label for StageSeedingSource.fromPrevRanking
@@ -4183,7 +4183,7 @@ abstract class AppLocalizations {
   /// Snake grouping-strategy option
   ///
   /// In de, this message translates to:
-  /// **'Snake (Schweizer-Liga)'**
+  /// **'Snake / Reissverschluss'**
   String get tournamentWizardPoolStrategySnake;
 
   /// Seeded grouping-strategy option
@@ -5287,7 +5287,7 @@ abstract class AppLocalizations {
   /// Format chip: Swiss system
   ///
   /// In de, this message translates to:
-  /// **'Schweizer System'**
+  /// **'Schoch'**
   String get tournamentFormatSwiss;
 
   /// Format chip: round-robin then knockout
@@ -5305,7 +5305,7 @@ abstract class AppLocalizations {
   /// Format chip: Swiss then knockout
   ///
   /// In de, this message translates to:
-  /// **'Schweiz + K.-o.'**
+  /// **'Schoch + K.-o.'**
   String get tournamentFormatSwissKo;
 
   /// Detail-screen eyebrow
@@ -7057,7 +7057,7 @@ abstract class AppLocalizations {
   /// Action that derives the seed order from each participant's ELO via the tournament_autoseed_from_elo RPC
   ///
   /// In de, this message translates to:
-  /// **'Auto-Seed aus ELO'**
+  /// **'Aus ELO-Wertung'**
   String get tournamentSeedingAutoSeedButton;
 
   /// Inline banner title shown when the save or start RPC fails
@@ -7849,7 +7849,7 @@ abstract class AppLocalizations {
   /// Pairing mode label for the Swiss-system tournament format
   ///
   /// In de, this message translates to:
-  /// **'Schweizer System'**
+  /// **'Schoch'**
   String get tournamentSwissSystem;
 
   /// Field label for the number of Swiss rounds
@@ -7867,7 +7867,7 @@ abstract class AppLocalizations {
   /// Warning hint shown when participant count exceeds the recommended Swiss-system size
   ///
   /// In de, this message translates to:
-  /// **'Schweizer System ist optimiert für ≤ 64 Teilnehmer'**
+  /// **'Bei sehr vielen Teilnehmern werden die Runden länger'**
   String get tournamentSwissOversize;
 
   /// Section label for the points-formula selector

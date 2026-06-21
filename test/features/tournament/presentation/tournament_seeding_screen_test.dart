@@ -253,7 +253,7 @@ void main() {
       isTrue,
     );
 
-    await tester.tap(find.text('Auto-Seed aus ELO'));
+    await tester.tap(find.text('Aus ELO-Wertung'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 16));
 

@@ -398,7 +398,7 @@
       }
     }
   },
-  "stageGraphConfigSwissHint": "Anzahl der Schweizer-System-Runden. Die Paarungen jeder Runde entstehen live nach Tabellenstand.",
+  "stageGraphConfigSwissHint": "Anzahl der Schoch-Runden. Die Paarungen jeder Runde entstehen live nach Tabellenstand.",
   "@stageGraphConfigSwissHint": {
     "description": "Helper caption under the swiss rounds field"
   },
@@ -524,7 +524,7 @@
   "@stageGraphEdgesMultiHint": {
     "description": "Hint that a node may have multiple outgoing edges"
   },
-  "stageGraphNodeTypePool": "Gruppe",
+  "stageGraphNodeTypePool": "Gruppenphase",
   "@stageGraphNodeTypePool": { "description": "Label for StageNodeType.pool" },
   "stageGraphNodeTypeRoundRobin": "Jeder gegen jeden",
   "@stageGraphNodeTypeRoundRobin": { "description": "Label for StageNodeType.roundRobin" },
@@ -542,7 +542,7 @@
   "@stageGraphNodeTypeInfoTitle": { "description": "Title of the stage-type explainer dialog" },
   "stageGraphNodeTypeInfoPool": "Jeder spielt in seiner Gruppe gegen jeden. Aus jeder Gruppe ziehen die Bestplatzierten weiter. Bei n Teilnehmern pro Gruppe sind das n-1 Runden.",
   "@stageGraphNodeTypeInfoPool": { "description": "Explainer for StageNodeType.pool" },
-  "stageGraphNodeTypeInfoSwiss": "Schweizer System: die Paarungen werden nach jeder Runde neu nach Tabellenstand gebildet — Sieger gegen Sieger, Verlierer gegen Verlierer. Flexible Rundenzahl, ein gemeinsamer Pool. Ideal für grosse Felder, weil nicht jeder gegen jeden spielen muss.",
+  "stageGraphNodeTypeInfoSwiss": "Schoch: die Paarungen werden nach jeder Runde neu nach Tabellenstand gebildet — Sieger gegen Sieger, Verlierer gegen Verlierer. Flexible Rundenzahl, ein gemeinsamer Pool. Ideal für grosse Felder, weil nicht jeder gegen jeden spielen muss.",
   "@stageGraphNodeTypeInfoSwiss": { "description": "Explainer for StageNodeType.swiss" },
   "stageGraphNodeTypeInfoSingleElim": "Wer ein Spiel verliert, ist raus. Schnell und kurz, aber eine einzige Niederlage beendet das Turnier.",
   "@stageGraphNodeTypeInfoSingleElim": { "description": "Explainer for StageNodeType.singleElim" },
@@ -554,7 +554,7 @@
   "@stageGraphNodeTypeInfoRoundRobin": { "description": "Explainer for StageNodeType.roundRobin" },
   "stageGraphNodeTypeInfoShootoutQuali": "Qualifikation per Shoot-out: die besten Würfe sichern die Startplätze für die nächste Stufe.",
   "@stageGraphNodeTypeInfoShootoutQuali": { "description": "Explainer for StageNodeType.shootoutQuali" },
-  "stageGraphSeedingFromElo": "Aus ELO",
+  "stageGraphSeedingFromElo": "Aus ELO-Wertung",
   "@stageGraphSeedingFromElo": { "description": "Label for StageSeedingSource.fromElo" },
   "stageGraphSeedingFromPrevRanking": "Aus Vorrangliste",
   "@stageGraphSeedingFromPrevRanking": { "description": "Label for StageSeedingSource.fromPrevRanking" },
@@ -2948,7 +2948,7 @@
   "@tournamentWizardPoolStrategyLabel": {
     "description": "Label for the pool grouping-strategy selector"
   },
-  "tournamentWizardPoolStrategySnake": "Snake (Schweizer-Liga)",
+  "tournamentWizardPoolStrategySnake": "Snake / Reissverschluss",
   "@tournamentWizardPoolStrategySnake": {
     "description": "Snake grouping-strategy option"
   },
@@ -3656,7 +3656,7 @@
   "@tournamentFormatSchoch": {
     "description": "Format chip: Schoch system"
   },
-  "tournamentFormatSwiss": "Schweizer System",
+  "tournamentFormatSwiss": "Schoch",
   "@tournamentFormatSwiss": {
     "description": "Format chip: Swiss system"
   },
@@ -3668,7 +3668,7 @@
   "@tournamentFormatSchochKo": {
     "description": "Format chip: Schoch then knockout"
   },
-  "tournamentFormatSwissKo": "Schweiz + K.-o.",
+  "tournamentFormatSwissKo": "Schoch + K.-o.",
   "@tournamentFormatSwissKo": {
     "description": "Format chip: Swiss then knockout"
   },
@@ -5000,7 +5000,7 @@
   "@tournamentSeedingStartKoButton": {
     "description": "Action that commits the seeding and triggers the start_ko_phase RPC"
   },
-  "tournamentSeedingAutoSeedButton": "Auto-Seed aus ELO",
+  "tournamentSeedingAutoSeedButton": "Aus ELO-Wertung",
   "@tournamentSeedingAutoSeedButton": {
     "description": "Action that derives the seed order from each participant's ELO via the tournament_autoseed_from_elo RPC"
   },
@@ -5566,7 +5566,7 @@
   "@seasonAssignTournament": {
     "description": "Action that assigns an existing tournament to the current season"
   },
-  "tournamentSwissSystem": "Schweizer System",
+  "tournamentSwissSystem": "Schoch",
   "@tournamentSwissSystem": {
     "description": "Pairing mode label for the Swiss-system tournament format"
   },
@@ -5578,7 +5578,7 @@
   "@tournamentSwissTiebreak": {
     "description": "Field label for the Swiss-system tiebreak rule selector"
   },
-  "tournamentSwissOversize": "Schweizer System ist optimiert für ≤ 64 Teilnehmer",
+  "tournamentSwissOversize": "Bei sehr vielen Teilnehmern werden die Runden länger",
   "@tournamentSwissOversize": {
     "description": "Warning hint shown when participant count exceeds the recommended Swiss-system size"
   },

@@ -348,7 +348,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Open the type dropdown so its menu entries render.
-    await tester.tap(find.text('Gruppe').last);
+    await tester.tap(find.text('Gruppenphase').last);
     await tester.pumpAndSettle();
 
     expect(find.text('Schoch'), findsWidgets);

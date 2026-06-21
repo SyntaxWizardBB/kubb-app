@@ -116,7 +116,7 @@ void main() {
     // Both node tiles (ids + type labels) render.
     expect(find.text('groups'), findsOneWidget);
     expect(find.text('cup'), findsOneWidget);
-    expect(find.text('Gruppe'), findsWidgets); // pool type label / section
+    expect(find.text('Gruppenphase'), findsWidgets); // pool type label / section
     expect(find.text('K.-o. (einfach)'), findsOneWidget);
 
     // The edge surfaces in the edges list.
@@ -372,7 +372,10 @@ void main() {
     await tester.tap(groupingInfo);
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Reissverschluss'), findsOneWidget);
+    expect(
+      find.textContaining('abwechselnd auf die Gruppen verteilt'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('info button explains the edge seeding mode', (tester) async {

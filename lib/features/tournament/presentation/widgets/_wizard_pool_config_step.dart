@@ -189,7 +189,7 @@ class _WizardPoolConfigStepState extends State<WizardPoolConfigStep> {
           items: const [
             DropdownMenuItem(
               value: PoolGroupingStrategy.snake,
-              child: Text('Snake (Schweizer-Liga)'),
+              child: Text('Snake / Reissverschluss'),
             ),
             DropdownMenuItem(
               value: PoolGroupingStrategy.seeded,

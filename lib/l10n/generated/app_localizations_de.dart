@@ -325,7 +325,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get stageGraphConfigSwissHint =>
-      'Anzahl der Schweizer-System-Runden. Die Paarungen jeder Runde entstehen live nach Tabellenstand.';
+      'Anzahl der Schoch-Runden. Die Paarungen jeder Runde entstehen live nach Tabellenstand.';
 
   @override
   String get stageGraphConfigWithReset => 'Grand-Final-Reset';
@@ -429,7 +429,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Eine Stufe darf mehrere Kanten haben: z. B. Sieger ins Haupt-Bracket UND Verlierer früher Runden in einen Neben-Cup.';
 
   @override
-  String get stageGraphNodeTypePool => 'Gruppe';
+  String get stageGraphNodeTypePool => 'Gruppenphase';
 
   @override
   String get stageGraphNodeTypeRoundRobin => 'Jeder gegen jeden';
@@ -458,7 +458,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get stageGraphNodeTypeInfoSwiss =>
-      'Schweizer System: die Paarungen werden nach jeder Runde neu nach Tabellenstand gebildet — Sieger gegen Sieger, Verlierer gegen Verlierer. Flexible Rundenzahl, ein gemeinsamer Pool. Ideal für grosse Felder, weil nicht jeder gegen jeden spielen muss.';
+      'Schoch: die Paarungen werden nach jeder Runde neu nach Tabellenstand gebildet — Sieger gegen Sieger, Verlierer gegen Verlierer. Flexible Rundenzahl, ein gemeinsamer Pool. Ideal für grosse Felder, weil nicht jeder gegen jeden spielen muss.';
 
   @override
   String get stageGraphNodeTypeInfoSingleElim =>
@@ -481,7 +481,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Qualifikation per Shoot-out: die besten Würfe sichern die Startplätze für die nächste Stufe.';
 
   @override
-  String get stageGraphSeedingFromElo => 'Aus ELO';
+  String get stageGraphSeedingFromElo => 'Aus ELO-Wertung';
 
   @override
   String get stageGraphSeedingFromPrevRanking => 'Aus Vorrangliste';
@@ -2284,7 +2284,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardPoolStrategyLabel => 'Gruppierungsstrategie';
 
   @override
-  String get tournamentWizardPoolStrategySnake => 'Snake (Schweizer-Liga)';
+  String get tournamentWizardPoolStrategySnake => 'Snake / Reissverschluss';
 
   @override
   String get tournamentWizardPoolStrategySeeded => 'Seeded (Blockweise)';
@@ -2901,7 +2901,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentFormatSchoch => 'Schoch';
 
   @override
-  String get tournamentFormatSwiss => 'Schweizer System';
+  String get tournamentFormatSwiss => 'Schoch';
 
   @override
   String get tournamentFormatRoundRobinKo => 'Gruppen + K.-o.';
@@ -2910,7 +2910,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentFormatSchochKo => 'Schoch + K.-o.';
 
   @override
-  String get tournamentFormatSwissKo => 'Schweiz + K.-o.';
+  String get tournamentFormatSwissKo => 'Schoch + K.-o.';
 
   @override
   String get tournamentDetailEyebrow => 'Turnier';
@@ -3906,7 +3906,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentSeedingStartKoButton => 'KO starten';
 
   @override
-  String get tournamentSeedingAutoSeedButton => 'Auto-Seed aus ELO';
+  String get tournamentSeedingAutoSeedButton => 'Aus ELO-Wertung';
 
   @override
   String get tournamentSeedingErrorTitle => 'Aktion fehlgeschlagen';
@@ -4344,7 +4344,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get seasonAssignTournament => 'Turnier zuordnen';
 
   @override
-  String get tournamentSwissSystem => 'Schweizer System';
+  String get tournamentSwissSystem => 'Schoch';
 
   @override
   String get tournamentSwissRounds => 'Runden';
@@ -4354,7 +4354,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentSwissOversize =>
-      'Schweizer System ist optimiert für ≤ 64 Teilnehmer';
+      'Bei sehr vielen Teilnehmern werden die Runden länger';
 
   @override
   String get tournamentPointsMode => 'Punkte-Modus';
