@@ -156,8 +156,11 @@ K.-o. — diese Zahl muss zur K.-o.-Grösse passen (sie wird im nächsten Schrit
 geprüft). — Status: `neu`
 
 **Gruppierungsstrategie** — *Wie Teams auf Gruppen verteilt werden* — Legt fest,
-nach welchem Prinzip die Teams den Gruppen zugeordnet werden. Die drei Optionen
-(Reissverschluss, Blockweise, Zufall) sind unten einzeln erklärt. — Status: `neu`
+nach welchem Prinzip die Teams den Gruppen zugeordnet werden. Im klassischen
+Format-Schritt fasst ein Info-Button die drei Optionen zusammen: Reissverschluss
+(stärkste und schwächste Teams abwechselnd, ausgeglichene Gruppen), Blockweise
+(Top-Teams der Reihe nach), Zufall (zufällige Verteilung, mit Seed
+reproduzierbar). Im Stufen-Graph sind sie einzeln per Info erklärt. — Status: `neu`
 
 **Gruppierung: Snake / Reissverschluss** — *Reissverschluss* — Reissverschluss:
 stärkste und schwächste Teams werden abwechselnd auf die Gruppen verteilt,
