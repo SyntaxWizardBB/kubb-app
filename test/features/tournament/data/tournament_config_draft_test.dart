@@ -159,7 +159,7 @@ void main() {
       final v = d.validate();
       expect(v.isValid, isTrue);
       expect(v.issues, isEmpty);
-      expect(d.derivedFormat, TournamentFormat.swissThenKo);
+      expect(d.derivedFormat, TournamentFormat.schochThenKo);
     });
 
     test('flags sets-to-win below 1', () {
@@ -307,7 +307,7 @@ void main() {
           nodes: <StageNode>[
             StageNode(
               id: 'prelim',
-              type: StageNodeType.pool,
+              type: StageNodeType.groupPhase,
               seeding: StageSeedingSource.fromElo,
             ),
             StageNode(
@@ -614,16 +614,16 @@ void main() {
       );
       expect(
         TournamentConfigDraft.formatFor(VorrundeType.schoch, KoType.singleOut),
-        TournamentFormat.swissThenKo,
+        TournamentFormat.schochThenKo,
       );
       expect(
         TournamentConfigDraft.formatFor(VorrundeType.schoch, KoType.doubleOut),
-        TournamentFormat.swissThenKo,
+        TournamentFormat.schochThenKo,
       );
       expect(
         TournamentConfigDraft.formatFor(
             VorrundeType.schoch, KoType.consolation),
-        TournamentFormat.swissThenKo,
+        TournamentFormat.schochThenKo,
       );
     });
 
@@ -642,7 +642,7 @@ void main() {
         vorrundeType: VorrundeType.schoch,
         koType: KoType.doubleOut,
       );
-      expect(d.derivedFormat, TournamentFormat.swissThenKo);
+      expect(d.derivedFormat, TournamentFormat.schochThenKo);
       expect(d.derivedBracketType, BracketType.doubleElimination);
     });
 
@@ -1158,7 +1158,7 @@ void main() {
           nodes: <StageNode>[
             StageNode(
               id: 'prelim',
-              type: StageNodeType.pool,
+              type: StageNodeType.groupPhase,
               seeding: StageSeedingSource.fromElo,
               config: const <String, Object?>{'group_count': 2},
             ),

@@ -409,7 +409,7 @@ TournamentDetail _liveDetailOwnedBy(String creatorUserId) => TournamentDetail(
         maxTeamSize: 1,
         minParticipants: 2,
         maxParticipants: 8,
-        format: TournamentFormat.swiss,
+        format: TournamentFormat.schoch,
         scoring: TournamentScoring.ekc,
         matchFormatConfig: const <String, Object?>{},
         tiebreakerOrder: const <String>[],

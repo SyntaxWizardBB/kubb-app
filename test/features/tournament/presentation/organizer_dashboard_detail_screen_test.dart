@@ -72,7 +72,7 @@ class _SpyRemote extends FakeTournamentRemote {
 TournamentDetail _detail({
   String? clubId,
   TournamentStatus status = TournamentStatus.live,
-  TournamentFormat format = TournamentFormat.swiss,
+  TournamentFormat format = TournamentFormat.schoch,
   Map<String, Object?> setup = const <String, Object?>{},
 }) =>
     TournamentDetail(

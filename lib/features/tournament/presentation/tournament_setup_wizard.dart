@@ -41,7 +41,7 @@ import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_model_explainer_sheet.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/save_template_dialog.dart';
-import 'package:kubb_app/features/tournament/presentation/widgets/swiss_config_section.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/schoch_config_section.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -86,10 +86,10 @@ class TournamentSetupWizard extends ConsumerStatefulWidget {
 class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
   int _step = 0;
   bool _submitting = false;
-  // T10: round-count for the Swiss-System format (default ceil(log2(n)),
+  // T10: round-count for the Schoch format (default ceil(log2(n)),
   // clamped 3..9). Stored locally — round-count isn't part of the create-
   // RPC contract yet, the pairing engine receives it client-side.
-  int? _swissRounds;
+  int? _schochRounds;
 
   /// Logical step list for the current draft. KO config always appears
   /// (every tournament has a KO stage). K12/K25: the former group-phase step
@@ -467,9 +467,9 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
           onKoType: controller.setKoType,
           onMaxSets: controller.setMaxSets,
           onPoolGrouping: controller.setPoolGrouping,
-          swissRounds: _swissRounds ??
-              SwissConfigSection.defaultRounds(draft.maxParticipants),
-          onSwissRoundsChanged: (v) => setState(() => _swissRounds = v),
+          schochRounds: _schochRounds ??
+              SchochConfigSection.defaultRounds(draft.maxParticipants),
+          onSchochRoundsChanged: (v) => setState(() => _schochRounds = v),
           onPitchPlanChanged: controller.setPitchPlan,
           onRoundTime: controller.setRoundTime,
           onBreakBetween: controller.setBreakBetweenMatchesSeconds,
@@ -1690,8 +1690,8 @@ class _StepFormat extends ConsumerStatefulWidget {
     required this.onKoType,
     required this.onMaxSets,
     required this.onPoolGrouping,
-    required this.swissRounds,
-    required this.onSwissRoundsChanged,
+    required this.schochRounds,
+    required this.onSchochRoundsChanged,
     required this.onPitchPlanChanged,
     required this.onRoundTime,
     required this.onBreakBetween,
@@ -1727,10 +1727,10 @@ class _StepFormat extends ConsumerStatefulWidget {
     required PoolGroupingStrategy strategy,
     int? randomSeed,
   }) onPoolGrouping;
-  // T10: Swiss-System round count — surfaced inline when the Vorrunde is
+  // T10: Schoch round count — surfaced inline when the Vorrunde is
   // Schoch. State lives in the wizard.
-  final int swissRounds;
-  final ValueChanged<int> onSwissRoundsChanged;
+  final int schochRounds;
+  final ValueChanged<int> onSchochRoundsChanged;
   final ValueChanged<PitchPlan?> onPitchPlanChanged;
   final ValueChanged<int> onRoundTime;
   final ValueChanged<int> onBreakBetween;
@@ -2034,12 +2034,12 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
         ),
         const SizedBox(height: KubbTokens.space2),
         // T10: the Schoch-rounds slider surfaces when the Vorrunde is Schoch
-        // (the pairing engine shares the round count with the Swiss system).
+        // (Schoch reuses the Schweizer-System pairing engine).
         if (draft.vorrundeType == VorrundeType.schoch)
-          SwissConfigSection(
+          SchochConfigSection(
             participantCount: draft.maxParticipants,
-            rounds: widget.swissRounds,
-            onRoundsChanged: widget.onSwissRoundsChanged,
+            rounds: widget.schochRounds,
+            onRoundsChanged: widget.onSchochRoundsChanged,
           ),
         // K12: group-phase config (group count + grouping strategy) lives
         // inline here, only when the group phase is the selected Vorrunde.

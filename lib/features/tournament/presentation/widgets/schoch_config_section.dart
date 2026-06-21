@@ -3,14 +3,14 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 
-/// Inline configuration block for the Swiss-System format option in the
+/// Inline configuration block for the Schoch format option in the
 /// setup wizard (TASK-M5.3-T10). Lets the organizer pick the number of
 /// rounds (default `ceil(log2(n))`, OD-M5-04), surfaces the read-only
 /// tiebreak order (Buchholz → Direct-Encounter → Random) and, for large
 /// fields, hints that more rounds help separate the standings. Schoch is the
 /// big-field Vorrunde, so there is no upper participant limit here.
-class SwissConfigSection extends StatelessWidget {
-  const SwissConfigSection({
+class SchochConfigSection extends StatelessWidget {
+  const SchochConfigSection({
     required this.participantCount,
     required this.rounds,
     required this.onRoundsChanged,

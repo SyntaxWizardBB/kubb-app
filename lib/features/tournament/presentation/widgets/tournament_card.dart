@@ -151,14 +151,10 @@ String formatLabel(TournamentFormat f, AppLocalizations l) {
       return l.tournamentFormatSingleElimination;
     case TournamentFormat.schoch:
       return l.tournamentFormatSchoch;
-    case TournamentFormat.swiss:
-      return l.tournamentFormatSwiss;
     case TournamentFormat.roundRobinThenKo:
       return l.tournamentFormatRoundRobinKo;
     case TournamentFormat.schochThenKo:
       return l.tournamentFormatSchochKo;
-    case TournamentFormat.swissThenKo:
-      return l.tournamentFormatSwissKo;
   }
 }
 

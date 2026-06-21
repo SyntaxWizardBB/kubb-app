@@ -170,10 +170,8 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
       TournamentFormat.roundRobin ||
       TournamentFormat.roundRobinThenKo =>
         (VorrundeType.groupPhase, ko),
-      TournamentFormat.swiss ||
       TournamentFormat.schoch ||
       TournamentFormat.singleElimination ||
-      TournamentFormat.swissThenKo ||
       TournamentFormat.schochThenKo =>
         (VorrundeType.schoch, ko),
     };
@@ -185,7 +183,7 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
   /// [PoolPhaseConfig] (group_count == 1, all participants in one pool) when
   /// none is set yet. The Schoch Vorrunde never visits the pool-config wizard
   /// step (it is only shown for [VorrundeType.groupPhase]), so without this
-  /// the hybrid `swiss_then_ko` format would persist `pool_phase_config: null`
+  /// the hybrid `schoch_then_ko` format would persist `pool_phase_config: null`
   /// and `tournament_start` would fail with "pool_phase_config required for
   /// hybrid format" (SQLSTATE 22023). Group-phase keeps configuring the pool
   /// explicitly in its step, so only Schoch auto-fills here.

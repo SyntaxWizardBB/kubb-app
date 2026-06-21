@@ -1058,7 +1058,7 @@ class _NodeDialogState extends State<_NodeDialog> {
     super.initState();
     final initial = widget.initial;
     _idController = TextEditingController(text: initial?.id ?? '');
-    _type = initial?.type ?? StageNodeType.pool;
+    _type = initial?.type ?? StageNodeType.groupPhase;
     _seeding = initial?.seeding ?? StageSeedingSource.asRouted;
     final config = initial?.config ?? const <String, Object?>{};
     _groupCount = _readInt(config['groupCount'], _groupCount);
@@ -1158,7 +1158,7 @@ class _NodeDialogState extends State<_NodeDialog> {
   /// Builds the type-relevant config keys via the kubb_domain writers (P5.5).
   Map<String, Object?> _buildConfig() {
     switch (_type) {
-      case StageNodeType.pool:
+      case StageNodeType.groupPhase:
       case StageNodeType.roundRobin:
         return writePoolNodeConfig(
           groupCount: _groupCount,
@@ -1175,7 +1175,7 @@ class _NodeDialogState extends State<_NodeDialog> {
                 e.key: e.value,
           },
         );
-      case StageNodeType.swiss:
+      case StageNodeType.schoch:
         return <String, Object?>{'rounds': _rounds};
       case StageNodeType.shootoutQuali:
         return <String, Object?>{'slots': _slots};
@@ -1292,7 +1292,7 @@ class _NodeDialogState extends State<_NodeDialog> {
   List<Widget> _configFields(AppLocalizations l) {
     final fields = <Widget>[];
     switch (_type) {
-      case StageNodeType.pool:
+      case StageNodeType.groupPhase:
       case StageNodeType.roundRobin:
         fields
           ..add(WizardNumberField(
@@ -1347,7 +1347,7 @@ class _NodeDialogState extends State<_NodeDialog> {
         }
         final pitchSection = _pitchAssignmentField(l);
         if (pitchSection != null) fields.add(pitchSection);
-      case StageNodeType.swiss:
+      case StageNodeType.schoch:
         fields
           ..add(WizardNumberField(
             label: l.stageGraphConfigRounds,
@@ -1975,8 +1975,8 @@ Widget buildStageValidationPanel(StageGraphBuilderState state) =>
 /// (existing graphs and templates still render them via [stageNodeTypeLabel])
 /// but are not picked for fresh stages.
 const List<StageNodeType> selectableStageNodeTypes = [
-  StageNodeType.pool,
-  StageNodeType.swiss,
+  StageNodeType.groupPhase,
+  StageNodeType.schoch,
   StageNodeType.singleElim,
   StageNodeType.doubleElim,
   StageNodeType.consolation,
@@ -1985,11 +1985,11 @@ const List<StageNodeType> selectableStageNodeTypes = [
 /// Localized label for a [StageNodeType].
 String stageNodeTypeLabel(AppLocalizations l, StageNodeType type) {
   switch (type) {
-    case StageNodeType.pool:
+    case StageNodeType.groupPhase:
       return l.stageGraphNodeTypePool;
     case StageNodeType.roundRobin:
       return l.stageGraphNodeTypeRoundRobin;
-    case StageNodeType.swiss:
+    case StageNodeType.schoch:
       return l.stageGraphNodeTypeSwiss;
     case StageNodeType.singleElim:
       return l.stageGraphNodeTypeSingleElim;
@@ -2006,11 +2006,11 @@ String stageNodeTypeLabel(AppLocalizations l, StageNodeType type) {
 /// matches. Surfaced via the type-picker info button.
 String stageNodeTypeInfo(AppLocalizations l, StageNodeType type) {
   switch (type) {
-    case StageNodeType.pool:
+    case StageNodeType.groupPhase:
       return l.stageGraphNodeTypeInfoPool;
     case StageNodeType.roundRobin:
       return l.stageGraphNodeTypeInfoRoundRobin;
-    case StageNodeType.swiss:
+    case StageNodeType.schoch:
       return l.stageGraphNodeTypeInfoSwiss;
     case StageNodeType.singleElim:
       return l.stageGraphNodeTypeInfoSingleElim;

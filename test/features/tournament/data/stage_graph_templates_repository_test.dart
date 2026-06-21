@@ -56,7 +56,7 @@ void main() {
       // Graph parsed via StageGraph.fromJson: nodes, edges + selector kind.
       expect(template.graph.nodes, hasLength(2));
       expect(template.graph.nodes.first.id, 'pool');
-      expect(template.graph.nodes.first.type, StageNodeType.pool);
+      expect(template.graph.nodes.first.type, StageNodeType.groupPhase);
       expect(template.graph.nodes[1].type, StageNodeType.singleElim);
       expect(template.graph.edges, hasLength(1));
       final selector = template.graph.edges.single.selector;

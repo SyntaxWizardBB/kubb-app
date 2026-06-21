@@ -47,10 +47,15 @@ const Map<TournamentFormat, String> _formatWire = {
   TournamentFormat.roundRobin: 'round_robin',
   TournamentFormat.singleElimination: 'single_elimination',
   TournamentFormat.schoch: 'schoch',
-  TournamentFormat.swiss: 'swiss',
   TournamentFormat.roundRobinThenKo: 'round_robin_then_ko',
   TournamentFormat.schochThenKo: 'schoch_then_ko',
-  TournamentFormat.swissThenKo: 'swiss_then_ko',
+};
+
+/// Legacy wire strings still emitted by older RPC projections / rows. Mapped
+/// onto the renamed enum values so a pre-migration deploy keeps parsing.
+const Map<String, TournamentFormat> _legacyFormatWire = {
+  'swiss': TournamentFormat.schoch,
+  'swiss_then_ko': TournamentFormat.schochThenKo,
 };
 
 const Map<TournamentStatus, String> _statusWire = {
@@ -190,7 +195,7 @@ K _enumFromWire<K, V>(Map<K, V> table, V raw, String label) {
 
 extension TournamentFormatWire on TournamentFormat {
   static TournamentFormat fromWire(String raw) =>
-      _enumFromWire(_formatWire, raw, 'TournamentFormat');
+      _legacyFormatWire[raw] ?? _enumFromWire(_formatWire, raw, 'TournamentFormat');
   String toWire() => _formatWire[this]!;
 }
 

@@ -309,9 +309,7 @@ class TournamentConfigDraft {
         TournamentFormat.roundRobinThenKo =>
           VorrundeType.groupPhase,
         TournamentFormat.schoch ||
-        TournamentFormat.swiss ||
-        TournamentFormat.schochThenKo ||
-        TournamentFormat.swissThenKo =>
+        TournamentFormat.schochThenKo =>
           VorrundeType.schoch,
       };
 
@@ -845,11 +843,11 @@ class TournamentConfigDraft {
   /// tournament has a KO stage, so a prelim always maps to its hybrid
   /// (…ThenKo) format:
   ///   groupPhase + any KO → roundRobinThenKo
-  ///   schoch     + any KO → swissThenKo   (server routes swiss == schoch)
+  ///   schoch     + any KO → schochThenKo
   static TournamentFormat formatFor(VorrundeType vorrunde, KoType ko) {
     return switch (vorrunde) {
       VorrundeType.groupPhase => TournamentFormat.roundRobinThenKo,
-      VorrundeType.schoch => TournamentFormat.swissThenKo,
+      VorrundeType.schoch => TournamentFormat.schochThenKo,
     };
   }
 
@@ -881,7 +879,7 @@ class TournamentConfigDraft {
   ///
   /// User requirement (P5/P6): selecting "Schoch" must automatically produce
   /// EXACTLY ONE pool that holds ALL participants — i.e. `group_count == 1` —
-  /// so the hybrid (`swiss_then_ko`) format always carries a valid
+  /// so the hybrid (`schoch_then_ko`) format always carries a valid
   /// `pool_phase_config` and `tournament_start` no longer fails with
   /// "pool_phase_config required for hybrid format".
   ///
@@ -941,20 +939,18 @@ class TournamentConfigDraft {
 
   /// Whether the wizard should surface the pool-phase configuration step.
   /// Pool grouping is only meaningful for hybrid formats that follow a
-  /// round-robin / Schoch / Swiss stage with a KO bracket.
+  /// round-robin / Schoch stage with a KO bracket.
   bool get supportsPoolPhase =>
       format == TournamentFormat.roundRobinThenKo ||
-      format == TournamentFormat.schochThenKo ||
-      format == TournamentFormat.swissThenKo;
+      format == TournamentFormat.schochThenKo;
 
   /// Whether a KO phase has to be configured for the selected [format].
   /// Covers the pure single-elimination format plus every hybrid
-  /// (group/Schoch/Swiss → KO) variant.
+  /// (group/Schoch → KO) variant.
   bool get requiresKoConfig =>
       format == TournamentFormat.singleElimination ||
       format == TournamentFormat.roundRobinThenKo ||
-      format == TournamentFormat.schochThenKo ||
-      format == TournamentFormat.swissThenKo;
+      format == TournamentFormat.schochThenKo;
 
   /// Wizard pre-fill value for the `withThirdPlacePlayoff` toggle
   /// (ADR-0017 §4). The wizard may still let the organizer override it.

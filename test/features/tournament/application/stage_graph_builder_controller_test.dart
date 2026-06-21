@@ -8,7 +8,7 @@ import 'package:kubb_domain/kubb_domain.dart';
 void main() {
   StageNode poolNode({int groupCount = 1}) => StageNode(
         id: 'pool',
-        type: StageNodeType.pool,
+        type: StageNodeType.groupPhase,
         seeding: StageSeedingSource.fromElo,
         config: <String, Object?>{'groupCount': groupCount},
       );
@@ -140,13 +140,13 @@ void main() {
       () {
     final replacement = StageNode(
       id: 'pool',
-      type: StageNodeType.swiss,
+      type: StageNodeType.schoch,
       seeding: StageSeedingSource.fromElo,
     );
     controller
       ..addNode(poolNode())
       ..updateNode('pool', replacement);
-    expect(read().graph.nodes.single.type, StageNodeType.swiss);
+    expect(read().graph.nodes.single.type, StageNodeType.schoch);
 
     final before = read().graph;
     controller.updateNode('does-not-exist', koNode());

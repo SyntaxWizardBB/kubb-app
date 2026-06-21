@@ -34,7 +34,7 @@ void main() {
       TournamentAdminCardRef(
         tournamentId: const TournamentId('t-1'),
         displayName: 'Liga A',
-        format: TournamentFormat.swiss,
+        format: TournamentFormat.schoch,
         status: TournamentStatus.live,
         currentRound: 3,
         scheduleStatus: RoundStatus.running,

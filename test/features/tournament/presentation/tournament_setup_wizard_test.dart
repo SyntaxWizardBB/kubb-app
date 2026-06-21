@@ -386,7 +386,7 @@ class _SchochSeededController extends TournamentConfigController {
   @override
   TournamentConfigDraft build() => _withStammdaten(
         const TournamentConfigDraft(
-          format: TournamentFormat.swissThenKo,
+          format: TournamentFormat.schochThenKo,
           vorrundeType: VorrundeType.schoch,
         ),
       );
@@ -398,7 +398,7 @@ class _ConsolationSeededController extends TournamentConfigController {
   @override
   TournamentConfigDraft build() => _withStammdaten(
         const TournamentConfigDraft(
-          format: TournamentFormat.swissThenKo,
+          format: TournamentFormat.schochThenKo,
           vorrundeType: VorrundeType.schoch,
           koType: KoType.consolation,
         ),
@@ -414,7 +414,7 @@ class _InvalidDraftSeededController extends TournamentConfigController {
   @override
   TournamentConfigDraft build() => _withStammdaten(
         const TournamentConfigDraft(
-          format: TournamentFormat.swissThenKo,
+          format: TournamentFormat.schochThenKo,
           vorrundeType: VorrundeType.schoch,
           setsToWin: 9,
         ),
@@ -443,7 +443,7 @@ class _StageGraphSeededController extends TournamentConfigController {
   @override
   TournamentConfigDraft build() => _withStammdaten(
         const TournamentConfigDraft(
-          format: TournamentFormat.swissThenKo,
+          format: TournamentFormat.schochThenKo,
           vorrundeType: VorrundeType.schoch,
           formatMode: TournamentFormatMode.stageGraph,
         ),
@@ -458,7 +458,7 @@ class _StageGraphTemplateController extends TournamentConfigController {
   @override
   TournamentConfigDraft build() => _withStammdaten(
         const TournamentConfigDraft(
-          format: TournamentFormat.swissThenKo,
+          format: TournamentFormat.schochThenKo,
           vorrundeType: VorrundeType.schoch,
           formatMode: TournamentFormatMode.stageGraph,
           appliedTemplateId: 'tpl-kubbmaister',
@@ -480,7 +480,7 @@ StageGraph get _p2ValidGraph => StageGraph(
       nodes: <StageNode>[
         StageNode(
           id: 'groups',
-          type: StageNodeType.pool,
+          type: StageNodeType.groupPhase,
           seeding: StageSeedingSource.asRouted,
           config: const <String, Object?>{'groupCount': 2, 'qualifierCount': 2},
         ),
@@ -703,7 +703,7 @@ void main() {
 
     await tester.tap(find.widgetWithText(FilledButton, 'Turnier anlegen'));
     await tester.pumpAndSettle();
-    expect(fake.createdFormat, TournamentFormat.swissThenKo);
+    expect(fake.createdFormat, TournamentFormat.schochThenKo);
     // Schoch auto-fills a single-pool pool_phase_config (group_count == 1, all
     // participants in one pool) even though the pool-config step is hidden, so
     // tournament_start no longer fails with "pool_phase_config required for
@@ -1988,7 +1988,7 @@ void main() {
           nodes: <StageNode>[
             StageNode(
               id: 'groups',
-              type: StageNodeType.pool,
+              type: StageNodeType.groupPhase,
               seeding: StageSeedingSource.asRouted,
               config: const <String, Object?>{
                 'groupCount': 2,
@@ -2071,7 +2071,7 @@ void main() {
           nodes: <StageNode>[
             StageNode(
               id: 'groups',
-              type: StageNodeType.pool,
+              type: StageNodeType.groupPhase,
               seeding: StageSeedingSource.asRouted,
               config: const <String, Object?>{
                 'groupCount': 2,
@@ -2095,7 +2095,7 @@ void main() {
     TournamentConfigController seededWithClub() => _SeededFn(
           () => _withStammdaten(
             const TournamentConfigDraft(
-              format: TournamentFormat.swissThenKo,
+              format: TournamentFormat.schochThenKo,
               vorrundeType: VorrundeType.schoch,
               formatMode: TournamentFormatMode.stageGraph,
               clubId: 'club-7',
@@ -2224,7 +2224,7 @@ void main() {
         controllerOverride: () => _SeededFn(
           () => _withStammdaten(
             const TournamentConfigDraft(
-              format: TournamentFormat.swissThenKo,
+              format: TournamentFormat.schochThenKo,
               vorrundeType: VorrundeType.schoch,
               formatMode: TournamentFormatMode.stageGraph,
             ),

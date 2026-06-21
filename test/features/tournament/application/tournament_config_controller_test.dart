@@ -83,19 +83,19 @@ void main() {
     test('schoch + singleOut => swissThenKo + single', () {
       controller.setVorrundeType(VorrundeType.schoch);
       controller.setKoType(KoType.singleOut);
-      expect(state().format, TournamentFormat.swissThenKo);
+      expect(state().format, TournamentFormat.schochThenKo);
       expect(state().bracketType, BracketType.singleElimination);
     });
 
     test('schoch + doubleOut => swissThenKo + double', () {
       controller.setVorrundeType(VorrundeType.schoch);
       controller.setKoType(KoType.doubleOut);
-      expect(state().format, TournamentFormat.swissThenKo);
+      expect(state().format, TournamentFormat.schochThenKo);
       expect(state().bracketType, BracketType.doubleElimination);
     });
 
     test('setFormat keeps the two-axis selection in sync', () {
-      controller.setFormat(TournamentFormat.swissThenKo);
+      controller.setFormat(TournamentFormat.schochThenKo);
       expect(state().vorrundeType, VorrundeType.schoch);
       expect(state().koType, KoType.singleOut);
 
@@ -132,7 +132,7 @@ void main() {
     });
 
     test('setFormat(swissThenKo) also auto-inits the single pool', () {
-      controller.setFormat(TournamentFormat.swissThenKo);
+      controller.setFormat(TournamentFormat.schochThenKo);
       final pool = state().poolPhaseConfig;
       expect(pool!.groupCount, 1);
     });
@@ -331,7 +331,7 @@ void main() {
           nodes: <StageNode>[
             StageNode(
               id: 'n1',
-              type: StageNodeType.pool,
+              type: StageNodeType.groupPhase,
               seeding: StageSeedingSource.fromElo,
             ),
           ],
@@ -384,7 +384,7 @@ void main() {
         nodes: <StageNode>[
           StageNode(
             id: 'prelim',
-            type: StageNodeType.pool,
+            type: StageNodeType.groupPhase,
             seeding: StageSeedingSource.fromElo,
           ),
           StageNode(

@@ -246,10 +246,14 @@ const Map<TournamentFormat, String> _formatWire = {
   TournamentFormat.roundRobin: 'round_robin',
   TournamentFormat.singleElimination: 'single_elimination',
   TournamentFormat.schoch: 'schoch',
-  TournamentFormat.swiss: 'swiss',
   TournamentFormat.roundRobinThenKo: 'round_robin_then_ko',
   TournamentFormat.schochThenKo: 'schoch_then_ko',
-  TournamentFormat.swissThenKo: 'swiss_then_ko',
+};
+
+/// Legacy wire strings still emitted by older rows / RPC projections.
+const Map<String, TournamentFormat> _legacyFormatWire = {
+  'swiss': TournamentFormat.schoch,
+  'swiss_then_ko': TournamentFormat.schochThenKo,
 };
 
 const Map<TournamentStatus, String> _statusWire = {
@@ -277,6 +281,8 @@ const Map<TournamentMatchStatus, String> _matchStatusWire = {
 };
 
 TournamentFormat _formatFromWire(String raw) {
+  final legacy = _legacyFormatWire[raw];
+  if (legacy != null) return legacy;
   for (final entry in _formatWire.entries) {
     if (entry.value == raw) return entry.key;
   }

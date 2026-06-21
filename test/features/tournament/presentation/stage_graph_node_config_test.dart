@@ -208,7 +208,7 @@ void main() {
   testWidgets('pool node spells out qualifiers are per group', (tester) async {
     await _editNode(
       tester,
-      initial: _node(StageNodeType.pool,
+      initial: _node(StageNodeType.groupPhase,
           config: const <String, Object?>{'groupCount': 2, 'qualifierCount': 2}),
     );
     expect(find.textContaining('pro Gruppe'), findsWidgets);
@@ -240,7 +240,7 @@ void main() {
   testWidgets('pool node writes grouping strategy (P5.5)', (tester) async {
     final node = await _editAndConfirm(
       tester,
-      initial: _node(StageNodeType.pool,
+      initial: _node(StageNodeType.groupPhase,
           config: const <String, Object?>{
             'groupCount': 4,
             'qualifierCount': 2,
@@ -256,7 +256,7 @@ void main() {
       (tester) async {
     await _editNode(
       tester,
-      initial: _node(StageNodeType.pool,
+      initial: _node(StageNodeType.groupPhase,
           config: const <String, Object?>{'groupCount': 2, 'qualifierCount': 2}),
     );
     expect(find.text('Pitch-Zuteilung pro Gruppe'), findsNothing);
@@ -266,7 +266,7 @@ void main() {
       (tester) async {
     await _editNode(
       tester,
-      initial: _node(StageNodeType.pool,
+      initial: _node(StageNodeType.groupPhase,
           config: const <String, Object?>{'groupCount': 2, 'qualifierCount': 2}),
       availablePitches: const <int>[1, 2, 3],
     );
@@ -279,7 +279,7 @@ void main() {
       (tester) async {
     final node = await _editAndConfirmWithTap(
       tester,
-      initial: _node(StageNodeType.pool,
+      initial: _node(StageNodeType.groupPhase,
           config: const <String, Object?>{'groupCount': 2, 'qualifierCount': 2}),
       availablePitches: const <int>[1, 2, 3],
     );
@@ -292,7 +292,7 @@ void main() {
       (tester) async {
     await _editNode(
       tester,
-      initial: _node(StageNodeType.pool, config: const <String, Object?>{
+      initial: _node(StageNodeType.groupPhase, config: const <String, Object?>{
         'groupCount': 2,
         'qualifierCount': 2,
         'group_pitch_assignment': <String, Object?>{
@@ -309,8 +309,8 @@ void main() {
 
   test('the add picker offers exactly the five curated types', () {
     expect(selectableStageNodeTypes, const [
-      StageNodeType.pool,
-      StageNodeType.swiss,
+      StageNodeType.groupPhase,
+      StageNodeType.schoch,
       StageNodeType.singleElim,
       StageNodeType.doubleElim,
       StageNodeType.consolation,

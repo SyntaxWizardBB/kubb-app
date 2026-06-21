@@ -53,7 +53,7 @@ TournamentAdminCardRef _card({
   return TournamentAdminCardRef(
     tournamentId: TournamentId(id),
     displayName: name,
-    format: TournamentFormat.swiss,
+    format: TournamentFormat.schoch,
     status: TournamentStatus.live,
     currentRound: round,
     scheduleStatus: schedule,

@@ -14,7 +14,7 @@ import 'package:kubb_domain/kubb_domain.dart';
 
 StageNode _pool(String id) => StageNode(
       id: id,
-      type: StageNodeType.pool,
+      type: StageNodeType.groupPhase,
       seeding: StageSeedingSource.asRouted,
       config: const <String, Object?>{'groupCount': 2, 'qualifierCount': 2},
     );

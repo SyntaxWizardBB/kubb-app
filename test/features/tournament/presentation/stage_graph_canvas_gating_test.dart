@@ -16,7 +16,7 @@ void main() {
         nodes: <StageNode>[
           StageNode(
             id: 'groups',
-            type: StageNodeType.pool,
+            type: StageNodeType.groupPhase,
             seeding: StageSeedingSource.asRouted,
             config: const <String, Object?>{'groupCount': 2, 'qualifierCount': 2},
           ),

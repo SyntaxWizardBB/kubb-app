@@ -88,7 +88,7 @@ void main() {
 
     expect(result, hasLength(2));
     expect(result[0].tournamentId, const TournamentId('t-1'));
-    expect(result[0].format, TournamentFormat.swiss);
+    expect(result[0].format, TournamentFormat.schoch);
     expect(result[0].scheduleStatus, RoundStatus.call);
     expect(result[0].remainingSeconds, 600);
     expect(result[1].tournamentId, const TournamentId('t-2'));
