@@ -294,7 +294,13 @@ class _TemplateBarState extends ConsumerState<_TemplateBar> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SectionHeader(title: l.stageGraphTemplatesSection),
+        _SectionHeader(
+          title: l.stageGraphTemplatesSection,
+          action: InfoIconButton(
+            title: l.stageGraphInfoTemplateTitle,
+            message: l.stageGraphInfoTemplateBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space3),
         templatesAsync.when(
           loading: () => KubbSkeleton.bar(height: 48),
@@ -1000,6 +1006,42 @@ class _DialogHint extends StatelessWidget {
   }
 }
 
+/// Row that pairs a muted field label with an [InfoIconButton], used inside the
+/// node/edge config dialogs where a labelled field needs its own explainer next
+/// to it. Mirrors the label styling of the dialog's other `_fieldLabel` rows.
+class _LabelWithInfo extends StatelessWidget {
+  const _LabelWithInfo({
+    required this.label,
+    required this.infoTitle,
+    required this.infoMessage,
+  });
+
+  final String label;
+  final String infoTitle;
+  final String infoMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.4,
+              color: tokens.fgMuted,
+            ),
+          ),
+        ),
+        InfoIconButton(title: infoTitle, message: infoMessage),
+      ],
+    );
+  }
+}
+
 class _NodeDialog extends StatefulWidget {
   const _NodeDialog({
     required this.existingIds,
@@ -1209,22 +1251,34 @@ class _NodeDialogState extends State<_NodeDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(
-                key: const Key('stageGraphNodeIdField'),
-                controller: _idController,
-                // The id is the edge anchor: renaming it in edit mode would
-                // leave incident edges pointing at the old id (orphans). Lock
-                // it on edit so ids stay stable; create a new node to change it.
-                readOnly: isEdit,
-                decoration: InputDecoration(
-                  labelText: l.stageGraphFieldId,
-                  errorText: _idError,
-                  helperText: isEdit ? l.stageGraphFieldIdLockedHint : null,
-                  border: const OutlineInputBorder(),
-                ),
-                onChanged: (_) {
-                  if (_idError != null) setState(() => _idError = null);
-                },
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      key: const Key('stageGraphNodeIdField'),
+                      controller: _idController,
+                      // The id is the edge anchor: renaming it in edit mode
+                      // would leave incident edges pointing at the old id
+                      // (orphans). Lock it on edit so ids stay stable; create a
+                      // new node to change it.
+                      readOnly: isEdit,
+                      decoration: InputDecoration(
+                        labelText: l.stageGraphFieldId,
+                        errorText: _idError,
+                        helperText:
+                            isEdit ? l.stageGraphFieldIdLockedHint : null,
+                        border: const OutlineInputBorder(),
+                      ),
+                      onChanged: (_) {
+                        if (_idError != null) setState(() => _idError = null);
+                      },
+                    ),
+                  ),
+                  InfoIconButton(
+                    title: l.stageGraphInfoNodeNameTitle,
+                    message: l.stageGraphInfoNodeNameBody,
+                  ),
+                ],
               ),
               const SizedBox(height: KubbTokens.space3),
               Row(
@@ -1254,22 +1308,31 @@ class _NodeDialogState extends State<_NodeDialog> {
                 ],
               ),
               const SizedBox(height: KubbTokens.space3),
-              DropdownButtonFormField<StageSeedingSource>(
-                initialValue: _seeding,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: l.stageGraphFieldSeeding,
-                  border: const OutlineInputBorder(),
-                ),
-                items: [
-                  for (final src in StageSeedingSource.values)
-                    DropdownMenuItem<StageSeedingSource>(
-                      value: src,
-                      child: Text(stageSeedingSourceLabel(l, src)),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<StageSeedingSource>(
+                      initialValue: _seeding,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        labelText: l.stageGraphFieldSeeding,
+                        border: const OutlineInputBorder(),
+                      ),
+                      items: [
+                        for (final src in StageSeedingSource.values)
+                          DropdownMenuItem<StageSeedingSource>(
+                            value: src,
+                            child: Text(stageSeedingSourceLabel(l, src)),
+                          ),
+                      ],
+                      onChanged: (v) => setState(() => _seeding = v ?? _seeding),
                     ),
+                  ),
+                  InfoIconButton(
+                    title: l.stageGraphInfoSeedingSourceTitle,
+                    message: l.stageGraphInfoSeedingSourceBody,
+                  ),
                 ],
-                onChanged: (v) =>
-                    setState(() => _seeding = v ?? _seeding),
               ),
               ..._configFields(l),
             ],
@@ -1295,20 +1358,40 @@ class _NodeDialogState extends State<_NodeDialog> {
       case StageNodeType.groupPhase:
       case StageNodeType.roundRobin:
         fields
-          ..add(WizardNumberField(
-            label: l.stageGraphConfigGroupCount,
-            value: _groupCount,
-            min: 1,
-            max: 32,
-            onChanged: (v) => setState(() => _groupCount = v),
+          ..add(Row(
+            children: [
+              Expanded(
+                child: WizardNumberField(
+                  label: l.stageGraphConfigGroupCount,
+                  value: _groupCount,
+                  min: 1,
+                  max: 32,
+                  onChanged: (v) => setState(() => _groupCount = v),
+                ),
+              ),
+              InfoIconButton(
+                title: l.stageGraphInfoGroupCountTitle,
+                message: l.stageGraphInfoGroupCountBody,
+              ),
+            ],
           ))
           ..add(_DialogHint(l.stageGraphConfigGroupCountHint))
-          ..add(WizardNumberField(
-            label: l.stageGraphConfigQualifierCount,
-            value: _qualifierCount,
-            min: 1,
-            max: 64,
-            onChanged: (v) => setState(() => _qualifierCount = v),
+          ..add(Row(
+            children: [
+              Expanded(
+                child: WizardNumberField(
+                  label: l.stageGraphConfigQualifierCount,
+                  value: _qualifierCount,
+                  min: 1,
+                  max: 64,
+                  onChanged: (v) => setState(() => _qualifierCount = v),
+                ),
+              ),
+              InfoIconButton(
+                title: l.stageGraphInfoQualifierTitle,
+                message: l.stageGraphInfoQualifierBody,
+              ),
+            ],
           ))
           // P3.2: the recurring confusion — qualifiers are PER GROUP, not a
           // total across all groups. Spell it out at the field.
@@ -1441,13 +1524,27 @@ class _NodeDialogState extends State<_NodeDialog> {
   List<Widget> _koConfigFields(AppLocalizations l, {required bool includeReset}) {
     return <Widget>[
       if (includeReset)
-        KubbLabeledSwitch(
-          title: l.stageGraphConfigWithReset,
-          subtitle: l.stageGraphConfigWithResetHint,
-          value: _withReset,
-          onChanged: (v) => setState(() => _withReset = v),
+        Row(
+          children: [
+            Expanded(
+              child: KubbLabeledSwitch(
+                title: l.stageGraphConfigWithReset,
+                subtitle: l.stageGraphConfigWithResetHint,
+                value: _withReset,
+                onChanged: (v) => setState(() => _withReset = v),
+              ),
+            ),
+            InfoIconButton(
+              title: l.stageGraphInfoKoResetTitle,
+              message: l.stageGraphInfoKoResetBody,
+            ),
+          ],
         ),
-      _fieldLabel(l.tournamentWizardKoMatchupLabel),
+      _LabelWithInfo(
+        label: l.tournamentWizardKoMatchupLabel,
+        infoTitle: l.stageGraphInfoKoMatchupTitle,
+        infoMessage: l.stageGraphInfoKoMatchupBody,
+      ),
       KubbBinaryChoice<KoMatchup>(
         selected: _matchup,
         onChanged: (v) => setState(() => _matchup = v),
@@ -1462,7 +1559,11 @@ class _NodeDialogState extends State<_NodeDialog> {
           ),
         ],
       ),
-      _fieldLabel(l.tournamentWizardKoTiebreakMethodLabel),
+      _LabelWithInfo(
+        label: l.tournamentWizardKoTiebreakMethodLabel,
+        infoTitle: l.stageGraphInfoKoTiebreakTitle,
+        infoMessage: l.stageGraphInfoKoTiebreakBody,
+      ),
       KubbBinaryChoice<KoTiebreakMethod>(
         selected: _tiebreak,
         onChanged: (v) => setState(() => _tiebreak = v),
@@ -1477,13 +1578,29 @@ class _NodeDialogState extends State<_NodeDialog> {
           ),
         ],
       ),
-      WizardNumberField(
-        label: l.stageGraphConfigKoRoundCount,
-        value: _koRounds.length,
-        min: 1,
-        max: 8,
-        onChanged: _setKoRoundCount,
+      Row(
+        children: [
+          Expanded(
+            child: WizardNumberField(
+              label: l.stageGraphConfigKoRoundCount,
+              value: _koRounds.length,
+              min: 1,
+              max: 8,
+              onChanged: _setKoRoundCount,
+            ),
+          ),
+          InfoIconButton(
+            title: l.stageGraphInfoKoRoundCountTitle,
+            message: l.stageGraphInfoKoRoundCountBody,
+          ),
+        ],
       ),
+      if (_koRounds.isNotEmpty)
+        _LabelWithInfo(
+          label: l.stageGraphConfigKoRoundsRulesLabel,
+          infoTitle: l.stageGraphInfoKoRoundTitle,
+          infoMessage: l.stageGraphInfoKoRoundBody,
+        ),
       for (var i = 0; i < _koRounds.length; i++)
         KoRoundBlock(
           key: ValueKey<int>(i),
@@ -1683,6 +1800,12 @@ class _EdgeDialogState extends State<_EdgeDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              _LabelWithInfo(
+                label: l.stageGraphEdgeConnectionLabel,
+                infoTitle: l.stageGraphInfoEdgeFromToTitle,
+                infoMessage: l.stageGraphInfoEdgeFromToBody,
+              ),
+              const SizedBox(height: KubbTokens.space2),
               _nodeDropdown(
                 label: l.stageGraphEdgeFrom,
                 value: _from,
@@ -1701,24 +1824,34 @@ class _EdgeDialogState extends State<_EdgeDialog> {
                 }),
               ),
               const SizedBox(height: KubbTokens.space3),
-              DropdownButtonFormField<_SelectorKind>(
-                initialValue: _kind,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: l.stageGraphEdgeSelectorLabel,
-                  border: const OutlineInputBorder(),
-                ),
-                items: [
-                  for (final k in _SelectorKind.values)
-                    DropdownMenuItem<_SelectorKind>(
-                      value: k,
-                      child: Text(_selectorKindLabel(l, k)),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<_SelectorKind>(
+                      initialValue: _kind,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        labelText: l.stageGraphEdgeSelectorLabel,
+                        border: const OutlineInputBorder(),
+                      ),
+                      items: [
+                        for (final k in _SelectorKind.values)
+                          DropdownMenuItem<_SelectorKind>(
+                            value: k,
+                            child: Text(_selectorKindLabel(l, k)),
+                          ),
+                      ],
+                      onChanged: (v) => setState(() {
+                        _kind = v ?? _kind;
+                        _error = null;
+                      }),
                     ),
+                  ),
+                  InfoIconButton(
+                    title: l.stageGraphInfoSelectorTitle,
+                    message: _selectorInfoMessage(l, _kind),
+                  ),
                 ],
-                onChanged: (v) => setState(() {
-                  _kind = v ?? _kind;
-                  _error = null;
-                }),
               ),
               // P3.2: explain what the chosen selector actually forwards.
               _DialogHint(_selectorKindHint(l, _kind)),
@@ -1887,6 +2020,12 @@ class _EdgeDialogState extends State<_EdgeDialog> {
         return l.stageGraphSelectorHintNonQualifiers;
     }
   }
+
+  /// Info-button body for the selector: a fixed intro followed by the chosen
+  /// kind's explanation, so the dialog reads as a whole sentence even before
+  /// the user has switched away from the default kind.
+  String _selectorInfoMessage(AppLocalizations l, _SelectorKind kind) =>
+      '${l.stageGraphInfoSelectorIntro} ${_selectorKindHint(l, kind)}';
 }
 
 

@@ -306,6 +306,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphConfigKoRoundCount => 'Anzahl K.-o.-Runden';
 
   @override
+  String get stageGraphConfigKoRoundsRulesLabel => 'Rundenregeln';
+
+  @override
   String stageGraphConfigKoRoundTitle(String n) {
     return 'Runde $n';
   }
@@ -515,6 +518,95 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get stageGraphSeedingInInfoManual =>
       'Du legst die Setzung der weitergeleiteten Teams selbst fest. Achtung: das kann den Phasenstart blockieren, bis die Setzung gespeichert ist.';
+
+  @override
+  String get stageGraphInfoTemplateTitle => 'Vorlage wählen';
+
+  @override
+  String get stageGraphInfoTemplateBody =>
+      'Statt alles neu zu bauen, kannst du eine gespeicherte Vorlage laden und als Ausgangspunkt nutzen. Anwenden übernimmt die komplette Konfiguration der Vorlage in deinen Aufbau.';
+
+  @override
+  String get stageGraphInfoNodeNameTitle => 'Name der Stufe';
+
+  @override
+  String get stageGraphInfoNodeNameBody =>
+      'Frei wählbarer Name, um die Stufe im Graphen zu erkennen (z. B. \"Gruppenphase\", \"Hauptbaum\"). Der Name lässt sich nicht mehr ändern, solange Kanten daran hängen.';
+
+  @override
+  String get stageGraphInfoSeedingSourceTitle =>
+      'Woher die Startreihenfolge kommt';
+
+  @override
+  String get stageGraphInfoSeedingSourceBody =>
+      'Legt fest, woher die Setzliste für diese Stufe stammt: aus der ELO-Wertung, aus einer Vorrangliste, von dir manuell gesetzt, oder \"wie geroutet\" (in der Reihenfolge, in der die Teams aus der vorherigen Stufe ankommen).';
+
+  @override
+  String get stageGraphInfoGroupCountTitle => 'Anzahl Gruppen';
+
+  @override
+  String get stageGraphInfoGroupCountBody =>
+      'In wie viele Gruppen das Feld dieser Stufe aufgeteilt wird.';
+
+  @override
+  String get stageGraphInfoQualifierTitle =>
+      'Wie viele pro Gruppe weiterkommen';
+
+  @override
+  String get stageGraphInfoQualifierBody =>
+      'Qualifikanten zählen pro Gruppe, nicht über alle Gruppen zusammen: bei 2 ziehen die besten 2 jeder Gruppe weiter.';
+
+  @override
+  String get stageGraphInfoKoMatchupTitle => 'Wer gegen wen';
+
+  @override
+  String get stageGraphInfoKoMatchupBody =>
+      'Bestimmt die Paarungen im K.-o. \"Beste vs. Schlechteste\" lässt die stärksten gegen die schwächsten antreten, \"1. vs. 2.\" paart benachbarte Ränge.';
+
+  @override
+  String get stageGraphInfoKoTiebreakTitle => 'Entscheid bei Gleichstand';
+
+  @override
+  String get stageGraphInfoKoTiebreakBody =>
+      'Wie ein unentschiedenes K.-o.-Spiel entschieden wird: \"Klassisch\" oder \"Mighty-Finisher\". Beim Mighty-Finisher wird ein zeitbegrenztes Spiel zu Ende gespielt, sobald die Zeit abgelaufen ist; steht es danach unentschieden, folgt ein Entscheidungssatz nach den festgelegten Finisher-Regeln. \"Klassisch\" ist der herkömmliche Entscheid ohne Zeit-Finisher. Der Mighty-Finisher ist nicht dasselbe wie das Shoot-out: das Shoot-out ist ein eigenes Konzept und löst beim Übergang Vorrunde→K.-o. ein platzierungsrelevantes Unentschieden auf, nicht ein einzelnes K.-o.-Spiel. Nur im K.-o. relevant, die Vorrunde hat keinen Tiebreak.';
+
+  @override
+  String get stageGraphInfoKoResetTitle => 'Zweites Finale möglich';
+
+  @override
+  String get stageGraphInfoKoResetBody =>
+      'Nur beim doppelten K.-o.: gewinnt das Team aus dem Verliererbaum das erste Finale, gibt es ein zweites, entscheidendes Finale (beide haben dann genau eine Niederlage).';
+
+  @override
+  String get stageGraphInfoKoRoundCountTitle => 'Wie viele Runden';
+
+  @override
+  String get stageGraphInfoKoRoundCountBody =>
+      'Legt fest, über wie viele Runden der K.-o.-Baum dieser Stufe gespielt wird.';
+
+  @override
+  String get stageGraphInfoKoRoundTitle => 'Regeln je Runde';
+
+  @override
+  String get stageGraphInfoKoRoundBody =>
+      'Pro K.-o.-Runde einstellbar: wie viele Sätze zum Sieg nötig sind, das Zeitlimit pro Spiel, die Pause danach und ob ein Tiebreak greift. Spätere Runden dürfen länger angesetzt sein als frühe.';
+
+  @override
+  String get stageGraphEdgeConnectionLabel => 'Verbindung';
+
+  @override
+  String get stageGraphInfoEdgeFromToTitle => 'Verbindung zwischen Stufen';
+
+  @override
+  String get stageGraphInfoEdgeFromToBody =>
+      'Eine Kante leitet Teilnehmer von einer Stufe (Von) in die nächste (Nach) weiter. So baust du den Ablauf zusammen. Eine Stufe darf mehrere Kanten haben — z. B. Sieger ins Hauptbaum UND Verlierer in einen Neben-Cup.';
+
+  @override
+  String get stageGraphInfoSelectorTitle => 'Selektor — wer weiterkommt';
+
+  @override
+  String get stageGraphInfoSelectorIntro =>
+      'Bestimmt, welche Teams diese Kante in die nächste Stufe weiterleitet.';
 
   @override
   String get stageGraphSaveTemplateName => 'Name';

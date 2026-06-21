@@ -610,6 +610,12 @@ abstract class AppLocalizations {
   /// **'Anzahl K.-o.-Runden'**
   String get stageGraphConfigKoRoundCount;
 
+  /// Group header above the per-round KO rules blocks
+  ///
+  /// In de, this message translates to:
+  /// **'Rundenregeln'**
+  String get stageGraphConfigKoRoundsRulesLabel;
+
   /// Title of a per-round KO format block
   ///
   /// In de, this message translates to:
@@ -963,6 +969,156 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Du legst die Setzung der weitergeleiteten Teams selbst fest. Achtung: das kann den Phasenstart blockieren, bis die Setzung gespeichert ist.'**
   String get stageGraphSeedingInInfoManual;
+
+  /// Title of the template-picker explainer dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Vorlage wählen'**
+  String get stageGraphInfoTemplateTitle;
+
+  /// Explainer for the template picker
+  ///
+  /// In de, this message translates to:
+  /// **'Statt alles neu zu bauen, kannst du eine gespeicherte Vorlage laden und als Ausgangspunkt nutzen. Anwenden übernimmt die komplette Konfiguration der Vorlage in deinen Aufbau.'**
+  String get stageGraphInfoTemplateBody;
+
+  /// Title of the stage-name explainer dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Name der Stufe'**
+  String get stageGraphInfoNodeNameTitle;
+
+  /// Explainer for the stage name field
+  ///
+  /// In de, this message translates to:
+  /// **'Frei wählbarer Name, um die Stufe im Graphen zu erkennen (z. B. \"Gruppenphase\", \"Hauptbaum\"). Der Name lässt sich nicht mehr ändern, solange Kanten daran hängen.'**
+  String get stageGraphInfoNodeNameBody;
+
+  /// Title of the stage seeding-source explainer dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Woher die Startreihenfolge kommt'**
+  String get stageGraphInfoSeedingSourceTitle;
+
+  /// Explainer for the stage seeding source
+  ///
+  /// In de, this message translates to:
+  /// **'Legt fest, woher die Setzliste für diese Stufe stammt: aus der ELO-Wertung, aus einer Vorrangliste, von dir manuell gesetzt, oder \"wie geroutet\" (in der Reihenfolge, in der die Teams aus der vorherigen Stufe ankommen).'**
+  String get stageGraphInfoSeedingSourceBody;
+
+  /// Title of the group-count explainer dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Anzahl Gruppen'**
+  String get stageGraphInfoGroupCountTitle;
+
+  /// Explainer for the group count field
+  ///
+  /// In de, this message translates to:
+  /// **'In wie viele Gruppen das Feld dieser Stufe aufgeteilt wird.'**
+  String get stageGraphInfoGroupCountBody;
+
+  /// Title of the qualifier-count explainer dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Wie viele pro Gruppe weiterkommen'**
+  String get stageGraphInfoQualifierTitle;
+
+  /// Explainer for the qualifier count field
+  ///
+  /// In de, this message translates to:
+  /// **'Qualifikanten zählen pro Gruppe, nicht über alle Gruppen zusammen: bei 2 ziehen die besten 2 jeder Gruppe weiter.'**
+  String get stageGraphInfoQualifierBody;
+
+  /// Title of the KO matchup explainer dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Wer gegen wen'**
+  String get stageGraphInfoKoMatchupTitle;
+
+  /// Explainer for the KO matchup choice
+  ///
+  /// In de, this message translates to:
+  /// **'Bestimmt die Paarungen im K.-o. \"Beste vs. Schlechteste\" lässt die stärksten gegen die schwächsten antreten, \"1. vs. 2.\" paart benachbarte Ränge.'**
+  String get stageGraphInfoKoMatchupBody;
+
+  /// Title of the KO tiebreak-method explainer dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Entscheid bei Gleichstand'**
+  String get stageGraphInfoKoTiebreakTitle;
+
+  /// Explainer for the KO tiebreak method
+  ///
+  /// In de, this message translates to:
+  /// **'Wie ein unentschiedenes K.-o.-Spiel entschieden wird: \"Klassisch\" oder \"Mighty-Finisher\". Beim Mighty-Finisher wird ein zeitbegrenztes Spiel zu Ende gespielt, sobald die Zeit abgelaufen ist; steht es danach unentschieden, folgt ein Entscheidungssatz nach den festgelegten Finisher-Regeln. \"Klassisch\" ist der herkömmliche Entscheid ohne Zeit-Finisher. Der Mighty-Finisher ist nicht dasselbe wie das Shoot-out: das Shoot-out ist ein eigenes Konzept und löst beim Übergang Vorrunde→K.-o. ein platzierungsrelevantes Unentschieden auf, nicht ein einzelnes K.-o.-Spiel. Nur im K.-o. relevant, die Vorrunde hat keinen Tiebreak.'**
+  String get stageGraphInfoKoTiebreakBody;
+
+  /// Title of the grand-final-reset explainer dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Zweites Finale möglich'**
+  String get stageGraphInfoKoResetTitle;
+
+  /// Explainer for the grand-final reset
+  ///
+  /// In de, this message translates to:
+  /// **'Nur beim doppelten K.-o.: gewinnt das Team aus dem Verliererbaum das erste Finale, gibt es ein zweites, entscheidendes Finale (beide haben dann genau eine Niederlage).'**
+  String get stageGraphInfoKoResetBody;
+
+  /// Title of the KO round-count explainer dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Wie viele Runden'**
+  String get stageGraphInfoKoRoundCountTitle;
+
+  /// Explainer for the KO round count field
+  ///
+  /// In de, this message translates to:
+  /// **'Legt fest, über wie viele Runden der K.-o.-Baum dieser Stufe gespielt wird.'**
+  String get stageGraphInfoKoRoundCountBody;
+
+  /// Title of the per-KO-round rules explainer dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Regeln je Runde'**
+  String get stageGraphInfoKoRoundTitle;
+
+  /// Explainer for the per-round KO rules
+  ///
+  /// In de, this message translates to:
+  /// **'Pro K.-o.-Runde einstellbar: wie viele Sätze zum Sieg nötig sind, das Zeitlimit pro Spiel, die Pause danach und ob ein Tiebreak greift. Spätere Runden dürfen länger angesetzt sein als frühe.'**
+  String get stageGraphInfoKoRoundBody;
+
+  /// Group label above the edge from/to dropdowns
+  ///
+  /// In de, this message translates to:
+  /// **'Verbindung'**
+  String get stageGraphEdgeConnectionLabel;
+
+  /// Title of the edge from/to explainer dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Verbindung zwischen Stufen'**
+  String get stageGraphInfoEdgeFromToTitle;
+
+  /// Explainer for the edge from/to fields
+  ///
+  /// In de, this message translates to:
+  /// **'Eine Kante leitet Teilnehmer von einer Stufe (Von) in die nächste (Nach) weiter. So baust du den Ablauf zusammen. Eine Stufe darf mehrere Kanten haben — z. B. Sieger ins Hauptbaum UND Verlierer in einen Neben-Cup.'**
+  String get stageGraphInfoEdgeFromToBody;
+
+  /// Title of the edge-selector explainer dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Selektor — wer weiterkommt'**
+  String get stageGraphInfoSelectorTitle;
+
+  /// Fixed intro sentence for the edge-selector explainer, prepended to the chosen selector's type-specific hint
+  ///
+  /// In de, this message translates to:
+  /// **'Bestimmt, welche Teams diese Kante in die nächste Stufe weiterleitet.'**
+  String get stageGraphInfoSelectorIntro;
 
   /// Label for the template name field
   ///
