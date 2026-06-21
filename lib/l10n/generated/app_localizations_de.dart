@@ -4000,6 +4000,43 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentSeedingEmpty => 'Noch keine qualifizierten Teilnehmer.';
 
   @override
+  String get tournamentSetupInfoSeedingSortTitle => 'Reihenfolge per Ziehen';
+
+  @override
+  String get tournamentSetupInfoSeedingSortBody =>
+      'Lange auf einen Eintrag tippen und ziehen, um die Setzreihenfolge zu ändern. Position 1 ist der höchste Setzplatz.';
+
+  @override
+  String get tournamentSetupInfoSeedingSaveTitle => 'Setzung sichern';
+
+  @override
+  String get tournamentSetupInfoSeedingSaveBody =>
+      'Speichert die aktuelle Reihenfolge. Erst nach dem Speichern lässt sich das K.-o. starten.';
+
+  @override
+  String get tournamentSetupInfoSeedingRestoreTitle =>
+      'Auf Gruppen-Reihenfolge zurücksetzen';
+
+  @override
+  String get tournamentSetupInfoSeedingRestoreBody =>
+      'Setzt deine manuellen Änderungen zurück auf die automatische Reihenfolge aus der Vorrunde.';
+
+  @override
+  String get tournamentSetupInfoSeedingEloTitle =>
+      'Setzliste aus ELO übernehmen';
+
+  @override
+  String get tournamentSetupInfoSeedingEloBody =>
+      'Füllt die Setzliste mit der Reihenfolge aus den ELO-Wertungen der Teams. Du kannst danach trotzdem von Hand nachsortieren.';
+
+  @override
+  String get tournamentSetupInfoSeedingStartKoTitle => 'K.-o. starten';
+
+  @override
+  String get tournamentSetupInfoSeedingStartKoBody =>
+      'Startet die K.-o.-Phase mit der gespeicherten Setzliste. Geht erst, wenn die Setzung gespeichert ist.';
+
+  @override
   String get tournamentWizardStep45Title => 'Liga-Wertung';
 
   @override

@@ -5058,6 +5058,46 @@
   "@tournamentSeedingEmpty": {
     "description": "Placeholder shown when the auto-seed list is empty (group phase not finished)"
   },
+  "tournamentSetupInfoSeedingSortTitle": "Reihenfolge per Ziehen",
+  "@tournamentSetupInfoSeedingSortTitle": {
+    "description": "Info dialog title for sorting the seeding list on the seeding screen"
+  },
+  "tournamentSetupInfoSeedingSortBody": "Lange auf einen Eintrag tippen und ziehen, um die Setzreihenfolge zu ändern. Position 1 ist der höchste Setzplatz.",
+  "@tournamentSetupInfoSeedingSortBody": {
+    "description": "Info dialog body for sorting the seeding list on the seeding screen"
+  },
+  "tournamentSetupInfoSeedingSaveTitle": "Setzung sichern",
+  "@tournamentSetupInfoSeedingSaveTitle": {
+    "description": "Info dialog title for the save-seeding button on the seeding screen"
+  },
+  "tournamentSetupInfoSeedingSaveBody": "Speichert die aktuelle Reihenfolge. Erst nach dem Speichern lässt sich das K.-o. starten.",
+  "@tournamentSetupInfoSeedingSaveBody": {
+    "description": "Info dialog body for the save-seeding button on the seeding screen"
+  },
+  "tournamentSetupInfoSeedingRestoreTitle": "Auf Gruppen-Reihenfolge zurücksetzen",
+  "@tournamentSetupInfoSeedingRestoreTitle": {
+    "description": "Info dialog title for the restore-auto button on the seeding screen"
+  },
+  "tournamentSetupInfoSeedingRestoreBody": "Setzt deine manuellen Änderungen zurück auf die automatische Reihenfolge aus der Vorrunde.",
+  "@tournamentSetupInfoSeedingRestoreBody": {
+    "description": "Info dialog body for the restore-auto button on the seeding screen"
+  },
+  "tournamentSetupInfoSeedingEloTitle": "Setzliste aus ELO übernehmen",
+  "@tournamentSetupInfoSeedingEloTitle": {
+    "description": "Info dialog title for the autoseed-from-ELO button on the seeding screen"
+  },
+  "tournamentSetupInfoSeedingEloBody": "Füllt die Setzliste mit der Reihenfolge aus den ELO-Wertungen der Teams. Du kannst danach trotzdem von Hand nachsortieren.",
+  "@tournamentSetupInfoSeedingEloBody": {
+    "description": "Info dialog body for the autoseed-from-ELO button on the seeding screen"
+  },
+  "tournamentSetupInfoSeedingStartKoTitle": "K.-o. starten",
+  "@tournamentSetupInfoSeedingStartKoTitle": {
+    "description": "Info dialog title for the start-KO button on the seeding screen"
+  },
+  "tournamentSetupInfoSeedingStartKoBody": "Startet die K.-o.-Phase mit der gespeicherten Setzliste. Geht erst, wenn die Setzung gespeichert ist.",
+  "@tournamentSetupInfoSeedingStartKoBody": {
+    "description": "Info dialog body for the start-KO button on the seeding screen"
+  },
   "tournamentWizardStep45Title": "Liga-Wertung",
   "@tournamentWizardStep45Title": {
     "description": "Title of wizard step 4.5 asking whether the tournament counts for the league"

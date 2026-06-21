@@ -7216,6 +7216,66 @@ abstract class AppLocalizations {
   /// **'Noch keine qualifizierten Teilnehmer.'**
   String get tournamentSeedingEmpty;
 
+  /// Info dialog title for sorting the seeding list on the seeding screen
+  ///
+  /// In de, this message translates to:
+  /// **'Reihenfolge per Ziehen'**
+  String get tournamentSetupInfoSeedingSortTitle;
+
+  /// Info dialog body for sorting the seeding list on the seeding screen
+  ///
+  /// In de, this message translates to:
+  /// **'Lange auf einen Eintrag tippen und ziehen, um die Setzreihenfolge zu ändern. Position 1 ist der höchste Setzplatz.'**
+  String get tournamentSetupInfoSeedingSortBody;
+
+  /// Info dialog title for the save-seeding button on the seeding screen
+  ///
+  /// In de, this message translates to:
+  /// **'Setzung sichern'**
+  String get tournamentSetupInfoSeedingSaveTitle;
+
+  /// Info dialog body for the save-seeding button on the seeding screen
+  ///
+  /// In de, this message translates to:
+  /// **'Speichert die aktuelle Reihenfolge. Erst nach dem Speichern lässt sich das K.-o. starten.'**
+  String get tournamentSetupInfoSeedingSaveBody;
+
+  /// Info dialog title for the restore-auto button on the seeding screen
+  ///
+  /// In de, this message translates to:
+  /// **'Auf Gruppen-Reihenfolge zurücksetzen'**
+  String get tournamentSetupInfoSeedingRestoreTitle;
+
+  /// Info dialog body for the restore-auto button on the seeding screen
+  ///
+  /// In de, this message translates to:
+  /// **'Setzt deine manuellen Änderungen zurück auf die automatische Reihenfolge aus der Vorrunde.'**
+  String get tournamentSetupInfoSeedingRestoreBody;
+
+  /// Info dialog title for the autoseed-from-ELO button on the seeding screen
+  ///
+  /// In de, this message translates to:
+  /// **'Setzliste aus ELO übernehmen'**
+  String get tournamentSetupInfoSeedingEloTitle;
+
+  /// Info dialog body for the autoseed-from-ELO button on the seeding screen
+  ///
+  /// In de, this message translates to:
+  /// **'Füllt die Setzliste mit der Reihenfolge aus den ELO-Wertungen der Teams. Du kannst danach trotzdem von Hand nachsortieren.'**
+  String get tournamentSetupInfoSeedingEloBody;
+
+  /// Info dialog title for the start-KO button on the seeding screen
+  ///
+  /// In de, this message translates to:
+  /// **'K.-o. starten'**
+  String get tournamentSetupInfoSeedingStartKoTitle;
+
+  /// Info dialog body for the start-KO button on the seeding screen
+  ///
+  /// In de, this message translates to:
+  /// **'Startet die K.-o.-Phase mit der gespeicherten Setzliste. Geht erst, wenn die Setzung gespeichert ist.'**
+  String get tournamentSetupInfoSeedingStartKoBody;
+
   /// Title of wizard step 4.5 asking whether the tournament counts for the league
   ///
   /// In de, this message translates to:

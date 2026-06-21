@@ -9,6 +9,7 @@ import 'package:kubb_app/features/tournament/application/tournament_list_provide
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_seeding_controller.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -145,14 +146,24 @@ class _Editor extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            l.tournamentSeedingEyebrow,
-            style: TextStyle(
-              color: tokens.fgMuted,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.4,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l.tournamentSeedingEyebrow,
+                  style: TextStyle(
+                    color: tokens.fgMuted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ),
+              InfoIconButton(
+                title: l.tournamentSetupInfoSeedingSortTitle,
+                message: l.tournamentSetupInfoSeedingSortBody,
+              ),
+            ],
           ),
           const SizedBox(height: KubbTokens.space2),
           Text(l.tournamentSeedingDragHint,
@@ -201,15 +212,20 @@ class _Editor extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: KubbTokens.space3),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed:
-                  busy ? null : () => unawaited(notifier.autoseedFromElo()),
-              icon: const Icon(Icons.auto_awesome, size: 18),
-              label: Text(l.tournamentSeedingAutoSeedButton),
+          Row(children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed:
+                    busy ? null : () => unawaited(notifier.autoseedFromElo()),
+                icon: const Icon(Icons.auto_awesome, size: 18),
+                label: Text(l.tournamentSeedingAutoSeedButton),
+              ),
             ),
-          ),
+            InfoIconButton(
+              title: l.tournamentSetupInfoSeedingEloTitle,
+              message: l.tournamentSetupInfoSeedingEloBody,
+            ),
+          ]),
           const SizedBox(height: KubbTokens.space2),
           Row(children: [
             Expanded(
@@ -219,27 +235,40 @@ class _Editor extends ConsumerWidget {
                 child: Text(l.tournamentSeedingResetButton),
               ),
             ),
-            const SizedBox(width: KubbTokens.space2),
+            InfoIconButton(
+              title: l.tournamentSetupInfoSeedingRestoreTitle,
+              message: l.tournamentSetupInfoSeedingRestoreBody,
+            ),
+            const SizedBox(width: KubbTokens.space1),
             Expanded(
               child: FilledButton(
                 onPressed: busy ? null : () => unawaited(notifier.save()),
                 child: Text(l.tournamentSeedingSaveButton),
               ),
             ),
+            InfoIconButton(
+              title: l.tournamentSetupInfoSeedingSaveTitle,
+              message: l.tournamentSetupInfoSeedingSaveBody,
+            ),
           ]),
           const SizedBox(height: KubbTokens.space2),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.tonal(
-              onPressed: busy
-                  ? null
-                  : () {
-                      _startRequested = true;
-                      unawaited(notifier.startKoPhase());
-                    },
-              child: Text(l.tournamentSeedingStartKoButton),
+          Row(children: [
+            Expanded(
+              child: FilledButton.tonal(
+                onPressed: busy
+                    ? null
+                    : () {
+                        _startRequested = true;
+                        unawaited(notifier.startKoPhase());
+                      },
+                child: Text(l.tournamentSeedingStartKoButton),
+              ),
             ),
-          ),
+            InfoIconButton(
+              title: l.tournamentSetupInfoSeedingStartKoTitle,
+              message: l.tournamentSetupInfoSeedingStartKoBody,
+            ),
+          ]),
         ],
       ),
     );
