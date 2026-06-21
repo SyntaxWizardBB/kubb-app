@@ -6433,5 +6433,29 @@
   "tournamentSetupInfoParticipantInfoBody": "Freitextfelder für praktische Infos rund ums Turnier. Erscheinen in der Turnierbeschreibung; alle optional.",
   "@tournamentSetupInfoParticipantInfoBody": {
     "description": "Info dialog body shared by the participant free-text info fields"
+  },
+  "tournamentSetupInfoTeamSizeMinTitle": "Kleinste Teamgrösse",
+  "@tournamentSetupInfoTeamSizeMinTitle": {
+    "description": "Info dialog title for the minimum team size field on the participants step"
+  },
+  "tournamentSetupInfoTeamSizeMinBody": "Wie viele Spieler ein Team mindestens haben muss. Bei 1 spielen Einzelpersonen.",
+  "@tournamentSetupInfoTeamSizeMinBody": {
+    "description": "Info dialog body for the minimum team size field"
+  },
+  "tournamentSetupInfoMaxTeamSizeTitle": "Grösste Teamgrösse",
+  "@tournamentSetupInfoMaxTeamSizeTitle": {
+    "description": "Info dialog title for the maximum players per team field on the participants step"
+  },
+  "tournamentSetupInfoMaxTeamSizeBody": "Wie viele Spieler ein Team höchstens haben darf. Liegt dieser Wert über dem Minimum, sind Teams unterschiedlicher Grösse erlaubt.",
+  "@tournamentSetupInfoMaxTeamSizeBody": {
+    "description": "Info dialog body for the maximum players per team field"
+  },
+  "tournamentSetupInfoMaxParticipantsTitle": "Teilnehmer-Obergrenze",
+  "@tournamentSetupInfoMaxParticipantsTitle": {
+    "description": "Info dialog title for the maximum participants field on the participants step"
+  },
+  "tournamentSetupInfoMaxParticipantsBody": "Wie viele Teams sich höchstens anmelden dürfen. Ist das Limit erreicht, sind keine weiteren Anmeldungen möglich.",
+  "@tournamentSetupInfoMaxParticipantsBody": {
+    "description": "Info dialog body for the maximum participants field"
   }
 }

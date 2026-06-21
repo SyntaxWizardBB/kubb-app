@@ -1798,6 +1798,10 @@ class _StepParticipants extends StatelessWidget {
           min: 1,
           max: 6,
           onChanged: onTeamSize,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoTeamSizeMinTitle,
+            message: l10n.tournamentSetupInfoTeamSizeMinBody,
+          ),
         ),
         const SizedBox(height: KubbTokens.space4),
         WizardNumberField(
@@ -1806,6 +1810,10 @@ class _StepParticipants extends StatelessWidget {
           min: draft.teamSize,
           max: 6,
           onChanged: onMaxTeamSize,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoMaxTeamSizeTitle,
+            message: l10n.tournamentSetupInfoMaxTeamSizeBody,
+          ),
         ),
         const SizedBox(height: KubbTokens.space1half),
         _HelperText(l10n.tournamentWizardTeamSizeHint),
@@ -1818,6 +1826,10 @@ class _StepParticipants extends StatelessWidget {
           min: 2,
           max: TournamentConfigDraft.participantsHardMax,
           onChanged: onMax,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoMaxParticipantsTitle,
+            message: l10n.tournamentSetupInfoMaxParticipantsBody,
+          ),
         ),
       ],
     );

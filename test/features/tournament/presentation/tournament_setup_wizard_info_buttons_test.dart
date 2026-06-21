@@ -27,9 +27,12 @@ class _SeededController extends TournamentConfigController {
   @override
   TournamentConfigDraft build() => super.build().copyWith(
         displayName: 'Frühlingscup',
+        clubChoiceMade: true,
         location: 'Brügg',
+        venueAddress: 'Sportplatz Brügg',
         eventStartsAt: DateTime(2026, 6, 20, 10),
         registrationClosesAt: DateTime(2026, 6, 18, 18),
+        checkinUntil: DateTime(2026, 6, 20, 9, 30),
       );
 }
 
@@ -125,6 +128,31 @@ void main() {
       tester,
       title: 'Hinweise für Teilnehmer',
       bodyFragment: 'Freitextfelder',
+    );
+  });
+
+  testWidgets('participants step number fields carry info buttons',
+      (tester) async {
+    await _pump(tester);
+    // The seeded controller fills every step-1 field, so a single "Weiter"
+    // lands on the Teilnehmer step.
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
+
+    await _openAndExpect(
+      tester,
+      title: 'Kleinste Teamgrösse',
+      bodyFragment: 'mindestens haben muss',
+    );
+    await _openAndExpect(
+      tester,
+      title: 'Grösste Teamgrösse',
+      bodyFragment: 'höchstens haben darf',
+    );
+    await _openAndExpect(
+      tester,
+      title: 'Teilnehmer-Obergrenze',
+      bodyFragment: 'höchstens anmelden dürfen',
     );
   });
 }

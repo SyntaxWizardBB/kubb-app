@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
 
 /// Labelled numeric input used across the tournament-setup wizard. Replaces
 /// the old +/- stepper widgets (`_NumberStepper`, `_MiniStepper`) with a
@@ -20,6 +21,7 @@ class WizardNumberField extends StatefulWidget {
     required this.max,
     required this.onChanged,
     this.compact = false,
+    this.info,
     super.key,
   });
 
@@ -28,6 +30,10 @@ class WizardNumberField extends StatefulWidget {
   final int min;
   final int max;
   final ValueChanged<int> onChanged;
+
+  /// Optional explainer shown as a trailing info-glyph next to the label.
+  /// Only surfaced in the roomy (non-compact) layout.
+  final InfoIconButton? info;
 
   /// Compact layout (smaller label, tighter height) for dense per-round
   /// rule blocks. Default is the roomy wizard-step layout.
@@ -150,18 +156,29 @@ class _WizardNumberFieldState extends State<WizardNumberField> {
       );
     }
 
+    final labelText = Text(
+      widget.label,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: tokens.fgMuted,
+        letterSpacing: 0.4,
+      ),
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          widget.label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: tokens.fgMuted,
-            letterSpacing: 0.4,
-          ),
-        ),
+        if (widget.info != null)
+          Row(
+            children: [
+              Flexible(child: labelText),
+              const Spacer(),
+              widget.info!,
+            ],
+          )
+        else
+          labelText,
         const SizedBox(height: KubbTokens.space2),
         field,
       ],

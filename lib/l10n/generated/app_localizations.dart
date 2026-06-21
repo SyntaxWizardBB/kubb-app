@@ -9075,6 +9075,42 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Freitextfelder für praktische Infos rund ums Turnier. Erscheinen in der Turnierbeschreibung; alle optional.'**
   String get tournamentSetupInfoParticipantInfoBody;
+
+  /// Info dialog title for the minimum team size field on the participants step
+  ///
+  /// In de, this message translates to:
+  /// **'Kleinste Teamgrösse'**
+  String get tournamentSetupInfoTeamSizeMinTitle;
+
+  /// Info dialog body for the minimum team size field
+  ///
+  /// In de, this message translates to:
+  /// **'Wie viele Spieler ein Team mindestens haben muss. Bei 1 spielen Einzelpersonen.'**
+  String get tournamentSetupInfoTeamSizeMinBody;
+
+  /// Info dialog title for the maximum players per team field on the participants step
+  ///
+  /// In de, this message translates to:
+  /// **'Grösste Teamgrösse'**
+  String get tournamentSetupInfoMaxTeamSizeTitle;
+
+  /// Info dialog body for the maximum players per team field
+  ///
+  /// In de, this message translates to:
+  /// **'Wie viele Spieler ein Team höchstens haben darf. Liegt dieser Wert über dem Minimum, sind Teams unterschiedlicher Grösse erlaubt.'**
+  String get tournamentSetupInfoMaxTeamSizeBody;
+
+  /// Info dialog title for the maximum participants field on the participants step
+  ///
+  /// In de, this message translates to:
+  /// **'Teilnehmer-Obergrenze'**
+  String get tournamentSetupInfoMaxParticipantsTitle;
+
+  /// Info dialog body for the maximum participants field
+  ///
+  /// In de, this message translates to:
+  /// **'Wie viele Teams sich höchstens anmelden dürfen. Ist das Limit erreicht, sind keine weiteren Anmeldungen möglich.'**
+  String get tournamentSetupInfoMaxParticipantsBody;
 }
 
 class _AppLocalizationsDelegate

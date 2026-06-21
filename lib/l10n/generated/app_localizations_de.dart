@@ -5050,4 +5050,25 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get tournamentSetupInfoParticipantInfoBody =>
       'Freitextfelder für praktische Infos rund ums Turnier. Erscheinen in der Turnierbeschreibung; alle optional.';
+
+  @override
+  String get tournamentSetupInfoTeamSizeMinTitle => 'Kleinste Teamgrösse';
+
+  @override
+  String get tournamentSetupInfoTeamSizeMinBody =>
+      'Wie viele Spieler ein Team mindestens haben muss. Bei 1 spielen Einzelpersonen.';
+
+  @override
+  String get tournamentSetupInfoMaxTeamSizeTitle => 'Grösste Teamgrösse';
+
+  @override
+  String get tournamentSetupInfoMaxTeamSizeBody =>
+      'Wie viele Spieler ein Team höchstens haben darf. Liegt dieser Wert über dem Minimum, sind Teams unterschiedlicher Grösse erlaubt.';
+
+  @override
+  String get tournamentSetupInfoMaxParticipantsTitle => 'Teilnehmer-Obergrenze';
+
+  @override
+  String get tournamentSetupInfoMaxParticipantsBody =>
+      'Wie viele Teams sich höchstens anmelden dürfen. Ist das Limit erreicht, sind keine weiteren Anmeldungen möglich.';
 }
