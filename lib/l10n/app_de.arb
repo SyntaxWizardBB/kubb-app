@@ -2566,6 +2566,10 @@
   "@tournamentWizardInviteSearchHint": {
     "description": "Hint text in the invite player search field"
   },
+  "tournamentWizardInvitedPlayersLabel": "Eingeladene Spieler",
+  "@tournamentWizardInvitedPlayersLabel": {
+    "description": "Field label above the invited-players search/picker section"
+  },
   "tournamentWizardInviteNoResults": "Niemand gefunden für „{query}\".",
   "@tournamentWizardInviteNoResults": {
     "description": "Empty-result message in the invite player search",
@@ -6261,5 +6265,173 @@
         "type": "String"
       }
     }
+  },
+  "tournamentSetupInfoDisplayNameTitle": "Name des Turniers",
+  "@tournamentSetupInfoDisplayNameTitle": {
+    "description": "Info dialog title for the tournament name field on the Stammdaten step"
+  },
+  "tournamentSetupInfoDisplayNameBody": "Der Name, unter dem dein Turnier in der Liste und für alle Teilnehmer erscheint. Die App hängt automatisch die Jahreszahl an (z. B. \"Frühlingscup 2026\").",
+  "@tournamentSetupInfoDisplayNameBody": {
+    "description": "Info dialog body for the tournament name field"
+  },
+  "tournamentSetupInfoClubTitle": "Wer richtet aus?",
+  "@tournamentSetupInfoClubTitle": {
+    "description": "Info dialog title for the club picker field"
+  },
+  "tournamentSetupInfoClubBody": "Wählst du einen Club, zählt das Turnier als offizielles, für die Liga wertbares Vereinsturnier. Wählst du \"Spasstournier – ohne Wertung\", ist es ein privates Turnier ohne Liga-Bezug, und du kannst es auf Einladung beschränken.",
+  "@tournamentSetupInfoClubBody": {
+    "description": "Info dialog body for the club picker field"
+  },
+  "tournamentSetupInfoLeagueCategoriesTitle": "Für welche Liga zählt es?",
+  "@tournamentSetupInfoLeagueCategoriesTitle": {
+    "description": "Info dialog title for the league categories field"
+  },
+  "tournamentSetupInfoLeagueCategoriesBody": "Legt fest, in welche Liga-Wertung die Ergebnisse einfliessen. Nur bei einem Vereinsturnier sicht- und auswählbar; ein Spasstournier hat keine Liga-Kategorie.",
+  "@tournamentSetupInfoLeagueCategoriesBody": {
+    "description": "Info dialog body for the league categories field"
+  },
+  "tournamentSetupInfoInviteOnlyTitle": "Nur eingeladene Spieler",
+  "@tournamentSetupInfoInviteOnlyTitle": {
+    "description": "Info dialog title for the invite-only toggle"
+  },
+  "tournamentSetupInfoInviteOnlyBody": "Wenn aktiv, können sich nicht alle frei anmelden — nur die Spieler, die du unten gezielt einlädst, dürfen mitspielen. Die Einladungen werden nach dem Anlegen des Turniers verschickt. Nur für Spassturniere ohne Club.",
+  "@tournamentSetupInfoInviteOnlyBody": {
+    "description": "Info dialog body for the invite-only toggle"
+  },
+  "tournamentSetupInfoInvitedPlayersTitle": "Wen einladen?",
+  "@tournamentSetupInfoInvitedPlayersTitle": {
+    "description": "Info dialog title for the invited players picker"
+  },
+  "tournamentSetupInfoInvitedPlayersBody": "Such die Spieler über den Namen und tippe \"Einladen\". Nur diese erhalten Zugang zum Turnier. Du kannst Einträge jederzeit wieder entfernen, bevor du das Turnier anlegst.",
+  "@tournamentSetupInfoInvitedPlayersBody": {
+    "description": "Info dialog body for the invited players picker"
+  },
+  "tournamentSetupInfoLocationTitle": "Wo wird gespielt?",
+  "@tournamentSetupInfoLocationTitle": {
+    "description": "Info dialog title for the location field"
+  },
+  "tournamentSetupInfoLocationBody": "Der Veranstaltungsort, kurz benannt (z. B. \"Sportplatz Brügg\"). Erscheint in der Turnierübersicht.",
+  "@tournamentSetupInfoLocationBody": {
+    "description": "Info dialog body for the location field"
+  },
+  "tournamentSetupInfoAddressTitle": "Genaue Anschrift",
+  "@tournamentSetupInfoAddressTitle": {
+    "description": "Info dialog title for the venue address field"
+  },
+  "tournamentSetupInfoAddressBody": "Die vollständige Adresse zum Anfahren. Hilft den Teilnehmern, den Spielort zu finden.",
+  "@tournamentSetupInfoAddressBody": {
+    "description": "Info dialog body for the venue address field"
+  },
+  "tournamentSetupInfoEventDateTitle": "Wann geht es los?",
+  "@tournamentSetupInfoEventDateTitle": {
+    "description": "Info dialog title for the start date field"
+  },
+  "tournamentSetupInfoEventDateBody": "Datum und Uhrzeit, an denen das Turnier beginnt.",
+  "@tournamentSetupInfoEventDateBody": {
+    "description": "Info dialog body for the start date field"
+  },
+  "tournamentSetupInfoRegistrationDeadlineTitle": "Anmeldeschluss",
+  "@tournamentSetupInfoRegistrationDeadlineTitle": {
+    "description": "Info dialog title for the registration deadline field"
+  },
+  "tournamentSetupInfoRegistrationDeadlineBody": "Bis zu diesem Zeitpunkt können sich Teilnehmer anmelden. Danach ist keine neue Anmeldung mehr möglich.",
+  "@tournamentSetupInfoRegistrationDeadlineBody": {
+    "description": "Info dialog body for the registration deadline field"
+  },
+  "tournamentSetupInfoCheckinUntilTitle": "Einchecken bis",
+  "@tournamentSetupInfoCheckinUntilTitle": {
+    "description": "Info dialog title for the check-in deadline field"
+  },
+  "tournamentSetupInfoCheckinUntilBody": "Bis dahin müssen angemeldete Teilnehmer vor Ort bestätigen, dass sie da sind. Wer bis dahin nicht eingecheckt hat, kann aus der Spielplanung fallen.",
+  "@tournamentSetupInfoCheckinUntilBody": {
+    "description": "Info dialog body for the check-in deadline field"
+  },
+  "tournamentSetupInfoScoringTitle": "Zählweise der Sätze",
+  "@tournamentSetupInfoScoringTitle": {
+    "description": "Info dialog title for the scoring choice"
+  },
+  "tournamentSetupInfoScoringBody": "Bestimmt, wie ein einzelner Satz gewertet wird. Bei EKC zählt jeder Feldkubb einen Punkt. Bei Classic zählt nur der Satzsieger — Sätze, die nicht zu Ende gespielt werden, fliessen nicht in die Wertung ein. Diese Wahl gilt für alle Spiele des Turniers.",
+  "@tournamentSetupInfoScoringBody": {
+    "description": "Info dialog body for the scoring choice"
+  },
+  "tournamentSetupInfoSureshotTitle": "Sonderregel Sureshot",
+  "@tournamentSetupInfoSureshotTitle": {
+    "description": "Info dialog title for the Sureshot toggle"
+  },
+  "tournamentSetupInfoSureshotBody": "Schaltet die Sureshot-Variante für alle Spiele ein. Mit Sureshot muss die Königsfigur am Ende eines Satzes durch die Beine hindurch abgeworfen werden statt aus dem normalen Stand. Lässt sich ein- und ausschalten.",
+  "@tournamentSetupInfoSureshotBody": {
+    "description": "Info dialog body for the Sureshot toggle"
+  },
+  "tournamentSetupInfoDiggyTitle": "Sonderregel Diggy",
+  "@tournamentSetupInfoDiggyTitle": {
+    "description": "Info dialog title for the Diggy toggle"
+  },
+  "tournamentSetupInfoDiggyBody": "Schaltet die Diggy-Variante für alle Spiele ein. Liegt beim Einwerfen ein Kubb auf einem anderen und dabei im Spielfeld (also ein gültiger Einwurf), darf das einwerfende Team den oben liegenden Kubb platzieren.",
+  "@tournamentSetupInfoDiggyBody": {
+    "description": "Info dialog body for the Diggy toggle"
+  },
+  "tournamentSetupInfoStrafkubbTitle": "Strafkubb-Platzierung",
+  "@tournamentSetupInfoStrafkubbTitle": {
+    "description": "Info dialog title for the Strafkubb-off-baseline toggle"
+  },
+  "tournamentSetupInfoStrafkubbBody": "Ein Strafkubb entsteht, wenn ein eingeworfener Kubb nach dem zweiten Versuch nicht gültig steht; der Gegner darf ihn frei aufstellen. Ist diese Option aktiv, muss der Strafkubb 30 cm (eine Stocklänge) Abstand zum König und zur Baseline haben.",
+  "@tournamentSetupInfoStrafkubbBody": {
+    "description": "Info dialog body for the Strafkubb-off-baseline toggle"
+  },
+  "tournamentSetupInfoOpeningTitle": "Eröffnung",
+  "@tournamentSetupInfoOpeningTitle": {
+    "description": "Info dialog title for the opening rule (Anspielregel) toggle"
+  },
+  "tournamentSetupInfoOpeningBody": "\"2-4-6\" heisst: in der ersten Runde werden 2 Wurfstöcke geworfen, in der zweiten 4, ab der dritten 6 — ein sanfter Einstieg. \"Frei\" lässt die Eröffnung offen. Gilt für alle Spiele.",
+  "@tournamentSetupInfoOpeningBody": {
+    "description": "Info dialog body for the opening rule (Anspielregel) toggle"
+  },
+  "tournamentSetupInfoRulesPdfTitle": "Regeln als PDF",
+  "@tournamentSetupInfoRulesPdfTitle": {
+    "description": "Info dialog title for the rules PDF upload"
+  },
+  "tournamentSetupInfoRulesPdfBody": "Optionales Dokument mit den Turnierregeln, das Teilnehmer einsehen können.",
+  "@tournamentSetupInfoRulesPdfBody": {
+    "description": "Info dialog body for the rules PDF upload"
+  },
+  "tournamentSetupInfoSiteMapPdfTitle": "Lageplan als PDF",
+  "@tournamentSetupInfoSiteMapPdfTitle": {
+    "description": "Info dialog title for the site-map PDF upload"
+  },
+  "tournamentSetupInfoSiteMapPdfBody": "Optionaler Plan des Spielgeländes (Felder, Anfahrt, Infrastruktur) zum Herunterladen.",
+  "@tournamentSetupInfoSiteMapPdfBody": {
+    "description": "Info dialog body for the site-map PDF upload"
+  },
+  "tournamentSetupInfoEntryFeeTitle": "Startgeld",
+  "@tournamentSetupInfoEntryFeeTitle": {
+    "description": "Info dialog title for the entry fee field"
+  },
+  "tournamentSetupInfoEntryFeeBody": "Betrag, den Teilnehmer zahlen. Leer oder 0 bedeutet kostenlos (\"Gratis\").",
+  "@tournamentSetupInfoEntryFeeBody": {
+    "description": "Info dialog body for the entry fee field"
+  },
+  "tournamentSetupInfoPaymentMethodsTitle": "Wie bezahlt wird",
+  "@tournamentSetupInfoPaymentMethodsTitle": {
+    "description": "Info dialog title for the payment methods chips"
+  },
+  "tournamentSetupInfoPaymentMethodsBody": "Wähle, welche Zahlungsarten du vor Ort akzeptierst (Bar, TWINT, Karte). Mehrfachauswahl möglich.",
+  "@tournamentSetupInfoPaymentMethodsBody": {
+    "description": "Info dialog body for the payment methods chips"
+  },
+  "tournamentSetupInfoContactTitle": "Kontakt für Rückfragen",
+  "@tournamentSetupInfoContactTitle": {
+    "description": "Info dialog title for the contact person fields"
+  },
+  "tournamentSetupInfoContactBody": "Name und Telefonnummer der Person, die Teilnehmer bei Fragen erreichen. Optional.",
+  "@tournamentSetupInfoContactBody": {
+    "description": "Info dialog body for the contact person fields"
+  },
+  "tournamentSetupInfoParticipantInfoTitle": "Hinweise für Teilnehmer",
+  "@tournamentSetupInfoParticipantInfoTitle": {
+    "description": "Info dialog title shared by the participant free-text info fields (food, travel, accommodation, weather)"
+  },
+  "tournamentSetupInfoParticipantInfoBody": "Freitextfelder für praktische Infos rund ums Turnier. Erscheinen in der Turnierbeschreibung; alle optional.",
+  "@tournamentSetupInfoParticipantInfoBody": {
+    "description": "Info dialog body shared by the participant free-text info fields"
   }
 }

@@ -13,6 +13,7 @@ class KubbLabeledSwitch extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.subtitle,
+    this.info,
     super.key,
   });
 
@@ -20,6 +21,9 @@ class KubbLabeledSwitch extends StatelessWidget {
   final String? subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
+
+  /// Optional explainer glyph rendered between the text and the switch.
+  final Widget? info;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +54,7 @@ class KubbLabeledSwitch extends StatelessWidget {
               ],
             ),
           ),
+          ?info,
           const SizedBox(width: KubbTokens.space3),
           Switch(
             value: value,

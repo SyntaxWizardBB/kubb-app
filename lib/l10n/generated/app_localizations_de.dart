@@ -1992,6 +1992,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardInviteSearchHint => 'Spielername suchen…';
 
   @override
+  String get tournamentWizardInvitedPlayersLabel => 'Eingeladene Spieler';
+
+  @override
   String tournamentWizardInviteNoResults(String query) {
     return 'Niemand gefunden für „$query\".';
   }
@@ -4898,4 +4901,153 @@ class AppLocalizationsDe extends AppLocalizations {
   String homeOngoingMatchSubtitle(String tournament, String opponent) {
     return '$tournament · gegen $opponent';
   }
+
+  @override
+  String get tournamentSetupInfoDisplayNameTitle => 'Name des Turniers';
+
+  @override
+  String get tournamentSetupInfoDisplayNameBody =>
+      'Der Name, unter dem dein Turnier in der Liste und für alle Teilnehmer erscheint. Die App hängt automatisch die Jahreszahl an (z. B. \"Frühlingscup 2026\").';
+
+  @override
+  String get tournamentSetupInfoClubTitle => 'Wer richtet aus?';
+
+  @override
+  String get tournamentSetupInfoClubBody =>
+      'Wählst du einen Club, zählt das Turnier als offizielles, für die Liga wertbares Vereinsturnier. Wählst du \"Spasstournier – ohne Wertung\", ist es ein privates Turnier ohne Liga-Bezug, und du kannst es auf Einladung beschränken.';
+
+  @override
+  String get tournamentSetupInfoLeagueCategoriesTitle =>
+      'Für welche Liga zählt es?';
+
+  @override
+  String get tournamentSetupInfoLeagueCategoriesBody =>
+      'Legt fest, in welche Liga-Wertung die Ergebnisse einfliessen. Nur bei einem Vereinsturnier sicht- und auswählbar; ein Spasstournier hat keine Liga-Kategorie.';
+
+  @override
+  String get tournamentSetupInfoInviteOnlyTitle => 'Nur eingeladene Spieler';
+
+  @override
+  String get tournamentSetupInfoInviteOnlyBody =>
+      'Wenn aktiv, können sich nicht alle frei anmelden — nur die Spieler, die du unten gezielt einlädst, dürfen mitspielen. Die Einladungen werden nach dem Anlegen des Turniers verschickt. Nur für Spassturniere ohne Club.';
+
+  @override
+  String get tournamentSetupInfoInvitedPlayersTitle => 'Wen einladen?';
+
+  @override
+  String get tournamentSetupInfoInvitedPlayersBody =>
+      'Such die Spieler über den Namen und tippe \"Einladen\". Nur diese erhalten Zugang zum Turnier. Du kannst Einträge jederzeit wieder entfernen, bevor du das Turnier anlegst.';
+
+  @override
+  String get tournamentSetupInfoLocationTitle => 'Wo wird gespielt?';
+
+  @override
+  String get tournamentSetupInfoLocationBody =>
+      'Der Veranstaltungsort, kurz benannt (z. B. \"Sportplatz Brügg\"). Erscheint in der Turnierübersicht.';
+
+  @override
+  String get tournamentSetupInfoAddressTitle => 'Genaue Anschrift';
+
+  @override
+  String get tournamentSetupInfoAddressBody =>
+      'Die vollständige Adresse zum Anfahren. Hilft den Teilnehmern, den Spielort zu finden.';
+
+  @override
+  String get tournamentSetupInfoEventDateTitle => 'Wann geht es los?';
+
+  @override
+  String get tournamentSetupInfoEventDateBody =>
+      'Datum und Uhrzeit, an denen das Turnier beginnt.';
+
+  @override
+  String get tournamentSetupInfoRegistrationDeadlineTitle => 'Anmeldeschluss';
+
+  @override
+  String get tournamentSetupInfoRegistrationDeadlineBody =>
+      'Bis zu diesem Zeitpunkt können sich Teilnehmer anmelden. Danach ist keine neue Anmeldung mehr möglich.';
+
+  @override
+  String get tournamentSetupInfoCheckinUntilTitle => 'Einchecken bis';
+
+  @override
+  String get tournamentSetupInfoCheckinUntilBody =>
+      'Bis dahin müssen angemeldete Teilnehmer vor Ort bestätigen, dass sie da sind. Wer bis dahin nicht eingecheckt hat, kann aus der Spielplanung fallen.';
+
+  @override
+  String get tournamentSetupInfoScoringTitle => 'Zählweise der Sätze';
+
+  @override
+  String get tournamentSetupInfoScoringBody =>
+      'Bestimmt, wie ein einzelner Satz gewertet wird. Bei EKC zählt jeder Feldkubb einen Punkt. Bei Classic zählt nur der Satzsieger — Sätze, die nicht zu Ende gespielt werden, fliessen nicht in die Wertung ein. Diese Wahl gilt für alle Spiele des Turniers.';
+
+  @override
+  String get tournamentSetupInfoSureshotTitle => 'Sonderregel Sureshot';
+
+  @override
+  String get tournamentSetupInfoSureshotBody =>
+      'Schaltet die Sureshot-Variante für alle Spiele ein. Mit Sureshot muss die Königsfigur am Ende eines Satzes durch die Beine hindurch abgeworfen werden statt aus dem normalen Stand. Lässt sich ein- und ausschalten.';
+
+  @override
+  String get tournamentSetupInfoDiggyTitle => 'Sonderregel Diggy';
+
+  @override
+  String get tournamentSetupInfoDiggyBody =>
+      'Schaltet die Diggy-Variante für alle Spiele ein. Liegt beim Einwerfen ein Kubb auf einem anderen und dabei im Spielfeld (also ein gültiger Einwurf), darf das einwerfende Team den oben liegenden Kubb platzieren.';
+
+  @override
+  String get tournamentSetupInfoStrafkubbTitle => 'Strafkubb-Platzierung';
+
+  @override
+  String get tournamentSetupInfoStrafkubbBody =>
+      'Ein Strafkubb entsteht, wenn ein eingeworfener Kubb nach dem zweiten Versuch nicht gültig steht; der Gegner darf ihn frei aufstellen. Ist diese Option aktiv, muss der Strafkubb 30 cm (eine Stocklänge) Abstand zum König und zur Baseline haben.';
+
+  @override
+  String get tournamentSetupInfoOpeningTitle => 'Eröffnung';
+
+  @override
+  String get tournamentSetupInfoOpeningBody =>
+      '\"2-4-6\" heisst: in der ersten Runde werden 2 Wurfstöcke geworfen, in der zweiten 4, ab der dritten 6 — ein sanfter Einstieg. \"Frei\" lässt die Eröffnung offen. Gilt für alle Spiele.';
+
+  @override
+  String get tournamentSetupInfoRulesPdfTitle => 'Regeln als PDF';
+
+  @override
+  String get tournamentSetupInfoRulesPdfBody =>
+      'Optionales Dokument mit den Turnierregeln, das Teilnehmer einsehen können.';
+
+  @override
+  String get tournamentSetupInfoSiteMapPdfTitle => 'Lageplan als PDF';
+
+  @override
+  String get tournamentSetupInfoSiteMapPdfBody =>
+      'Optionaler Plan des Spielgeländes (Felder, Anfahrt, Infrastruktur) zum Herunterladen.';
+
+  @override
+  String get tournamentSetupInfoEntryFeeTitle => 'Startgeld';
+
+  @override
+  String get tournamentSetupInfoEntryFeeBody =>
+      'Betrag, den Teilnehmer zahlen. Leer oder 0 bedeutet kostenlos (\"Gratis\").';
+
+  @override
+  String get tournamentSetupInfoPaymentMethodsTitle => 'Wie bezahlt wird';
+
+  @override
+  String get tournamentSetupInfoPaymentMethodsBody =>
+      'Wähle, welche Zahlungsarten du vor Ort akzeptierst (Bar, TWINT, Karte). Mehrfachauswahl möglich.';
+
+  @override
+  String get tournamentSetupInfoContactTitle => 'Kontakt für Rückfragen';
+
+  @override
+  String get tournamentSetupInfoContactBody =>
+      'Name und Telefonnummer der Person, die Teilnehmer bei Fragen erreichen. Optional.';
+
+  @override
+  String get tournamentSetupInfoParticipantInfoTitle =>
+      'Hinweise für Teilnehmer';
+
+  @override
+  String get tournamentSetupInfoParticipantInfoBody =>
+      'Freitextfelder für praktische Infos rund ums Turnier. Erscheinen in der Turnierbeschreibung; alle optional.';
 }

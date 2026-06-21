@@ -39,6 +39,7 @@ import 'package:kubb_app/features/tournament/presentation/stage_graph_builder_sc
         stageSeedingSourceLabel;
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_model_explainer_sheet.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/save_template_dialog.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/schoch_config_section.dart';
@@ -704,7 +705,13 @@ class _StepStammdatenState extends State<_StepStammdaten> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _FieldLabel(l10n.tournamentWizardDisplayNameLabel),
+        _FieldLabel(
+          l10n.tournamentWizardDisplayNameLabel,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoDisplayNameTitle,
+            message: l10n.tournamentSetupInfoDisplayNameBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           key: const Key('wizardNameField'),
@@ -717,7 +724,13 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         const SizedBox(height: KubbTokens.space1half),
         _HelperText(l10n.tournamentWizardDisplayNameYearHint),
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(l10n.tournamentWizardClubLabel),
+        _FieldLabel(
+          l10n.tournamentWizardClubLabel,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoClubTitle,
+            message: l10n.tournamentSetupInfoClubBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space2),
         _ClubPickerField(
           selectedClubId: draft.clubId,
@@ -733,7 +746,13 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         if (draft.clubId != null) ...[
           const SizedBox(height: KubbTokens.space5),
           // K29: league categories are required once a club is chosen.
-          _FieldLabel(l10n.tournamentWizardLeagueCategoriesLabel),
+          _FieldLabel(
+            l10n.tournamentWizardLeagueCategoriesLabel,
+            info: InfoIconButton(
+              title: l10n.tournamentSetupInfoLeagueCategoriesTitle,
+              message: l10n.tournamentSetupInfoLeagueCategoriesBody,
+            ),
+          ),
           const SizedBox(height: KubbTokens.space2),
           Wrap(
             spacing: KubbTokens.space2,
@@ -762,8 +781,20 @@ class _StepStammdatenState extends State<_StepStammdaten> {
             subtitle: l10n.tournamentWizardInviteOnlyHint,
             value: draft.inviteOnly,
             onChanged: controller.setInviteOnly,
+            info: InfoIconButton(
+              title: l10n.tournamentSetupInfoInviteOnlyTitle,
+              message: l10n.tournamentSetupInfoInviteOnlyBody,
+            ),
           ),
           if (draft.inviteOnly) ...[
+            const SizedBox(height: KubbTokens.space2),
+            _FieldLabel(
+              l10n.tournamentWizardInvitedPlayersLabel,
+              info: InfoIconButton(
+                title: l10n.tournamentSetupInfoInvitedPlayersTitle,
+                message: l10n.tournamentSetupInfoInvitedPlayersBody,
+              ),
+            ),
             const SizedBox(height: KubbTokens.space2),
             _InviteOnlySection(
               invitedUsers: draft.invitedUsers,
@@ -773,7 +804,13 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           ],
         ],
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(l10n.tournamentWizardLocationLabel),
+        _FieldLabel(
+          l10n.tournamentWizardLocationLabel,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoLocationTitle,
+            message: l10n.tournamentSetupInfoLocationBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _locationCtrl,
@@ -781,7 +818,13 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           onChanged: controller.setLocation,
         ),
         const SizedBox(height: KubbTokens.space4),
-        _FieldLabel(l10n.tournamentWizardVenueAddressLabel),
+        _FieldLabel(
+          l10n.tournamentWizardVenueAddressLabel,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoAddressTitle,
+            message: l10n.tournamentSetupInfoAddressBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _addressCtrl,
@@ -789,7 +832,13 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           onChanged: controller.setVenueAddress,
         ),
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(l10n.tournamentWizardEventDateLabel),
+        _FieldLabel(
+          l10n.tournamentWizardEventDateLabel,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoEventDateTitle,
+            message: l10n.tournamentSetupInfoEventDateBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space2),
         _DateField(
           value: draft.eventStartsAt,
@@ -799,7 +848,13 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           ),
         ),
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(l10n.tournamentWizardRegistrationDeadlineLabel),
+        _FieldLabel(
+          l10n.tournamentWizardRegistrationDeadlineLabel,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoRegistrationDeadlineTitle,
+            message: l10n.tournamentSetupInfoRegistrationDeadlineBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space2),
         _DateField(
           value: draft.registrationClosesAt,
@@ -809,7 +864,13 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           ),
         ),
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(l10n.tournamentWizardCheckinUntilLabel),
+        _FieldLabel(
+          l10n.tournamentWizardCheckinUntilLabel,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoCheckinUntilTitle,
+            message: l10n.tournamentSetupInfoCheckinUntilBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space2),
         _DateField(
           value: draft.checkinUntil,
@@ -819,7 +880,13 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           ),
         ),
         const SizedBox(height: KubbTokens.space5),
-        _FieldLabel(l10n.tournamentWizardScoringLabel),
+        _FieldLabel(
+          l10n.tournamentWizardScoringLabel,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoScoringTitle,
+            message: l10n.tournamentSetupInfoScoringBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space2),
         KubbBinaryChoice<String>(
           selected: draft.scoring == 'classic' ? 'classic' : 'ekc',
@@ -847,6 +914,10 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           value: draft.ruleVariants.sureshot,
           onChanged: (v) => controller
               .setRuleVariants(draft.ruleVariants.copyWith(sureshot: v)),
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoSureshotTitle,
+            message: l10n.tournamentSetupInfoSureshotBody,
+          ),
         ),
         KubbLabeledSwitch(
           title: l10n.tournamentWizardRuleDiggy,
@@ -854,6 +925,10 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           value: draft.ruleVariants.diggy,
           onChanged: (v) => controller
               .setRuleVariants(draft.ruleVariants.copyWith(diggy: v)),
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoDiggyTitle,
+            message: l10n.tournamentSetupInfoDiggyBody,
+          ),
         ),
         KubbLabeledSwitch(
           title: l10n.tournamentWizardRuleStrafkubb,
@@ -861,6 +936,10 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           value: draft.ruleVariants.strafkubbOffBaseline,
           onChanged: (v) => controller.setRuleVariants(
             draft.ruleVariants.copyWith(strafkubbOffBaseline: v),
+          ),
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoStrafkubbTitle,
+            message: l10n.tournamentSetupInfoStrafkubbBody,
           ),
         ),
         // K06: surface the opening rule (Anspielregel) as a default-on
@@ -875,9 +954,20 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           onChanged: (on) => controller.setRuleVariants(
             draft.ruleVariants.copyWith(openingRule: on ? '2-4-6' : 'free'),
           ),
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoOpeningTitle,
+            message: l10n.tournamentSetupInfoOpeningBody,
+          ),
         ),
         const SizedBox(height: KubbTokens.space4),
-        _FieldLabel(l10n.tournamentWizardRulesPdfLabel, optional: true),
+        _FieldLabel(
+          l10n.tournamentWizardRulesPdfLabel,
+          optional: true,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoRulesPdfTitle,
+            message: l10n.tournamentSetupInfoRulesPdfBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space2),
         _PdfUploadField(
           kind: TournamentPdfKind.rules,
@@ -885,7 +975,14 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           onChanged: controller.setRulesPdfUrl,
         ),
         const SizedBox(height: KubbTokens.space4),
-        _FieldLabel(l10n.tournamentWizardSiteMapPdfLabel, optional: true),
+        _FieldLabel(
+          l10n.tournamentWizardSiteMapPdfLabel,
+          optional: true,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoSiteMapPdfTitle,
+            message: l10n.tournamentSetupInfoSiteMapPdfBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space2),
         _PdfUploadField(
           kind: TournamentPdfKind.siteMap,
@@ -896,7 +993,14 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         // ---- Teilnahme ----
         _SectionHeaderText(l10n.tournamentWizardSectionParticipation),
         const SizedBox(height: KubbTokens.space3),
-        _FieldLabel(l10n.tournamentWizardEntryFeeLabel, optional: true),
+        _FieldLabel(
+          l10n.tournamentWizardEntryFeeLabel,
+          optional: true,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoEntryFeeTitle,
+            message: l10n.tournamentSetupInfoEntryFeeBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _feeCtrl,
@@ -906,7 +1010,14 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           onChanged: (text) => controller.setEntryFeeCents(_feeCents(text)),
         ),
         const SizedBox(height: KubbTokens.space4),
-        _FieldLabel(l10n.tournamentWizardPaymentMethodsLabel, optional: true),
+        _FieldLabel(
+          l10n.tournamentWizardPaymentMethodsLabel,
+          optional: true,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoPaymentMethodsTitle,
+            message: l10n.tournamentSetupInfoPaymentMethodsBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space2),
         Wrap(
           spacing: KubbTokens.space2,
@@ -921,7 +1032,14 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           ],
         ),
         const SizedBox(height: KubbTokens.space4),
-        _FieldLabel(l10n.tournamentWizardContactNameLabel, optional: true),
+        _FieldLabel(
+          l10n.tournamentWizardContactNameLabel,
+          optional: true,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoContactTitle,
+            message: l10n.tournamentSetupInfoContactBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space2),
         _PlainTextField(
           controller: _contactNameCtrl,
@@ -938,7 +1056,13 @@ class _StepStammdatenState extends State<_StepStammdaten> {
         ),
 
         // ---- Infos für Teilnehmer ----
-        _SectionHeaderText(l10n.tournamentWizardSectionInfo),
+        _SectionHeaderText(
+          l10n.tournamentWizardSectionInfo,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoParticipantInfoTitle,
+            message: l10n.tournamentSetupInfoParticipantInfoBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space3),
         _FieldLabel(l10n.tournamentWizardInfoFoodLabel, optional: true),
         const SizedBox(height: KubbTokens.space2),
@@ -1001,24 +1125,37 @@ List<_PaymentMethod> _paymentMethods(AppLocalizations l10n) => <_PaymentMethod>[
 /// Section heading with top spacing, used to group the long Stammdaten
 /// step into Eckdaten / Regeln / Teilnahme / Infos.
 class _SectionHeaderText extends StatelessWidget {
-  const _SectionHeaderText(this.text);
+  const _SectionHeaderText(this.text, {this.info});
 
   final String text;
+
+  /// Optional explainer glyph for a whole section, used where the fields
+  /// below share one explanation (participant free-text infos).
+  final InfoIconButton? info;
 
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final label = Text(
+      text,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.4,
+        color: tokens.fg,
+      ),
+    );
     return Padding(
       padding: const EdgeInsets.only(top: KubbTokens.space6),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.4,
-          color: tokens.fg,
-        ),
-      ),
+      child: info == null
+          ? label
+          : Row(
+              children: [
+                Flexible(child: label),
+                const Spacer(),
+                info!,
+              ],
+            ),
     );
   }
 }
@@ -1143,10 +1280,13 @@ class _PdfUploadFieldState extends ConsumerState<_PdfUploadField> {
 /// Small all-caps field label used across the Stammdaten step, with an
 /// optional "optional" badge.
 class _FieldLabel extends StatelessWidget {
-  const _FieldLabel(this.text, {this.optional = false});
+  const _FieldLabel(this.text, {this.optional = false, this.info});
 
   final String text;
   final bool optional;
+
+  /// Optional explainer shown as a trailing info-glyph next to the label.
+  final InfoIconButton? info;
 
   @override
   Widget build(BuildContext context) {
@@ -1177,6 +1317,10 @@ class _FieldLabel extends StatelessWidget {
               color: tokens.fgSubtle,
             ),
           ),
+        ],
+        if (info != null) ...[
+          const Spacer(),
+          info!,
         ],
       ],
     );

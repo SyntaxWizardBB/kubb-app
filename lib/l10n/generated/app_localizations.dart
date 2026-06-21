@@ -3670,6 +3670,12 @@ abstract class AppLocalizations {
   /// **'Spielername suchen…'**
   String get tournamentWizardInviteSearchHint;
 
+  /// Field label above the invited-players search/picker section
+  ///
+  /// In de, this message translates to:
+  /// **'Eingeladene Spieler'**
+  String get tournamentWizardInvitedPlayersLabel;
+
   /// Empty-result message in the invite player search
   ///
   /// In de, this message translates to:
@@ -8817,6 +8823,258 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{tournament} · gegen {opponent}'**
   String homeOngoingMatchSubtitle(String tournament, String opponent);
+
+  /// Info dialog title for the tournament name field on the Stammdaten step
+  ///
+  /// In de, this message translates to:
+  /// **'Name des Turniers'**
+  String get tournamentSetupInfoDisplayNameTitle;
+
+  /// Info dialog body for the tournament name field
+  ///
+  /// In de, this message translates to:
+  /// **'Der Name, unter dem dein Turnier in der Liste und für alle Teilnehmer erscheint. Die App hängt automatisch die Jahreszahl an (z. B. \"Frühlingscup 2026\").'**
+  String get tournamentSetupInfoDisplayNameBody;
+
+  /// Info dialog title for the club picker field
+  ///
+  /// In de, this message translates to:
+  /// **'Wer richtet aus?'**
+  String get tournamentSetupInfoClubTitle;
+
+  /// Info dialog body for the club picker field
+  ///
+  /// In de, this message translates to:
+  /// **'Wählst du einen Club, zählt das Turnier als offizielles, für die Liga wertbares Vereinsturnier. Wählst du \"Spasstournier – ohne Wertung\", ist es ein privates Turnier ohne Liga-Bezug, und du kannst es auf Einladung beschränken.'**
+  String get tournamentSetupInfoClubBody;
+
+  /// Info dialog title for the league categories field
+  ///
+  /// In de, this message translates to:
+  /// **'Für welche Liga zählt es?'**
+  String get tournamentSetupInfoLeagueCategoriesTitle;
+
+  /// Info dialog body for the league categories field
+  ///
+  /// In de, this message translates to:
+  /// **'Legt fest, in welche Liga-Wertung die Ergebnisse einfliessen. Nur bei einem Vereinsturnier sicht- und auswählbar; ein Spasstournier hat keine Liga-Kategorie.'**
+  String get tournamentSetupInfoLeagueCategoriesBody;
+
+  /// Info dialog title for the invite-only toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Nur eingeladene Spieler'**
+  String get tournamentSetupInfoInviteOnlyTitle;
+
+  /// Info dialog body for the invite-only toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Wenn aktiv, können sich nicht alle frei anmelden — nur die Spieler, die du unten gezielt einlädst, dürfen mitspielen. Die Einladungen werden nach dem Anlegen des Turniers verschickt. Nur für Spassturniere ohne Club.'**
+  String get tournamentSetupInfoInviteOnlyBody;
+
+  /// Info dialog title for the invited players picker
+  ///
+  /// In de, this message translates to:
+  /// **'Wen einladen?'**
+  String get tournamentSetupInfoInvitedPlayersTitle;
+
+  /// Info dialog body for the invited players picker
+  ///
+  /// In de, this message translates to:
+  /// **'Such die Spieler über den Namen und tippe \"Einladen\". Nur diese erhalten Zugang zum Turnier. Du kannst Einträge jederzeit wieder entfernen, bevor du das Turnier anlegst.'**
+  String get tournamentSetupInfoInvitedPlayersBody;
+
+  /// Info dialog title for the location field
+  ///
+  /// In de, this message translates to:
+  /// **'Wo wird gespielt?'**
+  String get tournamentSetupInfoLocationTitle;
+
+  /// Info dialog body for the location field
+  ///
+  /// In de, this message translates to:
+  /// **'Der Veranstaltungsort, kurz benannt (z. B. \"Sportplatz Brügg\"). Erscheint in der Turnierübersicht.'**
+  String get tournamentSetupInfoLocationBody;
+
+  /// Info dialog title for the venue address field
+  ///
+  /// In de, this message translates to:
+  /// **'Genaue Anschrift'**
+  String get tournamentSetupInfoAddressTitle;
+
+  /// Info dialog body for the venue address field
+  ///
+  /// In de, this message translates to:
+  /// **'Die vollständige Adresse zum Anfahren. Hilft den Teilnehmern, den Spielort zu finden.'**
+  String get tournamentSetupInfoAddressBody;
+
+  /// Info dialog title for the start date field
+  ///
+  /// In de, this message translates to:
+  /// **'Wann geht es los?'**
+  String get tournamentSetupInfoEventDateTitle;
+
+  /// Info dialog body for the start date field
+  ///
+  /// In de, this message translates to:
+  /// **'Datum und Uhrzeit, an denen das Turnier beginnt.'**
+  String get tournamentSetupInfoEventDateBody;
+
+  /// Info dialog title for the registration deadline field
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldeschluss'**
+  String get tournamentSetupInfoRegistrationDeadlineTitle;
+
+  /// Info dialog body for the registration deadline field
+  ///
+  /// In de, this message translates to:
+  /// **'Bis zu diesem Zeitpunkt können sich Teilnehmer anmelden. Danach ist keine neue Anmeldung mehr möglich.'**
+  String get tournamentSetupInfoRegistrationDeadlineBody;
+
+  /// Info dialog title for the check-in deadline field
+  ///
+  /// In de, this message translates to:
+  /// **'Einchecken bis'**
+  String get tournamentSetupInfoCheckinUntilTitle;
+
+  /// Info dialog body for the check-in deadline field
+  ///
+  /// In de, this message translates to:
+  /// **'Bis dahin müssen angemeldete Teilnehmer vor Ort bestätigen, dass sie da sind. Wer bis dahin nicht eingecheckt hat, kann aus der Spielplanung fallen.'**
+  String get tournamentSetupInfoCheckinUntilBody;
+
+  /// Info dialog title for the scoring choice
+  ///
+  /// In de, this message translates to:
+  /// **'Zählweise der Sätze'**
+  String get tournamentSetupInfoScoringTitle;
+
+  /// Info dialog body for the scoring choice
+  ///
+  /// In de, this message translates to:
+  /// **'Bestimmt, wie ein einzelner Satz gewertet wird. Bei EKC zählt jeder Feldkubb einen Punkt. Bei Classic zählt nur der Satzsieger — Sätze, die nicht zu Ende gespielt werden, fliessen nicht in die Wertung ein. Diese Wahl gilt für alle Spiele des Turniers.'**
+  String get tournamentSetupInfoScoringBody;
+
+  /// Info dialog title for the Sureshot toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Sonderregel Sureshot'**
+  String get tournamentSetupInfoSureshotTitle;
+
+  /// Info dialog body for the Sureshot toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Schaltet die Sureshot-Variante für alle Spiele ein. Mit Sureshot muss die Königsfigur am Ende eines Satzes durch die Beine hindurch abgeworfen werden statt aus dem normalen Stand. Lässt sich ein- und ausschalten.'**
+  String get tournamentSetupInfoSureshotBody;
+
+  /// Info dialog title for the Diggy toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Sonderregel Diggy'**
+  String get tournamentSetupInfoDiggyTitle;
+
+  /// Info dialog body for the Diggy toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Schaltet die Diggy-Variante für alle Spiele ein. Liegt beim Einwerfen ein Kubb auf einem anderen und dabei im Spielfeld (also ein gültiger Einwurf), darf das einwerfende Team den oben liegenden Kubb platzieren.'**
+  String get tournamentSetupInfoDiggyBody;
+
+  /// Info dialog title for the Strafkubb-off-baseline toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Strafkubb-Platzierung'**
+  String get tournamentSetupInfoStrafkubbTitle;
+
+  /// Info dialog body for the Strafkubb-off-baseline toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Ein Strafkubb entsteht, wenn ein eingeworfener Kubb nach dem zweiten Versuch nicht gültig steht; der Gegner darf ihn frei aufstellen. Ist diese Option aktiv, muss der Strafkubb 30 cm (eine Stocklänge) Abstand zum König und zur Baseline haben.'**
+  String get tournamentSetupInfoStrafkubbBody;
+
+  /// Info dialog title for the opening rule (Anspielregel) toggle
+  ///
+  /// In de, this message translates to:
+  /// **'Eröffnung'**
+  String get tournamentSetupInfoOpeningTitle;
+
+  /// Info dialog body for the opening rule (Anspielregel) toggle
+  ///
+  /// In de, this message translates to:
+  /// **'\"2-4-6\" heisst: in der ersten Runde werden 2 Wurfstöcke geworfen, in der zweiten 4, ab der dritten 6 — ein sanfter Einstieg. \"Frei\" lässt die Eröffnung offen. Gilt für alle Spiele.'**
+  String get tournamentSetupInfoOpeningBody;
+
+  /// Info dialog title for the rules PDF upload
+  ///
+  /// In de, this message translates to:
+  /// **'Regeln als PDF'**
+  String get tournamentSetupInfoRulesPdfTitle;
+
+  /// Info dialog body for the rules PDF upload
+  ///
+  /// In de, this message translates to:
+  /// **'Optionales Dokument mit den Turnierregeln, das Teilnehmer einsehen können.'**
+  String get tournamentSetupInfoRulesPdfBody;
+
+  /// Info dialog title for the site-map PDF upload
+  ///
+  /// In de, this message translates to:
+  /// **'Lageplan als PDF'**
+  String get tournamentSetupInfoSiteMapPdfTitle;
+
+  /// Info dialog body for the site-map PDF upload
+  ///
+  /// In de, this message translates to:
+  /// **'Optionaler Plan des Spielgeländes (Felder, Anfahrt, Infrastruktur) zum Herunterladen.'**
+  String get tournamentSetupInfoSiteMapPdfBody;
+
+  /// Info dialog title for the entry fee field
+  ///
+  /// In de, this message translates to:
+  /// **'Startgeld'**
+  String get tournamentSetupInfoEntryFeeTitle;
+
+  /// Info dialog body for the entry fee field
+  ///
+  /// In de, this message translates to:
+  /// **'Betrag, den Teilnehmer zahlen. Leer oder 0 bedeutet kostenlos (\"Gratis\").'**
+  String get tournamentSetupInfoEntryFeeBody;
+
+  /// Info dialog title for the payment methods chips
+  ///
+  /// In de, this message translates to:
+  /// **'Wie bezahlt wird'**
+  String get tournamentSetupInfoPaymentMethodsTitle;
+
+  /// Info dialog body for the payment methods chips
+  ///
+  /// In de, this message translates to:
+  /// **'Wähle, welche Zahlungsarten du vor Ort akzeptierst (Bar, TWINT, Karte). Mehrfachauswahl möglich.'**
+  String get tournamentSetupInfoPaymentMethodsBody;
+
+  /// Info dialog title for the contact person fields
+  ///
+  /// In de, this message translates to:
+  /// **'Kontakt für Rückfragen'**
+  String get tournamentSetupInfoContactTitle;
+
+  /// Info dialog body for the contact person fields
+  ///
+  /// In de, this message translates to:
+  /// **'Name und Telefonnummer der Person, die Teilnehmer bei Fragen erreichen. Optional.'**
+  String get tournamentSetupInfoContactBody;
+
+  /// Info dialog title shared by the participant free-text info fields (food, travel, accommodation, weather)
+  ///
+  /// In de, this message translates to:
+  /// **'Hinweise für Teilnehmer'**
+  String get tournamentSetupInfoParticipantInfoTitle;
+
+  /// Info dialog body shared by the participant free-text info fields
+  ///
+  /// In de, this message translates to:
+  /// **'Freitextfelder für praktische Infos rund ums Turnier. Erscheinen in der Turnierbeschreibung; alle optional.'**
+  String get tournamentSetupInfoParticipantInfoBody;
 }
 
 class _AppLocalizationsDelegate
