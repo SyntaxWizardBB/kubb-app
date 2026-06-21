@@ -21,6 +21,8 @@ import 'package:kubb_app/features/tournament/presentation/stage_graph_builder_sc
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_setup_wizard.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/schoch_config_section.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -694,8 +696,16 @@ void main() {
     expect(find.text('Schritt 2 von 5'), findsOneWidget);
     await _tapNext(tester); // -> Vorrunde
     expect(find.text('Schritt 3 von 5'), findsOneWidget);
-    // The shared Schoch/Swiss rounds slider surfaces for the Schoch axis.
-    expect(find.byType(Slider), findsOneWidget);
+    // The Schoch-rounds number input surfaces for the Schoch axis.
+    expect(find.byType(SchochConfigSection), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(SchochConfigSection),
+        matching: find.byType(WizardNumberField),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(Slider), findsNothing);
     await _tapNext(tester); // -> KO config (no group-phase step)
     expect(find.text('Schritt 4 von 5'), findsOneWidget);
     expect(find.text('KO-Konfiguration'), findsOneWidget);

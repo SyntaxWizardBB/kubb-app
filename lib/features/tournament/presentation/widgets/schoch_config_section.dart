@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_field.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
 /// Inline configuration block for the Schoch format option in the
-/// setup wizard (TASK-M5.3-T10). Lets the organizer pick the number of
+/// setup wizard (TASK-M5.3-T10). Lets the organizer type the number of
 /// rounds (default `ceil(log2(n))`, OD-M5-04), surfaces the read-only
 /// tiebreak order (Buchholz → Direct-Encounter → Random) and, for large
 /// fields, hints that more rounds help separate the standings. Schoch is the
@@ -95,29 +96,13 @@ class SchochConfigSection extends StatelessWidget {
             label: l10n.tournamentWizardSchochRoundsLabel,
             info: info,
             helper: l10n.tournamentWizardSchochTiebreak,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Slider(
-                    value: rounds.toDouble(),
-                    min: roundsMin.toDouble(),
-                    max: roundsMax.toDouble(),
-                    divisions: roundsMax - roundsMin,
-                    label: '$rounds',
-                    activeColor: tokens.primary,
-                    onChanged: (v) => onRoundsChanged(v.round()),
-                  ),
-                ),
-                const SizedBox(width: KubbTokens.space2),
-                Text(
-                  '$rounds',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: tokens.fg,
-                  ),
-                ),
-              ],
+            child: WizardNumberField(
+              label: l10n.tournamentWizardSchochRoundsLabel,
+              value: rounds,
+              min: roundsMin,
+              max: roundsMax,
+              onChanged: onRoundsChanged,
+              labelless: true,
             ),
           ),
         ],

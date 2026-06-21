@@ -2157,7 +2157,7 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
         ),
       ),
         const SizedBox(height: KubbTokens.space2),
-        // T10: the Schoch-rounds slider surfaces when the Vorrunde is Schoch
+        // T10: the Schoch-rounds input surfaces when the Vorrunde is Schoch
         // (Schoch reuses the Schweizer-System pairing engine).
         if (draft.vorrundeType == VorrundeType.schoch)
           SchochConfigSection(
