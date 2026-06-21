@@ -177,8 +177,13 @@ class _StageGraphFormView extends ConsumerWidget {
           _FieldSizeSection(fieldSize: s.fieldSize, notifier: notifier),
           const SizedBox(height: KubbTokens.space6),
         ],
-        _TemplateBar(notifier: notifier, graph: s.graph),
-        const SizedBox(height: KubbTokens.space6),
+        // The wizard host renders its own template bar above this body, so the
+        // builder's internal one would be a second, duplicate bar there. Show it
+        // only in the standalone editor.
+        if (!embedded) ...[
+          _TemplateBar(notifier: notifier, graph: s.graph),
+          const SizedBox(height: KubbTokens.space6),
+        ],
         if (isEmpty)
           _EmptyGraphState(notifier: notifier, availablePitches: s.availablePitches)
         else ...[

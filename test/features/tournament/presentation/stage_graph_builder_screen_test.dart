@@ -109,7 +109,60 @@ Future<StageGraphBuilderController> _pump(
   return controller;
 }
 
+/// Pumps the chrome-free [StageGraphBuilderBody] inline (embedded: true) the
+/// way the wizard hosts it, inside a scroll view that provides the surrounding
+/// scroll the embedded body relies on.
+Future<StageGraphBuilderController> _pumpEmbedded(
+  WidgetTester tester, {
+  required StageGraph graph,
+  int fieldSize = 8,
+  List<StageGraphTemplate> templates = const <StageGraphTemplate>[],
+}) async {
+  final controller = StageGraphBuilderController(graph, fieldSize);
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        stageGraphBuilderProvider.overrideWith(() => controller),
+        stageGraphTemplatesProvider.overrideWith((_) async => templates),
+      ],
+      child: MaterialApp(
+        theme: KubbTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const Scaffold(
+          body: SingleChildScrollView(
+            child: StageGraphBuilderBody(embedded: true),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  return controller;
+}
+
 void main() {
+  testWidgets(
+      'embedded body hides its own template bar (wizard owns it)',
+      (tester) async {
+    await _pumpEmbedded(tester, graph: _validGraph);
+
+    // The wizard renders its own template bar above the body, so the builder's
+    // internal one must not surface here.
+    expect(find.text('Vorlagen'), findsNothing);
+    // The field-size section is host-driven in the wizard too and stays hidden.
+    expect(find.text('Feldgrösse'), findsNothing);
+    // The actual editor (nodes/edges) is still present.
+    expect(find.text('groups'), findsOneWidget);
+    expect(find.text('cup'), findsOneWidget);
+  });
+
+  testWidgets('standalone screen keeps its template bar', (tester) async {
+    await _pump(tester, graph: _validGraph);
+
+    expect(find.text('Vorlagen'), findsOneWidget);
+  });
+
   testWidgets('T1 renders nodes + edge and shows playable', (tester) async {
     final controller = await _pump(tester, graph: _validGraph);
 
