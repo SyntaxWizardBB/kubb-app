@@ -520,6 +520,14 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
           controller: controller,
           onConfigChanged: controller.setKoConfig,
           onSeedingModeChanged: controller.setBracketSeedingMode,
+          helpShown: _helpSteps.contains(_StepKind.koConfig),
+          onHelpChanged: (on) => setState(() {
+            if (on) {
+              _helpSteps.add(_StepKind.koConfig);
+            } else {
+              _helpSteps.remove(_StepKind.koConfig);
+            }
+          }),
         );
       case _StepKind.summary:
         return _StepSummary(draft: draft);

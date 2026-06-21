@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_binary_choice.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_field.dart';
+import 'package:kubb_app/core/ui/widgets/wizard_help.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
@@ -16,12 +18,19 @@ import 'package:kubb_domain/kubb_domain.dart';
 /// Spiel um Platz 3 is always on (no toggle); the Shoot-Out and the
 /// Mighty-Finisher quali are removed from the wizard scope (always on resp.
 /// dropped). Domain rules pinned by ADR-0017 §3.
+///
+/// Like the other migrated steps the fields run through [KubbField]: the label,
+/// the optional explainer glyph and the helper line live in one tokenised
+/// place. The step carries its own "Erklärungen" toggle ([WizardHelpToggle]);
+/// the host wraps it in [WizardHelp] so the glyphs only surface in help mode.
 class WizardKoConfigStep extends StatefulWidget {
   const WizardKoConfigStep({
     required this.draft,
     required this.controller,
     required this.onConfigChanged,
     required this.onSeedingModeChanged,
+    required this.helpShown,
+    required this.onHelpChanged,
     super.key,
   });
 
@@ -29,6 +38,8 @@ class WizardKoConfigStep extends StatefulWidget {
   final TournamentConfigController controller;
   final ValueChanged<KoPhaseConfig?> onConfigChanged;
   final ValueChanged<SeedingMode> onSeedingModeChanged;
+  final bool helpShown;
+  final ValueChanged<bool> onHelpChanged;
 
   @override
   State<WizardKoConfigStep> createState() => _WizardKoConfigStepState();
@@ -176,46 +187,64 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l10n = AppLocalizations.of(context);
     final sizes = _bracketSizes();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _LabelWithInfo(
-          text: l10n.tournamentWizardQualifierCountLabel,
-          info: InfoIconButton(
-            title: l10n.tournamentSetupInfoKoBracketSizeTitle,
-            message: l10n.tournamentSetupInfoKoBracketSizeBody,
+        Align(
+          alignment: Alignment.centerRight,
+          child: WizardHelpToggle(
+            value: widget.helpShown,
+            onChanged: widget.onHelpChanged,
+            label: l10n.tournamentWizardHelpToggle,
           ),
         ),
         const SizedBox(height: KubbTokens.space2),
         // KO size is restricted to powers of two — no byes in the main
         // bracket (P6_SETUP_WIZARD_SPEC.md Screen 6).
-        Wrap(
-          spacing: KubbTokens.space2,
-          runSpacing: KubbTokens.space2,
-          children: [
-            for (final s in sizes)
-              _KoSizeChip(
-                label: '$s',
-                selected: _qualifierCount == s,
-                onTap: () => _onSizePicked(s),
-              ),
-          ],
-        ),
-        const SizedBox(height: KubbTokens.space2),
-        Text(
-          l10n.tournamentWizardQualifierCountHelper,
-          style: TextStyle(fontSize: 12, color: tokens.fgMuted),
+        KubbField(
+          label: l10n.tournamentWizardQualifierCountLabel,
+          helper: l10n.tournamentWizardQualifierCountHelper,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoKoBracketSizeTitle,
+            message: l10n.tournamentSetupInfoKoBracketSizeBody,
+          ),
+          child: Wrap(
+            spacing: KubbTokens.space2,
+            runSpacing: KubbTokens.space2,
+            children: [
+              for (final s in sizes)
+                _KoSizeChip(
+                  label: '$s',
+                  selected: _qualifierCount == s,
+                  onTap: () => _onSizePicked(s),
+                ),
+            ],
+          ),
         ),
         const SizedBox(height: KubbTokens.space5),
-        _SeedingModeRadios(
-          value: _seedingMode,
-          onChanged: _onSeedingChanged,
+        KubbField(
+          label: l10n.tournamentWizardSeedingSourceLabel,
           info: InfoIconButton(
             title: l10n.tournamentSetupInfoKoSeedingSourceTitle,
             message: l10n.tournamentSetupInfoKoSeedingSourceBody,
+          ),
+          child: KubbBinaryChoice<SeedingMode>(
+            selected: _seedingMode,
+            onChanged: _onSeedingChanged,
+            options: <KubbChoiceOption<SeedingMode>>[
+              KubbChoiceOption<SeedingMode>(
+                value: SeedingMode.auto,
+                // "aus Vorrunde" (not "Gruppenphase") — Schoch is also a valid
+                // Vorrunde (P6_SETUP_WIZARD_SPEC.md Screen 6).
+                title: l10n.tournamentWizardSeedingSourceAuto,
+              ),
+              KubbChoiceOption<SeedingMode>(
+                value: SeedingMode.manual,
+                title: l10n.tournamentWizardSeedingSourceManual,
+              ),
+            ],
           ),
         ),
         const SizedBox(height: KubbTokens.space6),
@@ -240,9 +269,12 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
   }
 
   /// Per-KO-round rule blocks, one per entry in [TournamentConfigDraft.
-  /// koRoundFormats]. Seeds any round still at the bare default with the
-  /// deterministic §A profile (postframe, so it doesn't mutate during build).
+  /// koRoundFormats]. The block carries no per-field glyphs — a single short
+  /// "Regeln pro KO-Runde" intro helper above the cards covers them. Seeds any
+  /// round still at the bare default with the deterministic §A profile
+  /// (postframe, so it doesn't mutate during build).
   List<Widget> _koRoundSections(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l10n = AppLocalizations.of(context);
     final d = widget.draft;
     final c = widget.controller;
@@ -250,21 +282,18 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
     if (rounds.isEmpty) return const <Widget>[];
     final total = rounds.length;
     return <Widget>[
-      _LabelWithInfo(
-        text: l10n.tournamentWizardKoRoundRulesLabel,
-        info: InfoIconButton(
-          title: l10n.tournamentSetupInfoKoRoundRulesTitle,
-          message: l10n.tournamentSetupInfoKoRoundRulesBody,
-        ),
+      Text(
+        l10n.tournamentWizardKoRoundRulesLabel,
+        style: tokens.labelStyle,
       ),
       Padding(
-        padding: const EdgeInsets.only(bottom: KubbTokens.space3),
+        padding: const EdgeInsets.only(
+          top: KubbTokens.space1half,
+          bottom: KubbTokens.space3,
+        ),
         child: Text(
           l10n.tournamentWizardKoRoundRulesHint,
-          style: TextStyle(
-            fontSize: 12,
-            color: Theme.of(context).extension<KubbTokens>()!.fgMuted,
-          ),
+          style: tokens.helperStyle,
         ),
       ),
       for (var i = 0; i < total; i++)
@@ -300,49 +329,49 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
       // the KO-system axis (KoType) — `bracketType` derives from it, so we
       // do NOT ask it again here to avoid a conflicting second source.
       // K21: KO-matchup as a shared binary-choice card (ADR-0033 P1.2).
-      _LabelWithInfo(
-        text: l10n.tournamentWizardKoMatchupLabel,
+      KubbField(
+        label: l10n.tournamentWizardKoMatchupLabel,
         info: InfoIconButton(
           title: l10n.tournamentSetupInfoKoMatchupTitle,
           message: l10n.tournamentSetupInfoKoMatchupBody,
         ),
-      ),
-      KubbBinaryChoice<KoMatchup>(
-        selected: d.koMatchup,
-        onChanged: c.setKoMatchup,
-        options: <KubbChoiceOption<KoMatchup>>[
-          KubbChoiceOption<KoMatchup>(
-            value: KoMatchup.seedHighVsLow,
-            title: l10n.tournamentWizardKoMatchupHighLow,
-          ),
-          KubbChoiceOption<KoMatchup>(
-            value: KoMatchup.oneVsTwo,
-            title: l10n.tournamentWizardKoMatchupOneTwo,
-          ),
-        ],
+        child: KubbBinaryChoice<KoMatchup>(
+          selected: d.koMatchup,
+          onChanged: c.setKoMatchup,
+          options: <KubbChoiceOption<KoMatchup>>[
+            KubbChoiceOption<KoMatchup>(
+              value: KoMatchup.seedHighVsLow,
+              title: l10n.tournamentWizardKoMatchupHighLow,
+            ),
+            KubbChoiceOption<KoMatchup>(
+              value: KoMatchup.oneVsTwo,
+              title: l10n.tournamentWizardKoMatchupOneTwo,
+            ),
+          ],
+        ),
       ),
       const SizedBox(height: KubbTokens.space5),
       // K22: KO-tiebreak method as a shared binary-choice card (ADR-0033 P1.2).
-      _LabelWithInfo(
-        text: l10n.tournamentWizardKoTiebreakMethodLabel,
+      KubbField(
+        label: l10n.tournamentWizardKoTiebreakMethodLabel,
         info: InfoIconButton(
           title: l10n.tournamentSetupInfoKoTiebreakTitle,
           message: l10n.tournamentSetupInfoKoTiebreakBody,
         ),
-      ),
-      KubbBinaryChoice<KoTiebreakMethod>(
-        selected: d.koTiebreakMethod,
-        onChanged: c.setKoTiebreakMethod,
-        options: <KubbChoiceOption<KoTiebreakMethod>>[
-          KubbChoiceOption<KoTiebreakMethod>(
-            value: KoTiebreakMethod.classicKingtossRemoval,
-            title: l10n.tournamentWizardKoTiebreakClassic,
-          ),
-          KubbChoiceOption<KoTiebreakMethod>(
-            value: KoTiebreakMethod.mightyFinisherShootout,
-            title: l10n.tournamentWizardKoTiebreakMighty,
-          ),
-        ],
+        child: KubbBinaryChoice<KoTiebreakMethod>(
+          selected: d.koTiebreakMethod,
+          onChanged: c.setKoTiebreakMethod,
+          options: <KubbChoiceOption<KoTiebreakMethod>>[
+            KubbChoiceOption<KoTiebreakMethod>(
+              value: KoTiebreakMethod.classicKingtossRemoval,
+              title: l10n.tournamentWizardKoTiebreakClassic,
+            ),
+            KubbChoiceOption<KoTiebreakMethod>(
+              value: KoTiebreakMethod.mightyFinisherShootout,
+              title: l10n.tournamentWizardKoTiebreakMighty,
+            ),
+          ],
+        ),
       ),
       const SizedBox(height: KubbTokens.space5),
       // Per-KO-round rule blocks. The list length is derived from the
@@ -357,7 +386,8 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
 /// in the KO step when [KoType.consolation] is chosen. The main-bracket size
 /// is NOT asked here: it equals the KO bracket size picked above (single
 /// source, K15). Offers the direct-starter count as chips (K16) and the
-/// required consolation name (K18).
+/// required consolation name (K18). Neither field carries an explainer glyph —
+/// the direct-starter helper and the self-explanatory name suffice.
 class _ConsolationKoSection extends StatelessWidget {
   const _ConsolationKoSection({
     required this.draft,
@@ -392,15 +422,6 @@ class _ConsolationKoSection extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final options = directCountOptions(bracketSize);
     final selectedDirect = draft.consolationDirectCount;
-    Widget label(String text) => Text(
-          text,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.4,
-            color: tokens.fgMuted,
-          ),
-        );
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
       borderSide: BorderSide(color: tokens.lineStrong, width: 1.5),
@@ -419,56 +440,47 @@ class _ConsolationKoSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          label(l10n.tournamentWizardConsolationSectionLabel),
+          Text(
+            l10n.tournamentWizardConsolationSectionLabel,
+            style: tokens.labelStyle,
+          ),
           const SizedBox(height: KubbTokens.space4),
           // K16 — direct starters as chips (no free number field anymore).
-          _LabelWithInfo(
-            text: l10n.tournamentWizardConsolationDirectCountLabel,
-            info: InfoIconButton(
-              title: l10n.tournamentSetupInfoKoConsolationDirectTitle,
-              message: l10n.tournamentSetupInfoKoConsolationDirectBody,
+          // The helper carries the explanation; no glyph.
+          KubbField(
+            label: l10n.tournamentWizardConsolationDirectCountLabel,
+            helper: l10n.tournamentWizardConsolationDirectCountHint,
+            child: Wrap(
+              key: const Key('wizardConsolationDirectCountChips'),
+              spacing: KubbTokens.space2,
+              runSpacing: KubbTokens.space2,
+              children: [
+                for (final v in options)
+                  _KoSizeChip(
+                    label: v == 0
+                        ? l10n.tournamentWizardConsolationDirectCountNone
+                        : '$v',
+                    selected: selectedDirect == v,
+                    onTap: () => controller.setConsolationDirectCount(v),
+                  ),
+              ],
             ),
-          ),
-          const SizedBox(height: KubbTokens.space2),
-          Wrap(
-            key: const Key('wizardConsolationDirectCountChips'),
-            spacing: KubbTokens.space2,
-            runSpacing: KubbTokens.space2,
-            children: [
-              for (final v in options)
-                _KoSizeChip(
-                  label: v == 0
-                      ? l10n.tournamentWizardConsolationDirectCountNone
-                      : '$v',
-                  selected: selectedDirect == v,
-                  onTap: () => controller.setConsolationDirectCount(v),
-                ),
-            ],
-          ),
-          const SizedBox(height: KubbTokens.space1half),
-          Text(
-            l10n.tournamentWizardConsolationDirectCountHint,
-            style: TextStyle(fontSize: 11, height: 1.35, color: tokens.fgSubtle),
           ),
           const SizedBox(height: KubbTokens.space4),
-          // K18 — consolation name is required (no "optional" badge).
-          _LabelWithInfo(
-            text: l10n.tournamentWizardConsolationNameLabel,
-            info: InfoIconButton(
-              title: l10n.tournamentSetupInfoKoConsolationNameTitle,
-              message: l10n.tournamentSetupInfoKoConsolationNameBody,
-            ),
-          ),
-          const SizedBox(height: KubbTokens.space2),
-          TextField(
-            key: const Key('wizardConsolationNameField'),
-            controller: nameController,
-            onChanged: controller.setConsolationName,
-            decoration: InputDecoration(
-              counterText: '',
-              hintText: l10n.tournamentWizardConsolationNameHint,
-              border: border,
-              enabledBorder: border,
+          // K18 — consolation name is required (no "optional" badge) and
+          // self-explanatory, so no glyph.
+          KubbField(
+            label: l10n.tournamentWizardConsolationNameLabel,
+            child: TextField(
+              key: const Key('wizardConsolationNameField'),
+              controller: nameController,
+              onChanged: controller.setConsolationName,
+              decoration: InputDecoration(
+                counterText: '',
+                hintText: l10n.tournamentWizardConsolationNameHint,
+                border: border,
+                enabledBorder: border,
+              ),
             ),
           ),
         ],
@@ -524,81 +536,6 @@ class _KoSizeChip extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _SeedingModeRadios extends StatelessWidget {
-  const _SeedingModeRadios({
-    required this.value,
-    required this.onChanged,
-    required this.info,
-  });
-
-  final SeedingMode value;
-  final ValueChanged<SeedingMode> onChanged;
-  final InfoIconButton info;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _LabelWithInfo(
-          text: l10n.tournamentWizardSeedingSourceLabel,
-          info: info,
-        ),
-        const SizedBox(height: KubbTokens.space2),
-        KubbBinaryChoice<SeedingMode>(
-          selected: value,
-          onChanged: onChanged,
-          options: <KubbChoiceOption<SeedingMode>>[
-            KubbChoiceOption<SeedingMode>(
-              value: SeedingMode.auto,
-              // "aus Vorrunde" (not "Gruppenphase") — Schoch is also a valid
-              // Vorrunde (P6_SETUP_WIZARD_SPEC.md Screen 6).
-              title: l10n.tournamentWizardSeedingSourceAuto,
-            ),
-            KubbChoiceOption<SeedingMode>(
-              value: SeedingMode.manual,
-              title: l10n.tournamentWizardSeedingSourceManual,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-/// Muted field label with a trailing [InfoIconButton], used in this step where
-/// the control below is a chip row or a [KubbBinaryChoice] rather than a
-/// labelled field with its own info slot.
-class _LabelWithInfo extends StatelessWidget {
-  const _LabelWithInfo({required this.text, required this.info});
-
-  final String text;
-  final InfoIconButton info;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return Row(
-      children: [
-        Flexible(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.4,
-              color: tokens.fgMuted,
-            ),
-          ),
-        ),
-        const Spacer(),
-        info,
-      ],
     );
   }
 }

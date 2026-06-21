@@ -2,20 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/core/ui/widgets/wizard_help.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 /// Hosts [WizardKoConfigStep] in a minimal MaterialApp and exposes the
 /// last config that was pushed via the callback, so the test can read it
-/// back without standing up the whole wizard.
+/// back without standing up the whole wizard. The step is wrapped in
+/// [WizardHelp] so the per-field explainer glyphs surface (like the live
+/// wizard, which flips help on via the step toggle).
 class _Host extends StatefulWidget {
-  const _Host({required this.draft, super.key});
+  const _Host({required this.draft, this.help = true, super.key});
 
   final TournamentConfigDraft draft;
+  final bool help;
 
   @override
   State<_Host> createState() => _HostState();
@@ -25,12 +30,14 @@ class _HostState extends State<_Host> {
   KoPhaseConfig? lastConfig;
   SeedingMode? lastSeeding;
   late TournamentConfigDraft _draft;
+  late bool _help;
   late final ProviderContainer _container;
 
   @override
   void initState() {
     super.initState();
     _draft = widget.draft;
+    _help = widget.help;
     _container = ProviderContainer();
   }
 
@@ -44,19 +51,24 @@ class _HostState extends State<_Host> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
-        child: WizardKoConfigStep(
-          draft: _draft,
-          controller:
-              _container.read(tournamentConfigControllerProvider.notifier),
-          onConfigChanged: (cfg) {
-            setState(() {
-              lastConfig = cfg;
-              if (cfg != null) {
-                _draft = _draft.copyWith(koConfig: cfg);
-              }
-            });
-          },
-          onSeedingModeChanged: (mode) => setState(() => lastSeeding = mode),
+        child: WizardHelp(
+          show: _help,
+          child: WizardKoConfigStep(
+            draft: _draft,
+            controller:
+                _container.read(tournamentConfigControllerProvider.notifier),
+            onConfigChanged: (cfg) {
+              setState(() {
+                lastConfig = cfg;
+                if (cfg != null) {
+                  _draft = _draft.copyWith(koConfig: cfg);
+                }
+              });
+            },
+            onSeedingModeChanged: (mode) => setState(() => lastSeeding = mode),
+            helpShown: _help,
+            onHelpChanged: (on) => setState(() => _help = on),
+          ),
         ),
       ),
     );
@@ -66,6 +78,7 @@ class _HostState extends State<_Host> {
 Future<_HostState> _pump(
   WidgetTester tester, {
   required TournamentConfigDraft draft,
+  bool help = true,
 }) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1;
@@ -79,7 +92,7 @@ Future<_HostState> _pump(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: const Locale('de'),
-      home: _Host(key: key, draft: draft),
+      home: _Host(key: key, draft: draft, help: help),
     ),
   );
   await tester.pumpAndSettle();
@@ -268,6 +281,8 @@ void main() {
               controller: controller,
               onConfigChanged: (_) {},
               onSeedingModeChanged: (_) {},
+              helpShown: false,
+              onHelpChanged: (_) {},
             ),
           ),
         ),
@@ -339,8 +354,10 @@ void main() {
     expect(find.textContaining('eigenen Setzlisten-Screen'), findsOneWidget);
   });
 
-  testWidgets('consolation name info button opens its explainer dialog',
+  testWidgets('consolation name and direct-starter lost their info glyphs',
       (tester) async {
+    // Even with help on, the Trostturnier fields are glyph-free now: the
+    // direct-starter helper and the self-explanatory name carry the meaning.
     await _pump(
       tester,
       draft: const TournamentConfigDraft(
@@ -349,16 +366,61 @@ void main() {
         koType: KoType.consolation,
       ),
     );
-    final info = find.descendant(
-      of: find.ancestor(
-        of: find.text('Name des Trostturniers'),
-        matching: find.byType(Row),
+    for (final label in const [
+      'Name des Trostturniers',
+      'Direkt ins Trostturnier',
+    ]) {
+      final info = find.descendant(
+        of: find.ancestor(
+          of: find.text(label),
+          matching: find.byType(Row),
+        ),
+        matching: find.byIcon(LucideIcons.info),
+      );
+      expect(info, findsNothing, reason: 'glyph for "$label" should be gone');
+    }
+  });
+
+  testWidgets('the four retained glyphs surface in help mode', (tester) async {
+    await _pump(
+      tester,
+      draft: const TournamentConfigDraft(
+        displayName: 'Cup',
+        format: TournamentFormat.roundRobinThenKo,
       ),
-      matching: find.byIcon(LucideIcons.info),
     );
-    expect(info, findsOneWidget);
-    await tester.tap(info);
+    for (final label in const [
+      'Anzahl Qualifikanten',
+      'Seeding-Quelle',
+      'Begegnungen',
+      'KO-Tiebreak-Methode',
+    ]) {
+      final info = find.descendant(
+        of: find.ancestor(
+          of: find.text(label),
+          matching: find.byType(Row),
+        ),
+        matching: find.byIcon(LucideIcons.info),
+      );
+      expect(info, findsOneWidget, reason: 'glyph for "$label" must show');
+    }
+  });
+
+  testWidgets('glyphs stay hidden until help mode is on', (tester) async {
+    await _pump(
+      tester,
+      help: false,
+      draft: const TournamentConfigDraft(
+        displayName: 'Cup',
+        format: TournamentFormat.roundRobinThenKo,
+      ),
+    );
+    // No glyph with help off — the toggle gates every field explainer.
+    expect(find.byType(InfoIconButton), findsNothing);
+
+    // Flip the step's own "Erklärungen" toggle: glyphs appear.
+    await tester.tap(find.text('Erklärungen'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Pflichtfeld beim Trostturnier'), findsOneWidget);
+    expect(find.byType(InfoIconButton), findsWidgets);
   });
 }
