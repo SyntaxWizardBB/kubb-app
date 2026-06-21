@@ -7,6 +7,7 @@ import 'package:kubb_app/core/ui/widgets/wizard_help.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/ko_model_explainer_sheet.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_round_block.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -194,6 +195,58 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
           ),
         ),
         const SizedBox(height: KubbTokens.space2),
+        // ---- KO axis (Single-Out | Double-Elimination | Trostturnier) ----
+        // The KO system is chosen here, at the top of the KO config (it used to
+        // sit on the format step, but the KO type belongs with the rest of the
+        // KO setup). One info glyph via KubbField; the detailed three-model
+        // sheet hangs off a discreet text link below so there is no second
+        // identical "i"-glyph competing with it.
+        KubbField(
+          label: l10n.tournamentWizardKoSystemLabel,
+          info: InfoIconButton(
+            title: l10n.tournamentSetupInfoKoTypeTitle,
+            message: l10n.tournamentSetupInfoKoTypeBody,
+          ),
+          child: KubbBinaryChoice<KoType>(
+            selected: widget.draft.koType,
+            onChanged: widget.controller.setKoType,
+            options: <KubbChoiceOption<KoType>>[
+              KubbChoiceOption<KoType>(
+                value: KoType.singleOut,
+                title: l10n.tournamentWizardKoSystemSingle,
+                subtitle: l10n.tournamentWizardKoSystemSingleHint,
+              ),
+              KubbChoiceOption<KoType>(
+                value: KoType.doubleOut,
+                title: l10n.tournamentWizardKoSystemDouble,
+                subtitle: l10n.tournamentWizardKoSystemDoubleHint,
+              ),
+              KubbChoiceOption<KoType>(
+                value: KoType.consolation,
+                title: l10n.tournamentWizardKoSystemConsolation,
+                subtitle: l10n.tournamentWizardKoSystemConsolationHint,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => KoModelExplainerSheet.show(context),
+            child: Text(
+              l10n.tournamentKoModelExplainerLink,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                decoration: TextDecoration.underline,
+                color: Theme.of(context).extension<KubbTokens>()!.primary,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space5),
         // KO size is restricted to powers of two — no byes in the main
         // bracket (P6_SETUP_WIZARD_SPEC.md Screen 6).
         KubbField(
@@ -318,8 +371,8 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
         ),
         const SizedBox(height: KubbTokens.space6),
       ],
-      // The single/double-out distinction is chosen on the format step via
-      // the KO-system axis (KoType) — `bracketType` derives from it, so we
+      // The single/double-out distinction is the KO-system axis (KoType)
+      // picked at the top of this step — `bracketType` derives from it, so we
       // do NOT ask it again here to avoid a conflicting second source.
       // K21: KO-matchup as a shared binary-choice card (ADR-0033 P1.2).
       KubbField(

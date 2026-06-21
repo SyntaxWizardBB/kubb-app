@@ -258,6 +258,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
     await tester.pumpAndSettle();
+    // The KO system + its compare-models link live on the KO step now.
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
     await _enableHelp(tester);
 
     // The detailed three-model sheet hangs off a discreet text link below the
@@ -268,5 +271,23 @@ void main() {
     await tester.tap(link);
     await tester.pumpAndSettle();
     expect(find.text('Welcher zweite Baum?'), findsOneWidget);
+  });
+
+  testWidgets('KO system info glyph lives on the KO step in help mode',
+      (tester) async {
+    await _pump(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
+    await _enableHelp(tester);
+
+    await _openAndExpect(
+      tester,
+      title: 'Welcher K.-o.-Baum',
+      bodyFragment: 'wie das Ausscheiden funktioniert',
+    );
   });
 }

@@ -133,12 +133,12 @@ void main() {
     );
   });
 
-  // Regression guard for the *real* wiring in `_StepFormat`: mounts the full
-  // wizard, navigates to the format step and taps the actual compare-models
+  // Regression guard for the *real* wiring in the KO step: mounts the full
+  // wizard, navigates to the KO config step and taps the actual compare-models
   // text link there, so removing/breaking the link -> modal hook in the wizard
   // fails this test.
   testWidgets(
-      'real wizard format step exposes the compare-models link to the explainer',
+      'real wizard KO step exposes the compare-models link to the explainer',
       (tester) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1;
@@ -178,8 +178,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Step 1 (Stammdaten) -> 2 (Teilnehmer) -> 3 (Format, holds the KO axis).
+    // Step 1 (Stammdaten) -> 2 (Teilnehmer) -> 3 (Format) -> 4 (KO config,
+    // which holds the KO axis + the compare-models link now).
     await tester.enterText(find.byKey(const Key('wizardNameField')), 'Cup');
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
     await tester.pumpAndSettle();

@@ -423,4 +423,73 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(InfoIconButton), findsWidgets);
   });
+
+  testWidgets('the KO system choice and its compare-models link live here now',
+      (tester) async {
+    await _pump(
+      tester,
+      draft: const TournamentConfigDraft(
+        displayName: 'Cup',
+        format: TournamentFormat.roundRobinThenKo,
+      ),
+    );
+    // The KO-system label, all three options and the compare-models link sit
+    // in the KO step (they used to live on the format step).
+    expect(find.text('K.-o.-System'), findsOneWidget);
+    expect(find.text('Single-Out'), findsOneWidget);
+    expect(find.text('Double-Elimination'), findsOneWidget);
+    expect(find.text('Trostturnier'), findsOneWidget);
+    expect(find.text('Modelle vergleichen'), findsOneWidget);
+  });
+
+  testWidgets('picking a KO system flows through the controller (koType + '
+      'bracketType)', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container.listen(
+      tournamentConfigControllerProvider,
+      (_, _) {},
+      fireImmediately: true,
+    );
+    final controller =
+        container.read(tournamentConfigControllerProvider.notifier);
+
+    tester.view.physicalSize = const Size(800, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: KubbTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('de'),
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: WizardKoConfigStep(
+              draft: const TournamentConfigDraft(
+                displayName: 'Cup',
+                format: TournamentFormat.roundRobinThenKo,
+              ),
+              controller: controller,
+              onConfigChanged: (_) {},
+              onSeedingModeChanged: (_) {},
+              helpShown: false,
+              onHelpChanged: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Double-Elimination'));
+    await tester.pumpAndSettle();
+
+    final state = container.read(tournamentConfigControllerProvider);
+    expect(state.koType, KoType.doubleOut);
+    // bracketType is derived from the KO type, so the choice propagates.
+    expect(state.bracketType, BracketType.doubleElimination);
+  });
 }

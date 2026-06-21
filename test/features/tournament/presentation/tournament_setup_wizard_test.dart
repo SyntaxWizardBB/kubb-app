@@ -730,11 +730,20 @@ void main() {
 
   testWidgets('no "Kein K.-o." option remains; three KO choices are offered',
       (tester) async {
-    await _pumpWizard(tester);
+    // The KO system choice moved to the KO step. A Schoch Vorrunde skips the
+    // group-phase config so the KO step is reachable with plain "Weiter".
+    await _pumpWizard(
+      tester,
+      controllerOverride: _SchochSeededController.new,
+    );
     await _typeName(tester, 'Cup');
     await _tapNext(tester); // -> participants
-    await _tapNext(tester); // -> Vorrunde
+    await _tapNext(tester); // -> Vorrunde (format step)
 
+    // Not on the format step anymore.
+    expect(find.text('Single-Out'), findsNothing);
+
+    await _tapNext(tester); // -> KO config
     expect(find.text('Kein K.-o.'), findsNothing);
     expect(find.text('Single-Out'), findsOneWidget);
     expect(find.text('Double-Elimination'), findsOneWidget);
@@ -742,11 +751,34 @@ void main() {
   });
 
   testWidgets(
-      'K15: Model-B config is NEVER in the format step — even for Trostturnier',
+      'KO system is no longer on the format step — picking it there is gone',
       (tester) async {
     await _pumpWizard(
       tester,
       controllerOverride: _SchochSeededController.new,
+    );
+    await _typeName(tester, 'Cup');
+    await _tapNext(tester); // -> participants
+    await _tapNext(tester); // -> Vorrunde (format step)
+
+    // The format step decides only mode + Vorrunde now. No KO-system label,
+    // no compare-models link, no Model-B section.
+    expect(find.text('K.-o.-System'), findsNothing);
+    expect(find.text('Modelle vergleichen'), findsNothing);
+    expect(
+      find.byKey(const Key('wizardConsolationKoSection')),
+      findsNothing,
+    );
+  });
+
+  testWidgets(
+      'K15: Model-B config is NEVER in the format step — only in the KO step',
+      (tester) async {
+    // Seeded as Trostturnier; the Model-B section must not appear on the
+    // format step, only after advancing to the KO step.
+    await _pumpWizard(
+      tester,
+      controllerOverride: _ConsolationSeededController.new,
     );
     await _typeName(tester, 'Cup');
     await _tapNext(tester); // -> participants
@@ -756,13 +788,10 @@ void main() {
       findsNothing,
     );
 
-    // Picking Trostturnier in the format step must NOT reveal the Model-B
-    // section here anymore (K15: it lives in the KO step).
-    await tester.tap(find.text('Trostturnier'));
-    await tester.pumpAndSettle();
+    await _tapNext(tester); // -> KO config
     expect(
       find.byKey(const Key('wizardConsolationKoSection')),
-      findsNothing,
+      findsOneWidget,
     );
   });
 
@@ -1741,16 +1770,17 @@ void main() {
       );
       await walkToFormat(tester);
 
-      // Classic mode first: the KO-system selector is present.
-      expect(find.text('K.-o.-System'), findsOneWidget);
+      // Classic mode first: the Vorrunde axis is present (the KO system moved
+      // to the KO step, so the Vorrunde choice marks the classic section now).
+      expect(find.byType(KubbBinaryChoice<VorrundeType>), findsOneWidget);
       expect(find.byKey(const Key('wizardStageGraphBuilder')), findsNothing);
 
       // Tap the stage-graph mode option.
       await tester.tap(find.text('Stufen-Graph').first);
       await tester.pumpAndSettle();
 
-      // Classic KO-system selector is gone; the embedded builder is mounted.
-      expect(find.text('K.-o.-System'), findsNothing);
+      // Classic Vorrunde axis is gone; the embedded builder is mounted.
+      expect(find.byType(KubbBinaryChoice<VorrundeType>), findsNothing);
       expect(find.byKey(const Key('wizardStageGraphBuilder')), findsOneWidget);
       // P2.3: the embedded body is the SHARED StageGraphBuilderBody (embedded),
       // the same widget the standalone editor screen renders.

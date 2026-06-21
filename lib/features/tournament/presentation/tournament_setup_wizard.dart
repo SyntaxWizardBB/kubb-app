@@ -44,7 +44,6 @@ import 'package:kubb_app/features/tournament/presentation/stage_graph_builder_sc
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
-import 'package:kubb_app/features/tournament/presentation/widgets/ko_model_explainer_sheet.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/save_template_dialog.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/schoch_config_section.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
@@ -496,7 +495,6 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
           koBracketSize: _koBracketSize(draft),
           onFormatMode: controller.setFormatMode,
           onVorrundeType: controller.setVorrundeType,
-          onKoType: controller.setKoType,
           onMaxSets: controller.setMaxSets,
           onPoolGrouping: controller.setPoolGrouping,
           schochRounds: _schochRounds ??
@@ -1785,7 +1783,6 @@ class _StepFormat extends ConsumerStatefulWidget {
     required this.koBracketSize,
     required this.onFormatMode,
     required this.onVorrundeType,
-    required this.onKoType,
     required this.onMaxSets,
     required this.onPoolGrouping,
     required this.schochRounds,
@@ -1813,11 +1810,10 @@ class _StepFormat extends ConsumerStatefulWidget {
   /// to `controller.setFormatMode` so the choice is bound to the draft (no
   /// local shadow state for the mode).
   final ValueChanged<TournamentFormatMode> onFormatMode;
-  // Two-axis format selection: Vorrunde (group phase vs Schoch) and KO
-  // system (single-out / double-elimination / consolation). The controller
-  // derives the legacy `TournamentFormat` + `BracketType` from these axes.
+  // Vorrunde axis (group phase vs Schoch). The KO system axis lives in the KO
+  // step now; the controller derives the legacy `TournamentFormat` from the
+  // Vorrunde here and `BracketType` from the KO type picked on the KO step.
   final ValueChanged<VorrundeType> onVorrundeType;
-  final ValueChanged<KoType> onKoType;
   final ValueChanged<int> onMaxSets;
 
   /// K12: pushes the group-phase grouping inputs (group count + strategy +
@@ -2130,7 +2126,6 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
   List<Widget> _classicFormatSection(KubbTokens tokens, AppLocalizations l10n) {
     final draft = widget.draft;
     final onVorrundeType = widget.onVorrundeType;
-    final onKoType = widget.onKoType;
     return <Widget>[
       // ---- Vorrunde axis (Gruppenphase | Schoch) ----
       KubbField(
@@ -2173,60 +2168,11 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
         // inline here, only when the group phase is the selected Vorrunde.
         if (draft.vorrundeType == VorrundeType.groupPhase)
           ..._groupPhaseSection(tokens, l10n),
-        const SizedBox(height: KubbTokens.space5),
-        // ---- KO axis (Single-Out | Double-Elimination | Trostturnier) ----
-        // One info glyph (short library explainer) via KubbField; the detailed
-        // three-model sheet hangs off a discreet text link below the choice so
-        // there is no second identical "i"-glyph competing with it.
-        KubbField(
-          label: l10n.tournamentWizardKoSystemLabel,
-          info: _infoButton(
-            l10n.tournamentSetupInfoKoTypeTitle,
-            l10n.tournamentSetupInfoKoTypeBody,
-          ),
-          child: KubbBinaryChoice<KoType>(
-            selected: draft.koType,
-            onChanged: onKoType,
-            options: <KubbChoiceOption<KoType>>[
-              KubbChoiceOption<KoType>(
-                value: KoType.singleOut,
-                title: l10n.tournamentWizardKoSystemSingle,
-                subtitle: l10n.tournamentWizardKoSystemSingleHint,
-              ),
-              KubbChoiceOption<KoType>(
-                value: KoType.doubleOut,
-                title: l10n.tournamentWizardKoSystemDouble,
-                subtitle: l10n.tournamentWizardKoSystemDoubleHint,
-              ),
-              KubbChoiceOption<KoType>(
-                value: KoType.consolation,
-                title: l10n.tournamentWizardKoSystemConsolation,
-                subtitle: l10n.tournamentWizardKoSystemConsolationHint,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: KubbTokens.space2),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => KoModelExplainerSheet.show(context),
-            child: Text(
-              l10n.tournamentKoModelExplainerLink,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                decoration: TextDecoration.underline,
-                color: tokens.primary,
-              ),
-            ),
-          ),
-        ),
-      // K15: the Model-B (Trostturnier) config — main-bracket size, direct
-      // starters and the (required) name — lives ENTIRELY in the KO step now
-      // (_wizard_ko_config_step.dart, _ConsolationKoSection). It is no longer
-      // rendered here, so the main-bracket size is chosen exactly once.
+      // The KO axis (Single-Out | Double-Elimination | Trostturnier) and the
+      // whole Model-B (Trostturnier) config moved to the KO step
+      // (_wizard_ko_config_step.dart). The format step now decides only the
+      // format mode + Vorrunde; the KO system is chosen with the rest of the
+      // KO setup.
     ];
   }
 
