@@ -91,7 +91,7 @@ Jede Match-Kachel in `/tournament/:id/dashboard` zeigt und kann:
 In der Turnier-Steuerung (`/tournament/:id/dashboard`):
 - **Pause / Weiter** (existiert).
 - **Rundenzeit verlängern UND verkürzen** (MUSS, neu) — Zeit auf die laufende Runde
-  drauflegen oder abziehen.
+  drauflegen oder abziehen, per **+/- Schritten UND direkter Zahleneingabe**.
 - **Statusanzeige (MUSS):** zeigt immer, **was gerade läuft**, mit der Zeit darunter:
   - z. B. **„Pause"** + Restzeit/Dauer darunter,
   - oder **„Runde 6"** + laufende Restzeit darunter.
@@ -107,6 +107,8 @@ In der Turnier-Steuerung (`/tournament/:id/dashboard`):
 - Ein Treffer zeigt, **für welches Turnier** sich Team/Spieler angemeldet hat.
 - Von dort wird **eingecheckt** — auch turnierübergreifend an einem Ort (ein
   Helfer am Eingang checkt alle ein, egal welches Turnier).
+- **Scope (MUSS):** der Screen umfasst **nur** Turniere, die (a) **aktuell in der
+  Check-in-Phase** sind UND (b) **vom selben Veranstalter publiziert** wurden.
 
 ---
 
@@ -135,11 +137,12 @@ sind aus dem Detail-Screen verschwunden und im Cockpit erreichbar.
 → sofort final, kein Spieler-Konsens nötig, sofort gesynced.
 
 **9.5 Timer:** Veranstalter kann pausieren/fortsetzen **und** die laufende Rundenzeit
-verlängern/verkürzen; die Statusanzeige zeigt aktuellen Zustand (Pause/Runde N) +
-Zeit.
+verlängern/verkürzen (per +/- **und** direkter Zahleneingabe); die Statusanzeige zeigt
+aktuellen Zustand (Pause/Runde N) + Zeit.
 
 **9.6 Cross-Check-in:** Über den Such-Screen findet der Veranstalter ein Team/Spieler,
-sieht dessen Turnier-Anmeldung und checkt ein — turnierübergreifend.
+sieht dessen Turnier-Anmeldung und checkt ein. Der Screen listet **nur** Turniere in
+der Check-in-Phase, die der Veranstalter **selbst publiziert** hat.
 
 **9.7 Berechtigung:** Ohne Manage-Recht kein Dashboard-Zugang und kein Absprung-Button.
 
@@ -160,14 +163,13 @@ sieht dessen Turnier-Anmeldung und checkt ein — turnierübergreifend.
 
 ---
 
-## 11. Offene Punkte
+## 11. Geklärte Entscheide & Implementierungs-Hinweise
 
-- **OFFEN-1 (Timer verstellen — Server):** RPC/Schema, um die laufende Rundenzeit
-  additiv zu verändern (+/- Sekunden) inkl. Skew-konformer Anzeige auf allen Clients
-  (Messaging-Framework, kein Polling).
-- **OFFEN-2 (Direkter Score — Audit):** Direkter Veranstalter-Score wird im Audit-Log
-  protokolliert (wer/wann/wert); ob eine optionale Begründung verlangt wird, ist offen
-  (Default: nein).
-- **OFFEN-3 (Cross-Check-in — Scope):** Sucht der Screen nur über Turniere im
-  Check-in-Fenster, oder über alle? Verhalten bei mehreren Anmeldungen desselben
-  Spielers in verschiedenen Turnieren.
+- **Timer-Verstellen (geklärt):** Rundenzeit per **+/- Schritten UND direkter
+  Zahleneingabe** veränderbar. Implementierung: additiver Schreibweg auf die laufende
+  Runde, skew-konforme Anzeige auf allen Clients (Messaging-Framework, kein Polling).
+- **Direkter Score (geklärt):** **keine Begründung** verlangt. Wird im Audit-Log
+  protokolliert (wer/wann/wert).
+- **Cross-Check-in Scope (geklärt):** der Such-Screen umfasst **nur** Turniere, die
+  (a) **aktuell in der Check-in-Phase** sind UND (b) **vom selben Veranstalter
+  publiziert** wurden.
