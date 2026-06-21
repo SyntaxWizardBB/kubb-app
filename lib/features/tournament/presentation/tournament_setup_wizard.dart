@@ -10,8 +10,10 @@ import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_binary_choice.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_chip.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_field.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_labeled_switch.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
+import 'package:kubb_app/core/ui/widgets/wizard_help.dart';
 import 'package:kubb_app/features/social/application/social_providers.dart';
 import 'package:kubb_app/features/tournament/application/stage_graph_builder_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
@@ -87,6 +89,11 @@ class TournamentSetupWizard extends ConsumerStatefulWidget {
 class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
   int _step = 0;
   bool _submitting = false;
+
+  // Per-step "Erklärungen anzeigen" state. Default off — each step starts
+  // quiet and the organizer opts into the inline explanations. Keyed by step
+  // kind so the choice survives stepping back and forth.
+  final Set<_StepKind> _helpSteps = <_StepKind>{};
   // T10: round-count for the Schoch format (default ceil(log2(n)),
   // clamped 3..9). Stored locally — round-count isn't part of the create-
   // RPC contract yet, the pairing engine receives it client-side.
@@ -403,7 +410,10 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
                   MediaQuery.viewInsetsOf(context).bottom +
                       KubbTokens.space8,
                 ),
-                child: _buildStep(kind, draft, controller),
+                child: WizardHelp(
+                  show: _helpSteps.contains(kind),
+                  child: _buildStep(kind, draft, controller),
+                ),
               ),
             ),
             _BottomBar(
@@ -457,6 +467,14 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
           onMax: controller.setMaxParticipants,
           onTeamSize: controller.setTeamSize,
           onMaxTeamSize: controller.setMaxTeamSize,
+          helpShown: _helpSteps.contains(_StepKind.participants),
+          onHelpChanged: (on) => setState(() {
+            if (on) {
+              _helpSteps.add(_StepKind.participants);
+            } else {
+              _helpSteps.remove(_StepKind.participants);
+            }
+          }),
         );
       case _StepKind.format:
         return _StepFormat(
@@ -1811,12 +1829,16 @@ class _StepParticipants extends StatelessWidget {
     required this.onMax,
     required this.onTeamSize,
     required this.onMaxTeamSize,
+    required this.helpShown,
+    required this.onHelpChanged,
   });
 
   final TournamentConfigDraft draft;
   final ValueChanged<int> onMax;
   final ValueChanged<int> onTeamSize;
   final ValueChanged<int> onMaxTeamSize;
+  final bool helpShown;
+  final ValueChanged<bool> onHelpChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -1824,43 +1846,63 @@ class _StepParticipants extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        WizardNumberField(
+        Align(
+          alignment: Alignment.centerRight,
+          child: WizardHelpToggle(
+            value: helpShown,
+            onChanged: onHelpChanged,
+            label: l10n.tournamentWizardHelpToggle,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        KubbField(
           label: l10n.tournamentWizardMinTeamSizeLabel,
-          value: draft.teamSize,
-          min: 1,
-          max: 6,
-          onChanged: onTeamSize,
           info: InfoIconButton(
             title: l10n.tournamentSetupInfoTeamSizeMinTitle,
             message: l10n.tournamentSetupInfoTeamSizeMinBody,
           ),
+          child: WizardNumberField(
+            label: l10n.tournamentWizardMinTeamSizeLabel,
+            value: draft.teamSize,
+            min: 1,
+            max: 6,
+            onChanged: onTeamSize,
+            labelless: true,
+          ),
         ),
         const SizedBox(height: KubbTokens.space4),
-        WizardNumberField(
+        KubbField(
           label: l10n.tournamentWizardMaxTeamSizeLabel,
-          value: draft.maxTeamSize,
-          min: draft.teamSize,
-          max: 6,
-          onChanged: onMaxTeamSize,
+          helper: l10n.tournamentWizardTeamSizeHint,
           info: InfoIconButton(
             title: l10n.tournamentSetupInfoMaxTeamSizeTitle,
             message: l10n.tournamentSetupInfoMaxTeamSizeBody,
           ),
+          child: WizardNumberField(
+            label: l10n.tournamentWizardMaxTeamSizeLabel,
+            value: draft.maxTeamSize,
+            min: draft.teamSize,
+            max: 6,
+            onChanged: onMaxTeamSize,
+            labelless: true,
+          ),
         ),
-        const SizedBox(height: KubbTokens.space1half),
-        _HelperText(l10n.tournamentWizardTeamSizeHint),
         const SizedBox(height: KubbTokens.space5),
         // K09: the minimum-participant field was removed. K10: the maximum may
         // be configured up to participantsHardMax (1000).
-        WizardNumberField(
+        KubbField(
           label: l10n.tournamentWizardMaxParticipantsLabel,
-          value: draft.maxParticipants,
-          min: 2,
-          max: TournamentConfigDraft.participantsHardMax,
-          onChanged: onMax,
           info: InfoIconButton(
             title: l10n.tournamentSetupInfoMaxParticipantsTitle,
             message: l10n.tournamentSetupInfoMaxParticipantsBody,
+          ),
+          child: WizardNumberField(
+            label: l10n.tournamentWizardMaxParticipantsLabel,
+            value: draft.maxParticipants,
+            min: 2,
+            max: TournamentConfigDraft.participantsHardMax,
+            onChanged: onMax,
+            labelless: true,
           ),
         ),
       ],

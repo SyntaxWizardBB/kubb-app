@@ -133,6 +133,56 @@ class KubbTokens extends ThemeExtension<KubbTokens> {
     onAccent: chalk0, danger: miss, onDanger: chalk0,
   );
 
+  // Canonical text styles for the setup wizard's field scaffolding. These
+  // replace the dozen hand-copied TextStyles in the wizard so the look stays
+  // in one place. Colours come from the active token set; the metrics mirror
+  // the values the wizard used before they were hoisted here.
+
+  /// All-caps field label above an input. `_FieldLabel` / `_LabelWithInfo`.
+  TextStyle get labelStyle => TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.4,
+        color: fgMuted,
+      );
+
+  /// Small "optional" badge trailing a label.
+  TextStyle get optionalBadgeStyle => TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.4,
+        color: fgSubtle,
+      );
+
+  /// Hint line below a field. `_HelperText`.
+  TextStyle get helperStyle => TextStyle(
+        fontSize: 11,
+        height: 1.35,
+        color: fgSubtle,
+      );
+
+  /// Error line below a field — helper metrics, danger colour.
+  TextStyle get errorStyle => TextStyle(
+        fontSize: 11,
+        height: 1.35,
+        color: danger,
+      );
+
+  /// Group header that separates field blocks. `_SectionHeaderText`.
+  TextStyle get sectionHeaderStyle => TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.4,
+        color: fg,
+      );
+
+  /// Numeric/value text inside a roomy input. `WizardNumberField`.
+  TextStyle get valueStyle => TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w800,
+        color: fg,
+      );
+
   @override
   KubbTokens copyWith({
     Color? bg, Color? bgRaised, Color? bgSunken, Color? fg, Color? fgMuted,

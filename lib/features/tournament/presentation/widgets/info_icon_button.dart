@@ -1,29 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_bottom_sheet.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-/// Small `info`-glyph button that opens a compact explainer dialog on tap.
+/// Project-wide info affordance: a small `info`-glyph that opens a compact
+/// explainer in a bottom sheet on tap. Bottom sheet over dialog so the content
+/// lands in thumb reach and dismisses with a swipe down — easier one-handed at
+/// the pitch than a centred dialog with an OK button.
 ///
-/// Used next to selectable options in the stage-graph builder so every choice
-/// (stage type, grouping strategy, edge seeding) carries a short, concrete
-/// explanation of what it does to the matches. Keeps the 48dp touch target and
-/// muted-glyph styling the rest of the tournament UI already uses.
+/// Used next to setup-wizard fields and stage-graph options so every choice
+/// carries a short, concrete explanation. Keeps the 48dp touch target and the
+/// muted-glyph styling the rest of the tournament UI uses.
+///
+/// For special cases (e.g. a richer explainer sheet) pass [onPressed] to route
+/// the tap somewhere else while keeping the same glyph and placement.
 class InfoIconButton extends StatelessWidget {
   const InfoIconButton({
     required this.title,
     required this.message,
     this.tooltip,
+    this.onPressed,
     super.key,
   });
 
-  /// Dialog heading — the name of the option being explained.
+  /// Sheet heading — the name of the thing being explained.
   final String title;
 
-  /// Explanation body shown in the dialog.
+  /// Explanation body shown in the sheet.
   final String message;
 
   /// Optional tooltip on the icon itself. Falls back to [title].
   final String? tooltip;
+
+  /// Optional tap override. When set it replaces the default explainer sheet,
+  /// so a caller can open its own sheet through the same affordance.
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -33,33 +44,46 @@ class InfoIconButton extends StatelessWidget {
       constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
       padding: EdgeInsets.zero,
       tooltip: tooltip ?? title,
-      onPressed: () => _show(context),
+      onPressed: onPressed ?? () => show(context),
     );
   }
 
-  Future<void> _show(BuildContext context) {
-    final width = (MediaQuery.sizeOf(context).width - 128).clamp(220.0, 360.0);
-    return showDialog<void>(
-      context: context,
-      builder: (ctx) {
-        final tokens = Theme.of(ctx).extension<KubbTokens>()!;
-        return AlertDialog(
-          title: Text(title),
-          content: SizedBox(
-            width: width,
+  /// Opens the default explainer sheet. Exposed so a label tap (or another
+  /// widget) can trigger the same sheet without going through the glyph.
+  Future<void> show(BuildContext context) => showKubbBottomSheet<void>(
+        context,
+        header: _InfoSheetHeader(title: title),
+        builder: (ctx) {
+          final tokens = Theme.of(ctx).extension<KubbTokens>()!;
+          return Padding(
+            padding: const EdgeInsets.only(top: KubbTokens.space3),
             child: Text(
               message,
               style: TextStyle(fontSize: 14, height: 1.4, color: tokens.fg),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(MaterialLocalizations.of(ctx).okButtonLabel),
-            ),
-          ],
-        );
-      },
+          );
+        },
+      );
+}
+
+class _InfoSheetHeader extends StatelessWidget {
+  const _InfoSheetHeader({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w800,
+          color: tokens.fg,
+        ),
+      ),
     );
   }
 }

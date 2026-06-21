@@ -2135,6 +2135,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardOptional => 'optional';
 
   @override
+  String get tournamentWizardHelpToggle => 'Erklärungen';
+
+  @override
   String get tournamentWizardLeagueCategoriesLabel => 'Liga-Kategorien';
 
   @override

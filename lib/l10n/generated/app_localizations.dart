@@ -3904,6 +3904,12 @@ abstract class AppLocalizations {
   /// **'optional'**
   String get tournamentWizardOptional;
 
+  /// Toggle label that shows or hides per-field explanations in a wizard step
+  ///
+  /// In de, this message translates to:
+  /// **'Erklärungen'**
+  String get tournamentWizardHelpToggle;
+
   /// League categories (A/B/C) multi-select label
   ///
   /// In de, this message translates to:

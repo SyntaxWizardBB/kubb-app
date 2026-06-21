@@ -22,6 +22,7 @@ class WizardNumberField extends StatefulWidget {
     required this.onChanged,
     this.compact = false,
     this.info,
+    this.labelless = false,
     super.key,
   });
 
@@ -38,6 +39,10 @@ class WizardNumberField extends StatefulWidget {
   /// Compact layout (smaller label, tighter height) for dense per-round
   /// rule blocks. Default is the roomy wizard-step layout.
   final bool compact;
+
+  /// Renders only the input control, without its own label/info row. Used when
+  /// the field sits inside a `KubbField` that owns the label and helper line.
+  final bool labelless;
 
   @override
   State<WizardNumberField> createState() => _WizardNumberFieldState();
@@ -117,11 +122,9 @@ class _WizardNumberFieldState extends State<WizardNumberField> {
       textAlign: TextAlign.center,
       onChanged: _onChanged,
       onSubmitted: (_) => _commit(),
-      style: TextStyle(
-        fontSize: widget.compact ? 16 : 20,
-        fontWeight: FontWeight.w800,
-        color: tokens.fg,
-      ),
+      style: widget.compact
+          ? tokens.valueStyle.copyWith(fontSize: 16)
+          : tokens.valueStyle,
       decoration: InputDecoration(
         isDense: widget.compact,
         contentPadding: EdgeInsets.symmetric(
@@ -132,6 +135,8 @@ class _WizardNumberFieldState extends State<WizardNumberField> {
         enabledBorder: border,
       ),
     );
+
+    if (widget.labelless) return field;
 
     if (widget.compact) {
       // Dense row: label on the left, narrow field on the right.
@@ -156,15 +161,7 @@ class _WizardNumberFieldState extends State<WizardNumberField> {
       );
     }
 
-    final labelText = Text(
-      widget.label,
-      style: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
-        color: tokens.fgMuted,
-        letterSpacing: 0.4,
-      ),
-    );
+    final labelText = Text(widget.label, style: tokens.labelStyle);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

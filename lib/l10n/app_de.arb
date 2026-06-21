@@ -2681,6 +2681,10 @@
   "@tournamentWizardOptional": {
     "description": "Small badge marking an optional setup field"
   },
+  "tournamentWizardHelpToggle": "Erklärungen",
+  "@tournamentWizardHelpToggle": {
+    "description": "Toggle label that shows or hides per-field explanations in a wizard step"
+  },
   "tournamentWizardLeagueCategoriesLabel": "Liga-Kategorien",
   "@tournamentWizardLeagueCategoriesLabel": {
     "description": "League categories (A/B/C) multi-select label"

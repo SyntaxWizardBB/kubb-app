@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_bottom_sheet.dart';
 import 'package:kubb_app/features/tournament/application/stage_graph_builder_controller.dart';
 import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/stage_graph_builder_screen.dart';
@@ -67,18 +68,18 @@ Future<void> _openAndExpect(
   await tester.tap(button);
   await tester.pumpAndSettle();
 
-  // The explainer dialog is the AlertDialog carrying [title]; scope the body
+  // The explainer is a KubbBottomSheet carrying [title]; scope the body
   // assertion to it. The underlying node/edge dialog stays in the tree behind
   // it and may repeat the same caption (the selector explainer reuses the field
   // hint), so a global textContaining would match twice.
-  final dialog = find.widgetWithText(AlertDialog, title);
-  expect(dialog, findsOneWidget);
+  final sheet = find.widgetWithText(KubbBottomSheet, title);
+  expect(sheet, findsOneWidget);
   expect(
-    find.descendant(of: dialog, matching: find.textContaining(bodyFragment)),
+    find.descendant(of: sheet, matching: find.textContaining(bodyFragment)),
     findsOneWidget,
   );
 
-  await tester.tap(find.text('OK'));
+  await tester.tapAt(const Offset(10, 10));
   await tester.pumpAndSettle();
 }
 

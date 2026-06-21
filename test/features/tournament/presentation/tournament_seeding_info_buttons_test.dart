@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_bottom_sheet.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
@@ -142,14 +143,14 @@ Future<void> _openAndExpect(
   await tester.tap(button);
   await tester.pumpAndSettle();
 
-  final dialog = find.widgetWithText(AlertDialog, title);
-  expect(dialog, findsOneWidget);
+  final sheet = find.widgetWithText(KubbBottomSheet, title);
+  expect(sheet, findsOneWidget);
   expect(
-    find.descendant(of: dialog, matching: find.textContaining(bodyFragment)),
+    find.descendant(of: sheet, matching: find.textContaining(bodyFragment)),
     findsOneWidget,
   );
 
-  await tester.tap(find.text('OK'));
+  await tester.tapAt(const Offset(10, 10));
   await tester.pumpAndSettle();
 }
 

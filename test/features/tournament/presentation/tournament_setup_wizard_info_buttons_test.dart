@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_bottom_sheet.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
@@ -71,7 +72,8 @@ Future<void> _pump(WidgetTester tester) async {
 }
 
 /// Finds the info-glyph whose tooltip matches [title], scrolls it into view,
-/// taps it, and asserts the explainer dialog shows [bodyFragment].
+/// taps it, and asserts the explainer sheet shows the [title] and
+/// [bodyFragment]. Dismisses the sheet afterwards by tapping the scrim.
 Future<void> _openAndExpect(
   WidgetTester tester, {
   required String title,
@@ -86,10 +88,11 @@ Future<void> _openAndExpect(
   await tester.tap(button);
   await tester.pumpAndSettle();
 
-  expect(find.widgetWithText(AlertDialog, title), findsOneWidget);
+  expect(find.byType(KubbBottomSheet), findsOneWidget);
+  expect(find.widgetWithText(KubbBottomSheet, title), findsOneWidget);
   expect(find.textContaining(bodyFragment), findsOneWidget);
 
-  await tester.tap(find.text('OK'));
+  await tester.tapAt(const Offset(10, 10));
   await tester.pumpAndSettle();
 }
 
@@ -137,6 +140,12 @@ void main() {
     // The seeded controller fills every step-1 field, so a single "Weiter"
     // lands on the Teilnehmer step.
     await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
+
+    // The participant fields surface their info glyphs only in help mode;
+    // turn it on via the step's "Erklärungen" toggle first.
+    expect(find.byType(InfoIconButton), findsNothing);
+    await tester.tap(find.text('Erklärungen'));
     await tester.pumpAndSettle();
 
     await _openAndExpect(
