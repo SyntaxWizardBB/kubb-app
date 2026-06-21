@@ -5187,6 +5187,59 @@ class AppLocalizationsDe extends AppLocalizations {
       'Steuert, wie das Ausscheiden funktioniert: bei \"einfach\" ist man nach einer Niederlage raus, bei \"doppelt\" erst nach der zweiten, und das \"Trostturnier\" gibt früh Ausgeschiedenen einen Nebenwettbewerb. Ausführliche Erklärung im \"K.-o.-Systeme erklärt\"-Sheet.';
 
   @override
+  String get tournamentSetupInfoKoBracketSizeTitle =>
+      'Wie viele Teams im K.-o.';
+
+  @override
+  String get tournamentSetupInfoKoBracketSizeBody =>
+      'Wie viele Teams in den K.-o.-Baum kommen (eine Zweierpotenz: 2, 4, 8, 16, …). Bei Gruppenphase muss diese Zahl durch die Anzahl Gruppen teilbar sein, weil pro Gruppe gleich viele weiterkommen.';
+
+  @override
+  String get tournamentSetupInfoKoSeedingSourceTitle =>
+      'Woher die Setzliste kommt';
+
+  @override
+  String get tournamentSetupInfoKoSeedingSourceBody =>
+      'Automatisch aus Vorrunde: Die Setzliste für den K.-o.-Baum wird automatisch aus der Vorrunden-Rangliste gebildet. Du musst nichts von Hand sortieren.\n\nManuell: Du legst die Setzliste selbst fest. Das passiert nach der Vorrunde auf einem eigenen Setzlisten-Screen, wo du die Qualifikanten per Ziehen sortierst. Erst wenn die Setzliste gespeichert ist, lässt sich das K.-o. starten.';
+
+  @override
+  String get tournamentSetupInfoKoMatchupTitle => 'Wer gegen wen';
+
+  @override
+  String get tournamentSetupInfoKoMatchupBody =>
+      'Bestimmt die Paarungen im K.-o.-Baum. \"Beste vs. Schlechteste\" lässt die stärksten gegen die schwächsten antreten, \"1. vs. 2.\" paart benachbarte Ränge.';
+
+  @override
+  String get tournamentSetupInfoKoTiebreakTitle => 'Entscheid bei Gleichstand';
+
+  @override
+  String get tournamentSetupInfoKoTiebreakBody =>
+      'Wie ein unentschiedenes K.-o.-Spiel entschieden wird. \"Mighty-Finisher\" und \"Shoot-out\" sind dabei nicht dasselbe. Der Mighty-Finisher wird gespielt, wenn eine zeitbegrenzte Partie abläuft: der Finisher startet, sobald die Zeit abgelaufen ist, und der laufende Satz wird zu Ende gespielt. Steht es danach unentschieden, folgt ein Entscheidungssatz nach den festgelegten Finisher-Regeln. \"Klassisch\" ist der herkömmliche Entscheid ohne Zeit-Finisher. Das Shoot-out ist ein anderes Konzept (Übergang Vorrunde→K.-o. bei platzierungsrelevantem Unentschieden).';
+
+  @override
+  String get tournamentSetupInfoKoConsolationDirectTitle =>
+      'Wer direkt im Trostturnier startet';
+
+  @override
+  String get tournamentSetupInfoKoConsolationDirectBody =>
+      'Wie viele Teams direkt aus der Vorrunde ins Trostturnier einsteigen, zusätzlich zu den im Hauptbaum ausgeschiedenen. \"Keine\" heisst: nur Ausgeschiedene aus dem Hauptbaum.';
+
+  @override
+  String get tournamentSetupInfoKoConsolationNameTitle =>
+      'Name des Trostturniers';
+
+  @override
+  String get tournamentSetupInfoKoConsolationNameBody =>
+      'Pflichtfeld beim Trostturnier: unter diesem Namen erscheint der Nebenwettbewerb. Ohne Namen kannst du nicht weiter.';
+
+  @override
+  String get tournamentSetupInfoKoRoundRulesTitle => 'Regeln je Runde';
+
+  @override
+  String get tournamentSetupInfoKoRoundRulesBody =>
+      'Pro K.-o.-Runde einstellbar: wie viele Sätze zum Sieg nötig sind, das Zeitlimit pro Spiel, die Pause danach und ob ein Tiebreak greift. Spätere Runden dürfen länger angesetzt sein als frühe.';
+
+  @override
   String get tournamentSetupInfoMaxSetsTitle => 'Sätze pro Spiel (Vorrunde)';
 
   @override

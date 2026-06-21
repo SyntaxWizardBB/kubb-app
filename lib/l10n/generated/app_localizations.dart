@@ -9304,6 +9304,90 @@ abstract class AppLocalizations {
   /// **'Steuert, wie das Ausscheiden funktioniert: bei \"einfach\" ist man nach einer Niederlage raus, bei \"doppelt\" erst nach der zweiten, und das \"Trostturnier\" gibt früh Ausgeschiedenen einen Nebenwettbewerb. Ausführliche Erklärung im \"K.-o.-Systeme erklärt\"-Sheet.'**
   String get tournamentSetupInfoKoTypeBody;
 
+  /// Info dialog title for the classic KO bracket-size selector
+  ///
+  /// In de, this message translates to:
+  /// **'Wie viele Teams im K.-o.'**
+  String get tournamentSetupInfoKoBracketSizeTitle;
+
+  /// Info dialog body for the classic KO bracket-size selector
+  ///
+  /// In de, this message translates to:
+  /// **'Wie viele Teams in den K.-o.-Baum kommen (eine Zweierpotenz: 2, 4, 8, 16, …). Bei Gruppenphase muss diese Zahl durch die Anzahl Gruppen teilbar sein, weil pro Gruppe gleich viele weiterkommen.'**
+  String get tournamentSetupInfoKoBracketSizeBody;
+
+  /// Info dialog title for the classic KO seeding-source choice
+  ///
+  /// In de, this message translates to:
+  /// **'Woher die Setzliste kommt'**
+  String get tournamentSetupInfoKoSeedingSourceTitle;
+
+  /// Info dialog body for the classic KO seeding-source choice
+  ///
+  /// In de, this message translates to:
+  /// **'Automatisch aus Vorrunde: Die Setzliste für den K.-o.-Baum wird automatisch aus der Vorrunden-Rangliste gebildet. Du musst nichts von Hand sortieren.\n\nManuell: Du legst die Setzliste selbst fest. Das passiert nach der Vorrunde auf einem eigenen Setzlisten-Screen, wo du die Qualifikanten per Ziehen sortierst. Erst wenn die Setzliste gespeichert ist, lässt sich das K.-o. starten.'**
+  String get tournamentSetupInfoKoSeedingSourceBody;
+
+  /// Info dialog title for the classic KO matchup choice
+  ///
+  /// In de, this message translates to:
+  /// **'Wer gegen wen'**
+  String get tournamentSetupInfoKoMatchupTitle;
+
+  /// Info dialog body for the classic KO matchup choice
+  ///
+  /// In de, this message translates to:
+  /// **'Bestimmt die Paarungen im K.-o.-Baum. \"Beste vs. Schlechteste\" lässt die stärksten gegen die schwächsten antreten, \"1. vs. 2.\" paart benachbarte Ränge.'**
+  String get tournamentSetupInfoKoMatchupBody;
+
+  /// Info dialog title for the classic KO tiebreak-method choice
+  ///
+  /// In de, this message translates to:
+  /// **'Entscheid bei Gleichstand'**
+  String get tournamentSetupInfoKoTiebreakTitle;
+
+  /// Info dialog body for the classic KO tiebreak-method choice
+  ///
+  /// In de, this message translates to:
+  /// **'Wie ein unentschiedenes K.-o.-Spiel entschieden wird. \"Mighty-Finisher\" und \"Shoot-out\" sind dabei nicht dasselbe. Der Mighty-Finisher wird gespielt, wenn eine zeitbegrenzte Partie abläuft: der Finisher startet, sobald die Zeit abgelaufen ist, und der laufende Satz wird zu Ende gespielt. Steht es danach unentschieden, folgt ein Entscheidungssatz nach den festgelegten Finisher-Regeln. \"Klassisch\" ist der herkömmliche Entscheid ohne Zeit-Finisher. Das Shoot-out ist ein anderes Konzept (Übergang Vorrunde→K.-o. bei platzierungsrelevantem Unentschieden).'**
+  String get tournamentSetupInfoKoTiebreakBody;
+
+  /// Info dialog title for the consolation direct-starter count
+  ///
+  /// In de, this message translates to:
+  /// **'Wer direkt im Trostturnier startet'**
+  String get tournamentSetupInfoKoConsolationDirectTitle;
+
+  /// Info dialog body for the consolation direct-starter count
+  ///
+  /// In de, this message translates to:
+  /// **'Wie viele Teams direkt aus der Vorrunde ins Trostturnier einsteigen, zusätzlich zu den im Hauptbaum ausgeschiedenen. \"Keine\" heisst: nur Ausgeschiedene aus dem Hauptbaum.'**
+  String get tournamentSetupInfoKoConsolationDirectBody;
+
+  /// Info dialog title for the consolation name field
+  ///
+  /// In de, this message translates to:
+  /// **'Name des Trostturniers'**
+  String get tournamentSetupInfoKoConsolationNameTitle;
+
+  /// Info dialog body for the consolation name field
+  ///
+  /// In de, this message translates to:
+  /// **'Pflichtfeld beim Trostturnier: unter diesem Namen erscheint der Nebenwettbewerb. Ohne Namen kannst du nicht weiter.'**
+  String get tournamentSetupInfoKoConsolationNameBody;
+
+  /// Info dialog title for the per-KO-round rule blocks
+  ///
+  /// In de, this message translates to:
+  /// **'Regeln je Runde'**
+  String get tournamentSetupInfoKoRoundRulesTitle;
+
+  /// Info dialog body for the per-KO-round rule blocks
+  ///
+  /// In de, this message translates to:
+  /// **'Pro K.-o.-Runde einstellbar: wie viele Sätze zum Sieg nötig sind, das Zeitlimit pro Spiel, die Pause danach und ob ein Tiebreak greift. Spätere Runden dürfen länger angesetzt sein als frühe.'**
+  String get tournamentSetupInfoKoRoundRulesBody;
+
   /// Info dialog title for the prelim max-sets field
   ///
   /// In de, this message translates to:

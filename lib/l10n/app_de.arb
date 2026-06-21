@@ -6536,6 +6536,62 @@
   "@tournamentSetupInfoKoTypeBody": {
     "description": "Info dialog body for the KO type choice"
   },
+  "tournamentSetupInfoKoBracketSizeTitle": "Wie viele Teams im K.-o.",
+  "@tournamentSetupInfoKoBracketSizeTitle": {
+    "description": "Info dialog title for the classic KO bracket-size selector"
+  },
+  "tournamentSetupInfoKoBracketSizeBody": "Wie viele Teams in den K.-o.-Baum kommen (eine Zweierpotenz: 2, 4, 8, 16, …). Bei Gruppenphase muss diese Zahl durch die Anzahl Gruppen teilbar sein, weil pro Gruppe gleich viele weiterkommen.",
+  "@tournamentSetupInfoKoBracketSizeBody": {
+    "description": "Info dialog body for the classic KO bracket-size selector"
+  },
+  "tournamentSetupInfoKoSeedingSourceTitle": "Woher die Setzliste kommt",
+  "@tournamentSetupInfoKoSeedingSourceTitle": {
+    "description": "Info dialog title for the classic KO seeding-source choice"
+  },
+  "tournamentSetupInfoKoSeedingSourceBody": "Automatisch aus Vorrunde: Die Setzliste für den K.-o.-Baum wird automatisch aus der Vorrunden-Rangliste gebildet. Du musst nichts von Hand sortieren.\n\nManuell: Du legst die Setzliste selbst fest. Das passiert nach der Vorrunde auf einem eigenen Setzlisten-Screen, wo du die Qualifikanten per Ziehen sortierst. Erst wenn die Setzliste gespeichert ist, lässt sich das K.-o. starten.",
+  "@tournamentSetupInfoKoSeedingSourceBody": {
+    "description": "Info dialog body for the classic KO seeding-source choice"
+  },
+  "tournamentSetupInfoKoMatchupTitle": "Wer gegen wen",
+  "@tournamentSetupInfoKoMatchupTitle": {
+    "description": "Info dialog title for the classic KO matchup choice"
+  },
+  "tournamentSetupInfoKoMatchupBody": "Bestimmt die Paarungen im K.-o.-Baum. \"Beste vs. Schlechteste\" lässt die stärksten gegen die schwächsten antreten, \"1. vs. 2.\" paart benachbarte Ränge.",
+  "@tournamentSetupInfoKoMatchupBody": {
+    "description": "Info dialog body for the classic KO matchup choice"
+  },
+  "tournamentSetupInfoKoTiebreakTitle": "Entscheid bei Gleichstand",
+  "@tournamentSetupInfoKoTiebreakTitle": {
+    "description": "Info dialog title for the classic KO tiebreak-method choice"
+  },
+  "tournamentSetupInfoKoTiebreakBody": "Wie ein unentschiedenes K.-o.-Spiel entschieden wird. \"Mighty-Finisher\" und \"Shoot-out\" sind dabei nicht dasselbe. Der Mighty-Finisher wird gespielt, wenn eine zeitbegrenzte Partie abläuft: der Finisher startet, sobald die Zeit abgelaufen ist, und der laufende Satz wird zu Ende gespielt. Steht es danach unentschieden, folgt ein Entscheidungssatz nach den festgelegten Finisher-Regeln. \"Klassisch\" ist der herkömmliche Entscheid ohne Zeit-Finisher. Das Shoot-out ist ein anderes Konzept (Übergang Vorrunde→K.-o. bei platzierungsrelevantem Unentschieden).",
+  "@tournamentSetupInfoKoTiebreakBody": {
+    "description": "Info dialog body for the classic KO tiebreak-method choice"
+  },
+  "tournamentSetupInfoKoConsolationDirectTitle": "Wer direkt im Trostturnier startet",
+  "@tournamentSetupInfoKoConsolationDirectTitle": {
+    "description": "Info dialog title for the consolation direct-starter count"
+  },
+  "tournamentSetupInfoKoConsolationDirectBody": "Wie viele Teams direkt aus der Vorrunde ins Trostturnier einsteigen, zusätzlich zu den im Hauptbaum ausgeschiedenen. \"Keine\" heisst: nur Ausgeschiedene aus dem Hauptbaum.",
+  "@tournamentSetupInfoKoConsolationDirectBody": {
+    "description": "Info dialog body for the consolation direct-starter count"
+  },
+  "tournamentSetupInfoKoConsolationNameTitle": "Name des Trostturniers",
+  "@tournamentSetupInfoKoConsolationNameTitle": {
+    "description": "Info dialog title for the consolation name field"
+  },
+  "tournamentSetupInfoKoConsolationNameBody": "Pflichtfeld beim Trostturnier: unter diesem Namen erscheint der Nebenwettbewerb. Ohne Namen kannst du nicht weiter.",
+  "@tournamentSetupInfoKoConsolationNameBody": {
+    "description": "Info dialog body for the consolation name field"
+  },
+  "tournamentSetupInfoKoRoundRulesTitle": "Regeln je Runde",
+  "@tournamentSetupInfoKoRoundRulesTitle": {
+    "description": "Info dialog title for the per-KO-round rule blocks"
+  },
+  "tournamentSetupInfoKoRoundRulesBody": "Pro K.-o.-Runde einstellbar: wie viele Sätze zum Sieg nötig sind, das Zeitlimit pro Spiel, die Pause danach und ob ein Tiebreak greift. Spätere Runden dürfen länger angesetzt sein als frühe.",
+  "@tournamentSetupInfoKoRoundRulesBody": {
+    "description": "Info dialog body for the per-KO-round rule blocks"
+  },
   "tournamentSetupInfoMaxSetsTitle": "Sätze pro Spiel (Vorrunde)",
   "@tournamentSetupInfoMaxSetsTitle": {
     "description": "Info dialog title for the prelim max-sets field"

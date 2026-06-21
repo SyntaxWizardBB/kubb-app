@@ -7,6 +7,7 @@ import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_config_step.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 /// Hosts [WizardKoConfigStep] in a minimal MaterialApp and exposes the
 /// last config that was pushed via the callback, so the test can read it
@@ -285,5 +286,79 @@ void main() {
 
     expect(container.read(tournamentConfigControllerProvider)
         .koRoundFormats.first.setsToWin, 3);
+  });
+
+  testWidgets('bracket-size info button opens its explainer dialog',
+      (tester) async {
+    await _pump(
+      tester,
+      draft: const TournamentConfigDraft(
+        displayName: 'Cup',
+        format: TournamentFormat.roundRobinThenKo,
+      ),
+    );
+    // The info glyph sits in the same row as the bracket-size label.
+    final info = find.descendant(
+      of: find.ancestor(
+        of: find.text('Anzahl Qualifikanten'),
+        matching: find.byType(Row),
+      ),
+      matching: find.byIcon(LucideIcons.info),
+    );
+    expect(info, findsOneWidget);
+    await tester.tap(info);
+    await tester.pumpAndSettle();
+    expect(find.text('Wie viele Teams im K.-o.'), findsOneWidget);
+    expect(
+      find.textContaining('eine Zweierpotenz'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('seeding-source info explains both auto and manual',
+      (tester) async {
+    await _pump(
+      tester,
+      draft: const TournamentConfigDraft(
+        displayName: 'Cup',
+        format: TournamentFormat.roundRobinThenKo,
+      ),
+    );
+    final info = find.descendant(
+      of: find.ancestor(
+        of: find.text('Seeding-Quelle'),
+        matching: find.byType(Row),
+      ),
+      matching: find.byIcon(LucideIcons.info),
+    );
+    expect(info, findsOneWidget);
+    await tester.tap(info);
+    await tester.pumpAndSettle();
+    // The single dialog covers both options and the manual screen hint.
+    expect(find.textContaining('Automatisch aus Vorrunde:'), findsOneWidget);
+    expect(find.textContaining('eigenen Setzlisten-Screen'), findsOneWidget);
+  });
+
+  testWidgets('consolation name info button opens its explainer dialog',
+      (tester) async {
+    await _pump(
+      tester,
+      draft: const TournamentConfigDraft(
+        displayName: 'Cup',
+        format: TournamentFormat.roundRobinThenKo,
+        koType: KoType.consolation,
+      ),
+    );
+    final info = find.descendant(
+      of: find.ancestor(
+        of: find.text('Name des Trostturniers'),
+        matching: find.byType(Row),
+      ),
+      matching: find.byIcon(LucideIcons.info),
+    );
+    expect(info, findsOneWidget);
+    await tester.tap(info);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Pflichtfeld beim Trostturnier'), findsOneWidget);
   });
 }
