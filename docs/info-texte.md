@@ -261,8 +261,11 @@ unentschiedenes K.-o.-Spiel entschieden wird: "Klassisch" oder
 "Mighty-Finisher". Beim Mighty-Finisher wird ein zeitbegrenztes Spiel zu Ende
 gespielt, sobald die Zeit abgelaufen ist; steht es danach unentschieden, folgt
 ein Entscheidungssatz nach den festgelegten Finisher-Regeln. "Klassisch" ist der
-herkömmliche Entscheid ohne Zeit-Finisher. Nur im K.-o. relevant, die Vorrunde
-hat keinen Tiebreak. — Status: `neu`
+herkömmliche Entscheid ohne Zeit-Finisher. Der Mighty-Finisher ist nicht
+dasselbe wie das Shoot-out: das Shoot-out ist ein eigenes Konzept und löst beim
+Übergang Vorrunde→K.-o. ein platzierungsrelevantes Unentschieden auf, nicht ein
+einzelnes K.-o.-Spiel. Nur im K.-o. relevant, die Vorrunde hat keinen Tiebreak.
+— Status: `neu`
 
 **KO-Config: Grand-Final-Reset** — *Zweites Finale möglich* — Nur beim doppelten
 K.-o.: gewinnt das Team aus dem Verliererbaum das erste Finale, gibt es ein
