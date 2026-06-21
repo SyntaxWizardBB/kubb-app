@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
 
 /// Inline configuration block for the Schoch format option in the
 /// setup wizard (TASK-M5.3-T10). Lets the organizer pick the number of
@@ -14,6 +15,7 @@ class SchochConfigSection extends StatelessWidget {
     required this.participantCount,
     required this.rounds,
     required this.onRoundsChanged,
+    this.info,
     super.key,
   });
 
@@ -22,6 +24,9 @@ class SchochConfigSection extends StatelessWidget {
   final int participantCount;
   final int rounds;
   final ValueChanged<int> onRoundsChanged;
+
+  /// Optional explainer shown next to the "Runden" label.
+  final InfoIconButton? info;
 
   static const int roundsMin = 5;
   static const int roundsMax = 9;
@@ -104,6 +109,7 @@ class SchochConfigSection extends StatelessWidget {
                   color: tokens.fg,
                 ),
               ),
+              ?info,
             ],
           ),
           Slider(

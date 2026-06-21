@@ -9111,6 +9111,138 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Wie viele Teams sich höchstens anmelden dürfen. Ist das Limit erreicht, sind keine weiteren Anmeldungen möglich.'**
   String get tournamentSetupInfoMaxParticipantsBody;
+
+  /// Info dialog title for the format-mode choice
+  ///
+  /// In de, this message translates to:
+  /// **'Wie das Turnier aufgebaut ist'**
+  String get tournamentSetupInfoFormatModeTitle;
+
+  /// Info dialog body for the format-mode choice
+  ///
+  /// In de, this message translates to:
+  /// **'\"Klassisch\" führt durch den gewohnten Ablauf: eine Vorrunde und danach ein K.-o. \"Stufen-Graph\" ist für Fortgeschrittene: du baust den Turnierablauf aus einzelnen Stufen selbst zusammen und verbindest sie. Im Stufen-Graph-Modus entfällt der separate K.-o.-Schritt — die K.-o.-Stufen baust du direkt im Graphen.'**
+  String get tournamentSetupInfoFormatModeBody;
+
+  /// Info dialog title for the Vorrunde type choice
+  ///
+  /// In de, this message translates to:
+  /// **'Wie die Vorrunde läuft'**
+  String get tournamentSetupInfoVorrundeTitle;
+
+  /// Info dialog body for the Vorrunde type choice
+  ///
+  /// In de, this message translates to:
+  /// **'Bestimmt, wie gespielt wird, bevor das K.-o. beginnt. \"Gruppenphase\": jeder spielt in seiner Gruppe gegen jeden, die Bestplatzierten ziehen weiter. \"Schoch\": ein gemeinsamer Pool, die Paarungen werden nach jeder Runde neu nach Tabellenstand gebildet — gut für grosse Felder.'**
+  String get tournamentSetupInfoVorrundeBody;
+
+  /// Info dialog title for the KO type choice
+  ///
+  /// In de, this message translates to:
+  /// **'Welcher K.-o.-Baum'**
+  String get tournamentSetupInfoKoTypeTitle;
+
+  /// Info dialog body for the KO type choice
+  ///
+  /// In de, this message translates to:
+  /// **'Steuert, wie das Ausscheiden funktioniert: bei \"einfach\" ist man nach einer Niederlage raus, bei \"doppelt\" erst nach der zweiten, und das \"Trostturnier\" gibt früh Ausgeschiedenen einen Nebenwettbewerb. Ausführliche Erklärung im \"K.-o.-Systeme erklärt\"-Sheet.'**
+  String get tournamentSetupInfoKoTypeBody;
+
+  /// Info dialog title for the prelim max-sets field
+  ///
+  /// In de, this message translates to:
+  /// **'Sätze pro Spiel (Vorrunde)'**
+  String get tournamentSetupInfoMaxSetsTitle;
+
+  /// Info dialog body for the prelim max-sets field
+  ///
+  /// In de, this message translates to:
+  /// **'Die höchstmögliche Anzahl Sätze, die ein Vorrunden-Spiel dauern darf. In der Vorrunde dürfen Spiele unentschieden enden; die Rangliste entscheidet über das Weiterkommen.'**
+  String get tournamentSetupInfoMaxSetsBody;
+
+  /// Info dialog title for the group-count field
+  ///
+  /// In de, this message translates to:
+  /// **'In wie viele Gruppen'**
+  String get tournamentSetupInfoGroupCountTitle;
+
+  /// Info dialog body for the group-count field
+  ///
+  /// In de, this message translates to:
+  /// **'Wie viele Gruppen in der Gruppenphase gebildet werden. Aus jeder Gruppe ziehen gleich viele Teams ins K.-o. — diese Zahl muss zur K.-o.-Grösse passen (sie wird im nächsten Schritt geprüft).'**
+  String get tournamentSetupInfoGroupCountBody;
+
+  /// Info dialog title for the grouping-strategy dropdown
+  ///
+  /// In de, this message translates to:
+  /// **'Wie Teams auf Gruppen verteilt werden'**
+  String get tournamentSetupInfoGroupingStrategyTitle;
+
+  /// Info dialog body for the grouping-strategy dropdown, covering all three options
+  ///
+  /// In de, this message translates to:
+  /// **'Legt fest, nach welchem Prinzip die Teams den Gruppen zugeordnet werden. Reissverschluss: stärkste und schwächste Teams werden abwechselnd verteilt, damit die Gruppen etwa gleich stark sind. Blockweise: die Top-Teams werden der Reihe nach auf die Gruppen verteilt. Zufall: zufällige Verteilung, mit gesetztem Seed reproduzierbar.'**
+  String get tournamentSetupInfoGroupingStrategyBody;
+
+  /// Info dialog title for the random-seed field
+  ///
+  /// In de, this message translates to:
+  /// **'Startwert für die Zufallsverteilung'**
+  String get tournamentSetupInfoRandomSeedTitle;
+
+  /// Info dialog body for the random-seed field
+  ///
+  /// In de, this message translates to:
+  /// **'Eine Zahl, die die zufällige Gruppierung steuerbar macht: derselbe Seed erzeugt immer dieselbe Verteilung. Lässt du das Feld leer, wird jedes Mal neu gemischt.'**
+  String get tournamentSetupInfoRandomSeedBody;
+
+  /// Info dialog title for the per-group pitch assignment
+  ///
+  /// In de, this message translates to:
+  /// **'Welche Felder für welche Gruppe'**
+  String get tournamentSetupInfoPitchAssignmentTitle;
+
+  /// Info dialog body for the per-group pitch assignment
+  ///
+  /// In de, this message translates to:
+  /// **'Ordnet jeder Gruppe (A, B, C, …) die Felder zu, auf denen ihre Spiele laufen. Ein Feld darf mehreren Gruppen dienen. Nur in der Gruppenphase und nur, wenn du Felder angelegt hast.'**
+  String get tournamentSetupInfoPitchAssignmentBody;
+
+  /// Info dialog title for the Schoch rounds slider
+  ///
+  /// In de, this message translates to:
+  /// **'Anzahl Schoch-Runden'**
+  String get tournamentSetupInfoSchochRoundsTitle;
+
+  /// Info dialog body for the Schoch rounds slider
+  ///
+  /// In de, this message translates to:
+  /// **'Wie viele Runden im Schoch-Modus gespielt werden. Mehr Runden trennen die Tabelle sauberer — bei grossen Feldern zu empfehlen. Die Paarungen jeder Runde entstehen live nach Tabellenstand.'**
+  String get tournamentSetupInfoSchochRoundsBody;
+
+  /// Info dialog title for the match-time field
+  ///
+  /// In de, this message translates to:
+  /// **'Zeit pro Spiel'**
+  String get tournamentSetupInfoMatchTimeTitle;
+
+  /// Info dialog body for the match-time field
+  ///
+  /// In de, this message translates to:
+  /// **'Zeitlimit für eine einzelne Begegnung, in Minuten.'**
+  String get tournamentSetupInfoMatchTimeBody;
+
+  /// Info dialog title for the break-between-matches field
+  ///
+  /// In de, this message translates to:
+  /// **'Pause nach einem Spiel'**
+  String get tournamentSetupInfoBreakBetweenTitle;
+
+  /// Info dialog body for the break-between-matches field
+  ///
+  /// In de, this message translates to:
+  /// **'Wie lange nach einem Spiel pausiert wird, bevor das nächste auf demselben Feld startet, in Minuten. 0 heisst keine Pause.'**
+  String get tournamentSetupInfoBreakBetweenBody;
 }
 
 class _AppLocalizationsDelegate

@@ -185,8 +185,10 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
     await tester.pumpAndSettle();
 
-    // The real info icon next to the KO-system label opens the explainer.
-    final infoIcon = find.byIcon(LucideIcons.info);
+    // The KO-system label carries two glyphs now: a short library info button
+    // and the explainer-sheet trigger. Scope to the latter by its tooltip so
+    // the regression guard still exercises the icon -> modal hook.
+    final infoIcon = find.byTooltip('K.-o.-Systeme erklärt');
     expect(infoIcon, findsOneWidget);
 
     await tester.tap(infoIcon);

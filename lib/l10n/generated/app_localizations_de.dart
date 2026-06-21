@@ -5071,4 +5071,85 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get tournamentSetupInfoMaxParticipantsBody =>
       'Wie viele Teams sich höchstens anmelden dürfen. Ist das Limit erreicht, sind keine weiteren Anmeldungen möglich.';
+
+  @override
+  String get tournamentSetupInfoFormatModeTitle =>
+      'Wie das Turnier aufgebaut ist';
+
+  @override
+  String get tournamentSetupInfoFormatModeBody =>
+      '\"Klassisch\" führt durch den gewohnten Ablauf: eine Vorrunde und danach ein K.-o. \"Stufen-Graph\" ist für Fortgeschrittene: du baust den Turnierablauf aus einzelnen Stufen selbst zusammen und verbindest sie. Im Stufen-Graph-Modus entfällt der separate K.-o.-Schritt — die K.-o.-Stufen baust du direkt im Graphen.';
+
+  @override
+  String get tournamentSetupInfoVorrundeTitle => 'Wie die Vorrunde läuft';
+
+  @override
+  String get tournamentSetupInfoVorrundeBody =>
+      'Bestimmt, wie gespielt wird, bevor das K.-o. beginnt. \"Gruppenphase\": jeder spielt in seiner Gruppe gegen jeden, die Bestplatzierten ziehen weiter. \"Schoch\": ein gemeinsamer Pool, die Paarungen werden nach jeder Runde neu nach Tabellenstand gebildet — gut für grosse Felder.';
+
+  @override
+  String get tournamentSetupInfoKoTypeTitle => 'Welcher K.-o.-Baum';
+
+  @override
+  String get tournamentSetupInfoKoTypeBody =>
+      'Steuert, wie das Ausscheiden funktioniert: bei \"einfach\" ist man nach einer Niederlage raus, bei \"doppelt\" erst nach der zweiten, und das \"Trostturnier\" gibt früh Ausgeschiedenen einen Nebenwettbewerb. Ausführliche Erklärung im \"K.-o.-Systeme erklärt\"-Sheet.';
+
+  @override
+  String get tournamentSetupInfoMaxSetsTitle => 'Sätze pro Spiel (Vorrunde)';
+
+  @override
+  String get tournamentSetupInfoMaxSetsBody =>
+      'Die höchstmögliche Anzahl Sätze, die ein Vorrunden-Spiel dauern darf. In der Vorrunde dürfen Spiele unentschieden enden; die Rangliste entscheidet über das Weiterkommen.';
+
+  @override
+  String get tournamentSetupInfoGroupCountTitle => 'In wie viele Gruppen';
+
+  @override
+  String get tournamentSetupInfoGroupCountBody =>
+      'Wie viele Gruppen in der Gruppenphase gebildet werden. Aus jeder Gruppe ziehen gleich viele Teams ins K.-o. — diese Zahl muss zur K.-o.-Grösse passen (sie wird im nächsten Schritt geprüft).';
+
+  @override
+  String get tournamentSetupInfoGroupingStrategyTitle =>
+      'Wie Teams auf Gruppen verteilt werden';
+
+  @override
+  String get tournamentSetupInfoGroupingStrategyBody =>
+      'Legt fest, nach welchem Prinzip die Teams den Gruppen zugeordnet werden. Reissverschluss: stärkste und schwächste Teams werden abwechselnd verteilt, damit die Gruppen etwa gleich stark sind. Blockweise: die Top-Teams werden der Reihe nach auf die Gruppen verteilt. Zufall: zufällige Verteilung, mit gesetztem Seed reproduzierbar.';
+
+  @override
+  String get tournamentSetupInfoRandomSeedTitle =>
+      'Startwert für die Zufallsverteilung';
+
+  @override
+  String get tournamentSetupInfoRandomSeedBody =>
+      'Eine Zahl, die die zufällige Gruppierung steuerbar macht: derselbe Seed erzeugt immer dieselbe Verteilung. Lässt du das Feld leer, wird jedes Mal neu gemischt.';
+
+  @override
+  String get tournamentSetupInfoPitchAssignmentTitle =>
+      'Welche Felder für welche Gruppe';
+
+  @override
+  String get tournamentSetupInfoPitchAssignmentBody =>
+      'Ordnet jeder Gruppe (A, B, C, …) die Felder zu, auf denen ihre Spiele laufen. Ein Feld darf mehreren Gruppen dienen. Nur in der Gruppenphase und nur, wenn du Felder angelegt hast.';
+
+  @override
+  String get tournamentSetupInfoSchochRoundsTitle => 'Anzahl Schoch-Runden';
+
+  @override
+  String get tournamentSetupInfoSchochRoundsBody =>
+      'Wie viele Runden im Schoch-Modus gespielt werden. Mehr Runden trennen die Tabelle sauberer — bei grossen Feldern zu empfehlen. Die Paarungen jeder Runde entstehen live nach Tabellenstand.';
+
+  @override
+  String get tournamentSetupInfoMatchTimeTitle => 'Zeit pro Spiel';
+
+  @override
+  String get tournamentSetupInfoMatchTimeBody =>
+      'Zeitlimit für eine einzelne Begegnung, in Minuten.';
+
+  @override
+  String get tournamentSetupInfoBreakBetweenTitle => 'Pause nach einem Spiel';
+
+  @override
+  String get tournamentSetupInfoBreakBetweenBody =>
+      'Wie lange nach einem Spiel pausiert wird, bevor das nächste auf demselben Feld startet, in Minuten. 0 heisst keine Pause.';
 }

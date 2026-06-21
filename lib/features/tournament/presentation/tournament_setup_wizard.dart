@@ -1346,6 +1346,38 @@ class _HelperText extends StatelessWidget {
   }
 }
 
+/// All-caps section label (Format-Modus, Vorrunde) with a trailing info-glyph.
+/// Used where the choice below is a [KubbBinaryChoice] rather than a labelled
+/// field, so the label is a plain Text instead of a [_FieldLabel].
+class _LabelWithInfo extends StatelessWidget {
+  const _LabelWithInfo({required this.text, required this.info});
+
+  final String text;
+  final InfoIconButton info;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Row(
+      children: [
+        Flexible(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.4,
+              color: tokens.fgMuted,
+            ),
+          ),
+        ),
+        const Spacer(),
+        info,
+      ],
+    );
+  }
+}
+
 /// Outline-bordered text field matching the wizard's design tokens.
 class _PlainTextField extends StatelessWidget {
   const _PlainTextField({
@@ -1923,6 +1955,11 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
     super.dispose();
   }
 
+  /// Shorthand for the repeated `InfoIconButton(title:, message:)` calls the
+  /// format step adds to every element. Keeps the build methods readable.
+  InfoIconButton _infoButton(String title, String body) =>
+      InfoIconButton(title: title, message: body);
+
   /// Seeds the embedded builder's root capacity ONCE from the draft's
   /// `maxParticipants` — the participant count entering the root stage, which is
   /// the same value `validateStageGraph` runs against in
@@ -2076,13 +2113,11 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
         // ADR-0033 §2: "Klassisch" stays an own, behaviour-neutral path; the
         // stage-graph mode embeds the builder inline (no jump screen). The mode
         // is bound to the draft via `onFormatMode` — no local mode shadow.
-        Text(
-          l10n.tournamentWizardFormatModeLabel,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.4,
-            color: tokens.fgMuted,
+        _LabelWithInfo(
+          text: l10n.tournamentWizardFormatModeLabel,
+          info: _infoButton(
+            l10n.tournamentSetupInfoFormatModeTitle,
+            l10n.tournamentSetupInfoFormatModeBody,
           ),
         ),
         const SizedBox(height: KubbTokens.space2),
@@ -2119,6 +2154,10 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
           min: TournamentConfigDraft.maxSetsMin,
           max: TournamentConfigDraft.maxSetsMax,
           onChanged: onMaxSets,
+          info: _infoButton(
+            l10n.tournamentSetupInfoMaxSetsTitle,
+            l10n.tournamentSetupInfoMaxSetsBody,
+          ),
         ),
         const SizedBox(height: KubbTokens.space4),
         WizardNumberField(
@@ -2127,6 +2166,10 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
           min: 5,
           max: 120,
           onChanged: (minutes) => onRoundTime(minutes * 60),
+          info: _infoButton(
+            l10n.tournamentSetupInfoMatchTimeTitle,
+            l10n.tournamentSetupInfoMatchTimeBody,
+          ),
         ),
         const SizedBox(height: KubbTokens.space4),
         WizardNumberField(
@@ -2135,6 +2178,10 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
           min: 0,
           max: 60,
           onChanged: (minutes) => onBreakBetween(minutes * 60),
+          info: _infoButton(
+            l10n.tournamentSetupInfoBreakBetweenTitle,
+            l10n.tournamentSetupInfoBreakBetweenBody,
+          ),
         ),
         _SectionHeaderText(l10n.tournamentWizardSectionPitches),
         const SizedBox(height: KubbTokens.space2),
@@ -2162,13 +2209,11 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
     final onKoType = widget.onKoType;
     return <Widget>[
       // ---- Vorrunde axis (Gruppenphase | Schoch) ----
-      Text(
-        l10n.tournamentWizardVorrundeLabel,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.4,
-          color: tokens.fgMuted,
+      _LabelWithInfo(
+        text: l10n.tournamentWizardVorrundeLabel,
+        info: _infoButton(
+          l10n.tournamentSetupInfoVorrundeTitle,
+          l10n.tournamentSetupInfoVorrundeBody,
         ),
       ),
       const SizedBox(height: KubbTokens.space2),
@@ -2196,6 +2241,10 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
             participantCount: draft.maxParticipants,
             rounds: widget.schochRounds,
             onRoundsChanged: widget.onSchochRoundsChanged,
+            info: _infoButton(
+              l10n.tournamentSetupInfoSchochRoundsTitle,
+              l10n.tournamentSetupInfoSchochRoundsBody,
+            ),
           ),
         // K12: group-phase config (group count + grouping strategy) lives
         // inline here, only when the group phase is the selected Vorrunde.
@@ -2215,6 +2264,13 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
                   color: tokens.fgMuted,
                 ),
               ),
+            ),
+            // Short library explainer for the KO type, in line with every other
+            // format element. The detailed three-model sheet stays available via
+            // the second icon below.
+            _infoButton(
+              l10n.tournamentSetupInfoKoTypeTitle,
+              l10n.tournamentSetupInfoKoTypeBody,
             ),
             // Info icon opens the KO-model explainer sheet. >=48dp touch
             // target per --bk-touch-min (Design-System).
@@ -2339,7 +2395,13 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
         : null;
     return <Widget>[
       const SizedBox(height: KubbTokens.space4),
-      _FieldLabel(l10n.tournamentWizardPoolGroupCountLabel),
+      _FieldLabel(
+        l10n.tournamentWizardPoolGroupCountLabel,
+        info: _infoButton(
+          l10n.tournamentSetupInfoGroupCountTitle,
+          l10n.tournamentSetupInfoGroupCountBody,
+        ),
+      ),
       const SizedBox(height: KubbTokens.space2),
       TextField(
         key: const Key('wizardGroupCountField'),
@@ -2370,7 +2432,13 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
             : '—',
       ),
       const SizedBox(height: KubbTokens.space4),
-      _FieldLabel(l10n.tournamentWizardPoolStrategyLabel),
+      _FieldLabel(
+        l10n.tournamentWizardPoolStrategyLabel,
+        info: _infoButton(
+          l10n.tournamentSetupInfoGroupingStrategyTitle,
+          l10n.tournamentSetupInfoGroupingStrategyBody,
+        ),
+      ),
       const SizedBox(height: KubbTokens.space2),
       DropdownButtonFormField<PoolGroupingStrategy>(
         key: const Key('wizardGroupStrategyField'),
@@ -2394,7 +2462,13 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
       ),
       if (_strategy == PoolGroupingStrategy.random) ...[
         const SizedBox(height: KubbTokens.space4),
-        _FieldLabel(l10n.tournamentWizardPoolRandomSeedLabel),
+        _FieldLabel(
+          l10n.tournamentWizardPoolRandomSeedLabel,
+          info: _infoButton(
+            l10n.tournamentSetupInfoRandomSeedTitle,
+            l10n.tournamentSetupInfoRandomSeedBody,
+          ),
+        ),
         const SizedBox(height: KubbTokens.space2),
         TextField(
           key: const Key('wizardGroupRandomSeedField'),
@@ -2422,7 +2496,13 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
     if (pitches.isEmpty) return const <Widget>[];
     return <Widget>[
       const SizedBox(height: KubbTokens.space6),
-      _FieldLabel(l10n.tournamentWizardPoolPitchAssignmentLabel),
+      _FieldLabel(
+        l10n.tournamentWizardPoolPitchAssignmentLabel,
+        info: _infoButton(
+          l10n.tournamentSetupInfoPitchAssignmentTitle,
+          l10n.tournamentSetupInfoPitchAssignmentBody,
+        ),
+      ),
       const SizedBox(height: KubbTokens.space2),
       _HelperText(l10n.tournamentWizardPoolPitchAssignmentHint),
       const SizedBox(height: KubbTokens.space3),

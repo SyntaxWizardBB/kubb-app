@@ -155,4 +155,43 @@ void main() {
       bodyFragment: 'höchstens anmelden dürfen',
     );
   });
+
+  testWidgets('format step mode and Vorrunde carry info buttons',
+      (tester) async {
+    await _pump(tester);
+    // Two "Weiter" taps: Stammdaten -> Teilnehmer -> Format.
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
+
+    await _openAndExpect(
+      tester,
+      title: 'Wie das Turnier aufgebaut ist',
+      bodyFragment: 'gewohnten Ablauf',
+    );
+    await _openAndExpect(
+      tester,
+      title: 'Wie die Vorrunde läuft',
+      bodyFragment: 'bevor das K.-o. beginnt',
+    );
+  });
+
+  testWidgets('Schoch rounds slider carries an info button', (tester) async {
+    await _pump(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
+
+    // Switch the Vorrunde to Schoch so its rounds section renders.
+    await tester.tap(find.text('Schoch'));
+    await tester.pumpAndSettle();
+
+    await _openAndExpect(
+      tester,
+      title: 'Anzahl Schoch-Runden',
+      bodyFragment: 'nach Tabellenstand',
+    );
+  });
 }
