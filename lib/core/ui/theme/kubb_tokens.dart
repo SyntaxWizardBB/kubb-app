@@ -1,10 +1,7 @@
 // ignore_for_file: avoid_multiple_declarations_per_line — dense palette tables
 //
 // Source of truth: `docs/design/colors_and_type.css` (canonical `--kc-*` block).
-// Konstanten und Felder hier spiegeln direkt die `--kc-*`-Tokens. Die
-// `--bk-*`-Aliases im CSS-Fuss bleiben fuer HTML-Previews bestehen, sind aber
-// nicht der Bezugspunkt fuer Flutter. Werte 1:1 zur CSS-Variante; bitte beim
-// Update beide Seiten gemeinsam pflegen.
+// Werte 1:1 zur CSS-Variante; beim Update beide Seiten gemeinsam pflegen.
 import 'package:flutter/material.dart';
 
 @immutable
@@ -84,6 +81,16 @@ class KubbTokens extends ThemeExtension<KubbTokens> {
   // Touch targets — `--kc-touch-min` / `--kc-touch-comfortable`.
   static const double touchMin = 48, touchComfortable = 64;
 
+  // Roomy single-line input height (date field, derived-value box).
+  static const double inputHeight = 56;
+
+  // Narrow numeric field width in a dense label-left row.
+  static const double numberFieldCompactWidth = 88;
+
+  // Inline icon sizes — `iconSm` for chips/affordances, `iconMd` for leading
+  // field/list glyphs.
+  static const double iconSm = 18, iconMd = 20;
+
   // Spacing scale (4px base) — `--kc-space-<n>`.
   static const double space1 = 4;    // --kc-space-1
   static const double space1half = 6; // half-step: `BK.AppBar` bottom-gap per shared.jsx
@@ -133,12 +140,10 @@ class KubbTokens extends ThemeExtension<KubbTokens> {
     onAccent: chalk0, danger: miss, onDanger: chalk0,
   );
 
-  // Canonical text styles for the setup wizard's field scaffolding. These
-  // replace the dozen hand-copied TextStyles in the wizard so the look stays
-  // in one place. Colours come from the active token set; the metrics mirror
-  // the values the wizard used before they were hoisted here.
+  // Canonical text styles for the setup wizard's field scaffolding — one place
+  // for the look. Colours come from the active token set.
 
-  /// All-caps field label above an input. `_FieldLabel` / `_LabelWithInfo`.
+  /// All-caps field label above an input.
   TextStyle get labelStyle => TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w700,
@@ -154,7 +159,7 @@ class KubbTokens extends ThemeExtension<KubbTokens> {
         color: fgSubtle,
       );
 
-  /// Hint line below a field. `_HelperText`.
+  /// Hint line below a field.
   TextStyle get helperStyle => TextStyle(
         fontSize: 11,
         height: 1.35,
@@ -168,7 +173,7 @@ class KubbTokens extends ThemeExtension<KubbTokens> {
         color: danger,
       );
 
-  /// Group header that separates field blocks. `_SectionHeaderText`.
+  /// Group header that separates field blocks.
   TextStyle get sectionHeaderStyle => TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w800,
@@ -176,7 +181,7 @@ class KubbTokens extends ThemeExtension<KubbTokens> {
         color: fg,
       );
 
-  /// Numeric/value text inside a roomy input. `WizardNumberField`.
+  /// Numeric/value text inside a roomy input.
   TextStyle get valueStyle => TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.w800,

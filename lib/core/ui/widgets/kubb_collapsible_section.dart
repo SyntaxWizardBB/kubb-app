@@ -2,15 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-/// Token-styled accordion for the optional blocks of the setup wizard. A
-/// header row with the section title and a chevron; tapping it reveals or
-/// hides [children]. Starts collapsed by default so the long Stammdaten step
-/// shows only its core fields until the organizer opens an optional block.
-///
-/// Deliberately not a Material `ExpansionTile` — that brings its own divider
-/// and tile padding that fight the wizard's token spacing. This keeps the
-/// `line` border, `radiusMd` corners and `sectionHeaderStyle` the rest of the
-/// step uses.
+/// Token-styled accordion for the optional blocks of the setup wizard. Starts
+/// collapsed. Not a Material `ExpansionTile` — its divider and tile padding
+/// fight the wizard's token spacing.
 class KubbCollapsibleSection extends StatefulWidget {
   const KubbCollapsibleSection({
     required this.title,
@@ -63,7 +57,7 @@ class _KubbCollapsibleSectionState extends State<KubbCollapsibleSection> {
                     _expanded
                         ? LucideIcons.chevronUp
                         : LucideIcons.chevronDown,
-                    size: 18,
+                    size: KubbTokens.iconSm,
                     color: tokens.fgMuted,
                   ),
                 ],

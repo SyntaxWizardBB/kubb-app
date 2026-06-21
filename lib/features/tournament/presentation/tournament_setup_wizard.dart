@@ -13,6 +13,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_chip.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_collapsible_section.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_field.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_labeled_switch.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_select_chip.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/core/ui/widgets/wizard_help.dart';
 import 'package:kubb_app/features/social/application/social_providers.dart';
@@ -629,12 +630,12 @@ class _BottomBar extends StatelessWidget {
               child: FilledButton(
                 onPressed: onPrimary,
                 child: submitting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
+                    ? SizedBox(
+                        width: KubbTokens.iconSm,
+                        height: KubbTokens.iconSm,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: tokens.onPrimary,
                         ),
                       )
                     : Text(primaryLabel),
@@ -808,10 +809,11 @@ class _StepStammdatenState extends State<_StepStammdaten> {
               runSpacing: KubbTokens.space2,
               children: [
                 for (final c in LeagueCategory.values)
-                  _SelectChip(
+                  KubbSelectChip(
                     label: l10n.tournamentWizardLeagueCategory(c.wire),
                     selected: draft.leagueCategories.contains(c),
                     onTap: () => controller.toggleLeagueCategory(c),
+                    showCheck: true,
                   ),
               ],
             ),
@@ -895,9 +897,8 @@ class _StepStammdatenState extends State<_StepStammdaten> {
           ),
         ),
         const SizedBox(height: KubbTokens.space5),
-        // Scoring stays in Eckdaten: it is a core, tournament-wide decision
-        // (EKC vs. classic) that shapes every match, not a rule add-on like
-        // the Spielregeln switches. It keeps its explainer.
+        // Scoring is tournament-wide (EKC vs. classic), not a per-rule add-on,
+        // so it lives in Eckdaten and keeps its explainer.
         KubbField(
           label: l10n.tournamentWizardScoringLabel,
           info: InfoIconButton(
@@ -1028,10 +1029,11 @@ class _StepStammdatenState extends State<_StepStammdaten> {
                 runSpacing: KubbTokens.space2,
                 children: [
                   for (final m in _paymentMethods(l10n))
-                    _SelectChip(
+                    KubbSelectChip(
                       label: m.label,
                       selected: draft.paymentMethods.contains(m.wire),
                       onTap: () => controller.togglePaymentMethod(m.wire),
+                      showCheck: true,
                     ),
                 ],
               ),
@@ -1602,8 +1604,8 @@ class _InviteCandidateRow extends StatelessWidget {
               alignment: Alignment.center,
               child: Text(
                 initial,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: tokens.onPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                 ),
@@ -1661,7 +1663,7 @@ class _DateField extends StatelessWidget {
       borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
       onTap: onTap,
       child: Container(
-        height: 56,
+        height: KubbTokens.inputHeight,
         padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space3),
         decoration: BoxDecoration(
           color: tokens.bgRaised,
@@ -1670,7 +1672,7 @@ class _DateField extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.event, size: 20, color: tokens.fgMuted),
+            Icon(Icons.event, size: KubbTokens.iconMd, color: tokens.fgMuted),
             const SizedBox(width: KubbTokens.space3),
             Expanded(
               child: Text(
@@ -1680,61 +1682,6 @@ class _DateField extends StatelessWidget {
                   fontWeight: v == null ? FontWeight.w500 : FontWeight.w700,
                   color: v == null ? tokens.fgSubtle : tokens.fg,
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SelectChip extends StatelessWidget {
-  const _SelectChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return InkWell(
-      borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-      onTap: onTap,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: KubbTokens.touchMin),
-        padding: const EdgeInsets.symmetric(
-          horizontal: KubbTokens.space4,
-          vertical: KubbTokens.space2,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? tokens.primary : tokens.bgRaised,
-          borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-          border: Border.all(
-            color: selected ? tokens.primary : tokens.line,
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              selected ? Icons.check_circle : Icons.circle_outlined,
-              size: 18,
-              color: selected ? Colors.white : tokens.fgMuted,
-            ),
-            const SizedBox(width: KubbTokens.space2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: selected ? Colors.white : tokens.fg,
               ),
             ),
           ],
@@ -2486,11 +2433,12 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
                         runSpacing: KubbTokens.space2,
                         children: [
                           for (final pitch in pitches)
-                            _SelectChip(
+                            KubbSelectChip(
                               label: '$pitch',
                               selected: assigned.contains(pitch),
                               onTap: () =>
                                   _togglePitchForGroup(plan, label, pitch),
+                              showCheck: true,
                             ),
                         ],
                       ),
@@ -2732,7 +2680,7 @@ class _DerivedValueBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 56,
+      height: KubbTokens.inputHeight,
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space3),
       decoration: BoxDecoration(

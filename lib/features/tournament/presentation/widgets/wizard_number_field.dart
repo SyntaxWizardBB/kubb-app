@@ -155,7 +155,7 @@ class _WizardNumberFieldState extends State<WizardNumberField> {
               ),
             ),
             const SizedBox(width: KubbTokens.space3),
-            SizedBox(width: 88, child: field),
+            SizedBox(width: KubbTokens.numberFieldCompactWidth, child: field),
           ],
         ),
       );

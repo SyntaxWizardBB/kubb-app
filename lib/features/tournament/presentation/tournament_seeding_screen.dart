@@ -222,7 +222,7 @@ class _Editor extends ConsumerWidget {
               child: OutlinedButton.icon(
                 onPressed:
                     busy ? null : () => unawaited(notifier.autoseedFromElo()),
-                icon: const Icon(Icons.auto_awesome, size: 18),
+                icon: const Icon(Icons.auto_awesome, size: KubbTokens.iconSm),
                 label: Text(l.tournamentSeedingAutoSeedButton),
               ),
             ),
@@ -302,9 +302,8 @@ class _Editor extends ConsumerWidget {
       );
 }
 
-/// One participant in the seeding list. Token-styled to match the wizard's
-/// `_InviteCandidateRow`: bordered raised container, meadow avatar with the
-/// 1-based seed position, name, and a drag handle.
+/// One participant in the seeding list: avatar with the 1-based seed position,
+/// name, and a drag handle.
 class _SeedRow extends StatelessWidget {
   const _SeedRow({
     required this.index,

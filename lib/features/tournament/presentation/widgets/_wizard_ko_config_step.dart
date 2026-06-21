@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_binary_choice.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_field.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_select_chip.dart';
 import 'package:kubb_app/core/ui/widgets/wizard_help.dart';
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
@@ -12,17 +13,9 @@ import 'package:kubb_domain/kubb_domain.dart';
 
 /// Wizard KO-phase configuration step.
 ///
-/// Hosts the power-of-two KO-size selector (no byes — the main bracket is a
-/// power of two, P6_SETUP_WIZARD_SPEC.md Screen 6), the seeding-source radio
-/// ("Automatisch aus Vorrunde" / manual) and the per-KO-round rule blocks.
-/// Spiel um Platz 3 is always on (no toggle); the Shoot-Out and the
-/// Mighty-Finisher quali are removed from the wizard scope (always on resp.
-/// dropped). Domain rules pinned by ADR-0017 §3.
-///
-/// Like the other migrated steps the fields run through [KubbField]: the label,
-/// the optional explainer glyph and the helper line live in one tokenised
-/// place. The step carries its own "Erklärungen" toggle ([WizardHelpToggle]);
-/// the host wraps it in [WizardHelp] so the glyphs only surface in help mode.
+/// Power-of-two KO-size selector (no byes), seeding-source choice and the
+/// per-KO-round rule blocks. Spiel um Platz 3 is always on. Domain rules
+/// pinned by ADR-0017 §3.
 class WizardKoConfigStep extends StatefulWidget {
   const WizardKoConfigStep({
     required this.draft,
@@ -215,7 +208,7 @@ class _WizardKoConfigStepState extends State<WizardKoConfigStep> {
             runSpacing: KubbTokens.space2,
             children: [
               for (final s in sizes)
-                _KoSizeChip(
+                KubbSelectChip(
                   label: '$s',
                   selected: _qualifierCount == s,
                   onTap: () => _onSizePicked(s),
@@ -456,7 +449,7 @@ class _ConsolationKoSection extends StatelessWidget {
               runSpacing: KubbTokens.space2,
               children: [
                 for (final v in options)
-                  _KoSizeChip(
+                  KubbSelectChip(
                     label: v == 0
                         ? l10n.tournamentWizardConsolationDirectCountNone
                         : '$v',
@@ -484,57 +477,6 @@ class _ConsolationKoSection extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Pill-style selectable chip for one power-of-two KO size.
-class _KoSizeChip extends StatelessWidget {
-  const _KoSizeChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return InkWell(
-      borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-      onTap: onTap,
-      child: Container(
-        constraints: const BoxConstraints(
-          minHeight: KubbTokens.touchMin,
-          minWidth: KubbTokens.touchMin,
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: KubbTokens.space4,
-          vertical: KubbTokens.space2,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? tokens.primary : tokens.bgRaised,
-          borderRadius: BorderRadius.circular(KubbTokens.radiusPill),
-          border: Border.all(
-            color: selected ? tokens.primary : tokens.line,
-            width: 1.5,
-          ),
-        ),
-        child: Center(
-          widthFactor: 1,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: selected ? Colors.white : tokens.fg,
-            ),
-          ),
-        ),
       ),
     );
   }

@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-/// Per-step "Erklärungen anzeigen" state for the setup wizard. Default off:
-/// fields stay quiet until the organizer asks for help. `KubbField` reads
-/// [show] to decide whether an info affordance is surfaced.
-///
-/// Held above the visible step and provided down via this [InheritedWidget];
-/// the wizard flips it with [WizardHelpToggle].
+/// Per-step "Erklärungen anzeigen" state for the setup wizard. Default off,
+/// flipped by [WizardHelpToggle]; `KubbField` reads [show] to surface its info
+/// affordance.
 class WizardHelp extends InheritedWidget {
   const WizardHelp({
     required this.show,
@@ -30,8 +27,7 @@ class WizardHelp extends InheritedWidget {
   bool updateShouldNotify(WizardHelp oldWidget) => show != oldWidget.show;
 }
 
-/// Dezenter Toggle, der den [WizardHelp]-Zustand kippt. Sits at the top of a
-/// step; tapping it turns the per-field info affordances on or off.
+/// Toggle that flips the [WizardHelp] state at the top of a step.
 class WizardHelpToggle extends StatelessWidget {
   const WizardHelpToggle({
     required this.value,
@@ -63,12 +59,7 @@ class WizardHelpToggle extends StatelessWidget {
             const SizedBox(width: KubbTokens.space2),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.4,
-                color: active,
-              ),
+              style: tokens.labelStyle.copyWith(color: active),
             ),
             const SizedBox(width: KubbTokens.space2),
             Switch.adaptive(
