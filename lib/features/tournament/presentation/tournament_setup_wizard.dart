@@ -504,6 +504,14 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
           onPitchPlanChanged: controller.setPitchPlan,
           onRoundTime: controller.setRoundTime,
           onBreakBetween: controller.setBreakBetweenMatchesSeconds,
+          helpShown: _helpSteps.contains(_StepKind.format),
+          onHelpChanged: (on) => setState(() {
+            if (on) {
+              _helpSteps.add(_StepKind.format);
+            } else {
+              _helpSteps.remove(_StepKind.format);
+            }
+          }),
         );
       case _StepKind.koConfig:
         return WizardKoConfigStep(
@@ -1259,21 +1267,17 @@ class _PdfUploadFieldState extends ConsumerState<_PdfUploadField> {
   }
 }
 
-/// Small all-caps field label used by the Format and Pitch steps for the
-/// controls that are not wrapped in a [KubbField], with an optional trailing
-/// info-glyph.
+/// Small all-caps field label used by the Pitch step for controls that are
+/// not wrapped in a [KubbField].
 class _FieldLabel extends StatelessWidget {
-  const _FieldLabel(this.text, {this.info});
+  const _FieldLabel(this.text);
 
   final String text;
-
-  /// Optional explainer shown as a trailing info-glyph next to the label.
-  final InfoIconButton? info;
 
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
-    final label = Text(
+    return Text(
       text,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
@@ -1282,14 +1286,6 @@ class _FieldLabel extends StatelessWidget {
         letterSpacing: 0.4,
         color: tokens.fgMuted,
       ),
-    );
-    if (info == null) return label;
-    return Row(
-      children: [
-        Flexible(child: label),
-        const Spacer(),
-        info!,
-      ],
     );
   }
 }
@@ -1309,38 +1305,6 @@ class _HelperText extends StatelessWidget {
         height: 1.35,
         color: tokens.fgSubtle,
       ),
-    );
-  }
-}
-
-/// All-caps section label (Format-Modus, Vorrunde) with a trailing info-glyph.
-/// Used where the choice below is a [KubbBinaryChoice] rather than a labelled
-/// field, so the label is a plain Text instead of a [_FieldLabel].
-class _LabelWithInfo extends StatelessWidget {
-  const _LabelWithInfo({required this.text, required this.info});
-
-  final String text;
-  final InfoIconButton info;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return Row(
-      children: [
-        Flexible(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.4,
-              color: tokens.fgMuted,
-            ),
-          ),
-        ),
-        const Spacer(),
-        info,
-      ],
     );
   }
 }
@@ -1874,6 +1838,8 @@ class _StepFormat extends ConsumerStatefulWidget {
     required this.onPitchPlanChanged,
     required this.onRoundTime,
     required this.onBreakBetween,
+    required this.helpShown,
+    required this.onHelpChanged,
   });
 
   /// K12: group-count bounds for the inline group-phase config.
@@ -1913,6 +1879,10 @@ class _StepFormat extends ConsumerStatefulWidget {
   final ValueChanged<PitchPlan?> onPitchPlanChanged;
   final ValueChanged<int> onRoundTime;
   final ValueChanged<int> onBreakBetween;
+
+  /// Per-step help mode: surfaces the kept info glyphs and drives the toggle.
+  final bool helpShown;
+  final ValueChanged<bool> onHelpChanged;
 
   @override
   ConsumerState<_StepFormat> createState() => _StepFormatState();
@@ -2100,33 +2070,41 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: WizardHelpToggle(
+            value: widget.helpShown,
+            onChanged: widget.onHelpChanged,
+            label: l10n.tournamentWizardHelpToggle,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
         // ---- P2.2 format-mode fork (Klassisch | Stufen-Graph) ----
         // ADR-0033 §2: "Klassisch" stays an own, behaviour-neutral path; the
         // stage-graph mode embeds the builder inline (no jump screen). The mode
         // is bound to the draft via `onFormatMode` — no local mode shadow.
-        _LabelWithInfo(
-          text: l10n.tournamentWizardFormatModeLabel,
+        KubbField(
+          label: l10n.tournamentWizardFormatModeLabel,
           info: _infoButton(
             l10n.tournamentSetupInfoFormatModeTitle,
             l10n.tournamentSetupInfoFormatModeBody,
           ),
-        ),
-        const SizedBox(height: KubbTokens.space2),
-        KubbBinaryChoice<TournamentFormatMode>(
-          selected: draft.formatMode,
-          onChanged: widget.onFormatMode,
-          options: <KubbChoiceOption<TournamentFormatMode>>[
-            KubbChoiceOption<TournamentFormatMode>(
-              value: TournamentFormatMode.classic,
-              title: l10n.tournamentWizardFormatModeClassic,
-              subtitle: l10n.tournamentWizardFormatModeClassicHint,
-            ),
-            KubbChoiceOption<TournamentFormatMode>(
-              value: TournamentFormatMode.stageGraph,
-              title: l10n.tournamentWizardFormatModeStageGraph,
-              subtitle: l10n.tournamentWizardFormatModeStageGraphHint,
-            ),
-          ],
+          child: KubbBinaryChoice<TournamentFormatMode>(
+            selected: draft.formatMode,
+            onChanged: widget.onFormatMode,
+            options: <KubbChoiceOption<TournamentFormatMode>>[
+              KubbChoiceOption<TournamentFormatMode>(
+                value: TournamentFormatMode.classic,
+                title: l10n.tournamentWizardFormatModeClassic,
+                subtitle: l10n.tournamentWizardFormatModeClassicHint,
+              ),
+              KubbChoiceOption<TournamentFormatMode>(
+                value: TournamentFormatMode.stageGraph,
+                title: l10n.tournamentWizardFormatModeStageGraph,
+                subtitle: l10n.tournamentWizardFormatModeStageGraphHint,
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: KubbTokens.space5),
         // The classic Vorrunde × KO section renders ONLY in the classic mode
@@ -2139,39 +2117,39 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
         // The prelim only exposes "Max. Sätze" now — sets-to-win is a KO-only
         // notion. The draft keeps setsToWin at its default for the server
         // payload and the per-round KO specs that still carry it.
-        WizardNumberField(
+        KubbField(
           label: l10n.tournamentWizardMaxSetsLabel,
-          value: draft.maxSets,
-          min: TournamentConfigDraft.maxSetsMin,
-          max: TournamentConfigDraft.maxSetsMax,
-          onChanged: onMaxSets,
-          info: _infoButton(
-            l10n.tournamentSetupInfoMaxSetsTitle,
-            l10n.tournamentSetupInfoMaxSetsBody,
+          child: WizardNumberField(
+            labelless: true,
+            label: l10n.tournamentWizardMaxSetsLabel,
+            value: draft.maxSets,
+            min: TournamentConfigDraft.maxSetsMin,
+            max: TournamentConfigDraft.maxSetsMax,
+            onChanged: onMaxSets,
           ),
         ),
         const SizedBox(height: KubbTokens.space4),
-        WizardNumberField(
+        KubbField(
           label: l10n.tournamentWizardMatchTimeLabel,
-          value: (draft.roundTimeSeconds / 60).round(),
-          min: 5,
-          max: 120,
-          onChanged: (minutes) => onRoundTime(minutes * 60),
-          info: _infoButton(
-            l10n.tournamentSetupInfoMatchTimeTitle,
-            l10n.tournamentSetupInfoMatchTimeBody,
+          child: WizardNumberField(
+            labelless: true,
+            label: l10n.tournamentWizardMatchTimeLabel,
+            value: (draft.roundTimeSeconds / 60).round(),
+            min: 5,
+            max: 120,
+            onChanged: (minutes) => onRoundTime(minutes * 60),
           ),
         ),
         const SizedBox(height: KubbTokens.space4),
-        WizardNumberField(
+        KubbField(
           label: l10n.tournamentWizardBreakBetweenLabel,
-          value: (draft.breakBetweenMatchesSeconds / 60).round(),
-          min: 0,
-          max: 60,
-          onChanged: (minutes) => onBreakBetween(minutes * 60),
-          info: _infoButton(
-            l10n.tournamentSetupInfoBreakBetweenTitle,
-            l10n.tournamentSetupInfoBreakBetweenBody,
+          child: WizardNumberField(
+            labelless: true,
+            label: l10n.tournamentWizardBreakBetweenLabel,
+            value: (draft.breakBetweenMatchesSeconds / 60).round(),
+            min: 0,
+            max: 60,
+            onChanged: (minutes) => onBreakBetween(minutes * 60),
           ),
         ),
         _SectionHeaderText(l10n.tournamentWizardSectionPitches),
@@ -2200,15 +2178,13 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
     final onKoType = widget.onKoType;
     return <Widget>[
       // ---- Vorrunde axis (Gruppenphase | Schoch) ----
-      _LabelWithInfo(
-        text: l10n.tournamentWizardVorrundeLabel,
+      KubbField(
+        label: l10n.tournamentWizardVorrundeLabel,
         info: _infoButton(
           l10n.tournamentSetupInfoVorrundeTitle,
           l10n.tournamentSetupInfoVorrundeBody,
         ),
-      ),
-      const SizedBox(height: KubbTokens.space2),
-      KubbBinaryChoice<VorrundeType>(
+        child: KubbBinaryChoice<VorrundeType>(
           selected: draft.vorrundeType,
           onChanged: onVorrundeType,
           options: <KubbChoiceOption<VorrundeType>>[
@@ -2224,6 +2200,7 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
             ),
           ],
         ),
+      ),
         const SizedBox(height: KubbTokens.space2),
         // T10: the Schoch-rounds slider surfaces when the Vorrunde is Schoch
         // (Schoch reuses the Schweizer-System pairing engine).
@@ -2243,62 +2220,53 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
           ..._groupPhaseSection(tokens, l10n),
         const SizedBox(height: KubbTokens.space5),
         // ---- KO axis (Single-Out | Double-Elimination | Trostturnier) ----
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                l10n.tournamentWizardKoSystemLabel,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.4,
-                  color: tokens.fgMuted,
-                ),
+        // One info glyph (short library explainer) via KubbField; the detailed
+        // three-model sheet hangs off a discreet text link below the choice so
+        // there is no second identical "i"-glyph competing with it.
+        KubbField(
+          label: l10n.tournamentWizardKoSystemLabel,
+          info: _infoButton(
+            l10n.tournamentSetupInfoKoTypeTitle,
+            l10n.tournamentSetupInfoKoTypeBody,
+          ),
+          child: KubbBinaryChoice<KoType>(
+            selected: draft.koType,
+            onChanged: onKoType,
+            options: <KubbChoiceOption<KoType>>[
+              KubbChoiceOption<KoType>(
+                value: KoType.singleOut,
+                title: l10n.tournamentWizardKoSystemSingle,
+                subtitle: l10n.tournamentWizardKoSystemSingleHint,
               ),
-            ),
-            // Short library explainer for the KO type, in line with every other
-            // format element. The detailed three-model sheet stays available via
-            // the second icon below.
-            _infoButton(
-              l10n.tournamentSetupInfoKoTypeTitle,
-              l10n.tournamentSetupInfoKoTypeBody,
-            ),
-            // Info icon opens the KO-model explainer sheet. >=48dp touch
-            // target per --bk-touch-min (Design-System).
-            IconButton(
-              icon: Icon(
-                LucideIcons.info,
-                size: 18,
-                color: tokens.fgMuted,
+              KubbChoiceOption<KoType>(
+                value: KoType.doubleOut,
+                title: l10n.tournamentWizardKoSystemDouble,
+                subtitle: l10n.tournamentWizardKoSystemDoubleHint,
               ),
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              padding: EdgeInsets.zero,
-              tooltip: l10n.tournamentKoModelExplainerOpen,
-              onPressed: () => KoModelExplainerSheet.show(context),
-            ),
-          ],
+              KubbChoiceOption<KoType>(
+                value: KoType.consolation,
+                title: l10n.tournamentWizardKoSystemConsolation,
+                subtitle: l10n.tournamentWizardKoSystemConsolationHint,
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: KubbTokens.space2),
-        KubbBinaryChoice<KoType>(
-          selected: draft.koType,
-          onChanged: onKoType,
-          options: <KubbChoiceOption<KoType>>[
-            KubbChoiceOption<KoType>(
-              value: KoType.singleOut,
-              title: l10n.tournamentWizardKoSystemSingle,
-              subtitle: l10n.tournamentWizardKoSystemSingleHint,
+        Align(
+          alignment: Alignment.centerLeft,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => KoModelExplainerSheet.show(context),
+            child: Text(
+              l10n.tournamentKoModelExplainerLink,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                decoration: TextDecoration.underline,
+                color: tokens.primary,
+              ),
             ),
-            KubbChoiceOption<KoType>(
-              value: KoType.doubleOut,
-              title: l10n.tournamentWizardKoSystemDouble,
-              subtitle: l10n.tournamentWizardKoSystemDoubleHint,
-            ),
-            KubbChoiceOption<KoType>(
-              value: KoType.consolation,
-              title: l10n.tournamentWizardKoSystemConsolation,
-              subtitle: l10n.tournamentWizardKoSystemConsolationHint,
-            ),
-          ],
+          ),
         ),
       // K15: the Model-B (Trostturnier) config — main-bracket size, direct
       // starters and the (required) name — lives ENTIRELY in the KO step now
@@ -2386,88 +2354,81 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
         : null;
     return <Widget>[
       const SizedBox(height: KubbTokens.space4),
-      _FieldLabel(
-        l10n.tournamentWizardPoolGroupCountLabel,
-        info: _infoButton(
-          l10n.tournamentSetupInfoGroupCountTitle,
-          l10n.tournamentSetupInfoGroupCountBody,
-        ),
-      ),
-      const SizedBox(height: KubbTokens.space2),
-      TextField(
-        key: const Key('wizardGroupCountField'),
-        controller: _groupCountCtrl,
-        keyboardType: TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        onChanged: _onGroupsTyped,
-        decoration: _outlineDecoration(tokens).copyWith(
-          counterText: '',
-          errorText: !_groupCountValid
-              ? l10n.tournamentWizardPoolGroupCountRangeError(
-                  _StepFormat.groupCountMin,
-                  _StepFormat.groupCountMax,
-                )
-              : divisibilityError,
+      KubbField(
+        label: l10n.tournamentWizardPoolGroupCountLabel,
+        child: TextField(
+          key: const Key('wizardGroupCountField'),
+          controller: _groupCountCtrl,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onChanged: _onGroupsTyped,
+          decoration: _outlineDecoration(tokens).copyWith(
+            counterText: '',
+            errorText: !_groupCountValid
+                ? l10n.tournamentWizardPoolGroupCountRangeError(
+                    _StepFormat.groupCountMin,
+                    _StepFormat.groupCountMax,
+                  )
+                : divisibilityError,
+          ),
         ),
       ),
       const SizedBox(height: KubbTokens.space4),
       // Qualifier-per-group is derived read-only from koBracketSize / groupCount
       // (K12 — not an input). The KO step follows this one, so it shows "—"
-      // until the KO size is chosen.
-      _FieldLabel(l10n.tournamentWizardPoolQualifiersPerGroupLabel),
-      const SizedBox(height: KubbTokens.space2),
-      _DerivedValueBox(
-        tokens: tokens,
-        value: _derivedQualifiersPerGroup > 0
-            ? '$_derivedQualifiersPerGroup'
-            : '—',
+      // until the KO size is chosen. Derived/read-only, so no info glyph — the
+      // helper line carries the short explanation.
+      KubbField(
+        label: l10n.tournamentWizardPoolQualifiersPerGroupLabel,
+        helper: l10n.tournamentWizardPoolQualifiersPerGroupHint,
+        child: _DerivedValueBox(
+          tokens: tokens,
+          value: _derivedQualifiersPerGroup > 0
+              ? '$_derivedQualifiersPerGroup'
+              : '—',
+        ),
       ),
       const SizedBox(height: KubbTokens.space4),
-      _FieldLabel(
-        l10n.tournamentWizardPoolStrategyLabel,
+      KubbField(
+        label: l10n.tournamentWizardPoolStrategyLabel,
         info: _infoButton(
           l10n.tournamentSetupInfoGroupingStrategyTitle,
           l10n.tournamentSetupInfoGroupingStrategyBody,
         ),
-      ),
-      const SizedBox(height: KubbTokens.space2),
-      DropdownButtonFormField<PoolGroupingStrategy>(
-        key: const Key('wizardGroupStrategyField'),
-        initialValue: _strategy,
-        onChanged: _onStrategyChanged,
-        decoration: _outlineDecoration(tokens),
-        items: [
-          DropdownMenuItem(
-            value: PoolGroupingStrategy.snake,
-            child: Text(l10n.tournamentWizardPoolStrategySnake),
-          ),
-          DropdownMenuItem(
-            value: PoolGroupingStrategy.seeded,
-            child: Text(l10n.tournamentWizardPoolStrategySeeded),
-          ),
-          DropdownMenuItem(
-            value: PoolGroupingStrategy.random,
-            child: Text(l10n.tournamentWizardPoolStrategyRandom),
-          ),
-        ],
+        child: DropdownButtonFormField<PoolGroupingStrategy>(
+          key: const Key('wizardGroupStrategyField'),
+          initialValue: _strategy,
+          onChanged: _onStrategyChanged,
+          decoration: _outlineDecoration(tokens),
+          items: [
+            DropdownMenuItem(
+              value: PoolGroupingStrategy.snake,
+              child: Text(l10n.tournamentWizardPoolStrategySnake),
+            ),
+            DropdownMenuItem(
+              value: PoolGroupingStrategy.seeded,
+              child: Text(l10n.tournamentWizardPoolStrategySeeded),
+            ),
+            DropdownMenuItem(
+              value: PoolGroupingStrategy.random,
+              child: Text(l10n.tournamentWizardPoolStrategyRandom),
+            ),
+          ],
+        ),
       ),
       if (_strategy == PoolGroupingStrategy.random) ...[
         const SizedBox(height: KubbTokens.space4),
-        _FieldLabel(
-          l10n.tournamentWizardPoolRandomSeedLabel,
-          info: _infoButton(
-            l10n.tournamentSetupInfoRandomSeedTitle,
-            l10n.tournamentSetupInfoRandomSeedBody,
+        KubbField(
+          label: l10n.tournamentWizardPoolRandomSeedLabel,
+          helper: l10n.tournamentWizardPoolRandomSeedHint,
+          child: TextField(
+            key: const Key('wizardGroupRandomSeedField'),
+            controller: _seedCtrl,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            onChanged: _onSeedTyped,
+            decoration: _outlineDecoration(tokens).copyWith(counterText: ''),
           ),
-        ),
-        const SizedBox(height: KubbTokens.space2),
-        TextField(
-          key: const Key('wizardGroupRandomSeedField'),
-          controller: _seedCtrl,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          onChanged: _onSeedTyped,
-          decoration: _outlineDecoration(tokens).copyWith(counterText: ''),
         ),
       ],
     ];
@@ -2487,51 +2448,52 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
     if (pitches.isEmpty) return const <Widget>[];
     return <Widget>[
       const SizedBox(height: KubbTokens.space6),
-      _FieldLabel(
-        l10n.tournamentWizardPoolPitchAssignmentLabel,
-        info: _infoButton(
-          l10n.tournamentSetupInfoPitchAssignmentTitle,
-          l10n.tournamentSetupInfoPitchAssignmentBody,
+      KubbField(
+        label: l10n.tournamentWizardPoolPitchAssignmentLabel,
+        helper: l10n.tournamentWizardPoolPitchAssignmentHint,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var g = 0; g < _groupCount; g++) ...[
+              if (g > 0) const SizedBox(height: KubbTokens.space4),
+              Builder(
+                builder: (context) {
+                  final label = _groupLabel(g);
+                  final assigned =
+                      plan.groupAssignment[label] ?? const <int>[];
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.tournamentWizardPoolGroupLabel(label),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: tokens.fg,
+                        ),
+                      ),
+                      const SizedBox(height: KubbTokens.space2),
+                      Wrap(
+                        spacing: KubbTokens.space2,
+                        runSpacing: KubbTokens.space2,
+                        children: [
+                          for (final pitch in pitches)
+                            _SelectChip(
+                              label: '$pitch',
+                              selected: assigned.contains(pitch),
+                              onTap: () =>
+                                  _togglePitchForGroup(plan, label, pitch),
+                            ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ],
         ),
       ),
-      const SizedBox(height: KubbTokens.space2),
-      _HelperText(l10n.tournamentWizardPoolPitchAssignmentHint),
-      const SizedBox(height: KubbTokens.space3),
-      for (var g = 0; g < _groupCount; g++) ...[
-        if (g > 0) const SizedBox(height: KubbTokens.space4),
-        Builder(
-          builder: (context) {
-            final label = _groupLabel(g);
-            final assigned = plan.groupAssignment[label] ?? const <int>[];
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.tournamentWizardPoolGroupLabel(label),
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: tokens.fg,
-                  ),
-                ),
-                const SizedBox(height: KubbTokens.space2),
-                Wrap(
-                  spacing: KubbTokens.space2,
-                  runSpacing: KubbTokens.space2,
-                  children: [
-                    for (final pitch in pitches)
-                      _SelectChip(
-                        label: '$pitch',
-                        selected: assigned.contains(pitch),
-                        onTap: () => _togglePitchForGroup(plan, label, pitch),
-                      ),
-                  ],
-                ),
-              ],
-            );
-          },
-        ),
-      ],
     ];
   }
 

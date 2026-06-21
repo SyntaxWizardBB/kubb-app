@@ -2398,6 +2398,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Qualifier pro Gruppe';
 
   @override
+  String get tournamentWizardPoolQualifiersPerGroupHint =>
+      'Wird aus K.-o.-Grösse und Gruppenzahl berechnet. Steht erst nach dem K.-o.-Schritt.';
+
+  @override
   String get tournamentWizardPoolStrategyLabel => 'Gruppierungsstrategie';
 
   @override
@@ -2426,6 +2430,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentWizardPoolRandomSeedLabel => 'Random-Seed (optional)';
+
+  @override
+  String get tournamentWizardPoolRandomSeedHint =>
+      'Gleicher Seed erzeugt dieselbe Verteilung. Leer lassen mischt jedes Mal neu.';
 
   @override
   String get tournamentWizardMatchTimeLabel => 'Zeit pro Match (Min.)';
@@ -2597,6 +2605,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentKoModelExplainerOpen => 'K.-o.-Systeme erklärt';
+
+  @override
+  String get tournamentKoModelExplainerLink => 'Modelle vergleichen';
 
   @override
   String get tournamentKoModelExplainerTitle => 'Welcher zweite Baum?';
@@ -5342,6 +5353,17 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get tournamentSetupInfoSchochRoundsBody =>
       'Wie viele Runden im Schoch-Modus gespielt werden. Mehr Runden trennen die Tabelle sauberer — bei grossen Feldern zu empfehlen. Die Paarungen jeder Runde entstehen live nach Tabellenstand.';
+
+  @override
+  String get tournamentWizardSchochRoundsLabel => 'Runden';
+
+  @override
+  String get tournamentWizardSchochLargeFieldHint =>
+      'Grosses Feld: mehr Runden trennen die Tabelle sauberer.';
+
+  @override
+  String get tournamentWizardSchochTiebreak =>
+      'Tiebreak: Buchholz → Direct-Encounter → Random';
 
   @override
   String get tournamentSetupInfoMatchTimeTitle => 'Zeit pro Spiel';

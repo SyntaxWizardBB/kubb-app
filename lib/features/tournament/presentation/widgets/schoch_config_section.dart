@@ -2,7 +2,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_field.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
+import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
 /// Inline configuration block for the Schoch format option in the
 /// setup wizard (TASK-M5.3-T10). Lets the organizer pick the number of
@@ -25,7 +27,8 @@ class SchochConfigSection extends StatelessWidget {
   final int rounds;
   final ValueChanged<int> onRoundsChanged;
 
-  /// Optional explainer shown next to the "Runden" label.
+  /// Explainer for the rounds choice. Surfaced via [KubbField] only in help
+  /// mode (Schoch rounds is one of the kept, explanation-worthy glyphs).
   final InfoIconButton? info;
 
   static const int roundsMin = 5;
@@ -47,6 +50,7 @@ class SchochConfigSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l10n = AppLocalizations.of(context);
     final largeField = participantCount > largeFieldHint;
     return Container(
       margin: const EdgeInsets.only(top: KubbTokens.space3),
@@ -74,8 +78,7 @@ class SchochConfigSection extends StatelessWidget {
                   const SizedBox(width: KubbTokens.space2),
                   Expanded(
                     child: Text(
-                      'Grosses Feld: mehr Runden trennen die Tabelle '
-                      'sauberer.',
+                      l10n.tournamentWizardSchochLargeFieldHint,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -88,46 +91,33 @@ class SchochConfigSection extends StatelessWidget {
             ),
             const SizedBox(height: KubbTokens.space3),
           ],
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Runden',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.4,
-                    color: tokens.fgMuted,
+          KubbField(
+            label: l10n.tournamentWizardSchochRoundsLabel,
+            info: info,
+            helper: l10n.tournamentWizardSchochTiebreak,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Slider(
+                    value: rounds.toDouble(),
+                    min: roundsMin.toDouble(),
+                    max: roundsMax.toDouble(),
+                    divisions: roundsMax - roundsMin,
+                    label: '$rounds',
+                    activeColor: tokens.primary,
+                    onChanged: (v) => onRoundsChanged(v.round()),
                   ),
                 ),
-              ),
-              Text(
-                '$rounds',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: tokens.fg,
+                const SizedBox(width: KubbTokens.space2),
+                Text(
+                  '$rounds',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: tokens.fg,
+                  ),
                 ),
-              ),
-              ?info,
-            ],
-          ),
-          Slider(
-            value: rounds.toDouble(),
-            min: roundsMin.toDouble(),
-            max: roundsMax.toDouble(),
-            divisions: roundsMax - roundsMin,
-            label: '$rounds',
-            activeColor: tokens.primary,
-            onChanged: (v) => onRoundsChanged(v.round()),
-          ),
-          const SizedBox(height: KubbTokens.space2),
-          Text(
-            'Tiebreak: Buchholz → Direct-Encounter → Random',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: tokens.fgMuted,
+              ],
             ),
           ),
         ],

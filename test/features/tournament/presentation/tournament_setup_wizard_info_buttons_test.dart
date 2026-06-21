@@ -167,7 +167,7 @@ void main() {
     );
   });
 
-  testWidgets('format step mode and Vorrunde carry info buttons',
+  testWidgets('format step glyphs stay hidden until help mode is on',
       (tester) async {
     await _pump(tester);
     // Two "Weiter" taps: Stammdaten -> Teilnehmer -> Format.
@@ -175,6 +175,22 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
     await tester.pumpAndSettle();
+
+    // The format step is quiet by default — even the retained glyphs only
+    // surface once the step's help mode is on.
+    expect(find.byType(InfoIconButton), findsNothing);
+    await _enableHelp(tester);
+    expect(find.byType(InfoIconButton), findsWidgets);
+  });
+
+  testWidgets('format step mode and Vorrunde carry info buttons in help mode',
+      (tester) async {
+    await _pump(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
+    await _enableHelp(tester);
 
     await _openAndExpect(
       tester,
@@ -188,12 +204,41 @@ void main() {
     );
   });
 
-  testWidgets('Schoch rounds slider carries an info button', (tester) async {
+  testWidgets('self-explanatory format fields lost their info glyphs',
+      (tester) async {
     await _pump(tester);
     await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
     await tester.pumpAndSettle();
+    await _enableHelp(tester);
+
+    // Max. Sätze, Match-Zeit and Pause are self-explanatory now — their glyphs
+    // are gone even with help on. The tooltips no longer resolve to a button.
+    for (final title in <String>[
+      'Sätze pro Spiel (Vorrunde)',
+      'Zeit pro Spiel',
+      'Pause nach einem Spiel',
+    ]) {
+      expect(
+        find.descendant(
+          of: find.byType(InfoIconButton),
+          matching: find.byTooltip(title),
+        ),
+        findsNothing,
+        reason: 'glyph "$title" should be gone',
+      );
+    }
+  });
+
+  testWidgets('Schoch rounds slider carries an info button in help mode',
+      (tester) async {
+    await _pump(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
+    await _enableHelp(tester);
 
     // Switch the Vorrunde to Schoch so its rounds section renders.
     await tester.tap(find.text('Schoch'));
@@ -204,5 +249,24 @@ void main() {
       title: 'Anzahl Schoch-Runden',
       bodyFragment: 'nach Tabellenstand',
     );
+  });
+
+  testWidgets('KO system offers a compare-models text link, not a 2nd glyph',
+      (tester) async {
+    await _pump(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
+    await tester.pumpAndSettle();
+    await _enableHelp(tester);
+
+    // The detailed three-model sheet hangs off a discreet text link below the
+    // KO choice — tapping it opens the explainer. No second "i"-glyph.
+    final link = find.text('Modelle vergleichen');
+    expect(link, findsOneWidget);
+    await tester.ensureVisible(link);
+    await tester.tap(link);
+    await tester.pumpAndSettle();
+    expect(find.text('Welcher zweite Baum?'), findsOneWidget);
   });
 }

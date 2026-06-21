@@ -134,10 +134,11 @@ void main() {
   });
 
   // Regression guard for the *real* wiring in `_StepFormat`: mounts the full
-  // wizard, navigates to the format step and taps the actual info icon there,
-  // so removing/breaking the icon -> modal hook in the wizard fails this test.
+  // wizard, navigates to the format step and taps the actual compare-models
+  // text link there, so removing/breaking the link -> modal hook in the wizard
+  // fails this test.
   testWidgets(
-      'real wizard format step exposes the info icon that opens the explainer',
+      'real wizard format step exposes the compare-models link to the explainer',
       (tester) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1;
@@ -185,13 +186,14 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Weiter'));
     await tester.pumpAndSettle();
 
-    // The KO-system label carries two glyphs now: a short library info button
-    // and the explainer-sheet trigger. Scope to the latter by its tooltip so
-    // the regression guard still exercises the icon -> modal hook.
-    final infoIcon = find.byTooltip('K.-o.-Systeme erklärt');
-    expect(infoIcon, findsOneWidget);
+    // The KO-system choice carries one info glyph (help-mode-gated) plus a
+    // discreet "Modelle vergleichen" text link for the detailed explainer. The
+    // link is always visible; tapping it opens the sheet.
+    final compareLink = find.text('Modelle vergleichen');
+    expect(compareLink, findsOneWidget);
 
-    await tester.tap(infoIcon);
+    await tester.ensureVisible(compareLink);
+    await tester.tap(compareLink);
     await tester.pumpAndSettle();
 
     // The modal is open (its title is unique to the explainer sheet). The

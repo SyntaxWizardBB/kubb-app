@@ -3030,6 +3030,10 @@
   "@tournamentWizardPoolQualifiersPerGroupLabel": {
     "description": "Read-only label for the derived qualifiers-per-group value"
   },
+  "tournamentWizardPoolQualifiersPerGroupHint": "Wird aus K.-o.-Grösse und Gruppenzahl berechnet. Steht erst nach dem K.-o.-Schritt.",
+  "@tournamentWizardPoolQualifiersPerGroupHint": {
+    "description": "Helper line for the read-only derived qualifiers-per-group value"
+  },
   "tournamentWizardPoolStrategyLabel": "Gruppierungsstrategie",
   "@tournamentWizardPoolStrategyLabel": {
     "description": "Label for the pool grouping-strategy selector"
@@ -3057,6 +3061,10 @@
   "tournamentWizardPoolRandomSeedLabel": "Random-Seed (optional)",
   "@tournamentWizardPoolRandomSeedLabel": {
     "description": "Label for the optional random-seed input shown for the random strategy"
+  },
+  "tournamentWizardPoolRandomSeedHint": "Gleicher Seed erzeugt dieselbe Verteilung. Leer lassen mischt jedes Mal neu.",
+  "@tournamentWizardPoolRandomSeedHint": {
+    "description": "Helper line for the optional random-seed input"
   },
   "tournamentWizardMatchTimeLabel": "Zeit pro Match (Min.)",
   "@tournamentWizardMatchTimeLabel": {
@@ -3226,6 +3234,10 @@
   "tournamentKoModelExplainerOpen": "K.-o.-Systeme erklärt",
   "@tournamentKoModelExplainerOpen": {
     "description": "Accessibility/tooltip label for the info icon that opens the KO-model explainer sheet"
+  },
+  "tournamentKoModelExplainerLink": "Modelle vergleichen",
+  "@tournamentKoModelExplainerLink": {
+    "description": "Text link under the KO-system choice that opens the detailed three-model explainer sheet"
   },
   "tournamentKoModelExplainerTitle": "Welcher zweite Baum?",
   "@tournamentKoModelExplainerTitle": {
@@ -6707,6 +6719,18 @@
   "tournamentSetupInfoSchochRoundsBody": "Wie viele Runden im Schoch-Modus gespielt werden. Mehr Runden trennen die Tabelle sauberer — bei grossen Feldern zu empfehlen. Die Paarungen jeder Runde entstehen live nach Tabellenstand.",
   "@tournamentSetupInfoSchochRoundsBody": {
     "description": "Info dialog body for the Schoch rounds slider"
+  },
+  "tournamentWizardSchochRoundsLabel": "Runden",
+  "@tournamentWizardSchochRoundsLabel": {
+    "description": "Label for the Schoch rounds slider"
+  },
+  "tournamentWizardSchochLargeFieldHint": "Grosses Feld: mehr Runden trennen die Tabelle sauberer.",
+  "@tournamentWizardSchochLargeFieldHint": {
+    "description": "Hint shown above the Schoch rounds slider for large fields"
+  },
+  "tournamentWizardSchochTiebreak": "Tiebreak: Buchholz → Direct-Encounter → Random",
+  "@tournamentWizardSchochTiebreak": {
+    "description": "Read-only tiebreak order shown below the Schoch rounds slider"
   },
   "tournamentSetupInfoMatchTimeTitle": "Zeit pro Spiel",
   "@tournamentSetupInfoMatchTimeTitle": {

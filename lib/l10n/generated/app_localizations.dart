@@ -4378,6 +4378,12 @@ abstract class AppLocalizations {
   /// **'Qualifier pro Gruppe'**
   String get tournamentWizardPoolQualifiersPerGroupLabel;
 
+  /// Helper line for the read-only derived qualifiers-per-group value
+  ///
+  /// In de, this message translates to:
+  /// **'Wird aus K.-o.-Grösse und Gruppenzahl berechnet. Steht erst nach dem K.-o.-Schritt.'**
+  String get tournamentWizardPoolQualifiersPerGroupHint;
+
   /// Label for the pool grouping-strategy selector
   ///
   /// In de, this message translates to:
@@ -4431,6 +4437,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Random-Seed (optional)'**
   String get tournamentWizardPoolRandomSeedLabel;
+
+  /// Helper line for the optional random-seed input
+  ///
+  /// In de, this message translates to:
+  /// **'Gleicher Seed erzeugt dieselbe Verteilung. Leer lassen mischt jedes Mal neu.'**
+  String get tournamentWizardPoolRandomSeedHint;
 
   /// Prelim time limit per match stepper label
   ///
@@ -4743,6 +4755,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'K.-o.-Systeme erklärt'**
   String get tournamentKoModelExplainerOpen;
+
+  /// Text link under the KO-system choice that opens the detailed three-model explainer sheet
+  ///
+  /// In de, this message translates to:
+  /// **'Modelle vergleichen'**
+  String get tournamentKoModelExplainerLink;
 
   /// Title of the KO-model explainer modal
   ///
@@ -9561,6 +9579,24 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Wie viele Runden im Schoch-Modus gespielt werden. Mehr Runden trennen die Tabelle sauberer — bei grossen Feldern zu empfehlen. Die Paarungen jeder Runde entstehen live nach Tabellenstand.'**
   String get tournamentSetupInfoSchochRoundsBody;
+
+  /// Label for the Schoch rounds slider
+  ///
+  /// In de, this message translates to:
+  /// **'Runden'**
+  String get tournamentWizardSchochRoundsLabel;
+
+  /// Hint shown above the Schoch rounds slider for large fields
+  ///
+  /// In de, this message translates to:
+  /// **'Grosses Feld: mehr Runden trennen die Tabelle sauberer.'**
+  String get tournamentWizardSchochLargeFieldHint;
+
+  /// Read-only tiebreak order shown below the Schoch rounds slider
+  ///
+  /// In de, this message translates to:
+  /// **'Tiebreak: Buchholz → Direct-Encounter → Random'**
+  String get tournamentWizardSchochTiebreak;
 
   /// Info dialog title for the match-time field
   ///
