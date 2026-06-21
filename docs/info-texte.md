@@ -68,13 +68,13 @@ Turniers. — Status: `neu`
 
 **Sureshot** — *Sonderregel Sureshot* — Schaltet die Sureshot-Variante für alle
 Spiele ein. Mit Sureshot muss die Königsfigur am Ende eines Satzes durch die
-Beine hindurch abgeworfen werden statt normal im Stehen. Lässt sich ein- und
-ausschalten. — Status: `neu`
+Beine hindurch abgeworfen werden statt aus dem normalen Stand. Lässt sich ein-
+und ausschalten. — Status: `neu`
 
 **Diggy** — *Sonderregel Diggy* — Schaltet die Diggy-Variante für alle Spiele
 ein. Liegt beim Einwerfen ein Kubb auf einem anderen und dabei im Spielfeld
-(also ein gültiger Einwurf), darf das einwerfende Team ihn platzieren. —
-Status: `neu`
+(also ein gültiger Einwurf), darf das einwerfende Team den oben liegenden Kubb
+platzieren. — Status: `neu`
 
 **Strafkubb ausserhalb Basislinie** — *Strafkubb-Platzierung* — Ein Strafkubb
 entsteht, wenn ein eingeworfener Kubb nach dem zweiten Versuch nicht gültig
