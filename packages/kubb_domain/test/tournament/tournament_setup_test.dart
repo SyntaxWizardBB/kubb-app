@@ -154,6 +154,14 @@ void main() {
       expect(plan.availablePitches(), <int>[8, 5, 6, 7]);
     });
 
+    test('manual numbers are deduplicated, first occurrence wins', () {
+      const plan = PitchPlan(
+        mode: PitchMode.manual,
+        numbers: <int>[3, 1, 3, 2, 1],
+      );
+      expect(plan.availablePitches(), <int>[3, 1, 2]);
+    });
+
     test('JSON round-trips including group assignment', () {
       const plan = PitchPlan(
         mode: PitchMode.manual,

@@ -1075,6 +1075,24 @@ class TournamentConfigDraft {
       ..addAll(mightyFinisherQuali?.issues() ?? const <String>[])
       ..addAll(consolationBracket?.issues() ?? const <String>[]);
 
+    // K34: a configured pitch plan must offer at least ceil(maxParticipants/2)
+    // distinct pitches — half the field plays at once, so a smaller plan can
+    // never run a full round in parallel. Counts distinct numbers, not the
+    // range width. Gated on a present plan (the plan step is optional) and only
+    // checked when the plan itself already validates clean, so this rule reads
+    // as one extra line rather than piling onto an already-broken plan.
+    final plan = pitchPlan;
+    if (plan != null && plan.issues().isEmpty) {
+      final distinct = plan.availablePitches().toSet().length;
+      final required = (maxParticipants + 1) ~/ 2;
+      if (distinct < required) {
+        issues.add(
+          'Mindestens $required Spielfelder nötig '
+          '(bei $maxParticipants Teilnehmern).',
+        );
+      }
+    }
+
     return (isValid: issues.isEmpty, issues: issues);
   }
 

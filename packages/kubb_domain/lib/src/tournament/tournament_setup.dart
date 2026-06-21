@@ -420,7 +420,9 @@ final class PitchPlan {
   final Map<String, List<int>> groupAssignment;
 
   /// Effective list of pitch numbers, honouring an explicit [order] when
-  /// present. For [PitchMode.range] this expands `rangeFrom..rangeTo`.
+  /// present. For [PitchMode.range] this expands `rangeFrom..rangeTo`. Manual
+  /// numbers are deduplicated (first occurrence wins) so a list with repeats
+  /// never yields a double pitch — the available list is a set by contract.
   List<int> availablePitches() {
     final from = rangeFrom;
     final to = rangeTo;
@@ -428,12 +430,22 @@ final class PitchPlan {
       PitchMode.range => (from != null && to != null)
           ? <int>[for (var n = from; n <= to; n++) n]
           : const <int>[],
-      PitchMode.manual => List<int>.of(numbers),
+      PitchMode.manual => _dedup(numbers),
     };
     if (order.isEmpty) return base;
     final inOrder = order.where(base.contains).toList();
     final rest = base.where((n) => !order.contains(n));
     return <int>[...inOrder, ...rest];
+  }
+
+  /// First-occurrence-wins dedup, preserving input order.
+  static List<int> _dedup(List<int> input) {
+    final seen = <int>{};
+    final out = <int>[];
+    for (final n in input) {
+      if (seen.add(n)) out.add(n);
+    }
+    return out;
   }
 
   List<String> issues() {

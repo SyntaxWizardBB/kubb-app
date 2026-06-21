@@ -1961,8 +1961,9 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
       String.fromCharCode('A'.codeUnitAt(0) + index);
 
   /// K23/K24: toggles [pitch] in the assignment list of group [label] and
-  /// pushes the updated pitch plan. A pitch may serve several groups, so this
-  /// only flips the one group.
+  /// pushes the updated pitch plan. A pitch belongs to EXACTLY one group:
+  /// selecting it for [label] strips it from every other group first, so a
+  /// pitch can never sit in two assignments at once. Deselecting frees it again.
   void _togglePitchForGroup(PitchPlan plan, String label, int pitch) {
     final next = <String, List<int>>{
       for (final entry in plan.groupAssignment.entries)
@@ -1972,11 +1973,14 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
     if (current.contains(pitch)) {
       current.remove(pitch);
     } else {
+      for (final entry in next.entries) {
+        if (entry.key != label) entry.value.remove(pitch);
+      }
       current
         ..add(pitch)
         ..sort();
     }
-    if (current.isEmpty) next.remove(label);
+    next.removeWhere((_, value) => value.isEmpty);
     widget.onPitchPlanChanged(plan.copyWith(groupAssignment: next));
   }
 
@@ -2337,8 +2341,10 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
 
   /// K23/K24: "Pitch-Zuteilung pro Gruppe" — rendered in the pitch context
   /// only when a pitch plan with available pitches exists and the group count
-  /// is valid. For each group label (A, B, …) the organiser multi-selects
-  /// which pitch numbers serve that group.
+  /// is valid. A pitch belongs to exactly one group, so each group's chip list
+  /// is filtered down to the pitches still free OR already on this group: a
+  /// pitch picked for group A disappears from B/C/… instantly and returns
+  /// everywhere once it is deselected.
   List<Widget> _pitchAssignmentSection(
     KubbTokens tokens,
     AppLocalizations l10n,
@@ -2362,6 +2368,16 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
                   final label = _groupLabel(g);
                   final assigned =
                       plan.groupAssignment[label] ?? const <int>[];
+                  // Pitches taken by OTHER groups are hidden here — exclusivity
+                  // is enforced both ways (filtered chips + toggle that strips
+                  // foreign groups), so the lists stay disjoint at all times.
+                  final takenElsewhere = <int>{
+                    for (final entry in plan.groupAssignment.entries)
+                      if (entry.key != label) ...entry.value,
+                  };
+                  final selectable = pitches
+                      .where((p) => !takenElsewhere.contains(p))
+                      .toList();
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -2378,7 +2394,7 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
                         spacing: KubbTokens.space2,
                         runSpacing: KubbTokens.space2,
                         children: [
-                          for (final pitch in pitches)
+                          for (final pitch in selectable)
                             KubbSelectChip(
                               label: '$pitch',
                               selected: assigned.contains(pitch),
@@ -3315,13 +3331,20 @@ class _PitchPlanSectionState extends State<_PitchPlanSection> {
     return t.isEmpty ? null : int.tryParse(t);
   }
 
-  static List<int> _parseNumbers(String s) => s
-      .split(RegExp(r'[,\s]+'))
-      .where((x) => x.isNotEmpty)
-      .map(int.tryParse)
-      .whereType<int>()
-      .where((n) => n > 0)
-      .toList();
+  /// Parses the comma/space-separated manual list, dropping anything that
+  /// isn't a positive int and deduplicating (first occurrence wins) so a typo
+  /// like "1, 2, 2, 3" never produces a double pitch in the plan.
+  static List<int> _parseNumbers(String s) {
+    final seen = <int>{};
+    final out = <int>[];
+    for (final raw in s.split(RegExp(r'[,\s]+'))) {
+      if (raw.isEmpty) continue;
+      final n = int.tryParse(raw);
+      if (n == null || n <= 0) continue;
+      if (seen.add(n)) out.add(n);
+    }
+    return out;
+  }
 
   /// Raw available pitch numbers for the current inputs, WITHOUT applying
   /// any manual `order` (used to seed/sync the reorder editor).

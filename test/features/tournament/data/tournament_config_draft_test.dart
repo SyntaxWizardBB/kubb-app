@@ -160,6 +160,64 @@ void main() {
       expect(d.derivedFormat, TournamentFormat.schochThenKo);
     });
 
+    test('flags a pitch plan with fewer than ceil(max/2) distinct pitches', () {
+      // 81 participants need 41 pitches; a 1-40 range is one short.
+      final d = _validStammdaten().copyWith(
+        maxParticipants: 81,
+        pitchPlan: const PitchPlan(
+          mode: PitchMode.range,
+          rangeFrom: 1,
+          rangeTo: 40,
+        ),
+      );
+      final v = d.validate();
+      expect(v.isValid, isFalse);
+      expect(
+        v.issues.any((i) => i.contains('Mindestens 41 Spielfelder')),
+        isTrue,
+      );
+    });
+
+    test('accepts a pitch plan that just reaches ceil(max/2) pitches', () {
+      // 1-41 gives exactly 41 distinct pitches for 81 participants.
+      final d = _validStammdaten().copyWith(
+        maxParticipants: 81,
+        pitchPlan: const PitchPlan(
+          mode: PitchMode.range,
+          rangeFrom: 1,
+          rangeTo: 41,
+        ),
+      );
+      final v = d.validate();
+      expect(v.isValid, isTrue);
+      expect(v.issues, isEmpty);
+    });
+
+    test('counts distinct pitches for the minimum, not the highest number', () {
+      // High pitch numbers don't pad the count: three distinct pitches (50, 60,
+      // 70) for an 8-player field still misses the ceil(8/2)=4 floor.
+      final d = _validStammdaten().copyWith(
+        maxParticipants: 8,
+        pitchPlan: const PitchPlan(
+          mode: PitchMode.manual,
+          numbers: <int>[50, 60, 70],
+        ),
+      );
+      final v = d.validate();
+      expect(v.isValid, isFalse);
+      expect(
+        v.issues.any((i) => i.contains('Mindestens 4 Spielfelder')),
+        isTrue,
+      );
+    });
+
+    test('no minimum-pitch issue when no pitch plan is configured', () {
+      final d = _validStammdaten().copyWith(maxParticipants: 81);
+      final v = d.validate();
+      expect(v.isValid, isTrue);
+      expect(v.issues.any((i) => i.contains('Spielfelder nötig')), isFalse);
+    });
+
     test('flags sets-to-win below 1', () {
       const d = TournamentConfigDraft(
         displayName: 'Cup',

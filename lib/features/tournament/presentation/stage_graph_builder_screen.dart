@@ -1155,8 +1155,9 @@ class _NodeDialogState extends State<_NodeDialog> {
   static int _groupIndexOf(String label) =>
       label.length == 1 ? label.codeUnitAt(0) - 'A'.codeUnitAt(0) : 1 << 30;
 
-  /// Toggles [pitch] in the assignment list of group [label]. A pitch may serve
-  /// several groups, so this only flips the one group.
+  /// Toggles [pitch] in the assignment list of group [label]. A pitch belongs
+  /// to exactly one group within this pool node, so selecting it for [label]
+  /// strips it from every other group first; deselecting frees it again.
   void _togglePitchForGroup(String label, int pitch) {
     setState(() {
       final next = <String, List<int>>{
@@ -1167,11 +1168,14 @@ class _NodeDialogState extends State<_NodeDialog> {
       if (current.contains(pitch)) {
         current.remove(pitch);
       } else {
+        for (final e in next.entries) {
+          if (e.key != label) e.value.remove(pitch);
+        }
         current
           ..add(pitch)
           ..sort();
       }
-      if (current.isEmpty) next.remove(label);
+      next.removeWhere((_, value) => value.isEmpty);
       _groupPitchAssignment = next;
     });
   }
@@ -1488,6 +1492,14 @@ class _NodeDialogState extends State<_NodeDialog> {
               final label = _groupLabel(g);
               final assigned =
                   _groupPitchAssignment[label] ?? const <int>[];
+              // Pitches taken by other groups in this node drop out here, so
+              // the per-group chip lists stay disjoint (exclusive assignment).
+              final takenElsewhere = <int>{
+                for (final e in _groupPitchAssignment.entries)
+                  if (e.key != label) ...e.value,
+              };
+              final selectable =
+                  pitches.where((p) => !takenElsewhere.contains(p)).toList();
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1504,7 +1516,7 @@ class _NodeDialogState extends State<_NodeDialog> {
                     spacing: KubbTokens.space2,
                     runSpacing: KubbTokens.space2,
                     children: [
-                      for (final pitch in pitches)
+                      for (final pitch in selectable)
                         _PitchAssignChip(
                           label: '$pitch',
                           selected: assigned.contains(pitch),

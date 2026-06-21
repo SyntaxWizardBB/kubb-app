@@ -132,9 +132,9 @@ class _WizardPoolConfigStepState extends State<WizardPoolConfigStep> {
   static String _groupLabel(int index) =>
       String.fromCharCode('A'.codeUnitAt(0) + index);
 
-  /// Toggles [pitch] in the assignment list of [label] and pushes the
-  /// updated pitch plan. A pitch may belong to several groups (the
-  /// organiser can share fields), so this only flips the one group.
+  /// Toggles [pitch] in the assignment list of [label] and pushes the updated
+  /// pitch plan. A pitch belongs to exactly one group: selecting it for [label]
+  /// strips it from every other group first; deselecting frees it again.
   void _togglePitchForGroup(PitchPlan plan, String label, int pitch) {
     final next = <String, List<int>>{
       for (final entry in plan.groupAssignment.entries)
@@ -144,11 +144,14 @@ class _WizardPoolConfigStepState extends State<WizardPoolConfigStep> {
     if (current.contains(pitch)) {
       current.remove(pitch);
     } else {
+      for (final entry in next.entries) {
+        if (entry.key != label) entry.value.remove(pitch);
+      }
       current
         ..add(pitch)
         ..sort();
     }
-    if (current.isEmpty) next.remove(label);
+    next.removeWhere((_, value) => value.isEmpty);
     widget.onPitchPlanChanged(plan.copyWith(groupAssignment: next));
   }
 
@@ -242,6 +245,14 @@ class _WizardPoolConfigStepState extends State<WizardPoolConfigStep> {
           builder: (context) {
             final label = _groupLabel(g);
             final assigned = plan.groupAssignment[label] ?? const <int>[];
+            // Pitches owned by other groups drop out here, so the per-group
+            // chip lists stay disjoint (exclusive assignment).
+            final takenElsewhere = <int>{
+              for (final entry in plan.groupAssignment.entries)
+                if (entry.key != label) ...entry.value,
+            };
+            final selectable =
+                pitches.where((p) => !takenElsewhere.contains(p)).toList();
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -258,7 +269,7 @@ class _WizardPoolConfigStepState extends State<WizardPoolConfigStep> {
                   spacing: KubbTokens.space2,
                   runSpacing: KubbTokens.space2,
                   children: [
-                    for (final pitch in pitches)
+                    for (final pitch in selectable)
                       _PitchAssignChip(
                         label: '$pitch',
                         selected: assigned.contains(pitch),
