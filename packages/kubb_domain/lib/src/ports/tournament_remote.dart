@@ -17,10 +17,8 @@ enum TournamentFormat {
   roundRobin,
   singleElimination,
   schoch,
-  swiss,
   roundRobinThenKo,
   schochThenKo,
-  swissThenKo,
 }
 
 /// Lifecycle status of a tournament.

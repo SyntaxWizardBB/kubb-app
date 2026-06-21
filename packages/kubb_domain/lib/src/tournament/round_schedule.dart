@@ -71,7 +71,8 @@ class TournamentRoundScheduleRef {
   /// 1-based round number within the phase.
   final int roundNumber;
 
-  /// Derived phase label: `group` (prelim/pool/swiss), `ko`, or `final`.
+  /// Derived phase label: `group` (prelim/group-phase/schoch), `ko`, or
+  /// `final`.
   /// Free text on purpose (the server stores it without a CHECK), so future
   /// phases stay additive.
   final String phase;

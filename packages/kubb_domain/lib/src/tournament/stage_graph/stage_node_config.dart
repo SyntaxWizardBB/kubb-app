@@ -5,10 +5,10 @@
 /// Keys (mirroring the classic JSON where one exists):
 /// - KO nodes: `ko_matchup`, `ko_tiebreak_method`, `with_reset` (double-elim),
 ///   `ko_round_formats` (`[MatchFormatSpec.toJson()]`, index 0 = round 1).
-/// - Pool/round-robin nodes: `groupCount`, `qualifierCount` (per group),
+/// - Group-phase/round-robin nodes: `groupCount`, `qualifierCount` (per group),
 ///   `grouping_strategy`, `random_seed`, `group_pitch_assignment` (per-group
 ///   pitch numbers, mirrors `PitchPlan.groupAssignment`).
-/// - Swiss nodes: `rounds`.
+/// - Schoch nodes: `rounds`.
 ///
 /// Existing keys stay camelCase (`groupCount`/`qualifierCount`/`rounds`/
 /// `with_reset`) to avoid a template-data migration; new keys are snake_case.

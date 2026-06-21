@@ -19,9 +19,9 @@ void main() {
       expect(
         {for (final v in StageNodeType.values) v: v.toWire()},
         {
-          StageNodeType.pool: 'pool',
+          StageNodeType.groupPhase: 'group_phase',
           StageNodeType.roundRobin: 'round_robin',
-          StageNodeType.swiss: 'swiss',
+          StageNodeType.schoch: 'schoch',
           StageNodeType.singleElim: 'single_elim',
           StageNodeType.doubleElim: 'double_elim',
           StageNodeType.consolation: 'consolation',
@@ -32,6 +32,14 @@ void main() {
         () => StageNodeType.fromWire('unknown'),
         throwsArgumentError,
       );
+    });
+
+    test('StageNodeType.fromWire still accepts the legacy pool/swiss strings',
+        () {
+      expect(StageNodeType.fromWire('pool'), StageNodeType.groupPhase);
+      expect(StageNodeType.fromWire('swiss'), StageNodeType.schoch);
+      expect(StageNodeType.fromWire('group_phase'), StageNodeType.groupPhase);
+      expect(StageNodeType.fromWire('schoch'), StageNodeType.schoch);
     });
 
     test('StageSeedingSource round-trips and pins wire strings', () {
@@ -76,7 +84,7 @@ void main() {
     test('JSON round-trip with non-empty config preserves equality', () {
       final node = StageNode(
         id: 'pool-1',
-        type: StageNodeType.pool,
+        type: StageNodeType.groupPhase,
         seeding: StageSeedingSource.fromElo,
         config: const <String, Object?>{
           'groupCount': 4,
@@ -92,7 +100,7 @@ void main() {
     test('real jsonEncode/jsonDecode round-trip preserves equality', () {
       final node = StageNode(
         id: 'pool-1',
-        type: StageNodeType.pool,
+        type: StageNodeType.groupPhase,
         seeding: StageSeedingSource.fromElo,
         config: const <String, Object?>{
           'groupCount': 4,
@@ -110,7 +118,7 @@ void main() {
     test('toJson returns a fresh mutable deep copy (no aliasing)', () {
       final node = StageNode(
         id: 'n',
-        type: StageNodeType.pool,
+        type: StageNodeType.groupPhase,
         seeding: StageSeedingSource.fromElo,
         config: const <String, Object?>{
           'ruleset': <String, Object?>{'best_of': 3},
@@ -130,7 +138,7 @@ void main() {
       final inner = <String, Object?>{'best_of': 3};
       final node = StageNode(
         id: 'n',
-        type: StageNodeType.pool,
+        type: StageNodeType.groupPhase,
         seeding: StageSeedingSource.fromElo,
         config: <String, Object?>{'ruleset': inner},
       );
@@ -151,7 +159,7 @@ void main() {
       final source = <String, Object?>{'a': 1};
       final node = StageNode(
         id: 'n',
-        type: StageNodeType.swiss,
+        type: StageNodeType.schoch,
         seeding: StageSeedingSource.manual,
         config: source,
       );
@@ -165,7 +173,7 @@ void main() {
     test('value equality covers all four fields', () {
       final base = StageNode(
         id: 'n',
-        type: StageNodeType.pool,
+        type: StageNodeType.groupPhase,
         seeding: StageSeedingSource.fromElo,
         config: const <String, Object?>{'k': 1},
       );
@@ -173,7 +181,7 @@ void main() {
         base,
         StageNode(
           id: 'n',
-          type: StageNodeType.pool,
+          type: StageNodeType.groupPhase,
           seeding: StageSeedingSource.fromElo,
           config: const <String, Object?>{'k': 1},
         ),
@@ -182,7 +190,7 @@ void main() {
         base.hashCode,
         StageNode(
           id: 'n',
-          type: StageNodeType.pool,
+          type: StageNodeType.groupPhase,
           seeding: StageSeedingSource.fromElo,
           config: const <String, Object?>{'k': 1},
         ).hashCode,
@@ -191,7 +199,7 @@ void main() {
         base ==
             StageNode(
               id: 'n2',
-              type: StageNodeType.pool,
+              type: StageNodeType.groupPhase,
               seeding: StageSeedingSource.fromElo,
               config: const <String, Object?>{'k': 1},
             ),
@@ -201,7 +209,7 @@ void main() {
         base ==
             StageNode(
               id: 'n',
-              type: StageNodeType.pool,
+              type: StageNodeType.groupPhase,
               seeding: StageSeedingSource.fromElo,
               config: const <String, Object?>{'k': 2},
             ),
@@ -346,7 +354,7 @@ void main() {
           nodes: <StageNode>[
             StageNode(
               id: 'pool',
-              type: StageNodeType.pool,
+              type: StageNodeType.groupPhase,
               seeding: StageSeedingSource.fromElo,
               config: const <String, Object?>{'groupCount': 2},
             ),
@@ -402,7 +410,7 @@ void main() {
         nodes: <StageNode>[
           StageNode(
             id: 'a',
-            type: StageNodeType.pool,
+            type: StageNodeType.groupPhase,
             seeding: StageSeedingSource.manual,
           ),
           StageNode(
@@ -446,7 +454,7 @@ void main() {
       final nodes = <StageNode>[
         StageNode(
           id: 'a',
-          type: StageNodeType.pool,
+          type: StageNodeType.groupPhase,
           seeding: StageSeedingSource.manual,
         ),
       ];
@@ -459,7 +467,7 @@ void main() {
       nodes.add(
         StageNode(
           id: 'x',
-          type: StageNodeType.swiss,
+          type: StageNodeType.schoch,
           seeding: StageSeedingSource.manual,
         ),
       );
@@ -474,7 +482,7 @@ void main() {
         () => graph.nodes.add(
           StageNode(
             id: 'y',
-            type: StageNodeType.swiss,
+            type: StageNodeType.schoch,
             seeding: StageSeedingSource.manual,
           ),
         ),

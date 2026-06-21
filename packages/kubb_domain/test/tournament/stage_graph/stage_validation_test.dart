@@ -60,7 +60,7 @@ void main() {
     test('T1 happy path: pool --TopK(2)--> singleElim has no errors', () {
       final graph = StageGraph(
         nodes: <StageNode>[
-          _node('grp', StageNodeType.pool),
+          _node('grp', StageNodeType.groupPhase),
           _node('ko', StageNodeType.singleElim),
         ],
         edges: <StageEdge>[_edge('grp', 'ko', const TopK(2))],
@@ -97,7 +97,7 @@ void main() {
       // root -> ko is fine; b <-> c is a detached cycle, unreachable from root.
       final graph = StageGraph(
         nodes: <StageNode>[
-          _node('root', StageNodeType.pool),
+          _node('root', StageNodeType.groupPhase),
           _node('ko', StageNodeType.singleElim),
           _node('b', StageNodeType.singleElim),
           _node('c', StageNodeType.singleElim),
@@ -114,7 +114,7 @@ void main() {
 
     test('isolated node without edges is its own root (no orphan)', () {
       final graph = StageGraph(
-        nodes: <StageNode>[_node('solo', StageNodeType.pool)],
+        nodes: <StageNode>[_node('solo', StageNodeType.groupPhase)],
         edges: const <StageEdge>[],
       );
       final findings = validateStageGraph(graph, fieldSize: 8);
@@ -123,7 +123,7 @@ void main() {
 
     test('T4 unknown node: edge with non-existent toNode', () {
       final graph = StageGraph(
-        nodes: <StageNode>[_node('grp', StageNodeType.pool)],
+        nodes: <StageNode>[_node('grp', StageNodeType.groupPhase)],
         edges: <StageEdge>[_edge('grp', 'missing', const TopK(2))],
       );
       final findings = validateStageGraph(graph, fieldSize: 8);
@@ -140,7 +140,7 @@ void main() {
         nodes: <StageNode>[
           _node(
             'grp',
-            StageNodeType.pool,
+            StageNodeType.groupPhase,
             seeding: StageSeedingSource.fromPrevRanking,
           ),
         ],
@@ -153,7 +153,7 @@ void main() {
     test('fromPrevRanking with incoming edge does not flag seeding', () {
       final graph = StageGraph(
         nodes: <StageNode>[
-          _node('grp', StageNodeType.pool),
+          _node('grp', StageNodeType.groupPhase),
           _node(
             'ko',
             StageNodeType.singleElim,
@@ -169,7 +169,7 @@ void main() {
     test('T6 too_few: TopK(1) into singleElim (input 1 < 2)', () {
       final graph = StageGraph(
         nodes: <StageNode>[
-          _node('grp', StageNodeType.pool),
+          _node('grp', StageNodeType.groupPhase),
           _node('ko', StageNodeType.singleElim),
         ],
         edges: <StageEdge>[_edge('grp', 'ko', const TopK(1))],
@@ -184,7 +184,7 @@ void main() {
     test('T7 selector_overlap: TopK(2) and Ranks(1,3) from same source', () {
       final graph = StageGraph(
         nodes: <StageNode>[
-          _node('grp', StageNodeType.pool),
+          _node('grp', StageNodeType.groupPhase),
           _node('ko1', StageNodeType.singleElim),
           _node('ko2', StageNodeType.singleElim),
         ],
@@ -230,7 +230,7 @@ void main() {
     test('T9 determinism: repeated calls yield identical ordered list', () {
       final graph = StageGraph(
         nodes: <StageNode>[
-          _node('grp', StageNodeType.pool),
+          _node('grp', StageNodeType.groupPhase),
           _node('ko', StageNodeType.singleElim),
           _node('b', StageNodeType.singleElim),
           _node('c', StageNodeType.singleElim),
@@ -254,8 +254,8 @@ void main() {
     test('T10 multi_root: two roots warns and skips capacity checks', () {
       final graph = StageGraph(
         nodes: <StageNode>[
-          _node('r1', StageNodeType.pool),
-          _node('r2', StageNodeType.pool),
+          _node('r1', StageNodeType.groupPhase),
+          _node('r2', StageNodeType.groupPhase),
           _node('ko', StageNodeType.singleElim),
         ],
         edges: <StageEdge>[
@@ -275,7 +275,7 @@ void main() {
           _node('seed', StageNodeType.singleElim),
           _node(
             'grp',
-            StageNodeType.pool,
+            StageNodeType.groupPhase,
             config: const <String, Object?>{'groupCount': 2},
           ),
         ],
@@ -296,7 +296,7 @@ void main() {
           _node('seed', StageNodeType.singleElim),
           _node(
             'grp',
-            StageNodeType.pool,
+            StageNodeType.groupPhase,
             config: const <String, Object?>{'groupCount': 2},
           ),
         ],

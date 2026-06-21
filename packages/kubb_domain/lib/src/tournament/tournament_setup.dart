@@ -37,9 +37,7 @@ enum LeagueCategory {
 /// Preliminary (group) stage type. The user-facing format choice is split
 /// into two orthogonal axes — the prelim type and the [KoType] — instead of
 /// exposing the raw `TournamentFormat` enum. `groupPhase` maps to the
-/// round-robin family, `schoch` to the Swiss/Schoch family (the server
-/// routes `swiss` and `schoch` identically, so Schoch reuses the Swiss
-/// path).
+/// round-robin family, `schoch` to the Schoch family.
 enum VorrundeType {
   groupPhase('group_phase'),
   schoch('schoch');

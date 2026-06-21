@@ -11,7 +11,7 @@ void main() {
     final a = TournamentSummaryRef(
       tournamentId: const TournamentId('t1'),
       displayName: 'Spring Cup',
-      format: TournamentFormat.swiss,
+      format: TournamentFormat.schoch,
       status: TournamentStatus.published,
       startedAt: DateTime.utc(2026, 5, 3),
       completedAt: DateTime.utc(2026, 5, 2),
@@ -22,7 +22,7 @@ void main() {
       final b = TournamentSummaryRef(
         tournamentId: const TournamentId('t1'),
         displayName: 'Spring Cup',
-        format: TournamentFormat.swiss,
+        format: TournamentFormat.schoch,
         status: TournamentStatus.published,
         startedAt: DateTime.utc(2026, 5, 3),
         completedAt: DateTime.utc(2026, 5, 2),
@@ -36,7 +36,7 @@ void main() {
       final b = TournamentSummaryRef(
         tournamentId: const TournamentId('t1'),
         displayName: 'Spring Cup',
-        format: TournamentFormat.swiss,
+        format: TournamentFormat.schoch,
         status: TournamentStatus.live,
         startedAt: DateTime.utc(2026, 5, 3),
         completedAt: DateTime.utc(2026, 5, 2),

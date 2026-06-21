@@ -6,7 +6,7 @@ void main() {
     TournamentAdminCardRef full() => TournamentAdminCardRef(
           tournamentId: const TournamentId('t1'),
           displayName: 'Spring Cup',
-          format: TournamentFormat.swiss,
+          format: TournamentFormat.schoch,
           status: TournamentStatus.live,
           currentRound: 3,
           scheduleStatus: RoundStatus.running,
@@ -20,7 +20,7 @@ void main() {
       final card = full();
       expect(card.tournamentId, const TournamentId('t1'));
       expect(card.displayName, 'Spring Cup');
-      expect(card.format, TournamentFormat.swiss);
+      expect(card.format, TournamentFormat.schoch);
       expect(card.status, TournamentStatus.live);
       expect(card.currentRound, 3);
       expect(card.scheduleStatus, RoundStatus.running);
@@ -62,7 +62,7 @@ void main() {
           TournamentAdminCardRef(
             tournamentId: const TournamentId('t1'),
             displayName: 'Spring Cup',
-            format: TournamentFormat.swiss,
+            format: TournamentFormat.schoch,
             status: TournamentStatus.live,
             currentRound: 3,
             scheduleStatus: RoundStatus.running,
@@ -79,7 +79,7 @@ void main() {
           TournamentAdminCardRef(
             tournamentId: const TournamentId('t1'),
             displayName: 'Spring Cup',
-            format: TournamentFormat.swiss,
+            format: TournamentFormat.schoch,
             status: TournamentStatus.live,
             currentRound: 3,
             scheduleStatus: RoundStatus.call, // differs

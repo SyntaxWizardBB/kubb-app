@@ -7,14 +7,14 @@ import 'package:meta/meta.dart';
 /// part of the serialization contract and is NOT derived from the enum name, so
 /// a future Dart rename never breaks the JSON representation.
 enum StageNodeType {
-  /// Group / pool phase.
-  pool('pool'),
+  /// Group phase (Gruppenphase).
+  groupPhase('group_phase'),
 
   /// Round-robin (everyone plays everyone).
   roundRobin('round_robin'),
 
-  /// Swiss / Schoch system.
-  swiss('swiss'),
+  /// Schoch system (former Swiss/Schweizer System).
+  schoch('schoch'),
 
   /// Single-elimination bracket.
   singleElim('single_elim'),
@@ -33,13 +33,22 @@ enum StageNodeType {
   /// Stable snake_case wire string (serialization contract).
   final String wire;
 
-  /// Serializes this value to its stable wire string.
+  /// Serializes this value to its current wire string.
   String toWire() => wire;
 
   /// Parses [wire] back to a [StageNodeType].
   ///
-  /// Throws [ArgumentError] for an unknown string (no silent default, no null).
+  /// Accepts the legacy wire strings `'pool'` and `'swiss'` alongside the
+  /// current `'group_phase'` and `'schoch'`, so old rows and an out-of-order
+  /// migration/deploy keep parsing. Throws [ArgumentError] for an unknown
+  /// string (no silent default, no null).
   static StageNodeType fromWire(String wire) {
+    switch (wire) {
+      case 'pool':
+        return StageNodeType.groupPhase;
+      case 'swiss':
+        return StageNodeType.schoch;
+    }
     for (final v in StageNodeType.values) {
       if (v.wire == wire) return v;
     }

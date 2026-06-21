@@ -553,9 +553,9 @@ _Capacity _selectionSize(EdgeSelector selector, _Capacity srcOut) {
 /// Minimum input participants required by a node's type (ADR-0030
 /// §Spieler-Anzahl-Constraints).
 ///
-/// `pool`/`roundRobin` require `groupCount * 2` when `config['groupCount']` is
-/// set (>= 1), else 2. `swiss` uses `rounds + 1` when `config['rounds']` is set,
-/// else a conservative 2 (Layer 1a does not rely on a runtime round count).
+/// `groupPhase`/`roundRobin` require `groupCount * 2` when `config['groupCount']`
+/// is set (>= 1), else 2. `schoch` uses `rounds + 1` when `config['rounds']` is
+/// set, else a conservative 2 (Layer 1a does not rely on a runtime round count).
 int _minInputForNode(StageNode node) {
   switch (node.type) {
     case StageNodeType.singleElim:
@@ -563,11 +563,11 @@ int _minInputForNode(StageNode node) {
     case StageNodeType.consolation:
     case StageNodeType.shootoutQuali:
       return 2;
-    case StageNodeType.pool:
+    case StageNodeType.groupPhase:
     case StageNodeType.roundRobin:
       final g = _positiveInt(node.config['groupCount']);
       return g != null ? g * 2 : 2;
-    case StageNodeType.swiss:
+    case StageNodeType.schoch:
       final rounds = _positiveInt(node.config['rounds']);
       return rounds != null ? rounds + 1 : 2;
   }
