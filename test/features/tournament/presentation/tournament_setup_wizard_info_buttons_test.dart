@@ -96,18 +96,28 @@ Future<void> _openAndExpect(
   await tester.pumpAndSettle();
 }
 
+/// Turns on the Stammdaten step's help mode so the retained info glyphs
+/// (Scoring + the Spielregeln switches) surface.
+Future<void> _enableHelp(WidgetTester tester) async {
+  await tester.tap(find.text('Erklärungen'));
+  await tester.pumpAndSettle();
+}
+
 void main() {
-  testWidgets('Turniername info button opens its explainer', (tester) async {
+  testWidgets('Stammdaten info glyphs stay hidden until help mode is on',
+      (tester) async {
     await _pump(tester);
-    await _openAndExpect(
-      tester,
-      title: 'Name des Turniers',
-      bodyFragment: 'unter dem dein Turnier',
-    );
+    // The Stammdaten step is quiet by default — no info glyphs on the
+    // self-explanatory fields, and the retained ones stay folded away.
+    expect(find.byType(InfoIconButton), findsNothing);
+    await _enableHelp(tester);
+    expect(find.byType(InfoIconButton), findsWidgets);
   });
 
-  testWidgets('Scoring info button opens its explainer', (tester) async {
+  testWidgets('Scoring info button opens its explainer in help mode',
+      (tester) async {
     await _pump(tester);
+    await _enableHelp(tester);
     await _openAndExpect(
       tester,
       title: 'Zählweise der Sätze',
@@ -115,22 +125,14 @@ void main() {
     );
   });
 
-  testWidgets('Sureshot toggle carries an info button', (tester) async {
+  testWidgets('Sureshot toggle carries an info button in help mode',
+      (tester) async {
     await _pump(tester);
+    await _enableHelp(tester);
     await _openAndExpect(
       tester,
       title: 'Sonderregel Sureshot',
       bodyFragment: 'durch die Beine',
-    );
-  });
-
-  testWidgets('shared participant-info section info button opens',
-      (tester) async {
-    await _pump(tester);
-    await _openAndExpect(
-      tester,
-      title: 'Hinweise für Teilnehmer',
-      bodyFragment: 'Freitextfelder',
     );
   });
 

@@ -2184,6 +2184,25 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardSectionInfo => 'Infos für Teilnehmer';
 
   @override
+  String get tournamentWizardSectionEckdaten => 'Eckdaten';
+
+  @override
+  String get tournamentWizardSectionPlay => 'Spielregeln';
+
+  @override
+  String get tournamentWizardSectionDocuments => 'Dokumente';
+
+  @override
+  String get tournamentWizardSectionPayment => 'Kosten & Zahlung';
+
+  @override
+  String get tournamentWizardSectionContact => 'Kontakt';
+
+  @override
+  String get tournamentWizardCheckinUntilHelper =>
+      'Bis dahin müssen Angemeldete vor Ort bestätigen.';
+
+  @override
   String get tournamentWizardVenueAddressLabel => 'Adresse';
 
   @override

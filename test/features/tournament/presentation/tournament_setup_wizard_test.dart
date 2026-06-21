@@ -20,6 +20,7 @@ import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/stage_graph_builder_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_setup_wizard.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -1020,8 +1021,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Kubb Club Aarau').last);
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Liga A'));
     await tester.tap(find.text('Liga A'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Klassisch'));
     await tester.tap(find.text('Klassisch'));
     await tester.pumpAndSettle();
 
@@ -1310,7 +1313,12 @@ void main() {
   testWidgets('K07: the participant info fields allow up to 5 lines',
       (tester) async {
     await _pumpWizard(tester);
-    // The info fields are built into the step regardless of scroll position.
+    // The info free-text fields live in the collapsed "Infos für Teilnehmer"
+    // accordion — open it before the fields exist in the tree.
+    await tester.ensureVisible(find.text('Infos für Teilnehmer'));
+    await tester.tap(find.text('Infos für Teilnehmer'));
+    await tester.pumpAndSettle();
+
     final infoFields = tester
         .widgetList<TextField>(find.byType(TextField))
         .where((f) => f.maxLines == 5)
@@ -1320,6 +1328,29 @@ void main() {
     for (final f in infoFields) {
       expect(f.minLines, 3);
     }
+  });
+
+  testWidgets('T2: optional blocks start collapsed and open on tap',
+      (tester) async {
+    await _pumpWizard(tester);
+    // The PDF upload buttons live in the "Dokumente" accordion. While it is
+    // folded the upload controls are not in the tree.
+    expect(find.text('PDF hochladen'), findsNothing);
+    await tester.ensureVisible(find.text('Dokumente'));
+    await tester.tap(find.text('Dokumente'));
+    await tester.pumpAndSettle();
+    // Two uploads inside: rules PDF + site-map PDF.
+    expect(find.text('PDF hochladen'), findsNWidgets(2));
+  });
+
+  testWidgets('T2: the Spielregeln switches show their glyph only in help mode',
+      (tester) async {
+    await _pumpWizard(tester);
+    // No glyph on a rule switch until help mode is turned on.
+    expect(find.byType(InfoIconButton), findsNothing);
+    await tester.tap(find.text('Erklärungen'));
+    await tester.pumpAndSettle();
+    expect(find.byType(InfoIconButton), findsWidgets);
   });
 
   // ---- W3: K12 group config in the Vorrunde step ----

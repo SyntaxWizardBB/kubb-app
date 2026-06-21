@@ -3994,6 +3994,42 @@ abstract class AppLocalizations {
   /// **'Infos für Teilnehmer'**
   String get tournamentWizardSectionInfo;
 
+  /// Section header: core tournament data (name, club, location, dates, scoring)
+  ///
+  /// In de, this message translates to:
+  /// **'Eckdaten'**
+  String get tournamentWizardSectionEckdaten;
+
+  /// Section header: rule-variant switches (sureshot, diggy, strafkubb, opening)
+  ///
+  /// In de, this message translates to:
+  /// **'Spielregeln'**
+  String get tournamentWizardSectionPlay;
+
+  /// Collapsible section: rule + site-map PDFs
+  ///
+  /// In de, this message translates to:
+  /// **'Dokumente'**
+  String get tournamentWizardSectionDocuments;
+
+  /// Collapsible section: entry fee + payment methods
+  ///
+  /// In de, this message translates to:
+  /// **'Kosten & Zahlung'**
+  String get tournamentWizardSectionPayment;
+
+  /// Collapsible section: contact person name + phone
+  ///
+  /// In de, this message translates to:
+  /// **'Kontakt'**
+  String get tournamentWizardSectionContact;
+
+  /// Helper under the on-site check-in deadline field
+  ///
+  /// In de, this message translates to:
+  /// **'Bis dahin müssen Angemeldete vor Ort bestätigen.'**
+  String get tournamentWizardCheckinUntilHelper;
+
   /// Venue address field label
   ///
   /// In de, this message translates to:

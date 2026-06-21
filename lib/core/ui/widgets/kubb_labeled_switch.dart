@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/wizard_help.dart';
 
 /// Shared title + subtitle + trailing [Switch] row for the setup wizard's
 /// on/off toggles (rule variants, invite-only, and the "Anspiel 2-4-6"
@@ -7,6 +8,12 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 ///
 /// ADR-0033 P1: replaces the inline `_ToggleRow` / `SwitchListTile` one-offs
 /// with one token-driven component.
+///
+/// The [info] glyph follows the same help-mode rule as the field scaffold: it
+/// only shows when an explainer is given AND [WizardHelp.show] is on for the
+/// step.
+/// Outside a wizard (no [WizardHelp] in scope) help mode reads as off, so the
+/// glyph stays hidden — the same quiet default the rest of the wizard uses.
 class KubbLabeledSwitch extends StatelessWidget {
   const KubbLabeledSwitch({
     required this.title,
@@ -28,6 +35,7 @@ class KubbLabeledSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final showInfo = info != null && WizardHelp.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: KubbTokens.space2),
       child: Row(
@@ -54,7 +62,7 @@ class KubbLabeledSwitch extends StatelessWidget {
               ],
             ),
           ),
-          ?info,
+          if (showInfo) info!,
           const SizedBox(width: KubbTokens.space3),
           Switch(
             value: value,

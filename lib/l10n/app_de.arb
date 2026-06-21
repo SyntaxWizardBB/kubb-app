@@ -2746,6 +2746,30 @@
   "@tournamentWizardSectionInfo": {
     "description": "Section header: free-text info blocks"
   },
+  "tournamentWizardSectionEckdaten": "Eckdaten",
+  "@tournamentWizardSectionEckdaten": {
+    "description": "Section header: core tournament data (name, club, location, dates, scoring)"
+  },
+  "tournamentWizardSectionPlay": "Spielregeln",
+  "@tournamentWizardSectionPlay": {
+    "description": "Section header: rule-variant switches (sureshot, diggy, strafkubb, opening)"
+  },
+  "tournamentWizardSectionDocuments": "Dokumente",
+  "@tournamentWizardSectionDocuments": {
+    "description": "Collapsible section: rule + site-map PDFs"
+  },
+  "tournamentWizardSectionPayment": "Kosten & Zahlung",
+  "@tournamentWizardSectionPayment": {
+    "description": "Collapsible section: entry fee + payment methods"
+  },
+  "tournamentWizardSectionContact": "Kontakt",
+  "@tournamentWizardSectionContact": {
+    "description": "Collapsible section: contact person name + phone"
+  },
+  "tournamentWizardCheckinUntilHelper": "Bis dahin müssen Angemeldete vor Ort bestätigen.",
+  "@tournamentWizardCheckinUntilHelper": {
+    "description": "Helper under the on-site check-in deadline field"
+  },
   "tournamentWizardVenueAddressLabel": "Adresse",
   "@tournamentWizardVenueAddressLabel": {
     "description": "Venue address field label"
