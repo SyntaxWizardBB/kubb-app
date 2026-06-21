@@ -118,9 +118,11 @@ mindestens haben muss. Bei 1 spielen Einzelpersonen. — Status: `neu`
 höchstens haben darf. Liegt dieser Wert über dem Minimum, sind Teams
 unterschiedlicher Grösse erlaubt. — Status: `neu`
 
-**Maximale Teilnehmerzahl** — *Teilnehmer-Obergrenze* — Wie viele Teams sich
-höchstens anmelden dürfen. Ist das Limit erreicht, sind keine weiteren
-Anmeldungen möglich. — Status: `neu`
+**Maximale Teilnehmerzahl** — *Teilnehmer-Obergrenze* — Wie viele Teams
+höchstens mitspielen. Ist das Limit erreicht, kommen weitere Teams auf die
+Warteliste. Sie rücken Stück für Stück nach, sobald sich ein Team abmeldet oder
+von einer Person mit Setup-Berechtigung entfernt wird. — Status: `bereits
+verdrahtet`
 
 ---
 

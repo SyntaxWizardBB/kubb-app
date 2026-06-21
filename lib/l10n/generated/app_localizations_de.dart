@@ -5252,7 +5252,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentSetupInfoMaxParticipantsBody =>
-      'Wie viele Teams sich höchstens anmelden dürfen. Ist das Limit erreicht, sind keine weiteren Anmeldungen möglich.';
+      'Wie viele Teams höchstens mitspielen. Ist das Limit erreicht, kommen weitere Teams auf die Warteliste. Sie rücken Stück für Stück nach, sobald sich ein Team abmeldet oder von einer Person mit Setup-Berechtigung entfernt wird.';
 
   @override
   String get tournamentSetupInfoFormatModeTitle =>

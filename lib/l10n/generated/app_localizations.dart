@@ -9421,7 +9421,7 @@ abstract class AppLocalizations {
   /// Info dialog body for the maximum participants field
   ///
   /// In de, this message translates to:
-  /// **'Wie viele Teams sich höchstens anmelden dürfen. Ist das Limit erreicht, sind keine weiteren Anmeldungen möglich.'**
+  /// **'Wie viele Teams höchstens mitspielen. Ist das Limit erreicht, kommen weitere Teams auf die Warteliste. Sie rücken Stück für Stück nach, sobald sich ein Team abmeldet oder von einer Person mit Setup-Berechtigung entfernt wird.'**
   String get tournamentSetupInfoMaxParticipantsBody;
 
   /// Info dialog title for the format-mode choice

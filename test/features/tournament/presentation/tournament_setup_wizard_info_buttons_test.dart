@@ -163,7 +163,7 @@ void main() {
     await _openAndExpect(
       tester,
       title: 'Teilnehmer-Obergrenze',
-      bodyFragment: 'höchstens anmelden dürfen',
+      bodyFragment: 'Warteliste',
     );
   });
 
