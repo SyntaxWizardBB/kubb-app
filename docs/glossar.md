@@ -106,10 +106,16 @@ Zwei verschiedene Achsen, sauber zu trennen:
 
 | User-Wort | Code (ist) | Bedeutung | Status |
 |---|---|---|---|
-| **Klassisch** | `KoTiebreakMethod.classicKingtossRemoval` | Klassischer Entscheid. | ✅ |
-| **Mighty-Finisher** | `KoTiebreakMethod.mightyFinisherShootout` | Shoot-out-Entscheid. | ✅ |
+| **Klassisch** | `KoTiebreakMethod.classicKingtossRemoval` | Herkömmlicher Entscheid ohne Zeit-Finisher. | ✅ |
+| **Mighty-Finisher** | `KoTiebreakMethod.mightyFinisherShootout` | Zeit-Ablauf-Finisher: läuft eine zeitbegrenzte Partie ab, startet der Finisher und der Satz wird zu Ende gespielt. Steht es danach unentschieden, folgt ein Entscheidungssatz nach den festgelegten Finisher-Regeln. | ✅ |
 
-Das bisherige Vorrunden-Tiebreak-Element ("Schweizer-konform") **entfaellt** (Vorrunde hat keinen Tiebreak). ✅
+Das bisherige Vorrunden-Tiebreak-Element ("Schweizer-konform") **entfällt** (Vorrunde hat keinen Tiebreak). ✅
+
+> **Mighty-Finisher ≠ Shoot-out.** Der Code-Identifier `mightyFinisherShootout`
+> ist irreführend benannt: der Mighty-Finisher ist der oben beschriebene
+> Zeit-Ablauf-Finisher, NICHT ein Shoot-out. Das Shoot-out ist ein anderes
+> Konzept — der Übergang Vorrunde→K.-o. bei platzierungsrelevantem
+> Unentschieden (siehe `docs/vorrunde-rangfolge.md`).
 
 ---
 
