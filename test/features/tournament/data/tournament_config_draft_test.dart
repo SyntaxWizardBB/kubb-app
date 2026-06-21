@@ -37,8 +37,6 @@ void main() {
       expect(d.tiebreakerOrder, [
         'total_points',
         'buchholz_minus_h2h',
-        'direct_comparison',
-        'mighty_finisher_shootout',
       ]);
       expect(d.koConfig, isNull);
       expect(d.bracketSeedingMode, isNull);
@@ -549,30 +547,15 @@ void main() {
       });
     });
 
-    test('toMatchFormatConfig carries prelim tiebreak + break when set', () {
+    test('pins the prelim tiebreak off and carries the break', () {
       const d = TournamentConfigDraft(
         roundTimeSeconds: 1500,
-        prelimTiebreakAfterSeconds: 1200,
         breakBetweenMatchesSeconds: 300,
       );
       final cfg = d.toMatchFormatConfig();
-      expect(cfg['tiebreak_enabled'], true);
-      expect(cfg['tiebreak_after_seconds'], 1200);
+      expect(cfg['tiebreak_enabled'], false);
+      expect(cfg['tiebreak_after_seconds'], isNull);
       expect(cfg['break_between_matches_seconds'], 300);
-    });
-
-    test('validate flags a prelim tiebreak time above the limit', () {
-      const d = TournamentConfigDraft(
-        displayName: 'Cup',
-        roundTimeSeconds: 1500,
-        prelimTiebreakAfterSeconds: 2000,
-      );
-      final result = d.validate();
-      expect(result.isValid, isFalse);
-      expect(
-        result.issues.any((i) => i.contains('Tiebreak-Zeit')),
-        isTrue,
-      );
     });
   });
 
@@ -1010,7 +993,6 @@ void main() {
         setsToWin: 3,
         maxSets: 5,
         roundTimeSeconds: 2400,
-        prelimTiebreakAfterSeconds: 1500,
         location: 'Bern',
         venueAddress: 'Wankdorf',
         entryFeeCents: 1500,
@@ -1030,7 +1012,6 @@ void main() {
       expect(back.setsToWin, 3);
       expect(back.maxSets, 5);
       expect(back.roundTimeSeconds, 2400);
-      expect(back.prelimTiebreakAfterSeconds, 1500);
       expect(back.location, 'Bern');
       expect(back.venueAddress, 'Wankdorf');
       expect(back.entryFeeCents, 1500);

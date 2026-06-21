@@ -2314,16 +2314,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardMatchTimeLabel => 'Zeit pro Match (Min.)';
 
   @override
-  String get tournamentWizardTiebreakLabel => 'Tiebreak';
-
-  @override
-  String get tournamentWizardTiebreakHint =>
-      'Bei Zeitablauf wird ein Tiebreak gespielt';
-
-  @override
-  String get tournamentWizardTiebreakAfterLabel => 'Tiebreak nach (Min.)';
-
-  @override
   String get tournamentWizardBreakBetweenLabel =>
       'Pause zwischen Matches (Min.)';
 
@@ -3934,17 +3924,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get tournamentWizardQualifierCountHelper =>
       'Wie viele Teams ziehen aus der Vorrunde in die KO-Phase ein? Nur Zweierpotenzen (4/8/16/32) — keine Freilose im Hauptbaum.';
-
-  @override
-  String get tournamentWizardStep6Title => 'Tiebreaker-Reihenfolge';
-
-  @override
-  String get tournamentWizardTiebreakerHint =>
-      'Lange tippen und ziehen, um die Reihenfolge der Entscheidungskriterien zu ändern.';
-
-  @override
-  String get tournamentWizardTiebreakerResetButton =>
-      'Standard wiederherstellen';
 
   @override
   String get tournamentKoHelpTitle => 'Wie funktioniert der KO-Cut?';

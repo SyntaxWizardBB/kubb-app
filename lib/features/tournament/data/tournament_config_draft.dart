@@ -78,13 +78,10 @@ class TournamentConfigDraft {
     this.maxSets = 2,
     this.roundTimeSeconds = 1800,
     this.basekubbsPerSide = 5,
-    this.prelimTiebreakAfterSeconds,
     this.breakBetweenMatchesSeconds = 0,
     this.tiebreakerOrder = const <String>[
       'total_points',
       'buchholz_minus_h2h',
-      'direct_comparison',
-      'mighty_finisher_shootout',
     ],
     this.koConfig,
     this.bracketSeedingMode,
@@ -156,10 +153,6 @@ class TournamentConfigDraft {
         ? v.map((e) => e.toString()).toList(growable: false)
         : const <String>[];
 
-    // ---- Prelim match format (inverts toMatchFormatConfig) ----
-    final tbAfter = intOf(cfg['tiebreak_after_seconds']);
-    final tbEnabled = cfg['tiebreak_enabled'] == true;
-
     // ---- Two-axis selection ----
     final vorrundeWire = setup['vorrunde_type'] as String?;
     final koWire = setup['ko_type'] as String?;
@@ -220,15 +213,12 @@ class TournamentConfigDraft {
       maxSets: intOf(cfg['max_sets']) ?? 2,
       roundTimeSeconds: intOf(cfg['round_time_seconds']) ?? 1800,
       basekubbsPerSide: intOf(cfg['basekubbs_per_side']) ?? 5,
-      prelimTiebreakAfterSeconds: tbEnabled ? tbAfter : null,
       breakBetweenMatchesSeconds:
           intOf(cfg['break_between_matches_seconds']) ?? 0,
       tiebreakerOrder: header.tiebreakerOrder.isEmpty
           ? const <String>[
               'total_points',
               'buchholz_minus_h2h',
-              'direct_comparison',
-              'mighty_finisher_shootout',
             ]
           : header.tiebreakerOrder,
       koConfig: koConfigJson == null ? null : _koConfigFromWire(koConfigJson),
@@ -530,10 +520,6 @@ class TournamentConfigDraft {
   final int roundTimeSeconds;
   final int basekubbsPerSide;
 
-  /// Prelim tiebreak trigger in seconds; null = prelim played without a
-  /// tiebreak (common in group phases). Must be < [roundTimeSeconds].
-  final int? prelimTiebreakAfterSeconds;
-
   /// Configured break between prelim matches, in seconds.
   final int breakBetweenMatchesSeconds;
 
@@ -697,8 +683,6 @@ class TournamentConfigDraft {
     int? maxSets,
     int? roundTimeSeconds,
     int? basekubbsPerSide,
-    int? prelimTiebreakAfterSeconds,
-    bool clearPrelimTiebreak = false,
     int? breakBetweenMatchesSeconds,
     List<String>? tiebreakerOrder,
     KoPhaseConfig? koConfig,
@@ -769,9 +753,6 @@ class TournamentConfigDraft {
       maxSets: maxSets ?? this.maxSets,
       roundTimeSeconds: roundTimeSeconds ?? this.roundTimeSeconds,
       basekubbsPerSide: basekubbsPerSide ?? this.basekubbsPerSide,
-      prelimTiebreakAfterSeconds: clearPrelimTiebreak
-          ? null
-          : (prelimTiebreakAfterSeconds ?? this.prelimTiebreakAfterSeconds),
       breakBetweenMatchesSeconds:
           breakBetweenMatchesSeconds ?? this.breakBetweenMatchesSeconds,
       tiebreakerOrder: tiebreakerOrder ?? this.tiebreakerOrder,
@@ -996,11 +977,6 @@ class TournamentConfigDraft {
       issues.add('Rundenzeit muss mindestens eine Minute sein.');
     }
 
-    final tbAfter = prelimTiebreakAfterSeconds;
-    if (tbAfter != null && (tbAfter < 60 || tbAfter > roundTimeSeconds)) {
-      issues.add(
-          'Tiebreak-Zeit muss zwischen 1 Minute und dem Zeitlimit liegen.');
-    }
     if (breakBetweenMatchesSeconds < 0) {
       issues.add('Pause zwischen Matches darf nicht negativ sein.');
     }
@@ -1112,8 +1088,11 @@ class TournamentConfigDraft {
       'max_sets': maxSets,
       'round_time_seconds': roundTimeSeconds,
       'basekubbs_per_side': basekubbsPerSide,
-      'tiebreak_enabled': prelimTiebreakAfterSeconds != null,
-      'tiebreak_after_seconds': prelimTiebreakAfterSeconds,
+      // The prelim has no match tiebreak (docs/vorrunde-rangfolge.md): partien
+      // may end in a draw, the ranking decides. The wire keys stay so the
+      // server contract is unchanged, but they are pinned off.
+      'tiebreak_enabled': false,
+      'tiebreak_after_seconds': null,
       'break_between_matches_seconds': breakBetweenMatchesSeconds,
     };
   }
@@ -1227,7 +1206,6 @@ class TournamentConfigDraft {
           other.maxSets == maxSets &&
           other.roundTimeSeconds == roundTimeSeconds &&
           other.basekubbsPerSide == basekubbsPerSide &&
-          other.prelimTiebreakAfterSeconds == prelimTiebreakAfterSeconds &&
           other.breakBetweenMatchesSeconds == breakBetweenMatchesSeconds &&
           listEquals(other.tiebreakerOrder, tiebreakerOrder) &&
           other.koConfig == koConfig &&
@@ -1287,7 +1265,6 @@ class TournamentConfigDraft {
         maxSets,
         roundTimeSeconds,
         basekubbsPerSide,
-        prelimTiebreakAfterSeconds,
         breakBetweenMatchesSeconds,
         Object.hashAll(tiebreakerOrder),
         koConfig,

@@ -4234,24 +4234,6 @@ abstract class AppLocalizations {
   /// **'Zeit pro Match (Min.)'**
   String get tournamentWizardMatchTimeLabel;
 
-  /// Prelim tiebreak toggle title
-  ///
-  /// In de, this message translates to:
-  /// **'Tiebreak'**
-  String get tournamentWizardTiebreakLabel;
-
-  /// Prelim tiebreak toggle subtitle
-  ///
-  /// In de, this message translates to:
-  /// **'Bei Zeitablauf wird ein Tiebreak gespielt'**
-  String get tournamentWizardTiebreakHint;
-
-  /// Prelim tiebreak trigger time stepper label
-  ///
-  /// In de, this message translates to:
-  /// **'Tiebreak nach (Min.)'**
-  String get tournamentWizardTiebreakAfterLabel;
-
   /// Break between matches stepper label
   ///
   /// In de, this message translates to:
@@ -7107,24 +7089,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Wie viele Teams ziehen aus der Vorrunde in die KO-Phase ein? Nur Zweierpotenzen (4/8/16/32) — keine Freilose im Hauptbaum.'**
   String get tournamentWizardQualifierCountHelper;
-
-  /// Title of wizard step 6 for tiebreaker reordering
-  ///
-  /// In de, this message translates to:
-  /// **'Tiebreaker-Reihenfolge'**
-  String get tournamentWizardStep6Title;
-
-  /// Hint above the drag-to-reorder tiebreaker list
-  ///
-  /// In de, this message translates to:
-  /// **'Lange tippen und ziehen, um die Reihenfolge der Entscheidungskriterien zu ändern.'**
-  String get tournamentWizardTiebreakerHint;
-
-  /// Button that resets the tiebreaker order to the spec default
-  ///
-  /// In de, this message translates to:
-  /// **'Standard wiederherstellen'**
-  String get tournamentWizardTiebreakerResetButton;
 
   /// Title of the in-app help section explaining the KO phase (U8)
   ///

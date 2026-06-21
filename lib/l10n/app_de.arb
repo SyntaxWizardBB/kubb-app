@@ -2976,18 +2976,6 @@
   "@tournamentWizardMatchTimeLabel": {
     "description": "Prelim time limit per match stepper label"
   },
-  "tournamentWizardTiebreakLabel": "Tiebreak",
-  "@tournamentWizardTiebreakLabel": {
-    "description": "Prelim tiebreak toggle title"
-  },
-  "tournamentWizardTiebreakHint": "Bei Zeitablauf wird ein Tiebreak gespielt",
-  "@tournamentWizardTiebreakHint": {
-    "description": "Prelim tiebreak toggle subtitle"
-  },
-  "tournamentWizardTiebreakAfterLabel": "Tiebreak nach (Min.)",
-  "@tournamentWizardTiebreakAfterLabel": {
-    "description": "Prelim tiebreak trigger time stepper label"
-  },
   "tournamentWizardBreakBetweenLabel": "Pause zwischen Matches (Min.)",
   "@tournamentWizardBreakBetweenLabel": {
     "description": "Break between matches stepper label"
@@ -5035,18 +5023,6 @@
   "tournamentWizardQualifierCountHelper": "Wie viele Teams ziehen aus der Vorrunde in die KO-Phase ein? Nur Zweierpotenzen (4/8/16/32) — keine Freilose im Hauptbaum.",
   "@tournamentWizardQualifierCountHelper": {
     "description": "Helper text for the power-of-two KO size selector"
-  },
-  "tournamentWizardStep6Title": "Tiebreaker-Reihenfolge",
-  "@tournamentWizardStep6Title": {
-    "description": "Title of wizard step 6 for tiebreaker reordering"
-  },
-  "tournamentWizardTiebreakerHint": "Lange tippen und ziehen, um die Reihenfolge der Entscheidungskriterien zu ändern.",
-  "@tournamentWizardTiebreakerHint": {
-    "description": "Hint above the drag-to-reorder tiebreaker list"
-  },
-  "tournamentWizardTiebreakerResetButton": "Standard wiederherstellen",
-  "@tournamentWizardTiebreakerResetButton": {
-    "description": "Button that resets the tiebreaker order to the spec default"
   },
   "tournamentKoHelpTitle": "Wie funktioniert der KO-Cut?",
   "@tournamentKoHelpTitle": {

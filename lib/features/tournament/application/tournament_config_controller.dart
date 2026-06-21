@@ -290,10 +290,6 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     state = state.copyWith(basekubbsPerSide: value);
   }
 
-  void setTiebreakerOrder(List<String> order) {
-    state = state.copyWith(tiebreakerOrder: List<String>.unmodifiable(order));
-  }
-
   /// Replaces the in-progress [KoPhaseConfig]. Used by the KO-config wizard
   /// step (T13) to commit `qualifierCount`, `withThirdPlacePlayoff` and
   /// `seedingMode` once the inputs are valid (`2 <= n <= participantCount`).
@@ -535,14 +531,6 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
   /// configured later, before the tournament starts).
   void setPitchPlan(PitchPlan? plan) {
     state = state.copyWith(pitchPlan: plan, clearPitchPlan: plan == null);
-  }
-
-  /// Prelim tiebreak trigger in seconds; `null` = no prelim tiebreak.
-  void setPrelimTiebreakAfterSeconds(int? seconds) {
-    state = state.copyWith(
-      prelimTiebreakAfterSeconds: seconds,
-      clearPrelimTiebreak: seconds == null,
-    );
   }
 
   void setBreakBetweenMatchesSeconds(int seconds) {
