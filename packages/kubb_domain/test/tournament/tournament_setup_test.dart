@@ -43,46 +43,62 @@ void main() {
       setsToWin: 3,
       maxSets: 5,
       timeLimitSeconds: 3600,
-      tiebreakAfterSeconds: 2400,
       breakBetweenMatchesSeconds: 300,
       finalNoTiebreak: true,
     );
 
+    test('tiebreakAfterSeconds derives from the match time when enabled', () {
+      const enabled = MatchFormatSpec(
+        setsToWin: 2,
+        maxSets: 3,
+        timeLimitSeconds: 1800,
+      );
+      // No separate offset: the tiebreak opens once the match time runs out.
+      expect(enabled.tiebreakAfterSeconds, 1800);
+
+      const disabled = MatchFormatSpec(
+        setsToWin: 2,
+        maxSets: 3,
+        timeLimitSeconds: 1800,
+        tiebreakEnabled: false,
+      );
+      expect(disabled.tiebreakAfterSeconds, isNull);
+    });
+
     test('JSON round-trips with snake_case keys', () {
       final json = spec.toJson();
       expect(json['sets_to_win'], 3);
-      expect(json['tiebreak_after_seconds'], 2400);
+      // The tiebreak window is bound to the match end (= timeLimitSeconds).
+      expect(json['tiebreak_after_seconds'], 3600);
       expect(json['final_no_tiebreak'], true);
       expect(MatchFormatSpec.fromJson(json), spec);
     });
 
-    test('fromJson applies defaults for optional keys', () {
+    test('fromJson ignores the legacy tiebreak_after_seconds key', () {
+      // Older rows still carry an explicit offset; it must not survive — the
+      // trigger is derived from the match time now.
       final parsed = MatchFormatSpec.fromJson(const <String, Object?>{
         'sets_to_win': 2,
         'max_sets': 3,
         'time_limit_seconds': 1500,
+        'tiebreak_after_seconds': 900,
       });
       expect(parsed.tiebreakEnabled, true);
-      expect(parsed.tiebreakAfterSeconds, isNull);
+      expect(parsed.tiebreakAfterSeconds, 1500);
       expect(parsed.basekubbsPerSide, 5);
       expect(parsed.finalNoTiebreak, false);
     });
 
-    test('issues flags max_sets too small and bad tiebreak time', () {
+    test('issues flags max_sets too small', () {
       const bad = MatchFormatSpec(
         setsToWin: 3,
         maxSets: 3,
         timeLimitSeconds: 3600,
-        tiebreakAfterSeconds: 4000,
       );
       final issues = bad.issues();
       expect(issues, isNotEmpty);
       expect(
         issues.any((i) => i.contains('Max. Sätze')),
-        isTrue,
-      );
-      expect(
-        issues.any((i) => i.contains('Tiebreak-Zeit')),
         isTrue,
       );
     });

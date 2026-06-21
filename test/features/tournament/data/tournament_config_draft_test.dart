@@ -643,21 +643,22 @@ void main() {
       final quarter = TournamentConfigDraft.defaultKoRoundFormatFor(0, 3);
       final semi = TournamentConfigDraft.defaultKoRoundFormatFor(1, 3);
       final fin = TournamentConfigDraft.defaultKoRoundFormatFor(2, 3);
-      // Quarter: Bo5 with a 40-min tiebreak.
+      // Quarter: Bo5, tiebreak on → triggers at the match end (60 min).
       expect(quarter.setsToWin, 3);
       expect(quarter.tiebreakEnabled, isTrue);
-      expect(quarter.tiebreakAfterSeconds, 2400);
+      expect(quarter.tiebreakAfterSeconds, 3600);
       // Semifinal: Bo5, no tiebreak.
       expect(semi.setsToWin, 3);
       expect(semi.tiebreakEnabled, isFalse);
       // Final: Bo5, no tiebreak, finalNoTiebreak.
       expect(fin.tiebreakEnabled, isFalse);
       expect(fin.finalNoTiebreak, isTrue);
-      // Early round in a large bracket → Bo3 with a 25-min tiebreak.
+      // Early round in a large bracket → Bo3, tiebreak on at the match end.
       final early = TournamentConfigDraft.defaultKoRoundFormatFor(0, 5);
       expect(early.setsToWin, 2);
       expect(early.maxSets, 3);
-      expect(early.tiebreakAfterSeconds, 1500);
+      expect(early.tiebreakEnabled, isTrue);
+      expect(early.tiebreakAfterSeconds, 2400);
     });
 
     test('withResizedKoRoundFormats grows, seeds and trims', () {
@@ -869,7 +870,6 @@ void main() {
           setsToWin: 3,
           maxSets: 5,
           timeLimitSeconds: 3600,
-          tiebreakAfterSeconds: 2400,
           finalNoTiebreak: true,
         ),
         pitchPlan: const PitchPlan(

@@ -119,6 +119,36 @@ void main() {
       expect(t.tiebreakAt, start);
       expect(t.tiebreakReached, isTrue);
     });
+
+    test('tiebreak bound to the match end: reached exactly when the clock '
+        'expires, and a held clock then freezes at zero', () {
+      // The KO format derives the trigger from the match time, so the offset
+      // equals the duration: the tiebreak opens precisely at the match end.
+      MatchTimer at(DateTime now, {bool onHold = false}) => MatchTimer(
+            startedAt: start,
+            durationSeconds: 300,
+            now: now,
+            tiebreakAfterSeconds: 300,
+            onHold: onHold,
+          );
+
+      // One second before the end: running, no tiebreak yet.
+      final before = at(start.add(const Duration(seconds: 299)));
+      expect(before.tiebreakReached, isFalse);
+      expect(before.isExpired, isFalse);
+
+      // At the end: expired AND the tiebreak is triggered.
+      final atEnd = at(start.add(const Duration(seconds: 300)));
+      expect(atEnd.isExpired, isTrue);
+      expect(atEnd.tiebreakReached, isTrue);
+
+      // Holding the clock past the end keeps remaining at zero — the clock
+      // stays put while the tiebreak result is awaited.
+      final held = at(start.add(const Duration(seconds: 420)), onHold: true);
+      expect(held.tiebreakReached, isTrue);
+      expect(held.remaining, Duration.zero);
+      expect(held.isFrozen, isTrue);
+    });
   });
 
   group('MatchTimer - value equality', () {

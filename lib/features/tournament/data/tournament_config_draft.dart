@@ -358,9 +358,11 @@ class TournamentConfigDraft {
   /// 0-based with 0 = first round … `totalRounds - 1` = final):
   ///   * final (last round)           → Bo5, 60 min, no tiebreak, finalNoTiebreak
   ///   * semifinal (R-1)              → Bo5, 60 min, no tiebreak
-  ///   * quarter/eighth (R-3 .. R-2)  → Bo5, 60 min, tiebreak after 40 min
-  ///   * earlier rounds (< R-3)       → Bo3, 40 min, tiebreak after 25 min
-  /// Used to seed new entries in [withResizedKoRoundFormats].
+  ///   * quarter/eighth (R-3 .. R-2)  → Bo5, 60 min, tiebreak on
+  ///   * earlier rounds (< R-3)       → Bo3, 40 min, tiebreak on
+  /// A tiebreak no longer carries its own offset — when on it triggers once
+  /// the match time runs out. Used to seed new entries in
+  /// [withResizedKoRoundFormats].
   static MatchFormatSpec defaultKoRoundFormatFor(
     int roundIndex,
     int totalRounds,
@@ -387,20 +389,18 @@ class TournamentConfigDraft {
       );
     }
     if (fromBack <= 4) {
-      // Quarter / eighth: Bo5 with a 40-minute tiebreak.
+      // Quarter / eighth: Bo5, tiebreak after the match time.
       return const MatchFormatSpec(
         setsToWin: 3,
         maxSets: 5,
         timeLimitSeconds: 3600,
-        tiebreakAfterSeconds: 2400,
       );
     }
-    // Earlier rounds: Bo3 with a 25-minute tiebreak.
+    // Earlier rounds: Bo3, tiebreak after the match time.
     return const MatchFormatSpec(
       setsToWin: 2,
       maxSets: 3,
       timeLimitSeconds: 2400,
-      tiebreakAfterSeconds: 1500,
     );
   }
 

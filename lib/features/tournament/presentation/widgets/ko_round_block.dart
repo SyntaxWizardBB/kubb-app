@@ -6,9 +6,11 @@ import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
 /// One per-KO-round rules card: numeric Sätze-zum-Sieg, Match-Zeit and
-/// Pause inputs plus a Tiebreak on/off switch with its own after-time. Edits
-/// emit a new [MatchFormatSpec] via [onChanged]; `max_sets` is auto-clamped
-/// to `2*setsToWin - 1` so a series can always be decided.
+/// Pause inputs plus a Tiebreak on/off switch. When the tiebreak is on it
+/// triggers automatically once the match time runs out, so there is no
+/// separate after-time. Edits emit a new [MatchFormatSpec] via [onChanged];
+/// `max_sets` is auto-clamped to `2*setsToWin - 1` so a series can always be
+/// decided.
 ///
 /// Props-in / callback-out and draft-free, so it is the single editor for a
 /// round's format — used by the classic KO config step AND the stage-graph
@@ -83,32 +85,14 @@ class KoRoundBlock extends StatelessWidget {
             onChanged: (v) =>
                 onChanged(spec.copyWith(breakBetweenMatchesSeconds: v * 60)),
           ),
+          // The tiebreak is a plain on/off switch: when on it triggers
+          // automatically once the match time runs out (no separate "Tiebreak
+          // nach"-time to configure).
           KubbLabeledSwitch(
             title: l10n.tournamentWizardKoRoundTiebreakLabel,
             value: spec.tiebreakEnabled,
-            onChanged: (on) => onChanged(
-              spec.copyWith(
-                tiebreakEnabled: on,
-                // Seed a sane after-time when enabling without one set.
-                tiebreakAfterSeconds: on
-                    ? (spec.tiebreakAfterSeconds ??
-                        (spec.timeLimitSeconds - 600)
-                            .clamp(60, spec.timeLimitSeconds))
-                    : spec.tiebreakAfterSeconds,
-              ),
-            ),
+            onChanged: (on) => onChanged(spec.copyWith(tiebreakEnabled: on)),
           ),
-          if (spec.tiebreakEnabled)
-            WizardNumberField(
-              label: l10n.tournamentWizardKoRoundTiebreakAfterLabel,
-              value: ((spec.tiebreakAfterSeconds ?? spec.timeLimitSeconds) / 60)
-                  .round(),
-              min: 1,
-              max: timeMin,
-              compact: true,
-              onChanged: (v) =>
-                  onChanged(spec.copyWith(tiebreakAfterSeconds: v * 60)),
-            ),
         ],
       ),
     );

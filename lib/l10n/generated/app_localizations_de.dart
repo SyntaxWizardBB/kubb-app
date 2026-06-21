@@ -2503,10 +2503,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentWizardKoRoundTiebreakLabel => 'Tiebreak';
 
   @override
-  String get tournamentWizardKoRoundTiebreakAfterLabel =>
-      'Tiebreak nach (Min.)';
-
-  @override
   String get tournamentWizardKoFinalNoTiebreak => 'Ab Halbfinale ohne Tiebreak';
 
   @override

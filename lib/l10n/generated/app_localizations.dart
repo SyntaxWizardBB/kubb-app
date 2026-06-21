@@ -4570,12 +4570,6 @@ abstract class AppLocalizations {
   /// **'Tiebreak'**
   String get tournamentWizardKoRoundTiebreakLabel;
 
-  /// Per-round tiebreak-after label
-  ///
-  /// In de, this message translates to:
-  /// **'Tiebreak nach (Min.)'**
-  String get tournamentWizardKoRoundTiebreakAfterLabel;
-
   /// Final/semifinal without tiebreak toggle
   ///
   /// In de, this message translates to:

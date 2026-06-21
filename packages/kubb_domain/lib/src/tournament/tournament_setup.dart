@@ -141,19 +141,21 @@ final class MatchFormatSpec {
     required this.maxSets,
     required this.timeLimitSeconds,
     this.tiebreakEnabled = true,
-    this.tiebreakAfterSeconds,
     this.breakBetweenMatchesSeconds = 0,
     this.basekubbsPerSide = 5,
     this.finalNoTiebreak = false,
   });
 
+  /// The tiebreak no longer carries its own offset: when enabled it triggers
+  /// automatically once the match time ([timeLimitSeconds]) runs out. The
+  /// legacy `tiebreak_after_seconds` wire key is therefore ignored on read —
+  /// only `tiebreak_enabled` matters — so older rows still hydrate cleanly.
   factory MatchFormatSpec.fromJson(Map<String, Object?> json) =>
       MatchFormatSpec(
         setsToWin: (json['sets_to_win']! as num).toInt(),
         maxSets: (json['max_sets']! as num).toInt(),
         timeLimitSeconds: (json['time_limit_seconds']! as num).toInt(),
         tiebreakEnabled: json['tiebreak_enabled'] as bool? ?? true,
-        tiebreakAfterSeconds: (json['tiebreak_after_seconds'] as num?)?.toInt(),
         breakBetweenMatchesSeconds:
             (json['break_between_matches_seconds'] as num?)?.toInt() ?? 0,
         basekubbsPerSide: (json['basekubbs_per_side'] as num?)?.toInt() ?? 5,
@@ -167,12 +169,17 @@ final class MatchFormatSpec {
   /// finished and the current score is recorded.
   final int timeLimitSeconds;
 
-  /// Whether a tiebreak is played at all in this phase.
+  /// Whether a tiebreak is played at all in this phase. When on, the tiebreak
+  /// triggers automatically once the match time runs out — there is no
+  /// separate offset to configure (see [tiebreakAfterSeconds]).
   final bool tiebreakEnabled;
 
-  /// When the tiebreak is triggered (< [timeLimitSeconds]). Null when
-  /// [tiebreakEnabled] is false.
-  final int? tiebreakAfterSeconds;
+  /// Elapsed-seconds offset at which the tiebreak opens, derived from the
+  /// match time: it triggers right when [timeLimitSeconds] runs out. Null when
+  /// the tiebreak is off. Kept as the single source the schedule / clock read,
+  /// so binding the trigger to the match end stays in one place.
+  int? get tiebreakAfterSeconds =>
+      tiebreakEnabled ? timeLimitSeconds : null;
 
   /// Configured break between consecutive matches (organiser planning).
   final int breakBetweenMatchesSeconds;
@@ -195,14 +202,6 @@ final class MatchFormatSpec {
     if (timeLimitSeconds < 60) {
       out.add('Zeitlimit muss mindestens eine Minute sein.');
     }
-    if (tiebreakEnabled) {
-      final after = tiebreakAfterSeconds;
-      if (after == null || after < 60) {
-        out.add('Tiebreak-Zeit muss mindestens eine Minute sein.');
-      } else if (after > timeLimitSeconds) {
-        out.add('Tiebreak-Zeit darf nicht über dem Zeitlimit liegen.');
-      }
-    }
     if (breakBetweenMatchesSeconds < 0) {
       out.add('Pause zwischen Matches darf nicht negativ sein.');
     }
@@ -217,6 +216,8 @@ final class MatchFormatSpec {
         'max_sets': maxSets,
         'time_limit_seconds': timeLimitSeconds,
         'tiebreak_enabled': tiebreakEnabled,
+        // Derived from the match time so the schedule's KO-seconds helper and
+        // the client clock open the tiebreak window exactly at the match end.
         'tiebreak_after_seconds': tiebreakAfterSeconds,
         'break_between_matches_seconds': breakBetweenMatchesSeconds,
         'basekubbs_per_side': basekubbsPerSide,
@@ -228,7 +229,6 @@ final class MatchFormatSpec {
     int? maxSets,
     int? timeLimitSeconds,
     bool? tiebreakEnabled,
-    int? tiebreakAfterSeconds,
     int? breakBetweenMatchesSeconds,
     int? basekubbsPerSide,
     bool? finalNoTiebreak,
@@ -238,7 +238,6 @@ final class MatchFormatSpec {
         maxSets: maxSets ?? this.maxSets,
         timeLimitSeconds: timeLimitSeconds ?? this.timeLimitSeconds,
         tiebreakEnabled: tiebreakEnabled ?? this.tiebreakEnabled,
-        tiebreakAfterSeconds: tiebreakAfterSeconds ?? this.tiebreakAfterSeconds,
         breakBetweenMatchesSeconds:
             breakBetweenMatchesSeconds ?? this.breakBetweenMatchesSeconds,
         basekubbsPerSide: basekubbsPerSide ?? this.basekubbsPerSide,
@@ -253,7 +252,6 @@ final class MatchFormatSpec {
           other.maxSets == maxSets &&
           other.timeLimitSeconds == timeLimitSeconds &&
           other.tiebreakEnabled == tiebreakEnabled &&
-          other.tiebreakAfterSeconds == tiebreakAfterSeconds &&
           other.breakBetweenMatchesSeconds == breakBetweenMatchesSeconds &&
           other.basekubbsPerSide == basekubbsPerSide &&
           other.finalNoTiebreak == finalNoTiebreak;
@@ -264,7 +262,6 @@ final class MatchFormatSpec {
         maxSets,
         timeLimitSeconds,
         tiebreakEnabled,
-        tiebreakAfterSeconds,
         breakBetweenMatchesSeconds,
         basekubbsPerSide,
         finalNoTiebreak,

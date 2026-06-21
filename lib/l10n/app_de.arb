@@ -3115,8 +3115,6 @@
   "@tournamentWizardKoRoundPauseLabel": { "description": "Per-round break-after label" },
   "tournamentWizardKoRoundTiebreakLabel": "Tiebreak",
   "@tournamentWizardKoRoundTiebreakLabel": { "description": "Per-round tiebreak toggle" },
-  "tournamentWizardKoRoundTiebreakAfterLabel": "Tiebreak nach (Min.)",
-  "@tournamentWizardKoRoundTiebreakAfterLabel": { "description": "Per-round tiebreak-after label" },
   "tournamentWizardKoFinalNoTiebreak": "Ab Halbfinale ohne Tiebreak",
   "@tournamentWizardKoFinalNoTiebreak": { "description": "Final/semifinal without tiebreak toggle" },
   "tournamentWizardMinParticipantsLabel": "Min. Teilnehmer",
