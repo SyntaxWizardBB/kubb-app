@@ -5094,6 +5094,30 @@
   "@tournamentSeedingErrorTitle": {
     "description": "Inline banner title shown when the save or start RPC fails"
   },
+  "tournamentSeedingInfoTitle": "Setzliste",
+  "@tournamentSeedingInfoTitle": {
+    "description": "Title of the head info sheet explaining the seeding screen"
+  },
+  "tournamentSeedingInfoBody": "Lege die Reihenfolge fest, in der die Teams in den KO-Baum gesetzt werden. Position 1 ist der höchste Setzplatz. Ziehe Einträge zum Umsortieren oder übernimm die ELO-Wertung. Erst nach dem Speichern lässt sich die KO-Phase starten.",
+  "@tournamentSeedingInfoBody": {
+    "description": "Body of the head info sheet explaining the seeding screen"
+  },
+  "tournamentSeedingDirtyHint": "Ungespeicherte Änderungen.",
+  "@tournamentSeedingDirtyHint": {
+    "description": "Small hint shown when the working seed order has unsaved changes"
+  },
+  "tournamentSeedingStartKoConfirmTitle": "KO jetzt starten?",
+  "@tournamentSeedingStartKoConfirmTitle": {
+    "description": "Title of the confirmation dialog before the irreversible KO start"
+  },
+  "tournamentSeedingStartKoConfirmBody": "Die Setzung wird fixiert und die KO-Phase gestartet. Das lässt sich nicht rückgängig machen.",
+  "@tournamentSeedingStartKoConfirmBody": {
+    "description": "Body of the confirmation dialog before the irreversible KO start"
+  },
+  "tournamentSeedingStartKoConfirmAction": "KO starten",
+  "@tournamentSeedingStartKoConfirmAction": {
+    "description": "Confirm action label in the KO-start confirmation dialog"
+  },
   "tournamentSeedingEmpty": "Noch keine qualifizierten Teilnehmer.",
   "@tournamentSeedingEmpty": {
     "description": "Placeholder shown when the auto-seed list is empty (group phase not finished)"

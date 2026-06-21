@@ -11,6 +11,7 @@ import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart
 import 'package:kubb_app/features/tournament/presentation/tournament_seeding_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 const _tournamentId = TournamentId('t-1');
 const _alpha = TournamentParticipantId('alpha1');
@@ -212,24 +213,58 @@ void main() {
 
   testWidgets('save button calls setSeeding with 1-based positions',
       (tester) async {
-    final (fake, _) = await _pump(tester);
-    await tester.tap(find.text('Seeding speichern'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 16));
+    final fake = _FakeRemote();
+    final container = ProviderContainer(
+      overrides: [tournamentRemoteProvider.overrideWithValue(fake)],
+    );
+    addTearDown(container.dispose);
+    final notifier = container
+        .read(tournamentSeedingControllerProvider(_tournamentId).notifier);
+    final config = KoPhaseConfig(qualifierCount: 3, participantCount: 3);
+    // Save is gated on isDirty; reorder so the working list diverges from
+    // the auto baseline and the button enables.
+    notifier
+      ..seed(
+        auto: const <TournamentParticipantId>[_alpha, _beta, _gamma],
+        config: config,
+      )
+      ..reorder(0, 3); // alpha → end: beta, gamma, alpha
+    await notifier.save();
     expect(fake.setSeedingCall, isNotNull);
     expect(fake.setSeedingCall!.id, _tournamentId);
     expect(fake.setSeedingCall!.seeds, <TournamentParticipantId, int>{
-      _alpha: 1,
-      _beta: 2,
-      _gamma: 3,
+      _beta: 1,
+      _gamma: 2,
+      _alpha: 3,
     });
   });
 
+  testWidgets('save button stays disabled while the order is clean',
+      (tester) async {
+    await _pump(tester);
+    final save = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Seeding speichern'),
+    );
+    expect(save.onPressed, isNull);
+  });
+
   testWidgets(
-      'KO start triggers startKoPhase and navigates to bracket on success',
+      'KO start confirms, triggers startKoPhase and navigates to bracket',
       (tester) async {
     final (fake, router) = await _pump(tester);
     await tester.tap(find.text('KO starten'));
+    await tester.pump();
+    // Confirmation dialog is up; nothing fired yet.
+    expect(find.text('KO jetzt starten?'), findsOneWidget);
+    expect(fake.startKoCall, isNull);
+    // Confirm via the dialog's primary action (scoped to the AlertDialog so
+    // it doesn't collide with the screen's start button of the same label).
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(FilledButton, 'KO starten'),
+      ),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
     expect(fake.startKoCall, isNotNull);
@@ -239,6 +274,31 @@ void main() {
       '/tournament/t-1/bracket',
     );
     expect(find.text('bracket-screen'), findsOneWidget);
+  });
+
+  testWidgets('KO start cancel does not fire the RPC', (tester) async {
+    final (fake, router) = await _pump(tester);
+    await tester.tap(find.text('KO starten'));
+    await tester.pump();
+    await tester.tap(find.text('Abbrechen'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(fake.startKoCall, isNull);
+    expect(
+      router.routerDelegate.currentConfiguration.uri.path,
+      '/tournament/t-1/seeding',
+    );
+  });
+
+  testWidgets('head info sheet replaces the per-button glyphs',
+      (tester) async {
+    await _pump(tester);
+    // Exactly one info affordance on the screen (the head explainer),
+    // not one glued to every action button.
+    expect(find.byIcon(LucideIcons.info), findsOneWidget);
+    await tester.tap(find.byIcon(LucideIcons.info));
+    await tester.pumpAndSettle();
+    expect(find.text('Setzliste'), findsOneWidget);
   });
 
   testWidgets(

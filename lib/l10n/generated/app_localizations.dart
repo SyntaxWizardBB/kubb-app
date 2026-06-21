@@ -7270,6 +7270,42 @@ abstract class AppLocalizations {
   /// **'Aktion fehlgeschlagen'**
   String get tournamentSeedingErrorTitle;
 
+  /// Title of the head info sheet explaining the seeding screen
+  ///
+  /// In de, this message translates to:
+  /// **'Setzliste'**
+  String get tournamentSeedingInfoTitle;
+
+  /// Body of the head info sheet explaining the seeding screen
+  ///
+  /// In de, this message translates to:
+  /// **'Lege die Reihenfolge fest, in der die Teams in den KO-Baum gesetzt werden. Position 1 ist der höchste Setzplatz. Ziehe Einträge zum Umsortieren oder übernimm die ELO-Wertung. Erst nach dem Speichern lässt sich die KO-Phase starten.'**
+  String get tournamentSeedingInfoBody;
+
+  /// Small hint shown when the working seed order has unsaved changes
+  ///
+  /// In de, this message translates to:
+  /// **'Ungespeicherte Änderungen.'**
+  String get tournamentSeedingDirtyHint;
+
+  /// Title of the confirmation dialog before the irreversible KO start
+  ///
+  /// In de, this message translates to:
+  /// **'KO jetzt starten?'**
+  String get tournamentSeedingStartKoConfirmTitle;
+
+  /// Body of the confirmation dialog before the irreversible KO start
+  ///
+  /// In de, this message translates to:
+  /// **'Die Setzung wird fixiert und die KO-Phase gestartet. Das lässt sich nicht rückgängig machen.'**
+  String get tournamentSeedingStartKoConfirmBody;
+
+  /// Confirm action label in the KO-start confirmation dialog
+  ///
+  /// In de, this message translates to:
+  /// **'KO starten'**
+  String get tournamentSeedingStartKoConfirmAction;
+
   /// Placeholder shown when the auto-seed list is empty (group phase not finished)
   ///
   /// In de, this message translates to:

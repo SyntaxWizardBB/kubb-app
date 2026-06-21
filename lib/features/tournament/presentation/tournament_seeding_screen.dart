@@ -160,14 +160,14 @@ class _Editor extends ConsumerWidget {
                 ),
               ),
               InfoIconButton(
-                title: l.tournamentSetupInfoSeedingSortTitle,
-                message: l.tournamentSetupInfoSeedingSortBody,
+                title: l.tournamentSeedingInfoTitle,
+                message: l.tournamentSeedingInfoBody,
               ),
             ],
           ),
           const SizedBox(height: KubbTokens.space2),
           Text(l.tournamentSeedingDragHint,
-              style: const TextStyle(fontSize: 13)),
+              style: TextStyle(fontSize: 13, color: tokens.fgMuted)),
           if (err != null) ...[
             const SizedBox(height: KubbTokens.space3),
             // CF6 (K19): the manual-seeding gate surfaces as a typed
@@ -175,6 +175,7 @@ class _Editor extends ConsumerWidget {
             // instead of the raw server message. Other errors fall back to
             // their string form.
             _errorBanner(
+              tokens,
               l.tournamentSeedingErrorTitle,
               err is SeedingRequiredException
                   ? l.tournamentSeedingRequiredError
@@ -185,6 +186,7 @@ class _Editor extends ConsumerWidget {
           Expanded(
             child: ReorderableListView.builder(
               itemCount: state.order.length,
+              buildDefaultDragHandles: false,
               onReorder: busy ? (_, _) {} : notifier.reorder,
               itemBuilder: (context, i) {
                 final id = state.order[i];
@@ -193,24 +195,27 @@ class _Editor extends ConsumerWidget {
                         ? displayNames[id.value]!
                         : l.tournamentParticipantUnknown)
                     : _nameFor(id);
-                return Card(
+                return _SeedRow(
                   key: ValueKey(id.value),
-                  margin: const EdgeInsets.symmetric(vertical: 2),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      radius: 16,
-                      child: Text('${i + 1}',
-                          style: const TextStyle(fontSize: 13)),
-                    ),
-                    title: Text(label, overflow: TextOverflow.ellipsis),
-                    subtitle:
-                        Text(l.tournamentSeedingPositionLabel(i + 1)),
-                    trailing: const Icon(Icons.drag_handle),
-                  ),
+                  index: i,
+                  label: label,
+                  positionLabel: l.tournamentSeedingPositionLabel(i + 1),
+                  tokens: tokens,
                 );
               },
             ),
           ),
+          if (state.isDirty) ...[
+            const SizedBox(height: KubbTokens.space2),
+            Text(
+              l.tournamentSeedingDirtyHint,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: tokens.accentHover,
+              ),
+            ),
+          ],
           const SizedBox(height: KubbTokens.space3),
           Row(children: [
             Expanded(
@@ -221,13 +226,7 @@ class _Editor extends ConsumerWidget {
                 label: Text(l.tournamentSeedingAutoSeedButton),
               ),
             ),
-            InfoIconButton(
-              title: l.tournamentSetupInfoSeedingEloTitle,
-              message: l.tournamentSetupInfoSeedingEloBody,
-            ),
-          ]),
-          const SizedBox(height: KubbTokens.space2),
-          Row(children: [
+            const SizedBox(width: KubbTokens.space2),
             Expanded(
               child: OutlinedButton(
                 onPressed:
@@ -235,63 +234,155 @@ class _Editor extends ConsumerWidget {
                 child: Text(l.tournamentSeedingResetButton),
               ),
             ),
-            InfoIconButton(
-              title: l.tournamentSetupInfoSeedingRestoreTitle,
-              message: l.tournamentSetupInfoSeedingRestoreBody,
-            ),
-            const SizedBox(width: KubbTokens.space1),
-            Expanded(
-              child: FilledButton(
-                onPressed: busy ? null : () => unawaited(notifier.save()),
-                child: Text(l.tournamentSeedingSaveButton),
-              ),
-            ),
-            InfoIconButton(
-              title: l.tournamentSetupInfoSeedingSaveTitle,
-              message: l.tournamentSetupInfoSeedingSaveBody,
-            ),
           ]),
           const SizedBox(height: KubbTokens.space2),
-          Row(children: [
-            Expanded(
-              child: FilledButton.tonal(
-                onPressed: busy
-                    ? null
-                    : () {
-                        _startRequested = true;
-                        unawaited(notifier.startKoPhase());
-                      },
-                child: Text(l.tournamentSeedingStartKoButton),
-              ),
+          FilledButton.tonal(
+            onPressed: busy || !state.isDirty
+                ? null
+                : () => unawaited(notifier.save()),
+            child: Text(l.tournamentSeedingSaveButton),
+          ),
+          const SizedBox(height: KubbTokens.space3),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(KubbTokens.touchComfortable),
             ),
-            InfoIconButton(
-              title: l.tournamentSetupInfoSeedingStartKoTitle,
-              message: l.tournamentSetupInfoSeedingStartKoBody,
-            ),
-          ]),
+            onPressed:
+                busy ? null : () => unawaited(_confirmAndStartKo(context, ref)),
+            child: Text(l.tournamentSeedingStartKoButton),
+          ),
         ],
       ),
     );
   }
 
-  Widget _errorBanner(String title, String message) => Container(
+  Future<void> _confirmAndStartKo(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.tournamentSeedingStartKoConfirmTitle),
+        content: Text(l.tournamentSeedingStartKoConfirmBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.confirmCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l.tournamentSeedingStartKoConfirmAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    _startRequested = true;
+    await ref
+        .read(tournamentSeedingControllerProvider(tournamentId).notifier)
+        .startKoPhase();
+  }
+
+  Widget _errorBanner(KubbTokens tokens, String title, String message) =>
+      Container(
         padding: const EdgeInsets.all(KubbTokens.space3),
         decoration: BoxDecoration(
-          color: KubbTokens.miss.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: KubbTokens.miss),
+          color: tokens.danger.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+          border: Border.all(color: tokens.danger),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title,
-                style: const TextStyle(
-                    color: KubbTokens.miss, fontWeight: FontWeight.w700)),
+                style: TextStyle(
+                    color: tokens.danger, fontWeight: FontWeight.w700)),
             const SizedBox(height: KubbTokens.space1),
-            Text(message, style: const TextStyle(fontSize: 12)),
+            Text(message, style: TextStyle(fontSize: 12, color: tokens.fg)),
           ],
         ),
       );
+}
+
+/// One participant in the seeding list. Token-styled to match the wizard's
+/// `_InviteCandidateRow`: bordered raised container, meadow avatar with the
+/// 1-based seed position, name, and a drag handle.
+class _SeedRow extends StatelessWidget {
+  const _SeedRow({
+    required this.index,
+    required this.label,
+    required this.positionLabel,
+    required this.tokens,
+    super.key,
+  });
+
+  final int index;
+  final String label;
+  final String positionLabel;
+  final KubbTokens tokens;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: KubbTokens.space2),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: KubbTokens.space3,
+          vertical: KubbTokens.space2,
+        ),
+        decoration: BoxDecoration(
+          color: tokens.bgRaised,
+          border: Border.all(color: tokens.line),
+          borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                color: KubbTokens.meadow600,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                '${index + 1}',
+                style: TextStyle(
+                  color: tokens.onPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const SizedBox(width: KubbTokens.space3),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.fg,
+                    ),
+                  ),
+                  Text(
+                    positionLabel,
+                    style: TextStyle(fontSize: 12, color: tokens.fgMuted),
+                  ),
+                ],
+              ),
+            ),
+            ReorderableDragStartListener(
+              index: index,
+              child: Icon(Icons.drag_handle, color: tokens.fgSubtle),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// File-private flag separating "save" from "save + start KO" so the

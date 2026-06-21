@@ -4030,6 +4030,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentSeedingErrorTitle => 'Aktion fehlgeschlagen';
 
   @override
+  String get tournamentSeedingInfoTitle => 'Setzliste';
+
+  @override
+  String get tournamentSeedingInfoBody =>
+      'Lege die Reihenfolge fest, in der die Teams in den KO-Baum gesetzt werden. Position 1 ist der höchste Setzplatz. Ziehe Einträge zum Umsortieren oder übernimm die ELO-Wertung. Erst nach dem Speichern lässt sich die KO-Phase starten.';
+
+  @override
+  String get tournamentSeedingDirtyHint => 'Ungespeicherte Änderungen.';
+
+  @override
+  String get tournamentSeedingStartKoConfirmTitle => 'KO jetzt starten?';
+
+  @override
+  String get tournamentSeedingStartKoConfirmBody =>
+      'Die Setzung wird fixiert und die KO-Phase gestartet. Das lässt sich nicht rückgängig machen.';
+
+  @override
+  String get tournamentSeedingStartKoConfirmAction => 'KO starten';
+
+  @override
   String get tournamentSeedingEmpty => 'Noch keine qualifizierten Teilnehmer.';
 
   @override

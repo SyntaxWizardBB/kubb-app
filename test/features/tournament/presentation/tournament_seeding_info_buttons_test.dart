@@ -129,60 +129,31 @@ Future<void> _pump(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 16));
 }
 
-Future<void> _openAndExpect(
-  WidgetTester tester, {
-  required String title,
-  required String bodyFragment,
-}) async {
-  final button = find.descendant(
-    of: find.byType(InfoIconButton),
-    matching: find.byTooltip(title),
-  );
-  expect(button, findsOneWidget, reason: 'missing info button "$title"');
-  await tester.ensureVisible(button);
-  await tester.tap(button);
-  await tester.pumpAndSettle();
-
-  final sheet = find.widgetWithText(KubbBottomSheet, title);
-  expect(sheet, findsOneWidget);
-  expect(
-    find.descendant(of: sheet, matching: find.textContaining(bodyFragment)),
-    findsOneWidget,
-  );
-
-  await tester.tapAt(const Offset(10, 10));
-  await tester.pumpAndSettle();
-}
-
 void main() {
-  testWidgets('seeding screen carries an info button for every element',
+  testWidgets('one head info affordance, not one per action button',
       (tester) async {
     await _pump(tester);
 
-    await _openAndExpect(
-      tester,
-      title: 'Reihenfolge per Ziehen',
-      bodyFragment: 'Lange auf einen Eintrag',
-    );
-    await _openAndExpect(
-      tester,
-      title: 'Setzliste aus ELO übernehmen',
-      bodyFragment: 'Reihenfolge aus den ELO-Wertungen',
-    );
-    await _openAndExpect(
-      tester,
-      title: 'Auf Gruppen-Reihenfolge zurücksetzen',
-      bodyFragment: 'automatische Reihenfolge aus der Vorrunde',
-    );
-    await _openAndExpect(
-      tester,
-      title: 'Setzung sichern',
-      bodyFragment: 'Erst nach dem Speichern',
-    );
-    await _openAndExpect(
-      tester,
-      title: 'K.-o. starten',
-      bodyFragment: 'gespeicherten Setzliste',
+    // The per-button glyphs are gone; a single info affordance sits at the
+    // screen head next to the eyebrow.
+    expect(find.byType(InfoIconButton), findsOneWidget);
+  });
+
+  testWidgets('head info opens a sheet explaining the seeding screen',
+      (tester) async {
+    await _pump(tester);
+
+    await tester.tap(find.byType(InfoIconButton));
+    await tester.pumpAndSettle();
+
+    final sheet = find.widgetWithText(KubbBottomSheet, 'Setzliste');
+    expect(sheet, findsOneWidget);
+    expect(
+      find.descendant(
+        of: sheet,
+        matching: find.textContaining('Erst nach dem Speichern'),
+      ),
+      findsOneWidget,
     );
   });
 }
