@@ -1,5 +1,4 @@
-import 'dart:math';
-
+import 'package:kubb_domain/src/tournament/seeding.dart';
 import 'package:meta/meta.dart';
 
 /// Strategy used to distribute participants into pool groups. See ADR-0019 §1.
@@ -38,7 +37,8 @@ class PoolPhaseResult {
 /// Distribution per strategy:
 ///   * `snake`  — row-by-row, alternating direction (S0→G0, S1→G1, ..., Sn→Gn,
 ///                Sn+1→Gn, Sn+2→Gn-1, ...). Standard Schweizer-Liga pattern.
-///   * `random` — deterministic Fisher-Yates with `randomSeed`, then snake.
+///   * `random` — `seedRandom(ids, randomSeed)` (portable LCG Fisher-Yates),
+///                then snake.
 ///   * `seeded` — sequential block-fill, input order preserved within group.
 ///
 /// BYE-Slots (`null`) are appended when `groupCount * groupSize > ids.length`,
@@ -70,7 +70,7 @@ PoolPhaseResult generatePools(List<String> ids, PoolPhaseConfig config) {
   final ordered = switch (config.strategy) {
     PoolGroupingStrategy.snake => ids,
     PoolGroupingStrategy.seeded => ids,
-    PoolGroupingStrategy.random => _shuffle(ids, config.randomSeed ?? 0),
+    PoolGroupingStrategy.random => seedRandom(ids, config.randomSeed ?? 0),
   };
 
   final groups = List<List<String?>>.generate(
@@ -105,17 +105,4 @@ PoolPhaseResult generatePools(List<String> ids, PoolPhaseConfig config) {
   }
 
   return PoolPhaseResult(groups: groups);
-}
-
-/// Deterministic Fisher-Yates using a seeded [Random]. Pure, plpgsql-portable.
-List<String> _shuffle(List<String> ids, int seed) {
-  final rng = Random(seed);
-  final out = List<String>.of(ids);
-  for (var i = out.length - 1; i > 0; i--) {
-    final j = rng.nextInt(i + 1);
-    final tmp = out[i];
-    out[i] = out[j];
-    out[j] = tmp;
-  }
-  return out;
 }

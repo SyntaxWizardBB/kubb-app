@@ -69,6 +69,9 @@ enum StageSeedingSource {
   /// Manually provided seed list.
   manual('manual'),
 
+  /// Reproducible shuffle from a stored seed (see ADR-0038, `seedRandom`).
+  random('random'),
+
   /// Use the order in which routing delivered the participants.
   asRouted('as_routed');
 

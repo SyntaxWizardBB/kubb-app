@@ -53,6 +53,7 @@ void main() {
           StageSeedingSource.fromPrevRanking: 'from_prev_ranking',
           StageSeedingSource.manual: 'manual',
           StageSeedingSource.asRouted: 'as_routed',
+          StageSeedingSource.random: 'random',
         },
       );
       expect(
