@@ -6957,5 +6957,65 @@
   "stageTypeGraphRoundFormatLabel": "Match-Format dieser Runde",
   "@stageTypeGraphRoundFormatLabel": {
     "description": "Label for the per-round match format editor"
+  },
+  "stageTypeGraphCanvasEmpty": "Noch keine Runden. Lege im Formular eine Runde an, dann erscheinen hier die Felder.",
+  "@stageTypeGraphCanvasEmpty": {
+    "description": "Empty state of the desktop stage-type-graph canvas"
+  },
+  "stageTypeGraphCanvasFieldRound": "Runde {round}",
+  "@stageTypeGraphCanvasFieldRound": {
+    "description": "Subtitle on a KO field card showing its round",
+    "placeholders": {
+      "round": {
+        "type": "String"
+      }
+    }
+  },
+  "stageTypeGraphCanvasInPort": "Eingang",
+  "@stageTypeGraphCanvasInPort": {
+    "description": "Tooltip for the input port of a field or round block"
+  },
+  "stageTypeGraphCanvasWinnerPort": "Sieger-Ausgang — auf Zielfeld ziehen",
+  "@stageTypeGraphCanvasWinnerPort": {
+    "description": "Tooltip for the winner output port of a KO field"
+  },
+  "stageTypeGraphCanvasLoserPort": "Verlierer-Ausgang — auf Zielfeld ziehen",
+  "@stageTypeGraphCanvasLoserPort": {
+    "description": "Tooltip for the loser output port of a KO field"
+  },
+  "stageTypeGraphCanvasAdvanceAll": "Alle weiter",
+  "@stageTypeGraphCanvasAdvanceAll": {
+    "description": "Label and tooltip for the Vorrunde advance-all output port"
+  },
+  "stageTypeGraphCanvasVorrundeTerminal": "Letzte Runde",
+  "@stageTypeGraphCanvasVorrundeTerminal": {
+    "description": "Footer on the terminal Vorrunde round block"
+  },
+  "stageTypeGraphCanvasDeleteEdge": "Kante {edge} entfernen?",
+  "@stageTypeGraphCanvasDeleteEdge": {
+    "description": "Confirmation message when deleting an edge on the canvas",
+    "placeholders": {
+      "edge": {
+        "type": "String"
+      }
+    }
+  },
+  "stageTypeGraphCanvasErrors": "{count, plural, one{1 Fehler — nicht speicherbar} other{{count} Fehler — nicht speicherbar}}",
+  "@stageTypeGraphCanvasErrors": {
+    "description": "Validation bar text when the type graph has errors",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stageTypeGraphCanvasWarnings": "{count, plural, one{Speicherbar · 1 Warnung} other{Speicherbar · {count} Warnungen}}",
+  "@stageTypeGraphCanvasWarnings": {
+    "description": "Validation bar text when the type graph is savable but has warnings",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

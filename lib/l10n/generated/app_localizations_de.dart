@@ -5542,4 +5542,57 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get stageTypeGraphRoundFormatLabel => 'Match-Format dieser Runde';
+
+  @override
+  String get stageTypeGraphCanvasEmpty =>
+      'Noch keine Runden. Lege im Formular eine Runde an, dann erscheinen hier die Felder.';
+
+  @override
+  String stageTypeGraphCanvasFieldRound(String round) {
+    return 'Runde $round';
+  }
+
+  @override
+  String get stageTypeGraphCanvasInPort => 'Eingang';
+
+  @override
+  String get stageTypeGraphCanvasWinnerPort =>
+      'Sieger-Ausgang — auf Zielfeld ziehen';
+
+  @override
+  String get stageTypeGraphCanvasLoserPort =>
+      'Verlierer-Ausgang — auf Zielfeld ziehen';
+
+  @override
+  String get stageTypeGraphCanvasAdvanceAll => 'Alle weiter';
+
+  @override
+  String get stageTypeGraphCanvasVorrundeTerminal => 'Letzte Runde';
+
+  @override
+  String stageTypeGraphCanvasDeleteEdge(String edge) {
+    return 'Kante $edge entfernen?';
+  }
+
+  @override
+  String stageTypeGraphCanvasErrors(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Fehler — nicht speicherbar',
+      one: '1 Fehler — nicht speicherbar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String stageTypeGraphCanvasWarnings(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Speicherbar · $count Warnungen',
+      one: 'Speicherbar · 1 Warnung',
+    );
+    return '$_temp0';
+  }
 }

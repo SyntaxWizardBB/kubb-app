@@ -9927,6 +9927,66 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Match-Format dieser Runde'**
   String get stageTypeGraphRoundFormatLabel;
+
+  /// Empty state of the desktop stage-type-graph canvas
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Runden. Lege im Formular eine Runde an, dann erscheinen hier die Felder.'**
+  String get stageTypeGraphCanvasEmpty;
+
+  /// Subtitle on a KO field card showing its round
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {round}'**
+  String stageTypeGraphCanvasFieldRound(String round);
+
+  /// Tooltip for the input port of a field or round block
+  ///
+  /// In de, this message translates to:
+  /// **'Eingang'**
+  String get stageTypeGraphCanvasInPort;
+
+  /// Tooltip for the winner output port of a KO field
+  ///
+  /// In de, this message translates to:
+  /// **'Sieger-Ausgang — auf Zielfeld ziehen'**
+  String get stageTypeGraphCanvasWinnerPort;
+
+  /// Tooltip for the loser output port of a KO field
+  ///
+  /// In de, this message translates to:
+  /// **'Verlierer-Ausgang — auf Zielfeld ziehen'**
+  String get stageTypeGraphCanvasLoserPort;
+
+  /// Label and tooltip for the Vorrunde advance-all output port
+  ///
+  /// In de, this message translates to:
+  /// **'Alle weiter'**
+  String get stageTypeGraphCanvasAdvanceAll;
+
+  /// Footer on the terminal Vorrunde round block
+  ///
+  /// In de, this message translates to:
+  /// **'Letzte Runde'**
+  String get stageTypeGraphCanvasVorrundeTerminal;
+
+  /// Confirmation message when deleting an edge on the canvas
+  ///
+  /// In de, this message translates to:
+  /// **'Kante {edge} entfernen?'**
+  String stageTypeGraphCanvasDeleteEdge(String edge);
+
+  /// Validation bar text when the type graph has errors
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, one{1 Fehler — nicht speicherbar} other{{count} Fehler — nicht speicherbar}}'**
+  String stageTypeGraphCanvasErrors(int count);
+
+  /// Validation bar text when the type graph is savable but has warnings
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, one{Speicherbar · 1 Warnung} other{Speicherbar · {count} Warnungen}}'**
+  String stageTypeGraphCanvasWarnings(int count);
 }
 
 class _AppLocalizationsDelegate
