@@ -86,6 +86,39 @@ void main() {
     });
   });
 
+  group('stage node config — schoch', () {
+    test('writeSchochNodeConfig round-trips the round count', () {
+      final config = writeSchochNodeConfig(rounds: 8);
+      expect(config[StageNodeConfigKeys.rounds], 8);
+      expect(schochRoundsFromConfig(config), 8);
+    });
+
+    test('reader falls back to the default when the key is missing', () {
+      expect(schochRoundsFromConfig(const <String, Object?>{}),
+          defaultSchochRounds);
+    });
+
+    test('reader falls back to the default for a non-int / non-positive value',
+        () {
+      expect(
+        schochRoundsFromConfig(const <String, Object?>{'rounds': 'seven'}),
+        defaultSchochRounds,
+      );
+      expect(
+        schochRoundsFromConfig(const <String, Object?>{'rounds': 0}),
+        defaultSchochRounds,
+      );
+    });
+
+    test('reader stays consistent with the stage-validation read (rounds + 1)',
+        () {
+      // _minInputForNode reads a positive int and uses rounds + 1; the helper
+      // must surface the same positive int so the two never drift.
+      final config = writeSchochNodeConfig(rounds: 5);
+      expect(schochRoundsFromConfig(config), 5);
+    });
+  });
+
   group('stage node config — readers are total (partial/garbage tolerant)', () {
     test('missing keys yield null/empty/false, never throw', () {
       const empty = <String, Object?>{};

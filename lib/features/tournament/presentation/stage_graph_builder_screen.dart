@@ -1247,7 +1247,7 @@ class _NodeDialogState extends State<_NodeDialog> {
           },
         );
       case StageNodeType.schoch:
-        return <String, Object?>{'rounds': _rounds};
+        return writeSchochNodeConfig(rounds: _rounds);
       case StageNodeType.shootoutQuali:
         return <String, Object?>{'slots': _slots};
       case StageNodeType.doubleElim:

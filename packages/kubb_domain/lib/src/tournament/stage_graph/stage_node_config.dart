@@ -20,6 +20,13 @@ library;
 import 'package:kubb_domain/src/tournament/pool_phase.dart';
 import 'package:kubb_domain/src/tournament/tournament_setup.dart';
 
+/// Fallback round count for a Schoch stage when `config['rounds']` is missing
+/// or malformed. Mirrors the wizard's default band (5..9) at a typical mid
+/// value — enough rounds to separate a standard field without dragging tiny
+/// rosters out. Kept fixed because the config map carries no participant count;
+/// the wizard seeds an `n`-aware default and persists it here.
+const int defaultSchochRounds = 7;
+
 /// Config key constants — the single spelling shared by readers and writers.
 abstract final class StageNodeConfigKeys {
   static const koMatchup = 'ko_matchup';
@@ -118,6 +125,19 @@ Map<String, List<int>> poolGroupPitchAssignmentFromConfig(
   return out;
 }
 
+// --- Schoch readers ---------------------------------------------------------
+
+/// The configured Schoch round count `R`. Reads `config['rounds']` as a
+/// positive int and falls back to [defaultSchochRounds] when the key is absent
+/// or holds a non-int / non-positive value. Stays in step with the
+/// `_minInputForNode` read in `stage_validation.dart`, which treats the same
+/// key as a positive int (`rounds + 1`) — both read a positive `rounds`, so a
+/// value written here is also the one the validator sees.
+int schochRoundsFromConfig(Map<String, Object?> config) {
+  final raw = config[StageNodeConfigKeys.rounds];
+  return raw is int && raw >= 1 ? raw : defaultSchochRounds;
+}
+
 // --- Writers ----------------------------------------------------------------
 
 /// Builds the config map for a KO node. Only set fields are written, so the
@@ -160,4 +180,11 @@ Map<String, Object?> writePoolNodeConfig({
         for (final e in groupPitchAssignment.entries) e.key: List<int>.of(e.value),
       },
   };
+}
+
+/// Builds the config map for a Schoch node. [rounds] is the round count `R`
+/// that drives the round-scoped close in the runner; it round-trips through
+/// [schochRoundsFromConfig].
+Map<String, Object?> writeSchochNodeConfig({required int rounds}) {
+  return <String, Object?>{StageNodeConfigKeys.rounds: rounds};
 }

@@ -95,10 +95,6 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
   // quiet and the organizer opts into the inline explanations. Keyed by step
   // kind so the choice survives stepping back and forth.
   final Set<_StepKind> _helpSteps = <_StepKind>{};
-  // T10: round-count for the Schoch format (default ceil(log2(n)),
-  // clamped 3..9). Stored locally — round-count isn't part of the create-
-  // RPC contract yet, the pairing engine receives it client-side.
-  int? _schochRounds;
 
   /// Logical step list for the current draft. KO config always appears
   /// (every tournament has a KO stage). K12/K25: the former group-phase step
@@ -494,12 +490,22 @@ class _TournamentSetupWizardState extends ConsumerState<TournamentSetupWizard> {
           controller: controller,
           koBracketSize: _koBracketSize(draft),
           onFormatMode: controller.setFormatMode,
-          onVorrundeType: controller.setVorrundeType,
+          onVorrundeType: (type) {
+            controller.setVorrundeType(type);
+            // Seed the n-aware default into the draft the moment the organizer
+            // picks Schoch, but only while the round count is still the bare
+            // domain fallback — never clobber a value the organizer typed.
+            if (type == VorrundeType.schoch &&
+                draft.schochRounds == defaultSchochRounds) {
+              controller.setSchochRounds(
+                SchochConfigSection.defaultRounds(draft.maxParticipants),
+              );
+            }
+          },
           onMaxSets: controller.setMaxSets,
           onPoolGrouping: controller.setPoolGrouping,
-          schochRounds: _schochRounds ??
-              SchochConfigSection.defaultRounds(draft.maxParticipants),
-          onSchochRoundsChanged: (v) => setState(() => _schochRounds = v),
+          schochRounds: draft.schochRounds,
+          onSchochRoundsChanged: controller.setSchochRounds,
           onPitchPlanChanged: controller.setPitchPlan,
           onRoundTime: controller.setRoundTime,
           onBreakBetween: controller.setBreakBetweenMatchesSeconds,

@@ -413,4 +413,59 @@ void main() {
       );
     });
   });
+
+  group('Schoch round count (M4 #3 / ADR-0039 §5)', () {
+    test('a bare default draft starts at the domain fallback', () {
+      expect(state().schochRounds, defaultSchochRounds);
+    });
+
+    test('setSchochRounds lands in the draft', () {
+      controller.setSchochRounds(6);
+      expect(state().schochRounds, 6);
+    });
+
+    test('the chosen count survives the REAL submit serialization', () {
+      // End-to-end: the wizard picks Schoch → sets the count → submit runs
+      // toSetupConfig (the actual create-RPC payload, NO stage node). The value
+      // must ride inside pool_phase_config. Goes red the moment toSetupConfig
+      // stops emitting it — the gap the inline writeSchochNodeConfig call hid.
+      controller.setVorrundeType(VorrundeType.schoch);
+      controller.setSchochRounds(9);
+
+      final setup = state().toSetupConfig();
+      final pool = setup['pool_phase_config'] as Map<String, Object?>?;
+      expect(pool, isNotNull);
+      expect(pool!['schoch_rounds'], 9);
+
+      // Read-back: fromDetail recovers it from the same wire shape.
+      final back = TournamentConfigDraft.fromDetail(_schochHeader(setup));
+      expect(back.schochRounds, 9);
+    });
+  });
+}
+
+/// Builds a published header whose `setup` is the verbatim toSetupConfig wire
+/// map, so fromDetail inverts the real serialization (M4 #3 read-back).
+TournamentDetailHeader _schochHeader(Map<String, Object?> setup) {
+  return TournamentDetailHeader(
+    tournamentId: 't-schoch',
+    displayName: 'Schoch',
+    createdByUserId: 'u-1',
+    clubId: null,
+    teamSize: 1,
+    maxTeamSize: 1,
+    minParticipants: 2,
+    maxParticipants: 8,
+    format: TournamentFormat.schochThenKo,
+    scoring: TournamentScoring.ekc,
+    matchFormatConfig: const <String, Object?>{},
+    tiebreakerOrder: const <String>[],
+    byePoints: null,
+    forfeitPoints: null,
+    status: TournamentStatus.published,
+    publishedAt: null,
+    startedAt: null,
+    completedAt: null,
+    setup: setup,
+  );
 }

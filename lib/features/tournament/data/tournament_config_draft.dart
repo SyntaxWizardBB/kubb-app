@@ -126,6 +126,8 @@ class TournamentConfigDraft {
     this.stageGraph,
     this.stageGraphFieldSize,
     this.appliedTemplateId,
+    // --- M4 #3: Schoch round count (ADR-0039 §5) ---
+    this.schochRounds = defaultSchochRounds,
   });
 
   /// Rebuilds a draft from a [TournamentDetailHeader] so the setup wizard
@@ -176,6 +178,12 @@ class TournamentConfigDraft {
     final koConfigJson = mapOf(setup['ko_config']);
     final poolConfigJson = mapOf(setup['pool_phase_config']);
     final koRoundFormatsRaw = setup['ko_round_formats'];
+
+    // M4 #3: the Schoch round count is persisted inside pool_phase_config (see
+    // toSetupConfig). Recover it for the edit-prefill, falling back to the
+    // domain default when the key is absent (older rows / non-Schoch formats).
+    final schochRounds =
+        intOf(poolConfigJson?['schoch_rounds']) ?? defaultSchochRounds;
 
     final maxTeamSize = intOf(setup['max_team_size']) ?? header.maxTeamSize;
 
@@ -286,6 +294,7 @@ class TournamentConfigDraft {
       // (behaviour-neutral); only an explicit stage-graph wire key flips it.
       formatMode: formatMode,
       appliedTemplateId: setup['applied_stage_graph_template_id'] as String?,
+      schochRounds: schochRounds,
     );
   }
 
@@ -440,6 +449,20 @@ class TournamentConfigDraft {
   /// chosen ("Vorlage wählen") or auto-saved on submit (OE-1, P2.4). Null in
   /// the classic path and while a free graph hasn't been saved yet.
   final String? appliedTemplateId;
+
+  /// Number of Schoch rounds `R` (M4 #3 / ADR-0039 §5). Only meaningful for a
+  /// Schoch Vorrunde; the wizard seeds an `n`-aware default
+  /// (`SchochConfigSection.defaultRounds`) when the organizer opens the step.
+  ///
+  /// Two persistence paths coexist. Today the classic schochThenKo submit is
+  /// authoritative: [toSetupConfig] writes the value into
+  /// `pool_phase_config['schoch_rounds']` and `fromDetail` reads it back, so it
+  /// survives a create/edit. The future stage-graph path carries the same value
+  /// in the Schoch node's `config['rounds']` (`writeSchochNodeConfig` ⇄
+  /// `schochRoundsFromConfig`); B6 maps the setup value onto the node config
+  /// when the paths converge. Defaults to `defaultSchochRounds`, the same
+  /// fallback the domain reader uses for a missing key.
+  final int schochRounds;
 
   // --- Model-B (consolation / Trostturnier) config (ADR-0028 §5) -------
   // Only meaningful when [koType] is [KoType.consolation]; the engine
@@ -737,6 +760,7 @@ class TournamentConfigDraft {
     bool clearStageGraphFieldSize = false,
     String? appliedTemplateId,
     bool clearAppliedTemplateId = false,
+    int? schochRounds,
   }) {
     return TournamentConfigDraft(
       displayName: displayName ?? this.displayName,
@@ -814,6 +838,7 @@ class TournamentConfigDraft {
       appliedTemplateId: clearAppliedTemplateId
           ? null
           : (appliedTemplateId ?? this.appliedTemplateId),
+      schochRounds: schochRounds ?? this.schochRounds,
     );
   }
 
@@ -1195,7 +1220,19 @@ class TournamentConfigDraft {
       'consolation_main_bracket_size': consolationMainBracketSize,
       'consolation_direct_count': consolationDirectCount,
       'consolation_name': _blankToNull(consolationName),
-      'pool_phase_config': poolPhaseConfig?.toWire(),
+      // The Schoch round count rides INSIDE pool_phase_config (M4 #3 /
+      // ADR-0039 §5). The classic schochThenKo path never builds a stage node,
+      // so this map — present whenever a Schoch Vorrunde is configured — is the
+      // value's only home on submit. fromDetail reads it back from the same key.
+      // The future stage-graph path keeps a parallel source in the Schoch
+      // node's config['rounds'] (writeSchochNodeConfig); B6 maps this setup
+      // value onto that node config when the two paths converge.
+      'pool_phase_config': vorrundeType == VorrundeType.schoch
+          ? <String, Object?>{
+              ...?poolPhaseConfig?.toWire(),
+              'schoch_rounds': schochRounds,
+            }
+          : poolPhaseConfig?.toWire(),
       'ko_config': koConfig?.toWire(),
       'bracket_type': bracketType.wire,
       'ko_matchup': koMatchup.wire,
@@ -1264,7 +1301,8 @@ class TournamentConfigDraft {
           other.formatMode == formatMode &&
           other.stageGraph == stageGraph &&
           other.stageGraphFieldSize == stageGraphFieldSize &&
-          other.appliedTemplateId == appliedTemplateId;
+          other.appliedTemplateId == appliedTemplateId &&
+          other.schochRounds == schochRounds;
 
   @override
   int get hashCode => Object.hashAll(<Object?>[
@@ -1324,5 +1362,6 @@ class TournamentConfigDraft {
         stageGraph,
         stageGraphFieldSize,
         appliedTemplateId,
+        schochRounds,
       ]);
 }

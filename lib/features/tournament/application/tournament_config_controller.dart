@@ -652,6 +652,14 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
     );
   }
 
+  /// Sets the Schoch round count (M4 #3 / ADR-0039 §5). The wizard's Schoch
+  /// section clamps the input to its 5..9 band before calling this; the draft
+  /// carries the value into the Schoch stage node's `config['rounds']` on
+  /// submit so it survives a save.
+  void setSchochRounds(int rounds) {
+    state = state.copyWith(schochRounds: rounds);
+  }
+
   TournamentConfigValidation validate() => state.validate();
 
   void reset() {

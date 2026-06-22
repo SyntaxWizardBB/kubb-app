@@ -64,6 +64,48 @@ void main() {
       const b = TournamentConfigDraft(displayName: 'X', setsToWin: 3);
       expect(a, isNot(equals(b)));
     });
+
+    test('schochRounds defaults to the domain fallback', () {
+      const d = TournamentConfigDraft();
+      expect(d.schochRounds, defaultSchochRounds);
+    });
+
+    test('copyWith carries schochRounds', () {
+      const d = TournamentConfigDraft();
+      final updated = d.copyWith(schochRounds: 9);
+      expect(updated.schochRounds, 9);
+      expect(updated.displayName, isNull);
+    });
+
+    test('toSetupConfig carries schochRounds in pool_phase_config (schoch)', () {
+      // REAL submit path: the classic schochThenKo create serializes through
+      // toSetupConfig, which has no stage node. The count must ride inside the
+      // pool_phase_config map that the Schoch Vorrunde always carries.
+      final d = const TournamentConfigDraft().copyWith(
+        vorrundeType: VorrundeType.schoch,
+        poolPhaseConfig:
+            TournamentConfigDraft.schochSinglePoolConfig(null),
+        schochRounds: 9,
+      );
+      final pool =
+          d.toSetupConfig()['pool_phase_config'] as Map<String, Object?>?;
+      expect(pool, isNotNull);
+      expect(pool!['schoch_rounds'], 9);
+    });
+
+    test('toSetupConfig omits schoch_rounds for a non-schoch format', () {
+      // Group-phase Vorrunde never persists a Schoch round count.
+      const d = TournamentConfigDraft(displayName: 'Group');
+      final pool = d.toSetupConfig()['pool_phase_config'];
+      expect(pool, isNull);
+    });
+
+    test('schochRounds participates in equality', () {
+      const a = TournamentConfigDraft(displayName: 'X');
+      final b =
+          const TournamentConfigDraft(displayName: 'X').copyWith(schochRounds: 8);
+      expect(a, isNot(equals(b)));
+    });
   });
 
   group('TournamentConfigDraft.validate', () {
@@ -1155,6 +1197,34 @@ void main() {
       expect(back.consolationMainBracketSize, 16);
       expect(back.consolationDirectCount, 4);
       expect(back.consolationName, 'Bâton Rouille');
+    });
+
+    test('round-trips the Schoch round count (M4 #3 / ADR-0039 §5)', () {
+      // The full REAL submit path: toSetupConfig serializes the count into
+      // pool_phase_config, the header carries that wire map, fromDetail inverts
+      // it. Drops the value when toSetupConfig stops emitting it — no stage
+      // node, no writeSchochNodeConfig involved.
+      final original = TournamentConfigDraft(
+        displayName: 'Schoch-Cup',
+        format: TournamentFormat.schochThenKo,
+        vorrundeType: VorrundeType.schoch,
+        koConfig: KoPhaseConfig(qualifierCount: 4, participantCount: 16),
+        poolPhaseConfig: TournamentConfigDraft.schochSinglePoolConfig(null),
+        schochRounds: 9,
+      );
+
+      final back = TournamentConfigDraft.fromDetail(headerFor(original));
+
+      expect(back.vorrundeType, VorrundeType.schoch);
+      expect(back.schochRounds, 9);
+    });
+
+    test('schochRounds falls back to the default when the key is absent', () {
+      // A group-phase header (no schoch_rounds key) prefills the domain default.
+      final back = TournamentConfigDraft.fromDetail(
+        headerFor(const TournamentConfigDraft(displayName: 'Group')),
+      );
+      expect(back.schochRounds, defaultSchochRounds);
     });
 
     test('falls back to defaults when the setup map is empty', () {
