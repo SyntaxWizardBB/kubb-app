@@ -25,26 +25,31 @@ class MatchResult {
   bool get isBye => participantB == null;
 }
 
-/// Buchholz tiebreak: Σ match-points scored by all opponents a participant
-/// has faced in prior rounds. Higher is better. Byes count as 0 (the bye
-/// "opponent" contributes nothing). Reference: OD-M5-01 Empfehlung B.
+/// Buchholz tiebreak (schoch-swiss spec §5): per opponent G, add G's total
+/// points minus the points G scored against this participant in their direct
+/// match. Higher is better. A bye contributes nothing — it has no opponent.
+/// The subtraction drops only the real head-to-head score, so an opponent's
+/// own bye (the 16 in their total) still counts (§5.3 edge-case).
 class BuchholzCalculator {
   const BuchholzCalculator();
 
-  /// Σ-Opponent-Punkte for [participantId] across [allMatches].
+  /// §5 Buchholz for [participantId] across [allMatches].
   int scoreFor(String participantId, List<MatchResult> allMatches) {
-    final opponents = <String>[];
+    var sum = 0;
     for (final m in allMatches) {
       if (m.isBye) continue;
+      final String opp;
+      final int oppVsMe;
       if (m.participantA == participantId) {
-        opponents.add(m.participantB!);
+        opp = m.participantB!;
+        oppVsMe = m.pointsB;
       } else if (m.participantB == participantId) {
-        opponents.add(m.participantA);
+        opp = m.participantA;
+        oppVsMe = m.pointsA;
+      } else {
+        continue;
       }
-    }
-    var sum = 0;
-    for (final opp in opponents) {
-      sum += _pointsOf(opp, allMatches);
+      sum += _pointsOf(opp, allMatches) - oppVsMe;
     }
     return sum;
   }

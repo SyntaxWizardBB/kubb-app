@@ -36,6 +36,7 @@ final class ParticipantStats {
     required this.opponentIds,
     required this.opponentTotalPointsLookup,
     required this.headToHeadLookup,
+    this.opponentScoreAgainstLookup = const {},
   });
 
   final String participantId;
@@ -46,6 +47,22 @@ final class ParticipantStats {
   final List<String> opponentIds;
   final Map<String, int> opponentTotalPointsLookup;
   final Map<String, int> headToHeadLookup;
+
+  /// Points each opponent scored against this participant in their direct
+  /// match — the §5 head-to-head subtrahend. Distinct from
+  /// [headToHeadLookup], which carries a win-differential for
+  /// [TiebreakerCriterion.directComparison].
+  final Map<String, int> opponentScoreAgainstLookup;
+
+  /// Buchholz per schoch-swiss spec §5: opponent totals minus what each
+  /// opponent scored head-to-head. Mirrors `BuchholzCalculator.scoreFor`.
+  int get buchholz => opponentIds.fold(
+        0,
+        (s, id) =>
+            s +
+            (opponentTotalPointsLookup[id] ?? 0) -
+            (opponentScoreAgainstLookup[id] ?? 0),
+      );
 
   int get _buchholz =>
       opponentIds.fold(0, (s, id) => s + (opponentTotalPointsLookup[id] ?? 0));

@@ -141,6 +141,13 @@ TournamentMatchResult tournamentMatchResultFromFinalScore({
   );
 }
 
+/// Points credited to a Schoch (Swiss) bye player: a full win, worth 16
+/// (schoch-swiss spec §4.2). The credit lands in the bye player's total and
+/// thereby feeds the Buchholz of every real opponent who faced them. Pass it
+/// to [computeStandings] via `byeScoreForUnopposedParticipant` for a Schoch
+/// preliminary; other formats keep their own bye handling (default 0).
+const int schochByeScore = 16;
+
 class _Acc {
   int totalPoints = 0;
   int wins = 0;
@@ -148,6 +155,7 @@ class _Acc {
   int kubbsConceded = 0;
   final List<String> opponentIds = [];
   final Map<String, int> headToHead = {};
+  final Map<String, int> scoreAgainst = {};
 }
 
 /// Pure ranking function (FR-RANK-3/-4). Computes per-participant stats from
@@ -217,6 +225,10 @@ List<ParticipantStats> computeStandings({
       ..opponentIds.add(r.participantA);
     a.headToHead.update(r.participantB!, (v) => v + d, ifAbsent: () => d);
     b.headToHead.update(r.participantA, (v) => v - d, ifAbsent: () => -d);
+    a.scoreAgainst
+        .update(r.participantB!, (v) => v + pointsB, ifAbsent: () => pointsB);
+    b.scoreAgainst
+        .update(r.participantA, (v) => v + pointsA, ifAbsent: () => pointsA);
   }
 
   final totals = {for (final e in accs.entries) e.key: e.value.totalPoints};
@@ -233,6 +245,8 @@ List<ParticipantStats> computeStandings({
           for (final o in accs[id]!.opponentIds) o: totals[o] ?? 0,
         },
         headToHeadLookup: Map.unmodifiable(accs[id]!.headToHead),
+        opponentScoreAgainstLookup:
+            Map.unmodifiable(accs[id]!.scoreAgainst),
       ),
   ];
   return stats..sort(tiebreaker.compare);

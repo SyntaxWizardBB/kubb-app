@@ -1261,6 +1261,10 @@ class TournamentRepository implements TournamentRemote {
                   as Map<String, dynamic>?) ??
               const <String, dynamic>{})
           .map((k, v) => MapEntry(k, _asInt(v))),
+      opponentScoreAgainstLookup: ((row['opponent_score_against_lookup']
+                  as Map<String, dynamic>?) ??
+              const <String, dynamic>{})
+          .map((k, v) => MapEntry(k, _asInt(v))),
     );
   }
 
