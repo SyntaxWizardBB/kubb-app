@@ -231,6 +231,31 @@ List<ValidationFinding> validateStageGraph(
   return findings;
 }
 
+/// The seeding sources an organizer may pick for a stage of [stageType]
+/// (stage-seeding-spec §1, §6.3 Gating).
+///
+/// A root stage ([isRoot] true, i.e. no incoming edge) is the tournament's
+/// Vorrunde: there is no previous standing to seed from, so it offers only
+/// ELO, Zufall and Manuell. A follow stage ([isRoot] false, fed by an incoming
+/// edge — typically KO) additionally offers `aus Vorrunde`
+/// ([StageSeedingSource.fromPrevRanking]) as the first option.
+///
+/// [StageSeedingSource.asRouted] is the routing-internal default and is never
+/// surfaced as a pickable source. [stageType] is part of the contract for
+/// future per-type narrowing; today every type shares the same gating, driven
+/// purely by root-vs-follow — the same root detection V5 uses (an incoming
+/// edge makes a stage a follow stage).
+List<StageSeedingSource> seedingSourcesFor(
+  StageNodeType stageType, {
+  required bool isRoot,
+}) =>
+    <StageSeedingSource>[
+      if (!isRoot) StageSeedingSource.fromPrevRanking,
+      StageSeedingSource.fromElo,
+      StageSeedingSource.random,
+      StageSeedingSource.manual,
+    ];
+
 /// Detects a cycle over [edges] via Kahn's algorithm. Emits one `cycle` finding
 /// (with a participating node id) when a cycle remains. Returns whether a cycle
 /// was found.

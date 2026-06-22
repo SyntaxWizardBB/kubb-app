@@ -922,6 +922,12 @@ abstract class AppLocalizations {
   /// **'Manuell'**
   String get stageGraphSeedingManual;
 
+  /// Label for StageSeedingSource.random
+  ///
+  /// In de, this message translates to:
+  /// **'Zufall'**
+  String get stageGraphSeedingRandom;
+
   /// Label for StageSeedingSource.asRouted
   ///
   /// In de, this message translates to:

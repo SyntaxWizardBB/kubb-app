@@ -564,6 +564,8 @@
   "@stageGraphSeedingFromPrevRanking": { "description": "Label for StageSeedingSource.fromPrevRanking" },
   "stageGraphSeedingManual": "Manuell",
   "@stageGraphSeedingManual": { "description": "Label for StageSeedingSource.manual" },
+  "stageGraphSeedingRandom": "Zufall",
+  "@stageGraphSeedingRandom": { "description": "Label for StageSeedingSource.random" },
   "stageGraphSeedingAsRouted": "Wie geroutet",
   "@stageGraphSeedingAsRouted": { "description": "Label for StageSeedingSource.asRouted" },
   "stageGraphSeedingInOrderPreserving": "Reihenfolge erhalten",

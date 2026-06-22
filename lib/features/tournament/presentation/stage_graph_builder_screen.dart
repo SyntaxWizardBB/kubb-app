@@ -514,6 +514,8 @@ class _NodesSection extends StatelessWidget {
       builder: (_) => _NodeDialog(
         existingIds: existing,
         initial: node,
+        isFollowStage:
+            stageNodeHasIncomingEdge(state.graph.edges, node.id),
         availablePitches: state.availablePitches,
       ),
     );
@@ -1051,12 +1053,18 @@ class _NodeDialog extends StatefulWidget {
   const _NodeDialog({
     required this.existingIds,
     this.initial,
+    this.isFollowStage = false,
     this.availablePitches = const <int>[],
   });
 
   /// Ids already used by OTHER nodes — used for duplicate detection.
   final Set<String> existingIds;
   final StageNode? initial;
+
+  /// Whether this stage has an incoming edge (a follow stage, e.g. KO). Drives
+  /// the seeding-source gating: only follow stages offer `aus Vorrunde`
+  /// (stage-seeding-spec §1, §6.3). A fresh node is always a root.
+  final bool isFollowStage;
 
   /// Pitch numbers the organizer can assign per group (pool / round-robin
   /// nodes). Empty when no pitch plan is configured (standalone editor), in
@@ -1084,8 +1092,6 @@ class _NodeDialogState extends State<_NodeDialog> {
   KoMatchup _matchup = KoMatchup.seedHighVsLow;
   KoTiebreakMethod _tiebreak = KoTiebreakMethod.classicKingtossRemoval;
   List<MatchFormatSpec> _koRounds = const <MatchFormatSpec>[];
-  PoolGroupingStrategy _grouping = PoolGroupingStrategy.snake;
-  int _randomSeed = 0;
   // Per-group pitch assignment (group label → pitch numbers) for pool nodes.
   Map<String, List<int>> _groupPitchAssignment = const <String, List<int>>{};
   String? _idError;
@@ -1119,8 +1125,9 @@ class _NodeDialogState extends State<_NodeDialog> {
     _koRounds = fmts.isNotEmpty
         ? List<MatchFormatSpec>.of(fmts)
         : <MatchFormatSpec>[_defaultKoRound, _defaultKoRound, _defaultKoRound];
-    _grouping = poolGroupingStrategyFromConfig(config) ?? _grouping;
-    _randomSeed = poolRandomSeedFromConfig(config) ?? _randomSeed;
+    // Pool distribution is Snake-only now (ADR-0038): the stored strategy
+    // (incl. legacy `random`/`seeded`) is read but never reapplied — the dialog
+    // always writes snake — so old graphs fold back to snake on the next save.
     _groupPitchAssignment = <String, List<int>>{
       for (final e in poolGroupPitchAssignmentFromConfig(config).entries)
         e.key: List<int>.of(e.value),
@@ -1129,6 +1136,21 @@ class _NodeDialogState extends State<_NodeDialog> {
 
   static int _readInt(Object? value, int fallback) =>
       value is int ? value : fallback;
+
+  /// Seeding sources the organizer may pick for this stage, gated by whether it
+  /// is a root (Vorrunde) or a follow stage with an incoming edge (KO). Single
+  /// source of truth lives in kubb_domain (`seedingSourcesFor`).
+  List<StageSeedingSource> get _seedingSources =>
+      seedingSourcesFor(_type, isRoot: !widget.isFollowStage);
+
+  /// The dropdown value coerced into the gated option list. A stored source no
+  /// longer offered (e.g. `asRouted` default, or `fromPrevRanking` on a node
+  /// that lost its incoming edge) falls back to the first gated option so the
+  /// dropdown never asserts on a value absent from its items.
+  StageSeedingSource get _gatedSeeding {
+    final sources = _seedingSources;
+    return sources.contains(_seeding) ? _seeding : sources.first;
+  }
 
   /// Grows/shrinks the per-round format list to [count], seeding new rounds with
   /// the default. Keeps existing per-round edits.
@@ -1200,7 +1222,7 @@ class _NodeDialogState extends State<_NodeDialog> {
     final node = StageNode(
       id: id,
       type: _type,
-      seeding: _seeding,
+      seeding: _gatedSeeding,
       config: _buildConfig(),
     );
     Navigator.of(context).pop(node);
@@ -1214,10 +1236,8 @@ class _NodeDialogState extends State<_NodeDialog> {
         return writePoolNodeConfig(
           groupCount: _groupCount,
           qualifierCount: _qualifierCount,
-          strategy: _grouping,
-          // The seed only matters for the random strategy; drop it otherwise.
-          randomSeed:
-              _grouping == PoolGroupingStrategy.random ? _randomSeed : null,
+          // Snake is the only distribution the UI offers (ADR-0038).
+          strategy: PoolGroupingStrategy.snake,
           // Only keep assignments for groups that still exist (group count may
           // have shrunk after an assignment was made).
           groupPitchAssignment: <String, List<int>>{
@@ -1321,14 +1341,14 @@ class _NodeDialogState extends State<_NodeDialog> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<StageSeedingSource>(
-                      initialValue: _seeding,
+                      initialValue: _gatedSeeding,
                       isExpanded: true,
                       decoration: InputDecoration(
                         labelText: l.stageGraphFieldSeeding,
                         border: const OutlineInputBorder(),
                       ),
                       items: [
-                        for (final src in StageSeedingSource.values)
+                        for (final src in _seedingSources)
                           DropdownMenuItem<StageSeedingSource>(
                             value: src,
                             child: Text(stageSeedingSourceLabel(l, src)),
@@ -1405,38 +1425,22 @@ class _NodeDialogState extends State<_NodeDialog> {
           // P3.2: the recurring confusion — qualifiers are PER GROUP, not a
           // total across all groups. Spell it out at the field.
           ..add(_DialogHint(l.stageGraphConfigQualifierHint))
-          // P5.5: how participants are distributed across the groups.
+          // Distribution is Snake-only (ADR-0038): random groups come from the
+          // seeding source, not a second random switch. Shown read-only so the
+          // organizer still sees how the seeding is spread across the groups.
           ..add(Row(
             children: [
               Expanded(child: _fieldLabel(l.tournamentWizardPoolStrategyLabel)),
               InfoIconButton(
                 title: l.stageGraphGroupingInfoTitle,
-                message: _groupingInfo(l, _grouping),
+                message: l.stageGraphGroupingInfoSnake,
               ),
             ],
           ))
-          ..add(DropdownButtonFormField<PoolGroupingStrategy>(
-            initialValue: _grouping,
-            isExpanded: true,
+          ..add(InputDecorator(
             decoration: const InputDecoration(border: OutlineInputBorder()),
-            items: [
-              for (final s in PoolGroupingStrategy.values)
-                DropdownMenuItem<PoolGroupingStrategy>(
-                  value: s,
-                  child: Text(_groupingLabel(l, s)),
-                ),
-            ],
-            onChanged: (v) => setState(() => _grouping = v ?? _grouping),
+            child: Text(l.tournamentWizardPoolStrategySnake),
           ));
-        if (_grouping == PoolGroupingStrategy.random) {
-          fields.add(WizardNumberField(
-            label: l.stageGraphConfigRandomSeed,
-            value: _randomSeed,
-            min: 0,
-            max: 999999,
-            onChanged: (v) => setState(() => _randomSeed = v),
-          ));
-        }
         final pitchSection = _pitchAssignmentField(l);
         if (pitchSection != null) fields.add(pitchSection);
       case StageNodeType.schoch:
@@ -1644,20 +1648,6 @@ class _NodeDialogState extends State<_NodeDialog> {
           );
         },
       );
-
-  static String _groupingLabel(AppLocalizations l, PoolGroupingStrategy s) =>
-      switch (s) {
-        PoolGroupingStrategy.snake => l.tournamentWizardPoolStrategySnake,
-        PoolGroupingStrategy.seeded => l.tournamentWizardPoolStrategySeeded,
-        PoolGroupingStrategy.random => l.tournamentWizardPoolStrategyRandom,
-      };
-
-  static String _groupingInfo(AppLocalizations l, PoolGroupingStrategy s) =>
-      switch (s) {
-        PoolGroupingStrategy.snake => l.stageGraphGroupingInfoSnake,
-        PoolGroupingStrategy.seeded => l.stageGraphGroupingInfoSeeded,
-        PoolGroupingStrategy.random => l.stageGraphGroupingInfoRandom,
-      };
 }
 
 /// Selector kinds offered in the edge dialog (parallel to [EdgeSelector]).
@@ -2068,6 +2058,11 @@ Future<StageNode?> showStageNodeAddDialog(
       ),
     );
 
+/// Whether [nodeId] has an incoming edge in [edges] (a follow stage). A node
+/// with no incoming edge is a root (Vorrunde) — see `seedingSourcesFor`.
+bool stageNodeHasIncomingEdge(List<StageEdge> edges, String nodeId) =>
+    edges.any((e) => e.toNodeId == nodeId);
+
 /// Opens the existing edit-node dialog seeded with [initial] and returns the
 /// updated [StageNode], or `null` if cancelled. [existingIds] are the ids of
 /// the OTHER nodes (for duplicate detection); the id field stays locked on edit.
@@ -2075,6 +2070,7 @@ Future<StageNode?> showStageNodeEditDialog(
   BuildContext context, {
   required StageNode initial,
   required Set<String> existingIds,
+  bool isFollowStage = false,
   List<int> availablePitches = const <int>[],
 }) =>
     showDialog<StageNode>(
@@ -2082,6 +2078,7 @@ Future<StageNode?> showStageNodeEditDialog(
       builder: (_) => _NodeDialog(
         existingIds: existingIds,
         initial: initial,
+        isFollowStage: isFollowStage,
         availablePitches: availablePitches,
       ),
     );
@@ -2202,6 +2199,8 @@ String stageSeedingSourceLabel(AppLocalizations l, StageSeedingSource src) {
       return l.stageGraphSeedingFromPrevRanking;
     case StageSeedingSource.manual:
       return l.stageGraphSeedingManual;
+    case StageSeedingSource.random:
+      return l.stageGraphSeedingRandom;
     case StageSeedingSource.asRouted:
       return l.stageGraphSeedingAsRouted;
   }

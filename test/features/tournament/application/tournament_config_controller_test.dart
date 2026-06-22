@@ -116,7 +116,7 @@ void main() {
       expect(pool, isNotNull);
       // Exactly one pool holding all participants (user requirement).
       expect(pool!.groupCount, 1);
-      expect(pool.strategy, PoolGroupingStrategy.seeded);
+      expect(pool.strategy, PoolGroupingStrategy.snake);
       // No KO config yet => minimum-bracket fallback.
       expect(pool.qualifiersPerGroup, 2);
     });
@@ -146,7 +146,7 @@ void main() {
       expect(wire, isNotNull);
       expect(wire!['group_count'], 1);
       expect(wire['qualifiers_per_group'], 4);
-      expect(wire['strategy'], 'seeded');
+      expect(wire['strategy'], 'snake');
     });
 
     test('switching Schoch -> groupPhase seeds the default group config', () {

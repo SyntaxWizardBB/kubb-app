@@ -867,14 +867,13 @@ class TournamentConfigDraft {
   /// `qualifiersPerGroup` mirrors the KO qualifier count when known (all teams
   /// in the single pool advance into the KO bracket up to that cut), falling
   /// back to 2 — the minimum a KO bracket can hold — when the KO config has
-  /// not been chosen yet. `strategy` is `seeded` (block-fill), which is the
-  /// transparent, deterministic choice for a single pool and matches the
-  /// existing `seeded` examples persisted in the DB.
+  /// not been chosen yet. `strategy` is `snake`, the only distribution the UI
+  /// offers (ADR-0038); for a single pool it is order-preserving anyway.
   static PoolPhaseConfig schochSinglePoolConfig(KoPhaseConfig? koConfig) {
     return PoolPhaseConfig(
       groupCount: 1,
       qualifiersPerGroup: koConfig?.qualifierCount ?? 2,
-      strategy: PoolGroupingStrategy.seeded,
+      strategy: PoolGroupingStrategy.snake,
     );
   }
 

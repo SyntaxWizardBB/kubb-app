@@ -624,7 +624,7 @@ void main() {
       );
       expect(cfg.groupCount, 1);
       expect(cfg.qualifiersPerGroup, 8);
-      expect(cfg.strategy, PoolGroupingStrategy.seeded);
+      expect(cfg.strategy, PoolGroupingStrategy.snake);
     });
 
     test('falls back to 2 qualifiers when the KO config is unknown', () {

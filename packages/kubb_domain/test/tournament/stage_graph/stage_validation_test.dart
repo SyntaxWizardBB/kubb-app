@@ -335,4 +335,48 @@ void main() {
       expect(_errors(findings), isEmpty);
     });
   });
+
+  group('seedingSourcesFor', () {
+    test('a root (Vorrunde) offers ELO, Zufall and Manuell, never aus Vorrunde',
+        () {
+      final sources = seedingSourcesFor(StageNodeType.groupPhase, isRoot: true);
+      expect(
+        sources,
+        const <StageSeedingSource>[
+          StageSeedingSource.fromElo,
+          StageSeedingSource.random,
+          StageSeedingSource.manual,
+        ],
+      );
+      expect(sources, isNot(contains(StageSeedingSource.fromPrevRanking)));
+      expect(sources, isNot(contains(StageSeedingSource.asRouted)));
+    });
+
+    test('a follow stage with an incoming edge prepends aus Vorrunde', () {
+      final sources =
+          seedingSourcesFor(StageNodeType.singleElim, isRoot: false);
+      expect(
+        sources,
+        const <StageSeedingSource>[
+          StageSeedingSource.fromPrevRanking,
+          StageSeedingSource.fromElo,
+          StageSeedingSource.random,
+          StageSeedingSource.manual,
+        ],
+      );
+      expect(sources, isNot(contains(StageSeedingSource.asRouted)));
+    });
+
+    test('Schoch and round-robin Vorrunden also allow Manuell', () {
+      for (final type in <StageNodeType>[
+        StageNodeType.schoch,
+        StageNodeType.roundRobin,
+      ]) {
+        expect(
+          seedingSourcesFor(type, isRoot: true),
+          contains(StageSeedingSource.manual),
+        );
+      }
+    });
+  });
 }

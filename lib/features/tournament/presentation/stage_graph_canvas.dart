@@ -612,6 +612,7 @@ class _PositionedNodeCard extends ConsumerWidget {
       context,
       initial: node,
       existingIds: existing,
+      isFollowStage: stageNodeHasIncomingEdge(state.graph.edges, node.id),
       availablePitches: state.availablePitches,
     );
     if (updated != null) controller.updateNode(node.id, updated);

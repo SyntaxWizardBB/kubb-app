@@ -493,6 +493,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphSeedingManual => 'Manuell';
 
   @override
+  String get stageGraphSeedingRandom => 'Zufall';
+
+  @override
   String get stageGraphSeedingAsRouted => 'Wie geroutet';
 
   @override
