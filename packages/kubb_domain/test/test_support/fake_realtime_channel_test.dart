@@ -1,4 +1,3 @@
-import 'package:kubb_domain/src/ports/realtime_channel.dart';
 import 'package:kubb_domain/src/test_support/fake_realtime_channel.dart';
 import 'package:kubb_domain/src/values/realtime_change.dart';
 import 'package:test/test.dart';
