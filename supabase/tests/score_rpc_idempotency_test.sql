@@ -66,7 +66,7 @@ BEGIN
   INSERT INTO public.tournaments(
       id, created_by, display_name, team_size, min_participants,
       max_participants, format, scoring, match_format, status)
-    VALUES (v_tid, user_id, 'Idempotency-Test', 1, 2, 16,
+    VALUES (v_tid, user_id, 'Idempotency-Test-' || v_tid::text, 1, 2, 16,
             'round_robin', 'ekc', '{"format":"best_of_3"}'::jsonb,
             'live');
 

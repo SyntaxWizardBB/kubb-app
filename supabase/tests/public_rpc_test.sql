@@ -26,7 +26,7 @@
 
 BEGIN;
 
-SELECT plan(8);
+SELECT plan(14);
 
 -- ---------------------------------------------------------------------
 -- Helpers (kopiert aus public_rls_test.sql).
@@ -70,7 +70,7 @@ BEGIN
   INSERT INTO public.tournaments(
       id, created_by, display_name, team_size, min_participants,
       max_participants, format, scoring, match_format, status, public)
-    VALUES (v_tid, v_uid, 'Public-RPC-Test', 1, 2, 16,
+    VALUES (v_tid, v_uid, 'Public-RPC-Test-' || v_tid::text, 1, 2, 16,
             'round_robin', 'ekc', '{"format":"best_of_1"}'::jsonb,
             p_status, p_public);
 
@@ -119,6 +119,10 @@ BEGIN
            v_draft_tid   AS draft_tid,
            v_pub_match   AS pub_mid,
            v_non_pub_mid AS non_pub_mid;
+  -- Die Fixture-IDs werden in den anon-Cases gelesen, nachdem die Rolle
+  -- auf `anon` umgeschaltet wurde. Ohne dieses GRANT scheitert der Lese-
+  -- zugriff auf die postgres-eigene TEMP-Tabelle mit 42501.
+  GRANT SELECT ON _pubrpc_ctx TO anon;
 END $$;
 
 -- ---------------------------------------------------------------------
@@ -226,15 +230,15 @@ SELECT ok(
   ),
   'public_tournament_get: envelope-Text enthaelt keine user_id / created_by / email / audit_tail Keys');
 
-SELECT * FROM finish();
-
-ROLLBACK;
-
 -- =====================================================================
 -- Phase A / Block A3b: app_server_now() — server-authoritative clock.
 --
--- Independent BEGIN...ROLLBACK transaction so no schema/data changes
--- leak out of the test. Asserts:
+-- Läuft in derselben BEGIN...ROLLBACK-Transaktion wie der RPC-Block
+-- oben; das finale ROLLBACK verwirft alle Fixtures. Die folgenden Cases
+-- lesen nur Katalog-Metadaten und rufen die Funktion auf, legen also
+-- nichts an, das mit den Fixtures kollidieren könnte. Vor den Checks
+-- wird die Rolle zurück auf `postgres` gesetzt, da Case 8 oben auf
+-- `anon` umgeschaltet hat. Asserts:
 --   1. function exists with the expected signature.
 --   2. return type is timestamptz.
 --   3. volatility is STABLE (so it inlines but stays a clock source).
@@ -243,9 +247,7 @@ ROLLBACK;
 --   6. return value is within 1s of now() (UTC-consistent offset source).
 -- =====================================================================
 
-BEGIN;
-
-SELECT plan(6);
+SELECT _pubrpc_as_postgres();
 
 -- 1. Function exists with the zero-argument signature.
 SELECT has_function(

@@ -154,6 +154,9 @@ SELECT lives_ok(
   $$ SELECT public.tournament_checkin_participant('aaaaaaaa-0000-0000-0000-000000000001') $$,
   'status-gate live => ok: creator check-in of confirmed participant on a live tournament succeeds');
 
+-- Verifikations-Reads laufen direkt auf den Tabellen — als postgres, da der
+-- Caller-Kontext oben 'authenticated' war (kein Direct-Read-Grant).
+SET LOCAL ROLE postgres;
 SELECT isnt(
   (SELECT checked_in_at FROM public.tournament_participants
     WHERE id = 'aaaaaaaa-0000-0000-0000-000000000001'),
@@ -169,10 +172,12 @@ SELECT is(
 -- ====================================================================
 -- (f) idempotent re-check-in no-op: timestamp preserved, no extra audit.
 -- ====================================================================
+SELECT _ci_as('88888888-8888-8888-8888-888888888801'); -- creator
 SELECT lives_ok(
   $$ SELECT public.tournament_checkin_participant('aaaaaaaa-0000-0000-0000-000000000001') $$,
   'idempotent re-check-in does not raise');
 
+SET LOCAL ROLE postgres;
 SELECT is(
   (SELECT count(*)::int FROM public.tournament_audit_events
     WHERE kind = 'participant_checked_in'
@@ -182,10 +187,12 @@ SELECT is(
 -- ====================================================================
 -- (g) undo sets checked_in_at back to NULL + 1 audit event.
 -- ====================================================================
+SELECT _ci_as('88888888-8888-8888-8888-888888888801'); -- creator
 SELECT lives_ok(
   $$ SELECT public.tournament_undo_checkin('aaaaaaaa-0000-0000-0000-000000000001') $$,
   'undo check-in succeeds');
 
+SET LOCAL ROLE postgres;
 SELECT is(
   (SELECT checked_in_at FROM public.tournament_participants
     WHERE id = 'aaaaaaaa-0000-0000-0000-000000000001'),
@@ -201,10 +208,12 @@ SELECT is(
 -- ====================================================================
 -- (h) idempotent undo no-op on already-NULL: no extra audit.
 -- ====================================================================
+SELECT _ci_as('88888888-8888-8888-8888-888888888801'); -- creator
 SELECT lives_ok(
   $$ SELECT public.tournament_undo_checkin('aaaaaaaa-0000-0000-0000-000000000001') $$,
   'idempotent undo on already-NULL does not raise');
 
+SET LOCAL ROLE postgres;
 SELECT is(
   (SELECT count(*)::int FROM public.tournament_audit_events
     WHERE kind = 'participant_checkin_undone'
@@ -214,6 +223,7 @@ SELECT is(
 -- ====================================================================
 -- (k) waitlist participant => 22023.
 -- ====================================================================
+SELECT _ci_as('88888888-8888-8888-8888-888888888801'); -- creator
 SELECT throws_ok(
   $$ SELECT public.tournament_checkin_participant('aaaaaaaa-0000-0000-0000-000000000002') $$,
   '22023', NULL,

@@ -320,9 +320,9 @@ DECLARE
   i       int;
   v_target uuid;
 BEGIN
+  PERFORM _tts_as_pg();
   SELECT created_by INTO v_org FROM public.tournaments WHERE id = p_tid;
 
-  PERFORM _tts_as_pg();
   FOR i IN 1..p_n LOOP
     v_uid := _tts_participant_user(v_org, i);
     v_pid := ('00000000-0000-0000-0c0c-' || lpad(
@@ -393,10 +393,10 @@ BEGIN
   SELECT created_by, format INTO v_org, v_format
     FROM public.tournaments WHERE id = p_tid;
 
-  PERFORM _tts_as(v_org);
-
   -- draft -> registration_open (IST publish goes straight to open registration).
+  PERFORM _tts_as(v_org);
   PERFORM public.tournament_publish(p_tid);
+  PERFORM _tts_as_pg();
   SELECT status INTO v_status FROM public.tournaments WHERE id = p_tid;
   IF v_status <> 'registration_open' THEN
     RAISE EXCEPTION '_tts_start: expected registration_open after publish, got %', v_status;
@@ -404,7 +404,9 @@ BEGIN
 
   -- registration_open -> live (hybrid: delegates to tournament_start_pool_phase;
   -- swiss_then_ko also materialises the single-pool round-robin group phase).
+  PERFORM _tts_as(v_org);
   PERFORM public.tournament_start(p_tid);
+  PERFORM _tts_as_pg();
   SELECT status INTO v_status FROM public.tournaments WHERE id = p_tid;
   IF v_status <> 'live' THEN
     RAISE EXCEPTION '_tts_start: expected live after start, got %', v_status;
@@ -454,6 +456,8 @@ DECLARE
   v_count    int := 0;
   v_target_lost_once boolean;
 BEGIN
+  -- Lesen aus den RPC-only-Tabellen (kein authenticated-Grant) als postgres.
+  PERFORM _tts_as_pg();
   SELECT created_by, format INTO v_org, v_format FROM public.tournaments WHERE id = p_tid;
   v_target := _tts_target(p_tid);
 
@@ -478,6 +482,7 @@ BEGIN
        AND participant_b IS NOT NULL
      ORDER BY phase, round_number, coalesce(bracket_position, 0), match_number_in_round
   LOOP
+    PERFORM _tts_as_pg();
     SELECT user_id INTO v_ua FROM public.tournament_participants WHERE id = m.participant_a;
     SELECT user_id INTO v_ub FROM public.tournament_participants WHERE id = m.participant_b;
 
@@ -513,6 +518,7 @@ BEGIN
     v_count := v_count + 1;
   END LOOP;
 
+  PERFORM _tts_as_pg();
   RETURN v_count;
 END;
 $$;
@@ -919,6 +925,8 @@ DECLARE
   v_guard   int;
   v_open    int;
   v_steer   text;
+  v_ko_org  uuid;
+  v_ko_cfg  jsonb;
 BEGIN
   v_tid := _tts_seed_tournament(p_row, p_n, v_org);
   v_target := _tts_register_n(v_tid, p_n);
@@ -944,9 +952,14 @@ BEGIN
   END LOOP;
 
   -- ---- Enter the KO phase once the prelim is terminal. ----
-  PERFORM _tts_as((SELECT created_by FROM public.tournaments WHERE id = v_tid));
-  PERFORM public.tournament_start_ko_phase(v_tid,
-    (SELECT ko_config FROM public.tournaments WHERE id = v_tid));
+  -- created_by + ko_config als postgres lesen (kein authenticated-Grant), erst
+  -- danach in die Organisator-Rolle für den SECURITY-DEFINER-RPC wechseln.
+  PERFORM _tts_as_pg();
+  SELECT created_by, ko_config INTO v_ko_org, v_ko_cfg
+    FROM public.tournaments WHERE id = v_tid;
+  PERFORM _tts_as(v_ko_org);
+  PERFORM public.tournament_start_ko_phase(v_tid, v_ko_cfg);
+  PERFORM _tts_as_pg();
 
   -- ---- KO: play every bracket round to a terminal result. ----
   FOR v_guard IN 1..12 LOOP
@@ -1044,6 +1057,14 @@ BEGIN
   PERFORM _tts_edge_put('forfeit_points',        (v_res ->> 'forfeit_points'));
   PERFORM _tts_edge_put('forfeit_winner_is_present',
     CASE WHEN (v_res ->> 'winner_participant_id') = v_pa::text THEN 'yes' ELSE 'no' END);
+
+  -- Eine noch offene Gruppen-Partie für die Negativ-Guards merken. Als postgres
+  -- gelesen (RPC-only-Tabellen); die Guard-Cases unten laufen als authenticated
+  -- und können tournament_matches nicht direkt lesen.
+  PERFORM _tts_edge_put('forfeit_guard_mid',
+    (SELECT id::text FROM public.tournament_matches
+      WHERE tournament_id = v_tid AND phase = 'group' AND status = 'scheduled'
+      ORDER BY id LIMIT 1));
 END;
 $forfeit$;
 
@@ -1063,9 +1084,7 @@ SELECT set_config('request.jwt.claims',
 SELECT set_config('role', 'authenticated', true);
 SELECT throws_ok(
   $$ SELECT public.tournament_match_forfeit(
-       (SELECT id FROM public.tournament_matches
-         WHERE tournament_id = (SELECT id FROM public.tournaments WHERE created_by='0ed60001-0ed6-0000-0001-000000000001'::uuid)
-           AND phase='group' AND status='scheduled' ORDER BY id LIMIT 1),
+       _tts_edge_get('forfeit_guard_mid')::uuid,
        'X', 'Valid length reason but bad absent side here') $$,
   '22023',
   NULL,
@@ -1073,9 +1092,7 @@ SELECT throws_ok(
 
 SELECT throws_ok(
   $$ SELECT public.tournament_match_forfeit(
-       (SELECT id FROM public.tournament_matches
-         WHERE tournament_id = (SELECT id FROM public.tournaments WHERE created_by='0ed60001-0ed6-0000-0001-000000000001'::uuid)
-           AND phase='group' AND status='scheduled' ORDER BY id LIMIT 1),
+       _tts_edge_get('forfeit_guard_mid')::uuid,
        'A', 'short') $$,
   '22023',
   NULL,
@@ -1213,6 +1230,10 @@ BEGIN
   PERFORM _tts_edge_put('override_pair_updated',
     CASE WHEN v_pa = v_n1 AND v_pb = v_n2 THEN 'yes' ELSE 'no' END);
   PERFORM _tts_edge_put('override_match_id', v_mid::text);
+  -- Reserve-Paar für den Negativ-Guard merken (als postgres aufgelöst); der
+  -- throws_ok unten läuft als authenticated und darf nicht direkt lesen.
+  PERFORM _tts_edge_put('override_guard_n1', v_n1::text);
+  PERFORM _tts_edge_put('override_guard_n2', v_n2::text);
 END;
 $override$;
 
@@ -1226,8 +1247,8 @@ SELECT set_config('role', 'authenticated', true);
 SELECT throws_ok(
   format($$ SELECT public.tournament_organizer_override_pairing(%L::uuid, %L::uuid, %L::uuid, '') $$,
          _tts_edge_get('override_match_id'),
-         _tts_participant((SELECT id FROM public.tournaments WHERE created_by='0ed60003-0ed6-0000-0003-000000000001'::uuid), 3)::text,
-         _tts_participant((SELECT id FROM public.tournaments WHERE created_by='0ed60003-0ed6-0000-0003-000000000001'::uuid), 4)::text),
+         _tts_edge_get('override_guard_n1'),
+         _tts_edge_get('override_guard_n2')),
   '22023',
   NULL,
   'override guard: an empty reason raises MISSING_REASON (22023)');
@@ -1324,11 +1345,15 @@ BEGIN
   UPDATE public.tournament_round_schedule SET status = 'running'
    WHERE tournament_id = v_tid AND round_number = 1;
 
-  -- pause + idempotent second pause (paused_at must not advance).
+  -- pause + idempotent second pause (paused_at must not advance). RPCs als
+  -- Organisator, die Verifikations-Reads als postgres (RPC-only-Tabelle).
   PERFORM _tts_as(v_org);
   PERFORM public.tournament_pause(v_tid);
+  PERFORM _tts_as_pg();
   SELECT paused_at INTO v_paused_1 FROM public.tournament_round_schedule WHERE tournament_id = v_tid AND round_number = 1;
+  PERFORM _tts_as(v_org);
   PERFORM public.tournament_pause(v_tid);
+  PERFORM _tts_as_pg();
   SELECT paused_at INTO v_paused_2 FROM public.tournament_round_schedule WHERE tournament_id = v_tid AND round_number = 1;
   PERFORM _tts_edge_put('pause_set', CASE WHEN v_paused_1 IS NOT NULL THEN 'yes' ELSE 'no' END);
   PERFORM _tts_edge_put('pause_idempotent', CASE WHEN v_paused_1 = v_paused_2 THEN 'yes' ELSE 'no' END);
@@ -1341,27 +1366,36 @@ BEGIN
    WHERE tournament_id = v_tid AND round_number = 1;
   PERFORM _tts_as(v_org);
   PERFORM public.tournament_resume(v_tid);
+  PERFORM _tts_as_pg();
   SELECT * INTO v_s FROM public.tournament_round_schedule WHERE tournament_id = v_tid AND round_number = 1;
   PERFORM _tts_edge_put('resume_paused_at_cleared', CASE WHEN v_s.paused_at IS NULL THEN 'yes' ELSE 'no' END);
   PERFORM _tts_edge_put('resume_accum', v_s.paused_accum_seconds::text);
 
   -- resume while not paused is a no-op (accum unchanged).
+  PERFORM _tts_as(v_org);
   PERFORM public.tournament_resume(v_tid);
+  PERFORM _tts_as_pg();
   SELECT paused_accum_seconds INTO v_s.paused_accum_seconds
     FROM public.tournament_round_schedule WHERE tournament_id = v_tid AND round_number = 1;
   PERFORM _tts_edge_put('resume_noop_accum', v_s.paused_accum_seconds::text);
 
   -- skip_forward: status running, pause cleared (paused_at NULL, accum 0).
+  PERFORM _tts_as(v_org);
   PERFORM public.tournament_skip_forward(v_tid);
+  PERFORM _tts_as_pg();
   SELECT * INTO v_s FROM public.tournament_round_schedule WHERE tournament_id = v_tid AND round_number = 1;
   PERFORM _tts_edge_put('skipfwd_status', v_s.status);
   PERFORM _tts_edge_put('skipfwd_pause_cleared',
     CASE WHEN v_s.paused_at IS NULL AND v_s.paused_accum_seconds = 0 THEN 'yes' ELSE 'no' END);
 
   -- skip_back: re-call the window (status call).
+  PERFORM _tts_as(v_org);
   PERFORM public.tournament_skip_back(v_tid);
+  PERFORM _tts_as_pg();
   SELECT status INTO v_s.status FROM public.tournament_round_schedule WHERE tournament_id = v_tid AND round_number = 1;
   PERFORM _tts_edge_put('skipback_status', v_s.status);
+  -- Tournament-Id für den Non-Manager-Guard (läuft als authenticated) merken.
+  PERFORM _tts_edge_put('pause_guard_tid', v_tid::text);
 END;
 $control$;
 
@@ -1388,7 +1422,7 @@ SELECT set_config('request.jwt.claims',
 SELECT set_config('role', 'authenticated', true);
 SELECT throws_ok(
   format($$ SELECT public.tournament_pause(%L::uuid) $$,
-         (SELECT id FROM public.tournaments WHERE created_by='0ed60005-0ed6-0000-0005-000000000001'::uuid)),
+         _tts_edge_get('pause_guard_tid')),
   '42501',
   NULL,
   'pause guard: a non-manager caller raises 42501');

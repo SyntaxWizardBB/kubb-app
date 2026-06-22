@@ -9,8 +9,10 @@
 -- Kombinationen (LOC-Budget); deckt aber alle Distributionsmuster ab
 -- (gerade/ungerade Reihen, 2- und 4-Gruppen-Snake).
 --
--- BYE-Distribution wird separat fuer n=10/g=4 geprueft (Dart sortiert
--- kuerzere Gruppen ans Ende und padded mit NULL bis groupSize).
+-- Ungleiche Verteilung wird separat für n=10/g=4 geprüft: der Server
+-- persistiert KEINE BYE-Slots (Migration 20260615000009), die Gruppen
+-- bleiben ungleich gross [3,3,2,2] ohne NULL-Padding. Das Padding bis
+-- groupSize ist reine Dart-Präsentation, nicht Server-Vertrag.
 --
 -- Random-Strategy bewusst ausgeklammert: Dart nutzt `dart:math.Random`
 -- (linear congruential, Dart-SDK-spezifisch). Die plpgsql-Spiegelung
@@ -161,36 +163,35 @@ SELECT results_eq(
   'n=16/g=4 seeded: per-group ordered seeds');
 
 -- ---------------------------------------------------------------------
--- BYE-Distribution: n=10, g=4, snake. groupSize=ceil(10/4)=3, also
--- 4*3 - 10 = 2 BYE-Slots. Dart sortiert kuerzere Gruppen nach hinten
--- vor dem Padding → BYE-Slots landen in den letzten Labels (C, D).
--- Strukturell statt positionsfest geprueft (Dart `List.sort` ist nicht
--- garantiert stabil; nur die Mengen-Properties sind Vertrag).
+-- Uneven distribution: n=10, g=4, snake. Der Server persistiert KEINE
+-- BYE-Slots (Migration 20260615000009: BYE-Slots werden im Server nicht
+-- materialisiert, der CONTINUE-Pfad überspringt sie). Damit verteilt
+-- _tournament_compute_pools 10 reale participant_ids auf vier ungleich
+-- grosse Gruppen [3,3,2,2] — A=[1,8,9], B=[2,7,10], C=[3,6], D=[4,5] —
+-- ganz ohne NULL-Padding. Das NULL-Padding bis groupSize ist reine
+-- Dart-Präsentation und NICHT Teil des Server-Vertrags. Direkt gegen
+-- _tournament_compute_pools(n=10,g=4,snake) verifiziert.
 -- ---------------------------------------------------------------------
 
--- 1) Jeder Slot pro Gruppe ist genau groupSize (=3).
-SELECT is(
-  (SELECT bool_and(jsonb_array_length(
-     (SELECT jsonb_agg(elem) FROM jsonb_array_elements(_test_pools(10, 4, 'snake')) elem
-       WHERE elem->>'group_label' = gl)) = 3)
-     FROM unnest(ARRAY['A','B','C','D']) AS gl),
-  true, 'n=10/g=4 snake: jede Gruppe hat groupSize=3 Slots');
+-- 13) Gruppengrössen sind [3,3,2,2] in group_label-Ordnung.
+SELECT results_eq(
+  $$ SELECT group_label, array_length(seeds, 1)
+       FROM _test_pool_shape(_test_pools(10, 4, 'snake')) ORDER BY group_label $$,
+  $$ VALUES ('A', 3), ('B', 3), ('C', 2), ('D', 2) $$,
+  'n=10/g=4 snake: Gruppengrössen [3,3,2,2] (keine BYE-Auffüllung)');
 
--- 2) Genau 2 BYE-Slots gesamt.
+-- 14) Insgesamt 10 Zeilen — eine pro realem Teilnehmer, kein Padding.
+SELECT is(
+  (SELECT count(*)::int
+     FROM jsonb_array_elements(_test_pools(10, 4, 'snake')) AS elem),
+  10, 'n=10/g=4 snake: genau 10 Zeilen (eine je realem Teilnehmer)');
+
+-- 15) Keine einzige Zeile mit participant_id IS NULL (kein BYE-Slot).
 SELECT is(
   (SELECT count(*)::int
      FROM jsonb_array_elements(_test_pools(10, 4, 'snake')) AS elem
     WHERE (elem->>'participant_id') IS NULL),
-  2, 'n=10/g=4 snake: genau 2 BYE-Slots (groupCount*groupSize - n)');
-
--- 3) BYE-Slots ausschliesslich in den lexikografisch letzten Gruppen
---    (Dart: kuerzere Gruppen nach hinten → C/D). Erlaubt: {C,D},
---    {D,D} ist ausgeschlossen weil Snake max 1 BYE pro Gruppe schreibt.
-SELECT is(
-  (SELECT bool_and((elem->>'group_label') IN ('C','D'))
-     FROM jsonb_array_elements(_test_pools(10, 4, 'snake')) AS elem
-    WHERE (elem->>'participant_id') IS NULL),
-  true, 'n=10/g=4 snake: BYE-Slots nur in kuerzesten Gruppen (C, D)');
+  0, 'n=10/g=4 snake: keine BYE-Zeile (Server persistiert keine BYE-Slots)');
 
 -- ---------------------------------------------------------------------
 -- Validierungs-Pfad: qualifiersPerGroup > groupSize → ERRCODE 22023

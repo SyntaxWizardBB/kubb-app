@@ -73,7 +73,7 @@ BEGIN
   INSERT INTO public.tournaments(
       id, created_by, display_name, team_size, min_participants,
       max_participants, format, scoring, match_format, status, public)
-    VALUES (v_tid, v_uid, 'Public-RLS-Test', 1, 2, 16,
+    VALUES (v_tid, v_uid, 'Public-RLS-Test-' || v_tid::text, 1, 2, 16,
             'round_robin', 'ekc', '{"format":"best_of_1"}'::jsonb,
             'live', p_public);
 
@@ -103,6 +103,10 @@ BEGIN
   v_non_pub_tid := _pub_seed_tournament(false);
   CREATE TEMP TABLE _pub_ctx ON COMMIT DROP AS
     SELECT v_pub_tid AS pub_tid, v_non_pub_tid AS non_pub_tid;
+  -- Die Fixture-IDs werden in den anon-Cases gelesen, nachdem die Rolle
+  -- auf `anon` umgeschaltet wurde. Ohne dieses GRANT scheitert der Lese-
+  -- zugriff auf die postgres-eigene TEMP-Tabelle mit 42501.
+  GRANT SELECT ON _pub_ctx TO anon;
 END $$;
 
 -- ---------------------------------------------------------------------

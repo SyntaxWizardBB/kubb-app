@@ -178,13 +178,19 @@ UPDATE public.tournament_round_schedule
 SELECT _sc_as('63333333-3333-3333-3333-333333333302');
 
 SELECT public.tournament_pause('65555555-5555-5555-5555-555555555501');
+-- Verifikations-Reads laufen direkt auf der Tabelle — als postgres, da der
+-- Caller-Kontext oben 'referee' war (Direkt-Read trifft sonst die tournaments-
+-- RLS-Subquery → 42501). Vor dem nächsten RPC zurück auf referee.
+SET LOCAL ROLE postgres;
 SELECT ok(
   (SELECT paused_at IS NOT NULL FROM public.tournament_round_schedule
     WHERE tournament_id = '65555555-5555-5555-5555-555555555501'
       AND status = 'running'),
   'pause: paused_at is set on the active row');
 
+SELECT _sc_as('63333333-3333-3333-3333-333333333302');
 SELECT public.tournament_resume('65555555-5555-5555-5555-555555555501');
+SET LOCAL ROLE postgres;
 SELECT ok(
   (SELECT paused_at IS NULL FROM public.tournament_round_schedule
     WHERE tournament_id = '65555555-5555-5555-5555-555555555501'
@@ -202,7 +208,9 @@ CREATE TEMP TABLE _sc_accum_before_resume AS
   SELECT paused_accum_seconds AS v FROM public.tournament_round_schedule
    WHERE tournament_id = '65555555-5555-5555-5555-555555555501'
      AND status = 'running';
+SELECT _sc_as('63333333-3333-3333-3333-333333333302');
 SELECT public.tournament_resume('65555555-5555-5555-5555-555555555501');
+SET LOCAL ROLE postgres;
 SELECT is(
   (SELECT paused_accum_seconds FROM public.tournament_round_schedule
     WHERE tournament_id = '65555555-5555-5555-5555-555555555501'
@@ -227,6 +235,7 @@ UPDATE public.tournament_round_schedule
 SELECT _sc_as('63333333-3333-3333-3333-333333333302');
 
 SELECT public.tournament_resume('65555555-5555-5555-5555-555555555501');
+SET LOCAL ROLE postgres;
 SELECT cmp_ok(
   (SELECT paused_accum_seconds FROM public.tournament_round_schedule
     WHERE tournament_id = '65555555-5555-5555-5555-555555555501'
@@ -247,11 +256,15 @@ SELECT _sc_as('63333333-3333-3333-3333-333333333302');
 SELECT public.tournament_pause('65555555-5555-5555-5555-555555555501');
 
 -- Capture paused_at, pause again, assert paused_at is unchanged (idempotent).
+-- Snapshot-Read als postgres (Caller war referee), dann zurück für den RPC.
+SET LOCAL ROLE postgres;
 CREATE TEMP TABLE _sc_paused_before AS
   SELECT paused_at AS v FROM public.tournament_round_schedule
    WHERE tournament_id = '65555555-5555-5555-5555-555555555501'
      AND status = 'running';
+SELECT _sc_as('63333333-3333-3333-3333-333333333302');
 SELECT public.tournament_pause('65555555-5555-5555-5555-555555555501');
+SET LOCAL ROLE postgres;
 SELECT is(
   (SELECT paused_at FROM public.tournament_round_schedule
     WHERE tournament_id = '65555555-5555-5555-5555-555555555501'
@@ -271,6 +284,8 @@ UPDATE public.tournament_round_schedule
 SELECT _sc_as('63333333-3333-3333-3333-333333333302');
 
 SELECT public.tournament_skip_forward('65555555-5555-5555-5555-555555555501');
+-- Verifikations-Reads als postgres (Caller war referee).
+SET LOCAL ROLE postgres;
 SELECT is(
   (SELECT status FROM public.tournament_round_schedule
     WHERE tournament_id = '65555555-5555-5555-5555-555555555501'
@@ -298,6 +313,8 @@ UPDATE public.tournament_round_schedule
 SELECT _sc_as('63333333-3333-3333-3333-333333333302');
 
 SELECT public.tournament_skip_back('65555555-5555-5555-5555-555555555501');
+-- Verifikations-Reads als postgres (Caller war referee).
+SET LOCAL ROLE postgres;
 SELECT is(
   (SELECT status FROM public.tournament_round_schedule
     WHERE tournament_id = '65555555-5555-5555-5555-555555555501'

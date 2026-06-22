@@ -78,10 +78,12 @@ DECLARE
   v_tid uuid := gen_random_uuid();
 BEGIN
   PERFORM _tt_mk_user(p_creator);
+  -- display_name ist global unique (lower(btrim(...))) — pro Turnier eine
+  -- eigene Bezeichnung, sonst kollidieren mehrere Fixtures im selben Lauf.
   INSERT INTO public.tournaments(
       id, created_by, display_name, team_size, min_participants,
       max_participants, format, scoring, match_format, status)
-    VALUES (v_tid, p_creator, 'T8-Team-Cup', 3, 2, 32,
+    VALUES (v_tid, p_creator, 'T8-Team-Cup-' || substr(v_tid::text, 1, 8), 3, 2, 32,
             'round_robin_then_ko', 'ekc',
             '{"format":"best_of_1","sets_to_win":1}'::jsonb,
             'registration_open');
@@ -121,13 +123,19 @@ BEGIN
     VALUES (v_g2, v_team, 'Gast-2', v_creator);
 
   PERFORM _tt_as(v_creator);
-  v_part := public.tournament_register_team(
-    v_tid, v_team, _tt_roster(v_creator, v_g1, v_g2));
+  -- Return ist jsonb {waitlist, participant_id} (Waitlist-Modell
+  -- 20261201000040), kein bare uuid — participant_id extrahieren.
+  v_part := (public.tournament_register_team(
+    v_tid, v_team, _tt_roster(v_creator, v_g1, v_g2)))->>'participant_id';
 
   CREATE TEMP TABLE _tt_reg_ctx ON COMMIT DROP AS
     SELECT v_creator AS creator, v_tid AS tid, v_team AS team,
            v_g1 AS g1, v_g2 AS g2, v_part AS participant;
 END $$;
+
+-- Verifikations-Reads laufen direkt auf den Tabellen — als postgres, da der
+-- DO-Block oben zuletzt als 'authenticated' lief (kein Direct-Read-Grant).
+SET LOCAL ROLE postgres;
 
 SELECT is(
   (SELECT count(*)::int FROM public.tournament_roster_slots
@@ -168,6 +176,10 @@ BEGIN
            v_g1 AS g1, v_g2 AS g2, v_g3 AS g3;
 END $$;
 
+-- Postgres-owned temp ctx — die format()-Subqueries unten lesen es unter
+-- der 'authenticated'-Rolle (Pattern wie _t7_guard_ctx in team_rpcs_test).
+GRANT SELECT ON _tt_minreg_ctx TO authenticated;
+
 SELECT _tt_as((SELECT creator FROM _tt_minreg_ctx));
 SELECT throws_ok(
   format($$
@@ -182,13 +194,18 @@ SELECT throws_ok(
        (SELECT g1 FROM _tt_minreg_ctx),
        (SELECT g2 FROM _tt_minreg_ctx),
        (SELECT g3 FROM _tt_minreg_ctx)),
-  'P0001', 'MIN_ONE_REGISTERED',
-  'tournament_register_team: nur Gaeste → P0001 MIN_ONE_REGISTERED');
+  -- Waitlist-Modell (20261201000040): Guard wirft 22023 mit dem Token in HINT,
+  -- nicht mehr P0001 mit dem Token in der Message.
+  '22023', 'roster must contain at least one registered member',
+  'tournament_register_team: nur Gaeste → 22023 MIN_ONE_REGISTERED');
 
 -- ---------------------------------------------------------------------
 -- 3. tournament_register_team — Caller nicht Pool-Mitglied → 42501.
 -- ---------------------------------------------------------------------
 
+-- Fixture-Seeding (auth.users, teams) als postgres — vorige Tests endeten
+-- als 'authenticated' (transaction-lokales SET ROLE leakt sonst hinein).
+SET LOCAL ROLE postgres;
 DO $$
 DECLARE
   v_creator uuid := gen_random_uuid();
@@ -208,6 +225,9 @@ BEGIN
     SELECT v_outsider AS outsider, v_tid AS tid, v_team AS team,
            v_g1 AS g1, v_g2 AS g2;
 END $$;
+
+-- Postgres-owned temp ctx — Read unter 'authenticated' in den format()-Subqueries.
+GRANT SELECT ON _tt_outsider_ctx TO authenticated;
 
 SELECT _tt_as((SELECT outsider FROM _tt_outsider_ctx));
 SELECT throws_ok(
@@ -231,6 +251,8 @@ SELECT throws_ok(
 --    alter Slot replaced_at, neuer Slot, Audit-Event.
 -- ---------------------------------------------------------------------
 
+-- Fixture-Seeding als postgres (voriger Test endete als 'authenticated').
+SET LOCAL ROLE postgres;
 DO $$
 DECLARE
   v_creator uuid := gen_random_uuid();
@@ -251,15 +273,21 @@ BEGIN
   INSERT INTO public.team_memberships(team_id, user_id)
     VALUES (v_team, v_partner);
   PERFORM _tt_as(v_creator);
-  v_part := public.tournament_register_team(
-    v_tid, v_team, _tt_roster(v_creator, v_g1, v_g2));
-  -- Slot 2 (g1) wird durch v_partner ersetzt.
+  v_part := (public.tournament_register_team(
+    v_tid, v_team, _tt_roster(v_creator, v_g1, v_g2)))->>'participant_id';
+  -- Slot 2 (g1) wird durch v_partner ersetzt; slot_index ist smallint.
   PERFORM public.tournament_roster_replace(
-    v_part, 2, v_partner, NULL, 'Verletzung');
+    v_part, 2::smallint, v_partner, NULL::uuid, 'Verletzung');
   CREATE TEMP TABLE _tt_repl_ctx ON COMMIT DROP AS
     SELECT v_creator AS creator, v_partner AS partner, v_tid AS tid,
            v_team AS team, v_part AS participant;
 END $$;
+
+-- Grant + Verifikations-Reads als postgres (DO-Block endete als creator).
+-- _tt_repl_ctx wird später (Test 8, tournament_roster_list) auch unter
+-- 'authenticated' gelesen — Grant wie bei den übrigen ctx-Tabellen.
+SET LOCAL ROLE postgres;
+GRANT SELECT ON _tt_repl_ctx TO authenticated;
 
 SELECT is(
   (SELECT count(*)::int FROM public.tournament_roster_slots
@@ -277,18 +305,21 @@ SELECT is(
   (SELECT partner FROM _tt_repl_ctx),
   'tournament_roster_replace: neuer offener Slot referenziert Partner');
 
+-- Audit-Kind ist 'roster_slot_replaced' (Migration-Wert), nicht 'roster_replaced'.
 SELECT is(
   (SELECT count(*)::int FROM public.tournament_audit_events
     WHERE tournament_id = (SELECT tid FROM _tt_repl_ctx)
-      AND kind = 'roster_replaced'),
+      AND kind = 'roster_slot_replaced'),
   1,
-  'tournament_roster_replace: Audit-Event roster_replaced geschrieben');
+  'tournament_roster_replace: Audit-Event roster_slot_replaced geschrieben');
 
 -- ---------------------------------------------------------------------
 -- 5. tournament_roster_replace bei awaiting_results Match
 --    → P0001 ROSTER_LOCKED_DURING_MATCH (OD-M3-07).
 -- ---------------------------------------------------------------------
 
+-- Fixture-Seeding als postgres (voriger Test endete als 'authenticated').
+SET LOCAL ROLE postgres;
 DO $$
 DECLARE
   v_creator uuid := gen_random_uuid();
@@ -309,16 +340,18 @@ BEGIN
   PERFORM _tt_mk_user(v_partner);
   INSERT INTO public.team_memberships(team_id, user_id)
     VALUES (v_team, v_partner);
-  PERFORM _tt_as(v_creator);
-  v_part := public.tournament_register_team(
-    v_tid, v_team, _tt_roster(v_creator, v_g1, v_g2));
-  -- Opponent-Participant (Single, fuer Match-Pairing).
+  -- Opponent-Seeding (auth.users + participant) noch als postgres, BEVOR auf
+  -- den Caller-Kontext für die RPC umgeschaltet wird.
   PERFORM _tt_mk_user(v_opponent);
   INSERT INTO public.tournament_participants(
       id, tournament_id, user_id, registration_status, registered_at)
     VALUES (gen_random_uuid(), v_tid, v_opponent, 'confirmed', now())
     RETURNING id INTO v_opp_part;
-  -- Offenes Match in awaiting_results sperrt das Roster.
+  PERFORM _tt_as(v_creator);
+  v_part := (public.tournament_register_team(
+    v_tid, v_team, _tt_roster(v_creator, v_g1, v_g2)))->>'participant_id';
+  -- Offenes Match in awaiting_results sperrt das Roster (Insert als postgres).
+  PERFORM set_config('role', 'postgres', true);
   INSERT INTO public.tournament_matches(
       tournament_id, round_number, match_number_in_round,
       participant_a, participant_b, status)
@@ -328,20 +361,28 @@ BEGIN
            v_part AS participant;
 END $$;
 
+-- Grant als postgres (DO-Block endete als postgres).
+SET LOCAL ROLE postgres;
+-- Postgres-owned temp ctx — Read unter 'authenticated' in den format()-Subqueries.
+GRANT SELECT ON _tt_locked_ctx TO authenticated;
+
 SELECT _tt_as((SELECT creator FROM _tt_locked_ctx));
 SELECT throws_ok(
   format($$
     SELECT public.tournament_roster_replace(
-      %L::uuid, 2, %L::uuid, NULL, 'Versuch')
+      %L::uuid, 2::smallint, %L::uuid, NULL::uuid, 'Versuch')
   $$, (SELECT participant FROM _tt_locked_ctx),
        (SELECT partner FROM _tt_locked_ctx)),
-  'P0001', 'ROSTER_LOCKED_DURING_MATCH',
-  'tournament_roster_replace: awaiting_results-Match → P0001 ROSTER_LOCKED_DURING_MATCH');
+  -- Guard wirft 22023 mit Token in HINT (ROSTER_LOCKED_DURING_MATCH).
+  '22023', 'roster locked while match is awaiting results',
+  'tournament_roster_replace: awaiting_results-Match → 22023 ROSTER_LOCKED_DURING_MATCH');
 
 -- ---------------------------------------------------------------------
 -- 6. tournament_roster_replace nach finalized → P0001 ROSTER_LOCKED.
 -- ---------------------------------------------------------------------
 
+-- Fixture-Seeding als postgres (voriger Test endete als 'authenticated').
+SET LOCAL ROLE postgres;
 DO $$
 DECLARE
   v_creator uuid := gen_random_uuid();
@@ -361,24 +402,32 @@ BEGIN
   INSERT INTO public.team_memberships(team_id, user_id)
     VALUES (v_team, v_partner);
   PERFORM _tt_as(v_creator);
-  v_part := public.tournament_register_team(
-    v_tid, v_team, _tt_roster(v_creator, v_g1, v_g2));
-  -- Turnier in finalized → Roster permanent gesperrt (FR-TEAM-15).
+  v_part := (public.tournament_register_team(
+    v_tid, v_team, _tt_roster(v_creator, v_g1, v_g2)))->>'participant_id';
+  -- Turnier in finalized → Roster permanent gesperrt (FR-TEAM-15);
+  -- Status-UPDATE als postgres (Fixture-Manipulation, kein RPC-Pfad).
+  PERFORM set_config('role', 'postgres', true);
   UPDATE public.tournaments SET status = 'finalized' WHERE id = v_tid;
   CREATE TEMP TABLE _tt_fin_ctx ON COMMIT DROP AS
     SELECT v_creator AS creator, v_partner AS partner,
            v_part AS participant;
 END $$;
 
+-- Grant als postgres (DO-Block endete als postgres).
+SET LOCAL ROLE postgres;
+-- Postgres-owned temp ctx — Read unter 'authenticated' in den format()-Subqueries.
+GRANT SELECT ON _tt_fin_ctx TO authenticated;
+
 SELECT _tt_as((SELECT creator FROM _tt_fin_ctx));
 SELECT throws_ok(
   format($$
     SELECT public.tournament_roster_replace(
-      %L::uuid, 2, %L::uuid, NULL, 'Versuch')
+      %L::uuid, 2::smallint, %L::uuid, NULL::uuid, 'Versuch')
   $$, (SELECT participant FROM _tt_fin_ctx),
        (SELECT partner FROM _tt_fin_ctx)),
-  'P0001', 'ROSTER_LOCKED',
-  'tournament_roster_replace: nach finalized → P0001 ROSTER_LOCKED');
+  -- Guard wirft 22023 mit Token in HINT (ROSTER_LOCKED).
+  '22023', 'roster is locked',
+  'tournament_roster_replace: nach finalized → 22023 ROSTER_LOCKED');
 
 -- ---------------------------------------------------------------------
 -- 7. BR-5: User bereits in anderem Team desselben Turniers → 23P01.
@@ -386,6 +435,8 @@ SELECT throws_ok(
 --    in einem anderen participant hat → Trigger blockt.
 -- ---------------------------------------------------------------------
 
+-- Fixture-Seeding als postgres (voriger Test endete als 'authenticated').
+SET LOCAL ROLE postgres;
 DO $$
 DECLARE
   v_creatorA uuid := gen_random_uuid();
@@ -422,30 +473,44 @@ BEGIN
     v_tid, v_teamB, _tt_roster(v_shared, v_gB1, v_gB2));
   -- Team A registriert: Captain v_creatorA + 2 Gaeste; OK.
   PERFORM _tt_as(v_creatorA);
-  v_partA := public.tournament_register_team(
-    v_tid, v_teamA, _tt_roster(v_creatorA, v_gA1, v_gA2));
+  v_partA := (public.tournament_register_team(
+    v_tid, v_teamA, _tt_roster(v_creatorA, v_gA1, v_gA2)))->>'participant_id';
   CREATE TEMP TABLE _tt_br5_ctx ON COMMIT DROP AS
     SELECT v_creatorA AS creatorA, v_shared AS shared, v_partA AS partA;
 END $$;
+
+-- Grant als postgres (DO-Block endete als creatorA/authenticated).
+SET LOCAL ROLE postgres;
+-- Postgres-owned temp ctx — Read unter 'authenticated' in der format()-Subquery.
+GRANT SELECT ON _tt_br5_ctx TO authenticated;
 
 -- Versuch: in Team A Slot 2 v_shared eintragen → BR-5 Violation.
 SELECT _tt_as((SELECT creatorA FROM _tt_br5_ctx));
 SELECT throws_ok(
   format($$
     SELECT public.tournament_roster_replace(
-      %L::uuid, 2, %L::uuid, NULL, 'Cross-Team-Versuch')
+      %L::uuid, 2::smallint, %L::uuid, NULL::uuid, 'Cross-Team-Versuch')
   $$, (SELECT partA FROM _tt_br5_ctx),
        (SELECT shared FROM _tt_br5_ctx)),
   '23P01', NULL,
   'tournament_roster_replace: Spieler in anderem Team → 23P01 BR-5');
 
 -- ---------------------------------------------------------------------
--- 8. tournament_roster_list — liefert nur offene (replaced_at IS NULL) Slots.
+-- 8. tournament_roster_list — Slots des participants nach Replace.
 -- ---------------------------------------------------------------------
 
+-- Die RPC verlangt auth.uid() (nicht NULL) und liefert jsonb {slots: [...]} —
+-- inkl. History-Rows (kein replaced_at-Filter). Wir rufen sie mit dem
+-- participant_id (NULL würde früh NULL zurückgeben) als authenticated Caller
+-- und zählen die offenen Slots (replaced_at IS NULL) im Resultat.
+SELECT _tt_as((SELECT creator FROM _tt_repl_ctx));
 SELECT is(
-  (SELECT count(*)::int FROM public.tournament_roster_list(
-     (SELECT tid FROM _tt_repl_ctx), NULL)),
+  (SELECT count(*)::int
+     FROM jsonb_array_elements(
+            public.tournament_roster_list(
+              (SELECT tid FROM _tt_repl_ctx),
+              (SELECT participant FROM _tt_repl_ctx))->'slots') e
+    WHERE e->>'replaced_at' IS NULL),
   3,
   'tournament_roster_list: liefert 3 offene Slots nach Replace (kein History-Row)');
 
@@ -453,6 +518,8 @@ SELECT is(
 -- 9. Score-RPC — Single-Match Regression: user_id-Caller funktioniert.
 -- ---------------------------------------------------------------------
 
+-- Fixture-Seeding als postgres (voriger Test endete als 'authenticated').
+SET LOCAL ROLE postgres;
 DO $$
 DECLARE
   v_a uuid := gen_random_uuid();
@@ -479,6 +546,9 @@ BEGIN
     SELECT v_a AS a, v_mid AS mid;
 END $$;
 
+-- Postgres-owned temp ctx — Read unter 'authenticated' in der format()-Subquery.
+GRANT SELECT ON _tt_solo_ctx TO authenticated;
+
 SELECT _tt_as((SELECT a FROM _tt_solo_ctx));
 SELECT lives_ok(
   format($$
@@ -493,6 +563,8 @@ SELECT lives_ok(
 -- 10. Score-RPC — Team-Match: Pool-Mitglied (nicht Captain) → OK.
 -- ---------------------------------------------------------------------
 
+-- Fixture-Seeding als postgres (voriger Test endete als 'authenticated').
+SET LOCAL ROLE postgres;
 DO $$
 DECLARE
   v_captainA uuid := gen_random_uuid();
@@ -522,11 +594,13 @@ BEGIN
   INSERT INTO public.team_guest_players(id, team_id, display_name, added_by)
     VALUES (v_gB2, v_teamB, 'GB2', v_captainB);
   PERFORM _tt_as(v_captainA);
-  v_partA := public.tournament_register_team(
-    v_tid, v_teamA, _tt_roster(v_captainA, v_gA1, v_gA2));
+  v_partA := (public.tournament_register_team(
+    v_tid, v_teamA, _tt_roster(v_captainA, v_gA1, v_gA2)))->>'participant_id';
   PERFORM _tt_as(v_captainB);
-  v_partB := public.tournament_register_team(
-    v_tid, v_teamB, _tt_roster(v_captainB, v_gB1, v_gB2));
+  v_partB := (public.tournament_register_team(
+    v_tid, v_teamB, _tt_roster(v_captainB, v_gB1, v_gB2)))->>'participant_id';
+  -- Match-Insert ist Fixture-Manipulation → als postgres (kein RPC-Pfad).
+  PERFORM set_config('role', 'postgres', true);
   INSERT INTO public.tournament_matches(
       tournament_id, round_number, match_number_in_round,
       participant_a, participant_b, status)
@@ -536,6 +610,12 @@ BEGIN
     SELECT v_captainA AS captainA, v_memberA AS memberA,
            v_teamA AS teamA, v_mid AS mid;
 END $$;
+
+-- Grant als postgres (DO-Block endete als postgres).
+SET LOCAL ROLE postgres;
+-- Postgres-owned temp ctx — wird in Tests 10-12 mehrfach unter 'authenticated'
+-- gelesen (format()-Subqueries).
+GRANT SELECT ON _tt_team_score_ctx TO authenticated;
 
 SELECT _tt_as((SELECT memberA FROM _tt_team_score_ctx));
 SELECT lives_ok(
@@ -551,6 +631,9 @@ SELECT lives_ok(
 -- 11. Score-RPC — Team-Match: Non-Pool-Member → 42501.
 -- ---------------------------------------------------------------------
 
+-- Fixture-DO-Block macht Direct-Inserts (auth.users) — als postgres, da der
+-- vorige Test als 'authenticated' endete.
+SET LOCAL ROLE postgres;
 DO $$
 DECLARE
   v_outsider uuid := gen_random_uuid();
@@ -560,6 +643,9 @@ BEGIN
     SELECT v_outsider AS outsider,
            (SELECT mid FROM _tt_team_score_ctx) AS mid;
 END $$;
+
+-- Postgres-owned temp ctx — Read unter 'authenticated' in der format()-Subquery.
+GRANT SELECT ON _tt_score_ns_ctx TO authenticated;
 
 SELECT _tt_as((SELECT outsider FROM _tt_score_ns_ctx));
 SELECT throws_ok(
@@ -576,6 +662,8 @@ SELECT throws_ok(
 -- 12. Score-RPC — Pool-Mitglied wurde entfernt (removed_at gesetzt) → 42501.
 -- ---------------------------------------------------------------------
 
+-- Direct-UPDATE auf team_memberships — als postgres (Test 11 endete als outsider).
+SET LOCAL ROLE postgres;
 DO $$
 BEGIN
   -- Pool-Membership von memberA entziehen (FR: BR-9 erwartet active membership).

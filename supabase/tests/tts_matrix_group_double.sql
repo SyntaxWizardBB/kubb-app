@@ -331,9 +331,9 @@ DECLARE
   i       int;
   v_target uuid;
 BEGIN
+  PERFORM _tts_as_pg();
   SELECT created_by INTO v_org FROM public.tournaments WHERE id = p_tid;
 
-  PERFORM _tts_as_pg();
   FOR i IN 1..p_n LOOP
     v_uid := _tts_participant_user(v_org, i);
     v_pid := ('00000000-0000-0000-0c0c-' || lpad(
@@ -404,10 +404,10 @@ BEGIN
   SELECT created_by, format INTO v_org, v_format
     FROM public.tournaments WHERE id = p_tid;
 
-  PERFORM _tts_as(v_org);
-
   -- draft -> registration_open (IST publish goes straight to open registration).
+  PERFORM _tts_as(v_org);
   PERFORM public.tournament_publish(p_tid);
+  PERFORM _tts_as_pg();
   SELECT status INTO v_status FROM public.tournaments WHERE id = p_tid;
   IF v_status <> 'registration_open' THEN
     RAISE EXCEPTION '_tts_start: expected registration_open after publish, got %', v_status;
@@ -415,7 +415,9 @@ BEGIN
 
   -- registration_open -> live (hybrid: delegates to tournament_start_pool_phase;
   -- swiss_then_ko also materialises the single-pool round-robin group phase).
+  PERFORM _tts_as(v_org);
   PERFORM public.tournament_start(p_tid);
+  PERFORM _tts_as_pg();
   SELECT status INTO v_status FROM public.tournaments WHERE id = p_tid;
   IF v_status <> 'live' THEN
     RAISE EXCEPTION '_tts_start: expected live after start, got %', v_status;
@@ -465,6 +467,8 @@ DECLARE
   v_count    int := 0;
   v_target_lost_once boolean;
 BEGIN
+  -- Lesen aus den RPC-only-Tabellen (kein authenticated-Grant) als postgres.
+  PERFORM _tts_as_pg();
   SELECT created_by, format INTO v_org, v_format FROM public.tournaments WHERE id = p_tid;
   v_target := _tts_target(p_tid);
 
@@ -489,6 +493,7 @@ BEGIN
        AND participant_b IS NOT NULL
      ORDER BY phase, round_number, coalesce(bracket_position, 0), match_number_in_round
   LOOP
+    PERFORM _tts_as_pg();
     SELECT user_id INTO v_ua FROM public.tournament_participants WHERE id = m.participant_a;
     SELECT user_id INTO v_ub FROM public.tournament_participants WHERE id = m.participant_b;
 
@@ -524,6 +529,7 @@ BEGIN
     v_count := v_count + 1;
   END LOOP;
 
+  PERFORM _tts_as_pg();
   RETURN v_count;
 END;
 $$;
@@ -930,6 +936,8 @@ DECLARE
   v_guard   int;
   v_open    int;
   v_steer   text;
+  v_ko_org  uuid;
+  v_ko_cfg  jsonb;
 BEGIN
   v_tid := _tts_seed_tournament(p_row, p_n, v_org);
   v_target := _tts_register_n(v_tid, p_n);
@@ -955,9 +963,14 @@ BEGIN
   END LOOP;
 
   -- ---- Enter the KO phase once the prelim is terminal. ----
-  PERFORM _tts_as((SELECT created_by FROM public.tournaments WHERE id = v_tid));
-  PERFORM public.tournament_start_ko_phase(v_tid,
-    (SELECT ko_config FROM public.tournaments WHERE id = v_tid));
+  -- created_by + ko_config als postgres lesen (kein authenticated-Grant), erst
+  -- danach in die Organisator-Rolle für den SECURITY-DEFINER-RPC wechseln.
+  PERFORM _tts_as_pg();
+  SELECT created_by, ko_config INTO v_ko_org, v_ko_cfg
+    FROM public.tournaments WHERE id = v_tid;
+  PERFORM _tts_as(v_ko_org);
+  PERFORM public.tournament_start_ko_phase(v_tid, v_ko_cfg);
+  PERFORM _tts_as_pg();
 
   -- ---- KO: play every bracket round to a terminal result. ----
   FOR v_guard IN 1..12 LOOP
@@ -1175,9 +1188,9 @@ DECLARE
   i       int;
   v_target uuid;
 BEGIN
+  PERFORM _tts_as_pg();
   SELECT created_by INTO v_org FROM public.tournaments WHERE id = p_tid;
 
-  PERFORM _tts_as_pg();
   FOR i IN 1..p_n LOOP
     v_uid := _tts_participant_user(v_org, i);
     -- Injective per (tournament, idx): full md5 hex, 'c0c' marker + 12 hex tail.

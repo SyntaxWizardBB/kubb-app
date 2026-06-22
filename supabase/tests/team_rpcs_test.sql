@@ -107,6 +107,10 @@ BEGIN
     SELECT v_creator AS creator, v_team_id AS team_id;
 END $$;
 
+-- Verifikations-Reads laufen direkt auf den Tabellen — als postgres, da der
+-- DO-Block oben zuletzt auf 'authenticated' stand (kein Direct-Read-Grant).
+SELECT _team_su();
+
 SELECT is(
   (SELECT count(*)::int FROM public.team_memberships
     WHERE team_id = (SELECT team_id FROM _t7_create_ctx)
@@ -156,6 +160,9 @@ BEGIN
            v_team_id AS team_id, v_inv AS invitation_id;
 END $$;
 
+-- Direkt-Read auf team_invitations — als postgres (DO-Block endete als creator).
+SELECT _team_su();
+
 SELECT is(
   (SELECT state FROM public.team_invitations
     WHERE id = (SELECT invitation_id FROM _t7_inv_ctx)),
@@ -193,6 +200,9 @@ BEGIN
   PERFORM _team_as(v_ctx.invitee);
   PERFORM public.team_invitation_respond(v_ctx.invitation_id, true);
 END $$;
+
+-- Direkt-Read auf team_memberships — als postgres (DO-Block endete als invitee).
+SELECT _team_su();
 
 SELECT is(
   (SELECT count(*)::int FROM public.team_memberships
@@ -252,6 +262,9 @@ BEGIN
     SELECT v_team_id AS team_id, v_guest AS guest_id;
 END $$;
 
+-- Direkt-Read auf team_guest_players — als postgres (DO-Block endete als creator).
+SELECT _team_su();
+
 SELECT is(
   (SELECT display_name FROM public.team_guest_players
     WHERE id = (SELECT guest_id FROM _t7_guest_ctx)
@@ -282,6 +295,10 @@ BEGIN
   CREATE TEMP TABLE _t7_remove_ctx ON COMMIT DROP AS
     SELECT v_a AS a, v_b AS b, v_c AS c, v_team_id AS team_id;
 END $$;
+
+-- Direkt-Reads auf team_memberships/team_audit_events — als postgres
+-- (DO-Block endete als Aktor A).
+SELECT _team_su();
 
 SELECT isnt(
   (SELECT removed_at FROM public.team_memberships
@@ -356,6 +373,9 @@ BEGIN
     SELECT v_team_id AS team_id;
 END $$;
 
+-- Direkt-Read auf teams — als postgres (DO-Block endete als Solo-Mitglied).
+SELECT _team_su();
+
 SELECT isnt(
   (SELECT dissolved_at FROM public.teams
     WHERE id = (SELECT team_id FROM _t7_leave_ctx)),
@@ -418,6 +438,9 @@ BEGIN
   CREATE TEMP TABLE _t7_do_ctx ON COMMIT DROP AS
     SELECT v_team_id AS team_id, v_b AS b;
 END $$;
+
+-- Direkt-Read auf teams — als postgres (DO-Block endete als Aktor A).
+SELECT _team_su();
 
 SELECT isnt(
   (SELECT dissolved_at FROM public.teams

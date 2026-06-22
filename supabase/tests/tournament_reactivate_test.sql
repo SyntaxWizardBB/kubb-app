@@ -15,7 +15,7 @@
 
 BEGIN;
 
-SELECT plan(13);
+SELECT plan(12);
 
 CREATE OR REPLACE FUNCTION _ra_as(p_user uuid) RETURNS void
 LANGUAGE plpgsql AS $$

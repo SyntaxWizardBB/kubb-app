@@ -64,7 +64,7 @@ BEGIN
       max_participants, format, scoring, match_format,
       ko_config, status)
     VALUES (
-      v_tid, p_creator, 'T6-Test', 1, 2, 64,
+      v_tid, p_creator, 'T6-Test-' || v_tid::text, 1, 2, 64,
       'round_robin_then_ko', 'ekc', '{"format":"best_of_1"}'::jsonb,
       jsonb_build_object('with_third_place_playoff', p_with_third_place,
                          'qualifier_count', p_n),
