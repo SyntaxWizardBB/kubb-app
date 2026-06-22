@@ -152,6 +152,12 @@ final tournamentStandingsProvider =
   // the historical default.
   final detail = await remote.getTournamentDetail(id);
   final scoring = detail?.tournament.scoring ?? TournamentScoring.ekc;
+  // M1-T07: a Schoch bye is a full win worth 16 (schoch-swiss spec §4.2);
+  // every other format keeps its zero bye. When the detail is unavailable we
+  // fall back to round-robin's zero so behaviour is unchanged.
+  final byeScore = schochByeScoreFor(
+    detail?.tournament.format ?? TournamentFormat.roundRobin,
+  );
   final participantIds = <String>{
     for (final m in matches) ...[
       if (m.participantA != null) m.participantA!.value,
@@ -174,6 +180,7 @@ final tournamentStandingsProvider =
     participantIds: participantIds,
     results: results,
     scoring: scoring,
+    byeScoreForUnopposedParticipant: byeScore,
     tiebreaker: const TiebreakerChain(<TiebreakerCriterion>[
       TiebreakerCriterion.totalPoints,
       TiebreakerCriterion.wins,

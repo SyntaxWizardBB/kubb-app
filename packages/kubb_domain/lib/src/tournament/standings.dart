@@ -148,6 +148,23 @@ TournamentMatchResult tournamentMatchResultFromFinalScore({
 /// preliminary; other formats keep their own bye handling (default 0).
 const int schochByeScore = 16;
 
+/// Bye credit a [format] grants an unopposed participant when its standings
+/// are folded through [computeStandings]. Schoch (incl. its hybrid with a KO
+/// stage) scores a bye as a full win ([schochByeScore]); every other format
+/// keeps the historical zero. Pass the result straight into
+/// `byeScoreForUnopposedParticipant`.
+int schochByeScoreFor(TournamentFormat format) {
+  switch (format) {
+    case TournamentFormat.schoch:
+    case TournamentFormat.schochThenKo:
+      return schochByeScore;
+    case TournamentFormat.roundRobin:
+    case TournamentFormat.singleElimination:
+    case TournamentFormat.roundRobinThenKo:
+      return 0;
+  }
+}
+
 class _Acc {
   int totalPoints = 0;
   int wins = 0;

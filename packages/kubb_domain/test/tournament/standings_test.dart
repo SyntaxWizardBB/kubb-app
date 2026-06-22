@@ -358,4 +358,40 @@ void main() {
           lessThan(out.indexWhere((s) => s.participantId == 'b')));
     });
   });
+
+  group('schochByeScoreFor', () {
+    test('Schoch and its KO hybrid grant a full-win bye', () {
+      expect(schochByeScoreFor(TournamentFormat.schoch), equals(16));
+      expect(schochByeScoreFor(TournamentFormat.schochThenKo), equals(16));
+      expect(schochByeScoreFor(TournamentFormat.schoch), equals(schochByeScore));
+    });
+
+    test('every other format keeps the zero bye', () {
+      expect(schochByeScoreFor(TournamentFormat.roundRobin), equals(0));
+      expect(schochByeScoreFor(TournamentFormat.singleElimination), equals(0));
+      expect(schochByeScoreFor(TournamentFormat.roundRobinThenKo), equals(0));
+    });
+
+    test('feeds 16 into a Schoch bye player and 0 into a round-robin one', () {
+      final byes = [res('a', null, winFor(SetWinner.teamA))];
+      final schoch = computeStandings(
+        participantIds: ['a', 'b'],
+        results: byes,
+        tiebreaker: chain,
+        byeScoreForUnopposedParticipant:
+            schochByeScoreFor(TournamentFormat.schoch),
+      );
+      final roundRobin = computeStandings(
+        participantIds: ['a', 'b'],
+        results: byes,
+        tiebreaker: chain,
+        byeScoreForUnopposedParticipant:
+            schochByeScoreFor(TournamentFormat.roundRobin),
+      );
+      expect(schoch.firstWhere((s) => s.participantId == 'a').totalPoints,
+          equals(16));
+      expect(roundRobin.firstWhere((s) => s.participantId == 'a').totalPoints,
+          equals(0));
+    });
+  });
 }

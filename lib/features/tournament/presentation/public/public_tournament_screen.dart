@@ -338,6 +338,11 @@ class _StandingsTab extends StatelessWidget {
     final rows = computeStandings(
       participantIds: participantIds,
       results: results,
+      // M1-T07: a Schoch bye scores a full win (16, spec §4.2); other
+      // formats keep their zero bye. The spectator path mirrors the
+      // authenticated tournamentStandingsProvider.
+      byeScoreForUnopposedParticipant:
+          schochByeScoreFor(detail.tournament.format),
       // FF2 / Finding A: the anon public envelope (`public_tournament_get`)
       // now projects `tournaments.scoring`, so the spectator standings use
       // the real mode (classic vs ekc) — a classic tournament no longer
