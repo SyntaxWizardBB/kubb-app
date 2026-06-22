@@ -11,4 +11,6 @@ export 'stage_graph.dart';
 export 'stage_node.dart';
 export 'stage_node_config.dart';
 export 'stage_routing.dart';
+export 'stage_type_graph.dart';
+export 'stage_type_validation.dart';
 export 'stage_validation.dart';
