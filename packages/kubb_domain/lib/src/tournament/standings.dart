@@ -1,5 +1,6 @@
 import 'package:kubb_domain/src/ports/tournament_remote.dart';
 import 'package:kubb_domain/src/tournament/ekc_score.dart';
+import 'package:kubb_domain/src/tournament/stage_graph/stage_node.dart';
 import 'package:kubb_domain/src/tournament/tiebreaker.dart';
 import 'package:meta/meta.dart';
 
@@ -268,3 +269,23 @@ List<ParticipantStats> computeStandings({
   ];
   return stats..sort(tiebreaker.compare);
 }
+
+/// Standings for a preliminary [stage], ranked by the chain its type dictates
+/// (ADR-0035). The ranking is not user-configurable: [chainForStageType]
+/// derives it from `stage.type`, so a group phase never sees Buchholz and a
+/// Schoch ranks on the §5 Buchholz. A non-preliminary stage type throws via
+/// [chainForStageType]. Everything else delegates to [computeStandings].
+List<ParticipantStats> computeStageStandings({
+  required StageNode stage,
+  required List<String> participantIds,
+  required List<TournamentMatchResult> results,
+  TournamentScoring scoring = TournamentScoring.ekc,
+  int byeScoreForUnopposedParticipant = 0,
+}) =>
+    computeStandings(
+      participantIds: participantIds,
+      results: results,
+      tiebreaker: chainForStageType(stage.type),
+      scoring: scoring,
+      byeScoreForUnopposedParticipant: byeScoreForUnopposedParticipant,
+    );

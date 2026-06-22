@@ -394,4 +394,123 @@ void main() {
           equals(0));
     });
   });
+
+  group('computeStageStandings', () {
+    // A classic best-of-two sweep: [winner] takes both sets, carrying
+    // [kubbsByWinner] / [kubbsByLoser] basekubbs in the first set so the
+    // kubb-difference is controllable without affecting the set-win count.
+    MatchEkcScore sweep(
+      SetWinner winner, {
+      required int kubbsByWinner,
+      required int kubbsByLoser,
+    }) {
+      final kubbsA = winner == SetWinner.teamA ? kubbsByWinner : kubbsByLoser;
+      final kubbsB = winner == SetWinner.teamA ? kubbsByLoser : kubbsByWinner;
+      return MatchEkcScore([
+        SetScore(
+          basekubbsKnockedByA: kubbsA,
+          basekubbsKnockedByB: kubbsB,
+          winner: winner,
+        ),
+        SetScore(
+          basekubbsKnockedByA: 0,
+          basekubbsKnockedByB: 0,
+          winner: winner,
+        ),
+      ]);
+    }
+
+    StageNode stage(StageNodeType type) => StageNode(
+          id: 'stage-1',
+          type: type,
+          seeding: StageSeedingSource.asRouted,
+        );
+
+    test(
+        'group phase splits a point tie on kubb difference, ignoring the '
+        'direct match (vorrunde-spec §7.1)', () {
+      // Cyclic round-robin: a beats c, b beats a, c beats b. In classic
+      // scoring each wins one match -> all three tie on points. The direct
+      // a-vs-b match goes to b, yet a carries the larger kubb difference, so
+      // the group-phase chain (kubb_difference, no Buchholz, no direct
+      // comparison) must rank a ahead of b.
+      final out = computeStageStandings(
+        stage: stage(StageNodeType.groupPhase),
+        participantIds: ['a', 'b', 'c'],
+        scoring: TournamentScoring.classic,
+        results: [
+          res('a', 'c', sweep(SetWinner.teamA, kubbsByWinner: 12, kubbsByLoser: 0)),
+          res('b', 'a', sweep(SetWinner.teamA, kubbsByWinner: 6, kubbsByLoser: 5)),
+          res('c', 'b', sweep(SetWinner.teamA, kubbsByWinner: 6, kubbsByLoser: 0)),
+        ],
+      );
+
+      final a = out.firstWhere((s) => s.participantId == 'a');
+      final b = out.firstWhere((s) => s.participantId == 'b');
+      expect(a.totalPoints, equals(b.totalPoints));
+      // a lost the head-to-head to b but has the better kubb difference.
+      expect(a.headToHeadLookup['b'], lessThan(0));
+      expect(
+        a.kubbsScored - a.kubbsConceded,
+        greaterThan(b.kubbsScored - b.kubbsConceded),
+      );
+      // kubb difference wins: a ahead of b despite the lost direct match.
+      expect(out.indexWhere((s) => s.participantId == 'a'),
+          lessThan(out.indexWhere((s) => s.participantId == 'b')));
+    });
+
+    test('schoch splits a point tie on the §5 Buchholz (P1-1 carry-over)', () {
+      // a and b each finish on 4 points but faced different opponents. a beat
+      // strong c (6 pts), b beat weak d (0 pts). §5 Buchholz = sum over
+      // opponents of (opponent total - what they scored against me):
+      //   a: (c.total 6 - c's points vs a) + (loss opponent ...)
+      // We build it so a's opponents are clearly stronger than b's, so the
+      // Schoch chain (Buchholz second) ranks a ahead of b on Buchholz alone,
+      // with kubb difference deliberately favouring b to prove it is unused.
+      final results = [
+        // a beats c (strong), b beats d (weak): both +2 set-points.
+        res('a', 'c', sweep(SetWinner.teamA, kubbsByWinner: 4, kubbsByLoser: 0)),
+        res('b', 'd', sweep(SetWinner.teamA, kubbsByWinner: 12, kubbsByLoser: 0)),
+        // a beats e, b beats f: both +2 -> a and b tie at 4 set-points.
+        res('a', 'e', sweep(SetWinner.teamA, kubbsByWinner: 4, kubbsByLoser: 0)),
+        res('b', 'f', sweep(SetWinner.teamA, kubbsByWinner: 12, kubbsByLoser: 0)),
+        // c and e each win their other match so a's opponents have high
+        // totals; d and f lose theirs so b's opponents stay weak.
+        res('c', 'd', sweep(SetWinner.teamA, kubbsByWinner: 1, kubbsByLoser: 0)),
+        res('e', 'f', sweep(SetWinner.teamA, kubbsByWinner: 1, kubbsByLoser: 0)),
+      ];
+
+      final out = computeStageStandings(
+        stage: stage(StageNodeType.schoch),
+        participantIds: ['a', 'b', 'c', 'd', 'e', 'f'],
+        scoring: TournamentScoring.classic,
+        results: results,
+      );
+
+      final a = out.firstWhere((s) => s.participantId == 'a');
+      final b = out.firstWhere((s) => s.participantId == 'b');
+      expect(a.totalPoints, equals(b.totalPoints));
+      // a's opponents (c, e) are stronger than b's (d, f) -> higher §5 Buchholz.
+      expect(a.buchholz, greaterThan(b.buchholz));
+      // kubb difference favours b, proving the Schoch chain does not use it.
+      expect(
+        b.kubbsScored - b.kubbsConceded,
+        greaterThan(a.kubbsScored - a.kubbsConceded),
+      );
+      expect(out.indexWhere((s) => s.participantId == 'a'),
+          lessThan(out.indexWhere((s) => s.participantId == 'b')));
+    });
+
+    test('a non-preliminary stage type is rejected, not silently defaulted',
+        () {
+      expect(
+        () => computeStageStandings(
+          stage: stage(StageNodeType.singleElim),
+          participantIds: ['a', 'b'],
+          results: const [],
+        ),
+        throwsArgumentError,
+      );
+    });
+  });
 }

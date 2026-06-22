@@ -119,6 +119,8 @@ int _criterionCompare(
       // Physical decider; not resolvable from stats (decision §H). No-op so
       // the chain continues to the next criterion / the ID fallback.
       return 0;
+    case TiebreakerCriterion.buchholz:
+      return _buchholzSpec5(b).compareTo(_buchholzSpec5(a));
     case TiebreakerCriterion.buchholzMinusH2H:
       return _buchholzMinusH2H(b, a).compareTo(_buchholzMinusH2H(a, b));
     case TiebreakerCriterion.medianBuchholz:
@@ -133,6 +135,14 @@ int _criterionCompare(
 
 int _buchholz(ParticipantStats p) => p.opponentIds
     .fold(0, (s, id) => s + (p.opponentTotalPointsLookup[id] ?? 0));
+
+int _buchholzSpec5(ParticipantStats p) => p.opponentIds.fold(
+      0,
+      (s, id) =>
+          s +
+          (p.opponentTotalPointsLookup[id] ?? 0) -
+          (p.opponentScoreAgainstLookup[id] ?? 0),
+    );
 
 int _buchholzMinusH2H(ParticipantStats p, ParticipantStats other) =>
     _buchholz(p) - (p.headToHeadLookup[other.participantId] ?? 0);

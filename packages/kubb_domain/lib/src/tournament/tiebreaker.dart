@@ -1,10 +1,18 @@
 import 'dart:math';
 
+import 'package:kubb_domain/src/tournament/stage_graph/stage_node.dart';
 import 'package:meta/meta.dart';
 
 /// Tiebreaker criteria for tournament ranking (FR-RANK-4).
 enum TiebreakerCriterion {
   totalPoints,
+
+  /// Buchholz per schoch-swiss spec §5: opponent totals minus what each
+  /// opponent scored head-to-head (the kubb.live formula). This is the
+  /// Schoch criterion. Distinct from [buchholzMinusH2H], which is the older
+  /// naive variant and is NOT spec-conform (vorrunde-ranking-spec §6.2).
+  buchholz,
+
   buchholzMinusH2H,
   medianBuchholz,
   kubbDifference,
@@ -124,6 +132,8 @@ class TiebreakerChain {
       case TiebreakerCriterion.kubbDifference:
         return (b.kubbsScored - b.kubbsConceded)
             .compareTo(a.kubbsScored - a.kubbsConceded);
+      case TiebreakerCriterion.buchholz:
+        return b.buchholz.compareTo(a.buchholz);
       case TiebreakerCriterion.buchholzMinusH2H:
         return (b._buchholz - b._h2hSubtotalAgainst(a))
             .compareTo(a._buchholz - a._h2hSubtotalAgainst(b));
@@ -142,5 +152,45 @@ class TiebreakerChain {
         final draw = Random(seed).nextInt(2) == 0 ? -1 : 1;
         return a.participantId == ids[0] ? draw : -draw;
     }
+  }
+}
+
+/// The fixed preliminary-ranking chain for a stage [type] (ADR-0035,
+/// vorrunde-ranking-spec §6.2). Not user-configurable and not persisted: the
+/// chain follows from the stage type alone.
+///
+///  * [StageNodeType.groupPhase]: points -> kubb difference -> shoot-out.
+///    Buchholz is deliberately absent in every position (§4): everyone in a
+///    group faces the same opponents, so it never separates them.
+///  * [StageNodeType.schoch]: points -> §5 Buchholz -> shoot-out. Uses the
+///    kubb.live formula via [TiebreakerCriterion.buchholz], not the naive
+///    [TiebreakerCriterion.buchholzMinusH2H].
+///
+/// Any other stage type has no preliminary ranking and throws an
+/// [ArgumentError] rather than falling back to a silent default.
+TiebreakerChain chainForStageType(StageNodeType type) {
+  switch (type) {
+    case StageNodeType.groupPhase:
+      return const TiebreakerChain([
+        TiebreakerCriterion.totalPoints,
+        TiebreakerCriterion.kubbDifference,
+        TiebreakerCriterion.mightyFinisherShootout,
+      ]);
+    case StageNodeType.schoch:
+      return const TiebreakerChain([
+        TiebreakerCriterion.totalPoints,
+        TiebreakerCriterion.buchholz,
+        TiebreakerCriterion.mightyFinisherShootout,
+      ]);
+    case StageNodeType.roundRobin:
+    case StageNodeType.singleElim:
+    case StageNodeType.doubleElim:
+    case StageNodeType.consolation:
+    case StageNodeType.shootoutQuali:
+      throw ArgumentError.value(
+        type,
+        'type',
+        'no preliminary ranking chain for this stage type',
+      );
   }
 }
