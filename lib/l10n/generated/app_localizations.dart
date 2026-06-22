@@ -9663,6 +9663,270 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Wie lange nach einem Spiel pausiert wird, bevor das nächste auf demselben Feld startet, in Minuten. 0 heisst keine Pause.'**
   String get tournamentSetupInfoBreakBetweenBody;
+
+  /// AppBar eyebrow for the stage type graph (Ebene 2) editor
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen-Typ · Editor'**
+  String get stageTypeGraphEyebrow;
+
+  /// AppBar title for the stage type graph editor
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen-Typ modellieren'**
+  String get stageTypeGraphTitle;
+
+  /// Section header for the KO/Vorrunde category choice
+  ///
+  /// In de, this message translates to:
+  /// **'Kategorie'**
+  String get stageTypeGraphCategorySection;
+
+  /// Label for the knockout stage type category
+  ///
+  /// In de, this message translates to:
+  /// **'K.-o.'**
+  String get stageTypeGraphCategoryKo;
+
+  /// Label for the preliminary (Vorrunde) stage type category
+  ///
+  /// In de, this message translates to:
+  /// **'Vorrunde'**
+  String get stageTypeGraphCategoryVorrunde;
+
+  /// Explainer below the category choice
+  ///
+  /// In de, this message translates to:
+  /// **'K.-o.: Felder halbieren sich Richtung Final. Vorrunde: Felderzahl bleibt konstant, alle spielen weiter.'**
+  String get stageTypeGraphCategoryHint;
+
+  /// Label for the participant count field that seeds round 1
+  ///
+  /// In de, this message translates to:
+  /// **'Teilnehmer'**
+  String get stageTypeGraphParticipantsLabel;
+
+  /// Hint below the participant count field
+  ///
+  /// In de, this message translates to:
+  /// **'Erzeugt Runde 1 mit Feldern F1 … Fn.'**
+  String get stageTypeGraphParticipantsHint;
+
+  /// Button that resets the graph to a fresh round 1 for the chosen category and participant count
+  ///
+  /// In de, this message translates to:
+  /// **'Runde 1 neu erzeugen'**
+  String get stageTypeGraphRebuildRound1;
+
+  /// Section header for the list of type rounds
+  ///
+  /// In de, this message translates to:
+  /// **'Runden'**
+  String get stageTypeGraphRoundsSection;
+
+  /// Tooltip/label for adding a new type round
+  ///
+  /// In de, this message translates to:
+  /// **'Runde hinzufügen'**
+  String get stageTypeGraphAddRound;
+
+  /// Tooltip for deleting a type round
+  ///
+  /// In de, this message translates to:
+  /// **'Runde löschen'**
+  String get stageTypeGraphDeleteRound;
+
+  /// Title of a single round card
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {round}'**
+  String stageTypeGraphRoundTitle(String round);
+
+  /// Number of fields in a round
+  ///
+  /// In de, this message translates to:
+  /// **'{count} Felder'**
+  String stageTypeGraphRoundFieldCount(int count);
+
+  /// Label for the per-round field-count input
+  ///
+  /// In de, this message translates to:
+  /// **'Felderzahl'**
+  String get stageTypeGraphFieldCountLabel;
+
+  /// Hint about the constant plate count in a Vorrunde round
+  ///
+  /// In de, this message translates to:
+  /// **'Platten dieser Runde. In der Vorrunde bleibt die Zahl über alle Runden konstant.'**
+  String get stageTypeGraphPlatesHint;
+
+  /// Note explaining the AdvanceAll semantics of a Vorrunde round transition
+  ///
+  /// In de, this message translates to:
+  /// **'Alle weiter → nächste Runde. Die Neupaarung folgt der Vorrunden-Regel; einzelne Sieger-/Verlierer-Wege gibt es hier nicht.'**
+  String get stageTypeGraphAdvanceAllNote;
+
+  /// Label for the Vorrunde re-pairing rule choice
+  ///
+  /// In de, this message translates to:
+  /// **'Neupaarung'**
+  String get stageTypeGraphPairingRuleLabel;
+
+  /// Label for the group round-robin re-pairing rule
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppe (jeder gegen jeden)'**
+  String get stageTypeGraphPairingGroup;
+
+  /// Label for the Schoch/Monrad re-pairing rule
+  ///
+  /// In de, this message translates to:
+  /// **'Schoch (Auslosung nach Stand)'**
+  String get stageTypeGraphPairingSchoch;
+
+  /// Section header for the field edges of a KO type graph
+  ///
+  /// In de, this message translates to:
+  /// **'Feld-Verdrahtung'**
+  String get stageTypeGraphEdgesSection;
+
+  /// Tooltip/label for adding a field edge
+  ///
+  /// In de, this message translates to:
+  /// **'Kante hinzufügen'**
+  String get stageTypeGraphAddEdge;
+
+  /// Tooltip for deleting a field edge
+  ///
+  /// In de, this message translates to:
+  /// **'Kante löschen'**
+  String get stageTypeGraphDeleteEdge;
+
+  /// Explains why a Vorrunde shows no granular winner/loser edge options
+  ///
+  /// In de, this message translates to:
+  /// **'In der Vorrunde laufen alle weiter — es gibt keine einzelnen Sieger-/Verlierer-Kanten zum Anwählen.'**
+  String get stageTypeGraphEdgesVorrundeHint;
+
+  /// Empty state for the KO field edges list
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Kanten verdrahtet.'**
+  String get stageTypeGraphEdgesEmpty;
+
+  /// Label for the field edge kind dropdown (winner/loser/open)
+  ///
+  /// In de, this message translates to:
+  /// **'Art'**
+  String get stageTypeGraphEdgeKindLabel;
+
+  /// Winner field edge kind
+  ///
+  /// In de, this message translates to:
+  /// **'Sieger'**
+  String get stageTypeGraphEdgeWinner;
+
+  /// Loser field edge kind
+  ///
+  /// In de, this message translates to:
+  /// **'Verlierer'**
+  String get stageTypeGraphEdgeLoser;
+
+  /// Open field edge kind (deliberately undecided path)
+  ///
+  /// In de, this message translates to:
+  /// **'Offen lassen'**
+  String get stageTypeGraphEdgeOpen;
+
+  /// Warning shown when the open edge kind is selected
+  ///
+  /// In de, this message translates to:
+  /// **'Ein offener Weg ist erlaubt, wird aber als Warnung markiert.'**
+  String get stageTypeGraphEdgeOpenWarning;
+
+  /// Label for the source field of a field edge
+  ///
+  /// In de, this message translates to:
+  /// **'Von Feld'**
+  String get stageTypeGraphEdgeFromField;
+
+  /// Label for the target field of a field edge
+  ///
+  /// In de, this message translates to:
+  /// **'Zu Feld'**
+  String get stageTypeGraphEdgeToField;
+
+  /// Label for which side (winner/loser) of a field an open edge leaves dangling
+  ///
+  /// In de, this message translates to:
+  /// **'Seite'**
+  String get stageTypeGraphEdgeSlotLabel;
+
+  /// Section header for the live validation panel
+  ///
+  /// In de, this message translates to:
+  /// **'Prüfung'**
+  String get stageTypeGraphValidationSection;
+
+  /// Status chip when the type graph has no errors
+  ///
+  /// In de, this message translates to:
+  /// **'Speicherbar'**
+  String get stageTypeGraphSavable;
+
+  /// Status chip when the type graph has blocking errors
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht speicherbar'**
+  String get stageTypeGraphNotSavable;
+
+  /// Shown when validation produced no findings
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Befunde.'**
+  String get stageTypeGraphNoFindings;
+
+  /// Label for an error-severity finding
+  ///
+  /// In de, this message translates to:
+  /// **'Fehler'**
+  String get stageTypeGraphSeverityError;
+
+  /// Label for a warning-severity finding
+  ///
+  /// In de, this message translates to:
+  /// **'Warnung'**
+  String get stageTypeGraphSeverityWarning;
+
+  /// Save button for the stage type graph; disabled while there are errors
+  ///
+  /// In de, this message translates to:
+  /// **'Speichern'**
+  String get stageTypeGraphSave;
+
+  /// Cancel button in the stage type graph dialogs
+  ///
+  /// In de, this message translates to:
+  /// **'Abbrechen'**
+  String get stageTypeGraphCancel;
+
+  /// Confirm button in the stage type graph dialogs
+  ///
+  /// In de, this message translates to:
+  /// **'Übernehmen'**
+  String get stageTypeGraphConfirm;
+
+  /// Label for the per-round KO configuration block
+  ///
+  /// In de, this message translates to:
+  /// **'K.-o.-Konfiguration'**
+  String get stageTypeGraphKoConfigLabel;
+
+  /// Label for the per-round match format editor
+  ///
+  /// In de, this message translates to:
+  /// **'Match-Format dieser Runde'**
+  String get stageTypeGraphRoundFormatLabel;
 }
 
 class _AppLocalizationsDelegate

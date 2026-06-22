@@ -6775,5 +6775,187 @@
   "tournamentSetupInfoBreakBetweenBody": "Wie lange nach einem Spiel pausiert wird, bevor das nächste auf demselben Feld startet, in Minuten. 0 heisst keine Pause.",
   "@tournamentSetupInfoBreakBetweenBody": {
     "description": "Info dialog body for the break-between-matches field"
+  },
+  "stageTypeGraphEyebrow": "Stufen-Typ · Editor",
+  "@stageTypeGraphEyebrow": {
+    "description": "AppBar eyebrow for the stage type graph (Ebene 2) editor"
+  },
+  "stageTypeGraphTitle": "Stufen-Typ modellieren",
+  "@stageTypeGraphTitle": {
+    "description": "AppBar title for the stage type graph editor"
+  },
+  "stageTypeGraphCategorySection": "Kategorie",
+  "@stageTypeGraphCategorySection": {
+    "description": "Section header for the KO/Vorrunde category choice"
+  },
+  "stageTypeGraphCategoryKo": "K.-o.",
+  "@stageTypeGraphCategoryKo": {
+    "description": "Label for the knockout stage type category"
+  },
+  "stageTypeGraphCategoryVorrunde": "Vorrunde",
+  "@stageTypeGraphCategoryVorrunde": {
+    "description": "Label for the preliminary (Vorrunde) stage type category"
+  },
+  "stageTypeGraphCategoryHint": "K.-o.: Felder halbieren sich Richtung Final. Vorrunde: Felderzahl bleibt konstant, alle spielen weiter.",
+  "@stageTypeGraphCategoryHint": {
+    "description": "Explainer below the category choice"
+  },
+  "stageTypeGraphParticipantsLabel": "Teilnehmer",
+  "@stageTypeGraphParticipantsLabel": {
+    "description": "Label for the participant count field that seeds round 1"
+  },
+  "stageTypeGraphParticipantsHint": "Erzeugt Runde 1 mit Feldern F1 … Fn.",
+  "@stageTypeGraphParticipantsHint": {
+    "description": "Hint below the participant count field"
+  },
+  "stageTypeGraphRebuildRound1": "Runde 1 neu erzeugen",
+  "@stageTypeGraphRebuildRound1": {
+    "description": "Button that resets the graph to a fresh round 1 for the chosen category and participant count"
+  },
+  "stageTypeGraphRoundsSection": "Runden",
+  "@stageTypeGraphRoundsSection": {
+    "description": "Section header for the list of type rounds"
+  },
+  "stageTypeGraphAddRound": "Runde hinzufügen",
+  "@stageTypeGraphAddRound": {
+    "description": "Tooltip/label for adding a new type round"
+  },
+  "stageTypeGraphDeleteRound": "Runde löschen",
+  "@stageTypeGraphDeleteRound": {
+    "description": "Tooltip for deleting a type round"
+  },
+  "stageTypeGraphRoundTitle": "Runde {round}",
+  "@stageTypeGraphRoundTitle": {
+    "description": "Title of a single round card",
+    "placeholders": {
+      "round": { "type": "String" }
+    }
+  },
+  "stageTypeGraphRoundFieldCount": "{count} Felder",
+  "@stageTypeGraphRoundFieldCount": {
+    "description": "Number of fields in a round",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "stageTypeGraphFieldCountLabel": "Felderzahl",
+  "@stageTypeGraphFieldCountLabel": {
+    "description": "Label for the per-round field-count input"
+  },
+  "stageTypeGraphPlatesHint": "Platten dieser Runde. In der Vorrunde bleibt die Zahl über alle Runden konstant.",
+  "@stageTypeGraphPlatesHint": {
+    "description": "Hint about the constant plate count in a Vorrunde round"
+  },
+  "stageTypeGraphAdvanceAllNote": "Alle weiter → nächste Runde. Die Neupaarung folgt der Vorrunden-Regel; einzelne Sieger-/Verlierer-Wege gibt es hier nicht.",
+  "@stageTypeGraphAdvanceAllNote": {
+    "description": "Note explaining the AdvanceAll semantics of a Vorrunde round transition"
+  },
+  "stageTypeGraphPairingRuleLabel": "Neupaarung",
+  "@stageTypeGraphPairingRuleLabel": {
+    "description": "Label for the Vorrunde re-pairing rule choice"
+  },
+  "stageTypeGraphPairingGroup": "Gruppe (jeder gegen jeden)",
+  "@stageTypeGraphPairingGroup": {
+    "description": "Label for the group round-robin re-pairing rule"
+  },
+  "stageTypeGraphPairingSchoch": "Schoch (Auslosung nach Stand)",
+  "@stageTypeGraphPairingSchoch": {
+    "description": "Label for the Schoch/Monrad re-pairing rule"
+  },
+  "stageTypeGraphEdgesSection": "Feld-Verdrahtung",
+  "@stageTypeGraphEdgesSection": {
+    "description": "Section header for the field edges of a KO type graph"
+  },
+  "stageTypeGraphAddEdge": "Kante hinzufügen",
+  "@stageTypeGraphAddEdge": {
+    "description": "Tooltip/label for adding a field edge"
+  },
+  "stageTypeGraphDeleteEdge": "Kante löschen",
+  "@stageTypeGraphDeleteEdge": {
+    "description": "Tooltip for deleting a field edge"
+  },
+  "stageTypeGraphEdgesVorrundeHint": "In der Vorrunde laufen alle weiter — es gibt keine einzelnen Sieger-/Verlierer-Kanten zum Anwählen.",
+  "@stageTypeGraphEdgesVorrundeHint": {
+    "description": "Explains why a Vorrunde shows no granular winner/loser edge options"
+  },
+  "stageTypeGraphEdgesEmpty": "Noch keine Kanten verdrahtet.",
+  "@stageTypeGraphEdgesEmpty": {
+    "description": "Empty state for the KO field edges list"
+  },
+  "stageTypeGraphEdgeKindLabel": "Art",
+  "@stageTypeGraphEdgeKindLabel": {
+    "description": "Label for the field edge kind dropdown (winner/loser/open)"
+  },
+  "stageTypeGraphEdgeWinner": "Sieger",
+  "@stageTypeGraphEdgeWinner": {
+    "description": "Winner field edge kind"
+  },
+  "stageTypeGraphEdgeLoser": "Verlierer",
+  "@stageTypeGraphEdgeLoser": {
+    "description": "Loser field edge kind"
+  },
+  "stageTypeGraphEdgeOpen": "Offen lassen",
+  "@stageTypeGraphEdgeOpen": {
+    "description": "Open field edge kind (deliberately undecided path)"
+  },
+  "stageTypeGraphEdgeOpenWarning": "Ein offener Weg ist erlaubt, wird aber als Warnung markiert.",
+  "@stageTypeGraphEdgeOpenWarning": {
+    "description": "Warning shown when the open edge kind is selected"
+  },
+  "stageTypeGraphEdgeFromField": "Von Feld",
+  "@stageTypeGraphEdgeFromField": {
+    "description": "Label for the source field of a field edge"
+  },
+  "stageTypeGraphEdgeToField": "Zu Feld",
+  "@stageTypeGraphEdgeToField": {
+    "description": "Label for the target field of a field edge"
+  },
+  "stageTypeGraphEdgeSlotLabel": "Seite",
+  "@stageTypeGraphEdgeSlotLabel": {
+    "description": "Label for which side (winner/loser) of a field an open edge leaves dangling"
+  },
+  "stageTypeGraphValidationSection": "Prüfung",
+  "@stageTypeGraphValidationSection": {
+    "description": "Section header for the live validation panel"
+  },
+  "stageTypeGraphSavable": "Speicherbar",
+  "@stageTypeGraphSavable": {
+    "description": "Status chip when the type graph has no errors"
+  },
+  "stageTypeGraphNotSavable": "Nicht speicherbar",
+  "@stageTypeGraphNotSavable": {
+    "description": "Status chip when the type graph has blocking errors"
+  },
+  "stageTypeGraphNoFindings": "Keine Befunde.",
+  "@stageTypeGraphNoFindings": {
+    "description": "Shown when validation produced no findings"
+  },
+  "stageTypeGraphSeverityError": "Fehler",
+  "@stageTypeGraphSeverityError": {
+    "description": "Label for an error-severity finding"
+  },
+  "stageTypeGraphSeverityWarning": "Warnung",
+  "@stageTypeGraphSeverityWarning": {
+    "description": "Label for a warning-severity finding"
+  },
+  "stageTypeGraphSave": "Speichern",
+  "@stageTypeGraphSave": {
+    "description": "Save button for the stage type graph; disabled while there are errors"
+  },
+  "stageTypeGraphCancel": "Abbrechen",
+  "@stageTypeGraphCancel": {
+    "description": "Cancel button in the stage type graph dialogs"
+  },
+  "stageTypeGraphConfirm": "Übernehmen",
+  "@stageTypeGraphConfirm": {
+    "description": "Confirm button in the stage type graph dialogs"
+  },
+  "stageTypeGraphKoConfigLabel": "K.-o.-Konfiguration",
+  "@stageTypeGraphKoConfigLabel": {
+    "description": "Label for the per-round KO configuration block"
+  },
+  "stageTypeGraphRoundFormatLabel": "Match-Format dieser Runde",
+  "@stageTypeGraphRoundFormatLabel": {
+    "description": "Label for the per-round match format editor"
   }
 }

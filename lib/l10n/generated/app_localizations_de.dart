@@ -5400,4 +5400,146 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get tournamentSetupInfoBreakBetweenBody =>
       'Wie lange nach einem Spiel pausiert wird, bevor das nächste auf demselben Feld startet, in Minuten. 0 heisst keine Pause.';
+
+  @override
+  String get stageTypeGraphEyebrow => 'Stufen-Typ · Editor';
+
+  @override
+  String get stageTypeGraphTitle => 'Stufen-Typ modellieren';
+
+  @override
+  String get stageTypeGraphCategorySection => 'Kategorie';
+
+  @override
+  String get stageTypeGraphCategoryKo => 'K.-o.';
+
+  @override
+  String get stageTypeGraphCategoryVorrunde => 'Vorrunde';
+
+  @override
+  String get stageTypeGraphCategoryHint =>
+      'K.-o.: Felder halbieren sich Richtung Final. Vorrunde: Felderzahl bleibt konstant, alle spielen weiter.';
+
+  @override
+  String get stageTypeGraphParticipantsLabel => 'Teilnehmer';
+
+  @override
+  String get stageTypeGraphParticipantsHint =>
+      'Erzeugt Runde 1 mit Feldern F1 … Fn.';
+
+  @override
+  String get stageTypeGraphRebuildRound1 => 'Runde 1 neu erzeugen';
+
+  @override
+  String get stageTypeGraphRoundsSection => 'Runden';
+
+  @override
+  String get stageTypeGraphAddRound => 'Runde hinzufügen';
+
+  @override
+  String get stageTypeGraphDeleteRound => 'Runde löschen';
+
+  @override
+  String stageTypeGraphRoundTitle(String round) {
+    return 'Runde $round';
+  }
+
+  @override
+  String stageTypeGraphRoundFieldCount(int count) {
+    return '$count Felder';
+  }
+
+  @override
+  String get stageTypeGraphFieldCountLabel => 'Felderzahl';
+
+  @override
+  String get stageTypeGraphPlatesHint =>
+      'Platten dieser Runde. In der Vorrunde bleibt die Zahl über alle Runden konstant.';
+
+  @override
+  String get stageTypeGraphAdvanceAllNote =>
+      'Alle weiter → nächste Runde. Die Neupaarung folgt der Vorrunden-Regel; einzelne Sieger-/Verlierer-Wege gibt es hier nicht.';
+
+  @override
+  String get stageTypeGraphPairingRuleLabel => 'Neupaarung';
+
+  @override
+  String get stageTypeGraphPairingGroup => 'Gruppe (jeder gegen jeden)';
+
+  @override
+  String get stageTypeGraphPairingSchoch => 'Schoch (Auslosung nach Stand)';
+
+  @override
+  String get stageTypeGraphEdgesSection => 'Feld-Verdrahtung';
+
+  @override
+  String get stageTypeGraphAddEdge => 'Kante hinzufügen';
+
+  @override
+  String get stageTypeGraphDeleteEdge => 'Kante löschen';
+
+  @override
+  String get stageTypeGraphEdgesVorrundeHint =>
+      'In der Vorrunde laufen alle weiter — es gibt keine einzelnen Sieger-/Verlierer-Kanten zum Anwählen.';
+
+  @override
+  String get stageTypeGraphEdgesEmpty => 'Noch keine Kanten verdrahtet.';
+
+  @override
+  String get stageTypeGraphEdgeKindLabel => 'Art';
+
+  @override
+  String get stageTypeGraphEdgeWinner => 'Sieger';
+
+  @override
+  String get stageTypeGraphEdgeLoser => 'Verlierer';
+
+  @override
+  String get stageTypeGraphEdgeOpen => 'Offen lassen';
+
+  @override
+  String get stageTypeGraphEdgeOpenWarning =>
+      'Ein offener Weg ist erlaubt, wird aber als Warnung markiert.';
+
+  @override
+  String get stageTypeGraphEdgeFromField => 'Von Feld';
+
+  @override
+  String get stageTypeGraphEdgeToField => 'Zu Feld';
+
+  @override
+  String get stageTypeGraphEdgeSlotLabel => 'Seite';
+
+  @override
+  String get stageTypeGraphValidationSection => 'Prüfung';
+
+  @override
+  String get stageTypeGraphSavable => 'Speicherbar';
+
+  @override
+  String get stageTypeGraphNotSavable => 'Nicht speicherbar';
+
+  @override
+  String get stageTypeGraphNoFindings => 'Keine Befunde.';
+
+  @override
+  String get stageTypeGraphSeverityError => 'Fehler';
+
+  @override
+  String get stageTypeGraphSeverityWarning => 'Warnung';
+
+  @override
+  String get stageTypeGraphSave => 'Speichern';
+
+  @override
+  String get stageTypeGraphCancel => 'Abbrechen';
+
+  @override
+  String get stageTypeGraphConfirm => 'Übernehmen';
+
+  @override
+  String get stageTypeGraphKoConfigLabel => 'K.-o.-Konfiguration';
+
+  @override
+  String get stageTypeGraphRoundFormatLabel => 'Match-Format dieser Runde';
 }
