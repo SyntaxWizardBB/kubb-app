@@ -7061,5 +7061,49 @@
         "type": "int"
       }
     }
+  },
+  "tournamentWizardSummaryTypeRoundLabel": "Runde {round} ({fields} Felder)",
+  "@tournamentWizardSummaryTypeRoundLabel": {
+    "description": "M4 U12: Ebene-2 summary label for one type-graph round with its field count",
+    "placeholders": {
+      "round": { "type": "int" },
+      "fields": { "type": "int" }
+    }
+  },
+  "tournamentWizardSummaryTypeFields": "Felder: {ids}",
+  "@tournamentWizardSummaryTypeFields": {
+    "description": "M4 U12: lists the field ids of a type-graph round in the Ebene-2 summary",
+    "placeholders": {
+      "ids": { "type": "String" }
+    }
+  },
+  "tournamentWizardSummaryTypeFormat": "Bo{maxSets} · {minutes} Min.",
+  "@tournamentWizardSummaryTypeFormat": {
+    "description": "M4 U12: match-format short form for a type-graph round (best-of from max sets, time limit in minutes)",
+    "placeholders": {
+      "maxSets": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "tournamentWizardSummaryTypePairingRoundRobin": "Jeder gegen jeden",
+  "@tournamentWizardSummaryTypePairingRoundRobin": {
+    "description": "M4 U12: Vorrunde pairing rule label (group round-robin) in the Ebene-2 summary"
+  },
+  "tournamentWizardSummaryTypePairingSchoch": "Schoch / Monrad",
+  "@tournamentWizardSummaryTypePairingSchoch": {
+    "description": "M4 U12: Vorrunde pairing rule label (Schoch / Monrad) in the Ebene-2 summary"
+  },
+  "tournamentWizardSummaryTypeRoutingAdvanceAll": "Alle weiter",
+  "@tournamentWizardSummaryTypeRoutingAdvanceAll": {
+    "description": "M4 U12: routing label for a Vorrunde round where everyone advances to the next round"
+  },
+  "tournamentWizardSummaryTypeRouting": "Sieger {winners} · Verlierer {losers} · Offen {open}",
+  "@tournamentWizardSummaryTypeRouting": {
+    "description": "M4 U12: KO routing summary for a type-graph round (counts of winner, loser and open edges leaving the round)",
+    "placeholders": {
+      "winners": { "type": "int" },
+      "losers": { "type": "int" },
+      "open": { "type": "int" }
+    }
   }
 }

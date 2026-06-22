@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,8 @@ import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/core/ui/widgets/wizard_help.dart';
 import 'package:kubb_app/features/social/application/social_providers.dart';
 import 'package:kubb_app/features/tournament/application/stage_graph_builder_controller.dart';
+import 'package:kubb_app/features/tournament/application/stage_type_graph_builder_controller.dart'
+    show stageTypeGraphConfigKey;
 import 'package:kubb_app/features/tournament/application/tournament_config_controller.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart'
@@ -3066,7 +3069,7 @@ class _StepSummary extends ConsumerWidget {
     }
 
     final nodeRows = <_SummaryRowData>[
-      for (final n in graph.nodes)
+      for (final n in graph.nodes) ...[
         _SummaryRowData(
           n.id,
           <String>[
@@ -3075,6 +3078,11 @@ class _StepSummary extends ConsumerWidget {
             ?stageNodeConfigSummary(l10n, n),
           ].join(' · '),
         ),
+        // Ebene-2 drill-down: stages carrying a type graph add one row per
+        // round (fields, match-format, routing). Classic stages add nothing.
+        for (final r in stageTypeGraphSummaryRows(l10n, n))
+          _SummaryRowData(r.$1, r.$2),
+      ],
     ];
     final edgeRows = <_SummaryRowData>[
       for (final e in graph.edges)
@@ -3109,6 +3117,116 @@ class _StepSummary extends ConsumerWidget {
       const SizedBox(height: KubbTokens.space4),
     ];
   }
+}
+
+/// Ebene-2 drill-down rows for one stage node, one per round of its type graph
+/// (M4 U12). For a stage carrying `config['type_graph']`, the graph is
+/// reconstructed via [StageTypeGraph.fromJson] and summarized with
+/// [summarizeStageTypeGraph] — at setup time no matches are materialized yet, so
+/// progress is left awaiting and only the structure is shown. Each round becomes
+/// a `(label, value)` record: the label names the round with its field count,
+/// the value lists every field id, the round's match format, its KO
+/// tiebreak/matchup or Vorrunde pairing, and the routing leaving the round.
+///
+/// A classic stage (no `type_graph`) yields an empty list, so the Ebene-1 path
+/// stays untouched. A malformed graph is treated as classic — the summary never
+/// throws on a half-written config.
+List<(String, String)> stageTypeGraphSummaryRows(
+  AppLocalizations l,
+  StageNode node,
+) {
+  final raw = node.config[stageTypeGraphConfigKey];
+  if (raw is! Map) return const <(String, String)>[];
+  final StageTypeGraph graph;
+  try {
+    // `StageNode` stores config as an unmodifiable tree whose nested maps are
+    // `Map<Object?, Object?>`, while `fromJson` expects `Map<String, Object?>`.
+    // A JSON round-trip normalizes the whole tree to the shape the DB jsonb
+    // path produces, so the domain deserializer is reused verbatim.
+    final normalized = jsonDecode(jsonEncode(raw)) as Map<String, Object?>;
+    graph = StageTypeGraph.fromJson(normalized);
+  } on Object {
+    return const <(String, String)>[];
+  }
+
+  final summary = summarizeStageTypeGraph(graph);
+  return <(String, String)>[
+    for (final round in summary.rounds)
+      (
+        l.tournamentWizardSummaryTypeRoundLabel(
+          round.roundNumber,
+          round.fieldCount,
+        ),
+        _typeRoundValue(l, round),
+      ),
+  ];
+}
+
+String _typeRoundValue(AppLocalizations l, RoundSummary round) {
+  final parts = <String>[
+    l.tournamentWizardSummaryTypeFields(
+      round.fields.map((f) => f.field.id).join(', '),
+    ),
+    l.tournamentWizardSummaryTypeFormat(
+      round.matchFormat.maxSets,
+      round.matchFormat.timeLimitSeconds ~/ 60,
+    ),
+  ];
+
+  final matchup = round.koMatchup;
+  if (matchup != null) {
+    parts.add(switch (matchup) {
+      KoMatchup.seedHighVsLow => l.tournamentWizardKoMatchupHighLow,
+      KoMatchup.oneVsTwo => l.tournamentWizardKoMatchupOneTwo,
+    });
+  }
+  final tiebreak = round.koTiebreak;
+  if (tiebreak != null) {
+    parts.add(switch (tiebreak) {
+      KoTiebreakMethod.classicKingtossRemoval =>
+        l.tournamentWizardKoTiebreakClassic,
+      KoTiebreakMethod.mightyFinisherShootout =>
+        l.tournamentWizardKoTiebreakMighty,
+    });
+  }
+  final pairing = round.pairingRule;
+  if (pairing != null) {
+    parts.add(switch (pairing) {
+      TypePairingRule.groupRoundRobin =>
+        l.tournamentWizardSummaryTypePairingRoundRobin,
+      TypePairingRule.schochMonrad =>
+        l.tournamentWizardSummaryTypePairingSchoch,
+    });
+  }
+
+  if (round.advance != null) {
+    parts.add(l.tournamentWizardSummaryTypeRoutingAdvanceAll);
+  } else {
+    var winners = 0;
+    var losers = 0;
+    var open = 0;
+    for (final field in round.fields) {
+      for (final edge in field.outgoing) {
+        switch (edge) {
+          case WinnerEdge():
+            winners++;
+          case LoserEdge():
+            losers++;
+          case OpenEdge():
+            open++;
+          case AdvanceAllEdge():
+            break;
+        }
+      }
+    }
+    if (winners > 0 || losers > 0 || open > 0) {
+      parts.add(
+        l.tournamentWizardSummaryTypeRouting(winners, losers, open),
+      );
+    }
+  }
+
+  return parts.join(' · ');
 }
 
 /// Immutable (label, value) pair for one summary row.

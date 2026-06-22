@@ -10053,6 +10053,48 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{count, plural, one{Speicherbar · 1 Warnung} other{Speicherbar · {count} Warnungen}}'**
   String stageTypeGraphCanvasWarnings(int count);
+
+  /// M4 U12: Ebene-2 summary label for one type-graph round with its field count
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {round} ({fields} Felder)'**
+  String tournamentWizardSummaryTypeRoundLabel(int round, int fields);
+
+  /// M4 U12: lists the field ids of a type-graph round in the Ebene-2 summary
+  ///
+  /// In de, this message translates to:
+  /// **'Felder: {ids}'**
+  String tournamentWizardSummaryTypeFields(String ids);
+
+  /// M4 U12: match-format short form for a type-graph round (best-of from max sets, time limit in minutes)
+  ///
+  /// In de, this message translates to:
+  /// **'Bo{maxSets} · {minutes} Min.'**
+  String tournamentWizardSummaryTypeFormat(int maxSets, int minutes);
+
+  /// M4 U12: Vorrunde pairing rule label (group round-robin) in the Ebene-2 summary
+  ///
+  /// In de, this message translates to:
+  /// **'Jeder gegen jeden'**
+  String get tournamentWizardSummaryTypePairingRoundRobin;
+
+  /// M4 U12: Vorrunde pairing rule label (Schoch / Monrad) in the Ebene-2 summary
+  ///
+  /// In de, this message translates to:
+  /// **'Schoch / Monrad'**
+  String get tournamentWizardSummaryTypePairingSchoch;
+
+  /// M4 U12: routing label for a Vorrunde round where everyone advances to the next round
+  ///
+  /// In de, this message translates to:
+  /// **'Alle weiter'**
+  String get tournamentWizardSummaryTypeRoutingAdvanceAll;
+
+  /// M4 U12: KO routing summary for a type-graph round (counts of winner, loser and open edges leaving the round)
+  ///
+  /// In de, this message translates to:
+  /// **'Sieger {winners} · Verlierer {losers} · Offen {open}'**
+  String tournamentWizardSummaryTypeRouting(int winners, int losers, int open);
 }
 
 class _AppLocalizationsDelegate

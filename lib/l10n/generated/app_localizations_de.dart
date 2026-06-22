@@ -5630,4 +5630,34 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String tournamentWizardSummaryTypeRoundLabel(int round, int fields) {
+    return 'Runde $round ($fields Felder)';
+  }
+
+  @override
+  String tournamentWizardSummaryTypeFields(String ids) {
+    return 'Felder: $ids';
+  }
+
+  @override
+  String tournamentWizardSummaryTypeFormat(int maxSets, int minutes) {
+    return 'Bo$maxSets · $minutes Min.';
+  }
+
+  @override
+  String get tournamentWizardSummaryTypePairingRoundRobin =>
+      'Jeder gegen jeden';
+
+  @override
+  String get tournamentWizardSummaryTypePairingSchoch => 'Schoch / Monrad';
+
+  @override
+  String get tournamentWizardSummaryTypeRoutingAdvanceAll => 'Alle weiter';
+
+  @override
+  String tournamentWizardSummaryTypeRouting(int winners, int losers, int open) {
+    return 'Sieger $winners · Verlierer $losers · Offen $open';
+  }
 }
