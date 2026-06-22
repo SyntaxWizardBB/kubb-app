@@ -119,7 +119,9 @@ Aufwands; hier liegt das groesste Risiko (siehe `architecture.md` §10).
 Source-of-Truth-Entscheidung und das freigegebene Golden-Dataset sind die
 Quality-Gates §7.1-7.5 der Schoch-Spec nicht ausfuehrbar und M1 kann nicht starten.
 CP-2/CP-3 koennen als ADR-Bestaetigung durchlaufen, sofern der Owner den
-Empfehlungen (ADR-0037/0038, OFFEN-1: nur Runden + Paarungsregel) folgt.
+Empfehlungen (ADR-0037/0038) folgt. OFFEN-1 wurde vom Owner auf **Feld-Edges**
+entschieden (entgegen der Plan-Empfehlung "nur Runden + Paarungsregel") — siehe
+ADR-0039.
 
 ---
 

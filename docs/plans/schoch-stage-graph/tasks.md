@@ -25,7 +25,7 @@ Dependencies azyklisch (DAG).
 | **CP-1** (vor M2) | Vorrunden-Rangfolge fix-pro-Typ vs. user-konfigurierbar? | M2 | ADR-0035: fix |
 | **CP-2** (vor M3) | Seeding pro-Stufe vs. pro-Turnier (Root erbt Seedliste?)? | M3-Resolver | pro-Stufe via node.seeding, Root erbt turnier-weit |
 | **CP-3** (vor M4) | Datenmodell Ebene 2: jsonb-Sub-Graph vs. eigene Tabellen? | M4 | ADR-0037: jsonb |
-| **CP-3** (vor M4) | OFFEN-1 Vorrunde-Routing: Feld-Edges oder nur Runden + Paarungsregel? | M4 Vorrunde-Kategorie | nur Runden + Paarungsregel |
+| **CP-3** (vor M4) | OFFEN-1 Vorrunde-Routing: Feld-Edges oder nur Runden + Paarungsregel? | M4 Vorrunde-Kategorie | **Feld-Edges** (Owner-Entscheid, ADR-0039) |
 
 CP-0 und CP-1 sind echte BLOCKING-Eskalationen (sie bestimmen, wo der Code landet und
 ob die Gates ueberhaupt ausfuehrbar sind). CP-2/CP-3 koennen als ADR-Bestaetigung
@@ -447,7 +447,7 @@ Materializer fein gesplittet (Runden / Sieger-Advance / Verlierer-Route / R2+-Sc
 - **ID:** M4-T06 · **Type:** domain · **Agent:** coder-backend · **Size:** L · **Deps:** M4-T05
 - **Goal:** `stage_type_validation.dart`: fallend/konstant/offen/Kapazitaet, azyklisch (Kahn REUSE), `hasErrors` blockiert Speichern; `ValidationSeverity` REUSE.
 - **Akzeptanzkriterien:** Given M4-T05, When implementiert, Then gruen; bei Errors blockiert Speichern/Veroeffentlichen.
-- **Notes:** stage-spec §7; Vorbild validateStageGraph V1-V7. Owner CP-3 OFFEN-1 (Vorrunde: nur Runden + Paarungsregel, keine Feld-Edges) hier beruecksichtigen.
+- **Notes:** stage-spec §7; Vorbild validateStageGraph V1-V7. Owner CP-3 OFFEN-1: Vorrunde ALS Feld-Edges (ADR-0039) — AdvanceAllEdge je Runde, granulare Sieger/Verlierer-Edges in der Vorrunde unzulaessig.
 
 ### M4-T07 — Typ-Graph-Controller (ein Provider)
 - **ID:** M4-T07 · **Type:** frontend · **Agent:** coder-frontend · **Size:** M · **Deps:** M4-T02, M4-T06
