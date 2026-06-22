@@ -2,9 +2,9 @@
 
 **Status:** Verbindliche Implementierungs-Spezifikation & Quality-Gate.
 **Geltung:** Die Realtime-/Messaging-Schicht (`feat/realtime-sync`, P0–P6 bereits live).
-**Amendiert:** ADR-0029 — fügt **Kritikalitäts-Priorisierung** und eine **Catch-up-
-Refetch-Regel** hinzu (im ADR nicht vorgesehen) und fixt die in der Tiefenanalyse
-gefundenen Bugs.
+**Amendiert:** ADR-0029. Das **Design-Zielbild** (Push-für-kritisch, Delta-Catch-up,
+Freshness-Budget, Kritikalitäts-Stufe) ist in **ADR-0035** festgelegt; **diese Spec ist
+die v1-Korrektheits-Umsetzung + Bugfixes** auf dem Weg dorthin.
 **Ziel (unverändert):** Akku hält den ganzen Tag **UND** kritische Daten
 (Punktestand/Score) sind nie veraltet. Bei Konflikt hat **für kritische Daten die
 Frische Vorrang**, sonst der Akku.
@@ -39,23 +39,29 @@ Frische Vorrang**, sonst der Akku.
   `tournament_realtime_provider.dart:22`). Standings ist ein **first-class
   Realtime-Concern**.
 
-### 1.2 Catch-up-Refetch nach Reconnect/Resume (MUSS — ADR-Amendment)
+### 1.2 Catch-up nach Reconnect/Resume (MUSS — Zielbild ADR-0035)
 - **Heute (Bug 1 & 8, `realtime_channel_lifecycle.dart`):** CDC ist **forward-only** —
   Verpasstes wird nie nachgespielt; nach Reconnect/Resume gibt es **keinen garantierten
-  Refetch**. Screen bleibt veraltet bis zum nächsten Live-Event.
-- **Soll (verbindliche Regel):** Geht ein Kanal nach `errored`/`closed` wieder in
-  `joined` (= Reconnect), MUSS die zugehörige Read-Seite **genau einmal** refetchen
-  (`invalidateSelf` bzw. `refreshFromRemote`) — **nicht** aufs nächste Event warten.
-- **Zusätzlich beim App-`resume`:** alle wiederverbundenen Concerns refetchen **einmal**
-  (Teil der `resumed`-Sequenz nach Schritt „Kanäle reconnecten").
+  Catch-up**. Screen bleibt veraltet bis zum nächsten Live-Event.
+- **Soll — Delta-Catch-up (primär, ADR-0035 §3):** Jeder synchronisierte Concern
+  persistiert den zuletzt gesehenen **monotonen Cursor** (Lamport-Counter — auf
+  `tournament_matches` vorhanden). Geht ein Kanal nach `errored`/`closed` wieder in
+  `joined` (= Reconnect) ODER beim App-`resume`, holt der Client **das Delta seit
+  Cursor X** — exakt und billig, **nicht** aufs nächste Event warten.
+- **Fallback (kein Cursor verfügbar):** **genau einmal** voll refetchen
+  (`invalidateSelf`/`refreshFromRemote`).
 - Das deckt **beide** Lücken ab: Hintergrund→Resume **und** das ≥60-s-Error-Fenster.
+- **Hinweis:** Die v1-Umsetzung darf mit dem Voll-Refetch starten; der Delta-Cursor ist
+  die Ziel-Form (ADR-0035) und sollte folgen, sobald die v1-Fixes stehen.
 
 ---
 
-## 2. Kritikalitäts-Stufe (MUSS — ADR-Amendment)
+## 2. Kritikalitäts-Stufe (MUSS — formalisiert in ADR-0035)
 
-ADR-0029 behandelt alle Concerns gleich. Diese Spec führt **zwei Stufen** ein, als
-Eigenschaft am Concern/Channel-Key (nicht ad hoc am Call-Site):
+ADR-0029 behandelt alle Concerns gleich. **ADR-0035** führt **zwei Stufen** ein, als
+Eigenschaft am Concern/Channel-Key (nicht ad hoc am Call-Site). Die v1-Fixes setzen den
+**kritischen** Tier minimal um (Catch-up + Banner + engerer Fallback); **Push für den
+kritischen Tier** (ADR-0035 §2) ist eine spätere Phase:
 
 | Stufe | Concerns | Verhalten |
 |---|---|---|
@@ -140,8 +146,10 @@ kürzeren Kadenz; **Anmeldung** (normal) in 30 s.
 
 ## 7. Offene Punkte
 
-- **OFFEN-1 (Background-Frische):** Echte Out-of-app-Aktualität braucht den **Push-Pfad**
-  (heute Stub). Bis dahin ist Hintergrund-Frische = 0 (bewusst, ADR-0029). Kritische
-  Updates out-of-app = Folge-Arbeit (FCM/APNs data-message als Wake).
-- **OFFEN-2 (Kausale Konsistenz):** Im Fallback können gemischte Stände entstehen (alter
-  Score, neuer Status). Lamport-Epoche als Konsistenz-Constraint prüfen.
+- **Background-Frische (geplant, ADR-0035 §2):** Echte Out-of-app-Aktualität für den
+  kritischen Tier kommt über **Push** (FCM/APNs data-message als Wake) + Delta-Fetch.
+  Zielbild steht in ADR-0035; Umsetzung nach den v1-Fixes. Bis dahin gilt bewusst
+  ADR-0029 (Hintergrund-Frische = 0).
+- **OFFEN-1 (Kausale Konsistenz):** Im Fallback/Delta können gemischte Stände entstehen
+  (alter Score, neuer Status). Lamport-Epoche als Konsistenz-Constraint prüfen
+  (Detail-Design in ADR-0035-Umsetzung).
