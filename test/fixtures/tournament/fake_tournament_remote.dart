@@ -1084,6 +1084,28 @@ class FakeTournamentRemote implements TournamentRemote {
     return bracketFromMatches(rows);
   }
 
+  /// Records the last client-computed Schoch/Swiss pairing submission
+  /// (ADR-0039 §3 / ADR-0036). The fake only captures it — server-side
+  /// validation/materialisation is exercised by the SQL tests.
+  ({
+    TournamentId tournamentId,
+    String stageNodeId,
+    List<PlannedPairing> pairings,
+  })? lastPairStageRound;
+
+  @override
+  Future<void> pairStageRound({
+    required TournamentId tournamentId,
+    required String stageNodeId,
+    required List<PlannedPairing> pairings,
+  }) async {
+    lastPairStageRound = (
+      tournamentId: tournamentId,
+      stageNodeId: stageNodeId,
+      pairings: List<PlannedPairing>.unmodifiable(pairings),
+    );
+  }
+
   // ---------------------------------------------------------------------
   // Pool phase (M3.3 — T8). The Fake calls the pure-Dart [generatePools]
   // directly instead of mirroring a server RPC; that keeps the in-memory

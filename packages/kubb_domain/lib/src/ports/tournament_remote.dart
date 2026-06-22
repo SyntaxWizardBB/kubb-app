@@ -3,6 +3,7 @@ import 'package:kubb_domain/src/tournament/bracket_advance_event.dart';
 import 'package:kubb_domain/src/tournament/ekc_score.dart';
 import 'package:kubb_domain/src/tournament/king_outcome.dart';
 import 'package:kubb_domain/src/tournament/ko_phase.dart';
+import 'package:kubb_domain/src/tournament/pairing.dart';
 import 'package:kubb_domain/src/tournament/pool_group_standings.dart';
 import 'package:kubb_domain/src/tournament/pool_phase.dart';
 import 'package:kubb_domain/src/tournament/roster_slot.dart';
@@ -1061,6 +1062,25 @@ abstract interface class TournamentRemote {
   /// mapper, or hit a dedicated read RPC. The port exposes it as a
   /// convenience so the UI layer does not have to re-glue the parts.
   Future<Bracket> getBracket(TournamentId tournamentId);
+
+  // Schoch/Swiss next-round pairing (ADR-0039 §3, ADR-0036)
+
+  /// Submits the next Schoch/Swiss round of a stage. Per ADR-0036 the CLIENT
+  /// computes [pairings] in Dart (`SwissSystemStrategy.planRound`) from the
+  /// stage-scoped state; the server only validates and materialises them. The
+  /// pairing is bound to [stageNodeId] (`tournament_stages.node_id`) — the
+  /// server's repeat/bye checks and round-count run only over that stage, so
+  /// other stages can't leak into the validation. A [PlannedPairing] with a
+  /// null `participantB` is a bye. Backed by `tournament_pair_round` with
+  /// `p_strategy = 'swiss_system'` and `p_stage_node_id` set (migration
+  /// `20261301000000`). The server stays the security boundary: it re-checks
+  /// the setup gate, the live status and the stage being an active schoch
+  /// stage, and rejects an out-of-date pairing.
+  Future<void> pairStageRound({
+    required TournamentId tournamentId,
+    required String stageNodeId,
+    required List<PlannedPairing> pairings,
+  });
 
   // Roster (M3.2 — see architecture.md §3.5 and tournament-mode-spec
   // §3.6 FR-REG / §3.7 FR-TEAM)

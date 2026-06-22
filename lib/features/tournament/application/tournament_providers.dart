@@ -455,4 +455,68 @@ class TournamentActions {
         );
     _ref.invalidate(tournamentMatchDetailProvider(matchId));
   }
+
+  /// ADR-0039 §3 / ADR-0036: pairs the next Schoch/Swiss round of [stageNodeId].
+  ///
+  /// The CLIENT does the pairing in Dart — never the server. It reads the
+  /// stage-scoped match list, folds the finished matches of THIS stage into the
+  /// `SwissSystemStrategy` state (roster + prior results), computes the next
+  /// round via [SwissSystemStrategy.planRound], and submits the result to
+  /// `tournament_pair_round` (which only validates / materialises). Matches of
+  /// other stages and classic (null-stage) matches are filtered out so the
+  /// roster, the standings and the round number stay stage-scoped.
+  ///
+  /// The roster is the participants seen in [stageNodeId]'s matches in
+  /// first-seen order — that order is the stable start number `planRound` uses
+  /// as its final tiebreak (spec §6.1). Schoch byes count as a full win
+  /// (`schochByeScore`, spec §4.2). After the submit the stage match list +
+  /// detail are invalidated so the freshly paired round shows up.
+  Future<void> pairRound(TournamentId tournamentId, String stageNodeId) async {
+    final remote = _ref.read(tournamentRemoteProvider);
+    final stageMatches = [
+      for (final m in await remote.listMatchesForTournament(tournamentId))
+        if (m.stageNodeId == stageNodeId) m,
+    ];
+
+    final roster = <String>[];
+    var lastRound = 0;
+    final completed = <MatchResult>[];
+    for (final m in stageMatches) {
+      final a = m.participantA?.value;
+      if (a != null && !roster.contains(a)) roster.add(a);
+      final b = m.participantB?.value;
+      if (b != null && !roster.contains(b)) roster.add(b);
+      if (m.roundNumber > lastRound) lastRound = m.roundNumber;
+      if (!_isStandingsCounted(m)) continue;
+      completed.add(
+        MatchResult(
+          participantA: a!,
+          participantB: b,
+          pointsA: b == null ? schochByeScore : (m.finalScoreA ?? 0),
+          pointsB: m.finalScoreB ?? 0,
+          roundNumber: m.roundNumber,
+        ),
+      );
+    }
+
+    final planned = const SwissSystemStrategy().planRound(
+      participants: roster,
+      completedMatches: completed,
+      roundNumber: lastRound + 1,
+      tournamentId: tournamentId.value,
+    );
+
+    await remote.pairStageRound(
+      tournamentId: tournamentId,
+      stageNodeId: stageNodeId,
+      pairings: planned.pairings,
+    );
+    _ref
+      ..invalidate(tournamentMatchListProvider(tournamentId))
+      ..invalidate(tournamentDetailProvider(tournamentId));
+  }
+
+  bool _isStandingsCounted(TournamentMatchRef m) =>
+      m.status == TournamentMatchStatus.finalized ||
+      m.status == TournamentMatchStatus.overridden;
 }

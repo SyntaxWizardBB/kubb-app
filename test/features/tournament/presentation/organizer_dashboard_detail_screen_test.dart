@@ -507,4 +507,146 @@ void main() {
     expect(find.textContaining('strittig'), findsNothing);
     expect(find.textContaining(RegExp(r'\d+ offen')), findsNothing);
   });
+
+  // ─── M4 #4: Schoch/Swiss next-round pairing CTA (ADR-0039 §3) ──────────
+
+  testWidgets(
+      'shows the pair-next-round CTA and submits a client-computed, '
+      'stage-scoped pairing when the stage round is complete', (tester) async {
+    final stageMatches = _schochStageRound1();
+    final spy = _SwissPairSpy(stageMatches);
+    await _pump(
+      tester,
+      canAdminister: true,
+      remote: spy,
+      matches: stageMatches,
+      schedule: _schedule(RoundStatus.completed),
+      detail: _detail(setup: _schochSetup(rounds: 7)),
+    );
+
+    final cta = find.text('Nächste Runde paaren');
+    await tester.scrollUntilVisible(cta, 200);
+    expect(cta, findsOneWidget);
+
+    await tester.tap(cta);
+    await tester.pumpAndSettle();
+
+    final pair = spy.lastPairStageRound;
+    expect(pair, isNotNull, reason: 'the CTA must reach pairStageRound');
+    expect(pair!.stageNodeId, _schochNode);
+    // The submitted pairing equals what planRound computes locally — the
+    // CLIENT did the pairing, not the server.
+    expect(pair.pairings, equals(_expectedSchochRound2().pairings));
+  });
+
+  testWidgets('hides the CTA while the latest stage round is still open',
+      (tester) async {
+    final stageMatches = <TournamentMatchRef>[
+      ..._schochStageRound1(),
+      // A second round is partly open — not pairable yet.
+      _stageMatch(2, 1, status: TournamentMatchStatus.awaitingResults),
+    ];
+    await _pump(
+      tester,
+      canAdminister: true,
+      remote: _SwissPairSpy(stageMatches),
+      matches: stageMatches,
+      schedule: _schedule(RoundStatus.running),
+      detail: _detail(setup: _schochSetup(rounds: 7)),
+    );
+    expect(find.text('Nächste Runde paaren'), findsNothing);
+  });
+
+  testWidgets('hides the CTA once the last configured round is reached',
+      (tester) async {
+    // R = 1: round 1 complete IS the last round, so no further pairing.
+    final stageMatches = _schochStageRound1();
+    await _pump(
+      tester,
+      canAdminister: true,
+      remote: _SwissPairSpy(stageMatches),
+      matches: stageMatches,
+      schedule: _schedule(RoundStatus.completed),
+      detail: _detail(setup: _schochSetup(rounds: 1)),
+    );
+    expect(find.text('Nächste Runde paaren'), findsNothing);
+  });
+}
+
+const _schochNode = 'stage-schoch';
+
+Map<String, Object?> _schochSetup({required int rounds}) => <String, Object?>{
+      'pool_phase_config': <String, Object?>{'schoch_rounds': rounds},
+    };
+
+/// Stage-tagged finished round 1: P1>P2, P3>P4, P5=P6, P7>P8.
+List<TournamentMatchRef> _schochStageRound1() => <TournamentMatchRef>[
+      _stageMatch(1, 1),
+      _stageMatch(1, 2, a: 'P3', b: 'P4', scoreA: 12, scoreB: 11),
+      _stageMatch(1, 3, a: 'P5', b: 'P6', scoreA: 9, scoreB: 9),
+      _stageMatch(1, 4, a: 'P7', b: 'P8', scoreB: 2),
+    ];
+
+TournamentMatchRef _stageMatch(
+  int round,
+  int n, {
+  String a = 'P1',
+  String b = 'P2',
+  int scoreA = 16,
+  int scoreB = 5,
+  TournamentMatchStatus status = TournamentMatchStatus.finalized,
+}) =>
+    TournamentMatchRef(
+      matchId: TournamentMatchId('sm-$round-$n'),
+      tournamentId: _id,
+      roundNumber: round,
+      matchNumberInRound: n,
+      participantA: TournamentParticipantId(a),
+      participantB: TournamentParticipantId(b),
+      status: status,
+      consensusRound: 1,
+      finalScoreA: status == TournamentMatchStatus.finalized ? scoreA : null,
+      finalScoreB: status == TournamentMatchStatus.finalized ? scoreB : null,
+      stageNodeId: _schochNode,
+    );
+
+PlannedRound _expectedSchochRound2() {
+  final r1 = _schochStageRound1();
+  final roster = <String>[];
+  final completed = <MatchResult>[];
+  for (final m in r1) {
+    final a = m.participantA!.value;
+    final b = m.participantB!.value;
+    if (!roster.contains(a)) roster.add(a);
+    if (!roster.contains(b)) roster.add(b);
+    completed.add(
+      MatchResult(
+        participantA: a,
+        participantB: b,
+        pointsA: m.finalScoreA!,
+        pointsB: m.finalScoreB!,
+        roundNumber: m.roundNumber,
+      ),
+    );
+  }
+  return const SwissSystemStrategy().planRound(
+    participants: roster,
+    completedMatches: completed,
+    roundNumber: 2,
+    tournamentId: _id.value,
+  );
+}
+
+/// Serves a fixed stage-tagged match list and captures the pairing the CTA
+/// submits, so the test can assert the client-computed, stage-scoped payload.
+class _SwissPairSpy extends FakeTournamentRemote {
+  _SwissPairSpy(this._matches) : super(initialUser: const UserId('u1'));
+
+  final List<TournamentMatchRef> _matches;
+
+  @override
+  Future<List<TournamentMatchRef>> listMatchesForTournament(
+    TournamentId id,
+  ) async =>
+      _matches;
 }

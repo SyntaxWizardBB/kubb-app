@@ -189,6 +189,10 @@
   "@organizerMatchActionForfeit": {
     "description": "Per-match CTA on an open/awaiting match that opens the forfeit sheet"
   },
+  "organizerPairNextRound": "Nächste Runde paaren",
+  "@organizerPairNextRound": {
+    "description": "CTA on the organizer dashboard that triggers client-side Schoch/Swiss pairing of the next round"
+  },
   "stageGraphEyebrow": "Turnier-Baukasten",
   "@stageGraphEyebrow": {
     "description": "AppBar eyebrow for the stage-graph builder screen"

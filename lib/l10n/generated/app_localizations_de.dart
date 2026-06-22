@@ -162,6 +162,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get organizerMatchActionForfeit => 'Forfait';
 
   @override
+  String get organizerPairNextRound => 'Nächste Runde paaren';
+
+  @override
   String get stageGraphEyebrow => 'Turnier-Baukasten';
 
   @override

@@ -188,6 +188,14 @@ class _Body extends ConsumerWidget {
         // seeding route (manual seeding without a bracket) or the existing
         // startKoPhase mechanic (auto seeding) — no new server/RPC logic.
         _KoTransitionAction(tournamentId: tournamentId, detail: detail),
+        // Schoch/Swiss next-round CTA (ADR-0039 §3 / ADR-0036): surfaces once
+        // the active stage's latest round is complete and it is not the last
+        // round. The pairing is computed client-side and submitted stage-scoped.
+        _SwissPairAction(
+          tournamentId: tournamentId,
+          detail: detail,
+          matches: matches,
+        ),
         const SizedBox(height: KubbTokens.space5),
         Text(
           l.organizerDashboardRoundsTitle,
@@ -509,11 +517,9 @@ class _Badge extends StatelessWidget {
 /// The dashboard is a second entry-point into that controller, so it must run
 /// the same priming the seeding screen does before firing the RPC.
 ///
-/// Swiss/pairRound is intentionally NOT linked here (DOD-06): there is no
-/// existing client `pairRound` action/route in this branch (no
-/// `TournamentActions.pairRound`, no port/repository RPC), and B3 forbids new
-/// server/domain work, so inventing one is out of scope. The Swiss next-round
-/// pairing stays driven by the existing result-trigger materialisation.
+/// Swiss/Schoch next-round pairing is a SEPARATE CTA, [_SwissPairAction] (this
+/// handover is KO-only). The client computes that pairing in Dart and submits
+/// it stage-scoped — see [TournamentActions.pairRound] and ADR-0036/ADR-0039.
 class _KoTransitionAction extends ConsumerWidget {
   const _KoTransitionAction({
     required this.tournamentId,
@@ -587,6 +593,104 @@ class _KoTransitionAction extends ConsumerWidget {
         },
       ),
     );
+  }
+}
+
+/// Schoch/Swiss next-round CTA (ADR-0039 §3 / ADR-0036, M4 #4). Surfaces only
+/// while a Schoch stage is mid-flight: the tournament is `live`, the format is
+/// schoch-family, the stage's latest round is fully terminal
+/// (swiss_round_complete) and it is not yet the last configured round (`r < R`).
+/// On tap it fires [TournamentActions.pairRound], which RECHNET the pairing in
+/// Dart and submits it stage-scoped — the server only validates. Hidden when no
+/// stage-scoped Schoch round is ready to pair, so it never competes with the
+/// KO-handover CTA above.
+class _SwissPairAction extends ConsumerWidget {
+  const _SwissPairAction({
+    required this.tournamentId,
+    required this.detail,
+    required this.matches,
+  });
+
+  final TournamentId tournamentId;
+  final TournamentDetail detail;
+  final List<TournamentMatchRef> matches;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+
+    final stage = _pairableStage();
+    if (stage == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: KubbTokens.space3),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SizedBox(
+          height: KubbTokens.touchMin,
+          child: FilledButton.icon(
+            onPressed: () => ref
+                .read(tournamentActionsProvider)
+                .pairRound(tournamentId, stage)
+                .ignore(),
+            icon: const Icon(Icons.casino_outlined, size: 18),
+            label: Text(l.organizerPairNextRound),
+            style: FilledButton.styleFrom(
+              backgroundColor: tokens.accent,
+              foregroundColor: tokens.onAccent,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The stage node whose next Schoch round can be paired now, or null when
+  /// none qualifies. A stage qualifies when the tournament is live + a
+  /// schoch-family format, the stage has matches, its highest round is fully
+  /// terminal, and that round is below the configured count `R`.
+  String? _pairableStage() {
+    if (detail.tournament.status != TournamentStatus.live) return null;
+    final format = detail.tournament.format;
+    if (format != TournamentFormat.schoch &&
+        format != TournamentFormat.schochThenKo) {
+      return null;
+    }
+    final rounds = _schochRounds();
+
+    final byStage = <String, List<TournamentMatchRef>>{};
+    for (final m in matches) {
+      final node = m.stageNodeId;
+      if (node == null) continue;
+      (byStage[node] ??= <TournamentMatchRef>[]).add(m);
+    }
+
+    for (final entry in byStage.entries) {
+      final latest = entry.value
+          .map((m) => m.roundNumber)
+          .fold<int>(0, (a, b) => a > b ? a : b);
+      if (latest >= rounds) continue;
+      final latestComplete = entry.value
+          .where((m) => m.roundNumber == latest)
+          .every((m) =>
+              m.status == TournamentMatchStatus.finalized ||
+              m.status == TournamentMatchStatus.overridden ||
+              m.status == TournamentMatchStatus.voided);
+      if (latestComplete) return entry.key;
+    }
+    return null;
+  }
+
+  /// Configured Schoch round count `R`, read from
+  /// `setup.pool_phase_config.schoch_rounds`; falls back to the domain default.
+  int _schochRounds() {
+    final pool = detail.tournament.setup['pool_phase_config'];
+    if (pool is Map) {
+      final raw = pool['schoch_rounds'];
+      if (raw is int && raw >= 1) return raw;
+    }
+    return defaultSchochRounds;
   }
 }
 

@@ -663,6 +663,35 @@ class TournamentRepository implements TournamentRemote {
     );
   }
 
+  /// ADR-0039 §3 / ADR-0036: submits the client-computed next Schoch/Swiss
+  /// round to `tournament_pair_round` (migration `20261301000000`). The
+  /// pairing travels stage-scoped — `p_stage_node_id` set — so the server's
+  /// repeat/bye validation and round-count run only over [stageNodeId]'s
+  /// matches. A [PlannedPairing] with a null `participantB` is a bye and ships
+  /// as `participant_b: null` in the wire array.
+  @override
+  Future<void> pairStageRound({
+    required TournamentId tournamentId,
+    required String stageNodeId,
+    required List<PlannedPairing> pairings,
+  }) {
+    return _client.rpc<void>(
+      'tournament_pair_round',
+      params: <String, dynamic>{
+        'p_tournament_id': tournamentId.value,
+        'p_strategy': 'swiss_system',
+        'p_pairings': <Map<String, dynamic>>[
+          for (final p in pairings)
+            <String, dynamic>{
+              'participant_a': p.participantA,
+              'participant_b': p.participantB,
+            },
+        ],
+        'p_stage_node_id': stageNodeId,
+      },
+    );
+  }
+
   /// Calls `tournament_start_ko_phase`. Per ADR-0017 §7 the server
   /// surfaces an already-initialised bracket as `ERRCODE 40001`
   /// (`serialization_failure`); this adapter swallows that code so the

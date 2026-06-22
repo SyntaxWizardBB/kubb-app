@@ -357,6 +357,15 @@ class _FakeTournamentRemote implements TournamentRemote {
   }) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<void> pairStageRound({
+    required TournamentId tournamentId,
+    required String stageNodeId,
+    required List<PlannedPairing> pairings,
+  }) {
+    throw UnimplementedError();
+  }
 }
 
 /// Required Stammdaten fields (W1 / K03, K30-K33) merged onto a draft so

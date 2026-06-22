@@ -340,6 +340,12 @@ abstract class AppLocalizations {
   /// **'Forfait'**
   String get organizerMatchActionForfeit;
 
+  /// CTA on the organizer dashboard that triggers client-side Schoch/Swiss pairing of the next round
+  ///
+  /// In de, this message translates to:
+  /// **'Nächste Runde paaren'**
+  String get organizerPairNextRound;
+
   /// AppBar eyebrow for the stage-graph builder screen
   ///
   /// In de, this message translates to:
