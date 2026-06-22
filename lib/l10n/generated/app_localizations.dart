@@ -9916,6 +9916,72 @@ abstract class AppLocalizations {
   /// **'Übernehmen'**
   String get stageTypeGraphConfirm;
 
+  /// Section header for the stage-type template picker
+  ///
+  /// In de, this message translates to:
+  /// **'Typ-Vorlagen'**
+  String get stageTypeTemplatesSection;
+
+  /// Label of the stage-type template dropdown
+  ///
+  /// In de, this message translates to:
+  /// **'Vorlage wählen'**
+  String get stageTypeTemplatePickerLabel;
+
+  /// Apply the picked stage-type template into the builder
+  ///
+  /// In de, this message translates to:
+  /// **'Anwenden'**
+  String get stageTypeTemplateApply;
+
+  /// Save the current stage type graph as a reusable template
+  ///
+  /// In de, this message translates to:
+  /// **'Als Vorlage speichern'**
+  String get stageTypeTemplateSave;
+
+  /// Badge marking a shipped system stage-type template
+  ///
+  /// In de, this message translates to:
+  /// **'Vorlage'**
+  String get stageTypeTemplateSystemBadge;
+
+  /// Empty state of the stage-type template picker
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Typ-Vorlagen verfügbar.'**
+  String get stageTypeTemplatesEmpty;
+
+  /// Error state of the stage-type template picker
+  ///
+  /// In de, this message translates to:
+  /// **'Typ-Vorlagen konnten nicht geladen werden.'**
+  String get stageTypeTemplatesError;
+
+  /// Snackbar shown after a stage-type template was applied
+  ///
+  /// In de, this message translates to:
+  /// **'Vorlage angewendet.'**
+  String get stageTypeTemplateApplied;
+
+  /// Snackbar shown after a stage-type template was saved
+  ///
+  /// In de, this message translates to:
+  /// **'Als Vorlage gespeichert.'**
+  String get stageTypeTemplateSaved;
+
+  /// Snackbar shown when saving a stage-type template failed
+  ///
+  /// In de, this message translates to:
+  /// **'Vorlage konnte nicht gespeichert werden.'**
+  String get stageTypeTemplateSaveError;
+
+  /// Retry button when the stage-type template list failed to load
+  ///
+  /// In de, this message translates to:
+  /// **'Erneut versuchen'**
+  String get stageTypeTemplateRetry;
+
   /// Label for the per-round KO configuration block
   ///
   /// In de, this message translates to:

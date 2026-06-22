@@ -5,8 +5,13 @@ import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_binary_choice.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_chip.dart';
+import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/tournament/application/stage_type_graph_builder_controller.dart';
+import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart'
+    show TemplateVisibility;
+import 'package:kubb_app/features/tournament/data/stage_type_templates_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_round_block.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/save_template_dialog.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -72,6 +77,8 @@ class StageTypeGraphBuilderBody extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const _StageTypeTemplateBar(),
+          const SizedBox(height: KubbTokens.space6),
           _CategorySection(state: s, notifier: notifier),
           const SizedBox(height: KubbTokens.space6),
           _RoundsSection(state: s, notifier: notifier),
@@ -1007,6 +1014,204 @@ class _KoEdgeDialogState extends State<_KoEdgeDialog> {
       onChanged: (v) {
         if (v != null) onChanged(v);
       },
+    );
+  }
+}
+
+// === Stage-type template bar ===============================================
+
+/// Inline picker + save bar for Ebene-2 stage-TYPE templates (spec §6/§9.6,
+/// T12). Watches [stageTypeTemplatesProvider] (own + public templates, gated by
+/// RLS) and applies the picked template into the shared
+/// [stageTypeGraphBuilderProvider] via `loadFromGraph` — the single source the
+/// editor mutates. "Als Vorlage speichern" persists the current graph through
+/// `save_stage_type_template`. Reuses the shared [SaveTemplateDialog] / the
+/// Ebene-1 [TemplateVisibility].
+class _StageTypeTemplateBar extends ConsumerStatefulWidget {
+  const _StageTypeTemplateBar();
+
+  @override
+  ConsumerState<_StageTypeTemplateBar> createState() =>
+      _StageTypeTemplateBarState();
+}
+
+class _StageTypeTemplateBarState extends ConsumerState<_StageTypeTemplateBar> {
+  String? _selectedId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final templatesAsync = ref.watch(stageTypeTemplatesProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SectionHeader(title: l.stageTypeTemplatesSection),
+        const SizedBox(height: KubbTokens.space3),
+        templatesAsync.when(
+          loading: () => KubbSkeleton.bar(height: 48),
+          error: (_, _) => _ErrorState(
+            onRetry: () => ref.invalidate(stageTypeTemplatesProvider),
+          ),
+          data: _buildData,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildData(List<StageTypeTemplate> templates) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    final hasSelection =
+        _selectedId != null && templates.any((t) => t.id == _selectedId);
+    final selected = hasSelection ? _selectedId : null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (templates.isEmpty)
+          Text(
+            l.stageTypeTemplatesEmpty,
+            style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+          )
+        else
+          DropdownButtonFormField<String>(
+            key: const Key('stageTypeTemplatePicker'),
+            initialValue: selected,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: l.stageTypeTemplatePickerLabel,
+              border: const OutlineInputBorder(),
+            ),
+            items: [
+              for (final t in templates)
+                DropdownMenuItem<String>(
+                  value: t.id,
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(t.name, overflow: TextOverflow.ellipsis),
+                      ),
+                      if (t.isSystem) ...[
+                        const SizedBox(width: KubbTokens.space2),
+                        KubbChip(
+                          tone: KubbChipTone.heli,
+                          label: l.stageTypeTemplateSystemBadge,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+            ],
+            onChanged: (v) => setState(() => _selectedId = v),
+          ),
+        const SizedBox(height: KubbTokens.space3),
+        Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: KubbTokens.touchMin,
+                child: KubbButton(
+                  key: const Key('stageTypeTemplateApply'),
+                  variant: KubbButtonVariant.secondary,
+                  onPressed: selected == null
+                      ? null
+                      : () => _apply(templates, selected),
+                  child: Text(l.stageTypeTemplateApply),
+                ),
+              ),
+            ),
+            const SizedBox(width: KubbTokens.space3),
+            Expanded(
+              child: SizedBox(
+                height: KubbTokens.touchMin,
+                child: KubbButton(
+                  key: const Key('stageTypeTemplateSave'),
+                  variant: KubbButtonVariant.primary,
+                  onPressed: _save,
+                  child: Text(l.stageTypeTemplateSave),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void _apply(List<StageTypeTemplate> templates, String id) {
+    final l = AppLocalizations.of(context);
+    final template = templates.firstWhere((t) => t.id == id);
+    // Load into the shared builder (single source of truth). The applied graph
+    // is already a validated StageTypeGraph (it round-tripped through the apply
+    // RPC's type_graph jsonb on listTemplates), so loadFromGraph re-validates.
+    ref
+        .read(stageTypeGraphBuilderProvider.notifier)
+        .loadFromGraph(template.typeGraph);
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(l.stageTypeTemplateApplied)));
+  }
+
+  Future<void> _save() async {
+    final l = AppLocalizations.of(context);
+    final graph = ref.read(stageTypeGraphBuilderProvider).graph;
+    // The standalone editor has no organizing team in scope, so the club scope
+    // is disabled in the dialog (private / public only).
+    final result = await showDialog<SaveTemplateResult>(
+      context: context,
+      builder: (_) => const SaveTemplateDialog(clubAvailable: false),
+    );
+    if (result == null || !mounted) return;
+    final repo = ref.read(stageTypeTemplatesRepositoryProvider);
+    try {
+      await repo.saveTemplate(
+        name: result.name,
+        visibility: result.visibility == TemplateVisibility.club
+            ? TemplateVisibility.private
+            : result.visibility,
+        typeGraph: graph,
+      );
+      ref.invalidate(stageTypeTemplatesProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(SnackBar(content: Text(l.stageTypeTemplateSaved)));
+    } on Object {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(content: Text(l.stageTypeTemplateSaveError)),
+        );
+    }
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l.stageTypeTemplatesError,
+          style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        SizedBox(
+          height: KubbTokens.touchMin,
+          child: KubbButton(
+            variant: KubbButtonVariant.secondary,
+            onPressed: onRetry,
+            child: Text(l.stageTypeTemplateRetry),
+          ),
+        ),
+      ],
     );
   }
 }

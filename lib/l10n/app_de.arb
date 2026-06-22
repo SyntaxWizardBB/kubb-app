@@ -6950,6 +6950,50 @@
   "@stageTypeGraphConfirm": {
     "description": "Confirm button in the stage type graph dialogs"
   },
+  "stageTypeTemplatesSection": "Typ-Vorlagen",
+  "@stageTypeTemplatesSection": {
+    "description": "Section header for the stage-type template picker"
+  },
+  "stageTypeTemplatePickerLabel": "Vorlage wählen",
+  "@stageTypeTemplatePickerLabel": {
+    "description": "Label of the stage-type template dropdown"
+  },
+  "stageTypeTemplateApply": "Anwenden",
+  "@stageTypeTemplateApply": {
+    "description": "Apply the picked stage-type template into the builder"
+  },
+  "stageTypeTemplateSave": "Als Vorlage speichern",
+  "@stageTypeTemplateSave": {
+    "description": "Save the current stage type graph as a reusable template"
+  },
+  "stageTypeTemplateSystemBadge": "Vorlage",
+  "@stageTypeTemplateSystemBadge": {
+    "description": "Badge marking a shipped system stage-type template"
+  },
+  "stageTypeTemplatesEmpty": "Keine Typ-Vorlagen verfügbar.",
+  "@stageTypeTemplatesEmpty": {
+    "description": "Empty state of the stage-type template picker"
+  },
+  "stageTypeTemplatesError": "Typ-Vorlagen konnten nicht geladen werden.",
+  "@stageTypeTemplatesError": {
+    "description": "Error state of the stage-type template picker"
+  },
+  "stageTypeTemplateApplied": "Vorlage angewendet.",
+  "@stageTypeTemplateApplied": {
+    "description": "Snackbar shown after a stage-type template was applied"
+  },
+  "stageTypeTemplateSaved": "Als Vorlage gespeichert.",
+  "@stageTypeTemplateSaved": {
+    "description": "Snackbar shown after a stage-type template was saved"
+  },
+  "stageTypeTemplateSaveError": "Vorlage konnte nicht gespeichert werden.",
+  "@stageTypeTemplateSaveError": {
+    "description": "Snackbar shown when saving a stage-type template failed"
+  },
+  "stageTypeTemplateRetry": "Erneut versuchen",
+  "@stageTypeTemplateRetry": {
+    "description": "Retry button when the stage-type template list failed to load"
+  },
   "stageTypeGraphKoConfigLabel": "K.-o.-Konfiguration",
   "@stageTypeGraphKoConfigLabel": {
     "description": "Label for the per-round KO configuration block"

@@ -5538,6 +5538,41 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageTypeGraphConfirm => 'Übernehmen';
 
   @override
+  String get stageTypeTemplatesSection => 'Typ-Vorlagen';
+
+  @override
+  String get stageTypeTemplatePickerLabel => 'Vorlage wählen';
+
+  @override
+  String get stageTypeTemplateApply => 'Anwenden';
+
+  @override
+  String get stageTypeTemplateSave => 'Als Vorlage speichern';
+
+  @override
+  String get stageTypeTemplateSystemBadge => 'Vorlage';
+
+  @override
+  String get stageTypeTemplatesEmpty => 'Keine Typ-Vorlagen verfügbar.';
+
+  @override
+  String get stageTypeTemplatesError =>
+      'Typ-Vorlagen konnten nicht geladen werden.';
+
+  @override
+  String get stageTypeTemplateApplied => 'Vorlage angewendet.';
+
+  @override
+  String get stageTypeTemplateSaved => 'Als Vorlage gespeichert.';
+
+  @override
+  String get stageTypeTemplateSaveError =>
+      'Vorlage konnte nicht gespeichert werden.';
+
+  @override
+  String get stageTypeTemplateRetry => 'Erneut versuchen';
+
+  @override
   String get stageTypeGraphKoConfigLabel => 'K.-o.-Konfiguration';
 
   @override
