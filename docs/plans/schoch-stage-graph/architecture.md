@@ -400,6 +400,8 @@ graph TB
 
 ### ADR-0035: Vorrunden-Rangfolge aus dem Stage-Typ ableiten (nicht frei konfigurierbar)
 
+> Massgebliche Fassung: `docs/adr/0035-vorrunde-ranking-from-stage-type.md`.
+
 - **Status**: Proposed
 - **Date**: 2026-06-21
 - **Depends on**: ADR-0024, ADR-0030
@@ -428,6 +430,8 @@ nicht persistiert — keine zusaetzliche Spalte.
 
 ### ADR-0036: Buchholz und Schoch-Ranking server-autoritativ; Dart bleibt Heuristik + Test-Truth
 
+> Massgebliche Fassung: `docs/adr/0036-buchholz-schoch-ranking-server-authoritative.md`.
+
 - **Status**: Proposed
 - **Date**: 2026-06-21
 - **Depends on**: ADR-0030, OD-M5-04
@@ -454,6 +458,8 @@ Sicherung. Live-Schoch-Cut wird spec-konform. `tournament_stage_ranking` aendert
 sich fuer Schoch-Stages rueckwirkend — bestehende Daten pruefen.
 
 ### ADR-0037: Typ-Graph (Ebene 2) als jsonb-Sub-Graph in StageNode.config
+
+> Massgebliche Fassung: `docs/adr/0037-type-graph-jsonb-subgraph.md`.
 
 - **Status**: Proposed
 - **Date**: 2026-06-21
@@ -482,6 +488,8 @@ grosse Typ-Graphen blaehen die jsonb-Config; bei Bedarf spaeter auf Tabellen
 migrierbar, da die Domain-Struktur die Persistenz kapselt.
 
 ### ADR-0038: Seeding-Quelle `random` mit persistiertem Seed; Pool-Verteilung auf Snake
+
+> Massgebliche Fassung: `docs/adr/0038-seeding-random-source-and-snake-distribution.md`.
 
 - **Status**: Proposed
 - **Date**: 2026-06-21
