@@ -562,6 +562,7 @@ uebergreifende Kubb-Differenz-Normalisierung.
 | Doppelte Wahrheit Dart vs. >10 SQL-Ranking-Funktionen | Anzeige und gespielter Cut divergieren | Jede Ranking-Aenderung beide Pfade in einem Milestone + Paritaets-Test |
 | Pauschaler Buchholz-Fallback in vielen Migrationen kopiert | Eine Stelle wird uebersehen, Gruppenphase behaelt Buchholz | Eine neue Migration ueber alle Ranking-Funktionen, Audit-Grep nach `e.buchholz` |
 | Buchholz-Korrektur aendert Schoch-Ranglisten rueckwirkend | Bestehende/gestartete Turniere verschieben Cut | Golden-Test als Netz, Verhalten gegen Bestandsdaten pruefen |
+| Monrad-Reproduktion knapp ueber Schwelle (R2-R8 77.4 %, R3-R8 87.0 %) | Kuenftige Fixture- oder Pairing-Aenderung kann das Gate kippen | Marge bewusst dokumentiert; bei jeder Pairing-Aenderung Quoten neu messen; Startnummer-Quelle praezisieren sobald Setzliste verfuegbar (Spec §9 offen) |
 | Engine-Materializer aus Typ-Graph >> 100 LOC | Senior-Task-Limit gesprengt | Fein splitten: Runden-Materialisierung / Sieger-Advance / Verlierer-Route / R2+-Scheduling |
 | Paritaet zweiter Graph-Editor (Canvas + Handy) | State divergiert, AC §9.5 bricht | Strikt ein Provider, eine Serialisierung, Live-Revalidierung (wie Ebene 1) |
 | Dart-Random != plpgsql-Random | Vorschau != gespielte Setzliste | Geteilter Fisher-Yates, Golden-Parity-Test gegen Seed |
