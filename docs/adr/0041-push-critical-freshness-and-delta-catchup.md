@@ -119,6 +119,38 @@ Live-Zuschauerzahl, „Gegner trägt gerade ein". Nicht im kritischen Pfad; spä
   **unverändert** die Basis; dieses ADR erweitert nur den kritischen Tier.
 - Presence bleibt optional und ist kein Merge-Gate.
 
+## Verifikations-Notiz (W1-T17)
+
+Zwei Vorab-Checks aus der Fixes-Spec §0 bestätigt — Grundlage für den kritischen Tier
+und den Delta-Cursor:
+
+**Publication.** `supabase_realtime` ist **nicht** `FOR ALL TABLES`; jeder CDC-Target wird
+explizit per `ALTER PUBLICATION … ADD TABLE` eingetragen (ADR-0029 §4). Aktuelle Member
+(je eine Migration im Slot `20261231…20261237`, plus der Schedule-Target):
+
+| Tabelle | Migration | CDC-Filterspalte / RLS-USING |
+|---|---|---|
+| `public.user_inbox_messages` | `20261231000000` | `user_id` (owner-read) |
+| `public.friend_edges` | `20261232000000` | `owner_user_id` |
+| `public.tournament_matches` | `20261234000000` | `tournament_id` |
+| `public.team_memberships` | `20261235000000` | `team_id` / `user_id` (self-read additiv) |
+| `public.tournament_participants` | `20261236000000` | `tournament_id` / `user_id` (self-read additiv) |
+| `public.matches` | `20261237000000` | `id` |
+| `public.tournament_round_schedule` | `20261251000000` | `tournament_id` |
+
+`tournament_matches` (Slot `…234`) trägt die Live-Rangliste **und** den Lamport-Cursor —
+genau der kritische Standings-CDC-Pfad aus §1/§3 hängt daran. `REPLICA IDENTITY` bleibt
+überall `DEFAULT`; kein Consumer liest die Old-Row. Auf Staging gegen `pg_publication_tables`
+gegenprüfen (`WHERE pubname = 'supabase_realtime'`), weil lokal `FOR ALL TABLES` den fehlenden
+`ADD TABLE` maskieren würde (ADR-0029 §Risiko).
+
+**Migrations-Slots monoton.** Das `202612xx`-Schema (`YYYYMMDD`-Tagesslot, der über Tag 99
+hinaus auf 3-stellige Slots läuft, z. B. `…300…`, `…317…`) sortiert weiter strikt
+aufsteigend als zero-padded Prefix. Die CDC-Slots `…231…237` liegen lückenlos im Band
+`20261201000001 … 20261317000000`; keine doppelten Prefixe, keine nicht-monotone Stufe
+(über alle Migrationen geprüft). Der „2026-12-31 = skippt auf Prod"-Befund war Fehlalarm:
+`31` ist ein Sequenz-Slot, kein Kalendertag.
+
 ## Status-Notiz
 
 Owner-Entscheid 2026-06-22, Design only. Umsetzung auf `feat/realtime-sync` **nach** den
