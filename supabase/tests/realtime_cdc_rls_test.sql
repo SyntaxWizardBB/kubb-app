@@ -77,11 +77,20 @@ SELECT ok(
 );
 
 -- ---- matches: id -> participant_read ----
+-- The participant branch was rerouted through the _is_match_participant
+-- DEFINER helper (20261310000000 PART B) so authenticated can actually read
+-- matches without a match_participants grant. The helper takes matches.id as
+-- its argument, so the stored qual is `_is_match_participant(id)` — the
+-- `matches.` qualifier is stripped by Postgres, but the id-filter the CDC
+-- subscription matches on (matches:id=X) is still the gate: the policy admits
+-- a row iff that row's id passes the membership probe (or the caller created
+-- it). Asserting the helper-with-id call keeps the parity check honest — the
+-- id column is still what authorises the stream, it's just behind the helper.
 SELECT ok(
   (SELECT qual FROM pg_policies
     WHERE schemaname='public' AND tablename='matches'
-      AND policyname='matches_participant_read') LIKE '%matches.id%',
-  'matches_participant_read USING references matches.id (CDC id filter)'
+      AND policyname='matches_participant_read') LIKE '%_is_match_participant(id)%',
+  'matches_participant_read gates on id via _is_match_participant(id) (CDC id filter intact)'
 );
 
 -- ---- tournament_round_schedule: tournament_id -> read (ADR-0031 A1) ----
