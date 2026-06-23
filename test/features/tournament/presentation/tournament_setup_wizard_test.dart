@@ -738,7 +738,9 @@ void main() {
         fake.createdSetup?['pool_phase_config'] as Map<String, Object?>?;
     expect(pool, isNotNull);
     expect(pool?['group_count'], 1);
-    expect(pool?['strategy'], 'seeded');
+    // ADR-0038: the single Schoch pool is Snake-only, like every other
+    // distribution the wizard wires.
+    expect(pool?['strategy'], 'snake');
     // qualifiers_per_group tracks the KO qualifier count chosen in the KO step.
     expect(pool?['qualifiers_per_group'], isNotNull);
   });
@@ -1441,22 +1443,32 @@ void main() {
     expect(find.text('Gruppierungsstrategie'), findsNothing);
   });
 
-  testWidgets('K12: picking the Random strategy reveals the seed field',
-      (tester) async {
+  testWidgets('K12: distribution is Snake-only — no strategy dropdown, no '
+      'seed field (ADR-0038)', (tester) async {
     await _pumpWizard(tester);
     await _typeName(tester, 'Cup');
     await _tapNext(tester); // -> participants
     await _tapNext(tester); // -> Vorrunde
-    // The seed field is hidden for the default (snake) strategy.
+    // The old seeded/random dropdown and the seed field are gone: the strategy
+    // is fixed to Snake and shown read-only.
+    expect(find.byKey(const Key('wizardGroupStrategyField')), findsNothing);
     expect(find.byKey(const Key('wizardGroupRandomSeedField')), findsNothing);
-    await tester.tap(find.byKey(const Key('wizardGroupStrategyField')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Random (deterministisch)').last);
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const Key('wizardGroupRandomSeedField')),
-      findsOneWidget,
+    expect(find.byKey(const Key('wizardGroupStrategySnake')), findsOneWidget);
+    // No way to pick another distribution: those labels never render.
+    expect(find.text('Random (deterministisch)'), findsNothing);
+    expect(find.text('Seeded (Blockweise)'), findsNothing);
+    // Editing the group count still wires Snake into the draft.
+    await tester.enterText(
+      find.byKey(const Key('wizardGroupCountField')),
+      '8',
     );
+    await tester.pumpAndSettle();
+    final pool = ProviderScope.containerOf(
+      tester.element(find.byType(TournamentSetupWizard)),
+    ).read(tournamentConfigControllerProvider).poolPhaseConfig!;
+    expect(pool.groupCount, 8);
+    expect(pool.strategy, PoolGroupingStrategy.snake);
+    expect(pool.randomSeed, isNull);
   });
 
   testWidgets(

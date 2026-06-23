@@ -1857,7 +1857,6 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
   bool _useTemplate = false;
 
   late final TextEditingController _groupCountCtrl;
-  late final TextEditingController _seedCtrl;
 
   @override
   void initState() {
@@ -1866,13 +1865,11 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
     _groupCountCtrl = TextEditingController(
       text: '${pool?.groupCount ?? 4}',
     );
-    _seedCtrl = TextEditingController(text: pool?.randomSeed?.toString() ?? '');
   }
 
   @override
   void dispose() {
     _groupCountCtrl.dispose();
-    _seedCtrl.dispose();
     super.dispose();
   }
 
@@ -1907,10 +1904,6 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
     });
   }
 
-  /// Current grouping strategy (defaults to snake before the organiser picks).
-  PoolGroupingStrategy get _strategy =>
-      widget.draft.poolPhaseConfig?.strategy ?? PoolGroupingStrategy.snake;
-
   int get _groupCount => widget.draft.poolPhaseConfig?.groupCount ?? 0;
 
   bool get _groupCountValid =>
@@ -1935,34 +1928,13 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
 
   void _onGroupsTyped(String raw) {
     final value = int.tryParse(raw.trim()) ?? 0;
+    // Distribution is Snake-only (ADR-0038): the wizard never wires another
+    // strategy and never carries a random seed.
     widget.onPoolGrouping(
       groupCount: value,
-      strategy: _strategy,
-      randomSeed: _randomSeed(),
+      strategy: PoolGroupingStrategy.snake,
+      randomSeed: null,
     );
-  }
-
-  void _onStrategyChanged(PoolGroupingStrategy? next) {
-    if (next == null) return;
-    widget.onPoolGrouping(
-      groupCount: _groupCount,
-      strategy: next,
-      randomSeed: _randomSeed(),
-    );
-  }
-
-  void _onSeedTyped(String raw) {
-    final trimmed = raw.trim();
-    widget.onPoolGrouping(
-      groupCount: _groupCount,
-      strategy: _strategy,
-      randomSeed: trimmed.isEmpty ? null : int.tryParse(trimmed),
-    );
-  }
-
-  int? _randomSeed() {
-    final t = _seedCtrl.text.trim();
-    return t.isEmpty ? null : int.tryParse(t);
   }
 
   /// Group label for index 0..n: 'A', 'B', 'C', …
@@ -2303,48 +2275,21 @@ class _StepFormatState extends ConsumerState<_StepFormat> {
         ),
       ),
       const SizedBox(height: KubbTokens.space4),
+      // Distribution is Snake-only (ADR-0038). No dropdown, no seed field: the
+      // organizer sees the fixed strategy read-only, with the same explainer
+      // dialog the stage-graph builder uses.
       KubbField(
         label: l10n.tournamentWizardPoolStrategyLabel,
         info: _infoButton(
-          l10n.tournamentSetupInfoGroupingStrategyTitle,
-          l10n.tournamentSetupInfoGroupingStrategyBody,
+          l10n.stageGraphGroupingInfoTitle,
+          l10n.stageGraphGroupingInfoSnake,
         ),
-        child: DropdownButtonFormField<PoolGroupingStrategy>(
-          key: const Key('wizardGroupStrategyField'),
-          initialValue: _strategy,
-          onChanged: _onStrategyChanged,
-          decoration: _outlineDecoration(tokens),
-          items: [
-            DropdownMenuItem(
-              value: PoolGroupingStrategy.snake,
-              child: Text(l10n.tournamentWizardPoolStrategySnake),
-            ),
-            DropdownMenuItem(
-              value: PoolGroupingStrategy.seeded,
-              child: Text(l10n.tournamentWizardPoolStrategySeeded),
-            ),
-            DropdownMenuItem(
-              value: PoolGroupingStrategy.random,
-              child: Text(l10n.tournamentWizardPoolStrategyRandom),
-            ),
-          ],
+        child: _DerivedValueBox(
+          key: const Key('wizardGroupStrategySnake'),
+          tokens: tokens,
+          value: l10n.tournamentWizardPoolStrategySnake,
         ),
       ),
-      if (_strategy == PoolGroupingStrategy.random) ...[
-        const SizedBox(height: KubbTokens.space4),
-        KubbField(
-          label: l10n.tournamentWizardPoolRandomSeedLabel,
-          helper: l10n.tournamentWizardPoolRandomSeedHint,
-          child: TextField(
-            key: const Key('wizardGroupRandomSeedField'),
-            controller: _seedCtrl,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            onChanged: _onSeedTyped,
-            decoration: _outlineDecoration(tokens).copyWith(counterText: ''),
-          ),
-        ),
-      ],
     ];
   }
 
@@ -2643,7 +2588,7 @@ class _StageGraphTemplateBarState
 /// Read-only display box for a derived value (e.g. qualifier-per-group),
 /// styled like a disabled outline field so it reads as non-editable (K12).
 class _DerivedValueBox extends StatelessWidget {
-  const _DerivedValueBox({required this.tokens, required this.value});
+  const _DerivedValueBox({required this.tokens, required this.value, super.key});
 
   final KubbTokens tokens;
   final String value;

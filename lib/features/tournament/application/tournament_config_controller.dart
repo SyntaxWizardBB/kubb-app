@@ -320,7 +320,7 @@ class TournamentConfigController extends Notifier<TournamentConfigDraft> {
         poolPhaseConfig: PoolPhaseConfig(
           groupCount: 1,
           qualifiersPerGroup: config.qualifierCount,
-          strategy: pool?.strategy ?? PoolGroupingStrategy.seeded,
+          strategy: pool?.strategy ?? PoolGroupingStrategy.snake,
           randomSeed: pool?.randomSeed,
         ),
       );

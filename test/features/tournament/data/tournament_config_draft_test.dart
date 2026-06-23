@@ -1259,6 +1259,35 @@ void main() {
       expect(back.currency, 'CHF');
       expect(back.koConfig, isNull);
     });
+
+    // Read-back compat (ADR-0038): the wizard only writes Snake, but legacy
+    // tournaments persisted `seeded`/`random`. fromDetail must still parse the
+    // stored value — the enum stays, the orElse-Snake fallback only catches
+    // genuinely unknown strings.
+    for (final stored in const <PoolGroupingStrategy>[
+      PoolGroupingStrategy.seeded,
+      PoolGroupingStrategy.random,
+    ]) {
+      test('back-compat: a stored ${stored.name} config still round-trips', () {
+        final original = TournamentConfigDraft(
+          displayName: 'Legacy',
+          koConfig: KoPhaseConfig(qualifierCount: 8, participantCount: 16),
+          poolPhaseConfig: PoolPhaseConfig(
+            groupCount: 4,
+            qualifiersPerGroup: 2,
+            strategy: stored,
+            randomSeed: stored == PoolGroupingStrategy.random ? 7 : null,
+          ),
+        );
+
+        final back = TournamentConfigDraft.fromDetail(headerFor(original));
+
+        expect(back.poolPhaseConfig?.strategy, stored);
+        if (stored == PoolGroupingStrategy.random) {
+          expect(back.poolPhaseConfig?.randomSeed, 7);
+        }
+      });
+    }
   });
 
   group('TournamentConfigDraft stage-graph axis (P2.1, ADR-0033)', () {

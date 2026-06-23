@@ -166,16 +166,35 @@ void main() {
       expect(state().poolPhaseConfig?.strategy, PoolGroupingStrategy.snake);
     });
 
-    test('setPoolGrouping stores group count + strategy + seed', () {
+    test('setPoolGrouping on the Snake-only path stores Snake without a seed',
+        () {
+      // ADR-0038: the wizard only ever wires Snake and never a random seed.
+      controller.setPoolGrouping(
+        groupCount: 8,
+        strategy: PoolGroupingStrategy.snake,
+      );
+      final pool = state().poolPhaseConfig!;
+      expect(pool.groupCount, 8);
+      expect(pool.strategy, PoolGroupingStrategy.snake);
+      expect(pool.randomSeed, isNull);
+    });
+
+    test('back-compat: a stored random/seed config is still round-tripped '
+        'faithfully (enum not removed)', () {
+      // The enum and the wire still carry random/seeded so legacy drafts keep
+      // parsing. setPoolGrouping must not silently coerce a stored value.
       controller.setPoolGrouping(
         groupCount: 8,
         strategy: PoolGroupingStrategy.random,
         randomSeed: 42,
       );
       final pool = state().poolPhaseConfig!;
-      expect(pool.groupCount, 8);
       expect(pool.strategy, PoolGroupingStrategy.random);
       expect(pool.randomSeed, 42);
+      final wire =
+          state().toSetupConfig()['pool_phase_config'] as Map<String, Object?>?;
+      expect(wire!['strategy'], 'random');
+      expect(wire['random_seed'], 42);
     });
 
     test('qualifiers-per-group is derived from the KO bracket size', () {
