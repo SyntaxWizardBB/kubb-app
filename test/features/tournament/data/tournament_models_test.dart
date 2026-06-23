@@ -84,6 +84,9 @@ Map<String, dynamic> _matchRow({
   Object? bDisplayName = 'Bob',
   Object? setsWonA,
   Object? setsWonB,
+  // Sentinel: omit the key entirely so an older RPC revision without the
+  // projection can be exercised; pass an int to include it.
+  Object? pitchNumber = _omit,
 }) =>
     <String, dynamic>{
       'match_id': 'm-1',
@@ -100,7 +103,11 @@ Map<String, dynamic> _matchRow({
       'completed_at': null,
       'sets_won_a': ?setsWonA,
       'sets_won_b': ?setsWonB,
+      if (!identical(pitchNumber, _omit)) 'pitch_number': pitchNumber,
     };
+
+/// Sentinel for "drop this key from the map" in the row builders.
+const Object _omit = Object();
 
 void main() {
   group('tournamentDetailHeaderFromRow', () {
@@ -293,6 +300,38 @@ void main() {
       final m = tournamentMatchRefFromRow(_matchRow());
       expect(m.setsWonA, isNull);
       expect(m.setsWonB, isNull);
+    });
+
+    test('parses pitch_number when the RPC projects it', () {
+      final m = tournamentMatchRefFromRow(_matchRow(pitchNumber: 7));
+      expect(m.pitchNumber, 7);
+    });
+
+    test('leaves pitchNumber null when the RPC omits the column', () {
+      final m = tournamentMatchRefFromRow(_matchRow());
+      expect(m.pitchNumber, isNull);
+    });
+  });
+
+  group('tournamentMatchRefFromCdcRow (pitch_number)', () {
+    Map<String, Object?> cdc({Object? pitchNumber = _omit}) => <String, Object?>{
+          'id': 'm-9',
+          'tournament_id': 't-1',
+          'round_number': 1,
+          'match_number_in_round': 2,
+          'participant_a': 'p-1',
+          'participant_b': 'p-2',
+          'status': 'scheduled',
+          'consensus_round': 0,
+          if (!identical(pitchNumber, _omit)) 'pitch_number': pitchNumber,
+        };
+
+    test('parses pitch_number from the raw CDC column', () {
+      expect(tournamentMatchRefFromCdcRow(cdc(pitchNumber: 4)).pitchNumber, 4);
+    });
+
+    test('leaves pitchNumber null when the CDC row omits the column', () {
+      expect(tournamentMatchRefFromCdcRow(cdc()).pitchNumber, isNull);
     });
   });
 

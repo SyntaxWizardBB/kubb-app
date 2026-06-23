@@ -381,6 +381,8 @@ TournamentMatchRef tournamentMatchRefFromCdcRow(Map<String, Object?> row) {
     // M2a: raw CDC table column carries the phase token directly.
     phase: matchPhaseFromWire(row['phase'] as String?),
     stageNodeId: row['stage_node_id'] as String?,
+    // Raw CDC table column; null-tolerant so older rows decode cleanly.
+    pitchNumber: _asIntOrNull(row['pitch_number']),
   );
 }
 
@@ -512,6 +514,10 @@ TournamentMatchRef tournamentMatchRefFromRow(Map<String, dynamic> row) {
     // fabricates a KO auto-winner).
     phase: matchPhaseFromWire(row['phase'] as String?),
     stageNodeId: row['stage_node_id'] as String?,
+    // Assigned pitch, projected by tournament_match_get / tournament_list_
+    // matches since 20261317000000. Null on older RPC revisions / fakes that
+    // omit the column.
+    pitchNumber: _asIntOrNull(row['pitch_number']),
   );
 }
 

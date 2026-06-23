@@ -18,10 +18,10 @@ class MyActiveMatch {
 
   final TournamentMatchRef match;
 
-  /// Human pitch label, e.g. `"3"`. `TournamentMatchRef` carries no
-  /// `pitch_number` yet (see live-dashboard provider doc-block), so the
-  /// match number within the round is used as the stable stand-in until
-  /// the column lands.
+  /// Human pitch label, e.g. `"3"`. Uses the server-assigned
+  /// `TournamentMatchRef.pitchNumber` (projected by `tournament_list_matches`
+  /// since 20261317000000); falls back to the match number within the round
+  /// when the match carries no assigned pitch (no PitchPlan / older wire row).
   final String pitchLabel;
 
   /// Opponent's projected display name, or `null` when unresolved (the UI
@@ -75,7 +75,7 @@ final myActiveMatchProvider = Provider.autoDispose
         final callerIsA = myIds.contains(m.participantA);
         return MyActiveMatch(
           match: m,
-          pitchLabel: m.matchNumberInRound.toString(),
+          pitchLabel: (m.pitchNumber ?? m.matchNumberInRound).toString(),
           opponentName: callerIsA
               ? m.participantBDisplayName
               : m.participantADisplayName,

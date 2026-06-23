@@ -95,6 +95,35 @@ void main() {
       );
       expect(a, isNot(equals(b)));
     });
+
+    test('pitchNumber defaults to null and breaks equality when set', () {
+      const noPitch = TournamentMatchRef(
+        matchId: TournamentMatchId('m1'),
+        tournamentId: TournamentId('t1'),
+        roundNumber: 1,
+        matchNumberInRound: 3,
+        participantA: TournamentParticipantId('p1'),
+        participantB: TournamentParticipantId('p2'),
+        status: TournamentMatchStatus.scheduled,
+        consensusRound: 1,
+      );
+      expect(noPitch.pitchNumber, isNull);
+
+      const withPitch = TournamentMatchRef(
+        matchId: TournamentMatchId('m1'),
+        tournamentId: TournamentId('t1'),
+        roundNumber: 1,
+        matchNumberInRound: 3,
+        participantA: TournamentParticipantId('p1'),
+        participantB: TournamentParticipantId('p2'),
+        status: TournamentMatchStatus.scheduled,
+        consensusRound: 1,
+        pitchNumber: 7,
+      );
+      expect(withPitch.pitchNumber, 7);
+      expect(withPitch, isNot(equals(noPitch)));
+      expect(withPitch.hashCode, isNot(equals(noPitch.hashCode)));
+    });
   });
 
   group('TournamentSetScoreProposal', () {

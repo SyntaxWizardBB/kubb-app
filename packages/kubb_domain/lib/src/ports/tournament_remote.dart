@@ -240,6 +240,7 @@ class TournamentMatchRef {
     this.participantBDisplayName,
     this.phase = MatchPhase.group,
     this.stageNodeId,
+    this.pitchNumber,
   });
 
   final TournamentMatchId matchId;
@@ -290,6 +291,14 @@ class TournamentMatchRef {
   /// method.
   final String? stageNodeId;
 
+  /// The assigned pitch (`tournament_matches.pitch_number`, fed server-side by
+  /// `_tournament_assign_pitches` / `_from_stage_node`), projected by
+  /// `tournament_match_get` and `tournament_list_matches` since migration
+  /// 20261317000000. Null for wire rows / CDC payloads / fakes that predate
+  /// the projection or for a match the assign helper never stamped — the
+  /// player banner then falls back to a non-pitch label.
+  final int? pitchNumber;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -312,7 +321,8 @@ class TournamentMatchRef {
           other.participantADisplayName == participantADisplayName &&
           other.participantBDisplayName == participantBDisplayName &&
           other.phase == phase &&
-          other.stageNodeId == stageNodeId;
+          other.stageNodeId == stageNodeId &&
+          other.pitchNumber == pitchNumber;
 
   @override
   int get hashCode => Object.hash(
@@ -335,6 +345,7 @@ class TournamentMatchRef {
         participantBDisplayName,
         phase,
         stageNodeId,
+        pitchNumber,
       );
 }
 
