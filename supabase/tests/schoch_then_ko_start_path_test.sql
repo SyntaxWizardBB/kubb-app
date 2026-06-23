@@ -142,7 +142,7 @@ SELECT is(
     WHERE tournament_id = '5c0d0000-0000-0000-0000-00000000a001'::uuid
       AND node_id = 'ko'),
   'single_elim',
-  'KO-Stufe ist single_elim (konservativ)'
+  'KO-Stufe ist single_elim (bracket_type single_elimination, Default-Fall)'
 );
 SELECT is(
   (SELECT status FROM public.tournament_stages

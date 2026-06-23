@@ -1221,6 +1221,71 @@ END;
 $$;
 
 -- =====================================================================
+-- Matrix-local format-aware cons-main driver (Unit 8b). The harness's
+-- _tts_run_cons_main unconditionally calls tournament_start_ko_phase — correct
+-- on the flat-pool round_robin_then_ko path, but on the schoch stage-graph path
+-- (swiss_then_ko) the KO stage is auto-materialised by tournament_start, so
+-- firing the legacy KO RPC raises ALREADY_STARTED. Re-CREATE-OR-REPLACE the
+-- driver to skip that call for the stage-graph formats (identical to the harness
+-- otherwise: target_wins -> the target reaches the MAIN final, single A6 line).
+-- =====================================================================
+CREATE OR REPLACE FUNCTION _tts_run_cons_main(p_row text, p_n int)
+RETURNS SETOF text
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_org    uuid := gen_random_uuid();
+  v_tid    uuid;
+  v_guard  int;
+  v_open   int;
+  v_format text;
+BEGIN
+  v_tid := _tts_seed_tournament(p_row, p_n, v_org);
+  PERFORM _tts_register_n(v_tid, p_n);
+  PERFORM _tts_start(v_tid);
+
+  SELECT format INTO v_format FROM public.tournaments WHERE id = v_tid;
+
+  -- Prelim to completion (target tops the standings).
+  FOR v_guard IN 1..7 LOOP
+    SELECT count(*) INTO v_open
+      FROM public.tournament_matches
+      WHERE tournament_id = v_tid AND phase = 'group'
+        AND status NOT IN ('finalized','overridden','voided');
+    EXIT WHEN v_open = 0;
+    PERFORM _tts_play_round(v_tid, 'target_wins');
+  END LOOP;
+
+  -- Enter the KO phase. Only the flat-pool round_robin_then_ko path needs the
+  -- explicit legacy RPC; the schoch / swiss stage graph auto-materialises it.
+  IF v_format = 'round_robin_then_ko' THEN
+    PERFORM _tts_as((SELECT created_by FROM public.tournaments WHERE id = v_tid));
+    PERFORM public.tournament_start_ko_phase(v_tid,
+      (SELECT ko_config FROM public.tournaments WHERE id = v_tid));
+    PERFORM _tts_as_pg();
+  END IF;
+
+  -- KO to completion, target_wins -> target lands in the MAIN final.
+  FOR v_guard IN 1..12 LOOP
+    SELECT count(*) INTO v_open
+      FROM public.tournament_matches
+      WHERE tournament_id = v_tid
+        AND phase IN ('ko','final','third_place',
+                      'wb','lb','grand_final','grand_final_reset',
+                      'consolation','consolation_third_place')
+        AND status IN ('scheduled','awaiting_results')
+        AND participant_a IS NOT NULL AND participant_b IS NOT NULL;
+    EXIT WHEN v_open = 0;
+    PERFORM _tts_play_round(v_tid, 'target_wins');
+  END LOOP;
+
+  PERFORM _tts_advance(v_tid);
+
+  RETURN QUERY SELECT * FROM _tts_assert_target_reached(v_tid, p_row);
+END;
+$$;
+
+-- =====================================================================
 -- THE MATRIX. no_plan()/finish() per SPEC §4 (per-run line counts vary by
 -- bracket_type). Each call drives one full (row, N) lifecycle and emits the
 -- §4 A1..A6 group; consolation main-path passes emit the single A6 line.
@@ -1252,24 +1317,68 @@ SELECT * FROM _tts_run('schoch|single_out|one_vs_two|mighty_finisher_shootout|cl
 -- S01 (N=48) single_out: target -> final (SPEC §5/A6).
 SELECT * FROM _tts_run('schoch|single_out|seed_high_vs_low|classic_kingtoss_removal|ekc', 48);
 
--- =====================================================================
--- PRODUKT-OFFEN — double_out / consolation NACH Schoch (S09..S24, plus the
--- N=60 double/consolation subset). ADR-0039 §4: the schoch->KO auto-route is the
--- single KO materialiser on the stage-graph path; today it only owns single_elim.
--- double_elimination- and consolation-after-schoch are UNDERSPECIFIED — the seed
--- order into the winners/losers bracket, the bracket_reset default, and the
--- routing of early_ko_losers into the consolation bracket OVER the stage graph
--- are not defined anywhere (ADR-0039 marks the KO-type refinement as a later
--- unit; schoch_then_ko_start_path_test:145 cements 'KO stage is single_elim'). So
--- tournament_start keeps the KO stage at single_elim for these rows, and the
--- §4 A2 double_elim / consolation assertions cannot pass without GUESSING the
--- seeding semantics. They stay parked here until the owner fixes the spec; once
--- the auto-route derives double_elim / consolation, re-enable these rows verbatim.
---
--- S09..S16 double_out  -> grand final (needs wb/lb seeding spec).
--- S17..S24 consolation -> consolation final (needs early_ko_losers stage routing).
--- S09 (N=60) double_out, S17 (N=60) consolation likewise.
--- =====================================================================
+-- ---------------------------------------------------------------------
+-- §2.B schoch rows S09..S16 double_out @ default N=32 (Unit 8b). ADR-0039 §4:
+-- the schoch->KO auto-route now derives the KO stage type from bracket_type, so
+-- double_elimination after schoch materialises a stage wb/lb/grand_final
+-- bracket. with_reset is owner-default OFF. A6 -> grand final.
+-- ---------------------------------------------------------------------
+-- S09 (N=32) double_out: target -> grand final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|double_out|seed_high_vs_low|classic_kingtoss_removal|ekc', 32);
+-- S10 (N=32) double_out: target -> grand final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|double_out|seed_high_vs_low|classic_kingtoss_removal|classic', 32);
+-- S11 (N=32) double_out: target -> grand final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|double_out|seed_high_vs_low|mighty_finisher_shootout|ekc', 32);
+-- S12 (N=32) double_out: target -> grand final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|double_out|seed_high_vs_low|mighty_finisher_shootout|classic', 32);
+-- S13 (N=32) double_out: target -> grand final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|double_out|one_vs_two|classic_kingtoss_removal|ekc', 32);
+-- S14 (N=32) double_out: target -> grand final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|double_out|one_vs_two|classic_kingtoss_removal|classic', 32);
+-- S15 (N=32) double_out: target -> grand final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|double_out|one_vs_two|mighty_finisher_shootout|ekc', 32);
+-- S16 (N=32) double_out: target -> grand final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|double_out|one_vs_two|mighty_finisher_shootout|classic', 32);
+
+-- ---------------------------------------------------------------------
+-- §2.B schoch rows S17..S24 consolation @ default N=32 (Unit 8b). ADR-0039 §4:
+-- the auto-route now materialises a consolation sub-bracket alongside the main
+-- single-elim KO; early_ko_losers are routed in by the advance trigger. Each row
+-- runs BOTH endpoints (SPEC §5): _tts_run with target_to_consolation steering
+-- (A6 -> consolation final) and _tts_run_cons_main (A6 -> MAIN final).
+-- ---------------------------------------------------------------------
+-- S17 (N=32) consolation: target -> consolation final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|consolation|seed_high_vs_low|classic_kingtoss_removal|ekc|target_to_consolation', 32);
+SELECT * FROM _tts_run_cons_main('schoch|consolation|seed_high_vs_low|classic_kingtoss_removal|ekc', 32);
+-- S18 (N=32) consolation: target -> consolation final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|consolation|seed_high_vs_low|classic_kingtoss_removal|classic|target_to_consolation', 32);
+SELECT * FROM _tts_run_cons_main('schoch|consolation|seed_high_vs_low|classic_kingtoss_removal|classic', 32);
+-- S19 (N=32) consolation: target -> consolation final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|consolation|seed_high_vs_low|mighty_finisher_shootout|ekc|target_to_consolation', 32);
+SELECT * FROM _tts_run_cons_main('schoch|consolation|seed_high_vs_low|mighty_finisher_shootout|ekc', 32);
+-- S20 (N=32) consolation: target -> consolation final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|consolation|seed_high_vs_low|mighty_finisher_shootout|classic|target_to_consolation', 32);
+SELECT * FROM _tts_run_cons_main('schoch|consolation|seed_high_vs_low|mighty_finisher_shootout|classic', 32);
+-- S21 (N=32) consolation: target -> consolation final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|consolation|one_vs_two|classic_kingtoss_removal|ekc|target_to_consolation', 32);
+SELECT * FROM _tts_run_cons_main('schoch|consolation|one_vs_two|classic_kingtoss_removal|ekc', 32);
+-- S22 (N=32) consolation: target -> consolation final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|consolation|one_vs_two|classic_kingtoss_removal|classic|target_to_consolation', 32);
+SELECT * FROM _tts_run_cons_main('schoch|consolation|one_vs_two|classic_kingtoss_removal|classic', 32);
+-- S23 (N=32) consolation: target -> consolation final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|consolation|one_vs_two|mighty_finisher_shootout|ekc|target_to_consolation', 32);
+SELECT * FROM _tts_run_cons_main('schoch|consolation|one_vs_two|mighty_finisher_shootout|ekc', 32);
+-- S24 (N=32) consolation: target -> consolation final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|consolation|one_vs_two|mighty_finisher_shootout|classic|target_to_consolation', 32);
+SELECT * FROM _tts_run_cons_main('schoch|consolation|one_vs_two|mighty_finisher_shootout|classic', 32);
+
+-- §0.3 larger-size regime subset (N=60) for double_out / consolation (DoD-05).
+-- S09 (N=60) double_out: target -> grand final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|double_out|seed_high_vs_low|classic_kingtoss_removal|ekc', 60);
+-- S17 (N=60) consolation: target -> consolation final (SPEC §5/A6).
+SELECT * FROM _tts_run('schoch|consolation|seed_high_vs_low|classic_kingtoss_removal|ekc|target_to_consolation', 60);
+-- S17 (N=60) consolation main-path: target -> MAIN final (SPEC §5/A6 endpoint 1).
+SELECT * FROM _tts_run_cons_main('schoch|consolation|seed_high_vs_low|classic_kingtoss_removal|ekc', 60);
 
 SELECT * FROM finish();
 
