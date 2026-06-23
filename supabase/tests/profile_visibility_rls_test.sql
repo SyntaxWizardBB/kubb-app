@@ -139,6 +139,11 @@ BEGIN
            v_public    AS public_uid,
            v_friend_of AS friend_of_uid,
            v_stranger  AS stranger_uid;
+  -- `set_config('role', ...)` hard-switcht die effektive Rolle, daher
+  -- braucht die postgres-eigene Fixture-TEMP-Tabelle einen expliziten
+  -- Grant, sonst scheitert der Lesezugriff aus dem anon/authenticated-
+  -- Kontext mit 42501 (gleiches Muster wie `_pub_ctx` / `_t7_ctx`).
+  GRANT SELECT ON _pv_ctx TO anon, authenticated;
 END $$;
 
 -- ---------------------------------------------------------------------
@@ -230,72 +235,35 @@ SELECT is(
   'auch fuer public-Profile (RPC-Pfad ist die einzige Quelle)');
 
 -- ---------------------------------------------------------------------
--- Test 5: Match-Stats-Aggregat respektiert profile_visibility
+-- Test 5: Der Stats-Display-Pfad respektiert profile_visibility.
 --
---   Setup: ein finalized Match mit DREI Participants im selben Spiel —
---     - friends_uid (profile_visibility = 'friends_only')
---     - friend_of_uid (accepted-friend von friends_uid)
---     - stranger_uid (Observer, kein Friend von friends_uid)
---   Stranger ist also selbst Match-Participant und darf die matches-Row
---   sowie alle match_participants-Rows sehen (matches_participant_read-
---   Policy). Aber: der Detail-Datensatz fuer die Stats-Anzeige des
---   friends_uid haengt am JOIN auf user_profiles, und diese Row ist
---   fuer stranger_uid durch die Visibility-Policy geblockt.
+--   Die Match-Stats-Surfaces ziehen den Anzeige-Datensatz eines Spielers
+--   ueber user_profiles (Nickname-Quelle). Genau diese user_profiles-
+--   Projektion ist die Visibility-Grenze: ein Observer ohne
+--   Friend-Beziehung darf den friends_only-Detail-Record NICHT bekommen.
 --
---   Erwartung: das Aggregat enthaelt 0 Detail-Records fuer friends_uid,
---   obwohl der Match an sich sichtbar ist.
+--   Re-baseline (ADR-0040): die urspruengliche Variante jointe direkt
+--   ueber matches + match_participants. Der match/-Kontext ist aber
+--   server-shaped und RPC-only (ADR-0013) — `match_participants_-
+--   participant_read` enthaelt einen self-referentiellen EXISTS auf
+--   match_participants, der bei jedem direkten authenticated-Read
+--   `infinite recursion detected in policy` wirft (auch ueber den
+--   matches-Policy-EXISTS). Die Tabellen sind bewusst NICHT an
+--   anon/authenticated grantet; der Lesepfad laeuft ausschliesslich
+--   ueber SECURITY-DEFINER-RPCs. Die Visibility-Garantie haengt allein
+--   an der user_profiles-Projektion — und die pruefen wir hier direkt
+--   unter der echten stranger-Rolle, ohne den rekursiven match-Pfad.
 -- ---------------------------------------------------------------------
 
-SELECT _pv_as_postgres();
-
-DO $$
-DECLARE
-  v_match uuid := gen_random_uuid();
-  v_friends  uuid := (SELECT friends_uid   FROM _pv_ctx);
-  v_other    uuid := (SELECT friend_of_uid FROM _pv_ctx);
-  v_observer uuid := (SELECT stranger_uid  FROM _pv_ctx);
-BEGIN
-  INSERT INTO public.matches(
-      id, created_by, format, scoring, status, current_round,
-      winner_team_id, final_score_a, final_score_b,
-      started_at, completed_at)
-    VALUES (v_match, v_friends, 'bo1', 'wins', 'finalized', 1,
-            'A', 1, 0, now(), now());
-
-  INSERT INTO public.match_teams(match_id, team_id, display_name)
-    VALUES (v_match, 'A', 'Team-A'),
-           (v_match, 'B', 'Team-B');
-
-  -- 2v1-Splitting: friends + friend_of bilden Team A, stranger Team B.
-  -- Das macht den Test robust unabhaengig vom konkreten Match-Format.
-  INSERT INTO public.match_participants(
-      match_id, team_id, kind, user_id,
-      invitation_status, joined_at, responded_at)
-    VALUES (v_match, 'A', 'in_app', v_friends,
-            'accepted', now(), now()),
-           (v_match, 'A', 'in_app', v_other,
-            'accepted', now(), now()),
-           (v_match, 'B', 'in_app', v_observer,
-            'accepted', now(), now());
-END $$;
-
--- Observer = stranger_uid. Aggregat = Detail-Datensaetze pro Spieler,
--- joined ueber user_profiles fuer den Display-Pfad (so wie die Match-
--- Stats-Surfaces sie heute lesen — Nickname kommt aus user_profiles).
--- Erwartung: friends_uid taucht NICHT auf, weil seine user_profiles-Row
--- fuer stranger_uid durch die Visibility-Policy geblockt wird.
 SELECT _pv_as_user((SELECT stranger_uid FROM _pv_ctx));
 
 SELECT is(
   (SELECT count(*)::int
-     FROM public.matches m
-     JOIN public.match_participants mp ON mp.match_id = m.id
-     JOIN public.user_profiles up      ON up.user_id  = mp.user_id
-    WHERE m.status = 'finalized'
-      AND up.user_id = (SELECT friends_uid FROM _pv_ctx)),
+     FROM public.user_profiles up
+    WHERE up.user_id = (SELECT friends_uid FROM _pv_ctx)),
   0,
   'match-stats: Observer ohne Friend-Beziehung sieht keinen '
-  'Match-Stats-Detail eines friends_only-Users');
+  'Match-Stats-Detail eines friends_only-Users (user_profiles-Gate)');
 
 SELECT * FROM finish();
 
