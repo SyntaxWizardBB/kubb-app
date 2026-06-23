@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
+import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -110,6 +111,49 @@ final tournamentMatchListPollingProvider =
   void armFallback() {
     fallbackTimer = Timer(_matchFallbackPollInterval, () {
       ref.invalidate(tournamentMatchListProvider(id));
+      armFallback();
+    });
+  }
+
+  final fallbackSub = ref.listen<AsyncValue<bool>>(
+    realtimeFallbackProvider(id),
+    (_, next) {
+      final polling = next.maybeWhen(data: (v) => v, orElse: () => false);
+      if (polling) {
+        if (fallbackTimer == null) armFallback();
+      } else {
+        fallbackTimer?.cancel();
+        fallbackTimer = null;
+      }
+    },
+    fireImmediately: true,
+  );
+
+  ref.onDispose(() {
+    fallbackTimer?.cancel();
+    fallbackSub.close();
+  });
+});
+
+/// Participants/check-in fallback poller (Spec §3.1, acceptance 5.6, W1-T12).
+///
+/// The `tournament_participants` CDC drives check-in freshness live (ADR-0031
+/// D3), but it had no fallback poller — if the channel falls over for ≥60 s,
+/// check-in freshness drops to zero. This poller closes that gap exactly like
+/// [tournamentMatchListPollingProvider]: gated on the SAME
+/// [realtimeFallbackProvider] gate, it invalidates [tournamentDetailProvider]
+/// (which carries the participant + check-in snapshot) on the 30 s fallback
+/// cadence. A single self-rearming timer runs only while the channel is
+/// unhealthy and is cancelled on recovery — no unconditional `Timer.periodic`,
+/// no held background socket (ADR-0029).
+//
+// ignore: specify_nonobvious_property_types
+final tournamentParticipantsPollingProvider =
+    Provider.autoDispose.family<void, TournamentId>((ref, id) {
+  Timer? fallbackTimer;
+  void armFallback() {
+    fallbackTimer = Timer(_matchFallbackPollInterval, () {
+      ref.invalidate(tournamentDetailProvider(id));
       armFallback();
     });
   }

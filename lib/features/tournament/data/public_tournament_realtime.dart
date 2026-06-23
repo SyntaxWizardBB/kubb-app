@@ -211,10 +211,17 @@ class SupabasePublicTournamentRealtime implements PublicTournamentRealtime {
   @override
   Stream<PublicTournamentEvent> watch(TournamentId tournamentId) {
     final topic = publicTournamentRealtimeTopic(tournamentId);
-    final entry = _entries.putIfAbsent(
-      topic,
-      () => _open(topic),
-    )..refCount += 1;
+    // _open can throw (subscribe handshake fails). When it does the entry
+    // must not linger half-built in the map with a bumped refCount, or the
+    // onCancel teardown never runs and the channel zombies (Spec Bug 4.5).
+    final isNew = !_entries.containsKey(topic);
+    final _ChannelEntry entry;
+    try {
+      entry = _entries.putIfAbsent(topic, () => _open(topic))..refCount += 1;
+    } on Object {
+      if (isNew) _entries.remove(topic);
+      rethrow;
+    }
 
     late StreamSubscription<PublicTournamentEvent> sub;
     final controller = StreamController<PublicTournamentEvent>.broadcast(

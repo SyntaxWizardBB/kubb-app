@@ -16,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
+import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/data/tournament_config_draft.dart';
@@ -108,6 +109,9 @@ Future<void> _pumpStandings(
       overrides: [
         tournamentRemoteProvider.overrideWithValue(remote),
         currentUserIdProvider.overrideWith((_) => currentUser.value),
+        // The standings screen subscribes to the per-tournament channel as
+        // its realtime anchor (W1-T14); reuse the remote's fake transport.
+        realtimeChannelProvider.overrideWithValue(remote.realtime),
       ],
       child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,

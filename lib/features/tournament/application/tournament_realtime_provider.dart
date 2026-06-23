@@ -29,6 +29,34 @@ final tournamentMatchListRealtimeProvider = StreamProvider.autoDispose
   });
 });
 
+/// Realtime-Treiber für die Live-Rangliste (Spec §1.1, W1-T08).
+///
+/// `tournamentStandingsProvider` ist ein reiner `FutureProvider`, der die
+/// Tabelle clientseitig aus den finalisierten Matches synthetisiert — er
+/// hängt von Haus aus an keinem CDC. Dieser Provider watcht denselben
+/// `tournament_matches`-Stream wie [tournamentMatchListRealtimeProvider] und
+/// invalidiert bei jedem Event [tournamentStandingsProvider], damit die
+/// Rangliste sofort nachrechnet, statt bis zum nächsten manuellen Reload
+/// veraltet zu bleiben (Acceptance 5.1). Standings ist damit ein
+/// first-class Realtime-Concern.
+///
+/// Bewusst NICHT [tournamentRoundScheduleProvider] invalidieren: das ist ein
+/// CDC-Fold-Stream, ein `invalidate` würde seinen akkumulierten Stand
+/// zurücksetzen (siehe Doc-Block dort). Nur fetch-basierte Read-Provider.
+///
+/// `autoDispose` per Acceptance-Criterion.
+//
+// ignore: specify_nonobvious_property_types
+final tournamentStandingsRealtimeProvider = StreamProvider.autoDispose
+    .family<TournamentMatchRef, TournamentId>((ref, tournamentId) {
+  final remote = ref.watch(tournamentRemoteProvider);
+  final stream = remote.watchTournamentMatches(tournamentId);
+  return stream.map((event) {
+    ref.invalidate(tournamentStandingsProvider(tournamentId));
+    return event;
+  });
+});
+
 /// Realtime-Stream für ein einzelnes Tournament-Match (M4.1 §3.5).
 ///
 /// Subscribed intern auf den Per-Tournament-Channel (OD-M4-01) und

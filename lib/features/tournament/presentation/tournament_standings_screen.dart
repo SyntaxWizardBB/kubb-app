@@ -4,9 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
+import 'package:kubb_app/features/tournament/application/realtime_catchup_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
+import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/realtime_status_banner.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
@@ -56,6 +60,13 @@ class TournamentStandingsView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final id = TournamentId(tournamentId);
+    // Subscribe anchor (W1-T08/T14): drives the standings invalidation off
+    // the tournament_matches CDC and keeps the per-tournament channel open
+    // while this view is mounted, so the banner pair and the catch-up have a
+    // live channel to observe.
+    ref
+      ..watch(tournamentStandingsRealtimeProvider(id))
+      ..watch(realtimeCatchupProvider(id));
     final async = ref.watch(tournamentStandingsProvider(id));
     final detailAsync = ref.watch(tournamentDetailProvider(id));
     final myId = ref.watch(currentUserIdProvider);
@@ -73,24 +84,35 @@ class TournamentStandingsView extends ConsumerWidget {
           p.participantId: p.displayName!.trim(),
     };
 
-    return async.when(
-      // AUDIT §4.3 — fuenf Skeleton-Tabellenzeilen statt Spinner.
-      loading: () => const _StandingsSkeleton(),
-      error: (e, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(KubbTokens.space5),
-          child: Text(
-            '${l.tournamentStandingsLoadError}: $e',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: KubbTokens.miss),
+    // W1-T14: degraded/offline banner pair on this critical screen. Reuses
+    // the existing widgets (no duplication): the low-level state strip plus
+    // the fallback-polling strip driven by `realtimeFallbackProvider`.
+    return Column(
+      children: [
+        RealtimeStateBanner(tournamentId: id),
+        RealtimeStatusBanner(tournamentId: id),
+        Expanded(
+          child: async.when(
+            // AUDIT §4.3 — fuenf Skeleton-Tabellenzeilen statt Spinner.
+            loading: () => const _StandingsSkeleton(),
+            error: (e, _) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(KubbTokens.space5),
+                child: Text(
+                  '${l.tournamentStandingsLoadError}: $e',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: KubbTokens.miss),
+                ),
+              ),
+            ),
+            data: (rows) => _Table(
+              rows: rows,
+              callerId: myId,
+              displayNameById: displayNameById,
+            ),
           ),
         ),
-      ),
-      data: (rows) => _Table(
-        rows: rows,
-        callerId: myId,
-        displayNameById: displayNameById,
-      ),
+      ],
     );
   }
 }

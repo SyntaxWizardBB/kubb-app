@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
+import 'package:kubb_app/features/tournament/application/realtime_catchup_provider.dart';
 import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
@@ -152,10 +153,14 @@ Future<GoRouter> _pump(
             .overrideWith((_) async => standings),
         tournamentDetailProvider(_tid).overrideWith((_) async => _detail()),
         // Keep the realtime/fallback wiring inert (no network) — the
-        // reused match-list view watches both.
+        // reused match-list and standings views watch these.
         tournamentMatchListRealtimeProvider(_tid).overrideWith(
           (_) => const Stream<TournamentMatchRef>.empty(),
         ),
+        tournamentStandingsRealtimeProvider(_tid).overrideWith(
+          (_) => const Stream<TournamentMatchRef>.empty(),
+        ),
+        realtimeCatchupProvider(_tid).overrideWith((_) {}),
         realtimeFallbackProvider(_tid)
             .overrideWith((_) => Stream<bool>.value(false)),
       ],

@@ -1,3 +1,4 @@
+import 'package:kubb_domain/src/ports/realtime_channel.dart';
 import 'package:kubb_domain/src/values/ids.dart';
 
 /// Central channel-key / broadcast-topic builders (ADR-0029 §3 key table).
@@ -55,3 +56,28 @@ String tournamentBroadcastTopic(TournamentId tournamentId) =>
 @Deprecated('Use tournamentBroadcastTopic instead.')
 String publicTournamentRealtimeTopic(TournamentId tournamentId) =>
     tournamentBroadcastTopic(tournamentId);
+
+// --- Criticality mapping (ADR-0041 §2, Spec §2) ----------------------------
+
+/// Table prefixes whose channels carry the critical freshness tier. In v1
+/// only the per-tournament match feed qualifies — it drives the active match
+/// score, the live standings and the match status/clock (see
+/// [tournamentRealtimeChannelKey]). Declared here as a property of the
+/// channel-key builder so the tier is single-sourced and never decided ad hoc
+/// at the call-site.
+const Set<String> _criticalTablePrefixes = {'tournament_matches'};
+
+/// Maps a CDC channel key to its [RealtimeCriticality] tier.
+///
+/// Critical concerns (the per-tournament match feed) get the guaranteed
+/// catch-up, the tighter fallback cadence and the never-silent degraded
+/// banner. Everything else — registration/check-in (`tournament_participants`,
+/// `my*`), friends, team memberships, the inbox, and any unknown key —
+/// defaults to `normal`, so battery wins unless a concern is explicitly
+/// promoted here.
+RealtimeCriticality criticalityFor(String channelKey) {
+  final table = channelKey.split(':').first;
+  return _criticalTablePrefixes.contains(table)
+      ? RealtimeCriticality.critical
+      : RealtimeCriticality.normal;
+}

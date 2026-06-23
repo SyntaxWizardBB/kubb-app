@@ -93,6 +93,11 @@ class FakeTournamentRemote implements TournamentRemote {
   /// re-read fired (e.g. the participant CDC realtime provider, ADR-0031 D3).
   int detailFetchCount = 0;
 
+  /// Number of [listMatchesForTournament] calls. Only the standings provider
+  /// reads this, so catch-up tests count it to assert one re-read per rejoin
+  /// without the noise of the shared [detailFetchCount].
+  int matchesFetchCount = 0;
+
   /// Realtime adapter the `watch*` streams subscribe through. Tests drive
   /// events with [FakeRealtimeChannel.emit] addressed by
   /// [fakeRealtimeChannelKey] (see [matchesChannelKeyFor]).
@@ -514,8 +519,12 @@ class FakeTournamentRemote implements TournamentRemote {
   @override
   Future<List<TournamentMatchRef>> listMatchesForTournament(
     TournamentId id,
-  ) async =>
-      [for (final mid in _tournaments[id]!.matchIds) _matches[mid]!.toRef()];
+  ) async {
+    matchesFetchCount += 1;
+    final t = _tournaments[id];
+    if (t == null) return const [];
+    return [for (final mid in t.matchIds) _matches[mid]!.toRef()];
+  }
 
   @override
   Future<TournamentMatchRef?> getMatch(TournamentMatchId id) async =>

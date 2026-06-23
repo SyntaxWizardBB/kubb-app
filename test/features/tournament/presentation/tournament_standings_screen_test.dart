@@ -4,11 +4,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
+import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
+import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_standings_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
+import 'package:kubb_domain/src/test_support/fake_realtime_channel.dart';
+
+import '../../../fixtures/tournament/fake_tournament_remote.dart';
 
 ParticipantStats _stat(String id,
     {int total = 0, int wins = 0, int scored = 0, int conceded = 0}) {
@@ -94,6 +99,15 @@ Future<void> _pump(
         tournamentDetailProvider(const TournamentId('t-1'))
             .overrideWith((_) async => _detail(participants)),
         currentUserIdProvider.overrideWith((_) => me),
+        // The standings view now subscribes to the per-tournament channel as
+        // its realtime anchor (W1-T14); give it a fake transport + remote.
+        tournamentRemoteProvider.overrideWithValue(
+          FakeTournamentRemote(
+            initialUser: const UserId('me'),
+            realtime: FakeRealtimeChannel(),
+          ),
+        ),
+        realtimeChannelProvider.overrideWithValue(FakeRealtimeChannel()),
       ],
       child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,

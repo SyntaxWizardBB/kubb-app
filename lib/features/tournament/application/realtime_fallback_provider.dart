@@ -84,6 +84,10 @@ final realtimePollingFallbackProvider =
 
   void emit({required bool polling}) {
     if (polling == lastEmitted) return;
+    // errored↔joined flicker can fire a pending flip after the listener has
+    // gone and the controller closed (autoDispose). Guard before add so the
+    // race never writes a closed controller (Spec Bug 4.3).
+    if (controller.isClosed) return;
     lastEmitted = polling;
     controller.add(polling);
   }

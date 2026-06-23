@@ -85,8 +85,16 @@ mixin RealtimeChannelLifecycle {
     if (entry == null) return;
     if (entry.refCount > 0) entry.refCount -= 1;
     if (entry.refCount > 0) return;
-    entry.pendingClose?.cancel();
-    entry.pendingClose = Timer(closeDebounce, () => disposeEntry(entry));
+    // A manual close cancels any in-flight reconnect and resets the backoff
+    // so a re-subscribe inside the debounce window (or a later failure on a
+    // re-opened entry) starts again at the 1 s step instead of skipping the
+    // early stages of the schedule (Spec Bug 4.4).
+    entry
+      ..reconnectTimer?.cancel()
+      ..reconnectTimer = null
+      ..backoffIndex = 0
+      ..pendingClose?.cancel()
+      ..pendingClose = Timer(closeDebounce, () => disposeEntry(entry));
   }
 
   /// Tears down [entry] for good: cancels timers, removes it from the map,
@@ -98,8 +106,18 @@ mixin RealtimeChannelLifecycle {
     entry.reconnectTimer?.cancel();
     entry.pendingClose?.cancel();
     entries.remove(entry.key);
-    await teardownTransport(entry);
-    entry.stateController.add(RealtimeChannelState.closed);
+    // The transport seam belongs to the concrete adapter and may throw on a
+    // half-open Supabase channel. disposeEntry is the mixin's teardown
+    // contract ("must not throw") — swallow so a misbehaving adapter never
+    // aborts the controller cleanup below (Spec Bug 4.2).
+    try {
+      await teardownTransport(entry);
+    } on Object {
+      // Best-effort teardown — the entry is removed regardless.
+    }
+    if (!entry.stateController.isClosed) {
+      entry.stateController.add(RealtimeChannelState.closed);
+    }
     await entry.stateController.close();
     await entry.changeController.close();
   }

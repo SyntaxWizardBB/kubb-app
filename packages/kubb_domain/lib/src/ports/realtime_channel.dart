@@ -32,3 +32,14 @@ abstract interface class RealtimeChannel {
   /// "reconnecting…" banner.
   Stream<RealtimeChannelState> stateStream(String channelKey);
 }
+
+/// Freshness tier of a synchronised concern (ADR-0041 §2, Spec §2).
+///
+/// A declarative property of the channel-key, not an ad-hoc decision at the
+/// call-site. `critical` concerns (active match score, live standings, match
+/// status/clock of a tournament the user plays in or watches live) get a
+/// guaranteed catch-up refetch, a tighter fallback cadence and a never-silent
+/// degraded banner — for them freshness wins over battery. `normal` concerns
+/// (registration, check-in lists, friends, my-teams/-tournaments, inbox) keep
+/// the standard CDC + 30 s fallback with no banner pressure.
+enum RealtimeCriticality { critical, normal }

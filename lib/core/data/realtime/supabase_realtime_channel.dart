@@ -60,8 +60,14 @@ class SupabaseRealtimeChannel
           column: binding.filterColumn,
           value: binding.filterValue,
         ),
-        callback: (payload) =>
-            entry.changeController.add(_mapPayload(payload, binding.table)),
+        callback: (payload) {
+          // A CDC event can still fire after the entry was disposed (fast
+          // in/out navigation tears the channel down before Supabase stops
+          // delivering). Guard before touching the closed controller so we
+          // never throw "StreamController is closed" (Spec Bug 4.1).
+          if (entry.disposed || entry.changeController.isClosed) return;
+          entry.changeController.add(_mapPayload(payload, binding.table));
+        },
       )
       ..subscribe((status, error) => _handleStatus(entry, status));
     entry.transport = channel;
