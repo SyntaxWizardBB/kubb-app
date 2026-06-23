@@ -937,12 +937,20 @@ BEGIN
   -- ---- Enter the KO phase once the prelim is terminal. ----
   -- created_by + ko_config als postgres lesen (kein authenticated-Grant), erst
   -- danach in die Organisator-Rolle für den SECURITY-DEFINER-RPC wechseln.
-  PERFORM _tts_as_pg();
-  SELECT created_by, ko_config INTO v_ko_org, v_ko_cfg
-    FROM public.tournaments WHERE id = v_tid;
-  PERFORM _tts_as(v_ko_org);
-  PERFORM public.tournament_start_ko_phase(v_tid, v_ko_cfg);
-  PERFORM _tts_as_pg();
+  -- ADR-0039 §4: swiss_then_ko / schoch_then_ko run on the stage graph; the
+  -- runner auto-routes top_k into the KO stage and materialises the bracket
+  -- itself (the single ko_config-aware source). The explicit legacy
+  -- tournament_start_ko_phase is only the KO materialiser on the flat-pool
+  -- round_robin_then_ko path (stage_node_id NULL); firing it on the stage-graph
+  -- path raises ALREADY_STARTED against the auto-materialised KO.
+  IF v_format = 'round_robin_then_ko' THEN
+    PERFORM _tts_as_pg();
+    SELECT created_by, ko_config INTO v_ko_org, v_ko_cfg
+      FROM public.tournaments WHERE id = v_tid;
+    PERFORM _tts_as(v_ko_org);
+    PERFORM public.tournament_start_ko_phase(v_tid, v_ko_cfg);
+    PERFORM _tts_as_pg();
+  END IF;
 
   -- ---- KO: play every bracket round to a terminal result. ----
   FOR v_guard IN 1..12 LOOP
