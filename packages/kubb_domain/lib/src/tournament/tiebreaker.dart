@@ -155,6 +155,112 @@ class TiebreakerChain {
   }
 }
 
+/// The default chain used when a configured tiebreaker order is empty or
+/// carries nothing recognizable. Points first, then wins and kubb difference,
+/// then the on-site shoot-out as the last regular decider before the ID
+/// fallback. Deliberately Buchholz-free so it is safe for any stage type;
+/// schoch standings layer Buchholz on top via [standingsChainFor].
+const List<TiebreakerCriterion> defaultTiebreakerChain = [
+  TiebreakerCriterion.totalPoints,
+  TiebreakerCriterion.wins,
+  TiebreakerCriterion.kubbDifference,
+  TiebreakerCriterion.mightyFinisherShootout,
+];
+
+/// Parses a single `tiebreaker_order` wire token to its [TiebreakerCriterion],
+/// or `null` when the token is unknown. Tokens are the snake_case strings that
+/// `tournaments.tiebreaker_order` stores (the serialization contract shared with
+/// the ranking RPCs). Two aliases are accepted: `kubb_diff` for
+/// `kubb_difference` and `shootout` for `mighty_finisher_shootout`, mirroring
+/// how `StageNodeType.fromWire` tolerates legacy spellings.
+TiebreakerCriterion? tiebreakerCriterionFromWire(String token) {
+  switch (token) {
+    case 'total_points':
+      return TiebreakerCriterion.totalPoints;
+    case 'wins':
+      return TiebreakerCriterion.wins;
+    case 'kubb_difference':
+    case 'kubb_diff':
+      return TiebreakerCriterion.kubbDifference;
+    case 'buchholz':
+      return TiebreakerCriterion.buchholz;
+    case 'buchholz_minus_h2h':
+      return TiebreakerCriterion.buchholzMinusH2H;
+    case 'median_buchholz':
+      return TiebreakerCriterion.medianBuchholz;
+    case 'direct_comparison':
+      return TiebreakerCriterion.directComparison;
+    case 'mighty_finisher_shootout':
+    case 'shootout':
+      return TiebreakerCriterion.mightyFinisherShootout;
+    case 'random':
+      return TiebreakerCriterion.random;
+  }
+  return null;
+}
+
+/// Maps a list of wire tokens to a criterion chain, dropping anything
+/// unrecognized while preserving the order of the rest. Falls back to
+/// [defaultTiebreakerChain] when nothing maps (empty input or all-unknown), so
+/// callers always get a usable chain instead of an empty one.
+List<TiebreakerCriterion> tiebreakerChainFromTokens(List<String> tokens) {
+  final mapped = [
+    for (final t in tokens) ?tiebreakerCriterionFromWire(t),
+  ];
+  return mapped.isEmpty ? defaultTiebreakerChain : mapped;
+}
+
+/// The format-driven standings chain for a stage [type], honouring the
+/// configured [tiebreakerOrder] where it makes sense (vorrunde-ranking-spec
+/// §6.2, live-views-and-inbox-spec §5.3).
+///
+///  * [StageNodeType.groupPhase] and [StageNodeType.roundRobin]: every Buchholz
+///    variant is stripped from the configured order — within a group everyone
+///    faces the same opponents, so Buchholz never separates them. The fixed
+///    points -> kubb-difference -> shoot-out chain from [chainForStageType] is
+///    the fallback when the config maps to nothing usable.
+///  * [StageNodeType.schoch]: the naive [TiebreakerCriterion.buchholzMinusH2H]
+///    is replaced by the spec-conform §5 [TiebreakerCriterion.buchholz]; the
+///    fixed points -> Buchholz -> shoot-out chain is the fallback.
+///  * Any other stage type: the configured order verbatim (via
+///    [tiebreakerChainFromTokens]), falling back to [defaultTiebreakerChain].
+TiebreakerChain standingsChainFor(
+  StageNodeType type,
+  List<String> tiebreakerOrder,
+) {
+  final mapped = [
+    for (final t in tiebreakerOrder) ?tiebreakerCriterionFromWire(t),
+  ];
+  switch (type) {
+    case StageNodeType.groupPhase:
+    case StageNodeType.roundRobin:
+      final configured = mapped
+          .where((c) =>
+              c != TiebreakerCriterion.buchholz &&
+              c != TiebreakerCriterion.buchholzMinusH2H &&
+              c != TiebreakerCriterion.medianBuchholz)
+          .toList();
+      if (configured.isEmpty) {
+        return chainForStageType(StageNodeType.groupPhase);
+      }
+      return TiebreakerChain(configured);
+    case StageNodeType.schoch:
+      final configured = [
+        for (final c in mapped)
+          c == TiebreakerCriterion.buchholzMinusH2H
+              ? TiebreakerCriterion.buchholz
+              : c,
+      ];
+      if (configured.isEmpty) return chainForStageType(StageNodeType.schoch);
+      return TiebreakerChain(configured);
+    case StageNodeType.singleElim:
+    case StageNodeType.doubleElim:
+    case StageNodeType.consolation:
+    case StageNodeType.shootoutQuali:
+      return TiebreakerChain(tiebreakerChainFromTokens(tiebreakerOrder));
+  }
+}
+
 /// The fixed preliminary-ranking chain for a stage [type] (ADR-0035,
 /// vorrunde-ranking-spec §6.2). Not user-configurable and not persisted: the
 /// chain follows from the stage type alone.
