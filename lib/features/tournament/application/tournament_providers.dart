@@ -348,6 +348,26 @@ class TournamentActions {
     _ref.invalidate(tournamentListProvider);
   }
 
+  /// Organizer remove of a confirmed or waitlisted participant via
+  /// `tournament_remove_participant`. Soft-removes the row and promotes the
+  /// next waitlisted entry into the freed slot (server-side). Invalidates the
+  /// detail + discovery list AND the standings, because the promotion shifts
+  /// the confirmed pool the standings are computed over. The server owns the
+  /// setup gate and the status window; this method does not duplicate them.
+  Future<void> removeParticipant(
+    TournamentParticipantId id, {
+    required TournamentId tournamentId,
+    String? reason,
+  }) async {
+    await _ref
+        .read(tournamentRemoteProvider)
+        .removeParticipant(id, reason: reason);
+    _ref
+      ..invalidate(tournamentDetailProvider(tournamentId))
+      ..invalidate(tournamentListProvider)
+      ..invalidate(tournamentStandingsProvider(tournamentId));
+  }
+
   /// Organizer override for a match. Persists the final score and the
   /// mandatory reason via the `tournament_organizer_override` RPC, then
   /// refreshes the affected match detail so the acting device flips to

@@ -839,6 +839,20 @@ abstract interface class TournamentRemote {
   Future<void> confirmRegistration(TournamentParticipantId participantId);
   Future<void> rejectRegistration(TournamentParticipantId participantId);
 
+  /// Setup-gated soft removal of a confirmed or waitlisted participant. Backed
+  /// by `tournament_remove_participant` (migration `20261312000000`): sets the
+  /// row to `withdrawn` (never a hard delete that would cascade finalized
+  /// matches away), promotes the next waitlisted entry into the freed slot and
+  /// notices the organizer about any open matches to forfeit or override. The
+  /// optional [reason] is recorded in the audit tail. Server-authoritative on
+  /// the setup gate and the registration/live status window; the RPC errors
+  /// outside it. This is the organizer remove — distinct from the participant's
+  /// own [withdrawRegistration] and from [rejectRegistration].
+  Future<void> removeParticipant(
+    TournamentParticipantId participantId, {
+    String? reason,
+  });
+
   // On-site check-in (ADR-0031 Phase D)
 
   /// Marks a confirmed participant as physically present on site

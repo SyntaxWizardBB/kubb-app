@@ -4028,6 +4028,27 @@
   "@tournamentDetailActionRemove": {
     "description": "Optional organizer moderation action: remove a participant (not a required step)"
   },
+  "tournamentDetailRemoveConfirmTitle": "Teilnehmer entfernen?",
+  "@tournamentDetailRemoveConfirmTitle": {
+    "description": "Title of the confirm dialog before an organizer removes a participant"
+  },
+  "tournamentDetailRemoveConfirmBody": "{label} wird aus dem Turnier entfernt. Ein Platz auf der Warteliste rückt nach. Offene Spiele dieser Person musst du danach werten oder annullieren.",
+  "@tournamentDetailRemoveConfirmBody": {
+    "description": "Body of the confirm dialog before an organizer removes a participant",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "tournamentDetailRemoveReasonLabel": "Grund (optional)",
+  "@tournamentDetailRemoveReasonLabel": {
+    "description": "Label of the optional reason text field in the remove-participant dialog"
+  },
+  "tournamentDetailRemoveConfirmAction": "Entfernen",
+  "@tournamentDetailRemoveConfirmAction": {
+    "description": "Confirm button label in the remove-participant dialog"
+  },
   "tournamentDetailCheckinAction": "Einchecken",
   "@tournamentDetailCheckinAction": {
     "description": "Organizer action on a confirmed participant row: mark them physically present on site (ADR-0031 Phase D check-in)"

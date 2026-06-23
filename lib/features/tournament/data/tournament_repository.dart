@@ -442,6 +442,20 @@ class TournamentRepository implements TournamentRemote {
         participantId,
       );
 
+  @override
+  Future<void> removeParticipant(
+    TournamentParticipantId participantId, {
+    String? reason,
+  }) {
+    return _client.rpc<void>(
+      'tournament_remove_participant',
+      params: <String, dynamic>{
+        'p_participant_id': participantId.value,
+        'p_reason': ?reason,
+      },
+    );
+  }
+
   // On-site check-in (ADR-0031 Phase D, Block D3). Both calls forward to the
   // D1 RPCs (migration 20261265000000); the server owns the manage gate (K4),
   // the status window and the confirmed-precondition. No client-side

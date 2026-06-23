@@ -163,6 +163,12 @@ class _FakeTournamentRemote implements TournamentRemote {
   Future<void> rejectRegistration(TournamentParticipantId participantId) async {}
 
   @override
+  Future<void> removeParticipant(
+    TournamentParticipantId participantId, {
+    String? reason,
+  }) async {}
+
+  @override
   Future<void> checkinParticipant(TournamentParticipantId participantId) async {}
 
   @override

@@ -3228,6 +3228,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tournamentDetailActionRemove => 'Entfernen';
 
   @override
+  String get tournamentDetailRemoveConfirmTitle => 'Teilnehmer entfernen?';
+
+  @override
+  String tournamentDetailRemoveConfirmBody(String label) {
+    return '$label wird aus dem Turnier entfernt. Ein Platz auf der Warteliste rückt nach. Offene Spiele dieser Person musst du danach werten oder annullieren.';
+  }
+
+  @override
+  String get tournamentDetailRemoveReasonLabel => 'Grund (optional)';
+
+  @override
+  String get tournamentDetailRemoveConfirmAction => 'Entfernen';
+
+  @override
   String get tournamentDetailCheckinAction => 'Einchecken';
 
   @override

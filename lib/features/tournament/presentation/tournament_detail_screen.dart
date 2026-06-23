@@ -199,7 +199,7 @@ class _Body extends ConsumerWidget {
             Text(l.tournamentDetailParticipantsEmpty,
                 style: TextStyle(fontSize: 13, color: tokens.fgMuted)),
           for (final p in confirmedParts)
-            _participantRow(context, ref, p, isCreator, l, tokens,
+            _participantRow(context, ref, p, l, tokens,
                 tournamentId: id,
                 canManage: canManage,
                 checkinWindowOpen: checkinWindowOpen),
@@ -217,8 +217,10 @@ class _Body extends ConsumerWidget {
             const SizedBox(height: KubbTokens.space1),
             // Waitlisted rows never get a check-in toggle (check-in is for
             // confirmed pool members only — Phase-D spec, check-in ≠ confirm).
+            // The organizer remove is shown here too once they can manage.
             for (final p in waitlistParts)
-              _participantRow(context, ref, p, isCreator, l, tokens),
+              _participantRow(context, ref, p, l, tokens,
+                  tournamentId: id, canManage: canManage),
           ],
         ]),
         // T17: Roster tab visibility. The caller's participant carries a
@@ -314,7 +316,6 @@ Widget _participantRow(
   BuildContext context,
   WidgetRef ref,
   TournamentParticipant p,
-  bool isOrganizer,
   AppLocalizations l,
   KubbTokens tokens, {
   // D4: on-site check-in gate. The toggle is rendered ONLY for confirmed rows
@@ -385,13 +386,82 @@ Widget _participantRow(
                   : l.tournamentDetailStatusConfirmed,
               style: TextStyle(fontSize: 11, color: tokens.fgMuted)),
         ),
-      if (isOrganizer)
+      if (canManage && tournamentId != null)
         TextButton(
-            onPressed: () =>
-                _safe(context, () => actions.rejectRegistration(pid)),
+            style: TextButton.styleFrom(foregroundColor: KubbTokens.miss),
+            onPressed: () => _confirmRemoveParticipant(
+                  context,
+                  actions,
+                  pid,
+                  tournamentId,
+                  p.displayLabel,
+                  l,
+                ),
             child: Text(l.tournamentDetailActionRemove)),
     ]),
   );
+}
+
+/// Confirms an organizer remove with an optional reason, then routes to
+/// [TournamentActions.removeParticipant] (server-gated soft removal +
+/// waitlist promotion). Data-relevant, hence the explicit confirm; the
+/// reason is recorded in the audit tail when given.
+Future<void> _confirmRemoveParticipant(
+  BuildContext context,
+  TournamentActions actions,
+  TournamentParticipantId pid,
+  TournamentId tournamentId,
+  String label,
+  AppLocalizations l,
+) async {
+  final reasonController = TextEditingController();
+  try {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l.tournamentDetailRemoveConfirmTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l.tournamentDetailRemoveConfirmBody(label)),
+            const SizedBox(height: KubbTokens.space3),
+            TextField(
+              controller: reasonController,
+              decoration: InputDecoration(
+                labelText: l.tournamentDetailRemoveReasonLabel,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child:
+                Text(MaterialLocalizations.of(dialogContext).cancelButtonLabel),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: KubbTokens.miss),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l.tournamentDetailRemoveConfirmAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final reason = reasonController.text.trim();
+    if (!context.mounted) return;
+    await _safe(
+      context,
+      () => actions.removeParticipant(
+        pid,
+        tournamentId: tournamentId,
+        reason: reason.isEmpty ? null : reason,
+      ),
+    );
+  } finally {
+    reasonController.dispose();
+  }
 }
 
 /// Formats a check-in timestamp for the inline row label (D4-3). The stored

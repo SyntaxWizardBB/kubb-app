@@ -497,6 +497,13 @@ class FakeTournamentRemote implements TournamentRemote {
       _participants[pid]!.status = _PStatus.rejected;
 
   @override
+  Future<void> removeParticipant(
+    TournamentParticipantId pid, {
+    String? reason,
+  }) async =>
+      _participants[pid]!.status = _PStatus.withdrawn;
+
+  @override
   Future<void> checkinParticipant(TournamentParticipantId pid) async =>
       _participants[pid]!.checkedInAt ??= DateTime.now().toUtc();
 

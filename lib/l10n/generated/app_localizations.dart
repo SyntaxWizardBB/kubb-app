@@ -5866,6 +5866,30 @@ abstract class AppLocalizations {
   /// **'Entfernen'**
   String get tournamentDetailActionRemove;
 
+  /// Title of the confirm dialog before an organizer removes a participant
+  ///
+  /// In de, this message translates to:
+  /// **'Teilnehmer entfernen?'**
+  String get tournamentDetailRemoveConfirmTitle;
+
+  /// Body of the confirm dialog before an organizer removes a participant
+  ///
+  /// In de, this message translates to:
+  /// **'{label} wird aus dem Turnier entfernt. Ein Platz auf der Warteliste rückt nach. Offene Spiele dieser Person musst du danach werten oder annullieren.'**
+  String tournamentDetailRemoveConfirmBody(String label);
+
+  /// Label of the optional reason text field in the remove-participant dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Grund (optional)'**
+  String get tournamentDetailRemoveReasonLabel;
+
+  /// Confirm button label in the remove-participant dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Entfernen'**
+  String get tournamentDetailRemoveConfirmAction;
+
   /// Organizer action on a confirmed participant row: mark them physically present on site (ADR-0031 Phase D check-in)
   ///
   /// In de, this message translates to:
