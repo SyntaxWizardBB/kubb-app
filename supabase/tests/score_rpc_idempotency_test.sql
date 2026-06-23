@@ -9,15 +9,22 @@
 --   1. Erster Submit lamport=5/device='dev-A' → Row mit lamport_counter=5.
 --   2. Zweiter identischer Submit → kein neuer Row (Partial-UNIQUE-DEDUP).
 --   3. Legacy-4-Param-Pfad ohne Lamport → Rows skalieren mit set_index.
---   4. Submits lamport=5 + lamport=6 (gleiches Device) → zwei Rows.
---   5. Submits lamport=5 dev-A + lamport=5 dev-B → zwei Rows (Device-Split).
+--   4. Submits lamport=5 + lamport=6 (gleicher Slot, gleiches Device)
+--      → eine Row, in-place ersetzt, lamport=6 persistiert (DSCORE-30).
+--   5. Submits lamport=5 dev-A + lamport=5 dev-B (gleicher Slot)
+--      → eine Row, in-place ersetzt, device='dev-B' persistiert.
+--
+-- Cases 4/5 erzwingen REPLACE-Semantik: derselbe Submitter hat pro
+-- Versuch (consensus_round) und Set genau eine aktuelle Eingabe
+-- (unique_slot). Ein Outbox-Flush mit neuem Lamport ersetzt die alte,
+-- statt mit 23505 auf unique_slot zu kollidieren.
 --
 -- Pattern: Auth-Switch via `set_config('request.jwt.claims', ...)` plus
 -- `set_config('role','authenticated', ...)` analog `tournament_ko_rpcs.sql`.
 
 BEGIN;
 
-SELECT plan(7);
+SELECT plan(9);
 
 -- ---------------------------------------------------------------------
 -- Helpers: Auth-Switch + Fixture-Seed.
@@ -173,8 +180,9 @@ SELECT is(
   'Case 3: Legacy-Pfad schreibt zwei Rows mit lamport_counter IS NULL');
 
 -- ---------------------------------------------------------------------
--- Case 4: Zwei Submits selbes Device, verschiedene Lamport-Counter
---         → zwei Rows (kein Idempotenz-Treffer).
+-- Case 4: Zwei Submits selber Slot, selbes Device, gebumpter Lamport
+--         (Outbox-Flush nach korrigierter Eingabe) → eine Row, in-place
+--         ersetzt. unique_slot bleibt total, der neue Lamport gewinnt.
 -- ---------------------------------------------------------------------
 
 DO $$
@@ -199,12 +207,18 @@ BEGIN
 END $$;
 
 SELECT is(_t3_count((SELECT match_id FROM _t3_ctx4)),
-         2,
-         'Case 4: unterschiedliche Lamport-Counter erzeugen zwei Rows');
+         1,
+         'Case 4: gebumpter Lamport ersetzt in-place, eine Row');
+
+SELECT is(
+  (SELECT lamport_counter FROM public.tournament_set_score_proposals
+     WHERE match_id = (SELECT match_id FROM _t3_ctx4)),
+  6,
+  'Case 4: der neuere Lamport-Counter 6 wurde persistiert');
 
 -- ---------------------------------------------------------------------
--- Case 5: Gleicher Lamport-Counter, verschiedene Devices → zwei Rows
---         (Device-Achse trennt den Idempotenz-Schluessel).
+-- Case 5: Gleicher Lamport, gewechseltes Device, selber Slot → eine Row,
+--         in-place ersetzt, das zuletzt gesehene Device gewinnt.
 -- ---------------------------------------------------------------------
 
 DO $$
@@ -228,16 +242,89 @@ BEGIN
     SELECT v_match AS match_id;
 END $$;
 
-SELECT is(_t3_count((SELECT match_id FROM _t3_ctx5)),
-         2,
-         'Case 5: verschiedene Device-Ids erzeugen zwei Rows');
+SELECT is(
+  (SELECT device_id FROM public.tournament_set_score_proposals
+     WHERE match_id = (SELECT match_id FROM _t3_ctx5)),
+  'dev-B',
+  'Case 5: bei einer Row gewinnt das zuletzt gesehene Device dev-B');
+
+-- ---------------------------------------------------------------------
+-- Case 6: Identischer Replay (gleicher Lamport + Device) ist ein echtes
+--         No-Op — der WHERE-Guard unterdrückt das UPDATE, proposed_at
+--         bleibt unverändert (kein Row-Churn bei Netz-Retry).
+-- ---------------------------------------------------------------------
+
+DO $$
+DECLARE
+  v_match uuid;
+  v_user  uuid;
+  v_first timestamptz;
+BEGIN
+  SELECT s.match_id, s.user_id INTO v_match, v_user FROM _t3_seed_match() s;
+  PERFORM _t3_as(v_user);
+  PERFORM public.tournament_propose_set_score(
+    v_match, 1, 1,
+    '{"basekubbs_a":6,"basekubbs_b":3,"winner":"A"}'::jsonb,
+    5, 'dev-A');
+  SELECT proposed_at INTO v_first
+    FROM public.tournament_set_score_proposals WHERE match_id = v_match;
+  PERFORM pg_sleep(0.01);
+  PERFORM public.tournament_propose_set_score(
+    v_match, 1, 1,
+    '{"basekubbs_a":6,"basekubbs_b":3,"winner":"A"}'::jsonb,
+    5, 'dev-A');
+  PERFORM _t3_as_postgres();
+
+  CREATE TEMP TABLE _t3_ctx6 ON COMMIT DROP AS
+    SELECT v_match AS match_id, v_first AS first_proposed_at;
+END $$;
 
 SELECT is(
-  (SELECT count(DISTINCT device_id)::int
-     FROM public.tournament_set_score_proposals
-     WHERE match_id = (SELECT match_id FROM _t3_ctx5)),
-  2,
-  'Case 5: beide Device-Ids landeten distinct in der Persistenz');
+  (SELECT proposed_at FROM public.tournament_set_score_proposals
+     WHERE match_id = (SELECT match_id FROM _t3_ctx6)),
+  (SELECT first_proposed_at FROM _t3_ctx6),
+  'Case 6: identischer Replay lässt proposed_at unverändert (No-Op)');
+
+-- ---------------------------------------------------------------------
+-- Case 7: Echter Konflikt zweier Submitter im selben Versuch/Set bleibt
+--         zwei Rows — der Konsens-Vergleich (ADR-0007) liest weiter eine
+--         kanonische Zeile pro Seite. Replace darf das nicht stilllegen.
+-- ---------------------------------------------------------------------
+
+DO $$
+DECLARE
+  v_match uuid;
+  v_user_a uuid;
+  v_user_b uuid := gen_random_uuid();
+BEGIN
+  SELECT s.match_id, s.user_id INTO v_match, v_user_a FROM _t3_seed_match() s;
+  INSERT INTO auth.users(id, instance_id, aud, role, email,
+                         encrypted_password, email_confirmed_at,
+                         created_at, updated_at)
+    VALUES (v_user_b, '00000000-0000-0000-0000-000000000000',
+            'authenticated', 'authenticated',
+            'idem-b-' || v_user_b::text || '@test.local',
+            '', now(), now(), now());
+
+  PERFORM _t3_as(v_user_a);
+  PERFORM public.tournament_propose_set_score(
+    v_match, 1, 1,
+    '{"basekubbs_a":6,"basekubbs_b":2,"winner":"A"}'::jsonb,
+    5, 'dev-A');
+  PERFORM _t3_as(v_user_b);
+  PERFORM public.tournament_propose_set_score(
+    v_match, 1, 1,
+    '{"basekubbs_a":2,"basekubbs_b":6,"winner":"B"}'::jsonb,
+    7, 'dev-B');
+  PERFORM _t3_as_postgres();
+
+  CREATE TEMP TABLE _t3_ctx7 ON COMMIT DROP AS
+    SELECT v_match AS match_id;
+END $$;
+
+SELECT is(_t3_count((SELECT match_id FROM _t3_ctx7)),
+         2,
+         'Case 7: zwei verschiedene Submitter behalten je eine eigene Row');
 
 SELECT * FROM finish();
 
