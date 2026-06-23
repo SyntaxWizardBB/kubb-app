@@ -124,6 +124,35 @@ void main() {
       expect(withPitch, isNot(equals(noPitch)));
       expect(withPitch.hashCode, isNot(equals(noPitch.hashCode)));
     });
+
+    test('groupLabel defaults to null and breaks equality when set', () {
+      const noGroup = TournamentMatchRef(
+        matchId: TournamentMatchId('m1'),
+        tournamentId: TournamentId('t1'),
+        roundNumber: 1,
+        matchNumberInRound: 3,
+        participantA: TournamentParticipantId('p1'),
+        participantB: TournamentParticipantId('p2'),
+        status: TournamentMatchStatus.scheduled,
+        consensusRound: 1,
+      );
+      expect(noGroup.groupLabel, isNull);
+
+      const withGroup = TournamentMatchRef(
+        matchId: TournamentMatchId('m1'),
+        tournamentId: TournamentId('t1'),
+        roundNumber: 1,
+        matchNumberInRound: 3,
+        participantA: TournamentParticipantId('p1'),
+        participantB: TournamentParticipantId('p2'),
+        status: TournamentMatchStatus.scheduled,
+        consensusRound: 1,
+        groupLabel: 'A',
+      );
+      expect(withGroup.groupLabel, 'A');
+      expect(withGroup, isNot(equals(noGroup)));
+      expect(withGroup.hashCode, isNot(equals(noGroup.hashCode)));
+    });
   });
 
   group('TournamentSetScoreProposal', () {
@@ -255,6 +284,53 @@ void main() {
         isNot(equals(const TournamentParticipantId('x'))),
       );
       expect(const UserId('u').toString(), equals('UserId(u)'));
+    });
+  });
+
+  group('TournamentDetailHeader (W3-T09)', () {
+    TournamentDetailHeader header({
+      int teamSize = 1,
+      Map<String, Object?> setup = const <String, Object?>{},
+    }) =>
+        TournamentDetailHeader(
+          tournamentId: 't1',
+          displayName: 'Spring Cup',
+          createdByUserId: 'u1',
+          clubId: null,
+          teamSize: teamSize,
+          maxTeamSize: teamSize,
+          minParticipants: 4,
+          maxParticipants: 16,
+          format: TournamentFormat.roundRobinThenKo,
+          scoring: TournamentScoring.ekc,
+          matchFormatConfig: const <String, Object?>{},
+          tiebreakerOrder: const <String>[],
+          byePoints: null,
+          forfeitPoints: null,
+          status: TournamentStatus.live,
+          publishedAt: null,
+          startedAt: null,
+          completedAt: null,
+          setup: setup,
+        );
+
+    test('isTeam is false for a solo tournament (teamSize 1)', () {
+      expect(header().isTeam, isFalse);
+    });
+
+    test('isTeam is true once teamSize exceeds one', () {
+      expect(header(teamSize: 2).isTeam, isTrue);
+    });
+
+    test('qualifiersPerGroup reads pool_phase_config from setup', () {
+      final h = header(setup: const <String, Object?>{
+        'pool_phase_config': <String, Object?>{'qualifiers_per_group': 3},
+      });
+      expect(h.qualifiersPerGroup, 3);
+    });
+
+    test('qualifiersPerGroup falls back to 2 when no pool config present', () {
+      expect(header().qualifiersPerGroup, 2);
     });
   });
 }

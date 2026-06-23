@@ -69,7 +69,7 @@ class TournamentSummaryRef {
 
   /// Scheduled kickoff of the event (`tournaments.event_starts_at`). Null
   /// when undated or when an older RPC projection omits the column. Drives
-  /// the hub's "Kuenftige Turniere" date filter (>= today OR null).
+  /// the hub's "Künftige Turniere" date filter (>= today OR null).
   final DateTime? eventStartsAt;
 
   /// User-id of the row's creator. Null when the server-side projection
@@ -241,6 +241,7 @@ class TournamentMatchRef {
     this.phase = MatchPhase.group,
     this.stageNodeId,
     this.pitchNumber,
+    this.groupLabel,
   });
 
   final TournamentMatchId matchId;
@@ -299,6 +300,14 @@ class TournamentMatchRef {
   /// player banner then falls back to a non-pitch label.
   final int? pitchNumber;
 
+  /// W3-T08: the pool-phase group this match belongs to
+  /// (`tournament_matches.group_label`, e.g. `A`/`B`), projected by
+  /// `tournament_list_matches` since migration 20261318000000. NULL outside
+  /// the group phase and for wire rows / CDC payloads / fakes that predate the
+  /// projection — the live overview then renders the bare round instead of
+  /// "Gruppe A · Runde 1".
+  final String? groupLabel;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -322,10 +331,11 @@ class TournamentMatchRef {
           other.participantBDisplayName == participantBDisplayName &&
           other.phase == phase &&
           other.stageNodeId == stageNodeId &&
-          other.pitchNumber == pitchNumber;
+          other.pitchNumber == pitchNumber &&
+          other.groupLabel == groupLabel;
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
         matchId,
         tournamentId,
         roundNumber,
@@ -346,7 +356,8 @@ class TournamentMatchRef {
         phase,
         stageNodeId,
         pitchNumber,
-      );
+        groupLabel,
+      ]);
 }
 
 /// One team-side proposal for the score of one set inside one consensus
@@ -543,6 +554,25 @@ class TournamentDetailHeader {
   final DateTime? publishedAt;
   final DateTime? startedAt;
   final DateTime? completedAt;
+
+  /// W3-T09: a team tournament registers >1 player per side
+  /// (`tournaments.team_size > 1`). The live "Rangliste" header reads this to
+  /// label rows "Team" vs. "Spieler" (spec §5.4).
+  bool get isTeam => teamSize > 1;
+
+  /// W3-T09: how many participants per group advance out of the pool phase,
+  /// read from the persisted `pool_phase_config.qualifiers_per_group` in
+  /// [setup] instead of the hard-coded `2` the pool-standings screen used.
+  /// Falls back to `2` when the tournament has no pool config (non-pool
+  /// formats, older RPC revisions, the test fake).
+  int get qualifiersPerGroup {
+    final pool = setup['pool_phase_config'];
+    if (pool is Map) {
+      final raw = pool['qualifiers_per_group'];
+      if (raw is num) return raw.toInt();
+    }
+    return 2;
+  }
 }
 
 /// One audit-log entry exposed via the full tournament payload.
@@ -801,7 +831,7 @@ abstract interface class TournamentRemote {
 
   Future<void> publish(TournamentId id);
 
-  // Invite-only fun tournaments (Spaßturnier "auf Einladung")
+  // Invite-only fun tournaments (Spassturnier "auf Einladung")
   //
   // Backed by the SECURITY DEFINER RPCs from migration `20261272…`:
   // - `tournament_invite_user(p_tournament_id, p_user_id)` — organizer invites

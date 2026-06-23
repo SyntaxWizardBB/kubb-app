@@ -87,6 +87,7 @@ Map<String, dynamic> _matchRow({
   // Sentinel: omit the key entirely so an older RPC revision without the
   // projection can be exercised; pass an int to include it.
   Object? pitchNumber = _omit,
+  Object? groupLabel = _omit,
 }) =>
     <String, dynamic>{
       'match_id': 'm-1',
@@ -104,6 +105,7 @@ Map<String, dynamic> _matchRow({
       'sets_won_a': ?setsWonA,
       'sets_won_b': ?setsWonB,
       if (!identical(pitchNumber, _omit)) 'pitch_number': pitchNumber,
+      if (!identical(groupLabel, _omit)) 'group_label': groupLabel,
     };
 
 /// Sentinel for "drop this key from the map" in the row builders.
@@ -311,10 +313,28 @@ void main() {
       final m = tournamentMatchRefFromRow(_matchRow());
       expect(m.pitchNumber, isNull);
     });
+
+    test('parses group_label when the RPC projects it (W3-T08)', () {
+      final m = tournamentMatchRefFromRow(_matchRow(groupLabel: 'A'));
+      expect(m.groupLabel, 'A');
+    });
+
+    test('leaves groupLabel null when the RPC omits the column', () {
+      expect(tournamentMatchRefFromRow(_matchRow()).groupLabel, isNull);
+    });
+
+    test('leaves groupLabel null when the RPC sends an explicit null', () {
+      final m = tournamentMatchRefFromRow(_matchRow(groupLabel: null));
+      expect(m.groupLabel, isNull);
+    });
   });
 
   group('tournamentMatchRefFromCdcRow (pitch_number)', () {
-    Map<String, Object?> cdc({Object? pitchNumber = _omit}) => <String, Object?>{
+    Map<String, Object?> cdc({
+      Object? pitchNumber = _omit,
+      Object? groupLabel = _omit,
+    }) =>
+        <String, Object?>{
           'id': 'm-9',
           'tournament_id': 't-1',
           'round_number': 1,
@@ -324,6 +344,7 @@ void main() {
           'status': 'scheduled',
           'consensus_round': 0,
           if (!identical(pitchNumber, _omit)) 'pitch_number': pitchNumber,
+          if (!identical(groupLabel, _omit)) 'group_label': groupLabel,
         };
 
     test('parses pitch_number from the raw CDC column', () {
@@ -332,6 +353,14 @@ void main() {
 
     test('leaves pitchNumber null when the CDC row omits the column', () {
       expect(tournamentMatchRefFromCdcRow(cdc()).pitchNumber, isNull);
+    });
+
+    test('parses group_label from the raw CDC column (W3-T08)', () {
+      expect(tournamentMatchRefFromCdcRow(cdc(groupLabel: 'B')).groupLabel, 'B');
+    });
+
+    test('leaves groupLabel null when the CDC row omits the column', () {
+      expect(tournamentMatchRefFromCdcRow(cdc()).groupLabel, isNull);
     });
   });
 

@@ -218,6 +218,7 @@ extension RoundStatusWire on RoundStatus {
 
 int _asInt(Object? r) => r is int ? r : (r as num).toInt();
 int? _asIntOrNull(Object? r) => r == null ? null : _asInt(r);
+String? _asStringOrNull(Object? r) => r is String ? r : null;
 DateTime? _asDateOrNull(Object? r) =>
     r == null ? null : DateTime.parse(r as String);
 
@@ -383,6 +384,8 @@ TournamentMatchRef tournamentMatchRefFromCdcRow(Map<String, Object?> row) {
     stageNodeId: row['stage_node_id'] as String?,
     // Raw CDC table column; null-tolerant so older rows decode cleanly.
     pitchNumber: _asIntOrNull(row['pitch_number']),
+    // W3-T08: pool-phase group, raw CDC column; null-tolerant.
+    groupLabel: _asStringOrNull(row['group_label']),
   );
 }
 
@@ -518,6 +521,9 @@ TournamentMatchRef tournamentMatchRefFromRow(Map<String, dynamic> row) {
     // matches since 20261317000000. Null on older RPC revisions / fakes that
     // omit the column.
     pitchNumber: _asIntOrNull(row['pitch_number']),
+    // W3-T08: pool-phase group, projected by tournament_list_matches since
+    // 20261318000000. Null outside the group phase / on older RPC revisions.
+    groupLabel: _asStringOrNull(row['group_label']),
   );
 }
 
