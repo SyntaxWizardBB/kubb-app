@@ -102,7 +102,10 @@ void main() {
     // The remaining home tiles stay in place (fail-closed gate only
     // removes the organizer tile, never breaks the rest of the layout).
     expect(find.text('Meine Teams'), findsOneWidget);
-    expect(find.text('Match-Modus'), findsOneWidget);
+    // Spec §4: the old "Match-Modus / In Vorbereitung" placeholder tile is
+    // gone; with no active match the green pitch banner is hidden too.
+    expect(find.text('Match-Modus'), findsNothing);
+    expect(find.byKey(const ValueKey('pitch-call-banner')), findsNothing);
   });
 
   testWidgets('falls back to greeting without name when no profile',

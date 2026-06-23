@@ -3605,6 +3605,14 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String tournamentMatchHeaderRoundPitch(int round, int pitch) {
+    return 'Runde $round · Pitch $pitch';
+  }
+
+  @override
+  String get tournamentMatchWaitingForStart => 'Wartet auf Start der Runde';
+
+  @override
   String tournamentMatchVersusHeader(String a, String b) {
     return '$a gegen $b';
   }

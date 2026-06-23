@@ -6550,6 +6550,18 @@ abstract class AppLocalizations {
   /// **'Runde {round} — Spiel {match}'**
   String tournamentMatchHeaderRound(int round, int match);
 
+  /// Header eyebrow on match detail showing round and assigned pitch
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {round} · Pitch {pitch}'**
+  String tournamentMatchHeaderRoundPitch(int round, int pitch);
+
+  /// Pre-start placeholder shown on the match detail screen while the match has no started_at yet
+  ///
+  /// In de, this message translates to:
+  /// **'Wartet auf Start der Runde'**
+  String get tournamentMatchWaitingForStart;
+
   /// Header showing the two opponents
   ///
   /// In de, this message translates to:

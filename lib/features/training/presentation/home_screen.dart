@@ -14,15 +14,14 @@ import 'package:kubb_app/core/ui/widgets/kubb_mode_card.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/organizer_team/application/organizer_team_providers.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
-import 'package:kubb_app/features/tournament/application/my_active_match_provider.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
+import 'package:kubb_app/features/tournament/presentation/widgets/pitch_call_banner.dart';
 import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
 import 'package:kubb_app/features/training/presentation/widgets/crash_recovery_dialog.dart';
 import 'package:kubb_app/features/training/presentation/widgets/home_greeting.dart';
 import 'package:kubb_app/features/training/presentation/widgets/news_card.dart';
 import 'package:kubb_app/features/training/presentation/widgets/recent_section.dart';
-import 'package:kubb_app/features/training/presentation/widgets/tournier_card.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -55,14 +54,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           data: (visible) => visible,
           orElse: () => false,
         );
-    // P5-C (ADR-0032 §7): cross-tournament ongoing match. Fail-closed —
-    // loading/error/null all hide the tile completely (no placeholder).
-    final ongoingMatch =
-        ref.watch(myActiveTournamentMatchProvider).maybeWhen(
-              data: (m) => m,
-              orElse: () => null,
-            );
-
     ref.listen(crashRecoveryProvider, (_, next) {
       next.whenData((session) {
         if (session == null) return;
@@ -113,22 +104,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             HomeGreeting(eyebrow: l.homeEyebrow, greeting: greeting),
             const SizedBox(height: KubbTokens.space5),
-            // P5-C (ADR-0032 §7): ongoing TOURNAMENT match tile. Rendered
-            // only when the cross-tournament provider yields a match; tap
-            // opens the existing tournament match-detail screen. The 1vs1
-            // "Match Modus" tile in the training hub is a separate feature
-            // and stays untouched.
-            if (ongoingMatch != null) ...[
-              _OngoingMatchCard(ongoing: ongoingMatch),
-              const SizedBox(height: KubbTokens.space3),
-            ],
-            TournierCard(
-              eyebrow: l.homeTournierEyebrow,
-              title: l.homeTournierTitle,
-              subtitle: l.homeTournierComingSoon,
-              onTap: () => context.push(TournamentRoutes.hub),
-            ),
-            const SizedBox(height: KubbTokens.space3),
+            // Spec §4: the green "Dein Platz" match tile. Cross-tournament
+            // (no tournamentId) — the banner folds the caller's most urgent
+            // open match across all registered tournaments and renders
+            // nothing when there is none (fail-closed, no placeholder). It
+            // replaces both the old "Match-Modus / In Vorbereitung"
+            // placeholder and the "Laufendes Match" card.
+            const PitchCallBanner(),
             KubbModeCard(
               title: l.teamListTabMine,
               subtitle: l.teamListEmpty,
@@ -190,45 +172,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _openNews() async {
     await launchUrl(Uri.parse(_newsUrl), mode: LaunchMode.externalApplication);
-  }
-}
-
-/// P5-C (ADR-0032 §7): Home tile for the caller's most urgent open
-/// tournament match across all registered tournaments. Pure presentation —
-/// visibility is decided by the caller (the tile only exists when a match
-/// is present), so there is never a placeholder/skeleton state. Reuses the
-/// `KubbModeCard` building block (design-system tokens, ≥48 dp target).
-class _OngoingMatchCard extends StatelessWidget {
-  const _OngoingMatchCard({required this.ongoing});
-
-  final MyActiveTournamentMatch ongoing;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final opponent = ongoing.active.opponentName?.trim();
-    final opponentLabel = (opponent == null || opponent.isEmpty)
-        ? l.tournamentParticipantUnknown
-        : opponent;
-
-    return KubbModeCard(
-      key: const ValueKey('home.ongoingMatch'),
-      title: l.homeOngoingMatchTitle,
-      subtitle: l.homeOngoingMatchSubtitle(
-        ongoing.tournament.displayName,
-        opponentLabel,
-      ),
-      icon: LucideIcons.swords,
-      accentTone: KubbChipTone.matchWood,
-      onTap: () => unawaited(
-        context.push(
-          TournamentRoutes.matchDetail(
-            ongoing.tournament.tournamentId.value,
-            ongoing.active.match.matchId.value,
-          ),
-        ),
-      ),
-    );
   }
 }
 

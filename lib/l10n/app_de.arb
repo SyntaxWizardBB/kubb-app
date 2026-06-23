@@ -4539,6 +4539,24 @@
       }
     }
   },
+  "tournamentMatchHeaderRoundPitch": "Runde {round} · Pitch {pitch}",
+  "@tournamentMatchHeaderRoundPitch": {
+    "description": "Header eyebrow on match detail showing round and assigned pitch",
+    "placeholders": {
+      "round": {
+        "type": "int",
+        "example": "2"
+      },
+      "pitch": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "tournamentMatchWaitingForStart": "Wartet auf Start der Runde",
+  "@tournamentMatchWaitingForStart": {
+    "description": "Pre-start placeholder shown on the match detail screen while the match has no started_at yet"
+  },
   "tournamentMatchVersusHeader": "{a} gegen {b}",
   "@tournamentMatchVersusHeader": {
     "description": "Header showing the two opponents",

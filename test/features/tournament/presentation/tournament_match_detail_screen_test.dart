@@ -69,6 +69,8 @@ TournamentMatchRef _match({
   int consensusRound = 1,
   String? aName = 'Anna',
   String? bName = 'Bodo',
+  int? pitchNumber,
+  DateTime? startedAt,
 }) {
   return TournamentMatchRef(
     matchId: const TournamentMatchId('m-1'),
@@ -81,8 +83,39 @@ TournamentMatchRef _match({
     participantBDisplayName: bName,
     status: status,
     consensusRound: consensusRound,
+    pitchNumber: pitchNumber,
+    startedAt: startedAt,
   );
 }
+
+/// Minimal [TournamentDetail] header carrying a match-format config so the
+/// set-count cap can be driven from the organizer config (S3).
+TournamentDetail _detailWithConfig(Map<String, Object?> config) =>
+    TournamentDetail(
+      tournament: TournamentDetailHeader(
+        tournamentId: 't-1',
+        displayName: 'Test-Turnier',
+        createdByUserId: 'creator-1',
+        clubId: null,
+        teamSize: 1,
+        maxTeamSize: 1,
+        minParticipants: 2,
+        maxParticipants: 8,
+        format: TournamentFormat.schoch,
+        scoring: TournamentScoring.ekc,
+        matchFormatConfig: config,
+        tiebreakerOrder: const <String>[],
+        byePoints: null,
+        forfeitPoints: null,
+        status: TournamentStatus.live,
+        publishedAt: null,
+        startedAt: null,
+        completedAt: null,
+      ),
+      participants: const <TournamentParticipant>[],
+      matches: const <TournamentMatchRef>[],
+      auditTail: const <TournamentAuditEvent>[],
+    );
 
 Future<_FakeRemote> _pump(
   WidgetTester tester, {
@@ -393,6 +426,145 @@ void main() {
       tournamentDetail: _liveDetailOwnedBy('creator-1'),
     );
     expect(find.text('Als Veranstalter eintragen'), findsNothing);
+  });
+
+  // S3 (W2-T01/T02): the max-set cap follows the organizer config, not a
+  // fixed best-of-3. With max_sets=5 the user can add a 4th and 5th set;
+  // best-of-3 (the fallback) would block past 3.
+  testWidgets('add-set follows max_sets from config (Bo5 allows five sets)',
+      (tester) async {
+    await _pump(
+      tester,
+      match: _match(),
+      tournamentDetail: _detailWithConfig(const {'max_sets': 5}),
+    );
+    final add = find.text('Satz +');
+    for (var i = 0; i < 4; i++) {
+      await tester.tap(add);
+      await tester.pump();
+    }
+    expect(find.text('Satz 5'), findsOneWidget);
+    // The fifth set is the cap: the add button is now disabled.
+    final button = tester.widget<OutlinedButton>(
+      find.ancestor(of: add, matching: find.byType(OutlinedButton)),
+    );
+    expect(button.onPressed, isNull);
+  });
+
+  testWidgets('add-set caps at three sets for a best-of-3 config',
+      (tester) async {
+    await _pump(
+      tester,
+      match: _match(),
+      tournamentDetail: _detailWithConfig(const {'max_sets': 3}),
+    );
+    final add = find.text('Satz +');
+    for (var i = 0; i < 4; i++) {
+      await tester.tap(add);
+      await tester.pump();
+    }
+    expect(find.text('Satz 3'), findsOneWidget);
+    expect(find.text('Satz 4'), findsNothing);
+  });
+
+  // S2a (W2-T04): a match without started_at must not crash or render empty;
+  // it shows the "wartet auf Start" placeholder instead of the clock.
+  testWidgets('pre-start match shows the waiting-for-start state', (tester) async {
+    await _pump(
+      tester,
+      match: _match(),
+      tournamentDetail:
+          _detailWithConfig(const {'round_time_seconds': 1800}),
+    );
+    expect(tester.takeException(), isNull);
+    expect(
+      find.byKey(const ValueKey('match-waiting-for-start')),
+      findsOneWidget,
+    );
+    expect(find.text('Wartet auf Start der Runde'), findsOneWidget);
+  });
+
+  // S2b (W2-T05): the header shows the real assigned pitch (pitchNumber),
+  // not "Spiel". Falls back to the match number only when no pitch is set.
+  testWidgets('header shows the assigned pitch, not "Spiel"', (tester) async {
+    await _pump(tester, match: _match(pitchNumber: 7));
+    expect(find.text('Runde 1 · Pitch 7'), findsOneWidget);
+    // The header no longer says "Spiel" (the app-bar title "Spiel-Eingabe"
+    // is the only remaining "Spiel" on the screen).
+    expect(find.textContaining('— Spiel'), findsNothing);
+  });
+
+  testWidgets('header falls back to match number when no pitch is assigned',
+      (tester) async {
+    await _pump(tester, match: _match());
+    // matchNumberInRound is 1 for the test match.
+    expect(find.text('Runde 1 · Pitch 1'), findsOneWidget);
+  });
+
+  // S1 (W2-T03): the back button pops to the origin when a back stack
+  // exists, instead of always replacing with the match list.
+  testWidgets('back button pops to the origin when a back stack exists',
+      (tester) async {
+    final router = GoRouter(
+      initialLocation: '/origin',
+      routes: [
+        GoRoute(
+          path: '/origin',
+          builder: (_, _) => const Scaffold(body: Text('origin-screen')),
+        ),
+        GoRoute(
+          path: '/tournament/:id/match/:matchId',
+          builder: (_, s) => TournamentMatchDetailScreen(
+            tournamentId: s.pathParameters['id']!,
+            matchId: s.pathParameters['matchId']!,
+          ),
+        ),
+        GoRoute(
+          path: '/tournament/:id/matches',
+          builder: (_, _) => const Scaffold(body: Text('matches')),
+        ),
+      ],
+    );
+    final database = await openTestDatabase();
+    addTearDown(database.close);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          tournamentRemoteProvider.overrideWithValue(_FakeRemote(_match())),
+          appDatabaseProvider.overrideWithValue(database),
+        ],
+        child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: KubbTheme.light(),
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('origin-screen'), findsOneWidget);
+    // Push the match detail on top of /origin, building a back stack.
+    unawaited(router.push('/tournament/t-1/match/m-1'));
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 16));
+    expect(find.text('Spiel-Eingabe'), findsOneWidget);
+    // Back must return to the origin, not the match list.
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('origin-screen'), findsOneWidget);
+    expect(find.text('matches'), findsNothing);
+  });
+
+  testWidgets('back button falls back to the match list on a deep link',
+      (tester) async {
+    // _pump deep-links straight onto the match-detail route (no back stack),
+    // so canPop() is false and the back button lands on the match list.
+    await _pump(tester, match: _match());
+    expect(find.text('Spiel-Eingabe'), findsOneWidget);
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('matches'), findsOneWidget);
   });
 }
 

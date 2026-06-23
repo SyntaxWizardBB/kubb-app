@@ -69,9 +69,9 @@ class _TournamentMatchDetailScreenState
   /// tournament config (`basekubbs_per_side`) via [_maxBasekubbsFor].
   static const int _defaultMaxBasekubbs = 5;
 
-  /// Best-of-3 default; max-set cap from `matchFormatConfig` is wired
-  /// through once the wizard surfaces it.
-  static const int _maxSets = 3;
+  /// Best-of-3 fallback when the config carries neither `max_sets` nor
+  /// `sets_to_win` (older RPC revisions / the test fake).
+  static const int _defaultMaxSets = 3;
 
   TournamentMatchId get _matchId => TournamentMatchId(widget.matchId);
 
@@ -150,6 +150,26 @@ class _TournamentMatchDetailScreenState
     );
   }
 
+  /// The max number of sets, read from the organizer's round/phase config
+  /// (`matchFormatConfig['max_sets']`, falling back to `2 * sets_to_win - 1`)
+  /// rather than a hard-coded best-of-3. Mirrors the override screen's
+  /// `_config` derivation. Falls back to [_defaultMaxSets] when the header
+  /// has not loaded or neither key is present, and never drops below 1.
+  int _maxSetsFor(AsyncValue<TournamentDetail?> detailAsync) {
+    final value = detailAsync.maybeWhen<int>(
+      data: (d) {
+        final cfg = d?.tournament.matchFormatConfig ?? const <String, Object?>{};
+        final maxSets = (cfg['max_sets'] as num?)?.toInt();
+        if (maxSets != null) return maxSets;
+        final setsToWin = (cfg['sets_to_win'] as num?)?.toInt();
+        if (setsToWin != null) return 2 * setsToWin - 1;
+        return _defaultMaxSets;
+      },
+      orElse: () => _defaultMaxSets,
+    );
+    return value < 1 ? 1 : value;
+  }
+
   /// M2b (F2/F3) + P5.3d: the configured KO tiebreak / finisher method for
   /// THIS match. A stage-graph KO match uses its node's configured method
   /// ([stageMethods] keyed by `stage_node_id`); otherwise it falls back to the
@@ -176,8 +196,8 @@ class _TournamentMatchDetailScreenState
     );
   }
 
-  void _addSet(int consensusRound) {
-    if (_drafts.length >= _maxSets) return;
+  void _addSet(int consensusRound, int maxSets) {
+    if (_drafts.length >= maxSets) return;
     unawaited(_draftController.setSets(
         consensusRound, <ScoreDraftSet>[..._drafts, const ScoreDraftSet()]));
   }
@@ -461,8 +481,13 @@ class _TournamentMatchDetailScreenState
         backgroundColor: tokens.bg,
         elevation: 0,
         leading: BackButton(
-          onPressed: () =>
-              context.go(TournamentRoutes.matchesFor(widget.tournamentId)),
+          // S1: go back where the user came from (Rangliste / Bracket / Live /
+          // Home), not always the match list. Only when there is no back stack
+          // (deep link) do we fall back to the match list instead of a
+          // dead-end.
+          onPressed: () => context.canPop()
+              ? context.pop()
+              : context.go(TournamentRoutes.matchesFor(widget.tournamentId)),
         ),
         title: Text(l.tournamentMatchDetailTitle),
       ),
@@ -508,6 +533,9 @@ class _TournamentMatchDetailScreenState
         ref.watch(tournamentDetailProvider(TournamentId(widget.tournamentId)));
     // B1/F2: config-derived per-side base-kubb cap + KO finisher method.
     final maxBasekubbs = _maxBasekubbsFor(detailAsync);
+    // S3: config-derived max-set cap (best-of-N from the organizer config),
+    // no longer a hard-coded best-of-3.
+    final maxSets = _maxSetsFor(detailAsync);
     // P5.3d: stage-node tiebreak methods (empty for classic tournaments); a
     // stage KO match prefers its node's configured method.
     final stageMethods = ref
@@ -579,6 +607,15 @@ class _TournamentMatchDetailScreenState
           showPending: hasPending,
         ),
         const SizedBox(height: KubbTokens.space3),
+        // S2a: before the round starts the match carries no `started_at`.
+        // Instead of rendering nothing (or feeding the clock a null start and
+        // crashing) we show a calm "wartet auf Start" state so the clock slot
+        // stays present and the screen never looks empty pre-start.
+        if (!readOnly && match.startedAt == null)
+          const Padding(
+            padding: EdgeInsets.only(bottom: KubbTokens.space3),
+            child: _WaitingForStart(),
+          ),
         // Live match clock (spec "TournierStart"): only while the match is
         // running (it carries a started_at and is not in a terminal state)
         // and the tournament exposes a round time limit. Crossing expiry
@@ -678,9 +715,9 @@ class _TournamentMatchDetailScreenState
             const SizedBox(width: KubbTokens.space3),
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: drafts.length >= _maxSets
+                onPressed: drafts.length >= maxSets
                     ? null
-                    : () => _addSet(match.consensusRound),
+                    : () => _addSet(match.consensusRound, maxSets),
                 icon: const Icon(LucideIcons.plus),
                 label: Text(l.tournamentMatchAddSet),
               ),
@@ -785,6 +822,41 @@ int? _tiebreakAfterSeconds(Map<String, Object?> cfg) {
   return (cfg['tiebreak_after_seconds'] as num?)?.toInt();
 }
 
+/// S2a: pre-start placeholder for the clock slot. Shown while the match has
+/// no `started_at` yet — the round has not begun, so there is no clock to run.
+class _WaitingForStart extends StatelessWidget {
+  const _WaitingForStart();
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    return Container(
+      key: const ValueKey('match-waiting-for-start'),
+      padding: const EdgeInsets.all(KubbTokens.space3),
+      decoration: BoxDecoration(
+        color: tokens.bgRaised,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+        border: Border.all(color: tokens.line),
+      ),
+      child: Row(children: [
+        const Icon(Icons.hourglass_empty_outlined, color: KubbTokens.wood400),
+        const SizedBox(width: KubbTokens.space3),
+        Expanded(
+          child: Text(
+            l.tournamentMatchWaitingForStart,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: tokens.fg,
+            ),
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
 class _ErrorBody extends StatelessWidget {
   const _ErrorBody({required this.message});
   final String message;
@@ -836,9 +908,14 @@ class _Header extends ConsumerWidget {
         Row(
           children: [
             Expanded(
+              // S2b: show the assigned pitch (real `pitchNumber` W0 field),
+              // not "Spiel". Fall back to the match number within the round
+              // only when no pitch has been stamped (no PitchPlan / older
+              // wire row).
               child: Text(
-                l.tournamentMatchHeaderRound(
-                    match.roundNumber, match.matchNumberInRound),
+                l.tournamentMatchHeaderRoundPitch(
+                    match.roundNumber,
+                    match.pitchNumber ?? match.matchNumberInRound),
                 style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
