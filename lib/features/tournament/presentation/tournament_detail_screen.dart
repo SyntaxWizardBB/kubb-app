@@ -11,7 +11,6 @@ import 'package:kubb_app/features/tournament/application/tournament_realtime_pro
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_state_banner.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/realtime_status_banner.dart';
-import 'package:kubb_app/features/tournament/presentation/widgets/tournament_escalation_panel.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_stammdaten_card.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_status_pill.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
@@ -119,14 +118,6 @@ class _Body extends ConsumerWidget {
     // lifecycle/update RPC, so this only governs button visibility.
     final canManage = isCreator ||
         ref.watch(canManageTournamentClubProvider(detail.tournament.clubId));
-    // D4: on-site check-in window (OE-D1 + K4). The toggle is offered only
-    // while the tournament accepts/runs play; draft/finalized/aborted never
-    // show it. The server re-checks the same gate + status window, so this
-    // only governs button visibility.
-    final checkinWindowOpen =
-        detail.tournament.status == TournamentStatus.registrationOpen ||
-            detail.tournament.status == TournamentStatus.registrationClosed ||
-            detail.tournament.status == TournamentStatus.live;
     TournamentParticipant? me;
     if (myUserId != null) {
       for (final p in detail.participants) {
@@ -182,30 +173,16 @@ class _Body extends ConsumerWidget {
         TournamentStammdatenCard(header: h),
         const SizedBox(height: KubbTokens.space5),
         _card(context, l.tournamentDetailParticipants, [
-          // D4 (optional header counter): while the check-in window is open and
-          // the caller can manage, show "X/Y eingecheckt" over the confirmed
-          // pool so the organizer sees attendance at a glance.
-          if (canManage && checkinWindowOpen && confirmedParts.isNotEmpty) ...[
-            Text(
-              l.tournamentDetailCheckedInCount(
-                confirmedParts.where((p) => p.isCheckedIn).length,
-                confirmedParts.length,
-              ),
-              style: TextStyle(fontSize: 12, color: tokens.fgMuted),
-            ),
-            const SizedBox(height: KubbTokens.space1),
-          ],
+          // Unified player view (W4-T25): the participant list is read-only for
+          // everyone. Check-in, the check-in counter and the organizer remove
+          // moved to the cockpit (organizer_dashboard_detail_screen); a manager
+          // reaches them via the "→ Steuerung" button below.
           if (confirmedParts.isEmpty)
             Text(l.tournamentDetailParticipantsEmpty,
                 style: TextStyle(fontSize: 13, color: tokens.fgMuted)),
-          for (final p in confirmedParts)
-            _participantRow(context, ref, p, l, tokens,
-                tournamentId: id,
-                canManage: canManage,
-                checkinWindowOpen: checkinWindowOpen),
-          // Waitlist overview (in registration order). Visible to everyone
-          // so registrants understand the queue; the organizer additionally
-          // gets the optional (non-required) moderation remove on each row.
+          for (final p in confirmedParts) _participantRow(context, p, l, tokens),
+          // Waitlist overview (in registration order). Visible to everyone so
+          // registrants understand the queue.
           if (waitlistParts.isNotEmpty) ...[
             const SizedBox(height: KubbTokens.space3),
             Text(l.tournamentDetailWaitlistHeading.toUpperCase(),
@@ -215,12 +192,8 @@ class _Body extends ConsumerWidget {
                     letterSpacing: 0.88,
                     color: tokens.fgMuted)),
             const SizedBox(height: KubbTokens.space1),
-            // Waitlisted rows never get a check-in toggle (check-in is for
-            // confirmed pool members only — Phase-D spec, check-in ≠ confirm).
-            // The organizer remove is shown here too once they can manage.
             for (final p in waitlistParts)
-              _participantRow(context, ref, p, l, tokens,
-                  tournamentId: id, canManage: canManage),
+              _participantRow(context, p, l, tokens),
           ],
         ]),
         // T17: Roster tab visibility. The caller's participant carries a
@@ -244,22 +217,23 @@ class _Body extends ConsumerWidget {
           _PoolStandingsCard(id: id),
         ],
         const SizedBox(height: KubbTokens.space5),
-        _Actions(
-            detail: detail,
-            isCreator: isCreator,
-            canManage: canManage,
-            me: me,
-            id: id),
-        // D5: organizer escalation cockpit (disputed / overdue / not checked
-        // in) + No-Show→Forfait shortcut. Reads only from the already-loaded
-        // detail (no new fetch) and is reusable by the later B dashboard
-        // shell. Shown to managers only — it carries intervention actions.
+        // W4-T25: the unified player view. Player-only actions (personal
+        // register / withdraw / go-to-matches / standings / bracket) stay here;
+        // the organizer lifecycle block, check-in, moderation and the
+        // escalation cockpit moved to organizer_dashboard_detail_screen. A
+        // manager reaches all of that via the "→ Steuerung" button.
+        _Actions(detail: detail, me: me, id: id),
+        // Manager absprung into the cockpit (TournamentRoutes.dashboardDetail).
+        // The only organizer-specific affordance left on the detail screen.
         if (canManage) ...[
-          const SizedBox(height: KubbTokens.space5),
-          TournamentEscalationPanel(
-            detail: detail,
-            tournamentId: id,
-            canManage: canManage,
+          const SizedBox(height: KubbTokens.space3),
+          SizedBox(
+            height: KubbTokens.touchComfortable,
+            child: FilledButton(
+              onPressed: () =>
+                  context.push(TournamentRoutes.dashboardDetail(id.value)),
+              child: Text(l.tournamentDetailActionDashboard),
+            ),
           ),
         ],
         const SizedBox(height: KubbTokens.space5),
@@ -289,19 +263,6 @@ Widget _card(BuildContext context, String heading, List<Widget> children) {
   );
 }
 
-/// CF6 (K19): the configured seeding mode, read from the
-/// `ko_config.seeding_mode` discriminator on the projected setup map.
-/// Defaults to [SeedingMode.auto] when absent or unrecognised, matching
-/// the wizard/server default — so only an explicit `manual` triggers the
-/// mandatory seeding step.
-SeedingMode _seedingMode(TournamentDetail detail) {
-  final ko = detail.tournament.setup['ko_config'];
-  if (ko is Map && ko['seeding_mode'] == 'manual') {
-    return SeedingMode.manual;
-  }
-  return SeedingMode.auto;
-}
-
 Future<void> _safe(BuildContext context, Future<void> Function() op) async {
   try {
     await op();
@@ -312,169 +273,37 @@ Future<void> _safe(BuildContext context, Future<void> Function() op) async {
   }
 }
 
+/// Read-only participant row for the unified detail view (W4-T25). Shows the
+/// display label and a status pill (confirmed / waitlist). All organizer
+/// affordances (check-in toggle, remove) moved to the cockpit.
 Widget _participantRow(
   BuildContext context,
-  WidgetRef ref,
   TournamentParticipant p,
   AppLocalizations l,
-  KubbTokens tokens, {
-  // D4: on-site check-in gate. The toggle is rendered ONLY for confirmed rows
-  // when [canManage] is true AND the tournament status is inside the check-in
-  // window ([checkinWindowOpen], OE-D1 + K4). Both default to off so waitlist
-  // rows and non-manager views never see it. The server re-checks the same
-  // gate/status/idempotency; this is visibility only.
-  TournamentId? tournamentId,
-  bool canManage = false,
-  bool checkinWindowOpen = false,
-}) {
-  // New model: registrations are auto-confirmed; the only non-confirmed
-  // pool state shown here is `waitlist`. Approve/reject is gone (no row is
-  // ever `pending` anymore); the organizer keeps an OPTIONAL moderation
-  // remove that maps to the legacy reject RPC — it is not a required step.
+  KubbTokens tokens,
+) {
   final isWaitlist =
       p.registrationStatus == TournamentParticipantStatus.waitlist;
-  final pid = TournamentParticipantId(p.participantId);
-  final actions = ref.read(tournamentActionsProvider);
-  // Check-in is for confirmed pool members only (check-in ≠ confirm).
-  final showCheckin =
-      !isWaitlist && canManage && checkinWindowOpen && tournamentId != null;
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: KubbTokens.space1),
     child: Row(children: [
       Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(p.displayLabel,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: tokens.fg)),
-            // D4-3: check-in timestamp label on an already-checked-in row.
-            if (showCheckin && p.isCheckedIn && p.checkedInAt != null)
-              Text(
-                l.tournamentDetailCheckedInAt(
-                    _formatCheckedInAt(p.checkedInAt!)),
-                style: TextStyle(fontSize: 11, color: tokens.fgMuted),
-              ),
-          ],
-        ),
+        child: Text(p.displayLabel,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg)),
       ),
-      if (showCheckin)
-        ParticipantCheckinToggle(
-          isCheckedIn: p.isCheckedIn,
-          onCheckin: () => _safe(
-              context,
-              () => ref
-                  .read(tournamentActionsProvider)
-                  .checkin(pid, tournamentId: tournamentId)),
-          onUndoCheckin: () => _safe(
-              context,
-              () => ref
-                  .read(tournamentActionsProvider)
-                  .undoCheckin(pid, tournamentId: tournamentId)),
-        )
-      else
-        Padding(
-          padding: const EdgeInsets.only(right: KubbTokens.space2),
-          child: Text(
-              isWaitlist
-                  ? l.tournamentDetailStatusWaitlist
-                  : l.tournamentDetailStatusConfirmed,
-              style: TextStyle(fontSize: 11, color: tokens.fgMuted)),
-        ),
-      if (canManage && tournamentId != null)
-        TextButton(
-            style: TextButton.styleFrom(foregroundColor: KubbTokens.miss),
-            onPressed: () => _confirmRemoveParticipant(
-                  context,
-                  actions,
-                  pid,
-                  tournamentId,
-                  p.displayLabel,
-                  l,
-                ),
-            child: Text(l.tournamentDetailActionRemove)),
+      Padding(
+        padding: const EdgeInsets.only(right: KubbTokens.space2),
+        child: Text(
+            isWaitlist
+                ? l.tournamentDetailStatusWaitlist
+                : l.tournamentDetailStatusConfirmed,
+            style: TextStyle(fontSize: 11, color: tokens.fgMuted)),
+      ),
     ]),
   );
-}
-
-/// Confirms an organizer remove with an optional reason, then routes to
-/// [TournamentActions.removeParticipant] (server-gated soft removal +
-/// waitlist promotion). Data-relevant, hence the explicit confirm; the
-/// reason is recorded in the audit tail when given.
-Future<void> _confirmRemoveParticipant(
-  BuildContext context,
-  TournamentActions actions,
-  TournamentParticipantId pid,
-  TournamentId tournamentId,
-  String label,
-  AppLocalizations l,
-) async {
-  final reasonController = TextEditingController();
-  try {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l.tournamentDetailRemoveConfirmTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l.tournamentDetailRemoveConfirmBody(label)),
-            const SizedBox(height: KubbTokens.space3),
-            TextField(
-              controller: reasonController,
-              decoration: InputDecoration(
-                labelText: l.tournamentDetailRemoveReasonLabel,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child:
-                Text(MaterialLocalizations.of(dialogContext).cancelButtonLabel),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: KubbTokens.miss),
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l.tournamentDetailRemoveConfirmAction),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    final reason = reasonController.text.trim();
-    if (!context.mounted) return;
-    await _safe(
-      context,
-      () => actions.removeParticipant(
-        pid,
-        tournamentId: tournamentId,
-        reason: reason.isEmpty ? null : reason,
-      ),
-    );
-  } finally {
-    reasonController.dispose();
-  }
-}
-
-/// Formats a check-in timestamp for the inline row label (D4-3). The stored
-/// [checkedInAt] is already an absolute server instant (timestamptz projected
-/// by `tournament_get`), so it needs no Phase-A skew correction — the offset
-/// only matters for live countdowns against the local wall clock, not for
-/// rendering a fixed past instant. It is simply shown in the device's local
-/// time, which also degrades gracefully when Phase A is absent.
-String _formatCheckedInAt(DateTime checkedInAt) {
-  final dt = checkedInAt.toLocal();
-  String two(int n) => n.toString().padLeft(2, '0');
-  return '${two(dt.day)}.${two(dt.month)}.${dt.year} '
-      '${two(dt.hour)}:${two(dt.minute)}';
 }
 
 /// Reusable on-site check-in toggle for a confirmed participant row (ADR-0031
@@ -557,20 +386,15 @@ class ParticipantCheckinToggle extends StatelessWidget {
   }
 }
 
+/// Player-facing action area for the unified detail view (W4-T25). Holds ONLY
+/// the actions a player needs: personal register / withdraw while registration
+/// is open, go-to-matches while live, the final standings link, the bracket
+/// link once a KO bracket exists, and the aborted banner. All organizer
+/// lifecycle controls (publish / start / close / finalize / abort / seeding /
+/// edit / resume) moved to the cockpit.
 class _Actions extends ConsumerWidget {
-  const _Actions(
-      {required this.detail,
-      required this.isCreator,
-      required this.canManage,
-      required this.me,
-      required this.id});
+  const _Actions({required this.detail, required this.me, required this.id});
   final TournamentDetail detail;
-  final bool isCreator;
-
-  /// Creator OR a role holder (profile organizer / club admin). Gates the
-  /// lifecycle + edit actions and the lifecycle hint; participant moderation
-  /// stays creator-only via [isCreator].
-  final bool canManage;
   final TournamentParticipant? me;
   final TournamentId id;
 
@@ -582,17 +406,13 @@ class _Actions extends ConsumerWidget {
     final status = detail.tournament.status;
     final buttons = <Widget>[];
     final pathBase = '${TournamentRoutes.detail}/${id.value}';
-    // T15: surface bracket entry once any KO/third_place/final match
-    // exists. `tournamentBracketProvider` fetches exactly those rows
-    // and throws `ArgumentError` while the tournament is still in the
-    // group phase — both `error` and `loading` map to "no bracket yet"
-    // via `maybeWhen`.
+    // T15: surface bracket entry once any KO/third_place/final match exists.
+    // `tournamentBracketProvider` throws `ArgumentError` while still in the
+    // group phase — both error/loading map to "no bracket yet".
     final hasBracket = ref.watch(tournamentBracketProvider(id)).maybeWhen(
           data: (b) => switch (b) {
             SingleEliminationBracket(:final rounds) => rounds.isNotEmpty,
             DoubleEliminationBracket(:final wbRounds) => wbRounds.isNotEmpty,
-            // ADR-0028: a consolation tree (Model B) counts as a bracket once
-            // either its main tree or any consolation round is materialised.
             ConsolationBracket(:final mainRounds, :final rounds) =>
               mainRounds.isNotEmpty || rounds.isNotEmpty,
           },
@@ -614,52 +434,16 @@ class _Actions extends ConsumerWidget {
     void nav(String label, String path) =>
         buttons.add(mk(label, () => context.push(path)));
 
-    // V2-B2 edit-after-publish (incl. live): the organizer (creator/admin)
-    // may edit the details across the pre-start statuses AND while the
-    // tournament is `live`. The server (migration 20261243000000) re-checks
-    // the manage gate and applies the field-safety classes / safe recompute;
-    // a structural change against an already-played phase is rejected with
-    // HINT STRUCTURE_LOCKED. `aborted` is editable too — saving leaves the
-    // aborted state (server restores the pre-abort status). Only `finalized`
-    // stays frozen.
-    final canEdit = canManage &&
-        (status == TournamentStatus.draft ||
-            status == TournamentStatus.published ||
-            status == TournamentStatus.registrationOpen ||
-            status == TournamentStatus.registrationClosed ||
-            status == TournamentStatus.live ||
-            status == TournamentStatus.aborted);
-    if (canEdit) {
-      nav(l.tournamentDetailActionEdit, TournamentRoutes.edit(id.value));
-    }
-
-    // New open-registration model: publishing goes straight to
-    // `registration_open` (no separate "Anmeldung öffnen" step). The
-    // organizer can start directly from `registration_open` (the start
-    // implicitly closes registration); an explicit "Anmeldung schliessen"
-    // remains available but optional. `published` is no longer reachable
-    // from publish, but is handled defensively for any legacy row.
-    if (status == TournamentStatus.draft && canManage) {
-      op(l.tournamentDetailActionPublish, () => actions.publish(id));
-    } else if (status == TournamentStatus.registrationOpen ||
+    // Personal registration — available to EVERYONE while registration is open,
+    // including the organizer/creator (they may play in their own tournament).
+    if (status == TournamentStatus.registrationOpen ||
         status == TournamentStatus.published) {
-      // Organizer lifecycle controls.
-      if (canManage) {
-        op(l.tournamentDetailActionStart, () => actions.startTournament(id));
-        op(l.tournamentDetailActionCloseReg,
-            () => actions.closeRegistration(id));
-      }
-      // Personal registration — available to EVERYONE while registration is
-      // open, INCLUDING the organizer/creator (they may play in their own
-      // tournament). Shown alongside the manage controls above, so an admin
-      // is no longer stuck with only Start/Close and can register + withdraw.
       final m = me;
       if (m == null ||
           m.registrationStatus == TournamentParticipantStatus.withdrawn ||
           m.registrationStatus == TournamentParticipantStatus.rejected) {
         nav(l.tournamentDetailActionRegister, '$pathBase/register');
       } else {
-        // Confirmed or waitlisted: show the standing, then offer withdraw.
         buttons.add(_RegistrationStatusBadge(status: m.registrationStatus));
         op(
             l.tournamentDetailActionWithdraw,
@@ -668,33 +452,12 @@ class _Actions extends ConsumerWidget {
                 tournamentId: id),
             color: KubbTokens.miss);
       }
-    } else if (status == TournamentStatus.registrationClosed && canManage) {
-      op(l.tournamentDetailActionStart, () => actions.startTournament(id));
     } else if (status == TournamentStatus.live) {
-      if (canManage) {
-        // CF6 (K19): manual-seeding is a mandatory step on the Vorrunde->KO
-        // transition. When seeding_mode == manual and the KO bracket has not
-        // been built yet, the organizer must commit a seed list FIRST — the
-        // CTA routes to the seeding screen instead of starting the KO blind.
-        // Auto seeding keeps the existing flow (no extra step). The server
-        // re-enforces the gate (seeding_required) regardless.
-        if (!hasBracket && _seedingMode(detail) == SeedingMode.manual) {
-          nav(l.tournamentDetailActionSetSeeding,
-              TournamentRoutes.seeding(id.value));
-        }
-        op(l.tournamentDetailActionFinalize,
-            () => actions.finalizeTournament(id));
-      }
       if (me != null) {
         nav(l.tournamentDetailActionGotoMatches, '$pathBase/matches');
       }
     } else if (status == TournamentStatus.finalized) {
       nav(l.tournamentDetailActionStandings, '$pathBase/standings');
-    } else if (status == TournamentStatus.aborted && canManage) {
-      // Reactivate moves the tournament back to its pre-abort status; the
-      // Edit button (added above via canEdit) opens the wizard, which also
-      // leaves the aborted state on save.
-      op(l.tournamentDetailActionResume, () => actions.reactivate(id));
     }
 
     final abortedBanner = status == TournamentStatus.aborted
@@ -714,19 +477,8 @@ class _Actions extends ConsumerWidget {
     if (hasBracket) {
       nav(l.tournamentDetailActionBracket, '$pathBase/bracket');
     }
-    if (canManage &&
-        status != TournamentStatus.finalized &&
-        status != TournamentStatus.aborted) {
-      op(l.tournamentDetailActionAbort, () => actions.abortTournament(id),
-          color: KubbTokens.miss);
-    }
-    // Lifecycle hint: only a manager (creator or organizer/club admin) sees
-    // it, and only while the tournament is pre-start. It spells out the
-    // publish→open→close→start sequence so the registration flow stops being
-    // invisible (USER SPEC).
-    final hint = canManage ? _lifecycleHint(status, l) : null;
 
-    if (buttons.isEmpty && hint == null && abortedBanner == null) {
+    if (buttons.isEmpty && abortedBanner == null) {
       return const SizedBox.shrink();
     }
     return Column(
@@ -736,71 +488,11 @@ class _Actions extends ConsumerWidget {
           abortedBanner,
           const SizedBox(height: KubbTokens.space3),
         ],
-        if (hint != null) ...[
-          _LifecycleHint(text: hint),
-          const SizedBox(height: KubbTokens.space3),
-        ],
         for (var i = 0; i < buttons.length; i++) ...[
           if (i > 0) const SizedBox(height: KubbTokens.space2),
           buttons[i],
         ],
       ],
-    );
-  }
-
-  /// Organizer-facing copy for the current lifecycle stage; null when the
-  /// stage carries no guidance (live / finalized / aborted).
-  String? _lifecycleHint(TournamentStatus status, AppLocalizations l) {
-    return switch (status) {
-      TournamentStatus.draft => l.tournamentDetailHintDraft,
-      TournamentStatus.published => l.tournamentDetailHintPublished,
-      TournamentStatus.registrationOpen =>
-        l.tournamentDetailHintRegistrationOpen,
-      TournamentStatus.registrationClosed =>
-        l.tournamentDetailHintRegistrationClosed,
-      TournamentStatus.live ||
-      TournamentStatus.finalized ||
-      TournamentStatus.aborted =>
-        null,
-    };
-  }
-}
-
-/// Small info banner that guides the organizer through the lifecycle
-/// (publish → open registration → close → start). Uses the raised-surface
-/// chrome so it reads as helper copy, not an error.
-class _LifecycleHint extends StatelessWidget {
-  const _LifecycleHint({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<KubbTokens>()!;
-    return Container(
-      padding: const EdgeInsets.all(KubbTokens.space3),
-      decoration: BoxDecoration(
-        color: tokens.bgRaised,
-        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
-        border: Border.all(color: tokens.line, width: 1.5),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.info_outline, size: 18, color: tokens.fgMuted),
-          const SizedBox(width: KubbTokens.space2),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 13,
-                height: 1.35,
-                color: tokens.fgMuted,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

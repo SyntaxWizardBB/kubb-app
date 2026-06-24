@@ -48,6 +48,31 @@ class _SpyRemote extends FakeTournamentRemote {
   @override
   Future<void> startTournament(TournamentId id) async => calls.add('start');
 
+  // W4-T25: lifecycle RPCs migrated into the cockpit's _LifecycleSection.
+  @override
+  Future<void> publish(TournamentId id) async => calls.add('publish');
+  @override
+  Future<void> closeRegistration(TournamentId id) async =>
+      calls.add('closeReg');
+  @override
+  Future<void> finalizeTournament(TournamentId id) async =>
+      calls.add('finalize');
+  @override
+  Future<void> abortTournament(TournamentId id) async => calls.add('abort');
+  @override
+  Future<void> reactivateTournament(TournamentId id) async =>
+      calls.add('reactivate');
+
+  // Participant moderation (remove) migrated into the cockpit.
+  final List<String> removed = <String>[];
+  @override
+  Future<void> removeParticipant(
+    TournamentParticipantId participantId, {
+    String? reason,
+  }) async {
+    removed.add(participantId.value);
+  }
+
   /// Records the signed delta of each adjust-round-time dispatch so a test can
   /// assert the +/- step direction (extend = positive, shorten = negative).
   final List<int> adjustDeltas = <int>[];
@@ -84,6 +109,7 @@ TournamentDetail _detail({
   TournamentStatus status = TournamentStatus.live,
   TournamentFormat format = TournamentFormat.schoch,
   Map<String, Object?> setup = const <String, Object?>{},
+  List<TournamentParticipant> participants = const [],
 }) =>
     TournamentDetail(
       tournament: TournamentDetailHeader(
@@ -107,9 +133,24 @@ TournamentDetail _detail({
         completedAt: null,
         setup: setup,
       ),
-      participants: const [],
+      participants: participants,
       matches: const [],
       auditTail: const [],
+    );
+
+TournamentParticipant _participant({
+  required String id,
+  TournamentParticipantStatus status = TournamentParticipantStatus.approved,
+}) =>
+    TournamentParticipant(
+      participantId: id,
+      userId: 'user-$id',
+      nickname: null,
+      displayName: 'Spieler $id',
+      registrationStatus: status,
+      seed: null,
+      registeredAt: DateTime.utc(2026),
+      respondedAt: null,
     );
 
 TournamentMatchRef _match(
@@ -695,6 +736,129 @@ void main() {
       detail: _detail(setup: _schochSetup(rounds: 1)),
     );
     expect(find.text('Nächste Runde paaren'), findsNothing);
+  });
+
+  // ─── W4-T25: lifecycle action block migrated into the cockpit ──────────
+
+  Future<void> seek(WidgetTester tester, Finder f) async {
+    await tester.scrollUntilVisible(f, 200,
+        scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(f);
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('lifecycle: draft shows publish + dispatches it', (tester) async {
+    final spy = _SpyRemote();
+    await _pump(
+      tester,
+      canAdminister: true,
+      remote: spy,
+      detail: _detail(status: TournamentStatus.draft),
+    );
+    await seek(tester, find.text('Veröffentlichen'));
+    await tester.tap(find.text('Veröffentlichen'));
+    await tester.pumpAndSettle();
+    expect(spy.calls, contains('publish'));
+  });
+
+  testWidgets('lifecycle: registration_open shows Start + Anmeldung schliessen',
+      (tester) async {
+    final spy = _SpyRemote();
+    await _pump(
+      tester,
+      canAdminister: true,
+      remote: spy,
+      detail: _detail(status: TournamentStatus.registrationOpen),
+    );
+    await seek(tester, find.text('Turnier starten'));
+    expect(find.text('Anmeldung schliessen'), findsOneWidget);
+    await tester.tap(find.text('Turnier starten'));
+    await tester.pumpAndSettle();
+    expect(spy.calls, contains('start'));
+  });
+
+  testWidgets('lifecycle: live shows finalize + dispatches it', (tester) async {
+    final spy = _SpyRemote();
+    await _pump(
+      tester,
+      canAdminister: true,
+      remote: spy,
+      detail: _detail(),
+      schedule: _schedule(RoundStatus.running),
+    );
+    await seek(tester, find.text('Turnier abschliessen'));
+    await tester.tap(find.text('Turnier abschliessen'));
+    await tester.pumpAndSettle();
+    expect(spy.calls, contains('finalize'));
+  });
+
+  testWidgets('lifecycle: edit + abort available pre-finalize', (tester) async {
+    await _pump(
+      tester,
+      canAdminister: true,
+      detail: _detail(status: TournamentStatus.registrationClosed),
+    );
+    await seek(tester, find.text('Bearbeiten'));
+    expect(find.text('Bearbeiten'), findsOneWidget);
+    await seek(tester, find.text('Turnier abbrechen'));
+    expect(find.text('Turnier abbrechen'), findsOneWidget);
+  });
+
+  testWidgets('lifecycle: live manual-seeding shows the seeding CTA',
+      (tester) async {
+    await _pump(
+      tester,
+      canAdminister: true,
+      detail: _detail(
+        setup: const {
+          'ko_config': {'seeding_mode': 'manual'},
+        },
+      ),
+    );
+    await seek(tester, find.text('Seeding festlegen'));
+    expect(find.text('Seeding festlegen'), findsOneWidget);
+  });
+
+  testWidgets('lifecycle: aborted shows resume + dispatches reactivate',
+      (tester) async {
+    final spy = _SpyRemote();
+    await _pump(
+      tester,
+      canAdminister: true,
+      remote: spy,
+      detail: _detail(status: TournamentStatus.aborted),
+    );
+    await seek(tester, find.text('Fortsetzen'));
+    await tester.tap(find.text('Fortsetzen'));
+    await tester.pumpAndSettle();
+    expect(spy.calls, contains('reactivate'));
+  });
+
+  // ─── W4-T25: participant moderation migrated into the cockpit ──────────
+
+  testWidgets('moderation: Entfernen routes to removeParticipant',
+      (tester) async {
+    final spy = _SpyRemote();
+    await _pump(
+      tester,
+      canAdminister: true,
+      remote: spy,
+      detail: _detail(
+        status: TournamentStatus.registrationOpen,
+        participants: [_participant(id: 'p1')],
+      ),
+    );
+    await seek(tester, find.text('Entfernen'));
+    await tester.tap(find.text('Entfernen'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(TextButton, 'Entfernen'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(spy.removed, ['p1']);
   });
 }
 

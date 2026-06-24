@@ -212,6 +212,11 @@ class _Body extends ConsumerWidget {
           const SizedBox(height: KubbTokens.space5),
           _CheckinSection(tournamentId: tournamentId, detail: detail),
         ],
+        // W4-T25: participant moderation (remove) migrated from the detail
+        // screen. Rendered whenever there is a moderatable participant; same
+        // server-gated removal + waitlist promotion.
+        const SizedBox(height: KubbTokens.space5),
+        _ModerationSection(tournamentId: tournamentId, detail: detail),
         const SizedBox(height: KubbTokens.space5),
         Text(
           l.organizerDashboardRoundsTitle,
@@ -242,6 +247,13 @@ class _Body extends ConsumerWidget {
             ],
             const SizedBox(height: KubbTokens.space3),
           ],
+        // W4-T25: the lifecycle action block (publish / start / close /
+        // finalize / abort / seeding / edit / resume) migrated here from the
+        // detail screen. Sits below the round list so the live control bar +
+        // escalation cockpit stay at the top; the manager controls now live
+        // exclusively in the cockpit. Same actions/provider, new location.
+        const SizedBox(height: KubbTokens.space5),
+        _LifecycleSection(tournamentId: tournamentId, detail: detail),
       ],
     );
   }
@@ -382,6 +394,95 @@ class _CheckinSection extends ConsumerWidget {
               ),
             ),
         ],
+      ],
+    );
+  }
+}
+
+/// Participant moderation (W4-T25): the organizer "Entfernen" that lived inline
+/// on the detail screen now lives in the cockpit. Lists confirmed + waitlist
+/// rows with a remove button each, routing to the server-gated soft removal
+/// (`removeParticipant`) via the shared [confirmRemoveParticipant] dialog. The
+/// section is rendered whenever there is at least one moderatable participant,
+/// independent of the check-in window (registration / waitlist moderation can
+/// happen before check-in opens just as it could on the old detail screen).
+class _ModerationSection extends ConsumerWidget {
+  const _ModerationSection({required this.tournamentId, required this.detail});
+
+  final TournamentId tournamentId;
+  final TournamentDetail detail;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    final actions = ref.read(tournamentActionsProvider);
+    final moderatable = detail.participants
+        .where((p) =>
+            p.registrationStatus == TournamentParticipantStatus.approved ||
+            p.registrationStatus == TournamentParticipantStatus.pending ||
+            p.registrationStatus == TournamentParticipantStatus.waitlist)
+        .toList(growable: false);
+    if (moderatable.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.organizerModerationSectionTitle,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.8,
+            color: tokens.fgMuted,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        for (final p in moderatable)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: KubbTokens.space1),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    p.displayLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.fg,
+                    ),
+                  ),
+                ),
+                if (p.registrationStatus ==
+                    TournamentParticipantStatus.waitlist)
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(right: KubbTokens.space2),
+                    child: Text(
+                      l.tournamentDetailStatusWaitlist,
+                      style:
+                          TextStyle(fontSize: 11, color: tokens.fgMuted),
+                    ),
+                  ),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: KubbTokens.miss,
+                  ),
+                  onPressed: () => confirmRemoveParticipant(
+                    context,
+                    actions,
+                    TournamentParticipantId(p.participantId),
+                    tournamentId,
+                    p.displayLabel,
+                    l,
+                  ),
+                  child: Text(l.tournamentDetailActionRemove),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -892,4 +993,265 @@ SeedingMode _seedingMode(TournamentDetail detail) {
     return SeedingMode.manual;
   }
   return SeedingMode.auto;
+}
+
+/// Lifecycle action block (W4-T25), migrated verbatim from the detail screen's
+/// `_Actions` manager branch. Renders the status-appropriate organizer controls
+/// — publish / close registration / start / finalize / abort / resume — plus
+/// the edit + manual-seeding navigation, and the lifecycle hint. The personal
+/// register/withdraw actions stay on the (unified) detail screen: those are
+/// player actions, not organizer controls, so they are NOT migrated here.
+class _LifecycleSection extends ConsumerWidget {
+  const _LifecycleSection({required this.tournamentId, required this.detail});
+
+  final TournamentId tournamentId;
+  final TournamentDetail detail;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final actions = ref.read(tournamentActionsProvider);
+    final id = tournamentId;
+    final status = detail.tournament.status;
+    final buttons = <Widget>[];
+
+    Widget mk(String label, VoidCallback onTap, {Color? color}) => SizedBox(
+          height: KubbTokens.touchComfortable,
+          child: FilledButton(
+            style: color == null
+                ? null
+                : FilledButton.styleFrom(backgroundColor: color),
+            onPressed: onTap,
+            child: Text(label),
+          ),
+        );
+    void op(String label, Future<void> Function() fn, {Color? color}) =>
+        buttons.add(mk(label, () => _safe(context, fn), color: color));
+    void nav(String label, String path) =>
+        buttons.add(mk(label, () => context.push(path)));
+
+    // Edit-after-publish (incl. live + aborted); only `finalized` stays frozen.
+    final canEdit = status == TournamentStatus.draft ||
+        status == TournamentStatus.published ||
+        status == TournamentStatus.registrationOpen ||
+        status == TournamentStatus.registrationClosed ||
+        status == TournamentStatus.live ||
+        status == TournamentStatus.aborted;
+    if (canEdit) {
+      nav(l.tournamentDetailActionEdit, TournamentRoutes.edit(id.value));
+    }
+
+    if (status == TournamentStatus.draft) {
+      op(l.tournamentDetailActionPublish, () => actions.publish(id));
+    } else if (status == TournamentStatus.registrationOpen ||
+        status == TournamentStatus.published) {
+      op(l.tournamentDetailActionStart, () => actions.startTournament(id));
+      op(l.tournamentDetailActionCloseReg,
+          () => actions.closeRegistration(id));
+    } else if (status == TournamentStatus.registrationClosed) {
+      op(l.tournamentDetailActionStart, () => actions.startTournament(id));
+    } else if (status == TournamentStatus.live) {
+      if (!_hasBracket(ref) && _seedingMode(detail) == SeedingMode.manual) {
+        nav(l.tournamentDetailActionSetSeeding,
+            TournamentRoutes.seeding(id.value));
+      }
+      op(l.tournamentDetailActionFinalize,
+          () => actions.finalizeTournament(id));
+    } else if (status == TournamentStatus.aborted) {
+      op(l.tournamentDetailActionResume, () => actions.reactivate(id));
+    }
+
+    if (status != TournamentStatus.finalized &&
+        status != TournamentStatus.aborted) {
+      op(l.tournamentDetailActionAbort, () => actions.abortTournament(id),
+          color: KubbTokens.miss);
+    }
+
+    final abortedBanner = status == TournamentStatus.aborted
+        ? Container(
+            padding: const EdgeInsets.all(KubbTokens.space4),
+            decoration: BoxDecoration(
+                color: KubbTokens.miss.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(KubbTokens.radiusMd)),
+            child: Text(l.tournamentDetailAborted,
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.fg)),
+          )
+        : null;
+    final hint = _lifecycleHint(status, l);
+
+    if (buttons.isEmpty && hint == null && abortedBanner == null) {
+      return const SizedBox.shrink();
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l.organizerLifecycleSectionTitle,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.8,
+            color: tokens.fgMuted,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        if (abortedBanner != null) ...[
+          abortedBanner,
+          const SizedBox(height: KubbTokens.space3),
+        ],
+        if (hint != null) ...[
+          _LifecycleHint(text: hint),
+          const SizedBox(height: KubbTokens.space3),
+        ],
+        for (var i = 0; i < buttons.length; i++) ...[
+          if (i > 0) const SizedBox(height: KubbTokens.space2),
+          buttons[i],
+        ],
+        const SizedBox(height: KubbTokens.space5),
+      ],
+    );
+  }
+
+  bool _hasBracket(WidgetRef ref) =>
+      ref.watch(tournamentBracketProvider(tournamentId)).maybeWhen(
+            data: (b) => switch (b) {
+              SingleEliminationBracket(:final rounds) => rounds.isNotEmpty,
+              DoubleEliminationBracket(:final wbRounds) => wbRounds.isNotEmpty,
+              ConsolationBracket(:final mainRounds, :final rounds) =>
+                mainRounds.isNotEmpty || rounds.isNotEmpty,
+            },
+            orElse: () => false,
+          );
+
+  String? _lifecycleHint(TournamentStatus status, AppLocalizations l) {
+    return switch (status) {
+      TournamentStatus.draft => l.tournamentDetailHintDraft,
+      TournamentStatus.published => l.tournamentDetailHintPublished,
+      TournamentStatus.registrationOpen =>
+        l.tournamentDetailHintRegistrationOpen,
+      TournamentStatus.registrationClosed =>
+        l.tournamentDetailHintRegistrationClosed,
+      TournamentStatus.live ||
+      TournamentStatus.finalized ||
+      TournamentStatus.aborted =>
+        null,
+    };
+  }
+}
+
+/// Lifecycle helper banner (migrated from the detail screen). Reads as helper
+/// copy on the raised surface, not an error.
+class _LifecycleHint extends StatelessWidget {
+  const _LifecycleHint({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Container(
+      padding: const EdgeInsets.all(KubbTokens.space3),
+      decoration: BoxDecoration(
+        color: tokens.bgRaised,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+        border: Border.all(color: tokens.line, width: 1.5),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, size: 18, color: tokens.fgMuted),
+          const SizedBox(width: KubbTokens.space2),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.35,
+                color: tokens.fgMuted,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Surfaces an error from a lifecycle/moderation action as a SnackBar (migrated
+/// from the detail screen). Keeps the cockpit's action dispatch consistent with
+/// the old detail-screen behaviour.
+Future<void> _safe(BuildContext context, Future<void> Function() op) async {
+  try {
+    await op();
+  } on Object catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e'), backgroundColor: KubbTokens.miss));
+  }
+}
+
+/// Confirms an organizer remove with an optional reason, then routes to
+/// [TournamentActions.removeParticipant] (server-gated soft removal + waitlist
+/// promotion). Migrated from the detail screen (W4-T25); the reason is recorded
+/// in the audit tail when given.
+Future<void> confirmRemoveParticipant(
+  BuildContext context,
+  TournamentActions actions,
+  TournamentParticipantId pid,
+  TournamentId tournamentId,
+  String label,
+  AppLocalizations l,
+) async {
+  final reasonController = TextEditingController();
+  try {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l.tournamentDetailRemoveConfirmTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l.tournamentDetailRemoveConfirmBody(label)),
+            const SizedBox(height: KubbTokens.space3),
+            TextField(
+              controller: reasonController,
+              decoration: InputDecoration(
+                labelText: l.tournamentDetailRemoveReasonLabel,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child:
+                Text(MaterialLocalizations.of(dialogContext).cancelButtonLabel),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: KubbTokens.miss),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l.tournamentDetailRemoveConfirmAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final reason = reasonController.text.trim();
+    if (!context.mounted) return;
+    await _safe(
+      context,
+      () => actions.removeParticipant(
+        pid,
+        tournamentId: tournamentId,
+        reason: reason.isEmpty ? null : reason,
+      ),
+    );
+  } finally {
+    reasonController.dispose();
+  }
 }

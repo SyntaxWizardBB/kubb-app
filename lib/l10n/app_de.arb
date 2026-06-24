@@ -225,6 +225,14 @@
   "@organizerCheckinSectionTitle": {
     "description": "Section title above the per-tournament check-in list in the cockpit detail (spec §9.2)"
   },
+  "organizerLifecycleSectionTitle": "Lifecycle",
+  "@organizerLifecycleSectionTitle": {
+    "description": "Section title above the lifecycle action block (publish/start/close/finalize/abort/seeding/edit) in the cockpit detail"
+  },
+  "organizerModerationSectionTitle": "Teilnehmer",
+  "@organizerModerationSectionTitle": {
+    "description": "Section title above the participant moderation (remove) list in the cockpit detail"
+  },
   "organizerEscalationDisputedBadge": "{count, plural, one{1 strittig} other{{count} strittig}}",
   "@organizerEscalationDisputedBadge": {
     "description": "Escalation badge showing the number of disputed matches needing an override",
@@ -4229,6 +4237,10 @@
   "tournamentDetailActionResume": "Fortsetzen",
   "@tournamentDetailActionResume": {
     "description": "Action: organizer reactivates an aborted tournament back to its pre-abort status"
+  },
+  "tournamentDetailActionDashboard": "→ Turnier-Steuerung",
+  "@tournamentDetailActionDashboard": {
+    "description": "Action shown to a manager on the unified detail screen: jump into the organizer cockpit (dashboard detail) for this tournament"
   },
   "tournamentDetailHintDraft": "Veröffentlichen — die Anmeldung ist danach sofort offen und Spieler können sich anmelden. Starten kannst du, sobald genug Teilnehmer dabei sind.",
   "@tournamentDetailHintDraft": {

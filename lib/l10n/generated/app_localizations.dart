@@ -394,6 +394,18 @@ abstract class AppLocalizations {
   /// **'Check-in'**
   String get organizerCheckinSectionTitle;
 
+  /// Section title above the lifecycle action block (publish/start/close/finalize/abort/seeding/edit) in the cockpit detail
+  ///
+  /// In de, this message translates to:
+  /// **'Lifecycle'**
+  String get organizerLifecycleSectionTitle;
+
+  /// Section title above the participant moderation (remove) list in the cockpit detail
+  ///
+  /// In de, this message translates to:
+  /// **'Teilnehmer'**
+  String get organizerModerationSectionTitle;
+
   /// Escalation badge showing the number of disputed matches needing an override
   ///
   /// In de, this message translates to:
@@ -6117,6 +6129,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Fortsetzen'**
   String get tournamentDetailActionResume;
+
+  /// Action shown to a manager on the unified detail screen: jump into the organizer cockpit (dashboard detail) for this tournament
+  ///
+  /// In de, this message translates to:
+  /// **'→ Turnier-Steuerung'**
+  String get tournamentDetailActionDashboard;
 
   /// Lifecycle hint shown to the organizer while the tournament is still a draft (publishing opens registration immediately)
   ///

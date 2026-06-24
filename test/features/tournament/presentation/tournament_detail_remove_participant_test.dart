@@ -3,22 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
-import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_bracket_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
+import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
+import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
 import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
-import 'package:kubb_app/features/tournament/presentation/tournament_detail_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/organizer_dashboard_detail_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
+
+// W4-T25: participant moderation ("Entfernen") moved from the detail screen
+// into the organizer cockpit. These tests assert the migrated moderation
+// section routes to the server-gated `removeParticipant` (soft removal +
+// waitlist promotion), never the legacy reject.
 
 const _id = TournamentId('t-1');
 const _creator = 'u-creator';
 
-/// Records the participant ids passed to the two organizer-facing removal
-/// paths so the test can prove the "Entfernen" button now routes to
-/// [removeParticipant] (the setup-gated soft removal + waitlist promotion)
-/// and no longer to the legacy [rejectRegistration].
 class _SpyRemote implements TournamentRemote {
   final List<String> removed = <String>[];
   final List<String> rejected = <String>[];
@@ -108,16 +110,16 @@ TournamentDetail _detail({
 Future<_SpyRemote> _pump(
   WidgetTester tester,
   TournamentDetail detail, {
-  String? callerUserId,
-  bool canManage = false,
+  bool canAdminister = true,
 }) async {
   final remote = _SpyRemote();
   final router = GoRouter(
-    initialLocation: '/tournament/t-1',
+    initialLocation: '/tournament/t-1/dashboard',
     routes: [
       GoRoute(
-        path: '/tournament/:id',
-        builder: (_, _) => const TournamentDetailScreen(tournamentId: _id),
+        path: '/tournament/t-1/dashboard',
+        builder: (_, _) =>
+            const OrganizerDashboardDetailScreen(tournamentId: _id),
       ),
     ],
   );
@@ -127,8 +129,13 @@ Future<_SpyRemote> _pump(
       overrides: [
         tournamentRemoteProvider.overrideWithValue(remote),
         tournamentDetailProvider(_id).overrideWith((_) async => detail),
-        currentUserIdProvider.overrideWithValue(callerUserId),
-        canManageTournamentClubProvider(null).overrideWithValue(canManage),
+        canAdministerTournamentProvider((
+          clubId: null,
+          createdBy: _creator,
+        )).overrideWithValue(canAdminister),
+        tournamentMatchListProvider(_id).overrideWith((_) async => const []),
+        tournamentRoundScheduleProvider(_id)
+            .overrideWith((_) => Stream.value(const {})),
         tournamentBracketProvider(_id).overrideWith(
           (_) async => throw ArgumentError('no ko matches'),
         ),
@@ -145,6 +152,18 @@ Future<_SpyRemote> _pump(
   return remote;
 }
 
+Future<void> _tapRemove(WidgetTester tester) async {
+  await tester.scrollUntilVisible(
+    find.text('Entfernen'),
+    200,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.ensureVisible(find.text('Entfernen'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Entfernen'));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('confirm dialog routes Entfernen to removeParticipant',
       (tester) async {
@@ -154,15 +173,9 @@ void main() {
         status: TournamentStatus.registrationOpen,
         participants: [_participant(id: 'p1')],
       ),
-      callerUserId: 'u-other',
-      canManage: true,
     );
 
-    await tester.tap(find.text('Entfernen'));
-    await tester.pumpAndSettle();
-
-    // The confirm dialog is up; the action button (also "Entfernen") sits
-    // inside the AlertDialog. Tap it to commit.
+    await _tapRemove(tester);
     final dialogAction = find.descendant(
       of: find.byType(AlertDialog),
       matching: find.widgetWithText(TextButton, 'Entfernen'),
@@ -183,35 +196,30 @@ void main() {
         status: TournamentStatus.registrationOpen,
         participants: [_participant(id: 'p1')],
       ),
-      callerUserId: 'u-other',
-      canManage: true,
     );
 
-    await tester.tap(find.text('Entfernen'));
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.widgetWithText(TextButton, 'Abbrechen'),
-    );
+    await _tapRemove(tester);
+    await tester.tap(find.widgetWithText(TextButton, 'Abbrechen'));
     await tester.pumpAndSettle();
 
     expect(remote.removed, isEmpty);
     expect(remote.rejected, isEmpty);
   });
 
-  testWidgets('no remove button without manage rights', (tester) async {
+  testWidgets('no remove button without administer rights', (tester) async {
     await _pump(
       tester,
       _detail(
         status: TournamentStatus.registrationOpen,
         participants: [_participant(id: 'p1')],
       ),
-      callerUserId: 'u-other',
+      canAdminister: false,
     );
+    // The gate replaces the whole body with the empty state.
     expect(find.text('Entfernen'), findsNothing);
   });
 
-  testWidgets('waitlist row gets the remove button once canManage',
-      (tester) async {
+  testWidgets('waitlist row gets the remove button too', (tester) async {
     final remote = await _pump(
       tester,
       _detail(
@@ -220,12 +228,9 @@ void main() {
           _participant(id: 'w1', status: TournamentParticipantStatus.waitlist),
         ],
       ),
-      callerUserId: 'u-other',
-      canManage: true,
     );
 
-    await tester.tap(find.text('Entfernen'));
-    await tester.pumpAndSettle();
+    await _tapRemove(tester);
     await tester.tap(
       find.descendant(
         of: find.byType(AlertDialog),

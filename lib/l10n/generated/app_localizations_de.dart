@@ -180,6 +180,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get organizerCheckinSectionTitle => 'Check-in';
 
   @override
+  String get organizerLifecycleSectionTitle => 'Lifecycle';
+
+  @override
+  String get organizerModerationSectionTitle => 'Teilnehmer';
+
+  @override
   String organizerEscalationDisputedBadge(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -3368,6 +3374,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentDetailActionResume => 'Fortsetzen';
+
+  @override
+  String get tournamentDetailActionDashboard => '→ Turnier-Steuerung';
 
   @override
   String get tournamentDetailHintDraft =>
