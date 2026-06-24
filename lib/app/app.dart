@@ -7,6 +7,7 @@ import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/theme/theme_choice.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_offline_banner.dart';
+import 'package:kubb_app/features/notifications/application/push_notifications_provider.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:logging/logging.dart';
 
@@ -92,6 +93,9 @@ class _KubbAppState extends ConsumerState<KubbApp> {
         return _bootstrapShell(config, const _BootstrapErrorScreen());
       },
       data: (_) {
+        // Keep the FCM token lifecycle alive for the app's lifetime
+        // (register on login / refresh, unregister on sign-out).
+        ref.watch(pushNotificationsProvider);
         final router = ref.watch(goRouterProvider);
         return MaterialApp.router(
           onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,

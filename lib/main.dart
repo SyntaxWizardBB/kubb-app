@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -11,6 +13,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 const _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 const _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
+/// Background/terminated FCM handler (runs in its own isolate). The OS
+/// renders the `notification` block itself, and ADR-0029 §6 keeps the
+/// real catch-up on app resume, so there is intentionally no Firebase or
+/// network work here — it must stay cheap (battery regime).
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +46,18 @@ Future<void> main() async {
     url: _supabaseUrl,
     anonKey: _supabaseAnonKey,
   );
+
+  // Push (SPEC push-notifications §P3). Android reads google-services.json
+  // via the Gradle plugin, so no FirebaseOptions are needed here. Wrapped
+  // defensively: the app MUST still run on an environment without Firebase
+  // (e.g. an emulator image lacking Play Services). The token lifecycle
+  // itself lives in `pushNotificationsProvider`.
+  try {
+    await Firebase.initializeApp();
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  } on Object {
+    // Non-fatal — push simply stays inactive on this device.
+  }
 
   // FC-7 (ADR-0029 §(c)): construct the ONE production CDC adapter here,
   // over the already-initialised `Supabase.instance.client` (no second

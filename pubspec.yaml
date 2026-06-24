@@ -34,6 +34,11 @@ dependencies:
   app_links: ^6.3.0
   connectivity_plus: ^6.0.5
 
+  # Push (P3): FlutterFire pulls the native FCM SDK; google-services plugin
+  # supplies the Android config, so Firebase.initializeApp() needs no options.
+  firebase_core: any
+  firebase_messaging: any
+
   reactive_forms: any
   freezed_annotation: any
   json_annotation: any
