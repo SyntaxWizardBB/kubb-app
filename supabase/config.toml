@@ -88,3 +88,9 @@ enabled = false
 # is on a fresh device with only an anonymous Supabase session and
 # proves ownership via the signed challenge instead of via JWT.
 verify_jwt = false
+
+[functions.push-deliver]
+# Push outbox delivery worker (P2). Invoked only by the DB (pg_net webhook)
+# and pg_cron, both passing the service-role bearer — so JWT verification
+# stays ON to block any unauthenticated caller from triggering a sweep.
+verify_jwt = true
