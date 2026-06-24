@@ -318,6 +318,12 @@ class _MatchRow extends StatelessWidget {
         children: [
           Row(
             children: [
+              // Pitch badge (W4-T04 / cockpit-spec §4): the assigned pitch from
+              // the W0 projection. Hidden when the match has no pitch stamped.
+              if (match.pitchNumber != null) ...[
+                _PitchBadge(pitch: match.pitchNumber!),
+                const SizedBox(width: KubbTokens.space2),
+              ],
               Expanded(
                 child: Text(
                   '$a  vs  $b',
@@ -362,6 +368,19 @@ class _MatchRow extends StatelessWidget {
             ),
           ] else if (open) ...[
             const SizedBox(height: KubbTokens.space2),
+            // W4-T08 / cockpit-spec §5: direct score entry on every open
+            // (non-disputed) match. Opens the override editor in direct mode.
+            _MatchActionButton(
+              icon: Icons.edit_outlined,
+              label: l.organizerMatchActionDirectScore,
+              color: tokens.accent,
+              onTap: () => context.push(
+                TournamentRoutes.directScore(
+                  tournamentId.value,
+                  match.matchId.value,
+                ),
+              ),
+            ),
             _MatchActionButton(
               icon: Icons.flag_outlined,
               label: l.organizerMatchActionForfeit,
@@ -405,6 +424,40 @@ class _MatchActionButton extends StatelessWidget {
           icon: Icon(icon, size: 18, color: color),
           label: Text(label),
           style: TextButton.styleFrom(foregroundColor: color),
+        ),
+      ),
+    );
+  }
+}
+
+/// Small pitch-number badge on a [_MatchRow] (W4-T04 / cockpit-spec §4). Shows
+/// the assigned pitch from the W0 projection so the organizer can see at a
+/// glance which field a match runs on. Only rendered when a pitch is assigned.
+class _PitchBadge extends StatelessWidget {
+  const _PitchBadge({required this.pitch});
+
+  final int pitch;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: KubbTokens.space2,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: tokens.bgSunken,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusSm),
+        border: Border.all(color: tokens.line),
+      ),
+      child: Text(
+        AppLocalizations.of(context).organizerMatchPitchBadge(pitch),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          fontFeatures: const [FontFeature.tabularFigures()],
+          color: tokens.fgMuted,
         ),
       ),
     );

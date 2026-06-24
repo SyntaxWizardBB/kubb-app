@@ -582,6 +582,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 ),
               ),
               GoRoute(
+                // Cockpit-spec §5: organizer direct score entry — the override
+                // editor in direct mode (no dispute context, reason-free).
+                path: '/tournament/:id/match/:matchId/score',
+                builder: (_, state) => TournamentOverrideScreen(
+                  tournamentId: state.pathParameters['id']!,
+                  matchId: state.pathParameters['matchId']!,
+                  direct: true,
+                ),
+              ),
+              GoRoute(
                 path: '/tournament/:id/standings',
                 builder: (_, state) => TournamentStandingsScreen(
                   tournamentId: state.pathParameters['id']!,

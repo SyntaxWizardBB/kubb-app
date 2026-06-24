@@ -138,6 +138,34 @@ class TournamentOverrideController
       }
     }
   }
+
+  /// Reason-free organizer score entry (cockpit-spec §5). Reuses the same
+  /// organizer-authoritative write path as [submit] — the override RPC accepts
+  /// an empty reason and the audit trail records who/when/what either way — but
+  /// drops the [isReasonValid] precondition so the organizer can set the result
+  /// for any (also non-disputed) match without a justification. The score must
+  /// still be decisive.
+  Future<void> submitDirect(
+    TournamentMatchId matchId, {
+    required int setsToWin,
+  }) async {
+    if (state.submitting) return;
+    if (!isScoreDecisive(setsToWin)) {
+      throw StateError('direct score draft is not ready to submit');
+    }
+    state = state.copyWith(submitting: true);
+    try {
+      await ref.read(tournamentActionsProvider).organizerOverride(
+            matchId: matchId,
+            finalSetScores: toSetScores(),
+            reason: state.reason.trim(),
+          );
+    } finally {
+      if (ref.mounted) {
+        state = state.copyWith(submitting: false);
+      }
+    }
+  }
 }
 
 /// Auto-disposed so re-entering the override surface starts from a

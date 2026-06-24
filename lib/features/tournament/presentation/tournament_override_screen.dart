@@ -17,15 +17,24 @@ import 'package:lucide_icons/lucide_icons.dart';
 /// Three stacked sections — proposals review (collapsible), final score
 /// (reusing [TournamentSetInput]) and the mandatory reason — feed a
 /// single submit that calls `tournament_organizer_override`.
+///
+/// In [direct] mode (cockpit-spec §5) the same set-editor is reused for a
+/// plain organizer score entry: the dispute eyebrow, the proposals review and
+/// the reason field are hidden, the screen reads "Punkte eintragen", and the
+/// submit goes through the reason-free `submitDirect` path.
 class TournamentOverrideScreen extends ConsumerStatefulWidget {
   const TournamentOverrideScreen({
     required this.tournamentId,
     required this.matchId,
+    this.direct = false,
     super.key,
   });
 
   final String tournamentId;
   final String matchId;
+
+  /// Direct score-entry mode: no dispute context, no mandatory reason.
+  final bool direct;
 
   @override
   ConsumerState<TournamentOverrideScreen> createState() =>
@@ -85,7 +94,11 @@ class _OverrideState extends ConsumerState<TournamentOverrideScreen> {
   }) async {
     final n = ref.read(tournamentOverrideControllerProvider.notifier);
     try {
-      await n.submit(matchId, setsToWin: setsToWin);
+      if (widget.direct) {
+        await n.submitDirect(matchId, setsToWin: setsToWin);
+      } else {
+        await n.submit(matchId, setsToWin: setsToWin);
+      }
       if (!mounted) return;
       context.go(TournamentRoutes.matchDetail(widget.tournamentId, widget.matchId));
     } on Object catch (e) {
@@ -129,7 +142,8 @@ class _OverrideState extends ConsumerState<TournamentOverrideScreen> {
           onPressed: () => context.go(
               TournamentRoutes.matchDetail(widget.tournamentId, widget.matchId)),
         ),
-        title: Text(l.tournamentOverrideTitle),
+        title: Text(
+            widget.direct ? l.tournamentDirectScoreTitle : l.tournamentOverrideTitle),
       ),
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -184,16 +198,22 @@ class _OverrideState extends ConsumerState<TournamentOverrideScreen> {
     final scores = n.toSetScores();
     final ekc = computeEkc(scores);
     final decisive = n.isScoreDecisive(cfg.setsToWin);
+    // Direct mode (cockpit-spec §5) drops the mandatory reason: the score being
+    // decisive is the only gate. The override flow keeps the reason gate.
     final reasonValid = n.isReasonValid();
-    final canSubmit = decisive && reasonValid && !draft.submitting;
+    final canSubmit =
+        decisive && (widget.direct || reasonValid) && !draft.submitting;
 
     return ListView(
       padding: const EdgeInsets.all(KubbTokens.space4),
       children: [
-        _eyebrow(l, tokens, match),
-        const SizedBox(height: KubbTokens.space3),
-        _proposalsCard(l, tokens, match.consensusRound),
-        const SizedBox(height: KubbTokens.space4),
+        // Direct mode has no dispute context: no eyebrow, no proposals review.
+        if (!widget.direct) ...[
+          _eyebrow(l, tokens, match),
+          const SizedBox(height: KubbTokens.space3),
+          _proposalsCard(l, tokens, match.consensusRound),
+          const SizedBox(height: KubbTokens.space4),
+        ],
         _sectionHeader(tokens, l.tournamentOverrideFinalHeader),
         const SizedBox(height: KubbTokens.space3),
         for (var i = 0; i < draft.sets.length; i++) ...[
@@ -238,38 +258,41 @@ class _OverrideState extends ConsumerState<TournamentOverrideScreen> {
         const SizedBox(height: KubbTokens.space4),
         _livePreview(l, tokens, ekc, decisive, aName, bName),
         const SizedBox(height: KubbTokens.space4),
-        _sectionHeader(tokens, l.tournamentOverrideReasonHeader),
-        const SizedBox(height: KubbTokens.space2),
-        TextField(
-          controller: _reason,
-          maxLines: 4,
-          maxLength: TournamentOverrideController.reasonMax,
-          decoration: InputDecoration(
-            hintText: l.tournamentOverrideReasonHint,
-            filled: true,
-            fillColor: tokens.bgSunken,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
-              borderSide: BorderSide(color: tokens.line),
+        if (!widget.direct) ...[
+          _sectionHeader(tokens, l.tournamentOverrideReasonHeader),
+          const SizedBox(height: KubbTokens.space2),
+          TextField(
+            controller: _reason,
+            maxLines: 4,
+            maxLength: TournamentOverrideController.reasonMax,
+            decoration: InputDecoration(
+              hintText: l.tournamentOverrideReasonHint,
+              filled: true,
+              fillColor: tokens.bgSunken,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+                borderSide: BorderSide(color: tokens.line),
+              ),
+              counterText: '',
             ),
-            counterText: '',
           ),
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: Text(
-            l.tournamentOverrideReasonCounter(
-                draft.reason.trim().length,
-                TournamentOverrideController.reasonMax),
-            style: TextStyle(
-                fontSize: 12,
-                color: reasonValid ? tokens.fgMuted : KubbTokens.miss,
-                fontWeight: FontWeight.w700),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              l.tournamentOverrideReasonCounter(
+                  draft.reason.trim().length,
+                  TournamentOverrideController.reasonMax),
+              style: TextStyle(
+                  fontSize: 12,
+                  color: reasonValid ? tokens.fgMuted : KubbTokens.miss,
+                  fontWeight: FontWeight.w700),
+            ),
           ),
-        ),
-        const SizedBox(height: KubbTokens.space3),
+          const SizedBox(height: KubbTokens.space3),
+        ],
         if (!decisive) _validationLine(l.tournamentOverrideValidationScoreNotDecisive),
-        if (!reasonValid) _validationLine(l.tournamentOverrideValidationReasonEmpty),
+        if (!widget.direct && !reasonValid)
+          _validationLine(l.tournamentOverrideValidationReasonEmpty),
         SizedBox(
           height: KubbTokens.touchComfortable,
           child: FilledButton(
@@ -283,7 +306,9 @@ class _OverrideState extends ConsumerState<TournamentOverrideScreen> {
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: Colors.white),
                   )
-                : Text(l.tournamentOverrideSubmitButton),
+                : Text(widget.direct
+                    ? l.tournamentDirectScoreSubmitButton
+                    : l.tournamentOverrideSubmitButton),
           ),
         ),
       ],

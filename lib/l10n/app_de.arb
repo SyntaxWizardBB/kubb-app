@@ -189,6 +189,15 @@
   "@organizerMatchActionForfeit": {
     "description": "Per-match CTA on an open/awaiting match that opens the forfeit sheet"
   },
+  "organizerMatchPitchBadge": "Pitch {pitch}",
+  "@organizerMatchPitchBadge": {
+    "description": "Small badge on a cockpit match tile showing the assigned pitch number",
+    "placeholders": {
+      "pitch": {
+        "type": "int"
+      }
+    }
+  },
   "organizerPairNextRound": "Nächste Runde paaren",
   "@organizerPairNextRound": {
     "description": "CTA on the organizer dashboard that triggers client-side Schoch/Swiss pairing of the next round"
@@ -5032,6 +5041,18 @@
   "tournamentOverrideEntryAction": "Als Veranstalter eintragen",
   "@tournamentOverrideEntryAction": {
     "description": "Organizer entry button on the match detail to enter/correct the result directly"
+  },
+  "tournamentDirectScoreTitle": "Punkte eintragen",
+  "@tournamentDirectScoreTitle": {
+    "description": "App-bar title for the organizer direct score-entry screen (override screen in direct mode, no dispute context)"
+  },
+  "tournamentDirectScoreSubmitButton": "Punkte eintragen",
+  "@tournamentDirectScoreSubmitButton": {
+    "description": "Submit button on the organizer direct score-entry screen"
+  },
+  "organizerMatchActionDirectScore": "Punkte eintragen",
+  "@organizerMatchActionDirectScore": {
+    "description": "Per-match cockpit CTA that opens the direct score-entry editor for an open match"
   },
   "tournamentOverrideValidationReasonEmpty": "Begründung ist erforderlich",
   "tournamentOverrideValidationScoreNotDecisive": "Score muss eindeutig sein (ein Team erreicht die nötigen Sätze)",

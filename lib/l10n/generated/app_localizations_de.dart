@@ -162,6 +162,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get organizerMatchActionForfeit => 'Forfait';
 
   @override
+  String organizerMatchPitchBadge(int pitch) {
+    return 'Pitch $pitch';
+  }
+
+  @override
   String get organizerPairNextRound => 'Nächste Runde paaren';
 
   @override
@@ -3960,6 +3965,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentOverrideEntryAction => 'Als Veranstalter eintragen';
+
+  @override
+  String get tournamentDirectScoreTitle => 'Punkte eintragen';
+
+  @override
+  String get tournamentDirectScoreSubmitButton => 'Punkte eintragen';
+
+  @override
+  String get organizerMatchActionDirectScore => 'Punkte eintragen';
 
   @override
   String get tournamentOverrideValidationReasonEmpty =>

@@ -340,6 +340,12 @@ abstract class AppLocalizations {
   /// **'Forfait'**
   String get organizerMatchActionForfeit;
 
+  /// Small badge on a cockpit match tile showing the assigned pitch number
+  ///
+  /// In de, this message translates to:
+  /// **'Pitch {pitch}'**
+  String organizerMatchPitchBadge(int pitch);
+
   /// CTA on the organizer dashboard that triggers client-side Schoch/Swiss pairing of the next round
   ///
   /// In de, this message translates to:
@@ -7149,6 +7155,24 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Als Veranstalter eintragen'**
   String get tournamentOverrideEntryAction;
+
+  /// App-bar title for the organizer direct score-entry screen (override screen in direct mode, no dispute context)
+  ///
+  /// In de, this message translates to:
+  /// **'Punkte eintragen'**
+  String get tournamentDirectScoreTitle;
+
+  /// Submit button on the organizer direct score-entry screen
+  ///
+  /// In de, this message translates to:
+  /// **'Punkte eintragen'**
+  String get tournamentDirectScoreSubmitButton;
+
+  /// Per-match cockpit CTA that opens the direct score-entry editor for an open match
+  ///
+  /// In de, this message translates to:
+  /// **'Punkte eintragen'**
+  String get organizerMatchActionDirectScore;
 
   /// No description provided for @tournamentOverrideValidationReasonEmpty.
   ///

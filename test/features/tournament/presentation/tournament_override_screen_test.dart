@@ -92,20 +92,32 @@ Future<_FakeRemote> _pump(
   WidgetTester tester, {
   required TournamentMatchRef match,
   required String? callerUserId,
+  bool direct = false,
 }) async {
   tester.view.physicalSize = const Size(1080, 3200);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   final fake = _FakeRemote(match);
+  final initial = direct
+      ? '/tournament/t-1/match/m-1/score'
+      : '/tournament/t-1/match/m-1/override';
   final router = GoRouter(
-    initialLocation: '/tournament/t-1/match/m-1/override',
+    initialLocation: initial,
     routes: [
       GoRoute(
         path: '/tournament/:id/match/:matchId/override',
         builder: (_, s) => TournamentOverrideScreen(
           tournamentId: s.pathParameters['id']!,
           matchId: s.pathParameters['matchId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/tournament/:id/match/:matchId/score',
+        builder: (_, s) => TournamentOverrideScreen(
+          tournamentId: s.pathParameters['id']!,
+          matchId: s.pathParameters['matchId']!,
+          direct: true,
         ),
       ),
       GoRoute(
@@ -209,6 +221,59 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
     expect(fake.lastCall, isNotNull);
     expect(fake.lastCall!.reason, 'Schiedsrichter');
+    expect(fake.lastCall!.scores, hasLength(2));
+  });
+
+  // ─── W4-T07: direct score-entry mode ──────────────────────────────────
+
+  testWidgets('direct mode reads "Punkte eintragen" and hides the reason field',
+      (tester) async {
+    await _pump(
+      tester,
+      match: _match(status: TournamentMatchStatus.scheduled),
+      callerUserId: _creator,
+      direct: true,
+    );
+    // Title + submit button both say "Punkte eintragen"; no reason field, no
+    // dispute eyebrow, no proposals review.
+    expect(find.text('Punkte eintragen'), findsWidgets);
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text('Begründung'), findsNothing);
+    expect(find.text('Strittiges Match'), findsNothing);
+    expect(find.text('Bisherige Eingaben'), findsNothing);
+  });
+
+  testWidgets('direct mode submits with NO mandatory reason', (tester) async {
+    final fake = await _pump(
+      tester,
+      match: _match(status: TournamentMatchStatus.scheduled),
+      callerUserId: _creator,
+      direct: true,
+    );
+    final plus = find.byIcon(LucideIcons.plus);
+    for (var i = 0; i < 5; i++) {
+      await tester.tap(plus.first);
+      await tester.pump();
+    }
+    await tester.tap(find.widgetWithText(InkWell, 'Anna').first);
+    await tester.pump();
+    await tester.tap(find.text('Satz +'));
+    await tester.pump();
+    for (var i = 0; i < 5; i++) {
+      await tester.tap(plus.first);
+      await tester.pump();
+    }
+    await tester.tap(find.widgetWithText(InkWell, 'Anna').first);
+    await tester.pump();
+    // No reason entered — the direct path must still submit once decisive.
+    final btn = tester.widget<FilledButton>(find.byType(FilledButton));
+    expect(btn.onPressed, isNotNull,
+        reason: 'direct submit enables on a decisive score without a reason');
+    await tester.tap(find.byType(FilledButton));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(fake.lastCall, isNotNull);
+    expect(fake.lastCall!.reason, isEmpty);
     expect(fake.lastCall!.scores, hasLength(2));
   });
 }

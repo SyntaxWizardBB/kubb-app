@@ -107,6 +107,13 @@ abstract final class TournamentRoutes {
   static String override(String tournamentId, String matchId) =>
       '$matchBase/$tournamentId/match/$matchId/override';
 
+  /// Organizer direct score-entry entry-point (cockpit-spec §5) for any open
+  /// match. Reuses the override set-editor in direct mode (no dispute context,
+  /// no mandatory reason). Compose as
+  /// `'$matchBase/$tournamentId/match/$matchId/score'`.
+  static String directScore(String tournamentId, String matchId) =>
+      '$matchBase/$tournamentId/match/$matchId/score';
+
   static String standings(String tournamentId) =>
       '$standingsBase/$tournamentId/standings';
 

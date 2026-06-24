@@ -383,7 +383,11 @@ void main() {
       schedule: _schedule(RoundStatus.running),
     );
 
+    // The open row now also carries the W4-T08 "Punkte eintragen" CTA above
+    // the forfeit shortcut, so bring the forfeit button into view first.
     expect(find.text('Forfait'), findsOneWidget);
+    await tester.ensureVisible(find.text('Forfait'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Forfait'));
     await tester.pumpAndSettle();
 
