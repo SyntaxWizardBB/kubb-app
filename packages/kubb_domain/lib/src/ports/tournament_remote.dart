@@ -1060,6 +1060,14 @@ abstract interface class TournamentRemote {
   /// (status `call`, a fresh break window). Writes only the schedule row.
   Future<void> skipScheduleBackward(TournamentId id);
 
+  /// Adjusts the LIVE round's length additively (spec §6/§9.5). A positive
+  /// [deltaSeconds] lengthens, a negative one shortens the active round
+  /// (`match_seconds += delta`, clamped to >= 0, with `ends_at` re-anchored to
+  /// `starts_at + match_seconds`). Writes only the schedule row; the change
+  /// reaches clients over the schedule CDC. Backed by the
+  /// `tournament_adjust_round_time` RPC.
+  Future<void> adjustRoundTime(TournamentId id, int deltaSeconds);
+
   // KO-Phase (M2.2 — see architecture.md §4 and ADR-0017)
 
   /// FR-FMT-10 manual override. Writes the seeding order of the qualified

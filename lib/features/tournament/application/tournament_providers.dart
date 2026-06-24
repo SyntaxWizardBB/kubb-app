@@ -440,6 +440,25 @@ class TournamentActions {
     _invalidateScheduleControlOverview();
   }
 
+  /// Spec §6/§9.5: lengthen the live round by [seconds] (a positive amount).
+  /// Pushes `tournament_adjust_round_time(+seconds)` via the port — the server
+  /// writes only the schedule row, so the new time reaches the detail over the
+  /// schedule CDC; no full schedule recompute. Refreshes the overview only
+  /// (same seam rationale as the pause/resume/skip controls — see
+  /// [_invalidateScheduleControlOverview]).
+  Future<void> extendRound(TournamentId id, int seconds) async {
+    await _ref.read(tournamentRemoteProvider).adjustRoundTime(id, seconds);
+    _invalidateScheduleControlOverview();
+  }
+
+  /// Spec §6/§9.5: shorten the live round by [seconds] (a positive amount).
+  /// Pushes `tournament_adjust_round_time(-seconds)`; the server clamps the
+  /// result to >= 0. CDC-push, no recompute. Refreshes the overview only.
+  Future<void> shortenRound(TournamentId id, int seconds) async {
+    await _ref.read(tournamentRemoteProvider).adjustRoundTime(id, -seconds);
+    _invalidateScheduleControlOverview();
+  }
+
   /// Refresh after a pause/resume/skip control action (ADR-0031 Block B2c).
   ///
   /// Only [administrableTournamentsProvider] is invalidated: the dashboard

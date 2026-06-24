@@ -119,6 +119,28 @@ class AppLocalizationsDe extends AppLocalizations {
       'Zum Vorspulen gedrückt halten';
 
   @override
+  String get organizerRoundTimeTitle => 'Rundenzeit';
+
+  @override
+  String get organizerRoundTimeExtend => 'Rundenzeit verlängern';
+
+  @override
+  String get organizerRoundTimeShorten => 'Rundenzeit verkürzen';
+
+  @override
+  String organizerRoundTimeStep(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get organizerRoundTimeInputHint => 'Sekunden';
+
+  @override
+  String organizerRoundLabel(int round) {
+    return 'Runde $round';
+  }
+
+  @override
   String get organizerOpenDetail => 'Ablauf öffnen';
 
   @override

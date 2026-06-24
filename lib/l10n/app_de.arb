@@ -143,6 +143,40 @@
   "@organizerActionSkipForwardHoldHint": {
     "description": "Hold-to-confirm hint on the irreversible skip-forward action"
   },
+  "organizerRoundTimeTitle": "Rundenzeit",
+  "@organizerRoundTimeTitle": {
+    "description": "Label above the extend/shorten round-time controls"
+  },
+  "organizerRoundTimeExtend": "Rundenzeit verlängern",
+  "@organizerRoundTimeExtend": {
+    "description": "Semantics/tooltip for the +step button that lengthens the live round"
+  },
+  "organizerRoundTimeShorten": "Rundenzeit verkürzen",
+  "@organizerRoundTimeShorten": {
+    "description": "Semantics/tooltip for the -step button that shortens the live round"
+  },
+  "organizerRoundTimeStep": "{seconds} s",
+  "@organizerRoundTimeStep": {
+    "description": "Step size label on the +/- round-time buttons (in seconds)",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "organizerRoundTimeInputHint": "Sekunden",
+  "@organizerRoundTimeInputHint": {
+    "description": "Hint text for the direct seconds input that extends/shortens the round"
+  },
+  "organizerRoundLabel": "Runde {round}",
+  "@organizerRoundLabel": {
+    "description": "Control bar status: the active round number",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
+  },
   "organizerOpenDetail": "Ablauf öffnen",
   "@organizerOpenDetail": {
     "description": "Overview card action: open the per-tournament dashboard detail"

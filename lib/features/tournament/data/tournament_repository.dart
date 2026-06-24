@@ -1038,6 +1038,21 @@ class TournamentRepository implements TournamentRemote {
   Future<void> skipScheduleBackward(TournamentId id) =>
       _voidRpc('tournament_skip_back', id);
 
+  /// Adjust the live round's length: forwards to
+  /// `tournament_adjust_round_time(uuid, int)` (migration `20261319000000`),
+  /// which adds `deltaSeconds` to the active round's `match_seconds` (clamped
+  /// to >= 0) and re-anchors `ends_at`. Writes only the schedule row; the new
+  /// time reaches clients over the schedule CDC.
+  @override
+  Future<void> adjustRoundTime(TournamentId id, int deltaSeconds) =>
+      _client.rpc<void>(
+        'tournament_adjust_round_time',
+        params: <String, dynamic>{
+          'p_tournament_id': id.value,
+          'p_delta_seconds': deltaSeconds,
+        },
+      );
+
   @override
   Future<TournamentParticipantId> registerTeam({
     required TournamentId tournamentId,

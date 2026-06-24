@@ -15,6 +15,7 @@ import 'package:kubb_app/features/tournament/presentation/widgets/schedule_contr
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_forfeit_sheet.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../fixtures/tournament/fake_tournament_remote.dart';
 
@@ -46,6 +47,15 @@ class _SpyRemote extends FakeTournamentRemote {
       calls.add('skipBack');
   @override
   Future<void> startTournament(TournamentId id) async => calls.add('start');
+
+  /// Records the signed delta of each adjust-round-time dispatch so a test can
+  /// assert the +/- step direction (extend = positive, shorten = negative).
+  final List<int> adjustDeltas = <int>[];
+  @override
+  Future<void> adjustRoundTime(TournamentId id, int deltaSeconds) async {
+    calls.add('adjust');
+    adjustDeltas.add(deltaSeconds);
+  }
 
   // Records the KO-phase RPC without requiring the tournament to be registered
   // in the fake's store — the assertion is purely "did the existing mechanic
@@ -139,6 +149,31 @@ TournamentRoundScheduleRef _schedule(
       pausedAt: pausedAt,
       pausedAccumSeconds: 0,
     );
+
+/// A schedule row anchored at `now` so the Restzeit-Formel yields a positive
+/// remaining time for the status-line tests (the default [_schedule] anchors
+/// at 2026, which always reads as expired).
+TournamentRoundScheduleRef _liveSchedule({
+  required int matchSeconds,
+  bool paused = false,
+}) {
+  final now = DateTime.now().toUtc();
+  return TournamentRoundScheduleRef(
+    tournamentId: _id,
+    stageNodeId: null,
+    roundNumber: 1,
+    phase: 'group',
+    status: RoundStatus.running,
+    publishedAt: now,
+    startsAt: now,
+    endsAt: now.add(Duration(seconds: matchSeconds)),
+    breakSeconds: 60,
+    matchSeconds: matchSeconds,
+    tiebreakAfterSeconds: null,
+    pausedAt: paused ? now : null,
+    pausedAccumSeconds: 0,
+  );
+}
 
 /// Spy router: records every pushed location so the B3 link tests can assert
 /// the contextual actions navigate to the EXISTING override / seeding routes.
@@ -246,11 +281,14 @@ void main() {
     );
 
     expect(find.byType(ScheduleControlBar), findsOneWidget);
-    expect(find.text('Runde 1'), findsOneWidget);
+    // "Runde 1" now appears twice: once in the control-bar status line and once
+    // as the round header in the list.
+    expect(find.text('Runde 1'), findsWidgets);
+    await tester.scrollUntilVisible(find.text('Team A1  vs  Team B1'), 200, scrollable: find.byType(Scrollable).first);
     expect(find.text('Team A1  vs  Team B1'), findsOneWidget);
     // The lower rounds sit below the new B3 escalation/KO sections — scroll
     // them into the lazy list to assert they still render.
-    await tester.scrollUntilVisible(find.text('Team A3  vs  Team B3'), 200);
+    await tester.scrollUntilVisible(find.text('Team A3  vs  Team B3'), 200, scrollable: find.byType(Scrollable).first);
     expect(find.text('Runde 2'), findsOneWidget);
     expect(find.text('Team A3  vs  Team B3'), findsOneWidget);
   });
@@ -283,6 +321,79 @@ void main() {
     await tester.tap(find.text('Fortsetzen'));
     await tester.pump();
     expect(spy.calls, contains('resume'));
+  });
+
+  testWidgets('W4-T16: + step button dispatches extendRound (positive delta)',
+      (tester) async {
+    final spy = _SpyRemote();
+    await _pump(
+      tester,
+      canAdminister: true,
+      remote: spy,
+      schedule: _schedule(RoundStatus.running),
+    );
+
+    await tester.tap(find.byIcon(LucideIcons.plus));
+    await tester.pump();
+    expect(spy.calls, contains('adjust'));
+    expect(spy.adjustDeltas.single, greaterThan(0));
+  });
+
+  testWidgets('W4-T16: - step button dispatches shortenRound (negative delta)',
+      (tester) async {
+    final spy = _SpyRemote();
+    await _pump(
+      tester,
+      canAdminister: true,
+      remote: spy,
+      schedule: _schedule(RoundStatus.running),
+    );
+
+    await tester.tap(find.byIcon(LucideIcons.minus));
+    await tester.pump();
+    expect(spy.calls, contains('adjust'));
+    expect(spy.adjustDeltas.single, lessThan(0));
+  });
+
+  testWidgets('W4-T16: direct number input dispatches a matching adjust',
+      (tester) async {
+    final spy = _SpyRemote();
+    await _pump(
+      tester,
+      canAdminister: true,
+      remote: spy,
+      schedule: _schedule(RoundStatus.running),
+    );
+
+    await tester.enterText(find.byType(TextField), '90');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+    expect(spy.adjustDeltas.single, 90);
+  });
+
+  testWidgets('W4-T16: status line shows Runde N and a remaining time',
+      (tester) async {
+    await _pump(
+      tester,
+      canAdminister: true,
+      schedule: _liveSchedule(matchSeconds: 600),
+    );
+
+    // "Runde 1" appears both in the status line and the round header; the
+    // status line guarantees at least one.
+    expect(find.text('Runde 1'), findsWidgets);
+    // Remaining time renders as "Restzeit mm:ss" (a 600s round just started).
+    expect(find.textContaining('Restzeit'), findsOneWidget);
+  });
+
+  testWidgets('W4-T16: status line shows Pause while the clock is paused',
+      (tester) async {
+    await _pump(
+      tester,
+      canAdminister: true,
+      schedule: _liveSchedule(matchSeconds: 600, paused: true),
+    );
+    expect(find.text('Pausiert'), findsWidgets);
   });
 
   testWidgets('skip-back action dispatches skipBack', (tester) async {
@@ -356,6 +467,7 @@ void main() {
       schedule: _schedule(RoundStatus.running),
     );
 
+    await tester.scrollUntilVisible(find.text('Korrigieren'), 200, scrollable: find.byType(Scrollable).first);
     expect(find.text('Korrigieren'), findsOneWidget);
     await tester.tap(find.text('Korrigieren'));
     await tester.pumpAndSettle();
@@ -385,6 +497,7 @@ void main() {
 
     // The open row now also carries the W4-T08 "Punkte eintragen" CTA above
     // the forfeit shortcut, so bring the forfeit button into view first.
+    await tester.scrollUntilVisible(find.text('Forfait'), 200, scrollable: find.byType(Scrollable).first);
     expect(find.text('Forfait'), findsOneWidget);
     await tester.ensureVisible(find.text('Forfait'));
     await tester.pumpAndSettle();
@@ -492,9 +605,13 @@ void main() {
     expect(find.text('2 offen'), findsOneWidget);
     // The associated interventions are reachable in the (scrollable) list —
     // scroll the disputed override + a forfeit CTA into view to confirm.
-    await tester.scrollUntilVisible(find.text('Korrigieren'), 200);
+    await tester.scrollUntilVisible(find.text('Korrigieren'), 200, scrollable: find.byType(Scrollable).first);
     expect(find.text('Korrigieren'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Forfait').first, 200);
+    await tester.scrollUntilVisible(
+      find.text('Forfait').first,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Forfait'), findsWidgets);
   });
 
@@ -529,7 +646,11 @@ void main() {
     );
 
     final cta = find.text('Nächste Runde paaren');
-    await tester.scrollUntilVisible(cta, 200);
+    await tester.scrollUntilVisible(
+      cta,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(cta, findsOneWidget);
 
     await tester.tap(cta);

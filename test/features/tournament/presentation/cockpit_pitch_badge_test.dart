@@ -123,6 +123,11 @@ void main() {
   testWidgets('W4-T04: a pitch-assigned match shows its pitch badge',
       (tester) async {
     await _pump(tester, matches: [_match(1, pitch: 7)]);
+    await tester.scrollUntilVisible(
+      find.text('Pitch 7'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Pitch 7'), findsOneWidget);
   });
 

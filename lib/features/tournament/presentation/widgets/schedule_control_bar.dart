@@ -39,6 +39,11 @@ class ScheduleControlBar extends StatelessWidget {
     required this.onResume,
     required this.onSkipForward,
     required this.onSkipBack,
+    required this.onExtend,
+    required this.onShorten,
+    this.roundNumber,
+    this.remainingSeconds,
+    this.stepSeconds = 60,
     this.skipForwardHoldDuration = const Duration(milliseconds: 700),
     super.key,
   });
@@ -51,11 +56,28 @@ class ScheduleControlBar extends StatelessWidget {
   /// on the active schedule row).
   final bool paused;
 
+  /// Active round number for the status read-out ("Runde N"), or `null` when
+  /// no round is live yet.
+  final int? roundNumber;
+
+  /// Remaining seconds of the live round for the status read-out, or `null`
+  /// when unknown / no round is live.
+  final int? remainingSeconds;
+
   final VoidCallback? onStart;
   final VoidCallback? onPause;
   final VoidCallback? onResume;
   final VoidCallback? onSkipForward;
   final VoidCallback? onSkipBack;
+
+  /// Lengthen the live round by the given number of seconds (spec §6/§9.5).
+  final ValueChanged<int>? onExtend;
+
+  /// Shorten the live round by the given number of seconds (spec §6/§9.5).
+  final ValueChanged<int>? onShorten;
+
+  /// Step size of the +/- round-time buttons, in seconds (default 60).
+  final int stepSeconds;
 
   /// Hold duration the irreversible skip-forward action requires before it
   /// confirms. Injectable so widget tests can drive a short hold.
@@ -77,6 +99,13 @@ class ScheduleControlBar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _StatusLine(
+            paused: paused,
+            scheduleStatus: scheduleStatus,
+            roundNumber: roundNumber,
+            remainingSeconds: remainingSeconds,
+          ),
+          const SizedBox(height: KubbTokens.space3),
           // Primary clock toggle (Start / Pause / Resume).
           KubbButton(
             variant: paused
@@ -126,6 +155,12 @@ class ScheduleControlBar extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: KubbTokens.space3),
+          _RoundTimeControls(
+            stepSeconds: stepSeconds,
+            onExtend: onExtend,
+            onShorten: onShorten,
           ),
         ],
       ),
@@ -267,6 +302,267 @@ class _HoldToConfirmButtonState extends State<_HoldToConfirmButton>
                         ),
                       ],
                     ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Status read-out (spec §6 MUSS): shows what is currently running — "Pause"
+/// while the tournament-wide pause is active, otherwise "Runde N" — with the
+/// live round's remaining time underneath.
+class _StatusLine extends StatelessWidget {
+  const _StatusLine({
+    required this.paused,
+    required this.scheduleStatus,
+    required this.roundNumber,
+    required this.remainingSeconds,
+  });
+
+  final bool paused;
+  final RoundStatus? scheduleStatus;
+  final int? roundNumber;
+  final int? remainingSeconds;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+
+    final String title;
+    if (paused) {
+      title = l.organizerScheduleStatusPaused;
+    } else if (roundNumber != null) {
+      title = l.organizerRoundLabel(roundNumber!);
+    } else {
+      title = l.organizerScheduleStatusNone;
+    }
+
+    final remaining = remainingSeconds;
+    final String time;
+    if (remaining == null) {
+      time = l.organizerScheduleStatusNone;
+    } else if (remaining <= 0) {
+      time = l.organizerDashboardExpired;
+    } else {
+      time = l.organizerDashboardRemaining(_formatSeconds(remaining));
+    }
+    final expired = remaining != null && remaining <= 0;
+
+    return Row(
+      children: [
+        Icon(
+          paused ? LucideIcons.pause : LucideIcons.radio,
+          size: 16,
+          color: tokens.fgMuted,
+        ),
+        const SizedBox(width: KubbTokens.space2),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: tokens.fg,
+                ),
+              ),
+              Text(
+                time,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  color: expired ? KubbTokens.miss : tokens.fgMuted,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatSeconds(int seconds) {
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+}
+
+/// Round-time adjust controls (spec §6/§9.5 MUSS): a minus and a plus step
+/// button (default ±[stepSeconds]) plus a direct seconds input. The step
+/// buttons fire [onShorten]/[onExtend] with the step; the input submits its
+/// value as an extend (positive) or shorten (negative number).
+class _RoundTimeControls extends StatefulWidget {
+  const _RoundTimeControls({
+    required this.stepSeconds,
+    required this.onExtend,
+    required this.onShorten,
+  });
+
+  final int stepSeconds;
+  final ValueChanged<int>? onExtend;
+  final ValueChanged<int>? onShorten;
+
+  @override
+  State<_RoundTimeControls> createState() => _RoundTimeControlsState();
+}
+
+class _RoundTimeControlsState extends State<_RoundTimeControls> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submitInput() {
+    final raw = _controller.text.trim();
+    final value = int.tryParse(raw);
+    if (value == null || value == 0) return;
+    if (value > 0) {
+      widget.onExtend?.call(value);
+    } else {
+      widget.onShorten?.call(-value);
+    }
+    _controller.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    final enabled = widget.onExtend != null && widget.onShorten != null;
+    final stepLabel = l.organizerRoundTimeStep(widget.stepSeconds);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          l.organizerRoundTimeTitle,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.6,
+            color: tokens.fgMuted,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        Row(
+          children: [
+            _StepButton(
+              icon: LucideIcons.minus,
+              label: stepLabel,
+              semanticsLabel: l.organizerRoundTimeShorten,
+              onPressed:
+                  enabled ? () => widget.onShorten!(widget.stepSeconds) : null,
+            ),
+            const SizedBox(width: KubbTokens.space2),
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                enabled: enabled,
+                keyboardType: const TextInputType.numberWithOptions(signed: true),
+                textAlign: TextAlign.center,
+                onSubmitted: (_) => _submitInput(),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: tokens.fg,
+                ),
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: l.organizerRoundTimeInputHint,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: KubbTokens.space2,
+                    vertical: KubbTokens.space3,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+                    borderSide: BorderSide(color: tokens.line),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+                    borderSide: BorderSide(color: tokens.line),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: const Icon(LucideIcons.check, size: 16),
+                    onPressed: enabled ? _submitInput : null,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: KubbTokens.space2),
+            _StepButton(
+              icon: LucideIcons.plus,
+              label: stepLabel,
+              semanticsLabel: l.organizerRoundTimeExtend,
+              onPressed:
+                  enabled ? () => widget.onExtend!(widget.stepSeconds) : null,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// A square +/- step button for the round-time controls, honouring the 48 dp
+/// touch minimum.
+class _StepButton extends StatelessWidget {
+  const _StepButton({
+    required this.icon,
+    required this.label,
+    required this.semanticsLabel,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final String semanticsLabel;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    return Semantics(
+      button: true,
+      label: semanticsLabel,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+        child: Opacity(
+          opacity: enabled ? 1 : 0.4,
+          child: Container(
+            constraints: const BoxConstraints(
+              minHeight: KubbTokens.touchMin,
+              minWidth: KubbTokens.touchMin,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space2),
+            decoration: BoxDecoration(
+              color: KubbTokens.wood100,
+              borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 16, color: KubbTokens.wood700),
+                const SizedBox(width: KubbTokens.space1),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: KubbTokens.wood700,
                   ),
                 ),
               ],

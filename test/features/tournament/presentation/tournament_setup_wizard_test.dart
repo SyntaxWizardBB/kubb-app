@@ -262,6 +262,10 @@ class _FakeTournamentRemote implements TournamentRemote {
       throw UnimplementedError();
 
   @override
+  Future<void> adjustRoundTime(TournamentId id, int deltaSeconds) =>
+      throw UnimplementedError();
+
+  @override
   Future<void> setSeeding({
     required TournamentId tournamentId,
     required Map<TournamentParticipantId, int> seeds,

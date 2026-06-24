@@ -757,6 +757,9 @@ class FakeTournamentRemote implements TournamentRemote {
   @override
   Future<void> skipScheduleBackward(TournamentId id) async {}
 
+  @override
+  Future<void> adjustRoundTime(TournamentId id, int deltaSeconds) async {}
+
   bool _isBracketAdvanceChange(RealtimeChange change) {
     if (change.eventType == RealtimeEventType.delete) return false;
     final status = change.newRow['status'];

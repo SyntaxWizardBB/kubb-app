@@ -161,11 +161,16 @@ class _Body extends ConsumerWidget {
         ScheduleControlBar(
           scheduleStatus: activeRow?.status,
           paused: paused,
+          roundNumber: activeRow?.roundNumber,
+          remainingSeconds:
+              activeRow == null ? null : _remainingSeconds(activeRow),
           onStart: () => actions.startTournament(tournamentId).ignore(),
           onPause: () => actions.pause(tournamentId).ignore(),
           onResume: () => actions.resume(tournamentId).ignore(),
           onSkipForward: () => actions.skipForward(tournamentId).ignore(),
           onSkipBack: () => actions.skipBack(tournamentId).ignore(),
+          onExtend: (s) => actions.extendRound(tournamentId, s).ignore(),
+          onShorten: (s) => actions.shortenRound(tournamentId, s).ignore(),
         ),
         const SizedBox(height: KubbTokens.space5),
         Text(
@@ -228,6 +233,18 @@ class _Body extends ConsumerWidget {
           ],
       ],
     );
+  }
+
+  /// Remaining seconds of the active round per the Restzeit-Formel
+  /// (round_schedule.dart §Modell). A static snapshot at build time — the
+  /// schedule CDC re-renders this on every server-side change (pause / adjust /
+  /// skip), so no local ticker is needed in the control bar.
+  int _remainingSeconds(TournamentRoundScheduleRef row) {
+    final now = DateTime.now().toUtc();
+    final elapsed = now.difference(row.startsAt).inSeconds -
+        row.pausedAccumSeconds -
+        (row.pausedAt != null ? now.difference(row.pausedAt!).inSeconds : 0);
+    return row.matchSeconds - elapsed;
   }
 
   /// The lowest-numbered non-completed schedule row — the round the runner is

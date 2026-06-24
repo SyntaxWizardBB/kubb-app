@@ -286,6 +286,42 @@ abstract class AppLocalizations {
   /// **'Zum Vorspulen gedrückt halten'**
   String get organizerActionSkipForwardHoldHint;
 
+  /// Label above the extend/shorten round-time controls
+  ///
+  /// In de, this message translates to:
+  /// **'Rundenzeit'**
+  String get organizerRoundTimeTitle;
+
+  /// Semantics/tooltip for the +step button that lengthens the live round
+  ///
+  /// In de, this message translates to:
+  /// **'Rundenzeit verlängern'**
+  String get organizerRoundTimeExtend;
+
+  /// Semantics/tooltip for the -step button that shortens the live round
+  ///
+  /// In de, this message translates to:
+  /// **'Rundenzeit verkürzen'**
+  String get organizerRoundTimeShorten;
+
+  /// Step size label on the +/- round-time buttons (in seconds)
+  ///
+  /// In de, this message translates to:
+  /// **'{seconds} s'**
+  String organizerRoundTimeStep(int seconds);
+
+  /// Hint text for the direct seconds input that extends/shortens the round
+  ///
+  /// In de, this message translates to:
+  /// **'Sekunden'**
+  String get organizerRoundTimeInputHint;
+
+  /// Control bar status: the active round number
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {round}'**
+  String organizerRoundLabel(int round);
+
   /// Overview card action: open the per-tournament dashboard detail
   ///
   /// In de, this message translates to:
