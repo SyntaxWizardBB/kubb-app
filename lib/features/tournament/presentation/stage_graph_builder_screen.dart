@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,8 +13,10 @@ import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_labeled_switch.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/tournament/application/stage_graph_builder_controller.dart';
+import 'package:kubb_app/features/tournament/application/stage_type_graph_builder_controller.dart';
 import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/stage_graph_canvas.dart';
+import 'package:kubb_app/features/tournament/presentation/stage_type_graph_wizard_host.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_round_block.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/save_template_dialog.dart';
@@ -487,11 +490,35 @@ class _NodesSection extends StatelessWidget {
             node: node,
             onEdit: () => _openEditNode(context, node),
             onDelete: () => _confirmDelete(context, node),
+            // Gating: the Ebene-2 type graph is meaningful only for the
+            // structural stage types that map onto a type-graph category
+            // (KO families -> ko, group/round-robin/Schoch -> vorrunde). A
+            // shoot-out qualification has no field-graph notion, so it gets no
+            // affordance.
+            onModelType: stageNodeSupportsTypeGraph(node.type)
+                ? () => _openModelType(context, node)
+                : null,
           ),
           const SizedBox(height: KubbTokens.space2),
         ],
       ],
     );
+  }
+
+  Future<void> _openModelType(BuildContext context, StageNode node) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l = AppLocalizations.of(context);
+    final saved = await Navigator.of(context).push<StageNode>(
+      MaterialPageRoute<StageNode>(
+        fullscreenDialog: true,
+        builder: (_) => _StageTypeGraphPage(stage: node),
+      ),
+    );
+    if (saved == null) return;
+    notifier.updateNode(node.id, saved);
+    messenger
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(l.stageGraphModelTypeSaved)));
   }
 
   Future<void> _openAddNode(BuildContext context) async {
@@ -545,16 +572,90 @@ class _NodesSection extends StatelessWidget {
   }
 }
 
+/// Whether a stage node of [type] can carry a custom Ebene-2 type graph. Every
+/// structural type maps onto a type-graph category (KO families -> `ko`,
+/// group/round-robin/Schoch -> `vorrunde`); only the shoot-out qualification —
+/// a slot-based seeding stage — has no field graph, so it is excluded.
+bool stageNodeSupportsTypeGraph(StageNodeType type) {
+  switch (type) {
+    case StageNodeType.singleElim:
+    case StageNodeType.doubleElim:
+    case StageNodeType.consolation:
+    case StageNodeType.groupPhase:
+    case StageNodeType.roundRobin:
+    case StageNodeType.schoch:
+      return true;
+    case StageNodeType.shootoutQuali:
+      return false;
+  }
+}
+
+/// Full-screen host for the Ebene-2 type-graph editor of a single [stage]. It
+/// seeds [stageTypeGraphBuilderProvider] from the stage's existing
+/// `config['type_graph']` (a fresh editor when there is none), then mounts the
+/// shared [StageTypeGraphWizardHost]. On save it pops the merged [StageNode] so
+/// the Ebene-1 builder can write it back through its controller.
+class _StageTypeGraphPage extends StatelessWidget {
+  const _StageTypeGraphPage({required this.stage});
+
+  final StageNode stage;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    final seed = _seedGraph(stage);
+    return ProviderScope(
+      // A NESTED scope so the per-node editor starts from THIS node's stored
+      // graph without leaking into the Ebene-1 builder's own provider tree.
+      overrides: [
+        stageTypeGraphBuilderProvider.overrideWith(
+          () => StageTypeGraphBuilderController(seed),
+        ),
+      ],
+      child: Scaffold(
+        backgroundColor: tokens.bg,
+        appBar: KubbAppBar(
+          eyebrow: l.stageTypeGraphEyebrow,
+          title: l.stageTypeGraphTitle,
+        ),
+        body: StageTypeGraphWizardHost(
+          stage: stage,
+          onSaved: (node) => Navigator.of(context).pop(node),
+        ),
+      ),
+    );
+  }
+
+  /// Reconstructs the stage's stored type graph for the editor seed, or null
+  /// (fresh editor) when there is none or it does not parse.
+  static StageTypeGraph? _seedGraph(StageNode stage) {
+    final raw = stage.config[stageTypeGraphConfigKey];
+    if (raw is! Map) return null;
+    try {
+      final normalized = jsonDecode(jsonEncode(raw)) as Map<String, Object?>;
+      return StageTypeGraph.fromJson(normalized);
+    } on Object {
+      return null;
+    }
+  }
+}
+
 class _NodeTile extends StatelessWidget {
   const _NodeTile({
     required this.node,
     required this.onEdit,
     required this.onDelete,
+    this.onModelType,
   });
 
   final StageNode node;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+
+  /// Opens the Ebene-2 type-graph editor for this node. Null when the node type
+  /// has no type-graph category, in which case the affordance is hidden.
+  final VoidCallback? onModelType;
 
   @override
   Widget build(BuildContext context) {
@@ -618,6 +719,17 @@ class _NodeTile extends StatelessWidget {
               ],
             ),
           ),
+          if (onModelType != null)
+            IconButton(
+              key: Key('stageGraphModelType_${node.id}'),
+              tooltip: l.stageGraphModelType,
+              icon: const Icon(LucideIcons.network, size: 18),
+              constraints: const BoxConstraints.tightFor(
+                width: KubbTokens.touchMin,
+                height: KubbTokens.touchMin,
+              ),
+              onPressed: onModelType,
+            ),
           IconButton(
             tooltip: l.stageGraphEditNode,
             icon: const Icon(LucideIcons.pencil, size: 18),

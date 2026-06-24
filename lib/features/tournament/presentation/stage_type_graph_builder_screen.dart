@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kubb_app/core/ui/platform_capabilities.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_binary_choice.dart';
@@ -10,12 +11,17 @@ import 'package:kubb_app/features/tournament/application/stage_type_graph_builde
 import 'package:kubb_app/features/tournament/data/stage_graph_templates_repository.dart'
     show TemplateVisibility;
 import 'package:kubb_app/features/tournament/data/stage_type_templates_repository.dart';
+import 'package:kubb_app/features/tournament/presentation/stage_type_graph_canvas.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_round_block.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/save_template_dialog.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+
+/// Editor view selector. Both views share the SAME
+/// [stageTypeGraphBuilderProvider] (ADR-0039 §6.5 editor-parity).
+enum _EditorView { form, canvas }
 
 /// Form-based stage-type-graph editor (Ebene 2, ADR-0039 §1, spec §5 handy
 /// variant). Category-aware:
@@ -54,10 +60,79 @@ class StageTypeGraphBuilderScreen extends StatelessWidget {
   }
 }
 
-/// Chrome-free editor body so the wizard can host it inline. Reads/mutates only
-/// [stageTypeGraphBuilderProvider].
-class StageTypeGraphBuilderBody extends ConsumerWidget {
+/// Chrome-free editor body so the wizard / standalone screen can host it inline.
+/// Renders the form/canvas toggle plus the editor content (template bar,
+/// category, rounds, edges, validation, save bar). Reads/mutates ONLY
+/// [stageTypeGraphBuilderProvider] — there is NO second graph state; the canvas
+/// (U8) mutates the same provider, so `toConfig()` serializes identically
+/// whichever view made the edit (ADR-0039 §6.5 parity guarantee).
+///
+/// The visual canvas is desktop-only and needs room: on mobile / narrow
+/// viewports the toggle is hidden and the guided form is the only editor
+/// (mirrors the Ebene-1 `StageGraphBuilderBody`).
+class StageTypeGraphBuilderBody extends StatefulWidget {
   const StageTypeGraphBuilderBody({super.key, this.onSave});
+
+  final ValueChanged<Map<String, Object?>>? onSave;
+
+  @override
+  State<StageTypeGraphBuilderBody> createState() =>
+      _StageTypeGraphBuilderBodyState();
+}
+
+class _StageTypeGraphBuilderBodyState extends State<StageTypeGraphBuilderBody> {
+  _EditorView _view = _EditorView.form;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final canvasAvailable = isCanvasAvailable(MediaQuery.sizeOf(context).width);
+    final effectiveView = canvasAvailable ? _view : _EditorView.form;
+    final toggle = !canvasAvailable
+        ? const SizedBox.shrink()
+        : Padding(
+            padding: const EdgeInsets.fromLTRB(
+              KubbTokens.space4,
+              KubbTokens.space4,
+              KubbTokens.space4,
+              0,
+            ),
+            child: SegmentedButton<_EditorView>(
+              segments: [
+                ButtonSegment(
+                  value: _EditorView.form,
+                  icon: const Icon(LucideIcons.list, size: 16),
+                  label: Text(l.stageGraphViewForm),
+                ),
+                ButtonSegment(
+                  value: _EditorView.canvas,
+                  icon: const Icon(LucideIcons.gitBranch, size: 16),
+                  label: Text(l.stageGraphViewCanvas),
+                ),
+              ],
+              selected: <_EditorView>{_view},
+              onSelectionChanged: (s) => setState(() => _view = s.first),
+            ),
+          );
+
+    final body = effectiveView == _EditorView.form
+        ? _StageTypeFormView(onSave: widget.onSave)
+        : const StageTypeGraphCanvas();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        toggle,
+        Expanded(child: body),
+      ],
+    );
+  }
+}
+
+/// The original form-based editor body, now embedded under the form/canvas
+/// toggle. Reads/mutates only `stageTypeGraphBuilderProvider`.
+class _StageTypeFormView extends ConsumerWidget {
+  const _StageTypeFormView({this.onSave});
 
   final ValueChanged<Map<String, Object?>>? onSave;
 

@@ -52,6 +52,7 @@ import 'package:kubb_app/features/tournament/presentation/public/public_match_sc
 import 'package:kubb_app/features/tournament/presentation/public/public_tournament_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/register_team_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/stage_graph_builder_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/stage_type_graph_builder_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_bracket_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_conflict_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_detail_screen.dart';
@@ -509,6 +510,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: TournamentRoutes.stageGraph,
                 builder: (_, _) => const StageGraphBuilderScreen(),
+              ),
+              GoRoute(
+                path: TournamentRoutes.stageTypeGraph,
+                builder: (_, _) => const StageTypeGraphBuilderScreen(),
               ),
               GoRoute(
                 // ADR-0031 Phase B (Block B4): organizer dashboard overview.

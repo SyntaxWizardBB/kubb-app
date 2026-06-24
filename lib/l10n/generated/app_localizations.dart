@@ -508,6 +508,18 @@ abstract class AppLocalizations {
   /// **'Stufe löschen'**
   String get stageGraphDeleteNode;
 
+  /// Action on a stage node to open the Ebene-2 type-graph editor for that node
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen-Typ modellieren'**
+  String get stageGraphModelType;
+
+  /// Snackbar shown after a node's type graph was authored and written back
+  ///
+  /// In de, this message translates to:
+  /// **'Stufen-Typ gespeichert'**
+  String get stageGraphModelTypeSaved;
+
   /// Confirmation body when deleting a node
   ///
   /// In de, this message translates to:

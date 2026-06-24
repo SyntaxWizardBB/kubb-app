@@ -256,6 +256,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stageGraphDeleteNode => 'Stufe löschen';
 
   @override
+  String get stageGraphModelType => 'Stufen-Typ modellieren';
+
+  @override
+  String get stageGraphModelTypeSaved => 'Stufen-Typ gespeichert';
+
+  @override
   String stageGraphDeleteNodeConfirm(String id) {
     return 'Stufe „$id“ und alle damit verbundenen Kanten löschen?';
   }

@@ -45,6 +45,11 @@ abstract final class TournamentRoutes {
   /// prefix so it wins over the dynamic `/tournament/:id` detail route.
   static const stageGraph = '/tournament/stage-graph';
 
+  /// Stage-TYPE-graph builder (Ebene 2, ADR-0039 §1, spec §3/§9.1) — the
+  /// per-stage round/field type editor. Static prefix so it wins over the
+  /// dynamic `/tournament/:id` detail route.
+  static const stageTypeGraph = '/tournament/stage-type-graph';
+
   /// Organizer dashboard overview (ADR-0031 Phase B, Block B4) — the
   /// veranstalter cockpit across every administrable tournament. STATIC
   /// prefix on purpose: it MUST be registered BEFORE the dynamic
