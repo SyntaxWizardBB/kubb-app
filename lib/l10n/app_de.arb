@@ -4477,6 +4477,20 @@
       }
     }
   },
+  "tournamentMatchListGroupRound": "Gruppe {group} · Runde {round}",
+  "@tournamentMatchListGroupRound": {
+    "description": "Group + round header in the match list during the pool phase",
+    "placeholders": {
+      "group": {
+        "type": "String",
+        "example": "A"
+      },
+      "round": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
   "tournamentMatchLoadError": "Spiele konnten nicht geladen werden",
   "@tournamentMatchLoadError": {
     "description": "Error banner when match list / detail fails to load"
@@ -4919,6 +4933,10 @@
   "tournamentStandingsPlayer": "Spieler",
   "@tournamentStandingsPlayer": {
     "description": "Standings column: player"
+  },
+  "tournamentStandingsTeam": "Team",
+  "@tournamentStandingsTeam": {
+    "description": "Standings column header for team tournaments"
   },
   "tournamentStandingsTotal": "Total",
   "@tournamentStandingsTotal": {

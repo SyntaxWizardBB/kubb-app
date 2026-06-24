@@ -42,21 +42,24 @@ TournamentParticipant _participant(String id, String displayName) {
   );
 }
 
-TournamentDetail _detail(List<TournamentParticipant> participants) {
+TournamentDetail _detail(
+  List<TournamentParticipant> participants, {
+  int teamSize = 1,
+}) {
   return TournamentDetail(
-    tournament: const TournamentDetailHeader(
+    tournament: TournamentDetailHeader(
       tournamentId: 't-1',
       displayName: 'Sommer-Cup',
       createdByUserId: 'u-creator',
       clubId: null,
-      teamSize: 1,
-      maxTeamSize: 1,
+      teamSize: teamSize,
+      maxTeamSize: teamSize,
       minParticipants: 2,
       maxParticipants: 8,
       format: TournamentFormat.roundRobin,
       scoring: TournamentScoring.ekc,
-      matchFormatConfig: <String, Object?>{},
-      tiebreakerOrder: <String>[],
+      matchFormatConfig: const <String, Object?>{},
+      tiebreakerOrder: const <String>[],
       byePoints: 0,
       forfeitPoints: 0,
       status: TournamentStatus.live,
@@ -75,6 +78,7 @@ Future<void> _pump(
   required List<ParticipantStats> rows,
   String? me,
   List<TournamentParticipant> participants = const <TournamentParticipant>[],
+  int teamSize = 1,
 }) async {
   final router = GoRouter(
     initialLocation: '/tournament/t-1/standings',
@@ -97,7 +101,7 @@ Future<void> _pump(
         tournamentStandingsProvider(const TournamentId('t-1'))
             .overrideWith((_) async => rows),
         tournamentDetailProvider(const TournamentId('t-1'))
-            .overrideWith((_) async => _detail(participants)),
+            .overrideWith((_) async => _detail(participants, teamSize: teamSize)),
         currentUserIdProvider.overrideWith((_) => me),
         // The standings view now subscribes to the per-tournament channel as
         // its realtime anchor (W1-T14); give it a fake transport + remote.
@@ -149,6 +153,28 @@ void main() {
     // Two rows render rank "1" + wins "1" (gamma), so we just sanity-check
     // that *some* "1" shows up rather than fight the duplicate.
     expect(find.text('1'), findsWidgets);
+  });
+
+  testWidgets('solo tournament labels the name column "Spieler"',
+      (tester) async {
+    await _pump(
+      tester,
+      rows: <ParticipantStats>[_stat('alpha', total: 9)],
+      participants: <TournamentParticipant>[_participant('alpha', 'Alice')],
+    );
+    expect(find.text('Spieler'), findsOneWidget);
+    expect(find.text('Team'), findsNothing);
+  });
+
+  testWidgets('team tournament labels the name column "Team"', (tester) async {
+    await _pump(
+      tester,
+      teamSize: 2,
+      rows: <ParticipantStats>[_stat('alpha', total: 9)],
+      participants: <TournamentParticipant>[_participant('alpha', 'Alice')],
+    );
+    expect(find.text('Team'), findsOneWidget);
+    expect(find.text('Spieler'), findsNothing);
   });
 
   testWidgets('falls back to tournamentParticipantUnknown when the roster '

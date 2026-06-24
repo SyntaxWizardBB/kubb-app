@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/features/training/application/cloud_training_provider.dart';
@@ -23,7 +24,10 @@ class MyTrainingSessionsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      appBar: const KubbAppBar(title: 'Meine Online-Sessions'),
+      appBar: const KubbAppBar(
+        title: 'Meine Online-Sessions',
+        actions: [InboxBellAction()],
+      ),
       body: async.when(
         data: (sessions) {
           if (sessions.isEmpty) {

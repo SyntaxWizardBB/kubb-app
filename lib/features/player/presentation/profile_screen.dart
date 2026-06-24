@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/avatar_circle.dart';
+import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
@@ -41,6 +42,8 @@ class ProfileScreen extends ConsumerWidget {
           onPressed: () =>
               context.canPop() ? context.pop() : context.go('/'),
         ),
+        // Spec §4 / §5.5: profile is a non-entry screen — surface the Postfach.
+        trailing: const InboxBellAction(),
         eyebrow: Text(
           l.authEditProfileEyebrow.toUpperCase(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(

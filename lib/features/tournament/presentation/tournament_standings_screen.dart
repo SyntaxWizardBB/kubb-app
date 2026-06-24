@@ -109,6 +109,10 @@ class TournamentStandingsView extends ConsumerWidget {
               rows: rows,
               callerId: myId,
               displayNameById: displayNameById,
+              // W3-T14 / spec §5.4: a team tournament labels the name column
+              // "Team", a solo one "Spieler". Default to solo until the
+              // detail header resolves.
+              isTeam: detailAsync.asData?.value?.tournament.isTeam ?? false,
             ),
           ),
         ),
@@ -160,11 +164,13 @@ class _Table extends StatelessWidget {
     required this.rows,
     required this.callerId,
     required this.displayNameById,
+    required this.isTeam,
   });
 
   final List<ParticipantStats> rows;
   final String? callerId;
   final Map<String, String> displayNameById;
+  final bool isTeam;
 
   @override
   Widget build(BuildContext context) {
@@ -184,7 +190,7 @@ class _Table extends StatelessWidget {
     }
     return Column(
       children: [
-        _HeaderRow(),
+        _HeaderRow(isTeam: isTeam),
         const Divider(height: 1),
         Expanded(
           child: ListView.builder(
@@ -208,6 +214,10 @@ class _Table extends StatelessWidget {
 }
 
 class _HeaderRow extends StatelessWidget {
+  const _HeaderRow({required this.isTeam});
+
+  final bool isTeam;
+
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
@@ -221,7 +231,11 @@ class _HeaderRow extends StatelessWidget {
       child: Row(
         children: [
           _cell(l.tournamentStandingsRank, flex: 1, tokens: tokens),
-          _cell(l.tournamentStandingsPlayer, flex: 4, tokens: tokens),
+          _cell(
+            isTeam ? l.tournamentStandingsTeam : l.tournamentStandingsPlayer,
+            flex: 4,
+            tokens: tokens,
+          ),
           _cell(l.tournamentStandingsTotal, flex: 2, tokens: tokens),
           _cell(l.tournamentStandingsWins, flex: 2, tokens: tokens),
           _cell(l.tournamentStandingsBuchholz, flex: 2, tokens: tokens),

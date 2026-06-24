@@ -6472,6 +6472,12 @@ abstract class AppLocalizations {
   /// **'Runde {round}'**
   String tournamentMatchListRound(int round);
 
+  /// Group + round header in the match list during the pool phase
+  ///
+  /// In de, this message translates to:
+  /// **'Gruppe {group} · Runde {round}'**
+  String tournamentMatchListGroupRound(String group, int round);
+
   /// Error banner when match list / detail fails to load
   ///
   /// In de, this message translates to:
@@ -6963,6 +6969,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Spieler'**
   String get tournamentStandingsPlayer;
+
+  /// Standings column header for team tournaments
+  ///
+  /// In de, this message translates to:
+  /// **'Team'**
+  String get tournamentStandingsTeam;
 
   /// Standings column: total points
   ///

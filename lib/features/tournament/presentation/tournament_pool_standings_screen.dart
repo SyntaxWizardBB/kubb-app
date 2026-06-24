@@ -79,47 +79,74 @@ class TournamentPoolStandingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
+    return Scaffold(
+      backgroundColor: tokens.bg,
+      appBar: const KubbAppBar(title: 'Gruppen-Tabelle'),
+      body: TournamentPoolStandingsView(
+        tournamentId: tournamentId,
+        qualifiersPerGroup: qualifiersPerGroup,
+      ),
+    );
+  }
+}
+
+/// Reusable grouped pool-standings body: a cross-pool qualifier overview plus
+/// one collapsed [ExpansionTile] per group.
+///
+/// Extracted from [TournamentPoolStandingsScreen] so the live-view "Rangliste"
+/// tab can embed the same grouped standings for pool-phase tournaments without
+/// duplicating the group renderer. The screen wraps this in its Scaffold; the
+/// live screen embeds it directly. Behaviour is unchanged from the screen.
+class TournamentPoolStandingsView extends ConsumerWidget {
+  const TournamentPoolStandingsView({
+    required this.tournamentId,
+    this.qualifiersPerGroup = 2,
+    super.key,
+  });
+
+  final String tournamentId;
+  final int qualifiersPerGroup;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
     final id = TournamentId(tournamentId);
     ref.watch(tournamentPoolStandingsPollingProvider(id));
     final async = ref.watch(tournamentPoolStandingsProvider(id));
 
-    return Scaffold(
-      backgroundColor: tokens.bg,
-      appBar: const KubbAppBar(title: 'Gruppen-Tabelle'),
-      body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(KubbTokens.space5),
-            child: Text(
-              'Fehler: $e',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: KubbTokens.miss),
-            ),
+    return async.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(KubbTokens.space5),
+          child: Text(
+            'Fehler: $e',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: KubbTokens.miss),
           ),
         ),
-        data: (groups) => groups.isEmpty
-            ? Center(
-                child: Text(
-                  'Keine Pool-Daten verfügbar.',
-                  style: TextStyle(color: tokens.fgMuted),
-                ),
-              )
-            : ListView(
-                padding: const EdgeInsets.symmetric(
-                  vertical: KubbTokens.space3,
-                ),
-                children: [
-                  _CrossPoolOverview(
-                    groups: groups,
-                    qualifiers: qualifiersPerGroup,
-                  ),
-                  const SizedBox(height: KubbTokens.space4),
-                  for (final g in groups)
-                    _GroupTile(group: g, qualifiers: qualifiersPerGroup),
-                ],
-              ),
       ),
+      data: (groups) => groups.isEmpty
+          ? Center(
+              child: Text(
+                'Keine Pool-Daten verfügbar.',
+                style: TextStyle(color: tokens.fgMuted),
+              ),
+            )
+          : ListView(
+              padding: const EdgeInsets.symmetric(
+                vertical: KubbTokens.space3,
+              ),
+              children: [
+                _CrossPoolOverview(
+                  groups: groups,
+                  qualifiers: qualifiersPerGroup,
+                ),
+                const SizedBox(height: KubbTokens.space4),
+                for (final g in groups)
+                  _GroupTile(group: g, qualifiers: qualifiersPerGroup),
+              ],
+            ),
     );
   }
 }

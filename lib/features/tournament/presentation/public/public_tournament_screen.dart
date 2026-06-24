@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/tournament/application/public_tournament_providers.dart';
+import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
 import 'package:kubb_app/features/tournament/data/public_tournament_models.dart';
 import 'package:kubb_app/features/tournament/data/public_tournament_realtime.dart';
 import 'package:kubb_app/features/tournament/presentation/bracket/bracket_canvas.dart';
@@ -350,12 +351,14 @@ class _StandingsTab extends StatelessWidget {
       // exposed, no PII (ADR-0026). The authenticated path
       // (tournamentStandingsProvider) reads the same mode from its header.
       scoring: scoring,
-      tiebreaker: const TiebreakerChain(<TiebreakerCriterion>[
-        TiebreakerCriterion.totalPoints,
-        TiebreakerCriterion.wins,
-        TiebreakerCriterion.buchholzMinusH2H,
-        TiebreakerCriterion.kubbDifference,
-      ]),
+      // Spec §5.3: the chain follows the format's preliminary stage type
+      // (schoch -> Buchholz, group/round-robin -> kubb difference). The anon
+      // public envelope carries no tiebreaker_order (ADR-0026 privacy), so the
+      // format-driven default chain stands in for the configured one.
+      tiebreaker: standingsChainFor(
+        preliminaryStageTypeFor(detail.tournament.format),
+        const <String>[],
+      ),
     );
     return ListView.builder(
       itemCount: rows.length,

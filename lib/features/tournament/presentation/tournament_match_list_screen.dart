@@ -122,19 +122,35 @@ class _MatchListBody extends StatelessWidget {
         ),
       );
     }
-    final byRound = <int, List<TournamentMatchRef>>{};
+    // W3-T13: group by (group_label, round) so a pool-phase tournament shows
+    // "Gruppe A · Runde 1" instead of a bare "Runde 1" repeated per group.
+    // Outside the pool phase group_label is null and the header falls back to
+    // the plain round label. Insertion order follows the match list (already
+    // round-sorted server-side); within a key the matches keep that order.
+    final byKey = <_GroupRoundKey, List<TournamentMatchRef>>{};
     for (final m in matches) {
-      byRound.putIfAbsent(m.roundNumber, () => <TournamentMatchRef>[]).add(m);
+      byKey
+          .putIfAbsent(
+            _GroupRoundKey(m.groupLabel, m.roundNumber),
+            () => <TournamentMatchRef>[],
+          )
+          .add(m);
     }
-    final rounds = byRound.keys.toList()..sort();
+    final keys = byKey.keys.toList()
+      ..sort((a, b) {
+        final byGroup = (a.group ?? '').compareTo(b.group ?? '');
+        return byGroup != 0 ? byGroup : a.round.compareTo(b.round);
+      });
     return ListView(
       padding: const EdgeInsets.all(KubbTokens.space4),
       children: [
-        for (final r in rounds) ...[
+        for (final key in keys) ...[
           Padding(
             padding: const EdgeInsets.symmetric(vertical: KubbTokens.space2),
             child: Text(
-              l.tournamentMatchListRound(r),
+              key.group == null
+                  ? l.tournamentMatchListRound(key.round)
+                  : l.tournamentMatchListGroupRound(key.group!, key.round),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
@@ -143,7 +159,7 @@ class _MatchListBody extends StatelessWidget {
               ),
             ),
           ),
-          for (final m in byRound[r]!) ...[
+          for (final m in byKey[key]!) ...[
             TournamentMatchCard(
               match: m,
               // M1: the card resolves both sides through the central
@@ -159,4 +175,22 @@ class _MatchListBody extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Grouping key for the match list: pool [group] (null outside the pool phase)
+/// plus the [round] number. Two keys are equal when both components match, so
+/// "Gruppe A · Runde 1" and "Gruppe B · Runde 1" stay distinct sections.
+@immutable
+class _GroupRoundKey {
+  const _GroupRoundKey(this.group, this.round);
+
+  final String? group;
+  final int round;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _GroupRoundKey && other.group == group && other.round == round;
+
+  @override
+  int get hashCode => Object.hash(group, round);
 }

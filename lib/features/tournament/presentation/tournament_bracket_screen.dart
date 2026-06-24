@@ -25,15 +25,50 @@ class TournamentBracketScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
+
+    return Scaffold(
+      backgroundColor: tokens.bg,
+      // TODO(sprintB-followup): migrate to KubbAppBar
+      appBar: AppBar(
+        backgroundColor: tokens.bg,
+        elevation: 0,
+        leading: BackButton(
+          onPressed: () => context.go(
+            '${TournamentRoutes.detail}/$tournamentId',
+          ),
+        ),
+        title: Text(l.tournamentBracketTitle),
+      ),
+      body: TournamentBracketView(tournamentId: tournamentId),
+    );
+  }
+}
+
+/// Reusable read-only KO-bracket body: resolves the bracket + display-name
+/// lookup and renders the [BracketCanvas], with the group-phase empty state.
+///
+/// Extracted from [TournamentBracketScreen] so the live-view "Uebersicht" tab
+/// can embed the exact bracket once the KO phase is active, without a second
+/// resolver or copied empty-state. The screen wraps this in its Scaffold; the
+/// live screen embeds it. Behaviour is unchanged from the screen.
+class TournamentBracketView extends ConsumerWidget {
+  const TournamentBracketView({required this.tournamentId, super.key});
+
+  final String tournamentId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
     final id = TournamentId(tournamentId);
-    // Keep the bracket polling alive while this screen is mounted so
+    // Keep the bracket polling alive while this view is mounted so
     // newly advanced winners surface without manual reloads (M1 spec).
     ref.watch(tournamentBracketPollingProvider(id));
     final async = ref.watch(tournamentBracketProvider(id));
     // CF3 / K08: resolve participant ids to their display names from the
     // SAME server-projected source the match list/detail use
     // (team_id-driven: single -> nickname, team -> team name). The bracket
-    // value object carries only participant ids, so the screen supplies a
+    // value object carries only participant ids, so the view supplies a
     // resolver instead of the bracket exposing a second name source.
     final detail = ref
         .watch(tournamentDetailProvider(id))
@@ -52,53 +87,39 @@ class TournamentBracketScreen extends ConsumerWidget {
     // generic 'Trostturnier' fallback. Empty/missing -> null -> fallback.
     final consolationName = _consolationNameFrom(detail);
 
-    return Scaffold(
-      backgroundColor: tokens.bg,
-      // TODO(sprintB-followup): migrate to KubbAppBar
-      appBar: AppBar(
-        backgroundColor: tokens.bg,
-        elevation: 0,
-        leading: BackButton(
-          onPressed: () => context.go(
-            '${TournamentRoutes.detail}/$tournamentId',
+    return async.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(KubbTokens.space5),
+          child: Text(
+            '${l.tournamentBracketLoadError}: $e',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: KubbTokens.miss),
           ),
         ),
-        title: Text(l.tournamentBracketTitle),
       ),
-      body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(KubbTokens.space5),
-            child: Text(
-              '${l.tournamentBracketLoadError}: $e',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: KubbTokens.miss),
-            ),
-          ),
-        ),
-        data: (bracket) {
-          if (_isEmpty(bracket)) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(KubbTokens.space5),
-                child: Text(
-                  l.tournamentBracketEmpty,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: tokens.fgMuted),
-                ),
+      data: (bracket) {
+        if (_isEmpty(bracket)) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(KubbTokens.space5),
+              child: Text(
+                l.tournamentBracketEmpty,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: tokens.fgMuted),
               ),
-            );
-          }
-          return BracketCanvas(
-            bracket: bracket,
-            editable: false,
-            tournamentId: id,
-            nameFor: nameFor,
-            consolationName: consolationName,
+            ),
           );
-        },
-      ),
+        }
+        return BracketCanvas(
+          bracket: bracket,
+          editable: false,
+          tournamentId: id,
+          nameFor: nameFor,
+          consolationName: consolationName,
+        );
+      },
     );
   }
 

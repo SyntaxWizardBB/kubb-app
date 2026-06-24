@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
@@ -60,7 +61,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      appBar: const KubbAppBar(title: 'Freunde'),
+      appBar: const KubbAppBar(
+        title: 'Freunde',
+        actions: [InboxBellAction()],
+      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: KubbTokens.space4),
         child: Column(

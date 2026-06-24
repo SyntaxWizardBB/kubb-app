@@ -196,12 +196,13 @@ final tournamentStandingsProvider =
   // the historical default.
   final detail = await remote.getTournamentDetail(id);
   final scoring = detail?.tournament.scoring ?? TournamentScoring.ekc;
+  final format = detail?.tournament.format ?? TournamentFormat.roundRobin;
+  final tiebreakerOrder =
+      detail?.tournament.tiebreakerOrder ?? const <String>[];
   // M1-T07: a Schoch bye is a full win worth 16 (schoch-swiss spec §4.2);
   // every other format keeps its zero bye. When the detail is unavailable we
   // fall back to round-robin's zero so behaviour is unchanged.
-  final byeScore = schochByeScoreFor(
-    detail?.tournament.format ?? TournamentFormat.roundRobin,
-  );
+  final byeScore = schochByeScoreFor(format);
   final participantIds = <String>{
     for (final m in matches) ...[
       if (m.participantA != null) m.participantA!.value,
@@ -225,14 +226,34 @@ final tournamentStandingsProvider =
     results: results,
     scoring: scoring,
     byeScoreForUnopposedParticipant: byeScore,
-    tiebreaker: const TiebreakerChain(<TiebreakerCriterion>[
-      TiebreakerCriterion.totalPoints,
-      TiebreakerCriterion.wins,
-      TiebreakerCriterion.buchholzMinusH2H,
-      TiebreakerCriterion.kubbDifference,
-    ]),
+    // Spec §5.3: read the tiebreak chain from the configured order, mapped
+    // to the format's preliminary stage type — schoch layers Buchholz,
+    // group/round-robin strips it (Buchholz never separates same-pool
+    // opponents), instead of the old hard-wired chain.
+    tiebreaker: standingsChainFor(
+      preliminaryStageTypeFor(format),
+      tiebreakerOrder,
+    ),
   );
 });
+
+/// The preliminary (Vorrunde) stage type a [TournamentFormat] ranks under,
+/// used to pick the standings tiebreak chain (spec §5.3, vorrunde-ranking).
+/// The KO-only [TournamentFormat.singleElimination] has no league phase, so
+/// it falls back to the single-elim chain.
+StageNodeType preliminaryStageTypeFor(TournamentFormat format) {
+  switch (format) {
+    case TournamentFormat.roundRobin:
+      return StageNodeType.roundRobin;
+    case TournamentFormat.roundRobinThenKo:
+      return StageNodeType.groupPhase;
+    case TournamentFormat.schoch:
+    case TournamentFormat.schochThenKo:
+      return StageNodeType.schoch;
+    case TournamentFormat.singleElimination:
+      return StageNodeType.singleElim;
+  }
+}
 
 bool _isStandingsCounted(TournamentMatchRef m) {
   return m.status == TournamentMatchStatus.finalized ||

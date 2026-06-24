@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/features/player/application/player_ratings_provider.dart';
@@ -33,7 +34,10 @@ class FriendProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: tokens.bg,
-      appBar: KubbAppBar(title: name),
+      appBar: KubbAppBar(
+        title: name,
+        actions: const [InboxBellAction()],
+      ),
       body: RefreshIndicator(
         onRefresh: () async =>
             ref.invalidate(playerTrainingSessionsProvider(userId)),

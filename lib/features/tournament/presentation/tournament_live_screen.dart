@@ -3,11 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/icons.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_skeleton.dart';
 import 'package:kubb_app/features/tournament/application/my_active_match_provider.dart';
+import 'package:kubb_app/features/tournament/application/tournament_list_provider.dart';
+import 'package:kubb_app/features/tournament/application/tournament_match_providers.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_bracket_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_match_list_screen.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_pool_standings_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_standings_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_match_card.dart';
@@ -18,7 +23,7 @@ import 'package:kubb_domain/kubb_domain.dart';
 ///
 /// Three tabs, default index 0:
 ///   0. "Mein Match"  — the caller's non-terminal match(es) -> score entry.
-///   1. "Uebersicht"  — the full round-grouped match list (reused content).
+///   1. "Übersicht"  — the full round-grouped match list (reused content).
 ///   2. "Rangliste"   — live standings (reused content).
 ///
 /// The AppBar carries a top-right "Turnier-Infos" action -> tournament
@@ -73,6 +78,9 @@ class _TournamentLiveScreenState extends ConsumerState<TournamentLiveScreen>
               '${TournamentRoutes.detail}/${widget.tournamentId}',
             ),
           ),
+          // Spec §4 / §5.5: the live view is a non-entry screen, so the
+          // Postfach bell belongs here.
+          const InboxBellAction(),
         ],
       ),
       body: Column(
@@ -84,7 +92,7 @@ class _TournamentLiveScreenState extends ConsumerState<TournamentLiveScreen>
             indicatorColor: tokens.primary,
             tabs: const [
               Tab(text: 'Mein Match'),
-              Tab(text: 'Uebersicht'),
+              Tab(text: 'Übersicht'),
               Tab(text: 'Rangliste'),
             ],
           ),
@@ -93,8 +101,8 @@ class _TournamentLiveScreenState extends ConsumerState<TournamentLiveScreen>
               controller: _tab,
               children: [
                 _MyMatchTab(tournamentId: widget.tournamentId),
-                TournamentMatchListView(tournamentId: widget.tournamentId),
-                TournamentStandingsView(tournamentId: widget.tournamentId),
+                _OverviewTab(tournamentId: widget.tournamentId),
+                _StandingsTab(tournamentId: widget.tournamentId),
               ],
             ),
           ),
@@ -162,6 +170,58 @@ class _MyMatchTab extends ConsumerWidget {
         );
       },
     );
+  }
+}
+
+/// "Übersicht" tab (spec §2, §5.6). Phase-adaptive: once the KO phase is
+/// running it shows the KO bracket, otherwise the round-grouped match list.
+///
+/// The phase is read off the match list — a tournament is "in KO" as soon as a
+/// single match carries [MatchPhase.ko]. Until the list resolves, the round
+/// list is the safe default (no premature empty bracket).
+class _OverviewTab extends ConsumerWidget {
+  const _OverviewTab({required this.tournamentId});
+
+  final String tournamentId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final id = TournamentId(tournamentId);
+    final koActive = ref.watch(tournamentMatchListProvider(id)).maybeWhen(
+          data: (matches) => matches.any((m) => m.phase == MatchPhase.ko),
+          orElse: () => false,
+        );
+    return koActive
+        ? TournamentBracketView(tournamentId: tournamentId)
+        : TournamentMatchListView(tournamentId: tournamentId);
+  }
+}
+
+/// "Rangliste" tab (spec §2, §5.1). Format-adaptive: a group-phase tournament
+/// shows the grouped pool standings (one table per group), every other format
+/// the flat ranking.
+///
+/// Grouping follows the configured [TournamentFormat] — `roundRobinThenKo` is
+/// the group-phase family. Schoch and plain round-robin stay flat. The flat
+/// view is the default until the detail header resolves.
+class _StandingsTab extends ConsumerWidget {
+  const _StandingsTab({required this.tournamentId});
+
+  final String tournamentId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final id = TournamentId(tournamentId);
+    final header = ref
+        .watch(tournamentDetailProvider(id))
+        .maybeWhen(data: (d) => d?.tournament, orElse: () => null);
+    final grouped = header?.format == TournamentFormat.roundRobinThenKo;
+    return grouped
+        ? TournamentPoolStandingsView(
+            tournamentId: tournamentId,
+            qualifiersPerGroup: header?.qualifiersPerGroup ?? 2,
+          )
+        : TournamentStandingsView(tournamentId: tournamentId);
   }
 }
 

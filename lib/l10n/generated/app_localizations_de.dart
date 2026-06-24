@@ -3564,6 +3564,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String tournamentMatchListGroupRound(String group, int round) {
+    return 'Gruppe $group · Runde $round';
+  }
+
+  @override
   String get tournamentMatchLoadError => 'Spiele konnten nicht geladen werden';
 
   @override
@@ -3853,6 +3858,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tournamentStandingsPlayer => 'Spieler';
+
+  @override
+  String get tournamentStandingsTeam => 'Team';
 
   @override
   String get tournamentStandingsTotal => 'Total';

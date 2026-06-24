@@ -186,7 +186,7 @@ void main() {
     );
 
     expect(find.text('Mein Match'), findsOneWidget);
-    expect(find.text('Uebersicht'), findsOneWidget);
+    expect(find.text('Übersicht'), findsOneWidget);
     expect(find.text('Rangliste'), findsOneWidget);
 
     // The screen owns its own TabController; assert the default index via
@@ -242,8 +242,8 @@ void main() {
     // Tab 0 — my match.
     expect(find.text('B-rival'), findsOneWidget);
 
-    // Tab 1 — Uebersicht: full match list grouped by round.
-    await tester.tap(find.text('Uebersicht'));
+    // Tab 1 — Übersicht: full match list grouped by round.
+    await tester.tap(find.text('Übersicht'));
     await tester.pumpAndSettle();
     // Both matches (own + foreign) appear in the full overview list.
     expect(find.text('B-rival'), findsOneWidget);
