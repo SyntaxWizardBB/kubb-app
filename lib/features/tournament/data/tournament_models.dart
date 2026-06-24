@@ -527,6 +527,19 @@ TournamentMatchRef tournamentMatchRefFromRow(Map<String, dynamic> row) {
   );
 }
 
+/// Decodes a `tournament_search_checkin_targets` row into a
+/// [CheckinSearchHit] (W4-T20). The RPC projects the participant id + name,
+/// the tournament id + name and the current presence timestamp.
+CheckinSearchHit checkinSearchHitFromRow(Map<String, dynamic> row) {
+  return CheckinSearchHit(
+    participantId: TournamentParticipantId(row['participant_id'] as String),
+    displayName: row['display_name'] as String,
+    tournamentId: TournamentId(row['tournament_id'] as String),
+    tournamentName: row['tournament_name'] as String,
+    checkedInAt: _asDateOrNull(row['checked_in_at']),
+  );
+}
+
 /// Decodes a wire row into a domain [TournamentSummaryRef].
 TournamentSummaryRef tournamentSummaryRefFromRow(Map<String, dynamic> row) {
   final creator = row['created_by'] as String?;

@@ -175,6 +175,10 @@ class _FakeTournamentRemote implements TournamentRemote {
   Future<void> undoCheckin(TournamentParticipantId participantId) async {}
 
   @override
+  Future<List<CheckinSearchHit>> searchCheckinTargets(String query) async =>
+      const [];
+
+  @override
   Future<List<TournamentMatchRef>> listMatchesForTournament(
           TournamentId id) async =>
       const <TournamentMatchRef>[];

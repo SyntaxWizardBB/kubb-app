@@ -186,6 +186,54 @@ class TournamentAdminCardRef {
       );
 }
 
+/// One hit of the cross-tournament check-in search (spec §7 / §9.6). Names a
+/// team or single player ([displayName]) together with the tournament they
+/// registered for ([tournamentId] / [tournamentName]) and their current
+/// on-site presence ([checkedInAt], null = not checked in yet). Backed by the
+/// `tournament_search_checkin_targets` RPC (migration `20261320000000`), which
+/// is already scoped server-side to the caller-administered, public
+/// tournaments in the check-in window — the screen renders the hits as-is and
+/// checks one in via `checkinParticipant`.
+@immutable
+class CheckinSearchHit {
+  const CheckinSearchHit({
+    required this.participantId,
+    required this.displayName,
+    required this.tournamentId,
+    required this.tournamentName,
+    this.checkedInAt,
+  });
+
+  final TournamentParticipantId participantId;
+  final String displayName;
+  final TournamentId tournamentId;
+  final String tournamentName;
+
+  /// On-site presence timestamp, or `null` when not yet checked in.
+  final DateTime? checkedInAt;
+
+  bool get isCheckedIn => checkedInAt != null;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CheckinSearchHit &&
+          other.participantId == participantId &&
+          other.displayName == displayName &&
+          other.tournamentId == tournamentId &&
+          other.tournamentName == tournamentName &&
+          other.checkedInAt == checkedInAt;
+
+  @override
+  int get hashCode => Object.hash(
+        participantId,
+        displayName,
+        tournamentId,
+        tournamentName,
+        checkedInAt,
+      );
+}
+
 /// One entry of "tournaments the caller is registered for" — a
 /// [TournamentSummaryRef] paired with the caller's own participant id and
 /// registration status. Lets the hub's registrations list render the row
@@ -915,6 +963,15 @@ abstract interface class TournamentRemote {
   /// gate/status semantics as [checkinParticipant] and idempotent (undoing
   /// an already-cleared participant is a no-op). Errors propagate.
   Future<void> undoCheckin(TournamentParticipantId participantId);
+
+  /// Cross-tournament check-in search (spec §7 / §9.6). Fuzzy, case-insensitive
+  /// name search over the confirmed participants of the tournaments the caller
+  /// may administer that are currently in the check-in window. Backed by the
+  /// `tournament_search_checkin_targets` RPC (migration `20261320000000`): the
+  /// scope (caller-administered, public, check-in phase) is enforced
+  /// server-side, so a non-manager simply gets an empty list. Drives the
+  /// cross-checkin screen; checking a hit in goes through [checkinParticipant].
+  Future<List<CheckinSearchHit>> searchCheckinTargets(String query);
 
   // Matches
   Future<List<TournamentMatchRef>> listMatchesForTournament(TournamentId id);

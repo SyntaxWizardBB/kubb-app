@@ -1,5 +1,37 @@
 {
   "@@locale": "de",
+  "crossCheckinEyebrow": "Veranstalter · Check-in",
+  "@crossCheckinEyebrow": {
+    "description": "AppBar eyebrow for the cross-tournament check-in search screen (spec §7)"
+  },
+  "crossCheckinTitle": "Check-in",
+  "@crossCheckinTitle": {
+    "description": "AppBar title for the cross-tournament check-in search screen"
+  },
+  "crossCheckinSearchHint": "Team oder Spieler suchen",
+  "@crossCheckinSearchHint": {
+    "description": "Placeholder for the cross-checkin search field"
+  },
+  "crossCheckinPrompt": "Suche ein Team oder einen Spieler, um es turnierübergreifend einzuchecken.",
+  "@crossCheckinPrompt": {
+    "description": "Empty-state prompt before any cross-checkin search query is entered"
+  },
+  "crossCheckinNoResults": "Keine Treffer in deinen Turnieren in der Check-in-Phase.",
+  "@crossCheckinNoResults": {
+    "description": "Empty-state shown when a cross-checkin search returns no hits"
+  },
+  "crossCheckinError": "Suche fehlgeschlagen.",
+  "@crossCheckinError": {
+    "description": "Error label for the cross-checkin search"
+  },
+  "crossCheckinTile": "Cross-Turnier-Check-in",
+  "@crossCheckinTile": {
+    "description": "Cockpit overview entry label that routes into the cross-checkin search screen"
+  },
+  "crossCheckinTileSubtitle": "Team oder Spieler turnierübergreifend einchecken",
+  "@crossCheckinTileSubtitle": {
+    "description": "Subtitle under the cockpit cross-checkin entry"
+  },
   "organizerDashboardEyebrow": "Veranstalter · Cockpit",
   "@organizerDashboardEyebrow": {
     "description": "AppBar eyebrow for the organizer dashboard overview (ADR-0031 Phase B)"
@@ -188,6 +220,10 @@
   "organizerEscalationSectionTitle": "Eingriffe",
   "@organizerEscalationSectionTitle": {
     "description": "Section title above the escalation badges on the dashboard detail screen (B3)"
+  },
+  "organizerCheckinSectionTitle": "Check-in",
+  "@organizerCheckinSectionTitle": {
+    "description": "Section title above the per-tournament check-in list in the cockpit detail (spec §9.2)"
   },
   "organizerEscalationDisputedBadge": "{count, plural, one{1 strittig} other{{count} strittig}}",
   "@organizerEscalationDisputedBadge": {

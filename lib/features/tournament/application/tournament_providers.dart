@@ -338,6 +338,25 @@ class TournamentActions {
     _ref.invalidate(tournamentDetailProvider(tournamentId));
   }
 
+  /// Cross-tournament check-in search (spec §7 / §9.6). Forwards the query to
+  /// `tournament_search_checkin_targets`; the server scopes the hits to the
+  /// caller-administered, public, check-in-phase tournaments, so this method
+  /// adds no client-side filtering.
+  Future<List<CheckinSearchHit>> searchCheckinTargets(String query) =>
+      _ref.read(tournamentRemoteProvider).searchCheckinTargets(query);
+
+  /// Checks a cross-tournament search hit in via the existing
+  /// `tournament_checkin_participant` RPC (server owns the gate / status
+  /// window). Invalidates the hit's own tournament detail so an open detail
+  /// view re-reads the presence; the cross-checkin screen drives its own list
+  /// refresh on top of this.
+  Future<void> checkinTarget(CheckinSearchHit hit) async {
+    await _ref.read(tournamentRemoteProvider).checkinParticipant(
+          hit.participantId,
+        );
+    _ref.invalidate(tournamentDetailProvider(hit.tournamentId));
+  }
+
   Future<void> confirmRegistration(TournamentParticipantId id) async {
     await _ref.read(tournamentRemoteProvider).confirmRegistration(id);
     _ref.invalidate(tournamentListProvider);

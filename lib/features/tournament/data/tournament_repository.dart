@@ -469,6 +469,22 @@ class TournamentRepository implements TournamentRemote {
   Future<void> undoCheckin(TournamentParticipantId participantId) =>
       _voidParticipantRpc('tournament_undo_checkin', participantId);
 
+  // W4-T20: cross-tournament check-in search. The server scopes the result to
+  // the caller-administered, public, check-in-phase tournaments
+  // (tournament_search_checkin_targets, migration 20261320000000); the client
+  // forwards the raw query and decodes the hits.
+  @override
+  Future<List<CheckinSearchHit>> searchCheckinTargets(String query) async {
+    final rows = await _client.rpc<List<dynamic>>(
+      'tournament_search_checkin_targets',
+      params: <String, dynamic>{'p_query': query},
+    );
+    return rows
+        .cast<Map<String, dynamic>>()
+        .map(checkinSearchHitFromRow)
+        .toList(growable: false);
+  }
+
   @override
   Future<List<TournamentMatchRef>> listMatchesForTournament(
       TournamentId id) async {

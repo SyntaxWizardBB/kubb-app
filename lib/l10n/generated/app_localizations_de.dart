@@ -9,6 +9,33 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get crossCheckinEyebrow => 'Veranstalter · Check-in';
+
+  @override
+  String get crossCheckinTitle => 'Check-in';
+
+  @override
+  String get crossCheckinSearchHint => 'Team oder Spieler suchen';
+
+  @override
+  String get crossCheckinPrompt =>
+      'Suche ein Team oder einen Spieler, um es turnierübergreifend einzuchecken.';
+
+  @override
+  String get crossCheckinNoResults =>
+      'Keine Treffer in deinen Turnieren in der Check-in-Phase.';
+
+  @override
+  String get crossCheckinError => 'Suche fehlgeschlagen.';
+
+  @override
+  String get crossCheckinTile => 'Cross-Turnier-Check-in';
+
+  @override
+  String get crossCheckinTileSubtitle =>
+      'Team oder Spieler turnierübergreifend einchecken';
+
+  @override
   String get organizerDashboardEyebrow => 'Veranstalter · Cockpit';
 
   @override
@@ -148,6 +175,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get organizerEscalationSectionTitle => 'Eingriffe';
+
+  @override
+  String get organizerCheckinSectionTitle => 'Check-in';
 
   @override
   String organizerEscalationDisputedBadge(int count) {

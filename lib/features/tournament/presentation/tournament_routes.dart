@@ -52,6 +52,11 @@ abstract final class TournamentRoutes {
   /// as a tournament id (`:id == 'dashboard'`).
   static const dashboard = '/tournament/dashboard';
 
+  /// Cross-tournament check-in search (spec §7 / §9.6). STATIC prefix on
+  /// purpose: it MUST be registered BEFORE the dynamic `/tournament/:id`
+  /// detail route so `'cross-checkin'` is never matched as a tournament id.
+  static const crossCheckin = '/tournament/cross-checkin';
+
   /// Per-tournament organizer dashboard detail (ADR-0031 Phase B, Block B4):
   /// the round/match list plus the schedule control bar for ONE tournament.
   /// Composes `'/tournament/<id>/dashboard'`. The `:id` segment is concrete,

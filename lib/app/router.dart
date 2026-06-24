@@ -44,6 +44,7 @@ import 'package:kubb_app/features/team/presentation/team_edit_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_invitation_screen.dart';
 import 'package:kubb_app/features/team/presentation/team_list_screen.dart';
 import 'package:kubb_app/features/tournament/data/tournament_statistics_repository.dart';
+import 'package:kubb_app/features/tournament/presentation/cross_checkin_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/elo_leaderboard_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/organizer_dashboard_detail_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/organizer_dashboard_screen.dart';
@@ -516,6 +517,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 // and is NEVER matched as a tournament id (`:id == 'dashboard'`).
                 path: TournamentRoutes.dashboard,
                 builder: (_, _) => const OrganizerDashboardScreen(),
+              ),
+              GoRoute(
+                // Cross-tournament check-in search (spec §7 / §9.6). STATIC
+                // prefix; MUST stay ABOVE `/tournament/:id` so 'cross-checkin'
+                // is never matched as a tournament id.
+                path: TournamentRoutes.crossCheckin,
+                builder: (_, _) => const CrossCheckinScreen(),
               ),
               GoRoute(
                 path: '${TournamentRoutes.detail}/:id',

@@ -103,6 +103,13 @@ class FakeTournamentRemote implements TournamentRemote {
   /// [fakeRealtimeChannelKey] (see [matchesChannelKeyFor]).
   final FakeRealtimeChannel realtime;
 
+  /// Canned hits returned by [searchCheckinTargets], filtered by a
+  /// case-insensitive substring on [CheckinSearchHit.displayName] so a widget
+  /// test can drive the cross-checkin screen without a server. The last query
+  /// passed in is recorded in [lastCheckinSearchQuery].
+  List<CheckinSearchHit> checkinSearchHits = const [];
+  String? lastCheckinSearchQuery;
+
   /// Channel key for the `tournament_matches` slice of [tournamentId].
   /// Tests use this to address `realtime.emit` / `realtime.setState`;
   /// production adapters mirror the same `<table>:<column>=<value>`
@@ -515,6 +522,16 @@ class FakeTournamentRemote implements TournamentRemote {
   @override
   Future<void> undoCheckin(TournamentParticipantId pid) async =>
       _participants[pid]!.checkedInAt = null;
+
+  @override
+  Future<List<CheckinSearchHit>> searchCheckinTargets(String query) async {
+    lastCheckinSearchQuery = query;
+    final needle = query.toLowerCase();
+    return [
+      for (final hit in checkinSearchHits)
+        if (hit.displayName.toLowerCase().contains(needle)) hit,
+    ];
+  }
 
   @override
   Future<List<TournamentMatchRef>> listMatchesForTournament(

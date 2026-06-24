@@ -94,6 +94,54 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('de')];
 
+  /// AppBar eyebrow for the cross-tournament check-in search screen (spec §7)
+  ///
+  /// In de, this message translates to:
+  /// **'Veranstalter · Check-in'**
+  String get crossCheckinEyebrow;
+
+  /// AppBar title for the cross-tournament check-in search screen
+  ///
+  /// In de, this message translates to:
+  /// **'Check-in'**
+  String get crossCheckinTitle;
+
+  /// Placeholder for the cross-checkin search field
+  ///
+  /// In de, this message translates to:
+  /// **'Team oder Spieler suchen'**
+  String get crossCheckinSearchHint;
+
+  /// Empty-state prompt before any cross-checkin search query is entered
+  ///
+  /// In de, this message translates to:
+  /// **'Suche ein Team oder einen Spieler, um es turnierübergreifend einzuchecken.'**
+  String get crossCheckinPrompt;
+
+  /// Empty-state shown when a cross-checkin search returns no hits
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Treffer in deinen Turnieren in der Check-in-Phase.'**
+  String get crossCheckinNoResults;
+
+  /// Error label for the cross-checkin search
+  ///
+  /// In de, this message translates to:
+  /// **'Suche fehlgeschlagen.'**
+  String get crossCheckinError;
+
+  /// Cockpit overview entry label that routes into the cross-checkin search screen
+  ///
+  /// In de, this message translates to:
+  /// **'Cross-Turnier-Check-in'**
+  String get crossCheckinTile;
+
+  /// Subtitle under the cockpit cross-checkin entry
+  ///
+  /// In de, this message translates to:
+  /// **'Team oder Spieler turnierübergreifend einchecken'**
+  String get crossCheckinTileSubtitle;
+
   /// AppBar eyebrow for the organizer dashboard overview (ADR-0031 Phase B)
   ///
   /// In de, this message translates to:
@@ -339,6 +387,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Eingriffe'**
   String get organizerEscalationSectionTitle;
+
+  /// Section title above the per-tournament check-in list in the cockpit detail (spec §9.2)
+  ///
+  /// In de, this message translates to:
+  /// **'Check-in'**
+  String get organizerCheckinSectionTitle;
 
   /// Escalation badge showing the number of disputed matches needing an override
   ///

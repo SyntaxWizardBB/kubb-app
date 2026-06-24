@@ -12,6 +12,8 @@ import 'package:kubb_app/features/tournament/application/tournament_match_provid
 import 'package:kubb_app/features/tournament/application/tournament_providers.dart';
 import 'package:kubb_app/features/tournament/application/tournament_realtime_provider.dart';
 import 'package:kubb_app/features/tournament/application/tournament_seeding_controller.dart';
+import 'package:kubb_app/features/tournament/presentation/tournament_detail_screen.dart'
+    show ParticipantCheckinToggle;
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/schedule_control_bar.dart';
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_forfeit_sheet.dart';
@@ -201,6 +203,15 @@ class _Body extends ConsumerWidget {
           detail: detail,
           matches: matches,
         ),
+        // Per-tournament on-site check-in (spec §9.2 / §10): the check-in that
+        // lived inline on the detail screen now also lands here in the cockpit
+        // (the detail-screen entkernung itself is 4d). Only shown while the
+        // tournament is inside the check-in window; the server re-checks the
+        // same gate + status, so this governs visibility only.
+        if (_checkinWindowOpen(detail.tournament.status)) ...[
+          const SizedBox(height: KubbTokens.space5),
+          _CheckinSection(tournamentId: tournamentId, detail: detail),
+        ],
         const SizedBox(height: KubbTokens.space5),
         Text(
           l.organizerDashboardRoundsTitle,
@@ -262,6 +273,14 @@ class _Body extends ConsumerWidget {
     return active;
   }
 
+  /// On-site check-in window (OE-D1): only registration_open /
+  /// registration_closed / live accept a check-in. Mirrors the detail-screen
+  /// gate so the cockpit section appears in exactly the same states.
+  bool _checkinWindowOpen(TournamentStatus status) =>
+      status == TournamentStatus.registrationOpen ||
+      status == TournamentStatus.registrationClosed ||
+      status == TournamentStatus.live;
+
   Map<int, List<TournamentMatchRef>> _groupByRound(
     List<TournamentMatchRef> matches,
   ) {
@@ -275,6 +294,96 @@ class _Body extends ConsumerWidget {
         r: (map[r]!..sort((a, b) =>
             a.matchNumberInRound.compareTo(b.matchNumberInRound))),
     };
+  }
+}
+
+/// Per-tournament on-site check-in section for the cockpit detail (spec §9.2 /
+/// §10). Lists the confirmed pool with a [ParticipantCheckinToggle] per row,
+/// reusing the existing `tournament_checkin_participant` / `tournament_undo_
+/// checkin` RPCs via [TournamentActions]. Invalidating the detail provider
+/// after each toggle re-reads the presence (the participant CDC drives the
+/// same refresh).
+class _CheckinSection extends ConsumerWidget {
+  const _CheckinSection({required this.tournamentId, required this.detail});
+
+  final TournamentId tournamentId;
+  final TournamentDetail detail;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final l = AppLocalizations.of(context);
+    final actions = ref.read(tournamentActionsProvider);
+    final confirmed = detail.participants
+        .where((p) =>
+            p.registrationStatus == TournamentParticipantStatus.approved)
+        .toList(growable: false);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.organizerCheckinSectionTitle,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.8,
+            color: tokens.fgMuted,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        if (confirmed.isEmpty)
+          Text(
+            l.tournamentDetailParticipantsEmpty,
+            style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+          )
+        else ...[
+          Text(
+            l.tournamentDetailCheckedInCount(
+              confirmed.where((p) => p.isCheckedIn).length,
+              confirmed.length,
+            ),
+            style: TextStyle(fontSize: 12, color: tokens.fgMuted),
+          ),
+          const SizedBox(height: KubbTokens.space1),
+          for (final p in confirmed)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: KubbTokens.space1),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      p.displayLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: tokens.fg,
+                      ),
+                    ),
+                  ),
+                  ParticipantCheckinToggle(
+                    isCheckedIn: p.isCheckedIn,
+                    onCheckin: () => actions
+                        .checkin(
+                          TournamentParticipantId(p.participantId),
+                          tournamentId: tournamentId,
+                        )
+                        .ignore(),
+                    onUndoCheckin: () => actions
+                        .undoCheckin(
+                          TournamentParticipantId(p.participantId),
+                          tournamentId: tournamentId,
+                        )
+                        .ignore(),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ],
+    );
   }
 }
 

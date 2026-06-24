@@ -98,6 +98,8 @@ class OrganizerDashboardScreen extends ConsumerWidget {
                       TournamentRoutes.dashboardDetail(card.tournamentId.value),
                     ),
                     onPrimaryAction: (card) => _runPrimaryAction(ref, card),
+                    onOpenCrossCheckin: () =>
+                        context.push(TournamentRoutes.crossCheckin),
                   ),
                   // Tab 2 "Veranstalterteams": the teams list + the always-
                   // reachable "Veranstalterteam gründen" entry point.
@@ -149,6 +151,7 @@ class _TournamentsTab extends StatelessWidget {
     required this.ticker,
     required this.onOpenDetail,
     required this.onPrimaryAction,
+    required this.onOpenCrossCheckin,
   });
 
   final AsyncValue<List<TournamentAdminCardRef>> cardsAsync;
@@ -156,6 +159,7 @@ class _TournamentsTab extends StatelessWidget {
   final Stream<void>? ticker;
   final void Function(TournamentAdminCardRef) onOpenDetail;
   final void Function(TournamentAdminCardRef) onPrimaryAction;
+  final VoidCallback onOpenCrossCheckin;
 
   @override
   Widget build(BuildContext context) {
@@ -174,6 +178,7 @@ class _TournamentsTab extends StatelessWidget {
         ),
       ),
       data: (cards) {
+        final crossCheckinTile = _CrossCheckinTile(onTap: onOpenCrossCheckin);
         if (cards.isEmpty) {
           // In-screen gate (OE-B5) for the overview: the source RPC
           // `tournament_list_administrable` is itself server-gated by
@@ -197,6 +202,8 @@ class _TournamentsTab extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.all(KubbTokens.space4),
           children: [
+            crossCheckinTile,
+            const SizedBox(height: KubbTokens.space4),
             for (var i = 0; i < cards.length; i++) ...[
               if (i > 0) const SizedBox(height: KubbTokens.space3),
               OrganizerTournamentCard(
@@ -210,6 +217,63 @@ class _TournamentsTab extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+/// Cockpit entry into the cross-tournament check-in search (spec §7 / §9.6).
+/// A single tappable card at the top of the "Turniere" tab that routes the
+/// helper at the gate into the search screen.
+class _CrossCheckinTile extends StatelessWidget {
+  const _CrossCheckinTile({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final t = Theme.of(context).textTheme;
+    final l = AppLocalizations.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+      child: Container(
+        decoration: BoxDecoration(
+          color: tokens.bgRaised,
+          borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+        ),
+        padding: const EdgeInsets.all(KubbTokens.space3),
+        child: Row(
+          children: [
+            KubbIcon(LucideIcons.userCheck, size: 22, color: tokens.primary),
+            const SizedBox(width: KubbTokens.space3),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l.crossCheckinTile,
+                    style: t.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: tokens.fg,
+                    ),
+                  ),
+                  Text(
+                    l.crossCheckinTileSubtitle,
+                    style: t.bodySmall?.copyWith(color: tokens.fgMuted),
+                  ),
+                ],
+              ),
+            ),
+            KubbIcon(
+              LucideIcons.chevronRight,
+              size: 18,
+              color: tokens.fgMuted,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
