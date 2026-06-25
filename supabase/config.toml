@@ -88,3 +88,11 @@ enabled = false
 # is on a fresh device with only an anonymous Supabase session and
 # proves ownership via the signed challenge instead of via JWT.
 verify_jwt = false
+
+[functions.oauth-reconcile]
+# Links an OAuth identity onto an existing keypair account. JWT
+# verification stays off for the same reason as keypair-verify: the
+# caller pins the anon key and proves identity via two body-borne proofs
+# (signed challenge + GoTrue-validated OAuth token), not via the request
+# JWT.
+verify_jwt = false
