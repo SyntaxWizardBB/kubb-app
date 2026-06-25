@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/features/auth/application/account_setup_controller.dart';
+import 'package:kubb_app/features/auth/application/account_upgrade_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
 import 'package:kubb_app/features/auth/application/keypair_signing_service.dart';
 import 'package:kubb_app/features/auth/data/auth_telemetry.dart';
@@ -314,6 +315,35 @@ class AuthController extends AsyncNotifier<AuthSession> {
     state = AsyncData(next);
   }
 
+  /// Pushes the post-reconcile session after an OAuth-onto-keypair
+  /// upgrade (ADR-0042). The [userId] is UNCHANGED — the reconcile
+  /// re-minted onto the existing keypair user — and the keypair stays
+  /// valid as a fallback credential. Persisted so a cold start restores
+  /// the linked provider truthfully.
+  Future<void> applyOAuthUpgrade({
+    required String userId,
+    required AuthProvider provider,
+  }) async {
+    final displayName = state.value?.displayName ?? '';
+    final session = AuthSession.oauth(
+      userId: userId,
+      displayName: displayName,
+      provider: provider,
+      hasKeypairFallback: true,
+    );
+    final now = DateTime.now().toUtc();
+    final existing = await _dao.current();
+    await _dao.upsert(
+      userId: userId,
+      kind: provider == AuthProvider.google ? 'oauth_google' : 'oauth_apple',
+      displayName: displayName,
+      avatarColor: existing?.avatarColor,
+      expiresAt: existing?.expiresAt ?? now.add(const Duration(hours: 1)),
+      refreshAfter: existing?.refreshAfter ?? now.add(const Duration(minutes: 50)),
+    );
+    state = AsyncData(session);
+  }
+
   Future<void> _onAdapterState(
     AuthAdapterState adapterState,
     int eventGeneration,
@@ -333,6 +363,20 @@ class AuthController extends AsyncNotifier<AuthSession> {
         current is KeypairSession &&
         current.userId == incoming.userId;
     if (isAnonymousDowngrade) {
+      return;
+    }
+    // Clobber gate (ADR-0042): while an OAuth upgrade is mid-flight,
+    // getSessionFromUrl installs the FORKED OAuth session whose user_id
+    // differs from the keypair user. Drop that transient emission — not
+    // persisted, not set as state — until the reconcile re-mints onto
+    // the keypair user_id. A kill mid-flow then leaves the cache holding
+    // the keypair user. The reconcile's own emission carries the keypair
+    // user_id and passes this gate.
+    final inFlight = ref.read(upgradeInFlightProvider);
+    if (inFlight != null &&
+        incoming is! KeypairSession &&
+        incoming is! SignedOutSession &&
+        incoming.userId != inFlight.keypairUserId) {
       return;
     }
     if (incoming is SignedOutSession) {

@@ -374,6 +374,24 @@ class _StubAdapter implements SupabaseAuthAdapter {
       throw UnimplementedError('not used by refresher');
 
   @override
+  Future<OAuthCallbackResult> exchangeOAuthCallback(Uri uri) =>
+      throw UnimplementedError('not used by refresher');
+
+  @override
+  Future<void> completeOAuthSignIn(Uri uri) =>
+      throw UnimplementedError('not used by refresher');
+
+  @override
+  Future<AuthAdapterState> reconcileOAuthForKeypairUser({
+    required AuthOAuthProvider provider,
+    required List<int> publicKey,
+    required List<int> challenge,
+    required List<int> signature,
+    required String oauthAccessToken,
+  }) =>
+      throw UnimplementedError('not used by refresher');
+
+  @override
   Future<void> deleteCurrentAccount() =>
       throw UnimplementedError('not used by refresher');
 

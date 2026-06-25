@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:kubb_app/features/auth/data/auth_redirect.dart';
 import 'package:kubb_app/features/auth/data/supabase_auth_adapter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -58,7 +59,7 @@ class SupabaseAuthAdapterImpl implements SupabaseAuthAdapter {
       provider == AuthOAuthProvider.google
           ? OAuthProvider.google
           : OAuthProvider.apple,
-      redirectTo: 'kubbapp://auth/callback',
+      redirectTo: kAuthCallback,
     );
   }
 
@@ -199,15 +200,125 @@ class SupabaseAuthAdapterImpl implements SupabaseAuthAdapter {
   @override
   Future<AuthAdapterState> linkOAuthToCurrentUser(
       AuthOAuthProvider provider) async {
-    // Supabase exposes linkIdentity for adding OAuth credentials to an
-    // existing user. After completion the auth-state stream emits the
-    // upgraded session.
+    final oauthProvider = provider == AuthOAuthProvider.google
+        ? OAuthProvider.google
+        : OAuthProvider.apple;
+    if (_state.kind == AuthAdapterKind.keypair) {
+      // The keypair session is self-minted HS256 — GoTrue never issued
+      // it, so linkIdentity has no session to attach to and throws
+      // (ADR-0042). Only kick off the browser flow; the reconcile runs
+      // through the deep-link service + completeLink path.
+      await _client.auth.signInWithOAuth(
+        oauthProvider,
+        redirectTo: kAuthCallback,
+      );
+      return _state;
+    }
+    // Genuine GoTrue session (anonymous, or a real OAuth identity):
+    // linkIdentity is the supported manual-link path and works because
+    // the bearer is server-issued.
     await _client.auth.linkIdentity(
-      provider == AuthOAuthProvider.google
-          ? OAuthProvider.google
-          : OAuthProvider.apple,
-      redirectTo: 'kubbapp://auth/callback',
+      oauthProvider,
+      redirectTo: kAuthCallback,
     );
+    return _state;
+  }
+
+  @override
+  Future<OAuthCallbackResult> exchangeOAuthCallback(Uri uri) async {
+    final response = await _client.auth.getSessionFromUrl(uri);
+    final session = response.session;
+    return OAuthCallbackResult(
+      accessToken: session.accessToken,
+      userId: session.user.id,
+    );
+  }
+
+  @override
+  Future<void> completeOAuthSignIn(Uri uri) async {
+    // Standard cold-start sign-in: let GoTrue install the session and
+    // emit signedIn. Our own onAuthStateChange listener picks it up.
+    await _client.auth.getSessionFromUrl(uri);
+  }
+
+  @override
+  Future<AuthAdapterState> reconcileOAuthForKeypairUser({
+    required AuthOAuthProvider provider,
+    required List<int> publicKey,
+    required List<int> challenge,
+    required List<int> signature,
+    required String oauthAccessToken,
+  }) async {
+    // Pin Authorization to the anon key: the active session at this
+    // point is the forked OAuth bearer and must NOT be the authorizing
+    // principal. Both proofs travel in the body (ADR-0042 §Security).
+    final response = await _client.functions.invoke(
+      'oauth-reconcile',
+      headers: _anonKey.isEmpty
+          ? null
+          : <String, String>{'Authorization': 'Bearer $_anonKey'},
+      body: <String, dynamic>{
+        'provider': provider == AuthOAuthProvider.google ? 'google' : 'apple',
+        'public_key': base64Encode(publicKey),
+        'challenge_b64': base64Encode(challenge),
+        'signature_b64': base64Encode(signature),
+        'oauth_access_token': oauthAccessToken,
+      },
+    );
+    if (response.status < 200 || response.status >= 300) {
+      final body = response.data;
+      final code = body is Map<String, dynamic>
+          ? (body['error'] as String? ?? 'reconcile_failed')
+          : 'reconcile_failed';
+      throw ReconcileException(code);
+    }
+
+    final data = response.data as Map<String, dynamic>;
+    final userId = data['user_id'] as String;
+    final nickname = (data['nickname'] as String?) ?? '';
+    final accessToken = data['access_token'] as String;
+    final expiresAtUnix = (data['expires_at'] as num).toInt();
+    final expiresAt = DateTime.fromMillisecondsSinceEpoch(
+      expiresAtUnix * 1000,
+      isUtc: true,
+    );
+
+    // Hydrate the KEYPAIR session the reconcile minted — not the forked
+    // OAuth bearer, which the function just deleted. Same recoverSession
+    // shape as verifyKeypairSignature: provider stays 'keypair' so
+    // _kindForUser keeps classifying this as keypair-backed.
+    final sessionJson = jsonEncode(<String, dynamic>{
+      'access_token': accessToken,
+      'token_type': 'bearer',
+      'expires_in':
+          expiresAtUnix - DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      'expires_at': expiresAtUnix,
+      'user': <String, dynamic>{
+        'id': userId,
+        'aud': 'authenticated',
+        'role': 'authenticated',
+        'app_metadata': <String, dynamic>{
+          'provider': 'keypair',
+          'providers': <String>[
+            'keypair',
+            if (provider == AuthOAuthProvider.google) 'google' else 'apple',
+          ],
+        },
+        'user_metadata': <String, dynamic>{'nickname': nickname},
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'is_anonymous': false,
+      },
+    });
+    await _client.auth.recoverSession(sessionJson);
+
+    _state = AuthAdapterState(
+      userId: userId,
+      kind: AuthAdapterKind.keypair,
+      expiresAt: expiresAt,
+      refreshAfter: expiresAt.subtract(const Duration(minutes: 5)),
+      nickname: nickname,
+    );
+    _controller.add(_state);
     return _state;
   }
 

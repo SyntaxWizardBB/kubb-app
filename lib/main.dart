@@ -1,10 +1,11 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:kubb_app/app/app.dart';
+import 'package:kubb_app/app/app.dart' show KubbApp;
 import 'package:kubb_app/core/data/app_database_provider.dart';
 import 'package:kubb_app/core/data/realtime/supabase_realtime_channel.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
+import 'package:kubb_app/features/auth/data/auth_deep_link_service.dart';
 import 'package:kubb_app/features/tournament/application/realtime_fallback_provider.dart'
     show realtimeChannelProvider;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -54,7 +55,23 @@ Future<void> main() async {
         ),
         realtimeChannelProvider.overrideWithValue(realtimeAdapter),
       ],
-      child: const KubbApp(),
+      child: const _DeepLinkBootstrap(child: KubbApp()),
     ),
   );
+}
+
+/// Eagerly constructs and holds the [AuthDeepLinkService] for the app's
+/// lifetime, the way the realtime adapter is held. Reading the provider
+/// here triggers its `start()` (uriLinkStream + getInitialLink) so an
+/// OAuth callback is caught even on a cold start.
+class _DeepLinkBootstrap extends ConsumerWidget {
+  const _DeepLinkBootstrap({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(authDeepLinkServiceProvider);
+    return child;
+  }
 }

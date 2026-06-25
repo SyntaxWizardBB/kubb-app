@@ -55,12 +55,14 @@ extension AccountUpgradeStatePatterns on AccountUpgradeState {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _UpgradeIdle value)?  idle,TResult Function( _UpgradeLinking value)?  linking,TResult Function( _UpgradeDone value)?  done,TResult Function( _UpgradeFailed value)?  failed,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _UpgradeIdle value)?  idle,TResult Function( _UpgradeLaunching value)?  launching,TResult Function( _UpgradeAwaitingCallback value)?  awaitingCallback,TResult Function( _UpgradeReconciling value)?  reconciling,TResult Function( _UpgradeDone value)?  done,TResult Function( _UpgradeFailed value)?  failed,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _UpgradeIdle() when idle != null:
-return idle(_that);case _UpgradeLinking() when linking != null:
-return linking(_that);case _UpgradeDone() when done != null:
+return idle(_that);case _UpgradeLaunching() when launching != null:
+return launching(_that);case _UpgradeAwaitingCallback() when awaitingCallback != null:
+return awaitingCallback(_that);case _UpgradeReconciling() when reconciling != null:
+return reconciling(_that);case _UpgradeDone() when done != null:
 return done(_that);case _UpgradeFailed() when failed != null:
 return failed(_that);case _:
   return orElse();
@@ -80,12 +82,14 @@ return failed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _UpgradeIdle value)  idle,required TResult Function( _UpgradeLinking value)  linking,required TResult Function( _UpgradeDone value)  done,required TResult Function( _UpgradeFailed value)  failed,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _UpgradeIdle value)  idle,required TResult Function( _UpgradeLaunching value)  launching,required TResult Function( _UpgradeAwaitingCallback value)  awaitingCallback,required TResult Function( _UpgradeReconciling value)  reconciling,required TResult Function( _UpgradeDone value)  done,required TResult Function( _UpgradeFailed value)  failed,}){
 final _that = this;
 switch (_that) {
 case _UpgradeIdle():
-return idle(_that);case _UpgradeLinking():
-return linking(_that);case _UpgradeDone():
+return idle(_that);case _UpgradeLaunching():
+return launching(_that);case _UpgradeAwaitingCallback():
+return awaitingCallback(_that);case _UpgradeReconciling():
+return reconciling(_that);case _UpgradeDone():
 return done(_that);case _UpgradeFailed():
 return failed(_that);case _:
   throw StateError('Unexpected subclass');
@@ -104,12 +108,14 @@ return failed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _UpgradeIdle value)?  idle,TResult? Function( _UpgradeLinking value)?  linking,TResult? Function( _UpgradeDone value)?  done,TResult? Function( _UpgradeFailed value)?  failed,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _UpgradeIdle value)?  idle,TResult? Function( _UpgradeLaunching value)?  launching,TResult? Function( _UpgradeAwaitingCallback value)?  awaitingCallback,TResult? Function( _UpgradeReconciling value)?  reconciling,TResult? Function( _UpgradeDone value)?  done,TResult? Function( _UpgradeFailed value)?  failed,}){
 final _that = this;
 switch (_that) {
 case _UpgradeIdle() when idle != null:
-return idle(_that);case _UpgradeLinking() when linking != null:
-return linking(_that);case _UpgradeDone() when done != null:
+return idle(_that);case _UpgradeLaunching() when launching != null:
+return launching(_that);case _UpgradeAwaitingCallback() when awaitingCallback != null:
+return awaitingCallback(_that);case _UpgradeReconciling() when reconciling != null:
+return reconciling(_that);case _UpgradeDone() when done != null:
 return done(_that);case _UpgradeFailed() when failed != null:
 return failed(_that);case _:
   return null;
@@ -128,13 +134,15 @@ return failed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  idle,TResult Function()?  linking,TResult Function()?  done,TResult Function( String reason)?  failed,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  idle,TResult Function( AuthProvider provider)?  launching,TResult Function( AuthProvider provider)?  awaitingCallback,TResult Function( AuthProvider provider)?  reconciling,TResult Function()?  done,TResult Function( String code,  AuthProvider? provider)?  failed,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UpgradeIdle() when idle != null:
-return idle();case _UpgradeLinking() when linking != null:
-return linking();case _UpgradeDone() when done != null:
+return idle();case _UpgradeLaunching() when launching != null:
+return launching(_that.provider);case _UpgradeAwaitingCallback() when awaitingCallback != null:
+return awaitingCallback(_that.provider);case _UpgradeReconciling() when reconciling != null:
+return reconciling(_that.provider);case _UpgradeDone() when done != null:
 return done();case _UpgradeFailed() when failed != null:
-return failed(_that.reason);case _:
+return failed(_that.code,_that.provider);case _:
   return orElse();
 
 }
@@ -152,13 +160,15 @@ return failed(_that.reason);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  idle,required TResult Function()  linking,required TResult Function()  done,required TResult Function( String reason)  failed,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  idle,required TResult Function( AuthProvider provider)  launching,required TResult Function( AuthProvider provider)  awaitingCallback,required TResult Function( AuthProvider provider)  reconciling,required TResult Function()  done,required TResult Function( String code,  AuthProvider? provider)  failed,}) {final _that = this;
 switch (_that) {
 case _UpgradeIdle():
-return idle();case _UpgradeLinking():
-return linking();case _UpgradeDone():
+return idle();case _UpgradeLaunching():
+return launching(_that.provider);case _UpgradeAwaitingCallback():
+return awaitingCallback(_that.provider);case _UpgradeReconciling():
+return reconciling(_that.provider);case _UpgradeDone():
 return done();case _UpgradeFailed():
-return failed(_that.reason);case _:
+return failed(_that.code,_that.provider);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -175,13 +185,15 @@ return failed(_that.reason);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  idle,TResult? Function()?  linking,TResult? Function()?  done,TResult? Function( String reason)?  failed,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  idle,TResult? Function( AuthProvider provider)?  launching,TResult? Function( AuthProvider provider)?  awaitingCallback,TResult? Function( AuthProvider provider)?  reconciling,TResult? Function()?  done,TResult? Function( String code,  AuthProvider? provider)?  failed,}) {final _that = this;
 switch (_that) {
 case _UpgradeIdle() when idle != null:
-return idle();case _UpgradeLinking() when linking != null:
-return linking();case _UpgradeDone() when done != null:
+return idle();case _UpgradeLaunching() when launching != null:
+return launching(_that.provider);case _UpgradeAwaitingCallback() when awaitingCallback != null:
+return awaitingCallback(_that.provider);case _UpgradeReconciling() when reconciling != null:
+return reconciling(_that.provider);case _UpgradeDone() when done != null:
 return done();case _UpgradeFailed() when failed != null:
-return failed(_that.reason);case _:
+return failed(_that.code,_that.provider);case _:
   return null;
 
 }
@@ -224,34 +236,200 @@ String toString() {
 /// @nodoc
 
 
-class _UpgradeLinking implements AccountUpgradeState {
-  const _UpgradeLinking();
+class _UpgradeLaunching implements AccountUpgradeState {
+  const _UpgradeLaunching(this.provider);
   
 
+ final  AuthProvider provider;
 
-
+/// Create a copy of AccountUpgradeState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$UpgradeLaunchingCopyWith<_UpgradeLaunching> get copyWith => __$UpgradeLaunchingCopyWithImpl<_UpgradeLaunching>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UpgradeLinking);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UpgradeLaunching&&(identical(other.provider, provider) || other.provider == provider));
 }
 
 
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,provider);
 
 @override
 String toString() {
-  return 'AccountUpgradeState.linking()';
+  return 'AccountUpgradeState.launching(provider: $provider)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class _$UpgradeLaunchingCopyWith<$Res> implements $AccountUpgradeStateCopyWith<$Res> {
+  factory _$UpgradeLaunchingCopyWith(_UpgradeLaunching value, $Res Function(_UpgradeLaunching) _then) = __$UpgradeLaunchingCopyWithImpl;
+@useResult
+$Res call({
+ AuthProvider provider
+});
 
 
+
+
+}
+/// @nodoc
+class __$UpgradeLaunchingCopyWithImpl<$Res>
+    implements _$UpgradeLaunchingCopyWith<$Res> {
+  __$UpgradeLaunchingCopyWithImpl(this._self, this._then);
+
+  final _UpgradeLaunching _self;
+  final $Res Function(_UpgradeLaunching) _then;
+
+/// Create a copy of AccountUpgradeState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? provider = null,}) {
+  return _then(_UpgradeLaunching(
+null == provider ? _self.provider : provider // ignore: cast_nullable_to_non_nullable
+as AuthProvider,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class _UpgradeAwaitingCallback implements AccountUpgradeState {
+  const _UpgradeAwaitingCallback(this.provider);
+  
+
+ final  AuthProvider provider;
+
+/// Create a copy of AccountUpgradeState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$UpgradeAwaitingCallbackCopyWith<_UpgradeAwaitingCallback> get copyWith => __$UpgradeAwaitingCallbackCopyWithImpl<_UpgradeAwaitingCallback>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UpgradeAwaitingCallback&&(identical(other.provider, provider) || other.provider == provider));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,provider);
+
+@override
+String toString() {
+  return 'AccountUpgradeState.awaitingCallback(provider: $provider)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$UpgradeAwaitingCallbackCopyWith<$Res> implements $AccountUpgradeStateCopyWith<$Res> {
+  factory _$UpgradeAwaitingCallbackCopyWith(_UpgradeAwaitingCallback value, $Res Function(_UpgradeAwaitingCallback) _then) = __$UpgradeAwaitingCallbackCopyWithImpl;
+@useResult
+$Res call({
+ AuthProvider provider
+});
+
+
+
+
+}
+/// @nodoc
+class __$UpgradeAwaitingCallbackCopyWithImpl<$Res>
+    implements _$UpgradeAwaitingCallbackCopyWith<$Res> {
+  __$UpgradeAwaitingCallbackCopyWithImpl(this._self, this._then);
+
+  final _UpgradeAwaitingCallback _self;
+  final $Res Function(_UpgradeAwaitingCallback) _then;
+
+/// Create a copy of AccountUpgradeState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? provider = null,}) {
+  return _then(_UpgradeAwaitingCallback(
+null == provider ? _self.provider : provider // ignore: cast_nullable_to_non_nullable
+as AuthProvider,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class _UpgradeReconciling implements AccountUpgradeState {
+  const _UpgradeReconciling(this.provider);
+  
+
+ final  AuthProvider provider;
+
+/// Create a copy of AccountUpgradeState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$UpgradeReconcilingCopyWith<_UpgradeReconciling> get copyWith => __$UpgradeReconcilingCopyWithImpl<_UpgradeReconciling>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UpgradeReconciling&&(identical(other.provider, provider) || other.provider == provider));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,provider);
+
+@override
+String toString() {
+  return 'AccountUpgradeState.reconciling(provider: $provider)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$UpgradeReconcilingCopyWith<$Res> implements $AccountUpgradeStateCopyWith<$Res> {
+  factory _$UpgradeReconcilingCopyWith(_UpgradeReconciling value, $Res Function(_UpgradeReconciling) _then) = __$UpgradeReconcilingCopyWithImpl;
+@useResult
+$Res call({
+ AuthProvider provider
+});
+
+
+
+
+}
+/// @nodoc
+class __$UpgradeReconcilingCopyWithImpl<$Res>
+    implements _$UpgradeReconcilingCopyWith<$Res> {
+  __$UpgradeReconcilingCopyWithImpl(this._self, this._then);
+
+  final _UpgradeReconciling _self;
+  final $Res Function(_UpgradeReconciling) _then;
+
+/// Create a copy of AccountUpgradeState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? provider = null,}) {
+  return _then(_UpgradeReconciling(
+null == provider ? _self.provider : provider // ignore: cast_nullable_to_non_nullable
+as AuthProvider,
+  ));
+}
+
+
+}
 
 /// @nodoc
 
@@ -289,10 +467,11 @@ String toString() {
 
 
 class _UpgradeFailed implements AccountUpgradeState {
-  const _UpgradeFailed({required this.reason});
+  const _UpgradeFailed({required this.code, this.provider});
   
 
- final  String reason;
+ final  String code;
+ final  AuthProvider? provider;
 
 /// Create a copy of AccountUpgradeState
 /// with the given fields replaced by the non-null parameter values.
@@ -304,16 +483,16 @@ _$UpgradeFailedCopyWith<_UpgradeFailed> get copyWith => __$UpgradeFailedCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UpgradeFailed&&(identical(other.reason, reason) || other.reason == reason));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UpgradeFailed&&(identical(other.code, code) || other.code == code)&&(identical(other.provider, provider) || other.provider == provider));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,reason);
+int get hashCode => Object.hash(runtimeType,code,provider);
 
 @override
 String toString() {
-  return 'AccountUpgradeState.failed(reason: $reason)';
+  return 'AccountUpgradeState.failed(code: $code, provider: $provider)';
 }
 
 
@@ -324,7 +503,7 @@ abstract mixin class _$UpgradeFailedCopyWith<$Res> implements $AccountUpgradeSta
   factory _$UpgradeFailedCopyWith(_UpgradeFailed value, $Res Function(_UpgradeFailed) _then) = __$UpgradeFailedCopyWithImpl;
 @useResult
 $Res call({
- String reason
+ String code, AuthProvider? provider
 });
 
 
@@ -341,10 +520,11 @@ class __$UpgradeFailedCopyWithImpl<$Res>
 
 /// Create a copy of AccountUpgradeState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? reason = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? code = null,Object? provider = freezed,}) {
   return _then(_UpgradeFailed(
-reason: null == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
-as String,
+code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String,provider: freezed == provider ? _self.provider : provider // ignore: cast_nullable_to_non_nullable
+as AuthProvider?,
   ));
 }
 

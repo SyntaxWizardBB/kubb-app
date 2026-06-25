@@ -18,7 +18,7 @@ class _StubUpgradeController extends AccountUpgradeController {
   // No-op: tests assert on emitted state, not on the OAuth side-effect.
   @override
   Future<void> linkOAuth(AuthProvider provider) async {
-    state = const AccountUpgradeState.linking();
+    state = AccountUpgradeState.launching(provider);
   }
 }
 
@@ -92,7 +92,7 @@ void main() {
       (tester) async {
     await pump(
       tester,
-      const AccountUpgradeState.failed(reason: 'oauth declined'),
+      const AccountUpgradeState.failed(code: 'reconcile_failed'),
     );
 
     expect(
@@ -100,5 +100,21 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Konto erfolgreich verknüpft.'), findsNothing);
+  });
+
+  testWidgets('maps a typed failure code to its specific banner',
+      (tester) async {
+    await pump(
+      tester,
+      const AccountUpgradeState.failed(code: 'oauth_subject_in_use'),
+    );
+
+    expect(
+      find.text(
+        'Dieses Google- oder Apple-Konto ist bereits mit einem '
+        'anderen Profil verknüpft.',
+      ),
+      findsOneWidget,
+    );
   });
 }

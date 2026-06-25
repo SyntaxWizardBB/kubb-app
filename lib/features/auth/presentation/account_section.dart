@@ -27,7 +27,14 @@ class AccountSection extends ConsumerWidget {
     }
 
     final nickname = session.displayName ?? '';
-    final isAnonymous = session.isAnonymousKeypair;
+    // Show the link row for a keypair session (can add OAuth) and for an
+    // OAuth session that is still missing a provider (ADR-0010
+    // §Multi-credential users), not only for anonymous keypairs.
+    final canLink = session.maybeWhen(
+      keypair: (_, _, _) => true,
+      oauth: (_, _, _, _, _) => true,
+      orElse: () => false,
+    );
     final providerLabel = session.maybeWhen(
       keypair: (_, _, _) => l10n.authAccountProviderAnonymous,
       oauth: (_, _, p, _, _) => p == AuthProvider.apple
@@ -69,7 +76,7 @@ class AccountSection extends ConsumerWidget {
                 nickname: nickname,
                 providerLabel: providerLabel,
               ),
-              if (isAnonymous)
+              if (canLink)
                 _NavRow(
                   icon: Icons.lock_outline,
                   label: l10n.authAccountLinkLabel,

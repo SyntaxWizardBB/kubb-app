@@ -3364,11 +3364,47 @@ abstract class AppLocalizations {
   /// **'Apple verknüpfen'**
   String get authLinkAppleLabel;
 
-  /// Link-screen error banner
+  /// Link-screen generic error banner (fallback)
   ///
   /// In de, this message translates to:
   /// **'Verknüpfen fehlgeschlagen. Versuch es nochmals.'**
   String get authLinkErrorBanner;
+
+  /// Reconcile error: oauth_subject_in_use
+  ///
+  /// In de, this message translates to:
+  /// **'Dieses Google- oder Apple-Konto ist bereits mit einem anderen Profil verknüpft.'**
+  String get authLinkErrorSubjectInUse;
+
+  /// Reconcile error: forked_user_has_data
+  ///
+  /// In de, this message translates to:
+  /// **'Mit diesem Konto wurden bereits Turnierdaten erfasst. Verknüpfen ist darum nicht möglich.'**
+  String get authLinkErrorForkedHasData;
+
+  /// Reconcile error: oauth_token_invalid / oauth_provider_mismatch
+  ///
+  /// In de, this message translates to:
+  /// **'Die Anmeldung beim Anbieter hat nicht geklappt. Versuch es nochmals.'**
+  String get authLinkErrorOauthInvalid;
+
+  /// Reconcile error: challenge_* (expired / not found / signature)
+  ///
+  /// In de, this message translates to:
+  /// **'Der Sicherheitsnachweis ist abgelaufen. Starte das Verknüpfen neu.'**
+  String get authLinkErrorChallenge;
+
+  /// Reconcile error: callback_timeout
+  ///
+  /// In de, this message translates to:
+  /// **'Es kam keine Antwort vom Anbieter zurück. Versuch es nochmals.'**
+  String get authLinkErrorTimeout;
+
+  /// Reconcile error: keypair_seed_missing / not_keypair
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Passphrase ist auf diesem Gerät nicht verfügbar. Stelle zuerst dein Konto wieder her.'**
+  String get authLinkErrorSeedMissing;
 
   /// Link-screen success banner
   ///
