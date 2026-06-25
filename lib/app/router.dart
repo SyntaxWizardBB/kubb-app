@@ -213,7 +213,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // ── Public / auth flows — OUTSIDE the BottomNav shell ──
       GoRoute(
         path: AuthRoutes.signIn,
-        builder: (_, _) => const SignInScreen(),
+        // The early-access gate hands the validated code in via `extra` so
+        // the Gast path can register without re-prompting. OAuth ignores it.
+        builder: (_, state) => SignInScreen(
+          earlyAccessCode: state.extra is String ? state.extra! as String : null,
+        ),
       ),
       GoRoute(
         path: AuthRoutes.earlyAccess,

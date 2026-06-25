@@ -57,10 +57,11 @@ class _EarlyAccessEntryScreenState
         return;
       }
       setState(() => _busy = false);
-      // Carry the validated code into the signup flow; keypair_register
-      // re-validates it server-side and sets the club-founding capability.
+      // Code is valid — hand off to the sign-in choice (OAuth or Gast). The
+      // validated code rides along so the Gast path can found a club without a
+      // second prompt; keypair_register re-validates it server-side.
       await GoRouter.of(context)
-          .push<void>(AuthRoutes.anonymousSignup, extra: _codeCtrl.text.trim());
+          .push<void>(AuthRoutes.signIn, extra: _codeCtrl.text.trim());
     } on Object catch (e) {
       if (!mounted) return;
       setState(() {
