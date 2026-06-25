@@ -22,8 +22,6 @@ class AccountLinkScreen extends ConsumerStatefulWidget {
 }
 
 class _AccountLinkScreenState extends ConsumerState<AccountLinkScreen> {
-  AuthProvider? _active;
-
   bool get _showApple => !kIsWeb && Platform.isIOS;
 
   void _back() {
@@ -31,10 +29,34 @@ class _AccountLinkScreenState extends ConsumerState<AccountLinkScreen> {
   }
 
   Future<void> _link(AuthProvider provider) async {
-    setState(() => _active = provider);
     await ref
         .read(accountUpgradeControllerProvider.notifier)
         .linkOAuth(provider);
+  }
+
+  String _bannerForCode(AppLocalizations l10n, String code) {
+    switch (code) {
+      case 'oauth_subject_in_use':
+        return l10n.authLinkErrorSubjectInUse;
+      case 'forked_user_has_data':
+        return l10n.authLinkErrorForkedHasData;
+      case 'oauth_token_invalid':
+      case 'oauth_provider_mismatch':
+      case 'oauth_launch_failed':
+        return l10n.authLinkErrorOauthInvalid;
+      case 'challenge_not_found':
+      case 'challenge_expired':
+      case 'signature_invalid':
+      case 'no_account_for_public_key':
+        return l10n.authLinkErrorChallenge;
+      case 'callback_timeout':
+        return l10n.authLinkErrorTimeout;
+      case 'keypair_seed_missing':
+      case 'not_keypair':
+        return l10n.authLinkErrorSeedMissing;
+      default:
+        return l10n.authLinkErrorBanner;
+    }
   }
 
   @override
@@ -43,17 +65,25 @@ class _AccountLinkScreenState extends ConsumerState<AccountLinkScreen> {
     final l10n = AppLocalizations.of(context);
     final state = ref.watch(accountUpgradeControllerProvider);
 
-    final linking = state.maybeWhen(
-      linking: () => true,
+    final busy = state.maybeWhen(
+      launching: (_) => true,
+      awaitingCallback: (_) => true,
+      reconciling: (_) => true,
       orElse: () => false,
     );
     final done = state.maybeWhen(
       done: () => true,
       orElse: () => false,
     );
-    final error = state.maybeWhen(
-      failed: (_) => true,
-      orElse: () => false,
+    final errorCode = state.maybeWhen(
+      failed: (code, _) => code,
+      orElse: () => null,
+    );
+    final busyProvider = state.maybeWhen(
+      launching: (p) => p,
+      awaitingCallback: (p) => p,
+      reconciling: (p) => p,
+      orElse: () => null,
     );
 
     return Scaffold(
@@ -78,9 +108,8 @@ class _AccountLinkScreenState extends ConsumerState<AccountLinkScreen> {
                 provider: AuthProvider.google,
                 variant: OAuthButtonVariant.secondary,
                 label: l10n.authLinkGoogleLabel,
-                loading: linking && _active == AuthProvider.google,
-                onPressed:
-                    linking ? null : () => _link(AuthProvider.google),
+                loading: busy && busyProvider == AuthProvider.google,
+                onPressed: busy ? null : () => _link(AuthProvider.google),
               ),
               if (_showApple) ...[
                 const SizedBox(height: KubbTokens.space3),
@@ -88,16 +117,15 @@ class _AccountLinkScreenState extends ConsumerState<AccountLinkScreen> {
                   provider: AuthProvider.apple,
                   variant: OAuthButtonVariant.secondary,
                   label: l10n.authLinkAppleLabel,
-                  loading: linking && _active == AuthProvider.apple,
-                  onPressed:
-                      linking ? null : () => _link(AuthProvider.apple),
+                  loading: busy && busyProvider == AuthProvider.apple,
+                  onPressed: busy ? null : () => _link(AuthProvider.apple),
                 ),
               ],
-              if (error) ...[
+              if (errorCode != null) ...[
                 const SizedBox(height: KubbTokens.space3),
                 _Banner(
                   tone: _BannerTone.error,
-                  message: l10n.authLinkErrorBanner,
+                  message: _bannerForCode(l10n, errorCode),
                 ),
               ],
               if (done) ...[

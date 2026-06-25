@@ -44,6 +44,37 @@ enum AuthAdapterKind {
   oauthApple,
 }
 
+/// Carries the OAuth bearer the device just exchanged a `kubbapp://`
+/// callback for. Both fields are needed by the reconcile flow: the
+/// bearer is the body-borne Proof B that GoTrue re-validates, the
+/// [userId] is the forked GoTrue user the reconcile will delete.
+class OAuthCallbackResult {
+  const OAuthCallbackResult({
+    required this.accessToken,
+    required this.userId,
+  });
+
+  /// Live GoTrue access token from the freshly forked OAuth session.
+  final String accessToken;
+
+  /// The forked user_id GoTrue minted for this OAuth identity.
+  final String userId;
+}
+
+/// Thrown by [SupabaseAuthAdapter.reconcileOAuthForKeypairUser] when
+/// the `oauth-reconcile` edge function returns a non-2xx response.
+/// Carries the server-side error [code] (parsed from the `{error}`
+/// body) so the controller can branch onto a specific banner instead
+/// of a generic `toString()`.
+class ReconcileException implements Exception {
+  const ReconcileException(this.code);
+
+  final String code;
+
+  @override
+  String toString() => 'ReconcileException($code)';
+}
+
 /// Result of looking up an account by public-key challenge.
 ///
 /// Carries the freshly minted access token so the caller can hydrate
@@ -130,8 +161,40 @@ abstract class SupabaseAuthAdapter {
     required List<int> signature,
   });
 
-  /// Adds an OAuth credential to the current user's account.
+  /// Starts the OAuth upgrade flow for the current user.
+  ///
+  /// Branches on the current session kind. For a genuine GoTrue session
+  /// (anonymous or a real OAuth identity) it runs the supported
+  /// `linkIdentity` path. For a self-minted keypair session it only
+  /// launches `signInWithOAuth` — GoTrue never issued that token, so
+  /// `linkIdentity` would throw; the upgrade completes via the
+  /// deep-link service and [reconcileOAuthForKeypairUser] instead.
   Future<AuthAdapterState> linkOAuthToCurrentUser(AuthOAuthProvider provider);
+
+  /// Exchanges a `kubbapp://auth/callback` URI for the forked OAuth
+  /// session and returns its bearer + user_id. Used by the reconcile
+  /// flow to obtain Proof B without persisting the forked session as
+  /// the active identity.
+  Future<OAuthCallbackResult> exchangeOAuthCallback(Uri uri);
+
+  /// Completes a non-upgrade OAuth callback (cold-start sign-in) by
+  /// handing the URI to GoTrue's `getSessionFromUrl`, which installs
+  /// the session and fires `onAuthStateChange`.
+  Future<void> completeOAuthSignIn(Uri uri);
+
+  /// Server-side reconcile of an OAuth identity onto an existing
+  /// keypair user (ADR-0042). Both proofs travel in the body; the
+  /// Authorization header is pinned to the anon key so the transient
+  /// forked OAuth bearer is never the authorizing principal. On 200 the
+  /// returned keypair access token hydrates the session and the keypair
+  /// [AuthAdapterState] is returned. Non-2xx throws [ReconcileException].
+  Future<AuthAdapterState> reconcileOAuthForKeypairUser({
+    required AuthOAuthProvider provider,
+    required List<int> publicKey,
+    required List<int> challenge,
+    required List<int> signature,
+    required String oauthAccessToken,
+  });
 
   /// Hard-deletes the current user (cascades server-side per the
   /// auth.users CASCADE FKs).

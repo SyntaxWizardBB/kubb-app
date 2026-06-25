@@ -55,6 +55,8 @@ Anonymous users can upgrade to OAuth at any time:
 - Server keeps the same internal user ID; OAuth provider becomes an additional credential, the keypair stays valid as a fallback.
 - This is the preferred path for users who started anonymous and now want a tournament-organizer role.
 
+> **Amended by ADR-0042**: Für Keypair-Konten konkretisiert ADR-0042 diesen Upgrade als serverseitigen Reconcile. Das client-seitige `linkIdentity` fällt für diese Nutzer weg — es setzt eine GoTrue-bekannte Session voraus, die ein selbst-geminteter Keypair-JWT nicht ist. Stattdessen bindet eine Edge-Function die OAuth-Identität gegen zwei Beweise an die bestehende user_id. Die hier zugesicherte ID-Erhaltung bleibt unberührt.
+
 ### Multi-credential users
 
 A user is not limited to one credential. The same `auth.users.id` may have any combination of `oauth_google`, `oauth_apple`, and `keypair` rows in `user_credentials` (the table already encodes multi-row-per-user — see *Data model deltas*).

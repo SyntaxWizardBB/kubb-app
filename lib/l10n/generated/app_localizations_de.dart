@@ -1837,6 +1837,30 @@ class AppLocalizationsDe extends AppLocalizations {
       'Verknüpfen fehlgeschlagen. Versuch es nochmals.';
 
   @override
+  String get authLinkErrorSubjectInUse =>
+      'Dieses Google- oder Apple-Konto ist bereits mit einem anderen Profil verknüpft.';
+
+  @override
+  String get authLinkErrorForkedHasData =>
+      'Mit diesem Konto wurden bereits Turnierdaten erfasst. Verknüpfen ist darum nicht möglich.';
+
+  @override
+  String get authLinkErrorOauthInvalid =>
+      'Die Anmeldung beim Anbieter hat nicht geklappt. Versuch es nochmals.';
+
+  @override
+  String get authLinkErrorChallenge =>
+      'Der Sicherheitsnachweis ist abgelaufen. Starte das Verknüpfen neu.';
+
+  @override
+  String get authLinkErrorTimeout =>
+      'Es kam keine Antwort vom Anbieter zurück. Versuch es nochmals.';
+
+  @override
+  String get authLinkErrorSeedMissing =>
+      'Deine Passphrase ist auf diesem Gerät nicht verfügbar. Stelle zuerst dein Konto wieder her.';
+
+  @override
   String get authLinkSuccessBanner => 'Konto erfolgreich verknüpft.';
 
   @override

@@ -93,8 +93,7 @@ void main() {
     expect(find.text(l10n.authAccountSignOutLabel), findsNothing);
   });
 
-  testWidgets('shows link-account row only for anonymous keypair sessions',
-      (tester) async {
+  testWidgets('shows link-account row for keypair sessions', (tester) async {
     await pump(
       tester,
       const AuthSession.keypair(userId: 'u1', displayName: 'wiese-marc'),
@@ -108,7 +107,10 @@ void main() {
     expect(find.text(l10n.authAccountDeleteLabel), findsOneWidget);
   });
 
-  testWidgets('hides link-account row for oauth sessions', (tester) async {
+  testWidgets('shows link-account row for oauth sessions (multi-credential)',
+      (tester) async {
+    // ADR-0010 §Multi-credential: an OAuth session can still add the
+    // other provider, so the link row stays visible.
     await pump(
       tester,
       const AuthSession.oauth(
@@ -119,13 +121,13 @@ void main() {
     );
     final l10n = l10nOf(tester);
 
-    expect(find.text(l10n.authAccountLinkLabel), findsNothing);
+    expect(find.text(l10n.authAccountLinkLabel), findsOneWidget);
     expect(find.text(l10n.authAccountProviderGoogle), findsOneWidget);
     expect(find.text(l10n.authAccountSignOutLabel), findsOneWidget);
     expect(find.text(l10n.authAccountDeleteLabel), findsOneWidget);
   });
 
-  testWidgets('hides link-account row for oauth with keypair fallback',
+  testWidgets('shows link-account row for oauth with keypair fallback',
       (tester) async {
     await pump(
       tester,
@@ -138,7 +140,7 @@ void main() {
     );
     final l10n = l10nOf(tester);
 
-    expect(find.text(l10n.authAccountLinkLabel), findsNothing);
+    expect(find.text(l10n.authAccountLinkLabel), findsOneWidget);
     expect(find.text(l10n.authAccountProviderGoogle), findsOneWidget);
   });
 

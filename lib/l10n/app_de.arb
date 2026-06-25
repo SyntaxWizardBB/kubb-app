@@ -2303,7 +2303,31 @@
   },
   "authLinkErrorBanner": "Verknüpfen fehlgeschlagen. Versuch es nochmals.",
   "@authLinkErrorBanner": {
-    "description": "Link-screen error banner"
+    "description": "Link-screen generic error banner (fallback)"
+  },
+  "authLinkErrorSubjectInUse": "Dieses Google- oder Apple-Konto ist bereits mit einem anderen Profil verknüpft.",
+  "@authLinkErrorSubjectInUse": {
+    "description": "Reconcile error: oauth_subject_in_use"
+  },
+  "authLinkErrorForkedHasData": "Mit diesem Konto wurden bereits Turnierdaten erfasst. Verknüpfen ist darum nicht möglich.",
+  "@authLinkErrorForkedHasData": {
+    "description": "Reconcile error: forked_user_has_data"
+  },
+  "authLinkErrorOauthInvalid": "Die Anmeldung beim Anbieter hat nicht geklappt. Versuch es nochmals.",
+  "@authLinkErrorOauthInvalid": {
+    "description": "Reconcile error: oauth_token_invalid / oauth_provider_mismatch"
+  },
+  "authLinkErrorChallenge": "Der Sicherheitsnachweis ist abgelaufen. Starte das Verknüpfen neu.",
+  "@authLinkErrorChallenge": {
+    "description": "Reconcile error: challenge_* (expired / not found / signature)"
+  },
+  "authLinkErrorTimeout": "Es kam keine Antwort vom Anbieter zurück. Versuch es nochmals.",
+  "@authLinkErrorTimeout": {
+    "description": "Reconcile error: callback_timeout"
+  },
+  "authLinkErrorSeedMissing": "Deine Passphrase ist auf diesem Gerät nicht verfügbar. Stelle zuerst dein Konto wieder her.",
+  "@authLinkErrorSeedMissing": {
+    "description": "Reconcile error: keypair_seed_missing / not_keypair"
   },
   "authLinkSuccessBanner": "Konto erfolgreich verknüpft.",
   "@authLinkSuccessBanner": {

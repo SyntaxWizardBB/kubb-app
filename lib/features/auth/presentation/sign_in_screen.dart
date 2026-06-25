@@ -13,9 +13,14 @@ import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/features/auth/presentation/auth_widgets/oauth_provider_button.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
-/// Cold-start entry per design brief #1 / template `SignInScreen.jsx`.
+/// Sign-in choice (OAuth or Gast) shown after the early-access gate.
 class SignInScreen extends ConsumerStatefulWidget {
-  const SignInScreen({super.key});
+  const SignInScreen({this.earlyAccessCode, super.key});
+
+  /// A pre-validated early-access code handed in from the gate. When set,
+  /// the Gast path registers directly; when null (e.g. a deep link straight
+  /// to `/sign-in`), the Gast path opens the gate first.
+  final String? earlyAccessCode;
 
   @override
   ConsumerState<SignInScreen> createState() => _SignInScreenState();
@@ -69,8 +74,16 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   }
 
   Future<void> _onPickAnonymous() async {
-    // P7: creating an account first requires a valid early-access code.
-    await GoRouter.of(context).push<void>(AuthRoutes.earlyAccess);
+    // P7: creating an account first requires a valid early-access code. The
+    // gate usually hands one in — go straight to signup then. Without one
+    // (deep link onto /sign-in), open the gate first.
+    final code = widget.earlyAccessCode;
+    if (code != null && code.isNotEmpty) {
+      await GoRouter.of(context)
+          .push<void>(AuthRoutes.anonymousSignup, extra: code);
+    } else {
+      await GoRouter.of(context).push<void>(AuthRoutes.earlyAccess);
+    }
   }
 
   Future<void> _onPickRestore() async {

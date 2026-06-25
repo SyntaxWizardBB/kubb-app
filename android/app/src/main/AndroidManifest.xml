@@ -30,9 +30,8 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Deep link for Supabase OAuth callback (kubbapp://auth/callback).
-                 Custom scheme → no autoVerify (that is only for https App Links). -->
-            <intent-filter>
+            <!-- Deep link for Supabase OAuth callback (kubbapp://auth/callback). -->
+            <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>

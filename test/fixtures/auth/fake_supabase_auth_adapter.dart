@@ -40,6 +40,26 @@ class FakeSupabaseAuthAdapter implements SupabaseAuthAdapter {
   int attachKeypairCount = 0;
   int linkOAuthCount = 0;
   int refreshSessionCount = 0;
+  int reconcileCount = 0;
+  int exchangeCallbackCount = 0;
+  int completeSignInCount = 0;
+
+  /// When non-null, [exchangeOAuthCallback] returns this. Defaults to a
+  /// forked OAuth session whose user_id differs from any keypair user.
+  OAuthCallbackResult? exchangeOverride;
+
+  /// When non-null, [reconcileOAuthForKeypairUser] throws this (a
+  /// [ReconcileException] in practice) instead of succeeding.
+  Object? throwOnReconcile;
+
+  /// When non-null, the keypair state [reconcileOAuthForKeypairUser]
+  /// hydrates and emits on success. Defaults to a keypair session under
+  /// [reconcileUserId].
+  AuthAdapterState? reconcileResult;
+
+  /// user_id the successful reconcile re-mints onto. Tests set this to
+  /// the keypair user so the unchanged-id assertion holds.
+  String reconcileUserId = 'keypair-user';
 
   /// Controls what [wireAccessToken] returns. Tests can set this to
   /// `null` to simulate the cache-hydrated-but-wire-empty drift
@@ -184,8 +204,12 @@ class FakeSupabaseAuthAdapter implements SupabaseAuthAdapter {
       AuthOAuthProvider provider) async {
     _maybeThrow();
     linkOAuthCount += 1;
+    // Keypair upgrade branch: the self-minted session is not tracked by
+    // the adapter, so a null adapter state is legitimate here — the real
+    // impl just kicks off signInWithOAuth and returns. Mirror that
+    // instead of demanding an active GoTrue session.
     if (_state.userId == null) {
-      throw StateError('linkOAuth requires an active session');
+      return _state;
     }
     _emit(AuthAdapterState(
       userId: _state.userId,
@@ -197,6 +221,61 @@ class FakeSupabaseAuthAdapter implements SupabaseAuthAdapter {
       nickname: _state.nickname,
     ));
     return _state;
+  }
+
+  @override
+  Future<OAuthCallbackResult> exchangeOAuthCallback(Uri uri) async {
+    _maybeThrow();
+    exchangeCallbackCount += 1;
+    return exchangeOverride ??
+        const OAuthCallbackResult(
+          accessToken: 'forked-oauth-bearer',
+          userId: 'forked-oauth-user',
+        );
+  }
+
+  @override
+  Future<void> completeOAuthSignIn(Uri uri) async {
+    _maybeThrow();
+    completeSignInCount += 1;
+    final now = DateTime.now().toUtc();
+    _emit(AuthAdapterState(
+      userId: 'cold-oauth-user',
+      kind: AuthAdapterKind.oauthGoogle,
+      expiresAt: now.add(const Duration(hours: 1)),
+      refreshAfter: now.add(const Duration(minutes: 50)),
+      nickname: 'cold',
+    ));
+  }
+
+  @override
+  Future<AuthAdapterState> reconcileOAuthForKeypairUser({
+    required AuthOAuthProvider provider,
+    required List<int> publicKey,
+    required List<int> challenge,
+    required List<int> signature,
+    required String oauthAccessToken,
+  }) async {
+    reconcileCount += 1;
+    final t = throwOnReconcile;
+    if (t != null) {
+      throwOnReconcile = null;
+      // Rethrow the caller-supplied value as-is — tests pass a
+      // ReconcileException, which does not extend Error.
+      // ignore: only_throw_errors
+      throw t;
+    }
+    final now = DateTime.now().toUtc();
+    final next = reconcileResult ??
+        AuthAdapterState(
+          userId: reconcileUserId,
+          kind: AuthAdapterKind.keypair,
+          expiresAt: now.add(const Duration(hours: 12)),
+          refreshAfter: now.add(const Duration(hours: 11, minutes: 55)),
+          nickname: _state.nickname,
+        );
+    _emit(next);
+    return next;
   }
 
   @override
