@@ -81,6 +81,14 @@ function resolveJwtSecret(): Uint8Array | null {
   if (direct && direct.length > 0) {
     return new TextEncoder().encode(direct);
   }
+  // 1c. JWT_SECRET — hosted Supabase exposes neither SUPABASE_JWT_SECRET
+  //     nor SUPABASE_JWKS to edge functions, and custom secrets cannot use
+  //     the reserved SUPABASE_ prefix. Prod therefore provides the legacy
+  //     symmetric secret as the custom function secret JWT_SECRET.
+  const custom = Deno.env.get("JWT_SECRET");
+  if (custom && custom.length > 0) {
+    return new TextEncoder().encode(custom);
+  }
   // 1b. SUPABASE_INTERNAL_JWT_SECRET — some local CLI builds pass the raw
   //     symmetric secret through under this name instead of stripping it.
   //     Same value as SUPABASE_JWT_SECRET, so use it as a local-dev

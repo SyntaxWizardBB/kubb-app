@@ -34,10 +34,18 @@ function decodeBase64Url(value: string): Uint8Array {
 // 3. SUPABASE_JWKS — newer Supabase CLI (>= 2.9x) does NOT expose the raw
 //    secret; the symmetric key still travels through as the "oct" entry,
 //    with `k` holding the base64url-encoded raw bytes.
+// 4. JWT_SECRET — HOSTED Supabase exposes none of the above to edge
+//    functions (SUPABASE_-prefixed names are reserved and cannot be set as
+//    custom secrets either), so prod carries the legacy symmetric secret as
+//    the custom function secret JWT_SECRET (`supabase secrets set`).
 export function resolveJwtSecret(): Uint8Array | null {
   const direct = Deno.env.get("SUPABASE_JWT_SECRET");
   if (direct && direct.length > 0) {
     return new TextEncoder().encode(direct);
+  }
+  const custom = Deno.env.get("JWT_SECRET");
+  if (custom && custom.length > 0) {
+    return new TextEncoder().encode(custom);
   }
   const internal = Deno.env.get("SUPABASE_INTERNAL_JWT_SECRET");
   if (internal && internal.length > 0) {
