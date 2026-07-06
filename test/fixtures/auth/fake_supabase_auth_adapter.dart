@@ -181,6 +181,30 @@ class FakeSupabaseAuthAdapter implements SupabaseAuthAdapter {
     return _state;
   }
 
+  int updateNicknameCount = 0;
+  String? lastUpdatedNickname;
+
+  @override
+  Future<AuthAdapterState> updateNickname(String nickname) async {
+    _maybeThrow();
+    updateNicknameCount += 1;
+    lastUpdatedNickname = nickname;
+    if (_state.userId == null) {
+      throw StateError('updateNickname requires an active session');
+    }
+    // Preserve the current session (userId/kind) — only the display
+    // nickname in user_metadata changes, exactly like the real adapter's
+    // updateUser(data: {nickname}).
+    _emit(AuthAdapterState(
+      userId: _state.userId,
+      kind: _state.kind,
+      expiresAt: _state.expiresAt,
+      refreshAfter: _state.refreshAfter,
+      nickname: nickname,
+    ));
+    return _state;
+  }
+
   @override
   Future<AuthAdapterState> attachKeypair({
     required String nickname,

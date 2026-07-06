@@ -3,17 +3,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
+import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/cloud_profile_provider.dart';
+import 'package:kubb_app/features/auth/data/supabase_auth_adapter.dart';
 import 'package:kubb_app/features/auth/presentation/onboarding_profile_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 
 import '../../fixtures/auth/fake_cloud_profile_repository.dart';
+import '../../fixtures/auth/fake_supabase_auth_adapter.dart';
 
 void main() {
-  Future<FakeCloudProfileRepository> pump(WidgetTester tester,
+  Future<(FakeCloudProfileRepository, FakeSupabaseAuthAdapter)> pump(
+      WidgetTester tester,
       {Set<String> taken = const {}}) async {
     final fake = FakeCloudProfileRepository()..currentUserId = 'u1';
     fake.takenNicknames.addAll(taken);
+    // A fresh OAuth session is the real onboarding entry point; seed one so
+    // the screen's updateNickname (user_metadata mirror) has a live session.
+    final adapter = FakeSupabaseAuthAdapter();
+    await adapter.signInWithOAuth(AuthOAuthProvider.google);
     final router = GoRouter(
       initialLocation: '/onboarding/profile',
       routes: [
@@ -32,6 +40,7 @@ void main() {
       ProviderScope(
         overrides: [
           cloudProfileRepositoryProvider.overrideWithValue(fake),
+          supabaseAuthAdapterProvider.overrideWithValue(adapter),
         ],
         child: MaterialApp.router(
           routerConfig: router,
@@ -43,12 +52,12 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    return fake;
+    return (fake, adapter);
   }
 
   testWidgets('valid nickname creates the profile and routes home',
       (tester) async {
-    final fake = await pump(tester);
+    final (fake, adapter) = await pump(tester);
 
     // Button disabled with no input.
     final button = tester.widget<FilledButton>(
@@ -66,6 +75,11 @@ void main() {
 
     expect(fake.createCount, 1);
     expect(fake.storedUserIds, contains('u1'));
+    // The chosen name is mirrored into the session's user_metadata so
+    // session.displayName / displayProfileProvider match the server profile
+    // — identical to the keypair/anon setup.
+    expect(adapter.updateNicknameCount, 1);
+    expect(adapter.lastUpdatedNickname, 'kubb_king');
     expect(find.text('HOME_REACHED'), findsOneWidget);
   });
 
