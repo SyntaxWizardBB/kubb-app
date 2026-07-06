@@ -43,6 +43,8 @@ workflows:
       - build/ios/ipa/*.ipa
     publishing:
       app_store_connect:
+        # Inherit the API key from the integrations block above.
+        auth: integration
         # Needs the app record to exist in App Store Connect, else the upload
         # step fails — flip to false for the very first "does it build" run.
         submit_to_testflight: true
