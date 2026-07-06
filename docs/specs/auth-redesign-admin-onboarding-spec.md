@@ -95,9 +95,13 @@ Der Admin kann als Ziel-User agieren. Umsetzung sicher:
 - **MUSS UI-Banner:** solange die Session ein `impersonator_id`-Claim trägt, zeigt **jeder** Screen
   ein persistentes, auffälliges Banner **„Du agierst als &lt;Nickname&gt; — [Beenden]"**; „Beenden"
   stellt die Admin-Session wieder her (Admin-Token vor dem Wechsel sichern).
-- **MUSS Grenzen:** ein Admin darf **keinen anderen Admin** impersonaten (`target.is_admin = false`
-  erzwingen); Impersonation-Session ist **read/act-limitiert** nicht nötig, aber alle
-  Aktionen laufen als Ziel-User → das Banner ist die Sicherung gegen Verwechslung.
+- **Reichweite (D1 entschieden): VOLLE Session.** Der Admin agiert uneingeschränkt als Ziel-User —
+  inkl. **sicherheitsrelevanter** Aktionen (Passwort setzen/ändern, Profil ändern, an-/abmelden,
+  Punkte eintragen). Es gibt keine Aktions-Einschränkung; das Banner + der Audit-Log sind die
+  Sicherung.
+- **MUSS Grenzen:** ein Admin darf **keinen anderen Admin** impersonaten
+  (`target.is_admin = false` erzwingen). Start und Ende der Impersonation werden in
+  `admin_audit_events` protokolliert.
 
 ### 2.3 Client (MUSS)
 - Neuer Kontext `lib/features/admin/` (presentation/application/data), Design-System-konform
@@ -183,12 +187,12 @@ Rate-Limits, Refresh-Token-Rotation gratis.
 - **Domain-Reservierung:** die Login-Domain gehört ausschließlich diesem Kunstgriff; Nutzer geben
   **nie** eine E-Mail ein, nur ihren Nickname → die App bildet die Adresse deterministisch.
 - **`user_credentials.kind` um `'password'` erweitern** (additive Migration; Shape-Constraint).
-- **Rename-Kohärenz (MUSS):** ändert ein User seinen Nickname (`fn_profile_update_with_hash`),
-  MUSS die synthetische GoTrue-Adresse mitgezogen werden (Server-seitig via `auth.users.email`
-  Update in derselben Transaktion **oder** ein nachgelagerter admin/edge-Schritt). Alternativ —
-  **empfohlen, robuster:** die synthetische Adresse an eine **unveränderliche** Kennung koppeln
-  (z. B. `&lt;user_id&gt;@login.kubbclub.ch`) statt an den Nickname, dann ist Rename entkoppelt.
-  → **OFFENE ENTSCHEIDUNG D3.**
+- **Adresse an `user_id` gebunden (D3 entschieden):** die synthetische GoTrue-Adresse ist
+  `&lt;user_id&gt;@login.kubbclub.ch` — **unveränderlich**, damit ein Nickname-Rename den
+  Passwort-Login **nicht** berührt (kein `auth.users.email`-Update bei jedem Rename). Der
+  Nutzer gibt beim Login den **Nickname** ein; die App schlägt daraus `user_id` nach (neuer
+  RPC `password_login_email_for_nickname(p_nickname)` → gibt die synthetische Adresse zurück,
+  ohne Existenz-/Passwort-Info zu leaken) und ruft `signInWithPassword` mit der Adresse.
 
 ### 4.3 Client (MUSS)
 - **Setup:** neuer Passwort-Step im `anonymous_signup_flow` (Mindestlänge, Bestätigungsfeld,
@@ -240,14 +244,14 @@ Training-Kontext tabu; UI nur über Design-System + bestehende Bausteine; Nickna
 
 ## 7. Offene Entscheidungen (vor/spätestens bei der Umsetzung klären)
 
-- **D1 — Impersonation-Reichweite:** Nur „lesen/navigieren wie der User", oder auch **schreibende**
-  Aktionen in dessen Namen? (Spec baut aktuell die volle Session; Banner sichert ab.)
+- **D1 — Impersonation-Reichweite:** ✅ **ENTSCHIEDEN — volle Session** inkl. Passwort/Security
+  (§2.2). Alles im Namen des Users; Banner + Audit sichern ab.
+- **D3 — Synthetische Login-Adresse:** ✅ **ENTSCHIEDEN — an `user_id`** gebunden (rename-fest, §4.2).
+- **D5 — Offene Registrierung + Missbrauch:** ✅ **ENTSCHIEDEN — CAPTCHA vorerst zurückgestellt.**
+  Erste Verteidigung = Supabase-Rate-Limits. Cloudflare Turnstile (Auth → Attack Protection) bleibt
+  der bereitliegende Schalter für den öffentlichen/breiten Launch oder bei Missbrauch (~1–2 h Client).
 - **D2 — Admin-Bootstrap:** Owner-`is_admin` einmalig per SQL (dokumentiert) — bestätigt?
-- **D3 — Synthetische Login-Adresse an Nickname oder an `user_id` binden?** (`user_id` = robuster
-  bei Rename, empfohlen; Nickname = lesbarer in GoTrue-Tabelle.)
 - **D4 — Passwort-Pflicht rückwirkend?** Spec: **nein** (Alt-Konten optional nachrüsten). Bestätigen.
-- **D5 — Offene Registrierung + Missbrauch:** Bei öffentlichem Signup CAPTCHA/Attack-Protection
-  (Supabase Auth → Attack Protection) aktivieren? (Empfohlen, eigener kleiner Schritt.)
 - **D6 — OAuth-Neu-User-Fork (ADR-0042):** Der `before-user-created`-Hook, der die zweite
   `auth.users`-Zeile verhindert, ist noch ungebaut. In M2 mitziehen oder separat? (Empfehlung:
   separat, ADR-0042 hat einen eigenen Plan.)
