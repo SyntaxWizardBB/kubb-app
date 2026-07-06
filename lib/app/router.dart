@@ -208,9 +208,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         // Session passieren (R20-F-04). Alles andere — inklusive
         // `/sign-in/account-link` und `/sign-in/delete` — wird auf
         // den Sign-In-Screen umgeleitet.
-        // Unauthenticated → land on the early-access gate (the entry point
-        // for creating a profile); restore + sign-in stay reachable from there.
-        return _publicRoutes.contains(loc) ? null : AuthRoutes.earlyAccess;
+        // M4: registration is open (no early-access gate). Unauthenticated
+        // users land on the sign-in screen — the entry point for creating or
+        // recovering an account.
+        return _publicRoutes.contains(loc) ? null : AuthRoutes.signIn;
       }
       // M2: an authenticated user with no user_profiles row (typically a
       // fresh OAuth login) must pick a nickname before entering the app.
