@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/app/public_router_shell.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_bottom_nav.dart';
 import 'package:kubb_app/features/achievements/presentation/achievements_screen.dart';
+import 'package:kubb_app/features/admin/data/admin_models.dart';
+import 'package:kubb_app/features/admin/presentation/admin_dashboard_screen.dart';
+import 'package:kubb_app/features/admin/presentation/admin_user_detail_screen.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
@@ -386,6 +389,21 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 // Archiv der Nachrichten (über den Drawer erreichbar).
                 path: '/inbox/archive',
                 builder: (_, _) => const ArchiveScreen(),
+              ),
+              GoRoute(
+                // Admin-Dashboard (M1). Drawer-gated auf isAdminProvider; die
+                // admin_* RPCs re-prüfen caller_is_admin() serverseitig.
+                path: '/admin',
+                builder: (_, _) => const AdminDashboardScreen(),
+              ),
+              GoRoute(
+                path: '/admin/user/:id',
+                builder: (_, state) {
+                  final row = state.extra;
+                  return row is AdminUserRow
+                      ? AdminUserDetailScreen(row: row)
+                      : const AdminDashboardScreen();
+                },
               ),
               GoRoute(
                 // Meine Vereine (P5): Liste, Gründen (Code-gated) und Detail.

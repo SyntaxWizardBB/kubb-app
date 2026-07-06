@@ -33,3 +33,14 @@ final isOrganizerProvider = Provider<bool>((ref) {
         orElse: () => false,
       );
 });
+
+/// Whether the current user is a platform admin (M1). Drives the drawer
+/// "Admin" entry; resolves to `false` while the profile loads or is absent
+/// so the entry only appears once the flag is confirmed. The server RPCs
+/// re-check `caller_is_admin()`, so this only governs UI visibility.
+final isAdminProvider = Provider<bool>((ref) {
+  return ref.watch(cloudProfileProvider).maybeWhen(
+        data: (profile) => profile?.isAdmin ?? false,
+        orElse: () => false,
+      );
+});

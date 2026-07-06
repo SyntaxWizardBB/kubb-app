@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
+import 'package:kubb_app/features/auth/application/cloud_profile_provider.dart';
 import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -25,6 +26,7 @@ class KubbDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final profile = ref.watch(displayProfileProvider);
+    final isAdmin = ref.watch(isAdminProvider);
 
     return Drawer(
       backgroundColor: tokens.bg,
@@ -73,6 +75,15 @@ class KubbDrawer extends ConsumerWidget {
                     sub: 'App, Daten und Konto',
                     onTap: () => _go(context, '/settings'),
                   ),
+                  if (isAdmin) ...[
+                    const _DrawerSectionLabel('Verwaltung'),
+                    _DrawerRow(
+                      icon: LucideIcons.shield,
+                      label: 'Admin',
+                      sub: 'Nutzer & Rechte verwalten',
+                      onTap: () => _go(context, '/admin'),
+                    ),
+                  ],
                   const _DrawerSectionLabel('Rechtliches'),
                   _DrawerRow(
                     icon: LucideIcons.shieldCheck,

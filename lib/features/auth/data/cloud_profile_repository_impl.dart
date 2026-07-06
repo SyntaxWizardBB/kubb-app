@@ -35,7 +35,7 @@ class CloudProfileRepositoryImpl implements CloudProfileRepository {
         .from('user_profiles')
         .select(
           'user_id, nickname, avatar_color, onboarding_completed, '
-          'profile_visibility, is_organizer',
+          'profile_visibility, is_organizer, is_admin',
         )
         .eq('user_id', userId)
         .limit(1);
@@ -121,6 +121,8 @@ class CloudProfileRepositoryImpl implements CloudProfileRepository {
       // Defaults to true so a row that predates the is_organizer column
       // (or an update-RPC envelope that omits it) keeps create access.
       isOrganizer: (row['is_organizer'] as bool?) ?? true,
+      // Defaults to false — admin is opt-in and update-RPC envelopes omit it.
+      isAdmin: (row['is_admin'] as bool?) ?? false,
     );
   }
 }

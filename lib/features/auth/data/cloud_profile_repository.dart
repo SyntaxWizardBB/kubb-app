@@ -19,6 +19,7 @@ class CloudProfile {
     this.onboardingCompleted = false,
     this.visibility = ProfileVisibility.friendsOnly,
     this.isOrganizer = true,
+    this.isAdmin = false,
   });
 
   final String userId;
@@ -39,6 +40,11 @@ class CloudProfile {
   /// tournament hub and is enforced server-side in `tournament_create`.
   final bool isOrganizer;
 
+  /// Platform admin (M1, migration 20261333000000). Grants the in-app admin
+  /// dashboard + the `admin_*` RPCs. Defaults to `false` so a row that
+  /// predates the column resolves to non-admin.
+  final bool isAdmin;
+
   CloudProfile copyWith({
     String? userId,
     String? nickname,
@@ -46,6 +52,7 @@ class CloudProfile {
     bool? onboardingCompleted,
     ProfileVisibility? visibility,
     bool? isOrganizer,
+    bool? isAdmin,
   }) {
     return CloudProfile(
       userId: userId ?? this.userId,
@@ -54,6 +61,7 @@ class CloudProfile {
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
       visibility: visibility ?? this.visibility,
       isOrganizer: isOrganizer ?? this.isOrganizer,
+      isAdmin: isAdmin ?? this.isAdmin,
     );
   }
 }

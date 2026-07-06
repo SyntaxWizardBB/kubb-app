@@ -7,6 +7,7 @@ import 'package:kubb_app/core/ui/settings/app_settings_provider.dart';
 import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/theme/theme_choice.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_offline_banner.dart';
+import 'package:kubb_app/features/admin/presentation/widgets/impersonation_banner.dart';
 import 'package:kubb_app/features/notifications/application/push_notifications_provider.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:logging/logging.dart';
@@ -108,6 +109,7 @@ class _KubbAppState extends ConsumerState<KubbApp> {
           debugShowCheckedModeBanner: false,
           builder: (context, child) => Column(
             children: [
+              const ImpersonationBanner(),
               const KubbOfflineBanner(),
               Expanded(child: child ?? const SizedBox.shrink()),
             ],

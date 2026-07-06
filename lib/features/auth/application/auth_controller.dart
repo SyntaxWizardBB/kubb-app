@@ -5,6 +5,7 @@ import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/features/auth/application/account_setup_controller.dart';
 import 'package:kubb_app/features/auth/application/account_upgrade_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
+import 'package:kubb_app/features/auth/application/impersonation_controller.dart';
 import 'package:kubb_app/features/auth/application/keypair_signing_service.dart';
 import 'package:kubb_app/features/auth/data/auth_telemetry.dart';
 import 'package:kubb_app/features/auth/data/dao/cached_auth_session_dao.dart';
@@ -379,9 +380,14 @@ class AuthController extends AsyncNotifier<AuthSession> {
         incoming.userId != inFlight.keypairUserId) {
       return;
     }
+    // Clobber gate (M1 §2.2 impersonation): while an admin acts as another
+    // user, reflect the target in memory (state below) but NEVER persist it —
+    // the admin's cached identity must survive a cold restart and drive the
+    // exit re-sign (impersonationProvider.stop -> forceReSignWireSession).
+    final impersonating = ref.read(impersonationProvider) != null;
     if (incoming is SignedOutSession) {
       await _dao.clear();
-    } else {
+    } else if (!impersonating) {
       await _persistSession(adapterState, incoming);
     }
     if (eventGeneration != _generation) {
