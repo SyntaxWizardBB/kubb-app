@@ -7,7 +7,7 @@ import 'package:kubb_app/features/player/application/display_profile_provider.da
 import 'package:kubb_app/features/training/application/active_finisseur_notifier.dart';
 import 'package:kubb_app/features/training/presentation/widgets/kubb_stack_preview.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 const int _totalMax = 10;
 const int _baseHardMax = 5;

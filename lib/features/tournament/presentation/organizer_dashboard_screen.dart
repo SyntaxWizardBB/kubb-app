@@ -15,7 +15,7 @@ import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart
 import 'package:kubb_app/features/tournament/presentation/widgets/organizer_tournament_card.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Organizer dashboard OVERVIEW (ADR-0031 Phase B, Block B4) — the
 /// multi-tournament veranstalter cockpit.

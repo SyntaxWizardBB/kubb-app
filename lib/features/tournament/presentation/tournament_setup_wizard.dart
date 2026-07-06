@@ -52,7 +52,7 @@ import 'package:kubb_app/features/tournament/presentation/widgets/schoch_config_
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Logical step identifiers. The visible step index is derived from
 /// `_visibleSteps`. K12/K25: the group-phase inputs (group count + grouping

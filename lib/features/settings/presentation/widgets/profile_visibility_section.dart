@@ -6,7 +6,7 @@ import 'package:kubb_app/features/settings/presentation/widgets/settings_row.dar
 import 'package:kubb_app/features/settings/presentation/widgets/settings_section.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Settings section that exposes the profile visibility picker.
 ///

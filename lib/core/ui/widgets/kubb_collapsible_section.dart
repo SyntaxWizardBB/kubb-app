@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Token-styled accordion for the optional blocks of the setup wizard. Starts
 /// collapsed. Not a Material `ExpansionTile` — its divider and tile padding

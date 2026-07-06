@@ -15,7 +15,7 @@ import 'package:kubb_app/features/tournament/presentation/widgets/schedule_contr
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_forfeit_sheet.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../fixtures/tournament/fake_tournament_remote.dart';
 

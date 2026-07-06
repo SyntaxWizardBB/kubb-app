@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_bottom_sheet.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Project-wide info affordance: a small `info`-glyph that opens a compact
 /// explainer in a bottom sheet on tap. Bottom sheet over dialog so the content

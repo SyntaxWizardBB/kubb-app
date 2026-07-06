@@ -6,7 +6,7 @@ import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/widgets/inbox_bell_action.dart';
 import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/features/inbox/application/inbox_controller.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 void main() {
   Future<void> pump(

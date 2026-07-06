@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/match/data/match_config_draft.dart';
 import 'package:kubb_app/features/social/application/social_providers.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Bottom-sheet picker used by the match config wizard to add a
 /// participant slot to one of the teams.

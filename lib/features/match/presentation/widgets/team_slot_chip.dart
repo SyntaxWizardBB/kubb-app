@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Visual chip for one team-slot in the match config wizard.
 /// Renders an avatar circle with the participant's initial, the

@@ -10,7 +10,7 @@ import 'package:kubb_app/features/training/presentation/widgets/abort_dialog.dar
 import 'package:kubb_app/features/training/presentation/widgets/finisseur_inputs.dart';
 import 'package:kubb_app/features/training/presentation/widgets/pip_progress.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class FinisseurStickScreen extends ConsumerWidget {
   const FinisseurStickScreen({required this.sessionId, super.key});

@@ -6,7 +6,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_chip.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Sprint-B / W6-T2 — Skeleton-Screen fuer Achievements / Badges.
 ///

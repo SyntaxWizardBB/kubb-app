@@ -7,7 +7,7 @@ import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_forfeit_sheet.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Organizer escalation cockpit (ADR-0031 Phase D5). A self-contained,
 /// reusable widget that surfaces the three things that need organizer

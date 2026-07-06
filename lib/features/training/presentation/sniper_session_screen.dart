@@ -16,7 +16,7 @@ import 'package:kubb_app/features/training/application/active_session_state.dart
 import 'package:kubb_app/features/training/presentation/widgets/abort_dialog.dart';
 import 'package:kubb_app/features/training/presentation/widgets/back_confirm.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class SniperSessionScreen extends ConsumerWidget {
   const SniperSessionScreen({required this.sessionId, super.key});

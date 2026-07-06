@@ -10,7 +10,7 @@ import 'package:kubb_app/features/match/data/match_models.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
 import 'package:kubb_app/features/match/presentation/widgets/participant_picker_sheet.dart';
 import 'package:kubb_app/features/match/presentation/widgets/team_slot_chip.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Single-screen wizard for configuring a brand-new match. Drives
 /// [matchConfigControllerProvider] for state and finally hands the

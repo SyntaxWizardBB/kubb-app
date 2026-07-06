@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/features/player/application/display_profile_provider.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// App-wide navigation drawer, opened from the home AppBar hamburger.
 ///

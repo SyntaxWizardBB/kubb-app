@@ -8,7 +8,7 @@ import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart
 import 'package:kubb_app/features/tournament/presentation/widgets/conflict_comparison_row.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Side-by-side diff view shown between consensus rounds.
 ///

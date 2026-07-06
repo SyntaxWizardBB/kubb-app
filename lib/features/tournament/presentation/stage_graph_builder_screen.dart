@@ -23,7 +23,7 @@ import 'package:kubb_app/features/tournament/presentation/widgets/save_template_
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Form-based stage-graph builder (ADR-0030 §Editor, guided/composing variant).
 ///

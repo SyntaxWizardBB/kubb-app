@@ -10,7 +10,7 @@ import 'package:kubb_app/features/social/data/friend_models.dart';
 import 'package:kubb_app/features/team/application/team_membership_controller.dart';
 import 'package:kubb_app/features/team/data/team_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Whether the add flow invites a full member (admin role) or adds a
 /// guest-role player directly.

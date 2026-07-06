@@ -9,7 +9,7 @@ import 'package:kubb_app/features/training/application/active_finisseur_notifier
 import 'package:kubb_app/features/training/application/active_finisseur_state.dart';
 import 'package:kubb_app/features/training/presentation/finisseur_config_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../_helpers/sqlite_open.dart';
 

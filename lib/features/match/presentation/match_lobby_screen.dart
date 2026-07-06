@@ -12,7 +12,7 @@ import 'package:kubb_app/features/match/data/match_models.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
 import 'package:kubb_app/features/match/presentation/widgets/match_stage_indicator.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Pre-game lobby. Shows the team rosters and the invitation status of
 /// each in-app participant. Auto-redirects to the active screen once

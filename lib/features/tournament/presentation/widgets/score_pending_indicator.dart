@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Compact inline marker shown in the match-detail header while an
 /// outbox row is queued (no `acknowledgedAt`). The label uses inline

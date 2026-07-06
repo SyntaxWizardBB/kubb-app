@@ -11,7 +11,7 @@ import 'package:kubb_app/features/match/application/match_providers.dart';
 import 'package:kubb_app/features/match/data/match_models.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
 import 'package:kubb_app/features/match/presentation/widgets/match_stage_indicator.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Pure validation for a round-result entry. Returns `null` when the
 /// inputs form a valid result, otherwise a German message for inline

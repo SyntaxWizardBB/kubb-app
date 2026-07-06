@@ -12,7 +12,7 @@ import 'package:kubb_app/features/organizer_team/data/organizer_team_repository.
 import 'package:kubb_app/features/social/application/social_providers.dart';
 import 'package:kubb_app/features/social/data/friend_models.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Search-based "invite member to club" screen. Players come from the same
 /// directory search as the friends / team-add features (`friendSearchProvider`

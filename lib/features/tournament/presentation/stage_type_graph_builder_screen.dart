@@ -17,7 +17,7 @@ import 'package:kubb_app/features/tournament/presentation/widgets/save_template_
 import 'package:kubb_app/features/tournament/presentation/widgets/wizard_number_field.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Editor view selector. Both views share the SAME
 /// [stageTypeGraphBuilderProvider] (ADR-0039 §6.5 editor-parity).

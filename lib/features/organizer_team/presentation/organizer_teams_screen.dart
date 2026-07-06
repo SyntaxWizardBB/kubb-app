@@ -12,7 +12,7 @@ import 'package:kubb_app/features/organizer_team/application/organizer_team_prov
 import 'package:kubb_app/features/organizer_team/data/organizer_team_models.dart';
 import 'package:kubb_app/features/organizer_team/presentation/organizer_team_routes.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// "Meine Vereine" in the friends-screen idiom: one integrated search field.
 /// With a query it searches ALL clubs and lets you request to join from the

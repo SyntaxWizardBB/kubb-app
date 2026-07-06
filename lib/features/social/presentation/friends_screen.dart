@@ -13,7 +13,7 @@ import 'package:kubb_app/features/social/application/social_providers.dart';
 import 'package:kubb_app/features/social/data/friend_models.dart';
 import 'package:kubb_app/features/social/presentation/social_routes.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Phase-1 friends surface (ADR-0012). Two stacked sections:
 ///   1. A search field that hits the username-prefix RPC and renders

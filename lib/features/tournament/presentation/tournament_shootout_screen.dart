@@ -8,7 +8,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/features/tournament/application/tournament_shootout_providers.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// P6 shoot-out report/confirm screen (docs/P6_SHOOTOUT_TIEBREAK.md, D2b).
 ///

@@ -12,7 +12,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_mode_card.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
 import 'package:kubb_app/features/social/presentation/social_routes.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Landing screen for the Training tab (BottomNav branch 0).
 ///

@@ -16,7 +16,7 @@ import 'package:kubb_app/features/stats/presentation/widgets/stats_filter_modal.
 import 'package:kubb_app/features/stats/presentation/widgets/stats_session_list.dart';
 import 'package:kubb_app/features/stats/presentation/widgets/stats_trend_chart.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class StatsScreen extends ConsumerStatefulWidget {
   const StatsScreen({super.key});

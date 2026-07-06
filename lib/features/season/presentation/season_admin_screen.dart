@@ -4,7 +4,7 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/season/application/season_admin_controller.dart';
 import 'package:kubb_app/features/season/data/season_repository.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Liga-Admin CRUD-Screen für Saisonen (TASK-M5.3-T11). Listet sichtbare
 /// Saisonen als Tiles (Name + Status-Pill + Date-Range), Tap öffnet

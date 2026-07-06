@@ -8,7 +8,7 @@ import 'package:kubb_app/features/stats/application/stats_filter_notifier.dart';
 import 'package:kubb_app/features/stats/data/stats_aggregate.dart';
 import 'package:kubb_app/features/stats/presentation/stats_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 void main() {
   Future<void> pump(

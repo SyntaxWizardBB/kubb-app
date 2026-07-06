@@ -214,8 +214,9 @@ void main() {
 
     final listView =
         tester.widget<ReorderableListView>(find.byType(ReorderableListView));
-    // Move the first item (Feld 1) to the end.
-    listView.onReorder(0, 3);
+    // Move the first item (Feld 1) to the end. onReorder became nullable in
+    // Flutter 3.41 (onReorderItem supersedes it).
+    listView.onReorder!(0, 3);
     await tester.pumpAndSettle();
 
     expect(_draftPlan(container)!.order, <int>[2, 3, 1]);
@@ -236,7 +237,8 @@ void main() {
 
     final listView =
         tester.widget<ReorderableListView>(find.byType(ReorderableListView));
-    listView.onReorder(0, 3);
+    // onReorder became nullable in Flutter 3.41 (onReorderItem supersedes it).
+    listView.onReorder!(0, 3);
     await tester.pumpAndSettle();
     expect(_draftPlan(container)!.order, isNotEmpty);
 

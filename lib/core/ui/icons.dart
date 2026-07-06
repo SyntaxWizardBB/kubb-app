@@ -3,7 +3,7 @@
 // see docs/design/ui_kits/app/shared.jsx for the original SVG paths.
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class KubbIcons {
   const KubbIcons._();

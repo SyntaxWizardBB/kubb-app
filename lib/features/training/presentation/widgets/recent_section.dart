@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class RecentSection extends StatelessWidget {
   const RecentSection({required this.title, required this.items, super.key});

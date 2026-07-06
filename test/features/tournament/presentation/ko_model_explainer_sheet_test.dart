@@ -12,7 +12,7 @@ import 'package:kubb_app/features/tournament/presentation/tournament_setup_wizar
 import 'package:kubb_app/features/tournament/presentation/widgets/ko_model_explainer_sheet.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Minimal remote stub: the format step never hits the network, so the wizard
 /// only needs a remote that does not throw on construction.

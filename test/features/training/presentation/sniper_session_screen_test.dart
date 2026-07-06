@@ -11,7 +11,7 @@ import 'package:kubb_app/features/training/application/active_session_notifier.d
 import 'package:kubb_app/features/training/application/active_session_state.dart';
 import 'package:kubb_app/features/training/presentation/sniper_session_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class _StubSessionNotifier extends ActiveSessionNotifier {
   _StubSessionNotifier(this._initial);

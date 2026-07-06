@@ -9,7 +9,7 @@ import 'package:kubb_app/features/tournament/presentation/widgets/_wizard_ko_con
 import 'package:kubb_app/features/tournament/presentation/widgets/info_icon_button.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Hosts [WizardKoConfigStep] in a minimal MaterialApp and exposes the
 /// last config that was pushed via the callback, so the test can read it

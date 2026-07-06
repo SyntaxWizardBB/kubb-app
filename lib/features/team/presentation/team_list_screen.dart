@@ -8,7 +8,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/features/team/application/team_list_provider.dart';
 import 'package:kubb_app/features/team/application/team_providers.dart';
 import 'package:kubb_app/features/team/data/team_models.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Team discovery in the friends-screen idiom: one integrated search field
 /// filters the caller's memberships (server-side via `team_list_for_caller`)

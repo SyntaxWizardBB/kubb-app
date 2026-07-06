@@ -23,7 +23,7 @@ import 'package:kubb_app/features/training/presentation/widgets/home_greeting.da
 import 'package:kubb_app/features/training/presentation/widgets/news_card.dart';
 import 'package:kubb_app/features/training/presentation/widgets/recent_section.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 const _newsUrl = 'https://kubbtour.ch';

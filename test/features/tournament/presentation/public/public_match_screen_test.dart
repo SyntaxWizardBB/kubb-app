@@ -11,7 +11,7 @@ import 'package:kubb_app/features/tournament/data/public_tournament_realtime.dar
 import 'package:kubb_app/features/tournament/presentation/public/public_match_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Records the last shared link instead of invoking the system share sheet.
 class _FakeLinkShareService extends PublicLinkShareService {

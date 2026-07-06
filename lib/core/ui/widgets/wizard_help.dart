@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Per-step "Erklärungen anzeigen" state for the setup wizard. Default off,
 /// flipped by [WizardHelpToggle]; `KubbField` reads [show] to surface its info

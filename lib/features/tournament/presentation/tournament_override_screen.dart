@@ -11,7 +11,7 @@ import 'package:kubb_app/features/tournament/presentation/widgets/participant_na
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_set_input.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Organizer-only entry point for disputed matches (spec DSCORE-52..-58).
 /// Three stacked sections — proposals review (collapsible), final score

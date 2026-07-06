@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Per-set input row used by the match-detail score-entry screen.
 /// Stepper for each team's basekubbs plus a 3-way Königsstoss toggle.

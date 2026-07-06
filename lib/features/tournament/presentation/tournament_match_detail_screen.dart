@@ -30,7 +30,7 @@ import 'package:kubb_app/features/tournament/presentation/widgets/tournament_for
 import 'package:kubb_app/features/tournament/presentation/widgets/tournament_set_input.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Critical M1 screen: per-set score entry for one tournament match.
 ///

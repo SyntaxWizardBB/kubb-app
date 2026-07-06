@@ -6,7 +6,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_app_bar.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_empty_state.dart';
 import 'package:kubb_app/features/training/application/cloud_training_provider.dart';
 import 'package:kubb_app/features/training/data/cloud_training_repository.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Management view for the user's own online-saved training sessions (P2:
 /// "online gespeichert … und man soll die auch löschen können").

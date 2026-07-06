@@ -8,7 +8,7 @@ import 'package:kubb_app/features/tournament/data/public_tournament_models.dart'
 import 'package:kubb_app/features/tournament/data/public_tournament_realtime.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Read-only spectator view of one tournament match nach ADR-0026
 /// Strategie A.

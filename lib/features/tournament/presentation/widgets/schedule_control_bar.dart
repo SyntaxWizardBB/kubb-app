@@ -5,7 +5,7 @@ import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_button.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Schedule control bar for the per-tournament organizer dashboard detail
 /// (ADR-0031 Phase B, Block B4). Surfaces the four schedule-control actions

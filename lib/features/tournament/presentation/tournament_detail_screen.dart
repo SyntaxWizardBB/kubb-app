@@ -62,8 +62,9 @@ class TournamentDetailScreen extends ConsumerWidget {
       appBar: KubbAppBar(
         eyebrow: l.tournamentDetailEyebrow,
         title: detailAsync.maybeWhen(
-            data: (d) => d?.tournament.displayName ?? l.tournamentDetailEyebrow,
-            orElse: () => l.tournamentDetailEyebrow),
+          data: (d) => d?.tournament.displayName ?? l.tournamentDetailEyebrow,
+          orElse: () => l.tournamentDetailEyebrow,
+        ),
       ),
       body: Column(
         children: [
@@ -82,9 +83,11 @@ class TournamentDetailScreen extends ConsumerWidget {
               error: (e, _) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(KubbTokens.space5),
-                  child: Text(e.toString(),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: KubbTokens.miss)),
+                  child: Text(
+                    e.toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: KubbTokens.miss),
+                  ),
                 ),
               ),
               data: (d) => d == null
@@ -99,8 +102,7 @@ class TournamentDetailScreen extends ConsumerWidget {
 }
 
 class _Body extends ConsumerWidget {
-  const _Body(
-      {required this.detail, required this.myUserId, required this.id});
+  const _Body({required this.detail, required this.myUserId, required this.id});
   final TournamentDetail detail;
   final String? myUserId;
   final TournamentId id;
@@ -116,7 +118,8 @@ class _Body extends ConsumerWidget {
     // edit actions. A tournament with no club is manageable by the creator
     // only. The server re-checks `tournament_caller_can_manage` in every
     // lifecycle/update RPC, so this only governs button visibility.
-    final canManage = isCreator ||
+    final canManage =
+        isCreator ||
         ref.watch(canManageTournamentClubProvider(detail.tournament.clubId));
     // "me" = the registration this user belongs to. Registrant match wins;
     // otherwise any ACTIVE roster slot counts (team registrations belong to
@@ -147,33 +150,50 @@ class _Body extends ConsumerWidget {
     // for display so old data renders sensibly. `withdrawn`/`rejected`
     // never surface.
     final confirmedParts = detail.participants
-        .where((p) =>
-            p.registrationStatus == TournamentParticipantStatus.approved ||
-            p.registrationStatus == TournamentParticipantStatus.pending)
+        .where(
+          (p) =>
+              p.registrationStatus == TournamentParticipantStatus.approved ||
+              p.registrationStatus == TournamentParticipantStatus.pending,
+        )
         .toList(growable: false);
-    final waitlistParts = detail.participants
-        .where((p) =>
-            p.registrationStatus == TournamentParticipantStatus.waitlist)
-        .toList(growable: false)
-      ..sort((a, b) => a.registeredAt.compareTo(b.registeredAt));
+    final waitlistParts =
+        detail.participants
+            .where(
+              (p) =>
+                  p.registrationStatus == TournamentParticipantStatus.waitlist,
+            )
+            .toList(growable: false)
+          ..sort((a, b) => a.registeredAt.compareTo(b.registeredAt));
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(KubbTokens.space4, KubbTokens.space2,
-          KubbTokens.space4, KubbTokens.space12),
+      padding: const EdgeInsets.fromLTRB(
+        KubbTokens.space4,
+        KubbTokens.space2,
+        KubbTokens.space4,
+        KubbTokens.space12,
+      ),
       children: [
-        Row(children: [
-          Expanded(
-              child: Text(h.displayName,
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: tokens.fg))),
-          TournamentStatusPill(status: h.status),
-        ]),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                h.displayName,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: tokens.fg,
+                ),
+              ),
+            ),
+            TournamentStatusPill(status: h.status),
+          ],
+        ),
         const SizedBox(height: KubbTokens.space2),
         Text(
           l.tournamentDetailParticipantSummary(
-              detail.participants.length, h.maxParticipants),
+            detail.participants.length,
+            h.maxParticipants,
+          ),
           style: TextStyle(fontSize: 13, color: tokens.fgMuted),
         ),
         const SizedBox(height: KubbTokens.space5),
@@ -190,19 +210,25 @@ class _Body extends ConsumerWidget {
           // moved to the cockpit (organizer_dashboard_detail_screen); a manager
           // reaches them via the "→ Steuerung" button below.
           if (confirmedParts.isEmpty)
-            Text(l.tournamentDetailParticipantsEmpty,
-                style: TextStyle(fontSize: 13, color: tokens.fgMuted)),
-          for (final p in confirmedParts) _participantRow(context, p, l, tokens),
+            Text(
+              l.tournamentDetailParticipantsEmpty,
+              style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+            ),
+          for (final p in confirmedParts)
+            _participantRow(context, p, l, tokens),
           // Waitlist overview (in registration order). Visible to everyone so
           // registrants understand the queue.
           if (waitlistParts.isNotEmpty) ...[
             const SizedBox(height: KubbTokens.space3),
-            Text(l.tournamentDetailWaitlistHeading.toUpperCase(),
-                style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.88,
-                    color: tokens.fgMuted)),
+            Text(
+              l.tournamentDetailWaitlistHeading.toUpperCase(),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.88,
+                color: tokens.fgMuted,
+              ),
+            ),
             const SizedBox(height: KubbTokens.space1),
             for (final p in waitlistParts)
               _participantRow(context, p, l, tokens),
@@ -215,8 +241,7 @@ class _Body extends ConsumerWidget {
         // so non-members never see the section (acceptance criterion 2).
         if (me != null && h.teamSize > 1) ...[
           const SizedBox(height: KubbTokens.space5),
-          _RosterCard(
-              participantId: TournamentParticipantId(me.participantId)),
+          _RosterCard(participantId: TournamentParticipantId(me.participantId)),
         ],
         // T12 (M3.3): pool-phase "Gruppen" tab. The detail screen renders
         // a flat ListView (no TabController), so the tab maps to an
@@ -260,18 +285,25 @@ Widget _card(BuildContext context, String heading, List<Widget> children) {
   return Container(
     padding: const EdgeInsets.all(KubbTokens.space4),
     decoration: BoxDecoration(
-        color: tokens.bgRaised,
-        borderRadius: BorderRadius.circular(KubbTokens.radiusLg)),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Text(heading.toUpperCase(),
+      color: tokens.bgRaised,
+      borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          heading.toUpperCase(),
           style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.88,
-              color: tokens.fgMuted)),
-      const SizedBox(height: KubbTokens.space2),
-      ...children,
-    ]),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.88,
+            color: tokens.fgMuted,
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space2),
+        ...children,
+      ],
+    ),
   );
 }
 
@@ -281,7 +313,8 @@ Future<void> _safe(BuildContext context, Future<void> Function() op) async {
   } on Object catch (e) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: KubbTokens.miss));
+      SnackBar(content: Text('$e'), backgroundColor: KubbTokens.miss),
+    );
   }
 }
 
@@ -298,23 +331,31 @@ Widget _participantRow(
       p.registrationStatus == TournamentParticipantStatus.waitlist;
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: KubbTokens.space1),
-    child: Row(children: [
-      Expanded(
-        child: Text(p.displayLabel,
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            p.displayLabel,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg)),
-      ),
-      Padding(
-        padding: const EdgeInsets.only(right: KubbTokens.space2),
-        child: Text(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: tokens.fg,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(right: KubbTokens.space2),
+          child: Text(
             isWaitlist
                 ? l.tournamentDetailStatusWaitlist
                 : l.tournamentDetailStatusConfirmed,
-            style: TextStyle(fontSize: 11, color: tokens.fgMuted)),
-      ),
-    ]),
+            style: TextStyle(fontSize: 11, color: tokens.fgMuted),
+          ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -353,19 +394,21 @@ class ParticipantCheckinToggle extends StatelessWidget {
           constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
           child: Padding(
             padding: const EdgeInsets.symmetric(
-                horizontal: KubbTokens.space2, vertical: KubbTokens.space2),
+              horizontal: KubbTokens.space2,
+              vertical: KubbTokens.space2,
+            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.check_circle,
-                    size: 18, color: KubbTokens.hit),
+                const Icon(Icons.check_circle, size: 18, color: KubbTokens.hit),
                 const SizedBox(width: KubbTokens.space1),
                 Text(
                   l.tournamentDetailCheckedInState,
                   style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: KubbTokens.hit),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: KubbTokens.hit,
+                  ),
                 ),
               ],
             ),
@@ -381,15 +424,18 @@ class ParticipantCheckinToggle extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
         child: Padding(
           padding: const EdgeInsets.symmetric(
-              horizontal: KubbTokens.space2, vertical: KubbTokens.space2),
+            horizontal: KubbTokens.space2,
+            vertical: KubbTokens.space2,
+          ),
           child: Center(
             widthFactor: 1,
             child: Text(
               l.tournamentDetailCheckinAction,
               style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: tokens.primary),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: tokens.primary,
+              ),
             ),
           ),
         ),
@@ -421,7 +467,9 @@ class _Actions extends ConsumerWidget {
     // T15: surface bracket entry once any KO/third_place/final match exists.
     // `tournamentBracketProvider` throws `ArgumentError` while still in the
     // group phase — both error/loading map to "no bracket yet".
-    final hasBracket = ref.watch(tournamentBracketProvider(id)).maybeWhen(
+    final hasBracket = ref
+        .watch(tournamentBracketProvider(id))
+        .maybeWhen(
           data: (b) => switch (b) {
             SingleEliminationBracket(:final rounds) => rounds.isNotEmpty,
             DoubleEliminationBracket(:final wbRounds) => wbRounds.isNotEmpty,
@@ -432,15 +480,15 @@ class _Actions extends ConsumerWidget {
         );
 
     Widget mk(String label, VoidCallback onTap, {Color? color}) => SizedBox(
-          height: KubbTokens.touchComfortable,
-          child: FilledButton(
-            style: color == null
-                ? null
-                : FilledButton.styleFrom(backgroundColor: color),
-            onPressed: onTap,
-            child: Text(label),
-          ),
-        );
+      height: KubbTokens.touchComfortable,
+      child: FilledButton(
+        style: color == null
+            ? null
+            : FilledButton.styleFrom(backgroundColor: color),
+        onPressed: onTap,
+        child: Text(label),
+      ),
+    );
     void op(String label, Future<void> Function() fn, {Color? color}) =>
         buttons.add(mk(label, () => _safe(context, fn), color: color));
     void nav(String label, String path) =>
@@ -458,11 +506,13 @@ class _Actions extends ConsumerWidget {
       } else {
         buttons.add(_RegistrationStatusBadge(status: m.registrationStatus));
         op(
-            l.tournamentDetailActionWithdraw,
-            () => actions.withdrawRegistration(
-                TournamentParticipantId(m.participantId),
-                tournamentId: id),
-            color: KubbTokens.miss);
+          l.tournamentDetailActionWithdraw,
+          () => actions.withdrawRegistration(
+            TournamentParticipantId(m.participantId),
+            tournamentId: id,
+          ),
+          color: KubbTokens.miss,
+        );
       }
     } else if (status == TournamentStatus.live) {
       if (me != null) {
@@ -476,13 +526,17 @@ class _Actions extends ConsumerWidget {
         ? Container(
             padding: const EdgeInsets.all(KubbTokens.space4),
             decoration: BoxDecoration(
-                color: KubbTokens.miss.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(KubbTokens.radiusMd)),
-            child: Text(l.tournamentDetailAborted,
-                style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: tokens.fg)),
+              color: KubbTokens.miss.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(KubbTokens.radiusMd),
+            ),
+            child: Text(
+              l.tournamentDetailAborted,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: tokens.fg,
+              ),
+            ),
           )
         : null;
 
@@ -541,7 +595,10 @@ class _RegistrationStatusBadge extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg),
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: tokens.fg,
+            ),
           ),
         ],
       ),
@@ -569,14 +626,21 @@ class _RosterCard extends ConsumerWidget {
         loading: () => const Padding(
           padding: EdgeInsets.symmetric(vertical: KubbTokens.space2),
           child: SizedBox(
-              height: 18, width: 18, child: CircularProgressIndicator()),
+            height: 18,
+            width: 18,
+            child: CircularProgressIndicator(),
+          ),
         ),
-        error: (_, _) => Text(l.tournamentDetailRosterEmpty,
-            style: TextStyle(fontSize: 13, color: tokens.fgMuted)),
+        error: (_, _) => Text(
+          l.tournamentDetailRosterEmpty,
+          style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+        ),
         data: (slots) {
           if (slots.isEmpty) {
-            return Text(l.tournamentDetailRosterEmpty,
-                style: TextStyle(fontSize: 13, color: tokens.fgMuted));
+            return Text(
+              l.tournamentDetailRosterEmpty,
+              style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+            );
           }
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -615,17 +679,24 @@ class _PoolStandingsCard extends ConsumerWidget {
         loading: () => const Padding(
           padding: EdgeInsets.symmetric(vertical: KubbTokens.space2),
           child: SizedBox(
-              height: 18, width: 18, child: CircularProgressIndicator()),
+            height: 18,
+            width: 18,
+            child: CircularProgressIndicator(),
+          ),
         ),
         // Error path collapses to the empty-state copy: the pool RPC
         // throws ahead of phase-start, which is indistinguishable from
         // "no data yet" for the caller.
-        error: (_, _) => Text(l.tournamentDetailPoolsEmpty,
-            style: TextStyle(fontSize: 13, color: tokens.fgMuted)),
+        error: (_, _) => Text(
+          l.tournamentDetailPoolsEmpty,
+          style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+        ),
         data: (groups) {
           if (groups.isEmpty) {
-            return Text(l.tournamentDetailPoolsEmpty,
-                style: TextStyle(fontSize: 13, color: tokens.fgMuted));
+            return Text(
+              l.tournamentDetailPoolsEmpty,
+              style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+            );
           }
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -642,14 +713,23 @@ class _PoolStandingsCard extends ConsumerWidget {
   }
 }
 
-Widget _poolGroup(BuildContext context, AppLocalizations l, KubbTokens tokens,
-    PoolGroupStandings g) {
+Widget _poolGroup(
+  BuildContext context,
+  AppLocalizations l,
+  KubbTokens tokens,
+  PoolGroupStandings g,
+) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Text(l.tournamentDetailPoolGroup(g.groupLabel),
-          style: TextStyle(
-              fontSize: 13, fontWeight: FontWeight.w700, color: tokens.fg)),
+      Text(
+        l.tournamentDetailPoolGroup(g.groupLabel),
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: tokens.fg,
+        ),
+      ),
       const SizedBox(height: KubbTokens.space1),
       for (var i = 0; i < g.stats.length; i++)
         _poolRow(context, tokens, i + 1, g.stats[i]),
@@ -657,50 +737,83 @@ Widget _poolGroup(BuildContext context, AppLocalizations l, KubbTokens tokens,
   );
 }
 
-Widget _poolRow(BuildContext context, KubbTokens tokens, int rank,
-    ParticipantStats s) {
+Widget _poolRow(
+  BuildContext context,
+  KubbTokens tokens,
+  int rank,
+  ParticipantStats s,
+) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: KubbTokens.space1),
-    child: Row(children: [
-      SizedBox(
-        width: 28,
-        child: Text('$rank.',
-            style: TextStyle(fontSize: 13, color: tokens.fgMuted)),
-      ),
-      Expanded(
-        child: Text(s.participantId,
+    child: Row(
+      children: [
+        SizedBox(
+          width: 28,
+          child: Text(
+            '$rank.',
+            style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            s.participantId,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg)),
-      ),
-      Text('${s.totalPoints}',
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: tokens.fg,
+            ),
+          ),
+        ),
+        Text(
+          '${s.totalPoints}',
           style: TextStyle(
-              fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg)),
-    ]),
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: tokens.fg,
+          ),
+        ),
+      ],
+    ),
   );
 }
 
-Widget _rosterRow(BuildContext context, AppLocalizations l, KubbTokens tokens,
-    RosterSlot s) {
+Widget _rosterRow(
+  BuildContext context,
+  AppLocalizations l,
+  KubbTokens tokens,
+  RosterSlot s,
+) {
   final label = s.memberUserId?.value ?? s.guestPlayerId?.value ?? '?';
-  final marker = s.memberUserId != null ? '' : ' · ${l.tournamentDetailRosterGuest}';
+  final marker = s.memberUserId != null
+      ? ''
+      : ' · ${l.tournamentDetailRosterGuest}';
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: KubbTokens.space1),
-    child: Row(children: [
-      SizedBox(
-        width: 64,
-        child: Text(l.tournamentDetailRosterSlot(s.slotIndex),
-            style: TextStyle(fontSize: 13, color: tokens.fgMuted)),
-      ),
-      Expanded(
-        child: Text('$label$marker',
+    child: Row(
+      children: [
+        SizedBox(
+          width: 64,
+          child: Text(
+            l.tournamentDetailRosterSlot(s.slotIndex),
+            style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            '$label$marker',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w700, color: tokens.fg)),
-      ),
-    ]),
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: tokens.fg,
+            ),
+          ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -715,36 +828,47 @@ class _AuditTail extends StatelessWidget {
     final latest = events.take(5).toList(growable: false);
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: Container(
-        decoration: BoxDecoration(
-            color: tokens.bgRaised,
-            borderRadius: BorderRadius.circular(KubbTokens.radiusLg)),
+      // Material instead of a decorated Container: the tile's ink must land
+      // on the surface that paints the background (Flutter >=3.41 asserts).
+      child: Material(
+        color: tokens.bgRaised,
+        borderRadius: BorderRadius.circular(KubbTokens.radiusLg),
         child: ExpansionTile(
-          tilePadding:
-              const EdgeInsets.symmetric(horizontal: KubbTokens.space4),
-          title: Text(l.tournamentDetailAuditHeader.toUpperCase(),
-              style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.88,
-                  color: tokens.fgMuted)),
+          tilePadding: const EdgeInsets.symmetric(
+            horizontal: KubbTokens.space4,
+          ),
+          title: Text(
+            l.tournamentDetailAuditHeader.toUpperCase(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.88,
+              color: tokens.fgMuted,
+            ),
+          ),
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(KubbTokens.space4, 0,
-                  KubbTokens.space4, KubbTokens.space4),
+              padding: const EdgeInsets.fromLTRB(
+                KubbTokens.space4,
+                0,
+                KubbTokens.space4,
+                KubbTokens.space4,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (latest.isEmpty)
-                    Text(l.tournamentDetailAuditEmpty,
-                        style:
-                            TextStyle(fontSize: 13, color: tokens.fgMuted)),
+                    Text(
+                      l.tournamentDetailAuditEmpty,
+                      style: TextStyle(fontSize: 13, color: tokens.fgMuted),
+                    ),
                   for (final e in latest)
                     Padding(
                       padding: const EdgeInsets.only(top: KubbTokens.space1),
-                      child: Text('${e.at.toIso8601String()} — ${e.kind}',
-                          style:
-                              TextStyle(fontSize: 12, color: tokens.fgMuted)),
+                      child: Text(
+                        '${e.at.toIso8601String()} — ${e.kind}',
+                        style: TextStyle(fontSize: 12, color: tokens.fgMuted),
+                      ),
                     ),
                 ],
               ),

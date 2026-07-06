@@ -19,10 +19,12 @@ const Duration _poolStandingsFallbackPollInterval = Duration(seconds: 30);
 //
 // ignore: specify_nonobvious_property_types
 final tournamentPoolStandingsProvider =
-    FutureProvider.family<List<PoolGroupStandings>, TournamentId>(
-        (ref, id) async {
-  return ref.read(tournamentRemoteProvider).getPoolStandings(id);
-});
+    FutureProvider.family<List<PoolGroupStandings>, TournamentId>((
+      ref,
+      id,
+    ) async {
+      return ref.read(tournamentRemoteProvider).getPoolStandings(id);
+    });
 
 /// Keeps the pool-standings fresh while the Gruppen tab is mounted. CDC is
 /// the live source (ADR-0029 §(c) FC-6); polling is ONLY a failure-mode,
@@ -31,35 +33,35 @@ final tournamentPoolStandingsProvider =
 /// unconditional `Timer.periodic`.
 //
 // ignore: specify_nonobvious_property_types
-final tournamentPoolStandingsPollingProvider =
-    Provider.autoDispose.family<void, TournamentId>((ref, id) {
-  Timer? fallbackTimer;
-  void armFallback() {
-    fallbackTimer = Timer(_poolStandingsFallbackPollInterval, () {
-      ref.invalidate(tournamentPoolStandingsProvider(id));
-      armFallback();
-    });
-  }
-
-  final fallbackSub = ref.listen<AsyncValue<bool>>(
-    realtimeFallbackProvider(id),
-    (_, next) {
-      final polling = next.maybeWhen(data: (v) => v, orElse: () => false);
-      if (polling) {
-        if (fallbackTimer == null) armFallback();
-      } else {
-        fallbackTimer?.cancel();
-        fallbackTimer = null;
+final tournamentPoolStandingsPollingProvider = Provider.autoDispose
+    .family<void, TournamentId>((ref, id) {
+      Timer? fallbackTimer;
+      void armFallback() {
+        fallbackTimer = Timer(_poolStandingsFallbackPollInterval, () {
+          ref.invalidate(tournamentPoolStandingsProvider(id));
+          armFallback();
+        });
       }
-    },
-    fireImmediately: true,
-  );
 
-  ref.onDispose(() {
-    fallbackTimer?.cancel();
-    fallbackSub.close();
-  });
-});
+      final fallbackSub = ref.listen<AsyncValue<bool>>(
+        realtimeFallbackProvider(id),
+        (_, next) {
+          final polling = next.maybeWhen(data: (v) => v, orElse: () => false);
+          if (polling) {
+            if (fallbackTimer == null) armFallback();
+          } else {
+            fallbackTimer?.cancel();
+            fallbackTimer = null;
+          }
+        },
+        fireImmediately: true,
+      );
+
+      ref.onDispose(() {
+        fallbackTimer?.cancel();
+        fallbackSub.close();
+      });
+    });
 
 /// Pool-Phase standings view. Top section is a cross-pool overview limited to
 /// the top-`qualifiersPerGroup` rows of every group with highlighting; the
@@ -193,9 +195,11 @@ class _CrossPoolOverview extends StatelessWidget {
                       spacing: KubbTokens.space2,
                       runSpacing: KubbTokens.space1,
                       children: [
-                        for (var i = 0;
-                            i < g.stats.length && i < qualifiers;
-                            i++)
+                        for (
+                          var i = 0;
+                          i < g.stats.length && i < qualifiers;
+                          i++
+                        )
                           _QualifierChip(rank: i + 1, stats: g.stats[i]),
                       ],
                     ),
@@ -255,32 +259,38 @@ class _GroupTile extends StatelessWidget {
         horizontal: KubbTokens.space4,
         vertical: KubbTokens.space1,
       ),
-      decoration: BoxDecoration(
+      // Material instead of a decorated Container: the tile's ink must land
+      // on the surface that paints the background (Flutter >=3.41 asserts).
+      // The shape's side keeps the former Border.all outline.
+      child: Material(
         color: tokens.bgRaised,
-        border: Border.all(color: tokens.line),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: ExpansionTile(
-        // Default kollabiert (Acceptance §3, R-M3.3-4); Tap expandiert.
-        tilePadding:
-            const EdgeInsets.symmetric(horizontal: KubbTokens.space4),
-        title: Text(
-          group.groupLabel,
-          style: const TextStyle(fontWeight: FontWeight.w800),
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: tokens.line),
+          borderRadius: BorderRadius.circular(8),
         ),
-        subtitle: Text(
-          '${group.stats.length} Teilnehmer',
-          style: TextStyle(color: tokens.fgMuted, fontSize: 12),
+        child: ExpansionTile(
+          // Default kollabiert (Acceptance §3, R-M3.3-4); Tap expandiert.
+          tilePadding: const EdgeInsets.symmetric(
+            horizontal: KubbTokens.space4,
+          ),
+          title: Text(
+            group.groupLabel,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          subtitle: Text(
+            '${group.stats.length} Teilnehmer',
+            style: TextStyle(color: tokens.fgMuted, fontSize: 12),
+          ),
+          children: [
+            const _StandingsHeader(),
+            for (var i = 0; i < group.stats.length; i++)
+              _StandingsRow(
+                rank: i + 1,
+                stats: group.stats[i],
+                highlight: i < qualifiers,
+              ),
+          ],
         ),
-        children: [
-          const _StandingsHeader(),
-          for (var i = 0; i < group.stats.length; i++)
-            _StandingsRow(
-              rank: i + 1,
-              stats: group.stats[i],
-              highlight: i < qualifiers,
-            ),
-        ],
       ),
     );
   }
@@ -371,17 +381,16 @@ class _StandingsRow extends StatelessWidget {
     required int flex,
     required KubbTokens tokens,
     bool bold = false,
-  }) =>
-      Expanded(
-        flex: flex,
-        child: Text(
-          s,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
-            color: tokens.fg,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
-      );
+  }) => Expanded(
+    flex: flex,
+    child: Text(
+      s,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
+        color: tokens.fg,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    ),
+  );
 }

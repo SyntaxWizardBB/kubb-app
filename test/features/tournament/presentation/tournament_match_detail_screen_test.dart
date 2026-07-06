@@ -12,7 +12,7 @@ import 'package:kubb_app/features/tournament/data/tournament_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_match_detail_screen.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:kubb_domain/kubb_domain.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../_helpers/sqlite_open.dart';
 

@@ -9,7 +9,7 @@ import 'package:kubb_app/core/ui/theme/theme_choice.dart';
 import 'package:kubb_app/features/settings/presentation/widgets/settings_control_row.dart';
 import 'package:kubb_app/features/settings/presentation/widgets/settings_row.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 /// General app preferences: language, theme, vibration and the global heli

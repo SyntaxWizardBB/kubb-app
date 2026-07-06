@@ -5,7 +5,7 @@ import 'package:kubb_app/core/ui/widgets/kubb_bottom_sheet.dart';
 import 'package:kubb_app/features/match/presentation/match_routes.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_routes.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class TrainingSheet extends StatelessWidget {
   const TrainingSheet({super.key});

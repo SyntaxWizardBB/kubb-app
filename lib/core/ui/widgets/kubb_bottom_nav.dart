@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kubb_app/core/ui/icons.dart';
 import 'package:kubb_app/core/ui/theme/kubb_tokens.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Globale BottomNav-Leiste fuer authentifizierte Top-Level-Sektionen.
 ///
