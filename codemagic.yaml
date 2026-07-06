@@ -2,7 +2,7 @@
 # Docs: https://docs.codemagic.io/yaml-quick-start/building-a-flutter-app/
 #
 # Prerequisites (one-time, in the Codemagic UI / Apple portals):
-#   - App Store Connect API key uploaded to Codemagic, named `CodemagicASC`
+#   - App Store Connect API key uploaded to Codemagic, named `KubClubAppStore`
 #     (Team settings -> Integrations -> App Store Connect).
 #   - App ID `ch.kubbclub.app` registered in the Apple Developer portal, and an
 #     app record created in App Store Connect (required for TestFlight upload).
@@ -14,7 +14,7 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 60
     integrations:
-      app_store_connect: CodemagicASC
+      app_store_connect: KubClubAppStore
     environment:
       ios_signing:
         distribution_type: app_store
