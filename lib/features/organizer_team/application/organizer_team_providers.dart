@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
+import 'package:kubb_app/features/auth/application/cloud_profile_provider.dart';
 import 'package:kubb_app/features/organizer_team/data/organizer_team_models.dart';
 import 'package:kubb_app/features/organizer_team/data/organizer_team_repository.dart';
 import 'package:kubb_domain/kubb_domain.dart';
@@ -34,6 +35,22 @@ final canPublishTournamentProvider = FutureProvider<bool>((ref) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return false;
   return ref.read(organizerTeamRepositoryProvider).callerCanPublish();
+});
+
+/// Gates the "+ Neues Turnier" FAB (M2). True when the caller has the
+/// `can_found_clubs` capability OR an active club role — mirrors the
+/// server-side `caller_can_create_tournament()` that `tournament_create`
+/// enforces. Loading/error resolve to false (fail-closed).
+final canCreateTournamentProvider = Provider<bool>((ref) {
+  final canFound = ref.watch(cloudProfileProvider).maybeWhen(
+        data: (p) => p?.canFoundClubs ?? false,
+        orElse: () => false,
+      );
+  final canPublish = ref.watch(canPublishTournamentProvider).maybeWhen(
+        data: (v) => v,
+        orElse: () => false,
+      );
+  return canFound || canPublish;
 });
 
 /// Gates the home screen "Veranstalter" tile (P4-C, ADR-0032 §4). True when

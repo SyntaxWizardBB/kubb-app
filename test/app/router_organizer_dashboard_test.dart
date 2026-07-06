@@ -6,6 +6,8 @@ import 'package:kubb_app/app/bootstrap.dart';
 import 'package:kubb_app/app/router.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
+import 'package:kubb_app/features/auth/application/cloud_profile_provider.dart';
+import 'package:kubb_app/features/auth/data/cloud_profile_repository.dart';
 import 'package:kubb_app/features/tournament/presentation/organizer_dashboard_detail_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/organizer_dashboard_screen.dart';
 import 'package:kubb_app/features/tournament/presentation/tournament_detail_screen.dart';
@@ -28,6 +30,9 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         appBootstrapProvider.overrideWith((ref) async => null),
+        // M2: an onboarded profile so the onboarding redirect gate stays off.
+        cloudProfileProvider.overrideWith((ref) async =>
+            const CloudProfile(userId: 'test-user', nickname: 'Testuser')),
         authControllerProvider.overrideWith(
           () => _StubAuthController(
             const AuthSession.keypair(userId: 'u1', displayName: 'Lukas'),

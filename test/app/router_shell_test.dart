@@ -9,6 +9,8 @@ import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_bottom_nav.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
+import 'package:kubb_app/features/auth/application/cloud_profile_provider.dart';
+import 'package:kubb_app/features/auth/data/cloud_profile_repository.dart';
 import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/features/training/application/crash_recovery_provider.dart';
 import 'package:kubb_app/features/training/application/recent_sessions_provider.dart';
@@ -69,6 +71,9 @@ void main() {
     return ProviderContainer(
       overrides: [
         appBootstrapProvider.overrideWith((ref) async => null),
+        // M2: an onboarded profile so the onboarding redirect gate stays off.
+        cloudProfileProvider.overrideWith((ref) async =>
+            const CloudProfile(userId: 'test-user', nickname: 'Testuser')),
         authControllerProvider.overrideWith(factory),
         recentSessionsProvider.overrideWith(
           (ref) => Stream.value(const <RecentSessionView>[]),

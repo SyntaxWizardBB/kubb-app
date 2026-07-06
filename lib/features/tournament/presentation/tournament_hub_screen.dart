@@ -33,19 +33,18 @@ class TournamentHubScreen extends ConsumerWidget {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
     final l = AppLocalizations.of(context);
     final t = Theme.of(context).textTheme;
-    // P5: publishing is gated on club role — owner/admin/organizer of any
-    // club — rather than the old global is_organizer flag.
-    final canPublish = ref.watch(canPublishTournamentProvider).maybeWhen(
-          data: (v) => v,
-          orElse: () => false,
-        );
+    // M2: creating is gated on can_found_clubs OR a club role
+    // (owner/admin/organizer) — the same rule the server enforces in
+    // tournament_create. Users with the founder capability but no club yet
+    // now see the FAB too.
+    final canCreate = ref.watch(canCreateTournamentProvider);
 
     return Scaffold(
       backgroundColor: tokens.bg,
       drawer: const KubbDrawer(),
-      // Create entry point for club owners/admins/organizers — the FAB that
-      // used to live on the tournament list now sits on the hub overview.
-      floatingActionButton: canPublish
+      // Create entry point — FAB shown to can_found_clubs holders and club
+      // owners/admins/organizers (canCreateTournamentProvider).
+      floatingActionButton: canCreate
           ? FloatingActionButton.extended(
               onPressed: () =>
                   unawaited(context.push(TournamentRoutes.newTournament)),

@@ -10,12 +10,14 @@ import 'package:kubb_app/features/admin/presentation/admin_user_detail_screen.da
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 import 'package:kubb_app/features/auth/application/auth_providers.dart';
 import 'package:kubb_app/features/auth/application/auth_session.dart';
+import 'package:kubb_app/features/auth/application/cloud_profile_provider.dart';
 import 'package:kubb_app/features/auth/presentation/account_link_screen.dart';
 import 'package:kubb_app/features/auth/presentation/anonymous_signup_flow.dart';
 import 'package:kubb_app/features/auth/presentation/auth_routes.dart';
 import 'package:kubb_app/features/auth/presentation/delete_account_screen.dart';
 import 'package:kubb_app/features/auth/presentation/early_access_entry_screen.dart';
 import 'package:kubb_app/features/auth/presentation/edit_profile_screen.dart';
+import 'package:kubb_app/features/auth/presentation/onboarding_profile_screen.dart';
 import 'package:kubb_app/features/auth/presentation/onboarding_tour.dart';
 import 'package:kubb_app/features/auth/presentation/restore_flow.dart';
 import 'package:kubb_app/features/auth/presentation/sign_in_screen.dart';
@@ -135,6 +137,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthRefresh();
   ref
     ..listen(authControllerProvider, (_, _) => notifier.notify())
+    // M2: re-run the redirect when the cloud profile resolves so a fresh
+    // OAuth user (authenticated, no profile row) is sent to onboarding.
+    ..listen(cloudProfileProvider, (_, _) => notifier.notify())
     ..onDispose(notifier.dispose);
 
   return GoRouter(
@@ -204,6 +209,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         // for creating a profile); restore + sign-in stay reachable from there.
         return _publicRoutes.contains(loc) ? null : AuthRoutes.earlyAccess;
       }
+      // M2: an authenticated user with no user_profiles row (typically a
+      // fresh OAuth login) must pick a nickname before entering the app.
+      // While the profile query is still loading we stay put to avoid a
+      // flicker; the refreshListenable re-runs this once it resolves.
+      final prof = ref.read(cloudProfileProvider);
+      if (prof.hasValue) {
+        final hasProfile = prof.requireValue != null;
+        if (!hasProfile && loc != AuthRoutes.onboardingProfile) {
+          return AuthRoutes.onboardingProfile;
+        }
+        if (hasProfile && loc == AuthRoutes.onboardingProfile) {
+          return '/';
+        }
+      }
       if (loc == AuthRoutes.signIn ||
           loc == AuthRoutes.earlyAccess ||
           loc == AuthRoutes.anonymousSignup ||
@@ -237,6 +256,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AuthRoutes.restore,
         builder: (_, _) => const RestoreFlow(),
+      ),
+      GoRoute(
+        // M2 onboarding: forced nickname/profile step for an authenticated
+        // user without a user_profiles row. Outside the shell (no BottomNav).
+        path: AuthRoutes.onboardingProfile,
+        builder: (_, _) => const OnboardingProfileScreen(),
       ),
       GoRoute(
         path: AuthRoutes.accountLink,

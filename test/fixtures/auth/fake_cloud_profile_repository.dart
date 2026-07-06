@@ -16,6 +16,11 @@ class FakeCloudProfileRepository implements CloudProfileRepository {
 
   int ensureCount = 0;
   int updateCount = 0;
+  int createCount = 0;
+
+  /// Simulates `auth.uid()` for [createProfileForCurrentUser]. Tests set it
+  /// to the user whose onboarding profile is being created.
+  String? currentUserId;
 
   /// Nicknames (lower-cased) that the fake reports as already taken by some
   /// OTHER user. Tests add to this to drive the "name taken" block.
@@ -60,6 +65,23 @@ class FakeCloudProfileRepository implements CloudProfileRepository {
   @override
   Future<CloudProfile?> getProfile({required String userId}) async {
     return _rows[userId];
+  }
+
+  @override
+  Future<void> createProfileForCurrentUser({
+    required String nickname,
+    String? avatarColor,
+  }) async {
+    createCount += 1;
+    if (takenNicknames.contains(nickname.trim().toLowerCase())) {
+      throw const DuplicateNicknameException();
+    }
+    final uid = currentUserId ?? 'current-user';
+    _rows[uid] = CloudProfile(
+      userId: uid,
+      nickname: nickname,
+      avatarColor: avatarColor,
+    );
   }
 
   @override

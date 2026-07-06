@@ -20,6 +20,7 @@ class CloudProfile {
     this.visibility = ProfileVisibility.friendsOnly,
     this.isOrganizer = true,
     this.isAdmin = false,
+    this.canFoundClubs = false,
   });
 
   final String userId;
@@ -45,6 +46,12 @@ class CloudProfile {
   /// predates the column resolves to non-admin.
   final bool isAdmin;
 
+  /// Whether the user may found organizer teams AND create tournaments
+  /// (M2). Granted by an admin (or the legacy early-access organizer code);
+  /// defaults to `false`. Combined with the club-role check in
+  /// `canCreateTournamentProvider` to gate the "+ Neues Turnier" FAB.
+  final bool canFoundClubs;
+
   CloudProfile copyWith({
     String? userId,
     String? nickname,
@@ -53,6 +60,7 @@ class CloudProfile {
     ProfileVisibility? visibility,
     bool? isOrganizer,
     bool? isAdmin,
+    bool? canFoundClubs,
   }) {
     return CloudProfile(
       userId: userId ?? this.userId,
@@ -62,6 +70,7 @@ class CloudProfile {
       visibility: visibility ?? this.visibility,
       isOrganizer: isOrganizer ?? this.isOrganizer,
       isAdmin: isAdmin ?? this.isAdmin,
+      canFoundClubs: canFoundClubs ?? this.canFoundClubs,
     );
   }
 }
@@ -82,6 +91,15 @@ abstract class CloudProfileRepository {
 
   /// Reads the current row for [userId], or null if no row exists yet.
   Future<CloudProfile?> getProfile({required String userId});
+
+  /// Creates the CURRENT (authenticated) user's profile with [nickname]
+  /// (M2 OAuth/onboarding path) via the SECURITY DEFINER RPC
+  /// `profile_create_for_current_user`. `can_found_clubs` starts false.
+  /// Throws [DuplicateNicknameException] when the name is already taken.
+  Future<void> createProfileForCurrentUser({
+    required String nickname,
+    String? avatarColor,
+  });
 
   /// Whether [nickname] is free to use. Case- and whitespace-insensitive;
   /// excludes the caller's own current nickname server-side so re-saving an

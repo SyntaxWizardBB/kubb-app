@@ -35,12 +35,34 @@ class CloudProfileRepositoryImpl implements CloudProfileRepository {
         .from('user_profiles')
         .select(
           'user_id, nickname, avatar_color, onboarding_completed, '
-          'profile_visibility, is_organizer, is_admin',
+          'profile_visibility, is_organizer, is_admin, can_found_clubs',
         )
         .eq('user_id', userId)
         .limit(1);
     if (rows.isEmpty) return null;
     return _fromRow(rows.first);
+  }
+
+  @override
+  Future<void> createProfileForCurrentUser({
+    required String nickname,
+    String? avatarColor,
+  }) async {
+    try {
+      await _client.rpc<void>(
+        'profile_create_for_current_user',
+        params: <String, dynamic>{
+          'p_nickname': nickname,
+          'p_avatar_color': avatarColor,
+        },
+      );
+    } on PostgrestException catch (e) {
+      // citext UNIQUE on nickname surfaces as 23505 when the name is taken.
+      if (e.code == '23505') {
+        throw const DuplicateNicknameException();
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -123,6 +145,8 @@ class CloudProfileRepositoryImpl implements CloudProfileRepository {
       isOrganizer: (row['is_organizer'] as bool?) ?? true,
       // Defaults to false — admin is opt-in and update-RPC envelopes omit it.
       isAdmin: (row['is_admin'] as bool?) ?? false,
+      // Defaults to false — granted by an admin; omitted by update RPCs.
+      canFoundClubs: (row['can_found_clubs'] as bool?) ?? false,
     );
   }
 }
