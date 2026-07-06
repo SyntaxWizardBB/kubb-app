@@ -118,12 +118,24 @@ class _Body extends ConsumerWidget {
     // lifecycle/update RPC, so this only governs button visibility.
     final canManage = isCreator ||
         ref.watch(canManageTournamentClubProvider(detail.tournament.clubId));
+    // "me" = the registration this user belongs to. Registrant match wins;
+    // otherwise any ACTIVE roster slot counts (team registrations belong to
+    // the whole roster, not just whoever tapped "register" — withdraw and
+    // matches must work for every selected player).
     TournamentParticipant? me;
     if (myUserId != null) {
       for (final p in detail.participants) {
         if (p.userId == myUserId) {
           me = p;
           break;
+        }
+      }
+      if (me == null) {
+        for (final p in detail.participants) {
+          if (p.rosterMemberIds.contains(myUserId)) {
+            me = p;
+            break;
+          }
         }
       }
     }

@@ -159,6 +159,22 @@ class _State extends ConsumerState<RegisterTeamScreen> {
                         color: t.fg)),
               ),
             ]),
+            // The confirmation must state WHICH team was registered, not
+            // only the tournament and the roster names.
+            if (_selectedTeam != null) ...[
+              const SizedBox(height: KubbTokens.space2),
+              Row(children: [
+                Icon(Icons.groups, size: 16, color: t.fgMuted),
+                const SizedBox(width: KubbTokens.space2),
+                Expanded(
+                  child: Text(_selectedTeam!.displayName,
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: t.fg)),
+                ),
+              ]),
+            ],
             const SizedBox(height: KubbTokens.space3),
             Text(l.tournamentTeamRegisteredMembers,
                 style: TextStyle(fontSize: 13, color: t.fgMuted)),

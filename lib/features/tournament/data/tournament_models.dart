@@ -243,6 +243,12 @@ TournamentParticipant tournamentParticipantFromRow(Map<String, dynamic> row) {
     userId: row['user_id'] as String?,
     nickname: row['nickname'] as String?,
     displayName: row['display_name'] as String?,
+    // Team fields + active roster (20261332000000). Tolerant decode: older
+    // RPC payloads omit them -> null / const [].
+    teamId: row['team_id'] as String?,
+    teamDisplayName: row['team_display_name'] as String?,
+    rosterMemberIds:
+        (row['roster_member_ids'] as List?)?.cast<String>() ?? const [],
     registrationStatus: TournamentParticipantStatusWire.fromWire(
         row['registration_status'] as String),
     seed: _asIntOrNull(row['seed']),
@@ -408,6 +414,10 @@ TournamentParticipant tournamentParticipantFromCdcRow(Map<String, Object?> row) 
     userId: row['user_id'] as String?,
     nickname: row['nickname'] as String?,
     displayName: row['display_name'] as String?,
+    // Raw table column: team_id ships on the CDC wire; the joined team
+    // name and roster projection do not (the realtime provider only uses
+    // the row to invalidate the detail read, which re-projects them).
+    teamId: row['team_id'] as String?,
     registrationStatus: TournamentParticipantStatusWire.fromWire(
         row['registration_status']! as String),
     seed: _asIntOrNull(row['seed']),

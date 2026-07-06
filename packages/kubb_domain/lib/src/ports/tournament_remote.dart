@@ -245,11 +245,18 @@ class MyTournamentRegistration {
     required this.tournament,
     required this.participantId,
     required this.status,
+    this.teamDisplayName,
   });
 
   final TournamentSummaryRef tournament;
   final TournamentParticipantId participantId;
   final TournamentParticipantStatus status;
+
+  /// Name of the registered team; NULL for a solo registration. Projected
+  /// by `tournament_list_my_registrations` since `20261332000000` so the
+  /// list can say WHICH team is registered (roster members see team
+  /// registrations they did not create themselves).
+  final String? teamDisplayName;
 
   @override
   bool operator ==(Object other) =>
@@ -257,10 +264,12 @@ class MyTournamentRegistration {
       other is MyTournamentRegistration &&
           other.tournament == tournament &&
           other.participantId == participantId &&
-          other.status == status;
+          other.status == status &&
+          other.teamDisplayName == teamDisplayName;
 
   @override
-  int get hashCode => Object.hash(tournament, participantId, status);
+  int get hashCode =>
+      Object.hash(tournament, participantId, status, teamDisplayName);
 }
 
 /// Read-side snapshot of one tournament match. `participantB` is `null` for
@@ -494,11 +503,35 @@ class TournamentParticipant {
     required this.respondedAt,
     this.displayName,
     this.checkedInAt,
+    this.teamId,
+    this.teamDisplayName,
+    this.rosterMemberIds = const [],
   });
 
   final String participantId;
   final String? userId;
   final String? nickname;
+
+  /// Team behind this registration; NULL for a solo participant. Projected
+  /// by `tournament_get` since `20261332000000`.
+  final String? teamId;
+
+  /// The registered team's display name (`teams.display_name`); NULL for a
+  /// solo participant.
+  final String? teamDisplayName;
+
+  /// Active roster members (`tournament_roster_slots.member_user_id` with
+  /// `replaced_at IS NULL`). Every listed player manages this registration
+  /// like the registrant (withdraw, matches) — "me" gates match on this
+  /// set, not only on [userId]. Empty for solo rows and for older RPC
+  /// payloads that don't project it.
+  final List<String> rosterMemberIds;
+
+  /// True when [userId] is the given user OR the user sits on the active
+  /// roster — the single membership test manage/matches surfaces use.
+  bool belongsToUser(String? candidate) =>
+      candidate != null &&
+      (userId == candidate || rosterMemberIds.contains(candidate));
 
   /// Server-projected display name for this participant — single source
   /// for the four UI surfaces that previously fell back to UUID

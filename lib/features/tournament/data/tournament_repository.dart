@@ -269,6 +269,8 @@ class TournamentRepository implements TournamentRemote {
         status: _registrationStatusFromWire(
           row['registration_status']! as String,
         ),
+        // Projected since 20261332000000; older payloads omit it.
+        teamDisplayName: row['team_display_name'] as String?,
       );
     }).toList(growable: false);
   }

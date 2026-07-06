@@ -79,12 +79,24 @@ class TournamentRegistrationsScreen extends ConsumerWidget {
                     children: [
                       // Auto-confirmed model: surface the caller's standing
                       // ("Angemeldet" vs "Auf Warteliste") instead of any
-                      // pending/awaiting-confirmation framing.
-                      Text(
-                        reg.status == TournamentParticipantStatus.waitlist
-                            ? l.tournamentDetailStatusWaitlist
-                            : l.tournamentDetailStatusConfirmed,
-                        style: TextStyle(fontSize: 12, color: tokens.fgMuted),
+                      // pending/awaiting-confirmation framing. For a team
+                      // registration the row must say WHICH team is in —
+                      // roster members also see registrations they did not
+                      // create themselves.
+                      Expanded(
+                        child: Text(
+                          [
+                            if (reg.status ==
+                                TournamentParticipantStatus.waitlist)
+                              l.tournamentDetailStatusWaitlist
+                            else
+                              l.tournamentDetailStatusConfirmed,
+                            if (reg.teamDisplayName != null)
+                              reg.teamDisplayName!,
+                          ].join(' · '),
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 12, color: tokens.fgMuted),
+                        ),
                       ),
                       const Spacer(),
                       TextButton.icon(
