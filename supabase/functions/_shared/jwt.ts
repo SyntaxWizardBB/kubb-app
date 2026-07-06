@@ -124,3 +124,56 @@ export async function mintKeypairToken(
 
   return { accessToken, expiresAt, issuer };
 }
+
+// Short lifetime for impersonation: an admin acting as another user gets a
+// deliberately brief, non-refreshable window (M1 §2.2).
+const IMPERSONATION_TTL_SECONDS = 900; // 15 min
+
+export interface MintImpersonationTokenOptions {
+  userId: string; // the impersonated (target) user
+  nickname: string;
+  impersonatorId: string; // the admin acting as the target
+}
+
+// Mint a session token for `userId` that carries a top-level
+// `impersonator_id` claim so the client can render the mandatory
+// "you are acting as …" banner and offer an exit. Same HS256 shape as
+// mintKeypairToken but short-lived and without any refresh path.
+export async function mintImpersonationToken(
+  secret: Uint8Array,
+  supabaseUrl: string,
+  options: MintImpersonationTokenOptions,
+): Promise<MintedKeypairToken> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    secret,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+
+  const now = Math.floor(Date.now() / 1000);
+  const expiresAt = now + IMPERSONATION_TTL_SECONDS;
+  const issuer = `${supabaseUrl}/auth/v1`;
+
+  const accessToken = await jwtCreate(
+    { alg: "HS256", typ: "JWT" },
+    {
+      sub: options.userId,
+      aud: "authenticated",
+      role: "authenticated",
+      iss: issuer,
+      iat: now,
+      exp: expiresAt,
+      session_id: crypto.randomUUID(),
+      app_metadata: { provider: "impersonation", providers: ["impersonation"] },
+      user_metadata: { nickname: options.nickname },
+      // Read by the client to show the impersonation banner + exit.
+      impersonator_id: options.impersonatorId,
+      is_anonymous: false,
+    },
+    key,
+  );
+
+  return { accessToken, expiresAt, issuer };
+}

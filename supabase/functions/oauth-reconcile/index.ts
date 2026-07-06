@@ -183,6 +183,20 @@ serve(async (req: Request) => {
 
   const keypairUserId = credentialRow.data.user_id as string;
 
+  // Suspension gate (M1 §2.4): a suspended account may neither link nor mint.
+  const suspendRow = await supabase
+    .from("user_profiles")
+    .select("suspended_at")
+    .eq("user_id", keypairUserId)
+    .maybeSingle();
+  if (suspendRow.error) {
+    console.error("suspension lookup failed", suspendRow.error);
+    return jsonResponse(500, { error: "profile_lookup_failed" });
+  }
+  if (suspendRow.data?.suspended_at != null) {
+    return jsonResponse(403, { error: "account_suspended" });
+  }
+
   // Single-use: drop the challenge so a replay is impossible.
   await supabase
     .from("keypair_challenges")

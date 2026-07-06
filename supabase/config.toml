@@ -102,3 +102,11 @@ verify_jwt = true
 # (signed challenge + GoTrue-validated OAuth token), not via the request
 # JWT.
 verify_jwt = false
+
+[functions.admin-impersonate]
+# Admin mints a short-lived token to act as another user (M1). JWT
+# verification stays OFF at the gateway on purpose: keypair sessions are
+# self-minted HS256 tokens that the ES256-issuing gateway may reject. The
+# function does its own auth — getUser() validates the caller's token and
+# caller_is_admin() enforces admin+non-suspended against the DB.
+verify_jwt = false

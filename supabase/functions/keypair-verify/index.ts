@@ -230,13 +230,17 @@ serve(async (req: Request) => {
 
   const profileRow = await supabase
     .from("user_profiles")
-    .select("nickname")
+    .select("nickname, suspended_at")
     .eq("user_id", userId)
     .maybeSingle();
 
   if (profileRow.error) {
     console.error("user_profiles lookup failed", profileRow.error);
     return jsonResponse(500, { error: "profile_lookup_failed" });
+  }
+  // Suspension gate (M1 §2.4): a suspended account may never mint a token.
+  if (profileRow.data?.suspended_at != null) {
+    return jsonResponse(403, { error: "account_suspended" });
   }
   const nickname = (profileRow.data?.nickname as string | undefined) ?? "";
 
