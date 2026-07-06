@@ -152,6 +152,15 @@ abstract class SupabaseAuthAdapter {
     required String password,
   });
 
+  /// Writes the chosen [nickname] into the current session's user_metadata
+  /// so `session.displayName` — and every UI surface derived from it (home
+  /// greeting, drawer, profile) — reflects it. Used by the M2 OAuth
+  /// onboarding so an OAuth account shows the picked player name everywhere,
+  /// identical to the keypair/anon path (which seeds user_metadata via
+  /// [attachKeypair]). GoTrue's Google/Apple providers never populate a
+  /// `nickname` key themselves, so without this the display name stays empty.
+  Future<AuthAdapterState> updateNickname(String nickname);
+
   /// Attaches a keypair credential to the currently-authenticated user
   /// (anonymous or otherwise) and seeds the user-profile row with the
   /// chosen [nickname]. Returns the resulting state — typically the

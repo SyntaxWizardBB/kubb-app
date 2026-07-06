@@ -107,6 +107,20 @@ class SupabaseAuthAdapterImpl implements SupabaseAuthAdapter {
   }
 
   @override
+  Future<AuthAdapterState> updateNickname(String nickname) async {
+    // Mirror the chosen nickname into user_metadata so `_stateFromSession`
+    // resolves it into the session display name — same mechanism the keypair
+    // path uses via attachKeypair. GoTrue never writes `nickname` for OAuth
+    // providers, so an OAuth onboarding must set it explicitly here.
+    await _client.auth.updateUser(
+      UserAttributes(data: <String, dynamic>{'nickname': nickname}),
+    );
+    _state = _stateFromSession(_client.auth.currentSession);
+    _controller.add(_state);
+    return _state;
+  }
+
+  @override
   Future<AuthAdapterState> attachKeypair({
     required String nickname,
     required List<int> publicKey,

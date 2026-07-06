@@ -53,6 +53,13 @@ class _OnboardingProfileScreenState
       await ref
           .read(cloudProfileRepositoryProvider)
           .createProfileForCurrentUser(nickname: _nickname);
+      // Mirror the chosen name into the session's user_metadata so
+      // `session.displayName` / displayProfileProvider — home greeting,
+      // drawer, profile — show the picked player name everywhere, identical
+      // to the keypair/anon setup. A fresh OAuth session carries no
+      // `nickname` key (Google/Apple never set one), so without this the
+      // display name stays empty while server surfaces show the real name.
+      await ref.read(supabaseAuthAdapterProvider).updateNickname(_nickname);
       ref.invalidate(cloudProfileProvider);
       if (mounted) router.go('/');
     } on DuplicateNicknameException {

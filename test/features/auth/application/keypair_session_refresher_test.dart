@@ -364,6 +364,10 @@ class _StubAdapter implements SupabaseAuthAdapter {
       throw UnimplementedError('not used by refresher');
 
   @override
+  Future<AuthAdapterState> updateNickname(String nickname) =>
+      throw UnimplementedError('not used by refresher');
+
+  @override
   Future<AuthAdapterState> attachKeypair({
     required String nickname,
     required List<int> publicKey,
