@@ -349,6 +349,21 @@ class _StubAdapter implements SupabaseAuthAdapter {
       throw UnimplementedError('not used by refresher');
 
   @override
+  Future<AuthAdapterState> setEmailPassword({
+    required String email,
+    required String password,
+    required String nickname,
+  }) =>
+      throw UnimplementedError('not used by refresher');
+
+  @override
+  Future<AuthAdapterState> signInWithPassword({
+    required String email,
+    required String password,
+  }) =>
+      throw UnimplementedError('not used by refresher');
+
+  @override
   Future<AuthAdapterState> attachKeypair({
     required String nickname,
     required List<int> publicKey,

@@ -5,10 +5,12 @@ abstract final class AuthRoutes {
   static const earlyAccess = '/sign-in/early-access';
   static const anonymousSignup = '/sign-in/anonymous';
   static const restore = '/sign-in/restore';
+  static const passwordLogin = '/sign-in/password';
   static const onboardingProfile = '/onboarding/profile';
   static const accountLink = '/sign-in/account-link';
   static const deleteAccount = '/sign-in/delete';
   static const onboardingTour = '/onboarding-tour';
   static const editProfile = '/profile/edit';
+  static const setPassword = '/profile/password';
   static const inbox = '/inbox';
 }

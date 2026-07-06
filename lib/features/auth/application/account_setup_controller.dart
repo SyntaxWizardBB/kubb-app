@@ -91,6 +91,7 @@ class AccountSetupController extends Notifier<AccountSetupState> {
     required String nickname,
     required String mnemonic,
     required String earlyAccessCode,
+    required String password,
     String? avatarColor,
   }) async {
     state = const AccountSetupState.submitting();
@@ -102,6 +103,18 @@ class AccountSetupController extends Notifier<AccountSetupState> {
     try {
       telemetry.signinAttempt(kind: 'keypair');
       await adapter.signInAnonymously();
+
+      // M3: set a synthetic email + password on the fresh anon session
+      // (converts it to permanent) before attaching the keypair, so the
+      // account has both a password login and the passphrase recovery.
+      final anonUserId = adapter.currentState.userId;
+      if (anonUserId != null && password.isNotEmpty) {
+        await adapter.setEmailPassword(
+          email: '$anonUserId@login.kubbclub.ch',
+          password: password,
+          nickname: nickname,
+        );
+      }
 
       final keypair = await crypto.keypairFromMnemonic(mnemonic);
       await adapter.attachKeypair(

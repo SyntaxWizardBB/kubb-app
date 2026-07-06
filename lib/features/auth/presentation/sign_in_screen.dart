@@ -90,6 +90,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     await GoRouter.of(context).push<void>(AuthRoutes.restore);
   }
 
+  Future<void> _onPickPassword() async {
+    await GoRouter.of(context).push<void>(AuthRoutes.passwordLogin);
+  }
+
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).extension<KubbTokens>()!;
@@ -153,6 +157,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                             onPressed: _onPickAnonymous,
                           ),
                           const SizedBox(height: KubbTokens.space2),
+                          TextButton(
+                            onPressed: _onPickPassword,
+                            style: TextButton.styleFrom(
+                              foregroundColor: tokens.primary,
+                            ),
+                            child: const Text('Mit Passwort anmelden'),
+                          ),
                           TextButton(
                             onPressed: _onPickRestore,
                             style: TextButton.styleFrom(

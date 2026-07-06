@@ -19,7 +19,9 @@ import 'package:kubb_app/features/auth/presentation/early_access_entry_screen.da
 import 'package:kubb_app/features/auth/presentation/edit_profile_screen.dart';
 import 'package:kubb_app/features/auth/presentation/onboarding_profile_screen.dart';
 import 'package:kubb_app/features/auth/presentation/onboarding_tour.dart';
+import 'package:kubb_app/features/auth/presentation/password_login_screen.dart';
 import 'package:kubb_app/features/auth/presentation/restore_flow.dart';
+import 'package:kubb_app/features/auth/presentation/set_password_screen.dart';
 import 'package:kubb_app/features/auth/presentation/sign_in_screen.dart';
 import 'package:kubb_app/features/inbox/application/inbox_controller.dart';
 import 'package:kubb_app/features/inbox/presentation/archive_screen.dart';
@@ -121,6 +123,7 @@ const _publicRoutes = <String>{
   '/sign-in/early-access',
   '/sign-in/anonymous',
   '/sign-in/restore',
+  '/sign-in/password',
   '/onboarding-tour',
   '/legal/privacy',
   '/legal/imprint',
@@ -226,7 +229,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       if (loc == AuthRoutes.signIn ||
           loc == AuthRoutes.earlyAccess ||
           loc == AuthRoutes.anonymousSignup ||
-          loc == AuthRoutes.restore) {
+          loc == AuthRoutes.restore ||
+          loc == AuthRoutes.passwordLogin) {
         return '/';
       }
       return null;
@@ -256,6 +260,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AuthRoutes.restore,
         builder: (_, _) => const RestoreFlow(),
+      ),
+      GoRoute(
+        // M3 password login (nickname + password). Public, outside the shell.
+        path: AuthRoutes.passwordLogin,
+        builder: (_, _) => const PasswordLoginScreen(),
       ),
       GoRoute(
         // M2 onboarding: forced nickname/profile step for an authenticated
@@ -429,6 +438,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                       ? AdminUserDetailScreen(row: row)
                       : const AdminDashboardScreen();
                 },
+              ),
+              GoRoute(
+                // M3: set/change the login password (from Settings → Konto).
+                path: AuthRoutes.setPassword,
+                builder: (_, _) => const SetPasswordScreen(),
               ),
               GoRoute(
                 // Meine Vereine (P5): Liste, Gründen (Code-gated) und Detail.

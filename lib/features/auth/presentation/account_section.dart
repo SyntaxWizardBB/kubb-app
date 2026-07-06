@@ -85,6 +85,15 @@ class AccountSection extends ConsumerWidget {
                     AuthRoutes.accountLink,
                   ),
                 ),
+              // M3: set/change the login password (nickname + password).
+              _NavRow(
+                icon: Icons.password,
+                label: 'Passwort setzen',
+                sub: 'Login mit Spielername + Passwort',
+                onTap: () => GoRouter.of(context).push<void>(
+                  AuthRoutes.setPassword,
+                ),
+              ),
               // Postfach + Erfolge live in the drawer, not in settings (P7).
               _NavRow(
                 icon: Icons.logout,

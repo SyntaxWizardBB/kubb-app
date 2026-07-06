@@ -119,11 +119,29 @@ void main() {
   );
 
   test(
-    'keypair cache without private key in secure storage is unrecoverable',
+    'keypair cache without private key falls back to refreshSession '
+    '(M3 password-only device)',
     () async {
       await seedCache(kind: 'keypair');
-      adapter.wireAccessTokenOverride = null;
-      // No private key seeded — cache says keypair, storage disagrees.
+      adapter
+        ..wireAccessTokenOverride = null
+        ..refreshTokenResult = 'refreshed-wire-token';
+      // No private key (password-only device) — recover via GoTrue refresh.
+
+      final result = await container.read(ensureWireSessionProvider)();
+
+      expect(result, WireSessionOutcome.oauthRefreshed);
+      expect(adapter.refreshSessionCount, 1);
+    },
+  );
+
+  test(
+    'keypair cache without private key AND failing refresh is unrecoverable',
+    () async {
+      await seedCache(kind: 'keypair');
+      adapter
+        ..wireAccessTokenOverride = null
+        ..throwOnNextCall = StateError('no refresh token');
 
       final result = await container.read(ensureWireSessionProvider)();
 

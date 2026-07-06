@@ -72,6 +72,41 @@ class SupabaseAuthAdapterImpl implements SupabaseAuthAdapter {
   }
 
   @override
+  Future<AuthAdapterState> setEmailPassword({
+    required String email,
+    required String password,
+    required String nickname,
+  }) async {
+    // Converts the anon user to permanent with a synthetic email + password.
+    // The nickname rides in user_metadata so display survives a cold
+    // signInWithPassword. Confirmations are OFF (config), so no mail is sent.
+    await _client.auth.updateUser(
+      UserAttributes(
+        email: email,
+        password: password,
+        data: <String, dynamic>{'nickname': nickname},
+      ),
+    );
+    _state = _stateFromSession(_client.auth.currentSession);
+    _controller.add(_state);
+    return _state;
+  }
+
+  @override
+  Future<AuthAdapterState> signInWithPassword({
+    required String email,
+    required String password,
+  }) async {
+    final response = await _client.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+    _state = _stateFromSession(response.session);
+    _controller.add(_state);
+    return _state;
+  }
+
+  @override
   Future<AuthAdapterState> attachKeypair({
     required String nickname,
     required List<int> publicKey,

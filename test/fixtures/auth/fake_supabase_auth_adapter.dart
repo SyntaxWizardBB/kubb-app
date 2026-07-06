@@ -135,6 +135,52 @@ class FakeSupabaseAuthAdapter implements SupabaseAuthAdapter {
     return _state;
   }
 
+  int setEmailPasswordCount = 0;
+  int signInWithPasswordCount = 0;
+  String? lastPasswordEmail;
+
+  @override
+  Future<AuthAdapterState> setEmailPassword({
+    required String email,
+    required String password,
+    required String nickname,
+  }) async {
+    _maybeThrow();
+    setEmailPasswordCount += 1;
+    lastPasswordEmail = email;
+    if (_state.userId == null) {
+      throw StateError('setEmailPassword requires an active session');
+    }
+    // Anon -> permanent: keep the user_id, drop the anonymous kind.
+    _emit(AuthAdapterState(
+      userId: _state.userId,
+      kind: AuthAdapterKind.keypair,
+      expiresAt: _state.expiresAt,
+      refreshAfter: _state.refreshAfter,
+      nickname: nickname,
+    ));
+    return _state;
+  }
+
+  @override
+  Future<AuthAdapterState> signInWithPassword({
+    required String email,
+    required String password,
+  }) async {
+    _maybeThrow();
+    signInWithPasswordCount += 1;
+    lastPasswordEmail = email;
+    final now = DateTime.now().toUtc();
+    _emit(AuthAdapterState(
+      userId: 'fake-pw-user',
+      kind: AuthAdapterKind.keypair,
+      expiresAt: now.add(const Duration(hours: 1)),
+      refreshAfter: now.add(const Duration(minutes: 50)),
+      nickname: 'pwuser',
+    ));
+    return _state;
+  }
+
   @override
   Future<AuthAdapterState> attachKeypair({
     required String nickname,

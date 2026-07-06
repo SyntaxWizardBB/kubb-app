@@ -134,6 +134,24 @@ abstract class SupabaseAuthAdapter {
   /// signInAnonymously. Required before [attachKeypair].
   Future<AuthAdapterState> signInAnonymously();
 
+  /// M3: sets a synthetic email + password on the CURRENT (typically
+  /// anonymous) session, converting it to a permanent GoTrue user. The
+  /// [nickname] is written to user_metadata so a later [signInWithPassword]
+  /// on a fresh device still shows a display name.
+  Future<AuthAdapterState> setEmailPassword({
+    required String email,
+    required String password,
+    required String nickname,
+  });
+
+  /// M3: signs in with a synthetic email + password (GoTrue-native). The
+  /// email is resolved from the nickname via the
+  /// `password_login_email_for_nickname` RPC before this call.
+  Future<AuthAdapterState> signInWithPassword({
+    required String email,
+    required String password,
+  });
+
   /// Attaches a keypair credential to the currently-authenticated user
   /// (anonymous or otherwise) and seeds the user-profile row with the
   /// chosen [nickname]. Returns the resulting state — typically the

@@ -112,10 +112,23 @@ Future<WireSessionOutcome> ensureWireSession(Ref ref, {bool force = false}) asyn
       final keypair = ref.read(keypairStorageProvider);
       final privateKey = await keypair.load();
       if (privateKey == null) {
-        _wireSessionLog.warning(
-          'wire re-sign skipped: keypair cached but private key missing',
-        );
-        return WireSessionOutcome.unrecoverable;
+        // M3: a device that signed in with password only (no mnemonic) has
+        // no private key, but its GoTrue session carries a real refresh
+        // token. Recover via the standard refresh path instead of a keypair
+        // re-sign (which would need the missing seed).
+        try {
+          _wireSessionLog.info(
+            'wire re-sign: keypair cache without private key — '
+            'trying GoTrue refresh (password session)',
+          );
+          await adapter.refreshSession();
+          return WireSessionOutcome.oauthRefreshed;
+        } on Object catch (e, st) {
+          _wireSessionLog.warning(
+            'wire re-sign skipped: no private key and refresh failed', e, st,
+          );
+          return WireSessionOutcome.unrecoverable;
+        }
       }
       try {
         _wireSessionLog.info(

@@ -36,17 +36,22 @@ class AnonymousSignupFlow extends ConsumerStatefulWidget {
 class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
   _Step _step = _Step.nickname;
   String _nickname = '';
+  String _password = '';
   int _wordCount = 12;
   bool _ack = false;
   bool _submitting = false;
   String? _error;
 
-  void _toMnemonicStep(String nickname) {
+  void _toPasswordStep(String nickname) {
     setState(() {
       _nickname = nickname;
+      _step = _Step.password;
     });
+  }
+
+  void _toMnemonicStep() {
     ref.read(accountSetupControllerProvider.notifier).generateMnemonic(
-          nickname: nickname,
+          nickname: _nickname,
           wordCount: _wordCount,
         );
     setState(() => _step = _Step.mnemonic);
@@ -85,6 +90,7 @@ class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
           nickname: _nickname,
           mnemonic: mnemonic,
           earlyAccessCode: widget.earlyAccessCode,
+          password: _password,
         );
     if (!mounted) return;
     final result = ref.read(accountSetupControllerProvider);
@@ -102,6 +108,8 @@ class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
     setState(() {
       switch (_step) {
         case _Step.mnemonic:
+          _step = _Step.password;
+        case _Step.password:
           _step = _Step.nickname;
         case _Step.nickname:
         case _Step.success:
@@ -125,6 +133,7 @@ class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
     final stepIdx = _step.index;
     final title = switch (_step) {
       _Step.nickname => l10n.authSignupNicknameTitle,
+      _Step.password => 'Passwort wählen',
       _Step.mnemonic => 'Mnemonic-Phrase',
       _Step.success => l10n.authSignupSuccessTitle,
     };
@@ -142,7 +151,7 @@ class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
           children: [
             WizardHeader(
               step: stepIdx,
-              total: 3,
+              total: 4,
               eyebrow: l10n.authSignupEyebrow,
               title: title,
               onBack: stepIdx > 0 && _step != _Step.success ? _back : null,
@@ -154,7 +163,13 @@ class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
                   horizontal: KubbTokens.space6,
                 ),
                 child: switch (_step) {
-                  _Step.nickname => _NicknameStep(onContinue: _toMnemonicStep),
+                  _Step.nickname => _NicknameStep(onContinue: _toPasswordStep),
+                  _Step.password => _PasswordStep(
+                      onContinue: (pw) {
+                        setState(() => _password = pw);
+                        _toMnemonicStep();
+                      },
+                    ),
                   _Step.mnemonic => _MnemonicStep(
                       mnemonic: mnemonic,
                       wordCount: _wordCount,
@@ -177,7 +192,88 @@ class _AnonymousSignupFlowState extends ConsumerState<AnonymousSignupFlow> {
   }
 }
 
-enum _Step { nickname, mnemonic, success }
+enum _Step { nickname, password, mnemonic, success }
+
+/// M3 signup password step: choose a login password (min 8, confirmed).
+/// The passphrase remains the recovery key; this is the convenient
+/// day-to-day login. Advances to the mnemonic step on continue.
+class _PasswordStep extends StatefulWidget {
+  const _PasswordStep({required this.onContinue});
+
+  final ValueChanged<String> onContinue;
+
+  @override
+  State<_PasswordStep> createState() => _PasswordStepState();
+}
+
+class _PasswordStepState extends State<_PasswordStep> {
+  final _pw = TextEditingController();
+  final _confirm = TextEditingController();
+  bool _obscure = true;
+
+  @override
+  void dispose() {
+    _pw.dispose();
+    _confirm.dispose();
+    super.dispose();
+  }
+
+  bool get _valid => _pw.text.length >= 8 && _pw.text == _confirm.text;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = Theme.of(context).extension<KubbTokens>()!;
+    final mismatch = _confirm.text.isNotEmpty && _pw.text != _confirm.text;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: KubbTokens.space4),
+        Text(
+          'Wähle ein Passwort für den Login mit deinem Namen. '
+          'Die Wiederherstellungs-Phrase bleibt dein Notfall-Schlüssel.',
+          style: TextStyle(color: tokens.fgMuted),
+        ),
+        const SizedBox(height: KubbTokens.space4),
+        TextField(
+          controller: _pw,
+          obscureText: _obscure,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            labelText: 'Passwort',
+            helperText: 'Mindestens 8 Zeichen',
+            suffixIcon: IconButton(
+              icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+              onPressed: () => setState(() => _obscure = !_obscure),
+            ),
+          ),
+        ),
+        const SizedBox(height: KubbTokens.space3),
+        TextField(
+          controller: _confirm,
+          obscureText: _obscure,
+          onChanged: (_) => setState(() {}),
+          decoration: const InputDecoration(labelText: 'Passwort wiederholen'),
+        ),
+        if (mismatch)
+          const Padding(
+            padding: EdgeInsets.only(top: 6, left: 2),
+            child: Text('Die Passwörter stimmen nicht überein.',
+                style: TextStyle(fontSize: 12, color: KubbTokens.miss)),
+          ),
+        const Spacer(),
+        FilledButton(
+          onPressed: _valid ? () => widget.onContinue(_pw.text) : null,
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+            backgroundColor: KubbTokens.meadow500,
+          ),
+          child: const Text('Weiter'),
+        ),
+        const SizedBox(height: KubbTokens.space4),
+      ],
+    );
+  }
+}
 
 class _NicknameStep extends ConsumerStatefulWidget {
   const _NicknameStep({required this.onContinue});
