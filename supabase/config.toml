@@ -51,11 +51,13 @@ jwt_expiry = 3600
 enable_signup = true
 enable_anonymous_sign_ins = true
 
-# Disable email-based signup paths — ADR-0010 removes magic-link entirely.
-# OAuth providers are wired in below; keypair flow runs through custom
-# Postgres functions (M2-T03/T04), not through GoTrue.
+# M3: email+password IS used — but only with SYNTHETIC, user_id-bound
+# addresses (<user_id>@login.kubbclub.ch), never a real inbox. The user
+# types a nickname; the client resolves it to the synthetic address and
+# calls signInWithPassword. Confirmations MUST stay OFF (no deliverable
+# mailbox). Magic-link/OTP stay off (ADR-0010). Same settings on prod.
 [auth.email]
-enable_signup = false
+enable_signup = true
 double_confirm_changes = false
 enable_confirmations = false
 
