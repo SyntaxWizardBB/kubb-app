@@ -8,6 +8,7 @@ import 'package:kubb_app/core/ui/theme/kubb_theme.dart';
 import 'package:kubb_app/core/ui/theme/theme_choice.dart';
 import 'package:kubb_app/core/ui/widgets/kubb_offline_banner.dart';
 import 'package:kubb_app/features/admin/presentation/widgets/impersonation_banner.dart';
+import 'package:kubb_app/features/auth/application/nickname_self_heal_provider.dart';
 import 'package:kubb_app/features/notifications/application/push_notifications_provider.dart';
 import 'package:kubb_app/l10n/generated/app_localizations.dart';
 import 'package:logging/logging.dart';
@@ -94,9 +95,14 @@ class _KubbAppState extends ConsumerState<KubbApp> {
         return _bootstrapShell(config, const _BootstrapErrorScreen());
       },
       data: (_) {
-        // Keep the FCM token lifecycle alive for the app's lifetime
-        // (register on login / refresh, unregister on sign-out).
-        ref.watch(pushNotificationsProvider);
+        ref
+          // Keep the FCM token lifecycle alive for the app's lifetime
+          // (register on login / refresh, unregister on sign-out).
+          ..watch(pushNotificationsProvider)
+          // Backfill an empty session display name from the cloud profile for
+          // accounts onboarded before the nickname was mirrored into
+          // user_metadata (pre-fix OAuth accounts especially).
+          ..watch(nicknameSelfHealProvider);
         final router = ref.watch(goRouterProvider);
         return MaterialApp.router(
           onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
