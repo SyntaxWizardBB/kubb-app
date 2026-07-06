@@ -1,0 +1,48 @@
+# Codemagic CI/CD — iOS build & TestFlight for Kubb Club.
+# Docs: https://docs.codemagic.io/yaml-quick-start/building-a-flutter-app/
+#
+# Prerequisites (one-time, in the Codemagic UI / Apple portals):
+#   - App Store Connect API key uploaded to Codemagic, named `CodemagicASC`
+#     (Team settings -> Integrations -> App Store Connect).
+#   - App ID `ch.kubbclub.app` registered in the Apple Developer portal, and an
+#     app record created in App Store Connect (required for TestFlight upload).
+#   - Environment group `supabase` holding SUPABASE_URL + SUPABASE_ANON_KEY.
+#   - `ios/Runner/GoogleService-Info.plist` committed (needed once push lands).
+workflows:
+  ios-testflight:
+    name: iOS · TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: CodemagicASC
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: ch.kubbclub.app
+      groups:
+        - supabase # provides SUPABASE_URL + SUPABASE_ANON_KEY
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Set up code signing
+        # Applies the certificates/profiles Codemagic fetched via ios_signing.
+        script: xcode-project use-profiles
+      - name: Flutter pub get
+        script: flutter pub get
+      - name: Build signed IPA
+        # `flutter build ipa` generates the Podfile + runs pod install on first run.
+        # $BUILD_NUMBER (Codemagic's monotonic index) keeps TestFlight builds unique.
+        script: |
+          flutter build ipa --release \
+            --build-number=$BUILD_NUMBER \
+            --dart-define=SUPABASE_URL=$SUPABASE_URL \
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        # Needs the app record to exist in App Store Connect, else the upload
+        # step fails — flip to false for the very first "does it build" run.
+        submit_to_testflight: true
