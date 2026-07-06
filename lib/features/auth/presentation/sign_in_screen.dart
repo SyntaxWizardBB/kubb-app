@@ -74,16 +74,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   }
 
   Future<void> _onPickAnonymous() async {
-    // P7: creating an account first requires a valid early-access code. The
-    // gate usually hands one in — go straight to signup then. Without one
-    // (deep link onto /sign-in), open the gate first.
-    final code = widget.earlyAccessCode;
-    if (code != null && code.isNotEmpty) {
-      await GoRouter.of(context)
-          .push<void>(AuthRoutes.anonymousSignup, extra: code);
-    } else {
-      await GoRouter.of(context).push<void>(AuthRoutes.earlyAccess);
-    }
+    // M4: registration is open — no early-access code required. Go straight
+    // to the signup wizard. `earlyAccessCode` is kept for backward
+    // compatibility (deep links) but is no longer needed and ignored server-
+    // side by keypair_register.
+    await GoRouter.of(context).push<void>(
+      AuthRoutes.anonymousSignup,
+      extra: widget.earlyAccessCode,
+    );
   }
 
   Future<void> _onPickRestore() async {

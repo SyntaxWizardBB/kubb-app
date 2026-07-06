@@ -94,15 +94,16 @@ void main() {
 
   group('redirect — unauthenticated', () {
     // P7: `/` is no longer public — app use without a profile is impossible.
-    // A signed-out cold start is redirected to the early-access gate.
-    testWidgets('signedOut cold start redirects to early-access',
+    // M4: registration is open, so a signed-out cold start is redirected to
+    // the sign-in screen (no early-access gate).
+    testWidgets('signedOut cold start redirects to sign-in',
         (tester) async {
       final container = await pumpApp(
         tester,
         controllerFactory: () =>
             _StubAuthController(const AuthSession.signedOut()),
       );
-      expect(currentPath(container), AuthRoutes.earlyAccess);
+      expect(currentPath(container), AuthRoutes.signIn);
     });
 
     testWidgets('signedOut user navigating to /onboarding-tour stays',
@@ -128,7 +129,7 @@ void main() {
       );
       container.read(goRouterProvider).go(AuthRoutes.accountLink);
       await tester.pumpAndSettle();
-      expect(currentPath(container), AuthRoutes.earlyAccess);
+      expect(currentPath(container), AuthRoutes.signIn);
     });
 
     testWidgets('signedOut user on /sign-in/delete redirects to /sign-in',
@@ -140,7 +141,7 @@ void main() {
       );
       container.read(goRouterProvider).go(AuthRoutes.deleteAccount);
       await tester.pumpAndSettle();
-      expect(currentPath(container), AuthRoutes.earlyAccess);
+      expect(currentPath(container), AuthRoutes.signIn);
     });
 
     // Public legal routes (W1-T1/T2 register the screens in parallel; the
@@ -193,7 +194,7 @@ void main() {
       );
       container.read(goRouterProvider).go('/social/friends');
       await tester.pumpAndSettle();
-      expect(currentPath(container), AuthRoutes.earlyAccess);
+      expect(currentPath(container), AuthRoutes.signIn);
     });
   });
 
@@ -265,7 +266,7 @@ void main() {
       );
       container.read(goRouterProvider).go(AuthRoutes.inbox);
       await tester.pumpAndSettle();
-      expect(currentPath(container), AuthRoutes.earlyAccess);
+      expect(currentPath(container), AuthRoutes.signIn);
     });
   });
 
@@ -321,13 +322,13 @@ void main() {
         controllerFactory: () => stub,
       );
 
-      // P7: signed-out cold start is gated to early-access (no no-login `/`).
-      expect(currentPath(container), AuthRoutes.earlyAccess);
+      // P7/M4: signed-out cold start is gated to sign-in (no no-login `/`).
+      expect(currentPath(container), AuthRoutes.signIn);
 
-      // Navigate into a protected area — still gated to early-access.
+      // Navigate into a protected area — still gated to sign-in.
       container.read(goRouterProvider).go(SocialRoutes.friends);
       await tester.pumpAndSettle();
-      expect(currentPath(container), AuthRoutes.earlyAccess);
+      expect(currentPath(container), AuthRoutes.signIn);
 
       // Flip the controller to authenticated; refreshListenable must fire.
       stub.emit(
