@@ -16,9 +16,8 @@ workflows:
     integrations:
       app_store_connect: KubClubAppStore
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: ch.kubbclub.app
+      vars:
+        BUNDLE_ID: "ch.kubbclub.app"
       groups:
         - supabase # provides SUPABASE_URL + SUPABASE_ANON_KEY
       flutter: stable
@@ -26,8 +25,18 @@ workflows:
       cocoapods: default
     scripts:
       - name: Set up code signing
-        # Applies the certificates/profiles Codemagic fetched via ios_signing.
-        script: xcode-project use-profiles
+        # Explicitly fetch OR create (--create) the App Store distribution
+        # certificate + provisioning profile for the bundle id, then wire them
+        # into the Xcode project. Requires the ASC key (integrations block) to
+        # hold the App Manager or Admin role — a Developer-role key can read but
+        # NOT create signing files, which surfaces as "no matching profiles".
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
       - name: Flutter pub get
         script: flutter pub get
       - name: Build signed IPA
