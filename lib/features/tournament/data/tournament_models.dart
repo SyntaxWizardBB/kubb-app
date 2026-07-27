@@ -216,7 +216,7 @@ extension RoundStatusWire on RoundStatus {
   String toWire() => _roundStatusWire[this]!;
 }
 
-int _asInt(Object? r) => r is int ? r : (r as num).toInt();
+int _asInt(Object? r) => r is int ? r : (r! as num).toInt();
 int? _asIntOrNull(Object? r) => r == null ? null : _asInt(r);
 String? _asStringOrNull(Object? r) => r is String ? r : null;
 DateTime? _asDateOrNull(Object? r) =>

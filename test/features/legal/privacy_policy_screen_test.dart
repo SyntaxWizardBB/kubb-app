@@ -78,9 +78,7 @@ Future<void> _pumpScreen(WidgetTester tester) async {
 }
 
 void main() {
-  setUpAll(() {
-    TestWidgetsFlutterBinding.ensureInitialized();
-  });
+  setUpAll(TestWidgetsFlutterBinding.ensureInitialized);
 
   tearDown(() {
     PrivacyPolicyScreen.loaderOverride = () async => _fakePolicy;

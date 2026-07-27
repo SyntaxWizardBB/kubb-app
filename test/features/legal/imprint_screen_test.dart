@@ -58,9 +58,7 @@ Future<void> _pumpScreen(WidgetTester tester) async {
 }
 
 void main() {
-  setUpAll(() {
-    TestWidgetsFlutterBinding.ensureInitialized();
-  });
+  setUpAll(TestWidgetsFlutterBinding.ensureInitialized);
 
   tearDown(() {
     ImprintScreen.loaderOverride = () async => _fakeImprint;

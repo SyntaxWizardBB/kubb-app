@@ -130,7 +130,6 @@ void main() {
     (tester) async {
       await _pump(
         tester,
-        teamSize: 3,
         maxTeamSize: 4,
         pool: [
           _member('alice'),
