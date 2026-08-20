@@ -10,7 +10,6 @@ const String _kDeviceIdStorageKey = 'kubb_device_id';
 /// device-id helper. Tests override this with a fake.
 final deviceIdSecureStorageProvider = Provider<FlutterSecureStorage>((ref) {
   return const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),
