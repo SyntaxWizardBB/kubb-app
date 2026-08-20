@@ -1,5 +1,11 @@
+// AGP 9 defaults to the new DSL, but the kotlin-android plugin the flutter
+// gradle plugin relies on cannot run against it yet. Until that lands we stay
+// on the old DSL (supported through AGP 9.x) and mute its deprecation notice.
+@file:Suppress("DEPRECATION")
+
 import java.io.FileInputStream
 import java.util.Properties
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.application")
@@ -31,10 +37,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     defaultConfig {
@@ -74,6 +76,12 @@ android {
                 signingConfigs.getByName("debug")
             }
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
     }
 }
 

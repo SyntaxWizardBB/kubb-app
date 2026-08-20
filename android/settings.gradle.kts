@@ -19,11 +19,11 @@ pluginManagement {
 
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    id("com.android.application") version "8.11.1" apply false
-    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
+    id("com.android.application") version "9.1.1" apply false
+    id("org.jetbrains.kotlin.android") version "2.3.21" apply false
     // Google services plugin: processes android/app/google-services.json so
     // the Firebase SDKs (FCM push, P3) pick up the project config.
-    id("com.google.gms.google-services") version "4.4.4" apply false
+    id("com.google.gms.google-services") version "4.5.0" apply false
 }
 
 include(":app")
