@@ -190,7 +190,6 @@ Future<_FakeRemote> _pump(
 }
 
 void main() {
-  setUpAll(registerLinuxSqliteOverride);
 
   testWidgets('renders header, default first-set inputs and submit button',
       (tester) async {

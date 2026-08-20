@@ -7,8 +7,6 @@ import '../../../_helpers/sqlite_open.dart';
 void main() {
   late AppDatabase db;
 
-  setUpAll(registerLinuxSqliteOverride);
-
   setUp(() async {
     db = await openTestDatabase();
   });

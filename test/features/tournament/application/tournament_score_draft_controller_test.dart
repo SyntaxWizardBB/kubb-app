@@ -8,7 +8,6 @@ import 'package:kubb_domain/kubb_domain.dart';
 import '../../../_helpers/sqlite_open.dart';
 
 void main() {
-  setUpAll(registerLinuxSqliteOverride);
 
   ProviderContainer makeContainer(AppDatabase db) {
     final c = ProviderContainer(

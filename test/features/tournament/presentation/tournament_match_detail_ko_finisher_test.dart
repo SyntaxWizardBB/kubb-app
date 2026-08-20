@@ -163,7 +163,6 @@ Future<_FakeRemote> _pump(
 }
 
 void main() {
-  setUpAll(registerLinuxSqliteOverride);
 
   testWidgets('F1: KO king-less set shows the finisher prompt and blocks submit',
       (tester) async {

@@ -9,7 +9,6 @@ import 'package:kubb_app/features/inbox/data/inbox_repository.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../_helpers/sqlite_open.dart';
 
 class _MockSupabaseClient extends Mock implements SupabaseClient {}
 
@@ -56,7 +55,6 @@ class _FakeFilterBuilder extends Mock
 /// wire kind survives unchanged ('tournament_finished'), and `loadFromCache`
 /// proves it maps back to the typed kind.
 void main() {
-  setUpAll(registerLinuxSqliteOverride);
 
   late AppDatabase db;
   late _MockSupabaseClient client;

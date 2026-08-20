@@ -9,12 +9,10 @@ import 'package:kubb_app/features/auth/data/auth_telemetry.dart';
 import 'package:kubb_app/features/auth/data/dao/cached_auth_session_dao.dart';
 import 'package:kubb_app/features/auth/data/supabase_auth_adapter.dart';
 
-import '../../../_helpers/sqlite_open.dart';
 import '../../../fixtures/auth/fake_secure_token_store.dart';
 import '../../../fixtures/auth/fake_supabase_auth_adapter.dart';
 
 void main() {
-  setUpAll(registerLinuxSqliteOverride);
 
   late AppDatabase db;
   late CachedAuthSessionDao dao;

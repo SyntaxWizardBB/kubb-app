@@ -13,7 +13,6 @@ import '../../_helpers/sqlite_open.dart';
 ///   2. ack'd row <30d → kept.
 ///   3. pending row of any age → kept.
 void main() {
-  setUpAll(registerLinuxSqliteOverride);
 
   late AppDatabase db;
   late ScoreSubmissionOutboxDao dao;

@@ -2,12 +2,9 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 
-import '../../_helpers/sqlite_open.dart';
 
 void main() {
   late AppDatabase db;
-
-  setUpAll(registerLinuxSqliteOverride);
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());

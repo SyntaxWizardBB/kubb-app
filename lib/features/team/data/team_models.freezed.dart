@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'team_models.dart';
@@ -9,6 +9,7 @@ part of 'team_models.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -66,7 +67,7 @@ class _$TeamWireCopyWithImpl<$Res>
 /// Create a copy of TeamWire
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? displayName = null,Object? leagueMembership = null,Object? createdAt = null,Object? logoUrl = freezed,Object? country = freezed,Object? dissolvedAt = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(TeamWire(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String,leagueMembership: null == leagueMembership ? _self.leagueMembership : leagueMembership // ignore: cast_nullable_to_non_nullable
@@ -347,7 +348,7 @@ class _$TeamMembershipWireCopyWithImpl<$Res>
 /// Create a copy of TeamMembershipWire
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? membershipId = null,Object? userId = null,Object? joinedAt = null,}) {
-  return _then(_self.copyWith(
+  return _then(TeamMembershipWire(
 membershipId: null == membershipId ? _self.membershipId : membershipId // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,joinedAt: null == joinedAt ? _self.joinedAt : joinedAt // ignore: cast_nullable_to_non_nullable
@@ -616,7 +617,7 @@ class _$TeamInvitationWireCopyWithImpl<$Res>
 /// Create a copy of TeamInvitationWire
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? invitationId = null,Object? teamId = null,Object? inviteeUserId = null,Object? state = null,Object? createdAt = null,}) {
-  return _then(_self.copyWith(
+  return _then(TeamInvitationWire(
 invitationId: null == invitationId ? _self.invitationId : invitationId // ignore: cast_nullable_to_non_nullable
 as String,teamId: null == teamId ? _self.teamId : teamId // ignore: cast_nullable_to_non_nullable
 as String,inviteeUserId: null == inviteeUserId ? _self.inviteeUserId : inviteeUserId // ignore: cast_nullable_to_non_nullable
@@ -891,7 +892,7 @@ class _$GuestPlayerWireCopyWithImpl<$Res>
 /// Create a copy of GuestPlayerWire
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? guestId = null,Object? displayName = null,Object? addedAt = null,}) {
-  return _then(_self.copyWith(
+  return _then(GuestPlayerWire(
 guestId: null == guestId ? _self.guestId : guestId // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String,addedAt: null == addedAt ? _self.addedAt : addedAt // ignore: cast_nullable_to_non_nullable

@@ -44,8 +44,6 @@ class _RecordingNotifier extends ActiveFinisseurNotifier {
 }
 
 void main() {
-  registerLinuxSqliteOverride();
-
   late AppDatabase db;
   late _RecordingNotifier notifier;
 

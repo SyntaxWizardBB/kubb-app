@@ -6,11 +6,9 @@ import 'package:kubb_app/core/application/outbox_flusher_provider.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 import 'package:kubb_app/features/auth/application/auth_controller.dart';
 
-import '../_helpers/sqlite_open.dart';
 import '../fixtures/auth/fake_supabase_auth_adapter.dart';
 
 void main() {
-  setUpAll(registerLinuxSqliteOverride);
 
   late AppDatabase db;
   late FakeSupabaseAuthAdapter adapter;

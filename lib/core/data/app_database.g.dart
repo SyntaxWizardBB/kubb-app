@@ -4855,7 +4855,7 @@ final class $$PlayersTableReferences
     _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.sessions,
-    aliasName: $_aliasNameGenerator(db.players.id, db.sessions.playerId),
+    aliasName: 'players__id__sessions__player_id',
   );
 
   $$SessionsTableProcessedTableManager get sessionsRefs {
@@ -5159,8 +5159,8 @@ final class $$SessionsTableReferences
     extends BaseReferences<_$AppDatabase, $SessionsTable, Session> {
   $$SessionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $PlayersTable _playerIdTable(_$AppDatabase db) => db.players
-      .createAlias($_aliasNameGenerator(db.sessions.playerId, db.players.id));
+  static $PlayersTable _playerIdTable(_$AppDatabase db) =>
+      db.players.createAlias('sessions__player_id__players__id');
 
   $$PlayersTableProcessedTableManager get playerId {
     final $_column = $_itemColumn<String>('player_id')!;
@@ -5179,7 +5179,7 @@ final class $$SessionsTableReferences
   static MultiTypedResultKey<$SessionEventsTable, List<SessionEvent>>
   _sessionEventsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.sessionEvents,
-    aliasName: $_aliasNameGenerator(db.sessions.id, db.sessionEvents.sessionId),
+    aliasName: 'sessions__id__session_events__session_id',
   );
 
   $$SessionEventsTableProcessedTableManager get sessionEventsRefs {
@@ -5201,10 +5201,7 @@ final class $$SessionsTableReferences
   _finisseurStickEventsRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.finisseurStickEvents,
-        aliasName: $_aliasNameGenerator(
-          db.sessions.id,
-          db.finisseurStickEvents.sessionId,
-        ),
+        aliasName: 'sessions__id__finisseur_stick_events__session_id',
       );
 
   $$FinisseurStickEventsTableProcessedTableManager
@@ -5795,9 +5792,7 @@ final class $$SessionEventsTableReferences
   );
 
   static $SessionsTable _sessionIdTable(_$AppDatabase db) =>
-      db.sessions.createAlias(
-        $_aliasNameGenerator(db.sessionEvents.sessionId, db.sessions.id),
-      );
+      db.sessions.createAlias('session_events__session_id__sessions__id');
 
   $$SessionsTableProcessedTableManager get sessionId {
     final $_column = $_itemColumn<String>('session_id')!;
@@ -6289,10 +6284,8 @@ final class $$FinisseurStickEventsTableReferences
     super.$_typedResult,
   );
 
-  static $SessionsTable _sessionIdTable(_$AppDatabase db) =>
-      db.sessions.createAlias(
-        $_aliasNameGenerator(db.finisseurStickEvents.sessionId, db.sessions.id),
-      );
+  static $SessionsTable _sessionIdTable(_$AppDatabase db) => db.sessions
+      .createAlias('finisseur_stick_events__session_id__sessions__id');
 
   $$SessionsTableProcessedTableManager get sessionId {
     final $_column = $_itemColumn<String>('session_id')!;

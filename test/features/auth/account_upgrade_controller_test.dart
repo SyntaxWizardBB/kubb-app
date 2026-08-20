@@ -28,7 +28,6 @@ class _ThrowingTelemetry extends AuthTelemetry {
 }
 
 void main() {
-  setUpAll(registerLinuxSqliteOverride);
 
   late AppDatabase db;
   late FakeSupabaseAuthAdapter adapter;

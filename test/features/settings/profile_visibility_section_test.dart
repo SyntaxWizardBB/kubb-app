@@ -41,7 +41,6 @@ void main() {
   late FakeCloudProfileRepository fakeProfileRepo;
 
   setUpAll(() {
-    registerLinuxSqliteOverride();
     TestWidgetsFlutterBinding.ensureInitialized();
     PackageInfo.setMockInitialValues(
       appName: 'kubb_app',

@@ -17,7 +17,6 @@ import '../../../fixtures/auth/fake_secure_token_store.dart';
 import '../../../fixtures/auth/fake_supabase_auth_adapter.dart';
 
 void main() {
-  setUpAll(registerLinuxSqliteOverride);
 
   late AppDatabase db;
   late FakeSupabaseAuthAdapter adapter;

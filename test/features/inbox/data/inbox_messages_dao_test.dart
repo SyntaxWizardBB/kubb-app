@@ -3,7 +3,6 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 
-import '../../../_helpers/sqlite_open.dart';
 
 /// Direct DAO tests for the v7 inbox cache. They lean on
 /// [NativeDatabase.memory] so the migration path and the table shape
@@ -11,7 +10,6 @@ import '../../../_helpers/sqlite_open.dart';
 /// regression more clearly than failing to read back a row that was
 /// just written.
 void main() {
-  setUpAll(registerLinuxSqliteOverride);
 
   late AppDatabase db;
 

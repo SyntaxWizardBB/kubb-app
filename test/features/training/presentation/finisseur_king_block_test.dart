@@ -48,8 +48,6 @@ class _FakeNotifier extends ActiveFinisseurNotifier {
 }
 
 void main() {
-  registerLinuxSqliteOverride();
-
   late AppDatabase db;
 
   setUp(() async {

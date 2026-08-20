@@ -16,8 +16,6 @@ import '../../../_helpers/sqlite_open.dart';
 void main() {
   const playerId = 'p1';
 
-  setUpAll(registerLinuxSqliteOverride);
-
   late AppDatabase db;
   late InMemoryAchievementsRepository repo;
   late ProviderContainer container;

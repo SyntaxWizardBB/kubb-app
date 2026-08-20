@@ -9,8 +9,6 @@ void main() {
   late AppDatabase db;
   late TrainingRepository repo;
 
-  setUpAll(registerLinuxSqliteOverride);
-
   setUp(() async {
     db = await openTestDatabase();
     await db.playerDao.insert(

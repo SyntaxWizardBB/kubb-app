@@ -31,7 +31,6 @@ void main() {
   late AppDatabase db;
 
   setUpAll(() {
-    registerLinuxSqliteOverride();
     TestWidgetsFlutterBinding.ensureInitialized();
     PackageInfo.setMockInitialValues(
       appName: 'kubb_app',

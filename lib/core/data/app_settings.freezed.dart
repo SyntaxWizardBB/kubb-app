@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'app_settings.dart';
@@ -9,6 +9,7 @@ part of 'app_settings.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -63,7 +64,7 @@ class _$AppSettingsCopyWithImpl<$Res>
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? themeChoice = null,Object? heliTracking = null,Object? vibration = null,Object? sniperEyeToggleHidden = null,Object? longDubbieTracking = null,Object? penaltyKubbTracking = null,Object? kingThrowTracking = null,Object? allowContinueBeyondSticks = null,}) {
-  return _then(_self.copyWith(
+  return _then(AppSettings(
 themeChoice: null == themeChoice ? _self.themeChoice : themeChoice // ignore: cast_nullable_to_non_nullable
 as ThemeChoice,heliTracking: null == heliTracking ? _self.heliTracking : heliTracking // ignore: cast_nullable_to_non_nullable
 as bool,vibration: null == vibration ? _self.vibration : vibration // ignore: cast_nullable_to_non_nullable

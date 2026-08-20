@@ -9,7 +9,6 @@ import 'package:kubb_app/features/inbox/data/inbox_repository.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../_helpers/sqlite_open.dart';
 
 /// Hydrate-on-open verification: when the drift cache has rows for the
 /// user, [InboxRepository.loadFromCache] and [InboxRepository.watchForUser]
@@ -20,7 +19,6 @@ import '../../../_helpers/sqlite_open.dart';
 class _MockSupabaseClient extends Mock implements SupabaseClient {}
 
 void main() {
-  setUpAll(registerLinuxSqliteOverride);
 
   late AppDatabase db;
   late _MockSupabaseClient client;

@@ -46,8 +46,6 @@ void main() {
   late AppDatabase db;
   late ProviderContainer container;
 
-  setUpAll(registerLinuxSqliteOverride);
-
   setUp(() async {
     db = await openTestDatabase();
     await _seedPlayer(db, playerId);

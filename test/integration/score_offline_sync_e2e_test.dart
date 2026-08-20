@@ -41,7 +41,6 @@ import 'package:kubb_app/core/data/connectivity/connectivity_service.dart';
 import 'package:kubb_app/core/data/dao/score_submission_outbox_dao.dart';
 import 'package:kubb_domain/kubb_domain.dart';
 
-import '../_helpers/sqlite_open.dart';
 
 const _matchId = TournamentMatchId('m-offline');
 const _submitter = UserId('user-A');
@@ -171,7 +170,6 @@ class _ConnectivityProbeAdapter implements ConnectivityProbe {
 }
 
 void main() {
-  setUpAll(registerLinuxSqliteOverride);
 
   late AppDatabase db;
   late ScoreSubmissionOutboxDao dao;

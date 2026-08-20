@@ -3,7 +3,6 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kubb_app/core/data/app_database.dart';
 
-import '../../_helpers/sqlite_open.dart';
 
 /// Tests the v3 → v4 upgrade path. The strategy: open a v4 database,
 /// roll it back to a v3-shaped state by dropping the new table and
@@ -11,7 +10,6 @@ import '../../_helpers/sqlite_open.dart';
 /// the v4 migrator and assert the additive change applied without
 /// touching pre-existing rows.
 void main() {
-  setUpAll(registerLinuxSqliteOverride);
 
   late AppDatabase db;
 

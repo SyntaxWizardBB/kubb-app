@@ -8,7 +8,6 @@ import 'package:kubb_app/features/achievements/data/achievements_repository.dart
 import 'package:kubb_domain/kubb_domain.dart';
 import 'package:path/path.dart' as p;
 
-import '../../../_helpers/sqlite_open.dart';
 
 /// Sprint C W4-T1 — coverage for the Drift-backed
 /// [DriftAchievementsRepository] and the in-memory test double.
@@ -20,7 +19,6 @@ import '../../../_helpers/sqlite_open.dart';
 /// database and re-opening a fresh handle against the same file mirrors
 /// what happens between two app launches.
 void main() {
-  setUpAll(registerLinuxSqliteOverride);
 
   group('DriftAchievementsRepository', () {
     late Directory tmpDir;

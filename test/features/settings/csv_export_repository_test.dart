@@ -10,8 +10,6 @@ void main() {
   late AppDatabase db;
   late CsvExportRepository repo;
 
-  setUpAll(registerLinuxSqliteOverride);
-
   setUp(() async {
     db = await openTestDatabase();
     await db.playerDao.insert(
