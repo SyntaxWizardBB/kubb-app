@@ -30,8 +30,8 @@ dependencies:
   flutter_secure_storage: ^8.1.0
   cryptography: ^2.7.0
   bip39: ^1.0.6
-  app_links: ^6.3.0
-  connectivity_plus: ^6.0.5
+  app_links: ^7.2.1
+  connectivity_plus: ^7.3.1
 
   # Push (P3): FlutterFire pulls the native FCM SDK; google-services plugin
   # supplies the Android config, so Firebase.initializeApp() needs no options.
