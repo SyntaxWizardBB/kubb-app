@@ -53,3 +53,58 @@ workflows:
         # Needs the app record to exist in App Store Connect, else the upload
         # step fails — flip to false for the very first "does it build" run.
         submit_to_testflight: true
+
+  android-appdist:
+    name: Android · App Distribution
+    # Android needs no Mac; a Linux instance is cheaper and faster.
+    instance_type: linux_x2
+    max_build_duration: 60
+    # No triggering block -> start manually in the Codemagic UI, same as the
+    # iOS workflow. To auto-build a release cut instead, add a triggering block
+    # that fires on tag pushes (needs the repo's build-trigger/webhook wired in
+    # the Codemagic UI first):
+    #   triggering:
+    #     events:
+    #       - tag
+    #     tag_patterns:
+    #       - pattern: 'release/*'
+    #         include: true
+    environment:
+      # OWNER: upload the upload keystore in Codemagic under Code signing
+      # identities -> Android keystores, then put its reference name here.
+      # This attaches the keystore and emits CM_KEYSTORE_PATH / CM_KEY_ALIAS /
+      # CM_KEYSTORE_PASSWORD / CM_KEY_PASSWORD, which android/app/build.gradle.kts
+      # reads for the release signingConfig.
+      android_signing:
+        - kubb_upload_keystore # OWNER: Codemagic Android keystore reference name
+      groups:
+        - supabase # provides SUPABASE_URL + SUPABASE_ANON_KEY
+      flutter: stable
+    scripts:
+      - name: Flutter pub get
+        script: flutter pub get
+      - name: Build signed APK
+        # $PROJECT_BUILD_NUMBER (Codemagic's project-wide, monotonic index)
+        # becomes the Android versionCode, so App Distribution never rejects a
+        # duplicate on re-upload.
+        script: |
+          flutter build apk --release \
+            --build-number=$PROJECT_BUILD_NUMBER \
+            --dart-define=SUPABASE_URL=$SUPABASE_URL \
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
+    publishing:
+      firebase:
+        # OWNER: create a Firebase service account with the "Firebase App
+        # Distribution Admin" role, download its JSON key, and store the whole
+        # JSON as a secured env var named FIREBASE_SERVICE_ACCOUNT in Codemagic
+        # (Team- or app-level environment variables, "Secure" enabled).
+        firebase_service_account: $FIREBASE_SERVICE_ACCOUNT
+        android:
+          # Firebase app id for ch.kubbclub.app — mobilesdk_app_id from
+          # android/app/google-services.json (Firebase project kubbclubapp).
+          app_id: 1:106001380567:android:72f4f1f0989d54b996ac92
+          artifact_type: apk
+          groups:
+            - testers # OWNER: tester group alias, created in the Firebase console
