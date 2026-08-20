@@ -16,6 +16,10 @@ migrate_working_dir/
 /supabase/.branches/
 /supabase/.temp/
 /tools/supabase-local/.env
+# Any local env file — these hold access tokens, db passwords and service keys
+.env
+.env.*
+!.env.example
 /tools/supabase-local/data/
 
 # IntelliJ related
