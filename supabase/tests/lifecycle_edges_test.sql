@@ -260,6 +260,14 @@ BEGIN
             'org-' || p_organiser::text || '@tts.local', '', now(), now(), now())
     ON CONFLICT (id) DO NOTHING;
 
+  -- The organiser needs a profile carrying the organizer capability: since
+  -- 20261334000000 tournament_create is gated on caller_can_create_tournament(),
+  -- which reads user_profiles.can_found_clubs (default false) or an active
+  -- organizer-team role. Without this the seed aborts before any assertion runs.
+  INSERT INTO public.user_profiles(user_id, can_found_clubs)
+    VALUES (p_organiser, true)
+    ON CONFLICT (user_id) DO UPDATE SET can_found_clubs = true;
+
   -- N player users (deterministic, zero-padded UUIDs derived from organiser).
   FOR i IN 1..p_n LOOP
     v_uid := _tts_participant_user(p_organiser, i);
