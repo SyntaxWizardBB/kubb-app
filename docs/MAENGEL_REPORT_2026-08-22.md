@@ -3,7 +3,13 @@
 Ein Befund, gefunden beim Aufsetzen der lokalen Demo-Turniere (`supabase/seed.sql`).
 Reproduzierbar auf einer frischen lokalen DB, ohne Klickarbeit.
 
-## 1. Schoch-Turniere ignorieren den Platz-Plan (P2)
+## 1. Schoch-Turniere ignorieren den Platz-Plan (P2) — behoben
+
+> Behoben mit `20261337000000_stage_graph_assign_pitches.sql`: verbatim
+> Re-Base von `tournament_start_stage_graph` aus `20261299000000` mit einem
+> zusätzlichen `_tournament_assign_pitches`-Aufruf vor dem Go-Live-Update.
+> Festgehalten von `supabase/tests/stage_graph_pitch_assignment_test.sql`,
+> der ohne den Fix drei seiner vier Prüfungen verliert.
 
 **Beobachtung:** Ein Turnier mit `pitch_plan` im Range-Modus legt beim Start
 sämtliche Matches auf Platz 1. Bei "Demo Schoch 33 · Plätze 16-32" liegen alle
