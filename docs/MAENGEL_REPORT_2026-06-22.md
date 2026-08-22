@@ -1,5 +1,18 @@
 # Mängel-Report — 2026-06-22
 
+> **Status 2026-08-22: alle sechs Befunde abgearbeitet.** Nachgeprüft gegen den
+> heutigen Stand. 1 ist der Stufen-Graph-Route in `tournament_start` zu
+> verdanken (ADR-0039 §4) und über den lokalen Seed end-to-end verifiziert:
+> sechzehn Teilnehmer ergeben acht Matches in Runde 1, nicht 120. 2 löst
+> `20261312000000_tournament_remove_participant.sql` samt Dialog im
+> Organizer-Dashboard. 3 und 4 hängen an `schoch_rounds` und der verdrahteten
+> `pairRound`-Aktion, 5 an `20261314000000_override_writes_proposal_rows.sql`.
+> 6 ist vermutlich mit `20261307000000_fix_public_read_grants.sql` erledigt —
+> als einziger nicht sicher belegt.
+>
+> Der Report bleibt als Protokoll der Session stehen. Neue Befunde gehören in
+> einen neuen Report, nicht hier hinein.
+
 Befunde aus einer Testsession auf der lokalen Supabase-DB (Branch
 `feature/setup-wizard-verbesserungen`). Aufgesetzt wurde ein 64-Team-Schoch-Turnier
 (`schoch_then_ko`, 3er-Teams, KO über alle 64), dann der Schoch-Verlauf simuliert

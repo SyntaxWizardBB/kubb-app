@@ -20,3 +20,8 @@ update public.user_profiles set can_found_clubs = false  where nickname = 'NICKN
 -- 5) Konto sperren / entsperren (blockt keypair-verify + oauth-reconcile):
 update public.user_profiles set suspended_at = now()  where nickname = 'NICKNAME';  -- sperren
 update public.user_profiles set suspended_at = null   where nickname = 'NICKNAME';  -- entsperren
+
+-- ----------------------------------------------------------------------
+-- Lokal brauchst du das hier meistens nicht: `supabase db reset` legt über
+-- supabase/seed.sql einen Veranstalter `veranstalter` (Passwort kubb1234),
+-- sechzehn Spieler und ein startbereites Schoch-Turnier an.
