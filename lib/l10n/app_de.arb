@@ -84,14 +84,18 @@
   "@organizerDashboardRoundLabel": {
     "description": "Round header on the dashboard detail round/match list",
     "placeholders": {
-      "round": { "type": "int" }
+      "round": {
+        "type": "int"
+      }
     }
   },
   "organizerDashboardCurrentRound": "Runde {round}",
   "@organizerDashboardCurrentRound": {
     "description": "Card line showing the tournament's currently active round number",
     "placeholders": {
-      "round": { "type": "int" }
+      "round": {
+        "type": "int"
+      }
     }
   },
   "organizerDashboardNoRound": "Noch keine aktive Runde",
@@ -102,21 +106,27 @@
   "@organizerDashboardOpenMatches": {
     "description": "Open-match badge on the overview card",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "organizerDashboardDisputedMatches": "{count} strittig",
   "@organizerDashboardDisputedMatches": {
     "description": "Disputed-match badge on the overview card",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "organizerDashboardRemaining": "Restzeit {time}",
   "@organizerDashboardRemaining": {
     "description": "Remaining-time line on the overview card (mm:ss)",
     "placeholders": {
-      "time": { "type": "String" }
+      "time": {
+        "type": "String"
+      }
     }
   },
   "organizerDashboardExpired": "Zeit abgelaufen",
@@ -328,7 +338,9 @@
   "@stageGraphDeleteNodeConfirm": {
     "description": "Confirmation body when deleting a node",
     "placeholders": {
-      "id": { "type": "String" }
+      "id": {
+        "type": "String"
+      }
     }
   },
   "stageGraphEdgesSection": "Kanten",
@@ -577,22 +589,30 @@
   "@stageGraphSelectorTopK": {
     "description": "Short label for a TopK selector",
     "placeholders": {
-      "k": { "type": "int" }
+      "k": {
+        "type": "int"
+      }
     }
   },
   "stageGraphSelectorRanks": "Ränge {from}–{to}",
   "@stageGraphSelectorRanks": {
     "description": "Short label for a Ranks selector",
     "placeholders": {
-      "from": { "type": "int" },
-      "to": { "type": "int" }
+      "from": {
+        "type": "int"
+      },
+      "to": {
+        "type": "int"
+      }
     }
   },
   "stageGraphSelectorLosers": "Verlierer Runden {rounds}",
   "@stageGraphSelectorLosers": {
     "description": "Short label for a LosersOfRounds selector",
     "placeholders": {
-      "rounds": { "type": "String" }
+      "rounds": {
+        "type": "String"
+      }
     }
   },
   "stageGraphSelectorWinners": "Sieger",
@@ -628,148 +648,284 @@
     "description": "Hint that a node may have multiple outgoing edges"
   },
   "stageGraphNodeTypePool": "Gruppenphase",
-  "@stageGraphNodeTypePool": { "description": "Label for StageNodeType.pool" },
+  "@stageGraphNodeTypePool": {
+    "description": "Label for StageNodeType.pool"
+  },
   "stageGraphNodeTypeRoundRobin": "Jeder gegen jeden",
-  "@stageGraphNodeTypeRoundRobin": { "description": "Label for StageNodeType.roundRobin" },
+  "@stageGraphNodeTypeRoundRobin": {
+    "description": "Label for StageNodeType.roundRobin"
+  },
   "stageGraphNodeTypeSwiss": "Schoch",
-  "@stageGraphNodeTypeSwiss": { "description": "Label for StageNodeType.swiss" },
+  "@stageGraphNodeTypeSwiss": {
+    "description": "Label for StageNodeType.swiss"
+  },
   "stageGraphNodeTypeSingleElim": "K.-o. (einfach)",
-  "@stageGraphNodeTypeSingleElim": { "description": "Label for StageNodeType.singleElim" },
+  "@stageGraphNodeTypeSingleElim": {
+    "description": "Label for StageNodeType.singleElim"
+  },
   "stageGraphNodeTypeDoubleElim": "K.-o. (doppelt)",
-  "@stageGraphNodeTypeDoubleElim": { "description": "Label for StageNodeType.doubleElim" },
+  "@stageGraphNodeTypeDoubleElim": {
+    "description": "Label for StageNodeType.doubleElim"
+  },
   "stageGraphNodeTypeConsolation": "Trosttournier",
-  "@stageGraphNodeTypeConsolation": { "description": "Label for StageNodeType.consolation" },
+  "@stageGraphNodeTypeConsolation": {
+    "description": "Label for StageNodeType.consolation"
+  },
   "stageGraphNodeTypeShootoutQuali": "Shoot-out-Quali",
-  "@stageGraphNodeTypeShootoutQuali": { "description": "Label for StageNodeType.shootoutQuali" },
+  "@stageGraphNodeTypeShootoutQuali": {
+    "description": "Label for StageNodeType.shootoutQuali"
+  },
   "stageGraphNodeTypeInfoTitle": "Stufentyp",
-  "@stageGraphNodeTypeInfoTitle": { "description": "Title of the stage-type explainer dialog" },
+  "@stageGraphNodeTypeInfoTitle": {
+    "description": "Title of the stage-type explainer dialog"
+  },
   "stageGraphNodeTypeInfoPool": "Jeder spielt in seiner Gruppe gegen jeden. Aus jeder Gruppe ziehen die Bestplatzierten weiter. Bei n Teilnehmern pro Gruppe sind das n-1 Runden.",
-  "@stageGraphNodeTypeInfoPool": { "description": "Explainer for StageNodeType.pool" },
+  "@stageGraphNodeTypeInfoPool": {
+    "description": "Explainer for StageNodeType.pool"
+  },
   "stageGraphNodeTypeInfoSwiss": "Schoch: die Paarungen werden nach jeder Runde neu nach Tabellenstand gebildet — Sieger gegen Sieger, Verlierer gegen Verlierer. Flexible Rundenzahl, ein gemeinsamer Pool. Ideal für grosse Felder, weil nicht jeder gegen jeden spielen muss.",
-  "@stageGraphNodeTypeInfoSwiss": { "description": "Explainer for StageNodeType.swiss" },
+  "@stageGraphNodeTypeInfoSwiss": {
+    "description": "Explainer for StageNodeType.swiss"
+  },
   "stageGraphNodeTypeInfoSingleElim": "Wer ein Spiel verliert, ist raus. Schnell und kurz, aber eine einzige Niederlage beendet das Turnier.",
-  "@stageGraphNodeTypeInfoSingleElim": { "description": "Explainer for StageNodeType.singleElim" },
+  "@stageGraphNodeTypeInfoSingleElim": {
+    "description": "Explainer for StageNodeType.singleElim"
+  },
   "stageGraphNodeTypeInfoDoubleElim": "Erst nach der zweiten Niederlage ist man raus (Verliererbracket). Fairer als einfaches K.-o., braucht aber mehr Spiele und Zeit.",
-  "@stageGraphNodeTypeInfoDoubleElim": { "description": "Explainer for StageNodeType.doubleElim" },
+  "@stageGraphNodeTypeInfoDoubleElim": {
+    "description": "Explainer for StageNodeType.doubleElim"
+  },
   "stageGraphNodeTypeInfoConsolation": "Nebenwettbewerb für früh ausgeschiedene Teams, damit sie weiterspielen. Beeinflusst die Hauptwertung nicht.",
-  "@stageGraphNodeTypeInfoConsolation": { "description": "Explainer for StageNodeType.consolation" },
+  "@stageGraphNodeTypeInfoConsolation": {
+    "description": "Explainer for StageNodeType.consolation"
+  },
   "stageGraphNodeTypeInfoRoundRobin": "Jeder spielt gegen jeden. Die Tabelle entscheidet, niemand scheidet vorzeitig aus.",
-  "@stageGraphNodeTypeInfoRoundRobin": { "description": "Explainer for StageNodeType.roundRobin" },
+  "@stageGraphNodeTypeInfoRoundRobin": {
+    "description": "Explainer for StageNodeType.roundRobin"
+  },
   "stageGraphNodeTypeInfoShootoutQuali": "Qualifikation per Shoot-out: die besten Würfe sichern die Startplätze für die nächste Stufe.",
-  "@stageGraphNodeTypeInfoShootoutQuali": { "description": "Explainer for StageNodeType.shootoutQuali" },
+  "@stageGraphNodeTypeInfoShootoutQuali": {
+    "description": "Explainer for StageNodeType.shootoutQuali"
+  },
   "stageGraphSeedingFromElo": "Aus ELO-Wertung",
-  "@stageGraphSeedingFromElo": { "description": "Label for StageSeedingSource.fromElo" },
+  "@stageGraphSeedingFromElo": {
+    "description": "Label for StageSeedingSource.fromElo"
+  },
   "stageGraphSeedingFromPrevRanking": "Aus Vorrangliste",
-  "@stageGraphSeedingFromPrevRanking": { "description": "Label for StageSeedingSource.fromPrevRanking" },
+  "@stageGraphSeedingFromPrevRanking": {
+    "description": "Label for StageSeedingSource.fromPrevRanking"
+  },
   "stageGraphSeedingManual": "Manuell",
-  "@stageGraphSeedingManual": { "description": "Label for StageSeedingSource.manual" },
+  "@stageGraphSeedingManual": {
+    "description": "Label for StageSeedingSource.manual"
+  },
   "stageGraphSeedingRandom": "Zufall",
-  "@stageGraphSeedingRandom": { "description": "Label for StageSeedingSource.random" },
+  "@stageGraphSeedingRandom": {
+    "description": "Label for StageSeedingSource.random"
+  },
   "stageGraphSeedingAsRouted": "Wie geroutet",
-  "@stageGraphSeedingAsRouted": { "description": "Label for StageSeedingSource.asRouted" },
+  "@stageGraphSeedingAsRouted": {
+    "description": "Label for StageSeedingSource.asRouted"
+  },
   "stageGraphSeedingInOrderPreserving": "Reihenfolge erhalten",
-  "@stageGraphSeedingInOrderPreserving": { "description": "Label for StageSeedingIn.orderPreserving" },
+  "@stageGraphSeedingInOrderPreserving": {
+    "description": "Label for StageSeedingIn.orderPreserving"
+  },
   "stageGraphSeedingInReseedBySourceRank": "Neu nach Quell-Rang",
-  "@stageGraphSeedingInReseedBySourceRank": { "description": "Label for StageSeedingIn.reseedBySourceRank" },
+  "@stageGraphSeedingInReseedBySourceRank": {
+    "description": "Label for StageSeedingIn.reseedBySourceRank"
+  },
   "stageGraphSeedingInManual": "Manuell",
-  "@stageGraphSeedingInManual": { "description": "Label for StageSeedingIn.manual" },
+  "@stageGraphSeedingInManual": {
+    "description": "Label for StageSeedingIn.manual"
+  },
   "stageGraphSeedingInInfoTitle": "Seeding-Modus",
-  "@stageGraphSeedingInInfoTitle": { "description": "Title of the edge-seeding explainer dialog" },
+  "@stageGraphSeedingInInfoTitle": {
+    "description": "Title of the edge-seeding explainer dialog"
+  },
   "stageGraphSeedingInInfoOrderPreserving": "Die weitergeleiteten Teams behalten die Reihenfolge aus der Quell-Stufe.",
-  "@stageGraphSeedingInInfoOrderPreserving": { "description": "Explainer for StageSeedingIn.orderPreserving" },
+  "@stageGraphSeedingInInfoOrderPreserving": {
+    "description": "Explainer for StageSeedingIn.orderPreserving"
+  },
   "stageGraphSeedingInInfoReseedBySourceRank": "Die Teams werden anhand ihres Rangs in der Quell-Stufe neu gesetzt, bevor sie in die nächste Stufe gehen.",
-  "@stageGraphSeedingInInfoReseedBySourceRank": { "description": "Explainer for StageSeedingIn.reseedBySourceRank" },
+  "@stageGraphSeedingInInfoReseedBySourceRank": {
+    "description": "Explainer for StageSeedingIn.reseedBySourceRank"
+  },
   "stageGraphSeedingInInfoManual": "Du legst die Setzung der weitergeleiteten Teams selbst fest. Achtung: das kann den Phasenstart blockieren, bis die Setzung gespeichert ist.",
-  "@stageGraphSeedingInInfoManual": { "description": "Explainer for StageSeedingIn.manual" },
+  "@stageGraphSeedingInInfoManual": {
+    "description": "Explainer for StageSeedingIn.manual"
+  },
   "stageGraphInfoTemplateTitle": "Vorlage wählen",
-  "@stageGraphInfoTemplateTitle": { "description": "Title of the template-picker explainer dialog" },
+  "@stageGraphInfoTemplateTitle": {
+    "description": "Title of the template-picker explainer dialog"
+  },
   "stageGraphInfoTemplateBody": "Statt alles neu zu bauen, kannst du eine gespeicherte Vorlage laden und als Ausgangspunkt nutzen. Anwenden übernimmt die komplette Konfiguration der Vorlage in deinen Aufbau.",
-  "@stageGraphInfoTemplateBody": { "description": "Explainer for the template picker" },
+  "@stageGraphInfoTemplateBody": {
+    "description": "Explainer for the template picker"
+  },
   "stageGraphInfoNodeNameTitle": "Name der Stufe",
-  "@stageGraphInfoNodeNameTitle": { "description": "Title of the stage-name explainer dialog" },
+  "@stageGraphInfoNodeNameTitle": {
+    "description": "Title of the stage-name explainer dialog"
+  },
   "stageGraphInfoNodeNameBody": "Frei wählbarer Name, um die Stufe im Graphen zu erkennen (z. B. \"Gruppenphase\", \"Hauptbaum\"). Der Name lässt sich nicht mehr ändern, solange Kanten daran hängen.",
-  "@stageGraphInfoNodeNameBody": { "description": "Explainer for the stage name field" },
+  "@stageGraphInfoNodeNameBody": {
+    "description": "Explainer for the stage name field"
+  },
   "stageGraphInfoSeedingSourceTitle": "Woher die Startreihenfolge kommt",
-  "@stageGraphInfoSeedingSourceTitle": { "description": "Title of the stage seeding-source explainer dialog" },
+  "@stageGraphInfoSeedingSourceTitle": {
+    "description": "Title of the stage seeding-source explainer dialog"
+  },
   "stageGraphInfoSeedingSourceBody": "Legt fest, woher die Setzliste für diese Stufe stammt: aus der ELO-Wertung, aus einer Vorrangliste, von dir manuell gesetzt, oder \"wie geroutet\" (in der Reihenfolge, in der die Teams aus der vorherigen Stufe ankommen).",
-  "@stageGraphInfoSeedingSourceBody": { "description": "Explainer for the stage seeding source" },
+  "@stageGraphInfoSeedingSourceBody": {
+    "description": "Explainer for the stage seeding source"
+  },
   "stageGraphInfoGroupCountTitle": "Anzahl Gruppen",
-  "@stageGraphInfoGroupCountTitle": { "description": "Title of the group-count explainer dialog" },
+  "@stageGraphInfoGroupCountTitle": {
+    "description": "Title of the group-count explainer dialog"
+  },
   "stageGraphInfoGroupCountBody": "In wie viele Gruppen das Feld dieser Stufe aufgeteilt wird.",
-  "@stageGraphInfoGroupCountBody": { "description": "Explainer for the group count field" },
+  "@stageGraphInfoGroupCountBody": {
+    "description": "Explainer for the group count field"
+  },
   "stageGraphInfoQualifierTitle": "Wie viele pro Gruppe weiterkommen",
-  "@stageGraphInfoQualifierTitle": { "description": "Title of the qualifier-count explainer dialog" },
+  "@stageGraphInfoQualifierTitle": {
+    "description": "Title of the qualifier-count explainer dialog"
+  },
   "stageGraphInfoQualifierBody": "Qualifikanten zählen pro Gruppe, nicht über alle Gruppen zusammen: bei 2 ziehen die besten 2 jeder Gruppe weiter.",
-  "@stageGraphInfoQualifierBody": { "description": "Explainer for the qualifier count field" },
+  "@stageGraphInfoQualifierBody": {
+    "description": "Explainer for the qualifier count field"
+  },
   "stageGraphInfoKoMatchupTitle": "Wer gegen wen",
-  "@stageGraphInfoKoMatchupTitle": { "description": "Title of the KO matchup explainer dialog" },
+  "@stageGraphInfoKoMatchupTitle": {
+    "description": "Title of the KO matchup explainer dialog"
+  },
   "stageGraphInfoKoMatchupBody": "Bestimmt die Paarungen im K.-o. \"Beste vs. Schlechteste\" lässt die stärksten gegen die schwächsten antreten, \"1. vs. 2.\" paart benachbarte Ränge.",
-  "@stageGraphInfoKoMatchupBody": { "description": "Explainer for the KO matchup choice" },
+  "@stageGraphInfoKoMatchupBody": {
+    "description": "Explainer for the KO matchup choice"
+  },
   "stageGraphInfoKoTiebreakTitle": "Entscheid bei Gleichstand",
-  "@stageGraphInfoKoTiebreakTitle": { "description": "Title of the KO tiebreak-method explainer dialog" },
+  "@stageGraphInfoKoTiebreakTitle": {
+    "description": "Title of the KO tiebreak-method explainer dialog"
+  },
   "stageGraphInfoKoTiebreakBody": "Wie ein unentschiedenes K.-o.-Spiel entschieden wird: \"Klassisch\" oder \"Mighty-Finisher\". Beim Mighty-Finisher wird ein zeitbegrenztes Spiel zu Ende gespielt, sobald die Zeit abgelaufen ist; steht es danach unentschieden, folgt ein Entscheidungssatz nach den festgelegten Finisher-Regeln. \"Klassisch\" ist der herkömmliche Entscheid ohne Zeit-Finisher. Der Mighty-Finisher ist nicht dasselbe wie das Shoot-out: das Shoot-out ist ein eigenes Konzept und löst beim Übergang Vorrunde→K.-o. ein platzierungsrelevantes Unentschieden auf, nicht ein einzelnes K.-o.-Spiel. Nur im K.-o. relevant, die Vorrunde hat keinen Tiebreak.",
-  "@stageGraphInfoKoTiebreakBody": { "description": "Explainer for the KO tiebreak method" },
+  "@stageGraphInfoKoTiebreakBody": {
+    "description": "Explainer for the KO tiebreak method"
+  },
   "stageGraphInfoKoResetTitle": "Zweites Finale möglich",
-  "@stageGraphInfoKoResetTitle": { "description": "Title of the grand-final-reset explainer dialog" },
+  "@stageGraphInfoKoResetTitle": {
+    "description": "Title of the grand-final-reset explainer dialog"
+  },
   "stageGraphInfoKoResetBody": "Nur beim doppelten K.-o.: gewinnt das Team aus dem Verliererbaum das erste Finale, gibt es ein zweites, entscheidendes Finale (beide haben dann genau eine Niederlage).",
-  "@stageGraphInfoKoResetBody": { "description": "Explainer for the grand-final reset" },
+  "@stageGraphInfoKoResetBody": {
+    "description": "Explainer for the grand-final reset"
+  },
   "stageGraphInfoKoRoundCountTitle": "Wie viele Runden",
-  "@stageGraphInfoKoRoundCountTitle": { "description": "Title of the KO round-count explainer dialog" },
+  "@stageGraphInfoKoRoundCountTitle": {
+    "description": "Title of the KO round-count explainer dialog"
+  },
   "stageGraphInfoKoRoundCountBody": "Legt fest, über wie viele Runden der K.-o.-Baum dieser Stufe gespielt wird.",
-  "@stageGraphInfoKoRoundCountBody": { "description": "Explainer for the KO round count field" },
+  "@stageGraphInfoKoRoundCountBody": {
+    "description": "Explainer for the KO round count field"
+  },
   "stageGraphInfoKoRoundTitle": "Regeln je Runde",
-  "@stageGraphInfoKoRoundTitle": { "description": "Title of the per-KO-round rules explainer dialog" },
+  "@stageGraphInfoKoRoundTitle": {
+    "description": "Title of the per-KO-round rules explainer dialog"
+  },
   "stageGraphInfoKoRoundBody": "Pro K.-o.-Runde einstellbar: wie viele Sätze zum Sieg nötig sind, das Zeitlimit pro Spiel, die Pause danach und ob ein Tiebreak greift. Spätere Runden dürfen länger angesetzt sein als frühe.",
-  "@stageGraphInfoKoRoundBody": { "description": "Explainer for the per-round KO rules" },
+  "@stageGraphInfoKoRoundBody": {
+    "description": "Explainer for the per-round KO rules"
+  },
   "stageGraphEdgeConnectionLabel": "Verbindung",
-  "@stageGraphEdgeConnectionLabel": { "description": "Group label above the edge from/to dropdowns" },
+  "@stageGraphEdgeConnectionLabel": {
+    "description": "Group label above the edge from/to dropdowns"
+  },
   "stageGraphInfoEdgeFromToTitle": "Verbindung zwischen Stufen",
-  "@stageGraphInfoEdgeFromToTitle": { "description": "Title of the edge from/to explainer dialog" },
+  "@stageGraphInfoEdgeFromToTitle": {
+    "description": "Title of the edge from/to explainer dialog"
+  },
   "stageGraphInfoEdgeFromToBody": "Eine Kante leitet Teilnehmer von einer Stufe (Von) in die nächste (Nach) weiter. So baust du den Ablauf zusammen. Eine Stufe darf mehrere Kanten haben — z. B. Sieger ins Hauptbaum UND Verlierer in einen Neben-Cup.",
-  "@stageGraphInfoEdgeFromToBody": { "description": "Explainer for the edge from/to fields" },
+  "@stageGraphInfoEdgeFromToBody": {
+    "description": "Explainer for the edge from/to fields"
+  },
   "stageGraphInfoSelectorTitle": "Selektor — wer weiterkommt",
-  "@stageGraphInfoSelectorTitle": { "description": "Title of the edge-selector explainer dialog" },
+  "@stageGraphInfoSelectorTitle": {
+    "description": "Title of the edge-selector explainer dialog"
+  },
   "stageGraphInfoSelectorIntro": "Bestimmt, welche Teams diese Kante in die nächste Stufe weiterleitet.",
-  "@stageGraphInfoSelectorIntro": { "description": "Fixed intro sentence for the edge-selector explainer, prepended to the chosen selector's type-specific hint" },
+  "@stageGraphInfoSelectorIntro": {
+    "description": "Fixed intro sentence for the edge-selector explainer, prepended to the chosen selector's type-specific hint"
+  },
   "stageGraphSaveTemplateName": "Name",
-  "@stageGraphSaveTemplateName": { "description": "Label for the template name field" },
+  "@stageGraphSaveTemplateName": {
+    "description": "Label for the template name field"
+  },
   "stageGraphSaveTemplateVisibility": "Sichtbarkeit",
-  "@stageGraphSaveTemplateVisibility": { "description": "Label for the visibility dropdown" },
+  "@stageGraphSaveTemplateVisibility": {
+    "description": "Label for the visibility dropdown"
+  },
   "stageGraphVisibilityPrivate": "Privat (nur ich)",
-  "@stageGraphVisibilityPrivate": { "description": "Label for TemplateVisibility.private" },
+  "@stageGraphVisibilityPrivate": {
+    "description": "Label for TemplateVisibility.private"
+  },
   "stageGraphVisibilityClub": "Verein/Organisation",
-  "@stageGraphVisibilityClub": { "description": "Label for TemplateVisibility.club" },
+  "@stageGraphVisibilityClub": {
+    "description": "Label for TemplateVisibility.club"
+  },
   "stageGraphVisibilityPublic": "Öffentlich",
-  "@stageGraphVisibilityPublic": { "description": "Label for TemplateVisibility.public" },
+  "@stageGraphVisibilityPublic": {
+    "description": "Label for TemplateVisibility.public"
+  },
   "stageGraphSaveTemplateClubUnavailable": "Für Verein/Organisation muss ein Veranstalter gewählt sein.",
-  "@stageGraphSaveTemplateClubUnavailable": { "description": "Helper shown when the club visibility is not selectable because no club is set" },
+  "@stageGraphSaveTemplateClubUnavailable": {
+    "description": "Helper shown when the club visibility is not selectable because no club is set"
+  },
   "stageGraphConfirm": "Bestätigen",
-  "@stageGraphConfirm": { "description": "Generic confirm button in stage-graph dialogs" },
+  "@stageGraphConfirm": {
+    "description": "Generic confirm button in stage-graph dialogs"
+  },
   "stageGraphCancel": "Abbrechen",
-  "@stageGraphCancel": { "description": "Generic cancel button in stage-graph dialogs" },
+  "@stageGraphCancel": {
+    "description": "Generic cancel button in stage-graph dialogs"
+  },
   "stageGraphViewForm": "Formular",
-  "@stageGraphViewForm": { "description": "Toggle label for the form view of the stage-graph editor" },
+  "@stageGraphViewForm": {
+    "description": "Toggle label for the form view of the stage-graph editor"
+  },
   "stageGraphViewCanvas": "Canvas",
-  "@stageGraphViewCanvas": { "description": "Toggle label for the visual canvas view of the stage-graph editor" },
+  "@stageGraphViewCanvas": {
+    "description": "Toggle label for the visual canvas view of the stage-graph editor"
+  },
   "stageGraphCanvasEmpty": "Noch keine Stufen. Füge eine Stufe hinzu, um den Graphen zu zeichnen.",
-  "@stageGraphCanvasEmpty": { "description": "Empty-state hint shown on the canvas when the graph has no nodes" },
+  "@stageGraphCanvasEmpty": {
+    "description": "Empty-state hint shown on the canvas when the graph has no nodes"
+  },
   "stageGraphCanvasOutPort": "Kante ziehen",
-  "@stageGraphCanvasOutPort": { "description": "Tooltip on the output port handle of a stage-graph node card (drag to draw an edge)" },
+  "@stageGraphCanvasOutPort": {
+    "description": "Tooltip on the output port handle of a stage-graph node card (drag to draw an edge)"
+  },
   "stageGraphCanvasInPort": "Eingang",
-  "@stageGraphCanvasInPort": { "description": "Tooltip on the input port handle of a stage-graph node card (edge drop target)" },
+  "@stageGraphCanvasInPort": {
+    "description": "Tooltip on the input port handle of a stage-graph node card (edge drop target)"
+  },
   "stageGraphCanvasDeleteEdge": "Kante „{from} → {to}“ löschen?",
   "@stageGraphCanvasDeleteEdge": {
     "description": "Confirmation body when deleting an edge by tapping it on the canvas",
     "placeholders": {
-      "from": { "type": "String" },
-      "to": { "type": "String" }
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
     }
   },
   "stageGraphSeedingFieldHint": "Seeding: {label}",
   "@stageGraphSeedingFieldHint": {
     "description": "Compact seeding label shown on a node tile",
     "placeholders": {
-      "label": { "type": "String" }
+      "label": {
+        "type": "String"
+      }
     }
   },
   "appTitle": "Kubb",
@@ -2753,14 +2909,18 @@
   "@tournamentWizardInviteNoResults": {
     "description": "Empty-result message in the invite player search",
     "placeholders": {
-      "query": { "type": "String" }
+      "query": {
+        "type": "String"
+      }
     }
   },
   "tournamentWizardInviteSearchError": "Suche fehlgeschlagen: {error}",
   "@tournamentWizardInviteSearchError": {
     "description": "Error message when the invite player search fails",
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "tournamentWizardInviteAddAction": "Einladen",
@@ -2775,7 +2935,9 @@
   "@tournamentWizardInvitePartialError": {
     "description": "Snackbar shown when some invite calls failed after creating the tournament",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "tournamentWizardLocationLabel": "Ort",
@@ -3176,13 +3338,21 @@
     "description": "Random grouping-strategy option"
   },
   "stageGraphGroupingInfoTitle": "Gruppierungsstrategie",
-  "@stageGraphGroupingInfoTitle": { "description": "Title of the grouping-strategy explainer dialog" },
+  "@stageGraphGroupingInfoTitle": {
+    "description": "Title of the grouping-strategy explainer dialog"
+  },
   "stageGraphGroupingInfoSnake": "Reissverschluss: stärkste und schwächste Teams werden abwechselnd auf die Gruppen verteilt, damit die Gruppen etwa gleich stark sind.",
-  "@stageGraphGroupingInfoSnake": { "description": "Explainer for PoolGroupingStrategy.snake" },
+  "@stageGraphGroupingInfoSnake": {
+    "description": "Explainer for PoolGroupingStrategy.snake"
+  },
   "stageGraphGroupingInfoSeeded": "Blockweise nach Setzung: die Top-Teams werden der Reihe nach auf die Gruppen verteilt.",
-  "@stageGraphGroupingInfoSeeded": { "description": "Explainer for PoolGroupingStrategy.seeded" },
+  "@stageGraphGroupingInfoSeeded": {
+    "description": "Explainer for PoolGroupingStrategy.seeded"
+  },
   "stageGraphGroupingInfoRandom": "Zufällige Verteilung auf die Gruppen. Mit gesetztem Seed reproduzierbar.",
-  "@stageGraphGroupingInfoRandom": { "description": "Explainer for PoolGroupingStrategy.random" },
+  "@stageGraphGroupingInfoRandom": {
+    "description": "Explainer for PoolGroupingStrategy.random"
+  },
   "tournamentWizardPoolRandomSeedLabel": "Random-Seed (optional)",
   "@tournamentWizardPoolRandomSeedLabel": {
     "description": "Label for the optional random-seed input shown for the random strategy"
@@ -3200,48 +3370,90 @@
     "description": "Break between matches stepper label"
   },
   "tournamentWizardBracketTypeLabel": "Bracket-Typ",
-  "@tournamentWizardBracketTypeLabel": { "description": "Bracket type label" },
+  "@tournamentWizardBracketTypeLabel": {
+    "description": "Bracket type label"
+  },
   "tournamentWizardBracketSingle": "Single-KO",
-  "@tournamentWizardBracketSingle": { "description": "Single elimination" },
+  "@tournamentWizardBracketSingle": {
+    "description": "Single elimination"
+  },
   "tournamentWizardBracketDouble": "Double-KO",
-  "@tournamentWizardBracketDouble": { "description": "Double elimination" },
+  "@tournamentWizardBracketDouble": {
+    "description": "Double elimination"
+  },
   "tournamentWizardKoMatchupLabel": "Begegnungen",
-  "@tournamentWizardKoMatchupLabel": { "description": "KO matchup label" },
+  "@tournamentWizardKoMatchupLabel": {
+    "description": "KO matchup label"
+  },
   "tournamentWizardKoMatchupHighLow": "Beste vs Schlechteste",
-  "@tournamentWizardKoMatchupHighLow": { "description": "Seed high vs low" },
+  "@tournamentWizardKoMatchupHighLow": {
+    "description": "Seed high vs low"
+  },
   "tournamentWizardKoMatchupOneTwo": "1. vs 2.",
-  "@tournamentWizardKoMatchupOneTwo": { "description": "Adjacent placements" },
+  "@tournamentWizardKoMatchupOneTwo": {
+    "description": "Adjacent placements"
+  },
   "tournamentWizardKoTiebreakMethodLabel": "KO-Tiebreak-Methode",
-  "@tournamentWizardKoTiebreakMethodLabel": { "description": "KO tiebreak method" },
+  "@tournamentWizardKoTiebreakMethodLabel": {
+    "description": "KO tiebreak method"
+  },
   "tournamentWizardKoTiebreakClassic": "Klassisch",
-  "@tournamentWizardKoTiebreakClassic": { "description": "Classic tiebreak" },
+  "@tournamentWizardKoTiebreakClassic": {
+    "description": "Classic tiebreak"
+  },
   "tournamentWizardKoTiebreakMighty": "Mighty-Finisher",
-  "@tournamentWizardKoTiebreakMighty": { "description": "Mighty finisher shootout" },
+  "@tournamentWizardKoTiebreakMighty": {
+    "description": "Mighty finisher shootout"
+  },
   "tournamentWizardKoRulesLabel": "KO-Regelsatz",
-  "@tournamentWizardKoRulesLabel": { "description": "KO match rules section" },
+  "@tournamentWizardKoRulesLabel": {
+    "description": "KO match rules section"
+  },
   "tournamentWizardKoRoundRulesLabel": "Regeln pro KO-Runde",
-  "@tournamentWizardKoRoundRulesLabel": { "description": "Per-KO-round rules section header" },
+  "@tournamentWizardKoRoundRulesLabel": {
+    "description": "Per-KO-round rules section header"
+  },
   "tournamentWizardKoRoundRulesHint": "Sätze, Zeit und Pause können pro Runde gewählt werden.",
-  "@tournamentWizardKoRoundRulesHint": { "description": "Per-KO-round rules section helper" },
+  "@tournamentWizardKoRoundRulesHint": {
+    "description": "Per-KO-round rules section helper"
+  },
   "tournamentWizardKoRoundFinal": "Final",
-  "@tournamentWizardKoRoundFinal": { "description": "KO round label: final" },
+  "@tournamentWizardKoRoundFinal": {
+    "description": "KO round label: final"
+  },
   "tournamentWizardKoRoundSemi": "Halbfinale",
-  "@tournamentWizardKoRoundSemi": { "description": "KO round label: semifinal" },
+  "@tournamentWizardKoRoundSemi": {
+    "description": "KO round label: semifinal"
+  },
   "tournamentWizardKoRoundQuarter": "Viertelfinale",
-  "@tournamentWizardKoRoundQuarter": { "description": "KO round label: quarterfinal" },
+  "@tournamentWizardKoRoundQuarter": {
+    "description": "KO round label: quarterfinal"
+  },
   "tournamentWizardKoRoundEighth": "Achtelfinale",
-  "@tournamentWizardKoRoundEighth": { "description": "KO round label: round of 16" },
+  "@tournamentWizardKoRoundEighth": {
+    "description": "KO round label: round of 16"
+  },
   "tournamentWizardKoRoundOf": "1/{size}-Final",
   "@tournamentWizardKoRoundOf": {
     "description": "Generic KO round label for large brackets, e.g. 1/16-Final",
-    "placeholders": { "size": { "type": "int" } }
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
   },
   "tournamentWizardKoRoundPauseLabel": "Pause danach (Min.)",
-  "@tournamentWizardKoRoundPauseLabel": { "description": "Per-round break-after label" },
+  "@tournamentWizardKoRoundPauseLabel": {
+    "description": "Per-round break-after label"
+  },
   "tournamentWizardKoRoundTiebreakLabel": "Tiebreak",
-  "@tournamentWizardKoRoundTiebreakLabel": { "description": "Per-round tiebreak toggle" },
+  "@tournamentWizardKoRoundTiebreakLabel": {
+    "description": "Per-round tiebreak toggle"
+  },
   "tournamentWizardKoFinalNoTiebreak": "Ab Halbfinale ohne Tiebreak",
-  "@tournamentWizardKoFinalNoTiebreak": { "description": "Final/semifinal without tiebreak toggle" },
+  "@tournamentWizardKoFinalNoTiebreak": {
+    "description": "Final/semifinal without tiebreak toggle"
+  },
   "tournamentWizardMinParticipantsLabel": "Min. Teilnehmer",
   "@tournamentWizardMinParticipantsLabel": {
     "description": "Min participants stepper label"
@@ -3703,7 +3915,9 @@
   "@tournamentStatsEditionsCount": {
     "description": "Number of editions of a tournament series",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "tournamentStatsSeriesDetailEyebrow": "Serie",
@@ -3726,14 +3940,18 @@
   "@tournamentStatsFieldSize": {
     "description": "Field size (number of scored participants) of an edition",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "tournamentStatsPlacementShort": "{rank}.",
   "@tournamentStatsPlacementShort": {
     "description": "Short ordinal placement label, e.g. 1.",
     "placeholders": {
-      "rank": { "type": "int" }
+      "rank": {
+        "type": "int"
+      }
     }
   },
   "tournamentStatsWinnerLabel": "Sieger",
@@ -3929,15 +4147,21 @@
   "@tournamentDetailTeamSizeRange": {
     "description": "H2: team-size shown as a min..max range",
     "placeholders": {
-      "min": {"type": "int"},
-      "max": {"type": "int"}
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
     }
   },
   "tournamentDetailTeamSizeFixed": "{size} Spieler",
   "@tournamentDetailTeamSizeFixed": {
     "description": "H2: team-size when fixed (min == max)",
     "placeholders": {
-      "size": {"type": "int"}
+      "size": {
+        "type": "int"
+      }
     }
   },
   "tournamentDetailBasekubbs": "Basiskubbs/Seite",
@@ -3952,7 +4176,9 @@
   "@tournamentDetailTiebreakAfter": {
     "description": "H2: tiebreak enabled with a time threshold",
     "placeholders": {
-      "minutes": {"type": "int"}
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "tournamentDetailBreakBetween": "Pause zwischen Matches",
@@ -3963,7 +4189,9 @@
   "@tournamentDetailMinutes": {
     "description": "H2: a value expressed in minutes",
     "placeholders": {
-      "minutes": {"type": "int"}
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "tournamentDetailKoPhaseHeading": "KO-Phase",
@@ -4002,7 +4230,9 @@
   "@tournamentDetailMightyFinisherSlots": {
     "description": "H2: mighty-finisher slot count",
     "placeholders": {
-      "slots": {"type": "int"}
+      "slots": {
+        "type": "int"
+      }
     }
   },
   "tournamentDetailFinalNoTiebreak": "Finale ohne Tiebreak",
@@ -4089,8 +4319,12 @@
   "@tournamentDetailPoolConfigValue": {
     "description": "H2: pool config summary (group count + qualifiers per group)",
     "placeholders": {
-      "groups": {"type": "int"},
-      "qualifiers": {"type": "int"}
+      "groups": {
+        "type": "int"
+      },
+      "qualifiers": {
+        "type": "int"
+      }
     }
   },
   "tournamentDetailParticipants": "Teilnehmer",
@@ -4113,7 +4347,9 @@
   "@tournamentDetailRosterSlot": {
     "description": "Roster slot label with 1-based index",
     "placeholders": {
-      "index": { "type": "int" }
+      "index": {
+        "type": "int"
+      }
     }
   },
   "tournamentDetailRosterGuest": "Gast",
@@ -4124,7 +4360,9 @@
   "@tournamentMatchHammerCrew": {
     "description": "Team match header listing roster members",
     "placeholders": {
-      "members": { "type": "String" }
+      "members": {
+        "type": "String"
+      }
     }
   },
   "tournamentDetailPending": "ausstehend",
@@ -4302,7 +4540,9 @@
   "@tournamentDetailPoolGroup": {
     "description": "Heading per pool group, e.g. 'Gruppe A'",
     "placeholders": {
-      "label": { "type": "String" }
+      "label": {
+        "type": "String"
+      }
     }
   },
   "tournamentDetailInfoHeading": "Veranstaltung",
@@ -4445,7 +4685,9 @@
   "@tournamentDetailKoQualifiers": {
     "description": "CF5/K28: KO bracket size value",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "tournamentDetailConsolationLabel": "Trostturnier",
@@ -4476,8 +4718,12 @@
   "@tournamentDetailConsolationRankBandValue": {
     "description": "H2: consolation rank band value (from–to)",
     "placeholders": {
-      "from": { "type": "int" },
-      "to": { "type": "int" }
+      "from": {
+        "type": "int"
+      },
+      "to": {
+        "type": "int"
+      }
     }
   },
   "tournamentDetailConsolationDirectCount": "Direkt-Starter Trostturnier",
@@ -4548,22 +4794,30 @@
   "@tournamentTeamRosterRangeFixed": {
     "description": "Roster hint for a fixed team size",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "tournamentTeamRosterRange": "Wähle zwischen {min} und {max} Spielern für dein Team aus.",
   "@tournamentTeamRosterRange": {
     "description": "Roster hint for a team size range",
     "placeholders": {
-      "min": { "type": "int" },
-      "max": { "type": "int" }
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
     }
   },
   "tournamentTeamRosterSelected": "{count} ausgewählt",
   "@tournamentTeamRosterSelected": {
     "description": "Shows how many roster members are currently selected",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "tournamentTeamRegistered": "Team angemeldet.",
@@ -4824,14 +5078,18 @@
   "@tournamentMatchFinisherSetLabel": {
     "description": "M2b: which set the KO finisher prompt resolves",
     "placeholders": {
-      "set": { "type": "int" }
+      "set": {
+        "type": "int"
+      }
     }
   },
   "tournamentMatchFinisherNeeded": "Satz {set}: KO ohne König — Finisher auflösen",
   "@tournamentMatchFinisherNeeded": {
     "description": "M2b: validation hint shown when a KO set has no King and the finisher is unresolved",
     "placeholders": {
-      "set": { "type": "int" }
+      "set": {
+        "type": "int"
+      }
     }
   },
   "tournamentMatchFinisherShootoutPending": "Mighty-Finisher Shoot-out offen — im Shoot-out auflösen.",
@@ -4880,14 +5138,18 @@
   "@tournamentMatchPitchCallTitle": {
     "description": "Prominent call-to-play banner pointing the participant to their pitch",
     "placeholders": {
-      "pitch": { "type": "String" }
+      "pitch": {
+        "type": "String"
+      }
     }
   },
   "tournamentMatchPitchCallVersus": "Gegen {opponent}",
   "@tournamentMatchPitchCallVersus": {
     "description": "Opponent line under the pitch-call banner",
     "placeholders": {
-      "opponent": { "type": "String" }
+      "opponent": {
+        "type": "String"
+      }
     }
   },
   "tournamentMatchPitchCallAction": "Spiel öffnen",
@@ -6413,12 +6675,23 @@
   "tournamentWizardSummaryTeamSizeFixed": "{size} (fix)",
   "@tournamentWizardSummaryTeamSizeFixed": {
     "description": "K26: summary value for a fixed team size",
-    "placeholders": { "size": { "type": "int" } }
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
   },
   "tournamentWizardSummaryTeamSizeRange": "{min}–{max}",
   "@tournamentWizardSummaryTeamSizeRange": {
     "description": "K26: summary value for a variable team size range",
-    "placeholders": { "min": { "type": "int" }, "max": { "type": "int" } }
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   },
   "tournamentWizardSummaryYes": "Ja",
   "@tournamentWizardSummaryYes": {
@@ -6432,8 +6705,12 @@
   "@tournamentWizardSummaryFee": {
     "description": "K26: summary value for the entry fee (amount + currency)",
     "placeholders": {
-      "amount": { "type": "String" },
-      "currency": { "type": "String" }
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
     }
   },
   "tournamentWizardSummaryFeeFree": "Gratis",
@@ -6475,7 +6752,11 @@
   "tournamentWizardSummaryInfoCount": "{count} hinterlegt",
   "@tournamentWizardSummaryInfoCount": {
     "description": "K26: summary value counting the filled participant info texts",
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "tournamentWizardSummaryFormatLabel": "Format",
   "@tournamentWizardSummaryFormatLabel": {
@@ -6517,8 +6798,12 @@
   "@tournamentWizardSummaryKoRoundEntry": {
     "description": "K26: summary short form for one KO round (round number + best-of from its max sets), joined by '·'",
     "placeholders": {
-      "round": { "type": "int" },
-      "maxSets": { "type": "int" }
+      "round": {
+        "type": "int"
+      },
+      "maxSets": {
+        "type": "int"
+      }
     }
   },
   "tournamentWizardSummarySeedingLabel": "Seeding-Quelle",
@@ -6561,7 +6846,9 @@
   "@eloGamesCount": {
     "description": "Number of rated games behind an ELO value",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "nicknameTakenError": "Dieser Name ist bereits vergeben — bitte wähle einen anderen.",
@@ -7020,14 +7307,18 @@
   "@stageTypeGraphRoundTitle": {
     "description": "Title of a single round card",
     "placeholders": {
-      "round": { "type": "String" }
+      "round": {
+        "type": "String"
+      }
     }
   },
   "stageTypeGraphRoundFieldCount": "{count} Felder",
   "@stageTypeGraphRoundFieldCount": {
     "description": "Number of fields in a round",
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "stageTypeGraphFieldCountLabel": "Felderzahl",
@@ -7258,23 +7549,33 @@
   "@tournamentWizardSummaryTypeRoundLabel": {
     "description": "M4 U12: Ebene-2 summary label for one type-graph round with its field count",
     "placeholders": {
-      "round": { "type": "int" },
-      "fields": { "type": "int" }
+      "round": {
+        "type": "int"
+      },
+      "fields": {
+        "type": "int"
+      }
     }
   },
   "tournamentWizardSummaryTypeFields": "Felder: {ids}",
   "@tournamentWizardSummaryTypeFields": {
     "description": "M4 U12: lists the field ids of a type-graph round in the Ebene-2 summary",
     "placeholders": {
-      "ids": { "type": "String" }
+      "ids": {
+        "type": "String"
+      }
     }
   },
   "tournamentWizardSummaryTypeFormat": "Bo{maxSets} · {minutes} Min.",
   "@tournamentWizardSummaryTypeFormat": {
     "description": "M4 U12: match-format short form for a type-graph round (best-of from max sets, time limit in minutes)",
     "placeholders": {
-      "maxSets": { "type": "int" },
-      "minutes": { "type": "int" }
+      "maxSets": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "tournamentWizardSummaryTypePairingRoundRobin": "Jeder gegen jeden",
@@ -7293,9 +7594,67 @@
   "@tournamentWizardSummaryTypeRouting": {
     "description": "M4 U12: KO routing summary for a type-graph round (counts of winner, loser and open edges leaving the round)",
     "placeholders": {
-      "winners": { "type": "int" },
-      "losers": { "type": "int" },
-      "open": { "type": "int" }
+      "winners": {
+        "type": "int"
+      },
+      "losers": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
     }
+  },
+  "adminShellBrand": "Kubb Club",
+  "@adminShellBrand": {
+    "description": "Sidebar wordmark on the organiser desktop shell"
+  },
+  "adminShellBrandSub": "Turnierleitung",
+  "@adminShellBrandSub": {
+    "description": "Sidebar subtitle under the wordmark"
+  },
+  "adminShellSeason": "Saison 2026",
+  "@adminShellSeason": {
+    "description": "Sidebar nav section label"
+  },
+  "adminNavOverview": "Übersicht",
+  "@adminNavOverview": {
+    "description": "Sidebar nav entry"
+  },
+  "adminNavTournaments": "Turniere",
+  "@adminNavTournaments": {
+    "description": "Sidebar nav entry"
+  },
+  "adminNavRegistrations": "Anmeldungen",
+  "@adminNavRegistrations": {
+    "description": "Sidebar nav entry"
+  },
+  "adminNavSchedule": "Spielplan",
+  "@adminNavSchedule": {
+    "description": "Sidebar nav entry"
+  },
+  "adminNavDisputes": "Konflikte",
+  "@adminNavDisputes": {
+    "description": "Sidebar nav entry"
+  },
+  "adminNavTeams": "Teams & Spieler",
+  "@adminNavTeams": {
+    "description": "Sidebar nav entry"
+  },
+  "adminOverviewEyebrow": "Turnierleitung · Live",
+  "@adminOverviewEyebrow": {
+    "description": "Page eyebrow above the overview title"
+  },
+  "adminOverviewTitle": "Kommandozentrale",
+  "@adminOverviewTitle": {
+    "description": "Overview page title"
+  },
+  "adminActionExport": "Exportieren",
+  "@adminActionExport": {
+    "description": "Header action on the admin pages"
+  },
+  "adminActionCreateTournament": "+ Turnier anlegen",
+  "@adminActionCreateTournament": {
+    "description": "Primary header action"
   }
 }

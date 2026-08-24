@@ -5795,4 +5795,43 @@ class AppLocalizationsDe extends AppLocalizations {
   String tournamentWizardSummaryTypeRouting(int winners, int losers, int open) {
     return 'Sieger $winners · Verlierer $losers · Offen $open';
   }
+
+  @override
+  String get adminShellBrand => 'Kubb Club';
+
+  @override
+  String get adminShellBrandSub => 'Turnierleitung';
+
+  @override
+  String get adminShellSeason => 'Saison 2026';
+
+  @override
+  String get adminNavOverview => 'Übersicht';
+
+  @override
+  String get adminNavTournaments => 'Turniere';
+
+  @override
+  String get adminNavRegistrations => 'Anmeldungen';
+
+  @override
+  String get adminNavSchedule => 'Spielplan';
+
+  @override
+  String get adminNavDisputes => 'Konflikte';
+
+  @override
+  String get adminNavTeams => 'Teams & Spieler';
+
+  @override
+  String get adminOverviewEyebrow => 'Turnierleitung · Live';
+
+  @override
+  String get adminOverviewTitle => 'Kommandozentrale';
+
+  @override
+  String get adminActionExport => 'Exportieren';
+
+  @override
+  String get adminActionCreateTournament => '+ Turnier anlegen';
 }

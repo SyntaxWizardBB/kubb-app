@@ -10323,6 +10323,84 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Sieger {winners} · Verlierer {losers} · Offen {open}'**
   String tournamentWizardSummaryTypeRouting(int winners, int losers, int open);
+
+  /// Sidebar wordmark on the organiser desktop shell
+  ///
+  /// In de, this message translates to:
+  /// **'Kubb Club'**
+  String get adminShellBrand;
+
+  /// Sidebar subtitle under the wordmark
+  ///
+  /// In de, this message translates to:
+  /// **'Turnierleitung'**
+  String get adminShellBrandSub;
+
+  /// Sidebar nav section label
+  ///
+  /// In de, this message translates to:
+  /// **'Saison 2026'**
+  String get adminShellSeason;
+
+  /// Sidebar nav entry
+  ///
+  /// In de, this message translates to:
+  /// **'Übersicht'**
+  String get adminNavOverview;
+
+  /// Sidebar nav entry
+  ///
+  /// In de, this message translates to:
+  /// **'Turniere'**
+  String get adminNavTournaments;
+
+  /// Sidebar nav entry
+  ///
+  /// In de, this message translates to:
+  /// **'Anmeldungen'**
+  String get adminNavRegistrations;
+
+  /// Sidebar nav entry
+  ///
+  /// In de, this message translates to:
+  /// **'Spielplan'**
+  String get adminNavSchedule;
+
+  /// Sidebar nav entry
+  ///
+  /// In de, this message translates to:
+  /// **'Konflikte'**
+  String get adminNavDisputes;
+
+  /// Sidebar nav entry
+  ///
+  /// In de, this message translates to:
+  /// **'Teams & Spieler'**
+  String get adminNavTeams;
+
+  /// Page eyebrow above the overview title
+  ///
+  /// In de, this message translates to:
+  /// **'Turnierleitung · Live'**
+  String get adminOverviewEyebrow;
+
+  /// Overview page title
+  ///
+  /// In de, this message translates to:
+  /// **'Kommandozentrale'**
+  String get adminOverviewTitle;
+
+  /// Header action on the admin pages
+  ///
+  /// In de, this message translates to:
+  /// **'Exportieren'**
+  String get adminActionExport;
+
+  /// Primary header action
+  ///
+  /// In de, this message translates to:
+  /// **'+ Turnier anlegen'**
+  String get adminActionCreateTournament;
 }
 
 class _AppLocalizationsDelegate
