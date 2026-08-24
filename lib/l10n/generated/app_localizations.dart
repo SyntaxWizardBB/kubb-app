@@ -10401,6 +10401,90 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'+ Turnier anlegen'**
   String get adminActionCreateTournament;
+
+  /// Pulsing badge on the live round panel
+  ///
+  /// In de, this message translates to:
+  /// **'Live'**
+  String get adminLiveBadge;
+
+  /// Secondary action on the live round panel
+  ///
+  /// In de, this message translates to:
+  /// **'Runde pausieren'**
+  String get adminActionPauseRound;
+
+  /// Shown instead of pause while the round is paused
+  ///
+  /// In de, this message translates to:
+  /// **'Runde fortsetzen'**
+  String get adminActionResumeRound;
+
+  /// Primary action on the live round panel
+  ///
+  /// In de, this message translates to:
+  /// **'Runde abschliessen'**
+  String get adminActionCloseRound;
+
+  /// Label above the round clock
+  ///
+  /// In de, this message translates to:
+  /// **'Rundenzeit'**
+  String get adminRoundTimeLabel;
+
+  /// Label above the round-length chips
+  ///
+  /// In de, this message translates to:
+  /// **'Rundenlänge'**
+  String get adminRoundLengthLabel;
+
+  /// Takes a minute off the round clock
+  ///
+  /// In de, this message translates to:
+  /// **'−1:00'**
+  String get adminTimerBack;
+
+  /// Adds a minute to the round clock
+  ///
+  /// In de, this message translates to:
+  /// **'+1:00'**
+  String get adminTimerForward;
+
+  /// Resets the round clock
+  ///
+  /// In de, this message translates to:
+  /// **'Zurücksetzen'**
+  String get adminTimerReset;
+
+  /// Starts the round clock
+  ///
+  /// In de, this message translates to:
+  /// **'Start'**
+  String get adminTimerStart;
+
+  /// Pauses the round clock
+  ///
+  /// In de, this message translates to:
+  /// **'Pause'**
+  String get adminTimerPause;
+
+  /// Opens the match behind a court card
+  ///
+  /// In de, this message translates to:
+  /// **'Details'**
+  String get adminCourtDetails;
+
+  /// Current round out of the planned total
+  ///
+  /// In de, this message translates to:
+  /// **'Runde {round} / {total}'**
+  String adminRoundOf(int round, int total);
+
+  /// How many courts have reported
+  ///
+  /// In de, this message translates to:
+  /// **'{done} / {total} Courts fertig'**
+  String adminCourtsDone(int done, int total);
 }
 
 class _AppLocalizationsDelegate

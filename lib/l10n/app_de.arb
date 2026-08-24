@@ -7656,5 +7656,77 @@
   "adminActionCreateTournament": "+ Turnier anlegen",
   "@adminActionCreateTournament": {
     "description": "Primary header action"
+  },
+  "adminLiveBadge": "Live",
+  "@adminLiveBadge": {
+    "description": "Pulsing badge on the live round panel"
+  },
+  "adminActionPauseRound": "Runde pausieren",
+  "@adminActionPauseRound": {
+    "description": "Secondary action on the live round panel"
+  },
+  "adminActionResumeRound": "Runde fortsetzen",
+  "@adminActionResumeRound": {
+    "description": "Shown instead of pause while the round is paused"
+  },
+  "adminActionCloseRound": "Runde abschliessen",
+  "@adminActionCloseRound": {
+    "description": "Primary action on the live round panel"
+  },
+  "adminRoundTimeLabel": "Rundenzeit",
+  "@adminRoundTimeLabel": {
+    "description": "Label above the round clock"
+  },
+  "adminRoundLengthLabel": "Rundenlänge",
+  "@adminRoundLengthLabel": {
+    "description": "Label above the round-length chips"
+  },
+  "adminTimerBack": "−1:00",
+  "@adminTimerBack": {
+    "description": "Takes a minute off the round clock"
+  },
+  "adminTimerForward": "+1:00",
+  "@adminTimerForward": {
+    "description": "Adds a minute to the round clock"
+  },
+  "adminTimerReset": "Zurücksetzen",
+  "@adminTimerReset": {
+    "description": "Resets the round clock"
+  },
+  "adminTimerStart": "Start",
+  "@adminTimerStart": {
+    "description": "Starts the round clock"
+  },
+  "adminTimerPause": "Pause",
+  "@adminTimerPause": {
+    "description": "Pauses the round clock"
+  },
+  "adminCourtDetails": "Details",
+  "@adminCourtDetails": {
+    "description": "Opens the match behind a court card"
+  },
+  "adminRoundOf": "Runde {round} / {total}",
+  "@adminRoundOf": {
+    "description": "Current round out of the planned total",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "adminCourtsDone": "{done} / {total} Courts fertig",
+  "@adminCourtsDone": {
+    "description": "How many courts have reported",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
   }
 }

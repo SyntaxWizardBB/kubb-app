@@ -5834,4 +5834,50 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get adminActionCreateTournament => '+ Turnier anlegen';
+
+  @override
+  String get adminLiveBadge => 'Live';
+
+  @override
+  String get adminActionPauseRound => 'Runde pausieren';
+
+  @override
+  String get adminActionResumeRound => 'Runde fortsetzen';
+
+  @override
+  String get adminActionCloseRound => 'Runde abschliessen';
+
+  @override
+  String get adminRoundTimeLabel => 'Rundenzeit';
+
+  @override
+  String get adminRoundLengthLabel => 'Rundenlänge';
+
+  @override
+  String get adminTimerBack => '−1:00';
+
+  @override
+  String get adminTimerForward => '+1:00';
+
+  @override
+  String get adminTimerReset => 'Zurücksetzen';
+
+  @override
+  String get adminTimerStart => 'Start';
+
+  @override
+  String get adminTimerPause => 'Pause';
+
+  @override
+  String get adminCourtDetails => 'Details';
+
+  @override
+  String adminRoundOf(int round, int total) {
+    return 'Runde $round / $total';
+  }
+
+  @override
+  String adminCourtsDone(int done, int total) {
+    return '$done / $total Courts fertig';
+  }
 }
