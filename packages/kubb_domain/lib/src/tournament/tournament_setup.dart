@@ -191,13 +191,21 @@ final class MatchFormatSpec {
   final bool finalNoTiebreak;
 
   /// Reusable invariants; the draft aggregates these for the wizard.
-  List<String> issues() {
+  ///
+  /// [oddMaxSets] is the KO rule: a KO match is best-of-N and has to produce a
+  /// winner, so an even N — which can end level — is rejected. The prelim
+  /// passes false: a draw is a legitimate group/Schoch result there and carries
+  /// a point (ADR-0024 §2).
+  List<String> issues({bool oddMaxSets = false}) {
     final out = <String>[];
     if (setsToWin < 1 || setsToWin > 4) {
       out.add('Sätze zum Sieg muss zwischen 1 und 4 liegen.');
     }
     if (maxSets < 2 * setsToWin - 1) {
       out.add('Max. Sätze muss mindestens ${2 * setsToWin - 1} sein.');
+    }
+    if (oddMaxSets && maxSets.isEven) {
+      out.add('Max. Sätze muss in der KO-Phase ungerade sein.');
     }
     if (timeLimitSeconds < 60) {
       out.add('Zeitlimit muss mindestens eine Minute sein.');

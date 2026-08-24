@@ -106,6 +106,28 @@ void main() {
     test('issues is empty for a valid spec', () {
       expect(spec.issues(), isEmpty);
     });
+
+    test('an even max sets is fine for the prelim but not for the KO', () {
+      const evenSets = MatchFormatSpec(
+        setsToWin: 2,
+        maxSets: 4,
+        timeLimitSeconds: 1800,
+      );
+      expect(evenSets.issues(), isEmpty);
+      expect(
+        evenSets.issues(oddMaxSets: true).any((i) => i.contains('ungerade')),
+        isTrue,
+      );
+    });
+
+    test('an odd max sets passes the KO rule', () {
+      const oddSets = MatchFormatSpec(
+        setsToWin: 2,
+        maxSets: 3,
+        timeLimitSeconds: 1800,
+      );
+      expect(oddSets.issues(oddMaxSets: true), isEmpty);
+    });
   });
 
   group('RuleVariants', () {

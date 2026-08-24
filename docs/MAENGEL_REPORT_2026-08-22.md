@@ -82,3 +82,42 @@ gesetzt ist. Ein Freilos zeigt jetzt schlicht keinen.
 Festgehalten von drei weiteren Prüfungen in
 `supabase/tests/stage_graph_pitch_assignment_test.sql` (neun Spieler auf genau
 vier Plätzen); ohne den Fix fällt "the bye holds no pitch" um.
+
+---
+
+## 3. KO-Satzzahl war nicht auf ungerade festgelegt (P3) — behoben
+
+**Beobachtung:** Ein KO-Match ist Best-of-N, und N muss ungerade sein, damit es
+einen Sieger geben kann. Der Solo-Match erzwingt das seit `20260507000007` per
+CHECK auf `matches.format` (`^bo([13579]|[1-9][13579])$`). Der Turnier-Pfad
+hatte keine entsprechende Regel.
+
+**Ursache:** `MatchFormatSpec.issues()` prüfte nur `max_sets >= 2*sets_to_win-1`,
+also eine Untergrenze, keine Parität. Der KO-Block im Wizard hat gar kein
+`max_sets`-Feld und leitet den Wert als `2*sets_to_win-1` ab — dadurch ist er
+in der Praxis ungerade, aber das ist eine UI-Eigenschaft, keine Regel. Ein
+importiertes oder von Hand geschriebenes Setup konnte einen geraden Wert
+tragen, serverseitig prüfte nichts. Die per-KO-Runden-Overrides
+(`ko_round_formats`) wurden überhaupt nicht validiert.
+
+**Bewusst nicht abgedeckt: die Vorrunde.** Dort ist ein Unentschieden ein
+gültiges Ergebnis (K14), und ADR-0024 §2 zahlt dafür einen Punkt
+(`MatchOutcome.draw: 1`). Eine Ungerade-Pflicht in der Vorrunde würde diese
+Regel zu totem Code machen. Owner-Entscheid 2026-08-24: die Regel gilt für KO
+und Solo-Match, nicht für die Vorrunde.
+
+**Behoben** an drei Stellen:
+
+- `20261339000000_ko_sets_must_be_odd.sql` — `_tournament_ko_sets_all_odd` plus
+  CHECK-Constraint auf `tournaments`. Als Tabellen-Constraint statt in
+  `tournament_create`, damit sie greift, welches RPC auch schreibt. `NOT VALID`:
+  neue und geänderte Zeilen werden geprüft, Bestandszeilen bleiben unangetastet
+  — die Constraint kann separat validiert werden, sobald die gehosteten Daten
+  als sauber bekannt sind.
+- `MatchFormatSpec.issues({bool oddMaxSets = false})` in der Domain.
+- Der Draft reicht `oddMaxSets: true` für `koMatchFormat` **und** für jeden
+  Eintrag in `koRoundFormats` durch — letztere wurden vorher gar nicht geprüft.
+
+Festgehalten von `supabase/tests/ko_sets_odd_test.sql` (8 Prüfungen, inklusive
+einer, die den Constraint-Text exakt vergleicht, damit eine spätere Ausweitung
+auf die Vorrunde auffällt) und zwei Domain-Tests.

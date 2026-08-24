@@ -1094,7 +1094,12 @@ class TournamentConfigDraft {
       issues.add('Anmeldeschluss muss vor dem Turnierstart liegen.');
     }
     issues
-      ..addAll(koMatchFormat?.issues() ?? const <String>[])
+      // KO formats must be odd best-of-N (see MatchFormatSpec.issues); the
+      // prelim above keeps its even values because draws count there.
+      ..addAll(koMatchFormat?.issues(oddMaxSets: true) ?? const <String>[])
+      ..addAll([
+        for (final spec in koRoundFormats) ...spec.issues(oddMaxSets: true),
+      ])
       ..addAll(pitchPlan?.issues() ?? const <String>[])
       ..addAll(mightyFinisherQuali?.issues() ?? const <String>[])
       ..addAll(consolationBracket?.issues() ?? const <String>[]);
