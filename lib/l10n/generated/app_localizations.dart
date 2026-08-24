@@ -10351,12 +10351,6 @@ abstract class AppLocalizations {
   /// Sidebar nav entry
   ///
   /// In de, this message translates to:
-  /// **'Turniere'**
-  String get adminNavTournaments;
-
-  /// Sidebar nav entry
-  ///
-  /// In de, this message translates to:
   /// **'Anmeldungen'**
   String get adminNavRegistrations;
 
@@ -10426,12 +10420,6 @@ abstract class AppLocalizations {
   /// **'Runde abschliessen'**
   String get adminActionCloseRound;
 
-  /// Label above the round clock
-  ///
-  /// In de, this message translates to:
-  /// **'Rundenzeit'**
-  String get adminRoundTimeLabel;
-
   /// Label above the round-length chips
   ///
   /// In de, this message translates to:
@@ -10461,12 +10449,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Start'**
   String get adminTimerStart;
-
-  /// Pauses the round clock
-  ///
-  /// In de, this message translates to:
-  /// **'Pause'**
-  String get adminTimerPause;
 
   /// Opens the match behind a court card
   ///

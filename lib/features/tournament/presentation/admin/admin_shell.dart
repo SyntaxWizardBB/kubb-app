@@ -14,7 +14,7 @@ enum AdminSection {
 
   String label(AppLocalizations l) => switch (this) {
         AdminSection.overview => l.adminNavOverview,
-        AdminSection.tournaments => l.adminNavTournaments,
+        AdminSection.tournaments => l.organizerDashboardTabTournaments,
         AdminSection.registrations => l.adminNavRegistrations,
         AdminSection.schedule => l.adminNavSchedule,
         AdminSection.disputes => l.adminNavDisputes,

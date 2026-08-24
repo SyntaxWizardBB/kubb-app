@@ -287,7 +287,7 @@ class _TimerRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _PanelCaption(l.adminRoundTimeLabel),
+              _PanelCaption(l.organizerRoundTimeTitle),
               const SizedBox(height: KubbTokens.space1),
               Text(
                 display,
@@ -312,7 +312,7 @@ class _TimerRow extends StatelessWidget {
                 onPressed: onNudge == null ? null : () => onNudge!(-1),
               ),
               _PanelButton(
-                label: running ? l.adminTimerPause : l.adminTimerStart,
+                label: running ? l.organizerActionPause : l.adminTimerStart,
                 onPressed: onToggle,
                 accent: true,
               ),

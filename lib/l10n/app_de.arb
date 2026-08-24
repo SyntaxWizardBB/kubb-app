@@ -7621,10 +7621,6 @@
   "@adminNavOverview": {
     "description": "Sidebar nav entry"
   },
-  "adminNavTournaments": "Turniere",
-  "@adminNavTournaments": {
-    "description": "Sidebar nav entry"
-  },
   "adminNavRegistrations": "Anmeldungen",
   "@adminNavRegistrations": {
     "description": "Sidebar nav entry"
@@ -7673,10 +7669,6 @@
   "@adminActionCloseRound": {
     "description": "Primary action on the live round panel"
   },
-  "adminRoundTimeLabel": "Rundenzeit",
-  "@adminRoundTimeLabel": {
-    "description": "Label above the round clock"
-  },
   "adminRoundLengthLabel": "Rundenlänge",
   "@adminRoundLengthLabel": {
     "description": "Label above the round-length chips"
@@ -7696,10 +7688,6 @@
   "adminTimerStart": "Start",
   "@adminTimerStart": {
     "description": "Starts the round clock"
-  },
-  "adminTimerPause": "Pause",
-  "@adminTimerPause": {
-    "description": "Pauses the round clock"
   },
   "adminCourtDetails": "Details",
   "@adminCourtDetails": {

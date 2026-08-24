@@ -5809,9 +5809,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get adminNavOverview => 'Übersicht';
 
   @override
-  String get adminNavTournaments => 'Turniere';
-
-  @override
   String get adminNavRegistrations => 'Anmeldungen';
 
   @override
@@ -5848,9 +5845,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get adminActionCloseRound => 'Runde abschliessen';
 
   @override
-  String get adminRoundTimeLabel => 'Rundenzeit';
-
-  @override
   String get adminRoundLengthLabel => 'Rundenlänge';
 
   @override
@@ -5864,9 +5858,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get adminTimerStart => 'Start';
-
-  @override
-  String get adminTimerPause => 'Pause';
 
   @override
   String get adminCourtDetails => 'Details';

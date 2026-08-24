@@ -94,7 +94,7 @@ void main() {
     final l = await AppLocalizations.delegate.load(const Locale('de'));
 
     await pumpPanel(tester);
-    expect(find.text(l.adminTimerPause), findsOneWidget);
+    expect(find.text(l.organizerActionPause), findsOneWidget);
     expect(find.text(l.adminTimerStart), findsNothing);
 
     await pumpPanel(tester, running: false);
