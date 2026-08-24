@@ -54,3 +54,31 @@ supabase db reset          # legt die drei Demo-Turniere an
 select pitch_number, count(*) from tournament_matches
  where round_number = 1 group by 1;
 ```
+
+---
+
+## 2. Ein Freilos belegte einen echten Platz (P3) — behoben
+
+**Beobachtung:** Bei ungerader Teilnehmerzahl erzeugt jede Schoch-Runde eine
+Freilos-Zeile. Die bekam einen Platz aus dem Plan zugeteilt — bei "Demo Schoch
+33" lag sie auf Platz 32, während sich sechzehn echte Partien die restlichen
+sechzehn Plätze teilten. Auf einem Gelände mit genau so vielen Plätzen wie
+Partien hätte das zwei echte Partien auf einen Platz gedrängt.
+
+**Ursache:** `_tournament_assign_pitches` verteilte über alle Zeilen der Runde,
+ohne Freilose auszunehmen. Eine Freilos-Zeile ist aber schon beim Anlegen
+`finalized` mit gesetztem Sieger — sie wird nie gespielt.
+
+**Behoben** mit `20261338000000_bye_matches_have_no_pitch.sql`: verbatim
+Re-Base von `20261201000003` mit zwei Ergänzungen — Freilose werden vorab auf
+`pitch_number = NULL` gesetzt (vor den Plan-Prüfungen, gilt also auch ohne
+Plan) und aus der Verteilung ausgenommen. Die Änderung sitzt in der geteilten
+Zuweisungsfunktion, gilt damit für Vorrunde, Gruppenphase, KO und Folgerunden
+gleichermassen.
+
+Kein Client-Code nötig: die UI zeigt einen Platz ohnehin nur, wenn einer
+gesetzt ist. Ein Freilos zeigt jetzt schlicht keinen.
+
+Festgehalten von drei weiteren Prüfungen in
+`supabase/tests/stage_graph_pitch_assignment_test.sql` (neun Spieler auf genau
+vier Plätzen); ohne den Fix fällt "the bye holds no pitch" um.
