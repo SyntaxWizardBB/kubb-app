@@ -5880,4 +5880,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String adminCourtsDone(int done, int total) {
     return '$done / $total Courts fertig';
   }
+
+  @override
+  String get adminTasksEyebrow => 'Zu erledigen';
+
+  @override
+  String get adminTasksTitle => 'Offene Aufgaben';
+
+  @override
+  String adminTasksOpenCount(int count) {
+    return '$count offen';
+  }
+
+  @override
+  String adminStandingsEyebrow(int round) {
+    return 'Tabelle · nach Runde $round';
+  }
 }

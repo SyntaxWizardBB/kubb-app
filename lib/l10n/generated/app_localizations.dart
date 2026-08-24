@@ -10485,6 +10485,30 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{done} / {total} Courts fertig'**
   String adminCourtsDone(int done, int total);
+
+  /// Eyebrow above the open-tasks card
+  ///
+  /// In de, this message translates to:
+  /// **'Zu erledigen'**
+  String get adminTasksEyebrow;
+
+  /// Title of the open-tasks card
+  ///
+  /// In de, this message translates to:
+  /// **'Offene Aufgaben'**
+  String get adminTasksTitle;
+
+  /// How many tasks are still open
+  ///
+  /// In de, this message translates to:
+  /// **'{count} offen'**
+  String adminTasksOpenCount(int count);
+
+  /// Eyebrow above the standings card
+  ///
+  /// In de, this message translates to:
+  /// **'Tabelle · nach Runde {round}'**
+  String adminStandingsEyebrow(int round);
 }
 
 class _AppLocalizationsDelegate

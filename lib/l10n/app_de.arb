@@ -7728,5 +7728,31 @@
         "type": "int"
       }
     }
+  },
+  "adminTasksEyebrow": "Zu erledigen",
+  "@adminTasksEyebrow": {
+    "description": "Eyebrow above the open-tasks card"
+  },
+  "adminTasksTitle": "Offene Aufgaben",
+  "@adminTasksTitle": {
+    "description": "Title of the open-tasks card"
+  },
+  "adminTasksOpenCount": "{count} offen",
+  "@adminTasksOpenCount": {
+    "description": "How many tasks are still open",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminStandingsEyebrow": "Tabelle · nach Runde {round}",
+  "@adminStandingsEyebrow": {
+    "description": "Eyebrow above the standings card",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
   }
 }
